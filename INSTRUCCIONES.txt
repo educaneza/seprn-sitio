@@ -1,0 +1,128 @@
+═══════════════════════════════════════════════════════════════
+   SITIO WEB SEPRN - INSTRUCCIONES DE USO
+═══════════════════════════════════════════════════════════════
+
+¡Hola George! 👋
+
+Aquí está el SITIO COMPLETO de SEPRN listo para revisar.
+
+
+📂 CONTENIDO DE ESTA CARPETA:
+═══════════════════════════════════════════════════════════════
+
+PÁGINAS PRINCIPALES:
+  ✓ index.html              - Página de inicio
+  ✓ nosotros.html          - Quiénes somos
+  ✓ areas.html             - 8 tarjetas de áreas
+  ✓ contacto.html          - Contacto
+  ✓ cte.html               - Consejo Técnico Escolar
+
+ÁREAS/SUBJEFATURAS:
+  ✓ otde.html              - TU ÁREA (Oficina de Tecnología)
+  ✓ oeve.html              - Evaluación Educativa
+  ✓ personal.html          - Administración de Personal
+  ✓ recursos.html          - Recursos Materiales y Financieros
+  
+  ACADÉMICA (hub + subpáginas):
+  ✓ academica.html              - Hub principal
+  ✓ programas-educativos.html   - Subpágina 1
+  ✓ gestion-escolar.html        - Subpágina 2
+  ✓ investigacion-educativa.html - Subpágina 3
+  ✓ servicio-profesional.html   - Subpágina 4
+
+RECURSOS:
+  ✓ styles.css             - Estilos globales
+  ✓ pdfs/                  - Carpeta con PDFs
+  ✓ images/                - Carpeta con imágenes
+
+
+🚀 CÓMO VER EL SITIO:
+═══════════════════════════════════════════════════════════════
+
+PASO 1: Abre el archivo "index.html" con tu navegador
+        (doble clic o clic derecho → "Abrir con" → Chrome/Firefox/Edge)
+
+PASO 2: Navega por el sitio completo usando el menú
+
+PASO 3: Revisa TODAS las páginas, especialmente TU ÁREA (otde.html)
+
+
+💡 NAVEGACIÓN:
+═══════════════════════════════════════════════════════════════
+
+Desde index.html puedes ir a:
+  → Nosotros
+  → Áreas (aquí verás las 8 tarjetas)
+  → CTE
+  → Contacto
+
+Desde areas.html puedes entrar a cada área:
+  → OTDE (tu área completa con nuevo diseño)
+  → OEVE
+  → Personal
+  → Académica (hub)
+  → Recursos
+  → etc.
+
+
+🎯 TU ÁREA - OTDE (otde.html):
+═══════════════════════════════════════════════════════════════
+
+NUEVO DISEÑO con secciones completas:
+
+✓ Hero section animado
+✓ Navegación sticky (se queda fija al hacer scroll)
+✓ 6 Secciones completas:
+  1. 📧 Correo Institucional (con formulario)
+  2. 🛠️ Soporte Técnico
+  3. 🔧 Mantenimiento
+  4. 💻 Aulas de Medios (NUEVA - con video + PDF + RED)
+  5. 🎮 Chuka (con guías + juego)
+  6. 🚀 MIED (con video + Drive)
+
+
+📝 QUÉ REVISAR:
+═══════════════════════════════════════════════════════════════
+
+1. ¿Funciona la navegación?
+2. ¿Se ven bien los diseños?
+3. ¿Falta algún contenido?
+4. ¿Los links funcionan?
+5. ¿Los videos se reproducen?
+6. ¿Los PDFs se descargan?
+7. ¿Te gusta el nuevo diseño de OTDE?
+
+
+⚠️ IMPORTANTE:
+═══════════════════════════════════════════════════════════════
+
+- Algunos placeholders están marcados como [PENDIENTE VALIDAR]
+- Los links a Google Drive funcionan (abren en nueva pestaña)
+- El formulario de correo se embebe desde Google Forms
+- Las páginas de Académica están interconectadas
+
+
+🔧 SI ENCUENTRAS PROBLEMAS:
+═══════════════════════════════════════════════════════════════
+
+Anota:
+  - ¿En qué página?
+  - ¿Qué no funciona?
+  - ¿Qué falta o sobra?
+
+Y me lo comentas para corregirlo.
+
+
+📌 PRÓXIMOS PASOS:
+═══════════════════════════════════════════════════════════════
+
+1. Revisa TODO el sitio
+2. Valida el contenido
+3. Aprueba los diseños
+4. Completamos lo que falte
+5. Subimos a GitHub Pages
+
+
+═══════════════════════════════════════════════════════════════
+   ¡Explora el sitio y dime qué opinas! 🚀
+═══════════════════════════════════════════════════════════════

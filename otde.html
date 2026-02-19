@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTDE - Oficina de Tecnología para el Desarrollo Educativo - SEPRN</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .area-hero {
+            background: linear-gradient(135deg, #56212f 0%, #9F2241 100%);
+            padding: 70px 50px;
+            border-radius: 18px;
+            margin-bottom: 50px;
+            text-align: center;
+        }
+        .area-hero h1 {
+            font-size: 38px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 10px;
+        }
+        .area-hero .subtitulo {
+            font-size: 18px;
+            color: #ddc8a4;
+            margin-bottom: 25px;
+        }
+        .area-hero p {
+            font-size: 16px;
+            color: rgba(255,255,255,0.9);
+            max-width: 750px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+        .seccion {
+            margin-bottom: 60px;
+        }
+        .seccion-titulo {
+            font-size: 26px;
+            font-weight: 700;
+            color: #56212f;
+            border-bottom: 3px solid #d6d1ca;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+        .objetivo-box {
+            background: rgba(159,34,65,0.05);
+            border-left: 4px solid #9F2241;
+            padding: 20px 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            font-size: 16px;
+            line-height: 1.8;
+            color: #333;
+        }
+        .funciones-lista {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .funciones-lista li {
+            padding: 12px 0 12px 30px;
+            position: relative;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 15px;
+            line-height: 1.7;
+            color: #333;
+        }
+        .funciones-lista li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #9F2241;
+            font-weight: bold;
+        }
+        .funciones-lista li:last-child {
+            border-bottom: none;
+        }
+        .contacto-box {
+            background: #d6d1ca;
+            padding: 35px;
+            border-radius: 14px;
+        }
+        .contacto-box h2 {
+            margin-top: 0;
+            font-size: 22px;
+            color: #56212f;
+            margin-bottom: 20px;
+        }
+        .contacto-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            font-size: 15px;
+            color: #333;
+        }
+        .contacto-icon {
+            font-size: 20px;
+            width: 30px;
+        }
+
+        /* Servicios Section */
+        .servicios-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin: 60px 0 40px 0;
+            padding: 30px;
+            background: #f9f8f6;
+            border-radius: 18px;
+        }
+        .servicio-tab {
+            padding: 15px 30px;
+            background: white;
+            border: 2px solid #d6d1ca;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 15px;
+            font-weight: 600;
+            color: #56212f;
+            text-align: center;
+            min-width: 200px;
+        }
+        .servicio-tab:hover {
+            border-color: #9F2241;
+            background: #9F2241;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(159,34,65,0.2);
+        }
+        .servicio-tab.active {
+            background: #56212f;
+            color: white;
+            border-color: #56212f;
+        }
+        .servicio-content {
+            display: none;
+            animation: fadeIn 0.4s;
+        }
+        .servicio-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .servicio-header {
+            background: linear-gradient(135deg, #56212f 0%, #9F2241 100%);
+            padding: 40px;
+            border-radius: 18px;
+            color: white;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .servicio-header h2 {
+            margin-top: 0;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: white;
+        }
+        .servicio-header p {
+            font-size: 17px;
+            opacity: 0.95;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.7;
+            color: white;
+        }
+        .content-block {
+            background: white;
+            border: 2px solid #d6d1ca;
+            border-radius: 14px;
+            padding: 35px;
+            margin-bottom: 30px;
+        }
+        .content-block h3 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #56212f;
+            margin: 0 0 20px 0;
+        }
+        .content-block p {
+            font-size: 15px;
+            line-height: 1.8;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .highlight-box {
+            background: rgba(159,34,65,0.05);
+            border-left: 4px solid #9F2241;
+            padding: 20px 25px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .highlight-box p {
+            margin: 8px 0;
+        }
+        .benefit-list {
+            list-style: none;
+            padding: 0;
+        }
+        .benefit-list li {
+            padding: 10px 0 10px 30px;
+            position: relative;
+            font-size: 15px;
+            line-height: 1.7;
+        }
+        .benefit-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #9F2241;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .download-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 28px;
+            background: #56212f;
+            color: white;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 600;
+            margin: 15px 10px 15px 0;
+            transition: all 0.3s;
+        }
+        .download-button:hover {
+            background: #9F2241;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(159,34,65,0.3);
+        }
+        .form-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            max-width: 500px;
+            margin: 30px auto;
+            padding: 18px 30px;
+            background: linear-gradient(135deg, #56212f 0%, #9F2241 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(159,34,65,0.3);
+        }
+        .form-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(159,34,65,0.4);
+        }
+        .form-container {
+            overflow: hidden;
+            transition: all 0.4s;
+            max-height: 0;
+        }
+        .form-container.active {
+            max-height: 3200px;
+        }
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 12px;
+            margin: 25px 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .resource-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        .resource-card {
+            background: white;
+            border: 2px solid #d6d1ca;
+            border-radius: 14px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .resource-card:hover {
+            border-color: #9F2241;
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(159,34,65,0.15);
+        }
+        .resource-icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+        }
+        .resource-card h4 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #56212f;
+            margin-bottom: 12px;
+        }
+        .resource-card p {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .featured-box {
+            background: linear-gradient(135deg, #56212f 0%, #9F2241 100%);
+            padding: 40px;
+            border-radius: 14px;
+            color: white;
+            text-align: center;
+            margin: 30px 0;
+        }
+        .featured-box h4 {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: white;
+        }
+        .featured-box p {
+            font-size: 16px;
+            margin-bottom: 25px;
+            color: rgba(255,255,255,0.95);
+        }
+        .featured-box .download-button {
+            background: white;
+            color: #56212f;
+        }
+        .featured-box .download-button:hover {
+            background: #f0f0f0;
+        }
+        @media(max-width:768px){
+            .area-hero { padding: 50px 25px; }
+            .area-hero h1 { font-size: 28px; }
+            .servicios-nav { flex-direction: column; }
+            .servicio-tab { width: 100%; }
+            .resource-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <nav>
+        <div class="logo">SEPRN</div>
+        <ul>
+            <li><a href="index.html">Inicio</a></li>
+            <li><a href="nosotros.html">Nosotros</a></li>
+            <li><a href="areas.html">Áreas</a></li>
+            <li><a href="cte.html">CTE</a></li>
+            <li><a href="contacto.html">Contacto</a></li>
+        </ul>
+    </nav>
+</header>
+
+<section class="content-section">
+    <!-- Hero Institucional -->
+    <div class="area-hero">
+        <h1>💻 OTDE</h1>
+        <p class="subtitulo">Oficina de Tecnología para el Desarrollo Educativo</p>
+        <p>Impulsamos la transformación digital de la educación mediante soluciones tecnológicas innovadoras, soporte técnico profesional y herramientas digitales que potencian el proceso de enseñanza-aprendizaje en la región de Nezahualcóyotl.</p>
+    </div>
+
+    <!-- Objetivo -->
+    <div class="seccion">
+        <h2 class="seccion-titulo">📋 Objetivo</h2>
+        <div class="objetivo-box">
+            Operar, promover, acompañar y evaluar los proyectos y programas de tecnología educativa como complemento a los desarrollados en los planteles educativos de la Subdirección de Educación Primaria.
+        </div>
+    </div>
+
+    <!-- Funciones -->
+    <div class="seccion">
+        <h2 class="seccion-titulo">⚙️ Funciones Principales</h2>
+        <ul class="funciones-lista">
+            <li>Capacitar y asesorar permanentemente a los enlaces de la estructura en el manejo de programas computacionales y navegación en internet</li>
+            <li>Gestionar y administrar altas, bajas y cambios de contraseñas del correo institucional</li>
+            <li>Realizar mantenimiento preventivo y correctivo de recursos educativos digitales y equipos de cómputo</li>
+            <li>Fomentar el uso de las TICCAD como auxiliar didáctico y administrativo en los centros de trabajo</li>
+            <li>Diseñar, organizar y dar seguimiento a cursos-taller que mantengan actualizado al personal</li>
+            <li>Difundir y dar seguimiento a convocatorias en el uso didáctico de las TICCAD</li>
+        </ul>
+    </div>
+
+    <!-- Navegación de Servicios -->
+    <div class="servicios-nav">
+        <div class="servicio-tab active" onclick="showServicio('correo')">📧 Correo Institucional</div>
+        <div class="servicio-tab" onclick="showServicio('mantenimiento')">🔧 Mantenimiento</div>
+        <div class="servicio-tab" onclick="showServicio('soporte')">🛠️ Soporte Técnico</div>
+        <div class="servicio-tab" onclick="showServicio('chuka')">🎮 Chuka</div>
+        <div class="servicio-tab" onclick="showServicio('recursos')">📚 Recursos</div>
+    </div>
+
+    <!-- SERVICIO 1: Correo Institucional -->
+    <div id="correo" class="servicio-content active">
+        <div class="servicio-header">
+            <h2>📧 Cuentas de Correo Institucional</h2>
+            <p>Gestionar ante las instancias correspondientes las cuentas institucionales de Microsoft para entregarlas a toda la estructura educativa y fomentar su utilización como medio de comunicación oficial y como una herramienta más de trabajo pedagógico y administrativo.</p>
+        </div>
+
+        <div class="content-block">
+            <h3>Acerca del Servicio</h3>
+            <p>Proporcionar al 100% de alumnos, docentes y directivos escolares sus cuentas de correo institucional y brindarles una herramienta para desarrollar su trabajo pedagógico y administrativo.</p>
+
+            <div class="highlight-box">
+                <p><strong>📝 Servicios Disponibles:</strong></p>
+                <p>• <strong>Alta de cuenta:</strong> Solicita tu cuenta de correo electrónico institucional con dominio @dee.edu.mx o @aulamexiquense.mx</p>
+                <p>• <strong>Cambio de contraseña:</strong> Solicita el cambio de contraseña de correo electrónico institucional con dominio @dee.edu.mx o @aulamexiquense.mx</p>
+            </div>
+
+            <button class="form-button" onclick="toggleForm('form-correo')">
+                <span>📝</span>
+                <span id="form-correo-text">Solicitar Cuenta o Cambio de Contraseña</span>
+                <span id="form-correo-arrow">▼</span>
+            </button>
+            
+            <div id="form-correo" class="form-container">
+                <iframe 
+                    src="https://docs.google.com/forms/d/e/1FAIpQLSfn9gi_nfTupbdk-BN7aK0B--8a2FdOxq9HIXOxZsVugoiD9A/viewform?embedded=true" 
+                    width="100%" 
+                    height="2900" 
+                    frameborder="0" 
+                    marginheight="0" 
+                    marginwidth="0"
+                    style="border-radius: 12px; border: 2px solid #d6d1ca; margin-top: 20px;">
+                    Cargando…
+                </iframe>
+            </div>
+            
+            <p style="margin-top: 20px; font-size: 14px; color: #977e5b; text-align: center;">
+                ¿Prefieres abrir el formulario en una pestaña nueva? 
+                <a href="https://forms.gle/upNsKgzf2D4kdcfn8" target="_blank" style="color: #9F2241; font-weight: 600;">
+                    Haz clic aquí →
+                </a>
+            </p>
+        </div>
+    </div>
+
+    <!-- SERVICIO 2: Mantenimiento -->
+    <div id="mantenimiento" class="servicio-content">
+        <div class="servicio-header">
+            <h2>🔧 Mantenimiento Preventivo y Correctivo</h2>
+            <p>Rehabilitación y reactivación de Aula de Medios. Realizar mantenimiento preventivo y correctivo a los equipos de cómputo de la Subdirección de Educación Primaria y Centros de Trabajo de la estructura.</p>
+        </div>
+
+        <div class="content-block">
+            <h3>Objetivo</h3>
+            <p>Contar con equipos de cómputo en las mejores condiciones posibles, teniendo las últimas actualizaciones y versiones de software para un correcto funcionamiento.</p>
+        </div>
+
+        <div class="content-block">
+            <h3>🖥️ Mantenimiento al Hardware</h3>
+            <ul class="benefit-list">
+                <li>Limpieza Interior y Exterior</li>
+                <li>Sustitución de piezas defectuosas</li>
+                <li>Aumento de Memoria RAM</li>
+                <li>Cambio de Pasta Térmica</li>
+            </ul>
+        </div>
+
+        <div class="content-block">
+            <h3>💿 Mantenimiento al Software</h3>
+            <ul class="benefit-list">
+                <li>Formateo de HDD</li>
+                <li>Instalación/Actualización de Windows</li>
+                <li>Instalación de Office 365</li>
+                <li>Respaldo de Archivos</li>
+                <li>Limpieza de Sistema Operativo</li>
+            </ul>
+        </div>
+
+        <div class="featured-box">
+            <div style="font-size: 50px; margin-bottom: 15px;">📦</div>
+            <h4>Instalación de Banco de Materiales</h4>
+            <p>Instalación de más de mil materiales didácticos digitales a los que se puede acceder sin necesidad de conexión de red.</p>
+        </div>
+
+        <div class="content-block">
+            <h3>¡Solicita Mantenimiento!</h3>
+            <p>Solicita el mantenimiento a los equipos de cómputo de uso escolar (aula de medios) o de uso administrativo (Dirección, Zona Escolar o Sector Educativo), por medio de oficio y vía estructura, nosotros nos pondremos en contacto contigo.</p>
+        </div>
+    </div>
+
+    <!-- SERVICIO 3: Soporte Técnico -->
+    <div id="soporte" class="servicio-content">
+        <div class="servicio-header">
+            <h2>🛠️ Soporte Técnico Remoto</h2>
+            <p>Brindar asistencia técnica rápida y eficaz a todas las figuras de la Estructura Educativa, independientemente de su ubicación, mediante la herramienta TeamViewer.</p>
+        </div>
+
+        <div class="content-block">
+            <h3>¡Solicita Soporte Técnico Remoto!</h3>
+            <p>Te compartimos algunos ejemplos de situaciones en las que te podemos ayudar de manera remota:</p>
+            
+            <ul class="benefit-list">
+                <li>Solucionar problemas de software: Diagnosticar y solucionar problemas de software, como errores de aplicaciones, fallos del sistema operativo o problemas de configuración</li>
+                <li>Eliminar malware y virus: Eliminar malware y virus de los equipos de los usuarios de forma remota</li>
+                <li>Realizar instalaciones y actualizaciones: Instalar software, actualizaciones y controladores en los equipos de forma remota</li>
+                <li>Configurar dispositivos: Configurar dispositivos como impresoras, routers o redes Wi-Fi de forma remota</li>
+            </ul>
+        </div>
+
+        <div class="content-block">
+            <h3>Guía rápida para utilizar TeamViewer</h3>
+            
+            <p><strong>1. Descargar e instalar TeamViewer:</strong></p>
+            <ul class="benefit-list">
+                <li>Descarga TeamViewer desde el sitio web oficial: <a href="https://www.teamviewer.com/latam/" target="_blank" style="color: #9F2241; font-weight: 600;">https://www.teamviewer.com/latam/</a></li>
+                <li>Instala TeamViewer</li>
+            </ul>
+
+            <p><strong>2. Conectarse a un dispositivo remoto:</strong></p>
+            <ul class="benefit-list">
+                <li>Abre TeamViewer</li>
+                <li>En el dispositivo que necesita asistencia, anota la ID de TeamViewer y la contraseña que se muestran en la ventana principal</li>
+                <li>Comparte los datos anteriores con el personal de la OTDE que te auxiliará</li>
+            </ul>
+
+            <div class="highlight-box">
+                <p><strong>💡 Consejos adicionales:</strong></p>
+                <p>• Para una conexión más rápida y segura, puedes crear una cuenta TeamViewer y configurar el acceso fácil.</p>
+                <p>• Puedes utilizar TeamViewer para conectarte a dispositivos móviles, así como a servidores y otros dispositivos.</p>
+                <p>• TeamViewer ofrece una amplia gama de funciones y opciones adicionales. Puedes consultar la documentación oficial para obtener más información.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SERVICIO 4: Chuka -->
+    <div id="chuka" class="servicio-content">
+        <div class="servicio-header">
+            <h2>🎮 Chuka - Rompe el Silencio</h2>
+            <p>Concientizar a los alumnos para que pierdan sus miedos de una forma divertida y tengan un conocimiento de cómo actuar en una situación de acoso físico, psicológico y sexual.</p>
+        </div>
+
+        <div class="content-block">
+            <h3>¿Qué es Chuka?</h3>
+            <p>La Oficina de las Naciones Unidas contra la Droga y el Delito (UNODC) en México lanzó el juego digital "Chuka, Rompe el Silencio", dentro del marco de la iniciativa Educación para la Justicia. El juego tiene la finalidad de ayudar a prevenir y erradicar la violencia de género.</p>
+            
+            <p>Está dirigido a niños y niñas de entre 7 y 12 años de edad y está enfocado en enseñarles a reaccionar de forma asertiva ante situaciones de violencia.</p>
+
+            <p>Además, cuando Chuka se juega en compañía de un adulto se generan aprendizajes más poderosos, puesto que da pie a realizar reflexiones respecto a los miedos que han enfrentado y las formas en que resolvieron las situaciones de conflicto, ya sea en el juego o bien en la vida real.</p>
+        </div>
+
+        <div class="content-block">
+            <h3>Las secuelas del silencio</h3>
+            <p>La violencia ejercida en contra de niñas, niños y adolescentes afecta su desarrollo pleno, causando baja autoestima, trastornos del sueño y de la alimentación. También genera estrés, ansiedad, conflictos emocionales y depresión; así como bajo rendimiento académico, ausentismos y deserción escolar que pueden perdurar y empeorar en la edad adulta.</p>
+
+            <p>Son muchos los motivos que confluyen y hacen que las niñas, niños y adolescentes no revelen que han sido o son víctimas de violencia, por ejemplo:</p>
+            
+            <ul class="benefit-list">
+                <li>Culpa y vergüenza</li>
+                <li>Miedo de las consecuencias que sus dichos puedan causar</li>
+                <li>Amenazas de daño físico o muerte por parte del (la) agresor(a)</li>
+                <li>Temor a ser estigmatizados o rechazados</li>
+                <li>Falta de interlocutores dispuestos a creer en sus palabras</li>
+            </ul>
+
+            <p>El secreto entre el niño y la persona que lo violenta es fundamental para que el maltrato se sostenga en el tiempo. Chuka: rompe el silencio, desde su título promueve que, para terminar con la violencia, los niños y niñas deben hablar, pedir ayuda, ser asertivos, decir que no, expresar si no les gusta algo que están viviendo y buscar la protección de los adultos o autoridades que se la puedan brindar.</p>
+        </div>
+
+        <div class="resource-grid">
+            <div class="resource-card">
+                <div class="resource-icon">📘</div>
+                <h4>Guía para Docentes</h4>
+                <p>Material de acompañamiento para maestros</p>
+                <a href="pdfs/chuka-guia-docentes.pdf" class="download-button" download>
+                    Descargar PDF <span>⬇️</span>
+                </a>
+            </div>
+
+            <div class="resource-card">
+                <div class="resource-icon">👨‍👩‍👧‍👦</div>
+                <h4>Guía para Padres</h4>
+                <p>Material de apoyo para familias</p>
+                <a href="pdfs/chuka-guia-familias.pdf" class="download-button" download>
+                    Descargar PDF <span>⬇️</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="featured-box">
+            <div style="font-size: 60px; margin-bottom: 15px;">🎮</div>
+            <h4>Descarga e Instala el Juego Chuka</h4>
+            <p>Instala en tu computadora el juego completo de Chuka para Windows</p>
+            <a href="https://drive.google.com/file/d/1DNY6qtWVR4Fu762HkrxIKCqIqRO2n8t5/view?usp=share_link" 
+               target="_blank" 
+               class="download-button">
+                Descargar desde Google Drive <span>→</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- SERVICIO 5: Recursos -->
+    <div id="recursos" class="servicio-content">
+        <div class="servicio-header">
+            <h2>📚 Recursos Educativos Digitales</h2>
+            <p>Accede a materiales, tutoriales y herramientas diseñadas para potenciar el uso de la tecnología en el aula.</p>
+        </div>
+
+        <div class="content-block">
+            <h3>💻 Modelos de Uso de Aula de Medios</h3>
+            <p>Existen diversas propuestas que buscan optimizar el uso de los recursos tecnológicos y mejorar el proceso de enseñanza-aprendizaje. Te compartimos una tabla comparativa que rescata algunos Modelos de uso de Aula de Medios, dependiendo del equipamiento con el que cuente tu Centro de Trabajo.</p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="pdfs/MODELOS_DE_USO_DEL_AULA_DE_MEDIOS.pdf" class="download-button" download>
+                    📄 Descargar Tabla de Modelos <span>⬇️</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="content-block">
+            <h3>📹 Asesoría: Rehabilitación de Aulas de Medios</h3>
+            <p>Tutorial en video sobre cómo rehabilitar y reactivar Aulas de Medios en tu centro educativo.</p>
+            <div class="video-wrapper">
+                <iframe 
+                    src="https://www.youtube.com/embed/HMwcBPsJWb0" 
+                    frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen>
+                </iframe>
+            </div>
+        </div>
+
+        <div class="featured-box">
+            <div style="font-size: 50px; margin-bottom: 15px;">🌐</div>
+            <h4>Recursos Educativos Digitales (RED)</h4>
+            <p>Repositorio de Recursos Educativos Digitales diseñados por la Oficina de Tecnología para el Desarrollo Educativo.</p>
+            <a href="https://bit.ly/3PREf4Z" target="_blank" class="download-button">
+                Ir al Repositorio RED <span>→</span>
+            </a>
+        </div>
+
+        <div class="featured-box">
+            <div style="font-size: 50px; margin-bottom: 15px;">▶️</div>
+            <h4>Canal de YouTube OTDE</h4>
+            <p>Lista de reproducción con tutoriales, asesorías y recursos educativos en video.</p>
+            <a href="https://www.youtube.com/channel/UCvDb2DPSJxFyhH3bCPd5D2Q" target="_blank" class="download-button">
+                Ver Canal de YouTube <span>→</span>
+            </a>
+        </div>
+    </div>
+
+<!-- Contacto -->
+        <div class="seccion">
+            <div class="contacto-box">
+                <h2>📞 Contacto</h2>
+                <div class="contacto-item"><span class="contacto-icon">👤</span><span><strong>Responsable:</strong> Mtro. Jorge Alberto Bonilla Torres</span></div>
+                <div class="contacto-item"><span class="contacto-icon">📧</span><span><strong>Correo:</strong> otde.nezahualcoyotl@dee.edu.mx</span></div>
+                <div class="contacto-item"><span class="contacto-icon">📞</span><span><strong>Teléfono:</strong> 55 3300 2400 Ext 9065</span></div>
+            </div>
+        </div>
+
+
+</section>
+
+    
+
+<footer>
+    <div class="footer-content">
+        <h3>Contacto</h3>
+        <p>Av. Texcoco #116, Col. Juárez Pantitlán</p>
+        <p>Nezahualcóyotl, Estado de México, C.P. 57460</p>
+        <p>Lunes a Viernes de 08:30 a 15:30 hrs</p>
+        
+        <div class="social-links">
+            <a href="https://www.facebook.com/SubNeza" target="_blank" title="Facebook">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                </svg>
+            </a>
+            <a href="https://www.youtube.com/channel/UCvDb2DPSJxFyhH3bCPd5D2Q" target="_blank" title="YouTube">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                </svg>
+            </a>
+        </div>
+        
+        <div class="copyright">
+            © 2026 SEPRN. Subdirección de Educación Primaria en la Región de Nezahualcóyotl
+        </div>
+    </div>
+</footer>
+
+<script>
+    function showServicio(servicioId) {
+        // Hide all content
+        const contents = document.querySelectorAll('.servicio-content');
+        contents.forEach(content => content.classList.remove('active'));
+        
+        // Remove active from all tabs
+        const tabs = document.querySelectorAll('.servicio-tab');
+        tabs.forEach(tab => tab.classList.remove('active'));
+        
+        // Show selected content and activate tab
+        document.getElementById(servicioId).classList.add('active');
+        event.target.classList.add('active');
+        
+        // Scroll to servicios section
+        document.querySelector('.servicios-nav').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function toggleForm(formId) {
+        const container = document.getElementById(formId);
+        const text = document.getElementById(formId + '-text');
+        const arrow = document.getElementById(formId + '-arrow');
+        
+        if (container.classList.contains('active')) {
+            container.classList.remove('active');
+            text.textContent = 'Solicitar Cuenta o Cambio de Contraseña';
+            arrow.textContent = '▼';
+        } else {
+            container.classList.add('active');
+            text.textContent = 'Ocultar Formulario';
+            arrow.textContent = '▲';
+            setTimeout(() => {
+                container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 400);
+        }
+    }
+</script>
+</body>
+</html>

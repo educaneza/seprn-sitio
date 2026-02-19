@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Áreas - SEPRN</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .areas-hero { text-align: center; margin-bottom: 60px; }
+        .areas-hero h1 { font-size: 42px; font-weight: 700; color: #56212f; margin-bottom: 15px; }
+        .areas-hero p { font-size: 18px; color: #666; max-width: 650px; margin: 0 auto; line-height: 1.7; }
+        .areas-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+        .area-card { background: white; border: 2px solid #d6d1ca; border-radius: 18px; padding: 35px 30px; text-decoration: none; display: block; transition: all 0.3s; position: relative; overflow: hidden; }
+        .area-card::before { content: ''; position: absolute; top: 0; left: 0; width: 5px; height: 100%; background: #d6d1ca; transition: all 0.3s; }
+        .area-card:hover { border-color: #9F2241; transform: translateY(-6px); box-shadow: 0 12px 35px rgba(159,34,65,0.15); }
+        .area-card:hover::before { background: #9F2241; width: 6px; }
+        .area-icon { font-size: 52px; margin-bottom: 20px; display: block; }
+        .area-tipo { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #9F2241; background: rgba(159,34,65,0.08); padding: 4px 12px; border-radius: 20px; display: inline-block; margin-bottom: 12px; }
+        .area-card h2 { font-size: 20px; font-weight: 700; color: #56212f; margin-bottom: 12px; line-height: 1.3; }
+        .area-card p { font-size: 14px; color: #666; line-height: 1.7; margin-bottom: 20px; }
+        .area-responsable { font-size: 13px; color: #977e5b; font-weight: 500; padding-top: 15px; border-top: 1px solid #f0f0f0; }
+        .ver-mas { font-size: 14px; font-weight: 600; color: #9F2241; display: flex; align-items: center; gap: 6px; margin-top: 15px; }
+        @media(max-width:768px){ .areas-hero h1 { font-size: 30px; } }
+    </style>
+</head>
+<body>
+<header><nav><div class="logo">SEPRN</div><ul>
+<li><a href="index.html">Inicio</a></li><li><a href="nosotros.html">Nosotros</a></li>
+<li><a href="areas.html" class="active">Áreas</a></li><li><a href="cte.html">CTE</a></li><li><a href="contacto.html">Contacto</a></li>
+</ul></nav></header>
+<section class="content-section">
+    <div class="areas-hero">
+        <h1>Áreas de la Subdirección</h1>
+        <p>Conoce la estructura organizacional de la SEPRN y las funciones que cada área desempeña al servicio de la comunidad educativa en la Región de Nezahualcóyotl.</p>
+    </div>
+    <div class="areas-grid">
+        <a href="planeacion.html" class="area-card">
+            <span class="area-icon">📊</span>
+            <span class="area-tipo">Subjefatura</span>
+            <h2>Planeación Educativa</h2>
+            <p>Integra y da seguimiento a la información institucional, estadística escolar y procesos de planeación y evaluación de la Subdirección.</p>
+            <div class="area-responsable">👤 Subjefe(a): Vacante</div>
+            <div class="ver-mas">Ver más →</div>
+        </a>
+        <a href="personal.html" class="area-card">
+            <span class="area-icon">👥</span>
+            <span class="area-tipo">Subjefatura</span>
+            <h2>Administración de Personal</h2>
+            <p>Administra los recursos humanos de la Subdirección, gestionando trámites de movimientos, plantillas y expedientes del personal.</p>
+            <div class="area-responsable">👤 Subjefa: Lic. Laura Gilda Mejía García</div>
+            <div class="ver-mas">Ver más →</div>
+        </a>
+        <a href="academica.html" class="area-card">
+            <span class="area-icon">🎓</span>
+            <span class="area-tipo">Subjefatura</span>
+            <h2>Académica</h2>
+            <p>Dirige las acciones técnico-pedagógicas de apoyo al plan y programas de estudio, con cuatro oficinas especializadas al servicio docente.</p>
+            <div class="area-responsable">👤 Subjefa: Mtra. Araceli Islas García</div>
+            <div class="ver-mas">Ver más →</div>
+        </a>
+        <a href="recursos.html" class="area-card">
+            <span class="area-icon">📦</span>
+            <span class="area-tipo">Subjefatura</span>
+            <h2>Recursos Materiales y Financieros</h2>
+            <p>Controla la administración de recursos materiales y financieros, asegurando el equipamiento y presupuesto de los centros de trabajo.</p>
+            <div class="area-responsable">👤 Subjefa: Lic. Helga Adriana Díaz Álvarez</div>
+            <div class="ver-mas">Ver más →</div>
+        </a>
+        <a href="otde.html" class="area-card">
+            <span class="area-icon">💻</span>
+            <span class="area-tipo">Oficina</span>
+            <h2>OTDE</h2>
+            <p>Oficina de Tecnología para el Desarrollo Educativo. Impulsa el uso de las TICCAD, gestiona cuentas institucionales y brinda soporte técnico a la estructura.</p>
+            <div class="area-responsable">👤 Mtro. Jorge Alberto Bonilla Torres</div>
+            <div class="ver-mas">Ver más →</div>
+        </a>
+        <a href="oeve.html" class="area-card">
+            <span class="area-icon">🤝</span>
+            <span class="area-tipo">Oficina</span>
+            <h2>OEVE</h2>
+            <p>Oficina de Extensión y Vinculación Educativa. Organiza y evalúa los programas de participación social y vinculación entre escuela, familia y comunidad.</p>
+            <div class="area-responsable">👤 Mtro. José Chino Montiel</div>
+            <div class="ver-mas">Ver más →</div>
+        </a>
+        <a href="juridico.html" class="area-card">
+            <span class="area-icon">⚖️</span>
+            <span class="area-tipo">Oficina</span>
+            <h2>Asuntos Jurídicos</h2>
+            <p>Verifica y da seguimiento a la aplicación de normas jurídico-administrativas, brindando asesoría legal a los centros de trabajo de la región.</p>
+            <div class="area-responsable">👤 Dra. Rosminda Dolores Dávila Torres</div>
+            <div class="ver-mas">Ver más →</div>
+        </a>
+    </div>
+</section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <h3>Contacto</h3>
+            <p>Av. Texcoco #116, Col. Juárez Pantitlán</p>
+            <p>Nezahualcóyotl, Estado de México, C.P. 57460</p>
+            <p>Lunes a Viernes de 08:30 a 15:30 hrs</p>
+            
+            <div class="social-links">
+                <a href="https://www.facebook.com/SubNeza" target="_blank" title="Facebook">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                </a>
+                <a href="https://www.youtube.com/channel/UCvDb2DPSJxFyhH3bCPd5D2Q" target="_blank" title="YouTube">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                </a>
+            </div>
+            
+            <div class="copyright">
+                © 2026 SEPRN. Subdirección de Educación Primaria en la Región de Nezahualcóyotl
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subjefatura Académica - SEPRN</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .area-hero { background: linear-gradient(135deg, #56212f 0%, #9F2241 100%); padding: 70px 50px; border-radius: 18px; margin-bottom: 50px; text-align: center; }
+        .area-hero h1 { font-size: 38px; font-weight: 700; color: white; margin-bottom: 10px; }
+        .area-hero .subtitulo { font-size: 18px; color: #ddc8a4; margin-bottom: 25px; }
+        .area-hero p { font-size: 16px; color: rgba(255,255,255,0.9); max-width: 750px; margin: 0 auto; line-height: 1.8; }
+        .seccion { margin-bottom: 60px; }
+        .seccion-titulo { font-size: 26px; font-weight: 700; color: #56212f; border-bottom: 3px solid #d6d1ca; padding-bottom: 15px; margin-bottom: 25px; }
+        .objetivo-box { background: rgba(159,34,65,0.05); border-left: 4px solid #9F2241; padding: 20px 25px; border-radius: 8px; margin-bottom: 30px; font-size: 16px; line-height: 1.8; color: #333; }
+        .funciones-lista { list-style: none; padding: 0; margin: 0; }
+        .funciones-lista li { padding: 12px 0 12px 30px; position: relative; border-bottom: 1px solid #f0f0f0; font-size: 15px; line-height: 1.7; color: #333; }
+        .funciones-lista li::before { content: '✓'; position: absolute; left: 0; color: #9F2241; font-weight: bold; }
+        .funciones-lista li:last-child { border-bottom: none; }
+        .oficinas-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 30px; margin-top: 20px; }
+        .oficina-card { background: white; border: 2px solid #d6d1ca; border-radius: 14px; overflow: hidden; transition: all 0.3s; }
+        .oficina-card:hover { border-color: #9F2241; box-shadow: 0 6px 25px rgba(159,34,65,0.12); transform: translateY(-3px); }
+        .oficina-header { background: #56212f; padding: 20px 25px; }
+        .oficina-header h3 { font-size: 17px; font-weight: 600; color: white; margin: 0; line-height: 1.4; }
+        .oficina-header .responsable { font-size: 13px; color: #ddc8a4; margin-top: 6px; }
+        .oficina-body { padding: 20px 25px; }
+        .oficina-objetivo { font-size: 14px; color: #555; line-height: 1.7; margin-bottom: 15px; font-style: italic; border-bottom: 1px solid #f0f0f0; padding-bottom: 15px; }
+        .oficina-body ul { list-style: none; padding: 0; margin: 0; }
+        .oficina-body li { padding: 8px 0 8px 22px; position: relative; font-size: 14px; color: #333; line-height: 1.6; border-bottom: 1px solid #f8f8f8; }
+        .oficina-body li::before { content: '→'; position: absolute; left: 0; color: #9F2241; font-weight: bold; }
+        .oficina-body li:last-child { border-bottom: none; }
+        .contacto-box { background: #d6d1ca; padding: 35px; border-radius: 14px; }
+        .contacto-box h2 { font-size: 22px; color: #56212f; margin-bottom: 20px; }
+        .contacto-item { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; font-size: 15px; color: #333; }
+        .contacto-icon { font-size: 20px; width: 30px; }
+        @media(max-width:768px){ .area-hero { padding: 50px 25px; } .area-hero h1 { font-size: 28px; } .oficinas-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<header><nav><div class="logo">SEPRN</div><ul>
+<li><a href="index.html">Inicio</a></li><li><a href="nosotros.html">Nosotros</a></li>
+<li><a href="areas.html">Áreas</a></li><li><a href="cte.html">CTE</a></li><li><a href="contacto.html">Contacto</a></li>
+</ul></nav></header>
+<section class="content-section">
+<div class="area-hero">
+    <h1>🎓 Subjefatura Académica</h1>
+    <p class="subtitulo">Apoyo técnico-pedagógico a la educación primaria</p>
+    <p>Dirige y controla las acciones técnico-pedagógicas que fortalecen el proceso de enseñanza-aprendizaje en las escuelas primarias de la región, con cuatro oficinas especializadas al servicio de la estructura educativa.</p>
+</div>
+<div class="seccion">
+    <h2 class="seccion-titulo">📋 Objetivo</h2>
+    <div class="objetivo-box">Dirigir y controlar las acciones técnico-pedagógicas de apoyo al plan y programas de estudio de los servicios de educación primaria, de acuerdo con las normas y lineamientos establecidos.</div>
+</div>
+<div class="seccion">
+    <h2 class="seccion-titulo">⚙️ Funciones Principales</h2>
+    <ul class="funciones-lista">
+        <li>Recibir, analizar y difundir las normas, lineamientos e indicaciones técnico-pedagógicas para su implantación en la estructura educativa.</li>
+        <li>Verificar que se proporcione asesoría técnico-pedagógica al personal de la estructura operativa en la operación del plan y programas de estudio.</li>
+        <li>Organizar y evaluar los Talleres Generales de Actualización para orientar y modificar la práctica docente.</li>
+        <li>Organizar cursos de actualización e integración de materiales bibliográficos y didácticos para elevar la calidad de la enseñanza.</li>
+        <li>Vigilar la operación de procesos de inscripción y promoción al programa de Carrera Magisterial y SPDPAAE.</li>
+        <li>Promover proyectos de investigación, innovación educativa y recursos didácticos que atiendan la problemática pedagógica.</li>
+    </ul>
+</div>
+<div class="seccion">
+    <h2 class="seccion-titulo">🏢 Oficinas Adscritas</h2>
+    <div class="oficinas-grid">
+        <div class="oficina-card">
+            <div class="oficina-header">
+                <h3>Oficina de Investigación Educativa</h3>
+                <div class="responsable">👤 Mtro. Edilberto Cortes Mendoza &nbsp;|&nbsp; 📧 adg0086n.investigacion@dee.edu.mx</div>
+            </div>
+            <div class="oficina-body">
+                <p class="oficina-objetivo">Desarrolla la actualización permanente de los profesores en servicio y realiza proyectos de investigación e innovación educativa para fortalecer la superación académica y profesional.</p>
+                <ul>
+                    <li>Detectar necesidades de actualización del personal docente</li>
+                    <li>Organizar foros de análisis pedagógico, conferencias y semanas culturales</li>
+                    <li>Difundir y promover convocatorias de superación profesional para docentes</li>
+                    <li>Desarrollar proyectos de investigación e innovación educativa</li>
+                    <li>Difundir a través de publicaciones los resultados de investigaciones</li>
+                </ul>
+            </div>
+        </div>
+        <div class="oficina-card">
+            <div class="oficina-header">
+                <h3>Oficina para el Servicio Profesional Docente</h3>
+                <div class="responsable">👤 Mtro. Roberto Carlos Molina Valdez &nbsp;|&nbsp; 📧 adg0086n.spd@dee.edu.mx</div>
+            </div>
+            <div class="oficina-body">
+                <p class="oficina-objetivo">Orienta al personal directivo, docente y administrativo acerca de los procesos del Servicio Profesional Docente y el Sistema de Promoción y Desarrollo para el Personal de Apoyo y Asistencia a la Educación.</p>
+                <ul>
+                    <li>Difundir y asesorar sobre procesos de promoción vertical y horizontal con incentivos</li>
+                    <li>Promover el proceso de inscripción y evaluación del SPDPAAE</li>
+                    <li>Difundir convocatorias de cursos estatales de actualización</li>
+                    <li>Dar seguimiento y acompañamiento a tutores y tutorados</li>
+                    <li>Difundir el acuerdo del programa de promoción con incentivos de educación básica</li>
+                </ul>
+            </div>
+        </div>
+        <div class="oficina-card">
+            <div class="oficina-header">
+                <h3>Oficina de Gestión y Transformación Escolar</h3>
+                <div class="responsable">👤 Mtra. Leticia Villarreal Zamora &nbsp;|&nbsp; 📧 adg0086n.gestion@dee.edu.mx</div>
+            </div>
+            <div class="oficina-body">
+                <p class="oficina-objetivo">Consolida el modelo de gestión educativa estratégica e impulsa la profesionalización del personal directivo para transformar las prácticas educativas y mejorar los aprendizajes.</p>
+                <ul>
+                    <li>Programar asesoría y tutoría a directores escolares y docentes mediante el SAAE</li>
+                    <li>Asesorar en la elaboración del Plan Anual de Trabajo, Programa Analítico y Plan de Mejora Continua</li>
+                    <li>Organizar estrategias de profesionalización para personal directivo y docente</li>
+                    <li>Consolidar los Consejos Técnicos Escolares como espacios de profesionalización</li>
+                    <li>Dar seguimiento a planeaciones estratégicas y planes de trabajo de la función directiva</li>
+                </ul>
+            </div>
+        </div>
+        <div class="oficina-card">
+            <div class="oficina-header">
+                <h3>Oficina de Programas Educativos</h3>
+                <div class="responsable">👤 Mtra. Nallely Rojas Pérez &nbsp;|&nbsp; 📧 adg0086n.programas@dee.edu.mx</div>
+            </div>
+            <div class="oficina-body">
+                <p class="oficina-objetivo">Promueve la articulación de los programas educativos para apoyar a la escuela en la gestión pedagógica, llevando el seguimiento y evaluación en su aplicación para mejorar el aprendizaje de los alumnos.</p>
+                <ul>
+                    <li>Asesorar y capacitar en la aplicación de Programas Educativos a la estructura</li>
+                    <li>Proporcionar asesoría para escuelas de Horario Extendido</li>
+                    <li>Apoyar el diseño del Programa de Mejora Continua y el Codiseño</li>
+                    <li>Facilitar que los planteles se consoliden como espacios seguros mediante participación social</li>
+                    <li>Dar seguimiento a programas y proyectos compensatorios de educación primaria</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="seccion">
+    <div class="contacto-box">
+        <h2>📞 Contacto</h2>
+        <div class="contacto-item"><span class="contacto-icon">👤</span><span><strong>Subjefa:</strong> Mtra. Araceli Islas García</span></div>
+        <div class="contacto-item"><span class="contacto-icon">📧</span><span><strong>Correo:</strong> adg0086n.academica@dee.edu.mx</div>
+        <div class="contacto-item"><span class="contacto-icon">📞</span><span><strong>Teléfono:</strong> 55 3300 2400 Ext 9064, 8322

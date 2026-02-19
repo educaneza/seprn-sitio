@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEPRN - Subdirección de Educación Primaria Nezahualcóyotl</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav>
+            <div class="logo">SEPRN</div>
+            <ul>
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="nosotros.html">Nosotros</a></li>
+                <li><a href="areas.html">Áreas</a></li>
+                <li><a href="cte.html">CTE</a></li>
+                <li><a href="contacto.html">Contacto</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>Subdirección de Educación<br>Primaria Nezahualcóyotl</h1>
+        <p>Formando personas íntegras con educación de calidad para enfrentar los retos del mañana.</p>
+    </section>
+
+    <!-- Main Areas -->
+    <section class="areas">
+        <a href="planeacion.html" class="area-card">
+            <h3>Planeación</h3>
+            <p>Control escolar, estadística y modernización educativa</p>
+        </a>
+        
+        <a href="personal.html" class="area-card">
+            <h3>Personal</h3>
+            <p>Administración de recursos humanos</p>
+        </a>
+        
+        <a href="academica.html" class="area-card">
+            <h3>Académica</h3>
+            <p>Programas educativos y gestión escolar</p>
+        </a>
+        
+        <a href="recursos.html" class="area-card">
+            <h3>Recursos</h3>
+            <p>Materiales y financieros</p>
+        </a>
+        
+        <a href="otde.html" class="area-card">
+            <h3>OTDE</h3>
+            <p>Tecnología para el desarrollo educativo</p>
+        </a>
+        
+        <a href="oeve.html" class="area-card">
+            <h3>OEVE</h3>
+            <p>Extensión y vinculación educativa</p>
+        </a>
+
+        <a href="juridico.html" class="area-card">
+            <h3>Jurídico</h3>
+            <p>Seguimiento de asuntos jurídicos</p>
+        </a>
+    </section>
+
+    <!-- Tooltip styles for map -->
+    <style>
+        .mapa-municipio { cursor: pointer; transition: opacity 0.2s; }
+        .mapa-municipio:hover { opacity: 0.75; }
+        .map-tooltip {
+            position: absolute;
+            background: #56212f;
+            color: white;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            white-space: nowrap;
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .map-tooltip::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-bottom: none;
+            border-top-color: #56212f;
+        }
+        .map-wrapper { position: relative; }
+    </style>
+
+    <!-- Cobertura -->
+    <section style="padding: 80px 50px; background: #f9f8f6;">
+        <div style="max-width: 1100px; margin: 0 auto;">
+            <div style="text-align: center; margin-bottom: 50px;">
+                <h2 style="font-size: 36px; font-weight: 700; color: #56212f; margin-bottom: 15px;">📍 Nuestra Cobertura</h2>
+                <p style="font-size: 17px; color: #666; max-width: 600px; margin: 0 auto; line-height: 1.7;">Atendemos <strong style="color:#9F2241;">18 municipios</strong> del oriente y suroriente del Estado de México, organizados en <strong style="color:#9F2241;">13 sectores educativos</strong>.</p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: start;">
+
+                <!-- SVG Map -->
+                <div style="background: white; border-radius: 18px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.06);">
+                    <p style="text-align:center; font-size:13px; color:#977e5b; margin-bottom:15px; font-weight:600; text-transform:uppercase; letter-spacing:1px;">Estado de México — Región Oriente</p>
+                    <p style="text-align:center; font-size:12px; color:#aaa; margin-bottom:15px;">Pasa el cursor sobre cada municipio</p>
+                    <div class="map-wrapper">
+                        <div class="map-tooltip" id="map-tooltip"></div>
+                        <svg viewBox="0 0 400 420" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:auto;">
+                            <rect width="400" height="420" fill="#f0ede8" rx="12"/>
+
+                            <!-- Zonas fuera de jurisdicción -->
+                            <polygon points="60,80 155,80 155,130 145,155 100,160 60,140" fill="#d6d1ca" stroke="white" stroke-width="1" opacity="0.5"/>
+                            <polygon points="60,140 100,160 90,200 60,210" fill="#d6d1ca" stroke="white" stroke-width="1" opacity="0.5"/>
+                            <polygon points="155,80 195,70 225,80 245,100 195,118" fill="#d6d1ca" stroke="white" stroke-width="1" opacity="0.5"/>
+                            <polygon points="305,115 340,110 350,150 325,160 295,140" fill="#d6d1ca" stroke="white" stroke-width="1" opacity="0.5"/>
+                            <polygon points="325,260 350,255 355,310 330,330 308,305" fill="#d6d1ca" stroke="white" stroke-width="1" opacity="0.5"/>
+                            <polygon points="165,350 208,338 215,370 185,380 158,368" fill="#d6d1ca" stroke="white" stroke-width="1" opacity="0.5"/>
+                            <polygon points="310,350 330,345 338,375 315,385 298,370" fill="#d6d1ca" stroke="white" stroke-width="1" opacity="0.5"/>
+
+                            <!-- Municipios atendidos — sin texto, con data-tooltip -->
+                            <polygon class="mapa-municipio" data-nombre="Nezahualcóyotl" data-sector="Sectores V, VI, VII, IX, X, XII" points="155,130 195,118 215,135 210,165 190,175 160,170 145,155" fill="#9F2241" stroke="white" stroke-width="1.5"/>
+                            <polygon class="mapa-municipio" data-nombre="Chimalhuacán" data-sector="Sector XI" points="215,135 245,125 255,145 240,165 210,165" fill="#9F2241" stroke="white" stroke-width="1.5"/>
+                            <polygon class="mapa-municipio" data-nombre="La Paz" data-sector="Sector IV" points="190,175 210,165 240,165 235,190 205,195" fill="#9F2241" stroke="white" stroke-width="1.5"/>
+                            <polygon class="mapa-municipio" data-nombre="Ixtapaluca" data-sector="Sectores II, XIII" points="235,190 265,175 285,190 280,220 250,225 235,210" fill="#9F2241" stroke="white" stroke-width="1.5"/>
+                            <polygon class="mapa-municipio" data-nombre="Chicoloapan" data-sector="Sectores IV, XI" points="255,145 285,140 295,160 275,175 255,165" fill="#9F2241" stroke="white" stroke-width="1.5"/>
+                            <polygon class="mapa-municipio" data-nombre="Texcoco" data-sector="Sector III" points="245,100 285,90 305,115 295,140 265,145 245,125" fill="#9F2241" stroke="white" stroke-width="1.5"/>
+                            <polygon class="mapa-municipio" data-nombre="Chalco" data-sector="Sectores II, VIII, XIII" points="250,225 280,220 300,240 290,265 260,265 245,248" fill="#9F2241" stroke="white" stroke-width="1.5"/>
+                            <polygon class="mapa-municipio" data-nombre="Valle de Chalco Solidaridad" data-sector="Sectores II, VIII" points="205,195 235,190 245,210 235,228 210,225" fill="#9F2241" stroke="white" stroke-width="1.5"/>
+                            <polygon class="mapa-municipio" data-nombre="Cocotitlán" data-sector="Sector VIII" points="235,228 255,225 262,245 248,255 233,245" fill="#9F2241" stroke="white" stroke-width="1.5"/>
+                            <polygon class="mapa-municipio" data-nombre="Tlalmanalco" data-sector="Sector I" points="290,245 315,238 325,260 310,278 288,272" fill="#9F2241" stroke="white" stroke-width="1.5"/>
+                            <polygon class="mapa-municipio" data-nombre="Amecameca" data-sector="Sector I" points="260,268 290,265 305,282 295,305 265,308 252,290" fill="#9F2241" stroke="white" stroke-width="1.5"/>
+                            <polygon class="mapa-municipio" data-nombre="Ozumba" data-sector="Sector I" points="250,308 278,308 282,328 260,335 242,325" fill="#9F2241" stroke="white" stroke-width="1.5"/>
+                            <polygon class="mapa-municipio" data-nombre="Atlautla" data-sector="Sector I" points="295,305 318,300 325,320 308,332 287,328" fill="#9F2241" stroke="white" stroke-width="1.5"/>
+                            <polygon class="mapa-municipio" data-nombre="Tepetlixpa" data-sector="Sector I" points="243,325 262,335 258,352 238,355 228,340" fill="#9F2241" stroke="white" stroke-width="1.5"/>
+                            <polygon class="mapa-municipio" data-nombre="Ayapango" data-sector="Sector I" points="284,330 307,332 310,350 290,358 278,347" fill="#9F2241" stroke="white" stroke-width="1.5"/>
+                            <polygon class="mapa-municipio" data-nombre="Juchitepec" data-sector="Sector I" points="215,320 242,322 240,345 220,350 208,338" fill="#9F2241" stroke="white" stroke-width="1.5"/>
+                            <polygon class="mapa-municipio" data-nombre="Temamatla" data-sector="Sectores I, VIII" points="205,280 232,278 235,300 215,308 200,296" fill="#9F2241" stroke="white" stroke-width="1.5"/>
+                            <polygon class="mapa-municipio" data-nombre="Tenango del Aire" data-sector="Sector I" points="180,300 205,296 210,318 192,325 176,315" fill="#9F2241" stroke="white" stroke-width="1.5"/>
+
+                            <!-- Leyenda -->
+                            <rect x="20" y="375" width="14" height="14" fill="#9F2241" rx="3"/>
+                            <text x="40" y="386" font-size="10" fill="#56212f" font-weight="600">Municipios atendidos (18)</text>
+                            <rect x="20" y="397" width="14" height="14" fill="#d6d1ca" rx="3"/>
+                            <text x="40" y="408" font-size="10" fill="#666">Fuera de jurisdicción</text>
+                        </svg>
+                    </div>
+                    <script>
+                        (function() {
+                            const tooltip = document.getElementById('map-tooltip');
+                            document.querySelectorAll('.mapa-municipio').forEach(function(el) {
+                                el.addEventListener('mouseenter', function(e) {
+                                    tooltip.innerHTML = '<strong>' + el.dataset.nombre + '</strong><br><span style="font-weight:400;font-size:11px;opacity:0.85">' + el.dataset.sector + '</span>';
+                                    tooltip.style.opacity = '1';
+                                });
+                                el.addEventListener('mousemove', function(e) {
+                                    const wrapper = tooltip.parentElement.getBoundingClientRect();
+                                    tooltip.style.left = (e.clientX - wrapper.left - tooltip.offsetWidth / 2) + 'px';
+                                    tooltip.style.top = (e.clientY - wrapper.top - tooltip.offsetHeight - 14) + 'px';
+                                });
+                                el.addEventListener('mouseleave', function() {
+                                    tooltip.style.opacity = '0';
+                                });
+                            });
+                        })();
+                    </script>
+                </div>
+
+                <!-- Municipios List -->
+                <div>
+                    <p style="font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #9F2241; margin-bottom: 20px;">Municipios y Sectores</p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
+                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Amecameca</p>
+                            <p style="font-size:11px; color:#977e5b; margin:0;">Sector I</p>
+                        </div>
+                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
+                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Atlautla</p>
+                            <p style="font-size:11px; color:#977e5b; margin:0;">Sector I</p>
+                        </div>
+                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
+                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Ayapango</p>
+                            <p style="font-size:11px; color:#977e5b; margin:0;">Sector I</p>
+                        </div>
+                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
+                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Chalco</p>
+                            <p style="font-size:11px; color:#977e5b; margin:0;">Sectores II, VIII, XIII</p>
+                        </div>
+                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
+                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Chicoloapan</p>
+                            <p style="font-size:11px; color:#977e5b; margin:0;">Sectores IV, XI</p>
+                        </div>
+                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
+                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Chimalhuacán</p>
+                            <p style="font-size:11px; color:#977e5b; margin:0;">Sector XI</p>
+                        </div>
+                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
+                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Cocotitlán</p>
+                            <p style="font-size:11px; color:#977e5b; margin:0;">Sector VIII</p>
+                        </div>
+                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
+                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Ixtapaluca</p>
+                            <p style="font-size:11px; color:#977e5b; margin:0;">Sectores II, XIII</p>
+                        </div>
+                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
+                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Juchitepec</p>
+                            <p style="font-size:11px; color:#977e5b; margin:0;">Sector I</p>
+                        </div>
+                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
+                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">La Paz</p>
+                            <p style="font-size:11px; color:#977e5b; margin:0;">Sector IV</p>
+                        </div>
+                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
+                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Nezahualcóyotl</p>
+                            <p style="font-size:11px; color:#977e5b; margin:0;">Sectores V, VI, VII, IX, X, XII</p>
+                        </div>
+                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
+                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Ozumba</p>
+                            <p style="font-size:11px; color:#977e5b; margin:0;">Sector I</p>
+                        </div>
+                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
+                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Temamatla</p>
+                            <p style="font-size:11px; color:#977e5b; margin:0;">Sectores I, VIII</p>
+                        </div>
+                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
+                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Tenango del Aire</p>
+                            <p style="font-size:11px; color:#977e5b; margin:0;">Sector I</p>
+                        </div>
+                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
+                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Tepetlixpa</p>
+                            <p style="font-size:11px; color:#977e5b; margin:0;">Sector I</p>
+                        </div>
+                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
+                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Texcoco</p>
+                            <p style="font-size:11px; color:#977e5b; margin:0;">Sector III</p>
+                        </div>
+                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
+                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Tlalmanalco</p>
+                            <p style="font-size:11px; color:#977e5b; margin:0;">Sector I</p>
+                        </div>
+                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
+                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Valle de Chalco Solidaridad</p>
+                            <p style="font-size:11px; color:#977e5b; margin:0;">Sectores II, VIII</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <h3>Contacto</h3>
+            <p>Av. Texcoco #116, Col. Juárez Pantitlán</p>
+            <p>Nezahualcóyotl, Estado de México, C.P. 57460</p>
+            <p>Lunes a Viernes de 08:30 a 15:30 hrs</p>
+            
+            <div class="social-links">
+                <a href="https://www.facebook.com/SubNeza" target="_blank" title="Facebook">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                </a>
+                <a href="https://www.youtube.com/channel/UCvDb2DPSJxFyhH3bCPd5D2Q" target="_blank" title="YouTube">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                </a>
+            </div>
+            
+            <div class="copyright">
+                © 2026 SEPRN. Subdirección de Educación Primaria en la Región de Nezahualcóyotl
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

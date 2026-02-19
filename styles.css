@@ -1,0 +1,386 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #000000;
+    background: #fff;
+    line-height: 1.6;
+}
+
+/* Header Navigation */
+header {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    border-bottom: 1px solid #d6d1ca;
+}
+
+nav {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    color: #56212f;
+}
+
+nav ul {
+    display: flex;
+    gap: 35px;
+    list-style: none;
+}
+
+nav a {
+    text-decoration: none;
+    color: #56212f;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.3s;
+}
+
+nav a:hover {
+    color: #9F2241;
+}
+
+/* Hero Section */
+.hero {
+    text-align: center;
+    padding: 120px 40px 100px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.hero h1 {
+    font-size: 56px;
+    font-weight: 600;
+    letter-spacing: -1.5px;
+    line-height: 1.1;
+    margin-bottom: 20px;
+    color: #56212f;
+}
+
+.hero p {
+    font-size: 21px;
+    color: #977e5b;
+    font-weight: 400;
+    line-height: 1.4;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+/* Main Areas Section */
+.areas {
+    max-width: 1200px;
+    margin: 80px auto;
+    padding: 0 40px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.area-card {
+    background: #d6d1ca;
+    border-radius: 18px;
+    padding: 50px 40px;
+    text-align: center;
+    transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.area-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(86, 33, 47, 0.15);
+    background: #c3b08f;
+}
+
+.area-card h3 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #56212f;
+}
+
+.area-card p {
+    font-size: 14px;
+    color: #000000;
+    font-weight: 400;
+}
+
+/* Leadership Section */
+.leadership {
+    background: #d6d1ca;
+    padding: 100px 40px;
+    margin-top: 100px;
+}
+
+.leadership-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.leadership h2 {
+    text-align: center;
+    font-size: 40px;
+    font-weight: 600;
+    margin-bottom: 60px;
+    color: #56212f;
+}
+
+.leaders {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 40px;
+}
+
+.leader {
+    text-align: center;
+}
+
+.leader-photo {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: #c3b08f;
+    margin: 0 auto 20px;
+    overflow: hidden;
+    border: 3px solid #9F2241;
+}
+
+.leader-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.leader h4 {
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #56212f;
+}
+
+.leader p {
+    font-size: 14px;
+    color: #000000;
+    font-weight: 400;
+    line-height: 1.3;
+}
+
+/* Footer */
+footer {
+    background: #56212f;
+    padding: 60px 40px 40px;
+    margin-top: 100px;
+    text-align: center;
+}
+
+.footer-content {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.footer-content h3 {
+    font-size: 21px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #ffffff;
+}
+
+.footer-content p {
+    font-size: 14px;
+    color: #ddc8a4;
+    margin-bottom: 8px;
+}
+
+.social-links {
+    margin: 30px 0;
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+}
+
+.social-links a {
+    width: 40px;
+    height: 40px;
+    background: #9F2241;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-decoration: none;
+    font-size: 18px;
+    transition: background 0.3s;
+}
+
+.social-links a:hover {
+    background: #bc955b;
+}
+
+.copyright {
+    margin-top: 40px;
+    font-size: 12px;
+    color: #c3b08f;
+}
+
+/* Content Section (for inner pages) */
+.content-section {
+    max-width: 1000px;
+    margin: 80px auto;
+    padding: 0 40px;
+}
+
+.content-section h1 {
+    font-size: 48px;
+    font-weight: 600;
+    color: #56212f;
+    margin-bottom: 40px;
+    text-align: center;
+}
+
+.content-section h2 {
+    font-size: 32px;
+    font-weight: 600;
+    color: #56212f;
+    margin-top: 60px;
+    margin-bottom: 20px;
+}
+
+.content-section h3 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #56212f;
+    margin-top: 40px;
+    margin-bottom: 15px;
+}
+
+.content-section p {
+    font-size: 16px;
+    line-height: 1.8;
+    color: #000000;
+    margin-bottom: 20px;
+}
+
+.content-section ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.content-section li {
+    font-size: 16px;
+    line-height: 1.8;
+    color: #000000;
+    margin-bottom: 15px;
+    padding-left: 30px;
+    position: relative;
+}
+
+.content-section li:before {
+    content: "•";
+    color: #9F2241;
+    font-weight: bold;
+    position: absolute;
+    left: 10px;
+}
+
+/* Video Grid for CTE */
+.video-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 30px;
+    margin-top: 40px;
+}
+
+.video-card {
+    background: #d6d1ca;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.video-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 30px rgba(86, 33, 47, 0.15);
+}
+
+.video-wrapper {
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+    overflow: hidden;
+}
+
+.video-wrapper iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.video-info {
+    padding: 20px;
+}
+
+.video-info h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #56212f;
+    margin-bottom: 8px;
+}
+
+.video-info p {
+    font-size: 14px;
+    color: #000000;
+    line-height: 1.5;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hero h1 {
+        font-size: 40px;
+    }
+
+    .hero p {
+        font-size: 19px;
+    }
+
+    nav {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    nav ul {
+        gap: 20px;
+    }
+
+    .areas {
+        grid-template-columns: 1fr;
+    }
+
+    .content-section h1 {
+        font-size: 36px;
+    }
+
+    .video-grid {
+        grid-template-columns: 1fr;
+    }
+}
