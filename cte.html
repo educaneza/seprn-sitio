@@ -5,6 +5,278 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CTE - SEPRN</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        .sesion-accordion {
+            background: white;
+            border: 2px solid #d6d1ca;
+            border-radius: 14px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        .sesion-accordion.active {
+            border-color: #9F2241;
+            box-shadow: 0 8px 30px rgba(159,34,65,0.15);
+        }
+        .sesion-header {
+            background: linear-gradient(135deg, #56212f 0%, #9F2241 100%);
+            padding: 25px 30px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+        .sesion-header:hover {
+            background: linear-gradient(135deg, #6d2a3d 0%, #b32850 100%);
+        }
+        .sesion-header-text h2 {
+            font-size: 22px;
+            font-weight: 700;
+            margin: 0 0 5px 0;
+            color: white;
+        }
+        .sesion-header-text p {
+            margin: 0;
+            font-size: 14px;
+            opacity: 0.95;
+            color: white;
+        }
+        .sesion-toggle {
+            font-size: 28px;
+            font-weight: 300;
+            transition: transform 0.3s;
+            color: white;
+        }
+        .sesion-accordion.active .sesion-toggle {
+            transform: rotate(180deg);
+        }
+        .sesion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out;
+            padding: 0 35px;
+        }
+        .sesion-accordion.active .sesion-content {
+            max-height: 2500px;
+            padding: 35px;
+        }
+        .download-all-section {
+            background: linear-gradient(135deg, #56212f 0%, #9F2241 100%);
+            padding: 25px 35px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+        .download-all-text {
+            flex: 1;
+        }
+        .download-all-text h4 {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+            color: white;
+        }
+        .download-all-text p {
+            margin: 0;
+            font-size: 14px;
+            opacity: 0.95;
+            color: white;
+        }
+        .download-all-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 28px;
+            background: white;
+            color: #56212f;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        .download-all-btn:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .video-container {
+            margin-bottom: 30px;
+        }
+        .video-container h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #56212f;
+            margin-bottom: 15px;
+        }
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .materiales-section {
+            border-top: 2px solid #f0f0f0;
+            padding-top: 25px;
+            margin-top: 25px;
+        }
+        .materiales-section h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #56212f;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .materiales-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .material-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: #f9f8f6;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        .material-item:hover {
+            background: #d6d1ca;
+            border-color: #9F2241;
+            transform: translateX(3px);
+        }
+        .material-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        .material-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .material-info strong {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #56212f;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .material-info span {
+            font-size: 12px;
+            color: #666;
+        }
+        .link-sep {
+            background: rgba(159,34,65,0.08);
+            padding: 20px 25px;
+            border-radius: 10px;
+            border-left: 4px solid #9F2241;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+        .link-sep-text h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 5px 0;
+            color: #56212f;
+        }
+        .link-sep-text p {
+            margin: 0;
+            font-size: 13px;
+            color: #666;
+        }
+        .link-sep a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 22px;
+            background: #56212f;
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        .link-sep a:hover {
+            background: #9F2241;
+            transform: translateY(-2px);
+        }
+        .info-box {
+            background: #f9f8f6;
+            padding: 30px;
+            border-radius: 14px;
+            text-align: center;
+            margin-top: 40px;
+        }
+        .info-box h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #56212f;
+            margin-bottom: 12px;
+        }
+        .info-box p {
+            font-size: 15px;
+            color: #666;
+            margin: 0;
+            line-height: 1.6;
+        }
+        @media(max-width:768px){
+            .download-all-section {
+                flex-direction: column;
+                text-align: center;
+            }
+            .download-all-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .link-sep {
+                flex-direction: column;
+                text-align: center;
+            }
+            .link-sep a {
+                width: 100%;
+                justify-content: center;
+            }
+            .materiales-grid { 
+                grid-template-columns: 1fr; 
+            }
+            .sesion-header {
+                padding: 20px;
+            }
+            .sesion-header-text h2 {
+                font-size: 18px;
+            }
+            .sesion-accordion.active .sesion-content {
+                padding: 25px 20px;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Header -->
@@ -24,49 +296,170 @@
     <!-- Content -->
     <section class="content-section">
         <h1>Consejo Técnico Escolar (CTE)</h1>
-        <p style="text-align: center; max-width: 700px; margin: 0 auto 60px;">
-            Encuentra aquí las grabaciones de las sesiones del Consejo Técnico Escolar.<br>Ciclo Escolar 2025-2026.
+        <p style="text-align: center; max-width: 700px; margin: 0 auto 60px; font-size: 17px; line-height: 1.7; color: #666;">
+            Encuentra aquí las grabaciones de las sesiones del Consejo Técnico Escolar, así como los materiales, insumos y recursos de apoyo para directivos y docentes de la región.
         </p>
 
-        <!-- Video Grid -->
-        <div class="video-grid">
-            <!-- Video 1 - TU VIDEO REAL -->
-            <div class="video-card">
-                <div class="video-wrapper">
-                    <iframe width="560" height="315" src="https://www.youtube.com/embed/1vFCnnWKkzg?si=g0h0rh4lsl1D7SdH" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        <!-- Quinta Sesión Ordinaria (ABIERTA POR DEFECTO) -->
+        <div class="sesion-accordion active">
+            <div class="sesion-header" onclick="toggleSesion(this)">
+                <div class="sesion-header-text">
+                    <h2>📅 Quinta Sesión Ordinaria 2025-2026</h2>
+                    <p>Materiales, presentaciones y video de la quinta sesión del Consejo Técnico Escolar</p>
                 </div>
-                <div class="video-info">
-                    <h3 style="text-align: center;">1ra Sesión Ordinaria - Septiembre 2025</h3>
-                    <p style="text-align: justify;">Asesoría en línea dirigida a autoridades educativas correspondiente a la Primera Sesión Ordinaria del Consejo Técnico Escolar, ciclo escolar 2025-2026.</p>
-                </div>
+                <div class="sesion-toggle">▼</div>
             </div>
-
-            <!-- Video 2 - EJEMPLO (puedes borrarlo o agregar otro) -->
-           <div class="video-card">
-                <div class="video-wrapper">
-                    <iframe width="560" height="315" src="https://www.youtube.com/embed/E_8IdfhULeE?si=qLRLCKNKQjNypJni" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-                </div>
-                <div class="video-info">
-                    <h3 style="text-align: center;">2da Sesión Ordinaria - Octubre 2025</h3>
-                    <p style="text-align: justify;">Asesoría en línea dirigida a autoridades educativas correspondiente a la Segunda Sesión Ordinaria del Consejo Técnico Escolar, ciclo escolar 2025-2026.</p>
-                </div>
-            </div>
-
-            <!-- Video 3 - EJEMPLO -->
-            <div class="video-card">
-                <div class="video-wrapper">
-                    <div style="width: 100%; height: 100%; background: #c3b08f; display: flex; align-items: center; justify-content: center; color: #56212f; font-weight: 600;">
-                        Próximo Video
+            
+                <!-- Video -->
+                <div class="video-container">
+                    <h3>📹 Video de la Sesión</h3>
+                    <div class="video-wrapper">
+                        <iframe 
+                            width="560" 
+                            height="315" 
+                            src="https://www.youtube.com/embed/1vFCnnWKkzg?si=g0h0rh4lsl1D7SdH" 
+                            title="YouTube video player" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                            referrerpolicy="strict-origin-when-cross-origin" 
+                            allowfullscreen>
+                        </iframe>
                     </div>
                 </div>
-                <div class="video-info">
-                    <h3>Próxima Sesión CTE</h3>
-                    <p>Aquí aparecerá el siguiente video.</p>
+
+                <!-- Materiales -->
+                <div class="materiales-section">
+                    <h3><span>📚</span> Materiales Individuales</h3>
+                    
+                    <div class="materiales-grid">
+                        <!-- Carta Descriptiva Tema 7 -->
+                        <a href="pdfs/cte/quinta-sesion/carta-descriptiva-tema7.docx" class="material-item" download>
+                            <div class="material-icon">📝</div>
+                            <div class="material-info">
+                                <strong>Carta Descriptiva Tema 7</strong>
+                                <span>Integración Curricular • DOCX</span>
+                            </div>
+                        </a>
+
+                        <!-- Carta Descriptiva Tema 9 -->
+                        <a href="pdfs/cte/quinta-sesion/carta-descriptiva-tema9.docx" class="material-item" download>
+                            <div class="material-icon">📝</div>
+                            <div class="material-info">
+                                <strong>Carta Descriptiva Tema 9</strong>
+                                <span>Reflexión sobre la Práctica • DOCX</span>
+                            </div>
+                        </a>
+
+                        <!-- Presentación Directores y Supervisores -->
+                        <a href="pdfs/cte/quinta-sesion/presentacion-directores-supervisores.pptx" class="material-item" download>
+                            <div class="material-icon">📊</div>
+                            <div class="material-info">
+                                <strong>Presentación SEPRN</strong>
+                                <span>Directores y Supervisores • PPTX</span>
+                            </div>
+                        </a>
+
+                        <!-- Presentación Tema 7 -->
+                        <a href="pdfs/cte/quinta-sesion/presentacion-tema7.pptx" class="material-item" download>
+                            <div class="material-icon">📊</div>
+                            <div class="material-info">
+                                <strong>Presentación Tema 7</strong>
+                                <span>Integración Curricular • PPTX</span>
+                            </div>
+                        </a>
+
+                        <!-- Presentación Tema 9 -->
+                        <a href="pdfs/cte/quinta-sesion/presentacion-tema9.pptx" class="material-item" download>
+                            <div class="material-icon">📊</div>
+                            <div class="material-info">
+                                <strong>Presentación Tema 9</strong>
+                                <span>Reflexión sobre la Práctica • PPTX</span>
+                            </div>
+                        </a>
+                    </div>
+
+            <div class="sesion-content">
+                <!-- Descargar Todo -->
+                <div class="download-all-section">
+                    <div class="download-all-text">
+                        <h4>📦 Descargar Paquete Completo</h4>
+                        <p>Descarga todos los materiales de esta sesión en un solo archivo ZIP</p>
+                    </div>
+                    <a href="pdfs/cte/quinta-sesion/quinta-sesion-completa.zip" class="download-all-btn" download>
+                        <span style="font-size: 20px;">📥</span>
+                        Descargar Todo
+                    </a>
+                </div>
+
+                    <!-- Link SEP -->
+                    <div class="link-sep">
+                        <div class="link-sep-text">
+                            <h4>🔗 Recursos Adicionales SEP</h4>
+                            <p>Insumos y materiales complementarios oficiales</p>
+                        </div>
+                        <a href="https://gestion.cte.sep.gob.mx/insumos/#!/" target="_blank">
+                            Ir al Portal SEP <span>→</span>
+                        </a>
+                    </div>
+                </div>
+
+        </div>
+
+        <!-- Sesión de Ejemplo (COLAPSADA) -->
+        <!-- Copia este bloque para agregar más sesiones -->
+        <!--
+        <div class="sesion-accordion">
+            <div class="sesion-header" onclick="toggleSesion(this)">
+                <div class="sesion-header-text">
+                    <h2>📅 Cuarta Sesión Ordinaria 2025-2026</h2>
+                    <p>Materiales y video de la cuarta sesión ordinaria</p>
+                </div>
+                <div class="sesion-toggle">▶</div>
+            </div>
+            
+            <div class="sesion-content">
+                <div class="download-all-section">
+                    <div class="download-all-text">
+                        <h4>📦 Descargar Paquete Completo</h4>
+                        <p>Descarga todos los materiales de esta sesión en un solo archivo ZIP</p>
+                    </div>
+                    <a href="pdfs/cte/cuarta-sesion/cuarta-sesion-completa.zip" class="download-all-btn" download>
+                        <span style="font-size: 20px;">📥</span>
+                        Descargar Todo
+                    </a>
+                </div>
+
+                <div class="video-container">
+                    <h3>📹 Video de la Sesión</h3>
+                    <div class="video-wrapper">
+                        <iframe 
+                            width="560" 
+                            height="315" 
+                            src="https://www.youtube.com/embed/TU_VIDEO_ID" 
+                            title="YouTube video player" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+                </div>
+
+                <div class="materiales-section">
+                    <h3><span>📚</span> Materiales Individuales</h3>
+                    <div class="materiales-grid">
+                        Aquí van los materiales...
+                    </div>
                 </div>
             </div>
         </div>
+        -->
 
-       
+        <!-- Info Box -->
+        <div class="info-box">
+            <h3>📆 Próximas Sesiones</h3>
+            <p>Los materiales de las próximas sesiones del Consejo Técnico Escolar se publicarán aquí conforme estén disponibles. Mantente al pendiente de las actualizaciones.</p>
+        </div>
+
     </section>
 
     <!-- Footer -->
@@ -95,5 +488,24 @@
             </div>
         </div>
     </footer>
+
+    <script>
+        function toggleSesion(header) {
+            const accordion = header.parentElement;
+            const wasActive = accordion.classList.contains('active');
+            
+            // Close all accordions
+            document.querySelectorAll('.sesion-accordion').forEach(acc => {
+                acc.classList.remove('active');
+                acc.querySelector('.sesion-toggle').textContent = '▶';
+            });
+            
+            // Open clicked accordion if it wasn't active
+            if (!wasActive) {
+                accordion.classList.add('active');
+                accordion.querySelector('.sesion-toggle').textContent = '▼';
+            }
+        }
+    </script>
 </body>
 </html>
