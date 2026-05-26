@@ -1,16 +1,17 @@
 <!DOCTYPE html>
 <html lang="es">
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-7D68DB8ELW"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-7D68DB8ELW');
-</script>
 <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-7D68DB8ELW"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-7D68DB8ELW');
+    </script>
     <meta charset="UTF-8">
+    <meta name="description" content="Grabaciones y materiales de las sesiones del Consejo Técnico Escolar 2025-2026 para directivos y docentes de la Región de Nezahualcóyotl.">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CTE - SEPRN</title>
     <link rel="stylesheet" href="styles.css">
@@ -176,8 +177,14 @@
             transform: translateX(3px);
         }
         .material-icon {
-            font-size: 24px;
+            width: 38px;
+            height: 38px;
             flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(159, 34, 65, 0.07);
+            border-radius: 8px;
         }
         .material-info {
             flex: 1;
@@ -292,6 +299,11 @@
     <header>
         <nav>
             <div class="logo">SEPRN</div>
+        <button class="nav-toggle" aria-label="Abrir menú" aria-expanded="false">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
             <ul>
                 <li><a href="index.html">Inicio</a></li>
                 <li><a href="nosotros.html">Nosotros</a></li>
@@ -309,11 +321,143 @@
             Encuentra aquí las grabaciones de las sesiones del Consejo Técnico Escolar, así como los materiales, insumos y recursos de apoyo para directivos y docentes de la región.
         </p>
 
-<!-- Sexta Sesión Ordinaria (ABIERTA POR DEFECTO) -->
+<!-- Séptima Sesión Ordinaria (ABIERTA POR DEFECTO) -->
 <div class="sesion-accordion active">
     <div class="sesion-header" onclick="toggleSesion(this)">
         <div class="sesion-header-text">
-            <h2>📅 Sexta Sesión Ordinaria 2025-2026 <span style="display: inline-block; background: #ff3b3b; color: white; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 6px; margin-left: 10px; vertical-align: middle;">NUEVO</span></h2>
+            <h2>Séptima Sesión Ordinaria 2025-2026 <span style="display: inline-block; background: #ff3b3b; color: white; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 6px; margin-left: 10px; vertical-align: middle;">NUEVO</span></h2>
+            <p>Materiales, presentaciones y video de la séptima sesión del Consejo Técnico Escolar</p>
+        </div>
+        <div class="sesion-toggle">▼</div>
+    </div>
+
+    <div class="sesion-content">
+
+        <!-- Opening -->
+        <div class="video-container">
+            <h3>Opening de la Sesión</h3>
+            <div class="video-wrapper">
+                <iframe
+                    width="560"
+                    height="315"
+                    src="https://www.youtube.com/embed/oUA9r4zKdgo?si=HnLsUqp0KnY5EH-q"
+                    title="Opening Séptima Sesión CTE"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerpolicy="strict-origin-when-cross-origin"
+                    allowfullscreen>
+                </iframe>
+            </div>
+        </div>
+
+        <!-- Grabación pendiente -->
+        <div class="video-container">
+            <h3>Grabación de la Sesión</h3>
+            <div style="background: #f9f8f6; border-radius: 12px; padding: 30px; text-align: center; border: 2px dashed #d6d1ca;">
+                <p style="margin: 0; font-size: 14px; color: #977e5b; font-weight: 500;">La grabación completa de esta sesión estará disponible próximamente.</p>
+            </div>
+        </div>
+
+        <!-- Materiales -->
+        <div class="materiales-section">
+            <h3>Materiales Individuales</h3>
+
+            <div class="materiales-grid">
+                <a href="pdfs/cte/septima-sesion/S%C3%A9ptima-Sesi%C3%B3n-Ordinaria-CTE.pptx" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="9" cy="10" r="2"/><path d="M13 8h4M13 12h4"/></svg></div>
+                    <div class="material-info">
+                        <strong>Presentación SEPRN</strong>
+                        <span>Séptima Sesión Ordinaria • PPTX</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/septima-sesion/Cuadernos-desarrollo-matem%C3%A1ticas-fase3.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Cuadernos Desarrollo de Matemáticas — Fase 3</strong>
+                        <span>Desarrollo del Pensamiento Matemático • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/septima-sesion/Cuadernos-desarrollo-matem%C3%A1ticas-fase4.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Cuadernos Desarrollo de Matemáticas — Fase 4</strong>
+                        <span>Desarrollo del Pensamiento Matemático • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/septima-sesion/Cuadernos-desarrollo-matem%C3%A1ticas-fase5.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Cuadernos Desarrollo de Matemáticas — Fase 5</strong>
+                        <span>Desarrollo del Pensamiento Matemático • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/septima-sesion/Cuadernos-desarrollo-matem%C3%A1ticas-fase5-parte-II.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Cuadernos Desarrollo de Matemáticas — Fase 5, Parte II</strong>
+                        <span>Desarrollo del Pensamiento Matemático • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/septima-sesion/estrategias-de-calculo-fase3%20segundo-1.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Estrategias de Cálculo — Fase 3</strong>
+                        <span>Segundo Grado • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/septima-sesion/M%C3%A1s-de-uno-pero-menos-de-dos-Fracciones-y-decimales.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Más de Uno Pero Menos de Dos</strong>
+                        <span>Fracciones y Decimales • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/septima-sesion/Narrativa-La-Inteligencia-Artificial-herramienta-y-aliada-en-el-quehacer-docente.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>La IA: Herramienta y Aliada Docente</strong>
+                        <span>Narrativa Pedagógica • PDF</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Descargar Todo -->
+        <div class="download-all-section">
+            <div class="download-all-text">
+                <h4>Descargar Paquete Completo</h4>
+                <p>Descarga todos los materiales de esta sesión en un solo archivo ZIP</p>
+            </div>
+            <a href="pdfs/cte/septima-sesion/S%C3%A9ptima-sesion-completa.zip" class="download-all-btn" download>
+                Descargar Todo
+            </a>
+        </div>
+
+        <!-- Link SEP -->
+        <div class="link-sep">
+            <div class="link-sep-text">
+                <h4>Recursos Adicionales SEP</h4>
+                <p>Insumos y materiales complementarios oficiales</p>
+            </div>
+            <a href="https://www.gestion.cte.sep.gob.mx/insumos/#!/" target="_blank" rel="noopener noreferrer">
+                Ir al Portal SEP <span>→</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Sexta Sesión Ordinaria -->
+<div class="sesion-accordion">
+    <div class="sesion-header" onclick="toggleSesion(this)">
+        <div class="sesion-header-text">
+            <h2>Sexta Sesión Ordinaria 2025-2026</h2>
             <p>Materiales, presentaciones y video de la sexta sesión del Consejo Técnico Escolar</p>
         </div>
         <div class="sesion-toggle">▼</div>
@@ -323,12 +467,12 @@
 
         <!-- Videos -->
         <div class="video-container">
-            <h3>🎬 Opening de la Sesión</h3>
+            <h3>Opening de la Sesión</h3>
             <div class="video-wrapper">
                 <iframe 
                     width="560" 
                     height="315" 
-                    src="https://www.youtube.com/embed/k3JZp4rLafA?si=-MCmUSPDcNsDdZr_" 
+                    data-src="https://www.youtube.com/embed/k3JZp4rLafA?si=-MCmUSPDcNsDdZr_" 
                     title="Opening Sexta Sesión CTE" 
                     frameborder="0" 
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
@@ -339,12 +483,12 @@
         </div>
 
         <div class="video-container">
-            <h3>📹 Grabación de la Sesión</h3>
+            <h3>Grabación de la Sesión</h3>
             <div class="video-wrapper">
                 <iframe 
                     width="560" 
                     height="315" 
-                    src="https://www.youtube.com/embed/yyAF0y0QPqA?si=K6PQIC6OSGOrjoiZ" 
+                    data-src="https://www.youtube.com/embed/yyAF0y0QPqA?si=K6PQIC6OSGOrjoiZ" 
                     title="Grabación Sexta Sesión CTE" 
                     frameborder="0" 
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
@@ -356,12 +500,12 @@
 
         <!-- Materiales -->
         <div class="materiales-section">
-            <h3><span>📚</span> Materiales Individuales</h3>
+            <h3>Materiales Individuales</h3>
             
             <div class="materiales-grid">
                 <!-- Carta Descriptiva Tema 8 -->
                 <a href="pdfs/cte/sexta-sesion/carta-descriptiva-tema8.docx" class="material-item" download>
-                    <div class="material-icon">📝</div>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></div>
                     <div class="material-info">
                         <strong>Carta Descriptiva Tema 8</strong>
                         <span>Ejes Articuladores • DOCX</span>
@@ -370,7 +514,7 @@
 
                 <!-- Carta Descriptiva Tema 12 -->
                 <a href="pdfs/cte/sexta-sesion/carta-descriptiva-tema12.docx" class="material-item" download>
-                    <div class="material-icon">📝</div>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></div>
                     <div class="material-info">
                         <strong>Carta Descriptiva Tema 12</strong>
                         <span>Infancias y Adolescencias Trans y No Binarias • DOCX</span>
@@ -379,7 +523,7 @@
 
                 <!-- Presentación Directores y Supervisores -->
                 <a href="pdfs/cte/sexta-sesion/presentacion-directores-supervisores.pptx" class="material-item" download>
-                    <div class="material-icon">📊</div>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="9" cy="10" r="2"/><path d="M13 8h4M13 12h4"/></svg></div>
                     <div class="material-info">
                         <strong>Presentación SEPRN</strong>
                         <span>Directores y Supervisores • PPTX</span>
@@ -388,7 +532,7 @@
 
                 <!-- Presentación Rezago Educativo -->
                 <a href="pdfs/cte/sexta-sesion/presentacion-rezago.pptx" class="material-item" download>
-                    <div class="material-icon">📊</div>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="9" cy="10" r="2"/><path d="M13 8h4M13 12h4"/></svg></div>
                     <div class="material-info">
                         <strong>Presentación Rezago Educativo</strong>
                         <span>Análisis de Rezago • PPTX</span>
@@ -397,7 +541,7 @@
 
                 <!-- Presentación Tema 8 -->
                 <a href="pdfs/cte/sexta-sesion/presentacion-tema8.pptx" class="material-item" download>
-                    <div class="material-icon">📊</div>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="9" cy="10" r="2"/><path d="M13 8h4M13 12h4"/></svg></div>
                     <div class="material-info">
                         <strong>Presentación Tema 8</strong>
                         <span>Ejes Articuladores • PPTX</span>
@@ -406,7 +550,7 @@
 
                 <!-- Presentación Tema 12 -->
                 <a href="pdfs/cte/sexta-sesion/presentacion-tema12.pptx" class="material-item" download>
-                    <div class="material-icon">📊</div>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="9" cy="10" r="2"/><path d="M13 8h4M13 12h4"/></svg></div>
                     <div class="material-info">
                         <strong>Presentación Tema 12</strong>
                         <span>Infancias y Adolescencias Trans y No Binarias • PPTX</span>
@@ -415,7 +559,7 @@
 
                 <!-- Orientaciones Tema 8 -->
                 <a href="pdfs/cte/sexta-sesion/orientaciones-tema8.pdf" class="material-item" download>
-                    <div class="material-icon">📄</div>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 13h1a2 2 0 0 1 0 4H9v-4"/><path d="M14 13v4"/><path d="M14 15h2"/><path d="M19 13v4"/><path d="M19 15h1"/></svg></div>
                     <div class="material-info">
                         <strong>Orientaciones Tema 8</strong>
                         <span>Ejes Articuladores • PDF</span>
@@ -424,7 +568,7 @@
 
                 <!-- Orientaciones Tema 12 -->
                 <a href="pdfs/cte/sexta-sesion/orientaciones-tema12.pdf" class="material-item" download>
-                    <div class="material-icon">📄</div>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 13h1a2 2 0 0 1 0 4H9v-4"/><path d="M14 13v4"/><path d="M14 15h2"/><path d="M19 13v4"/><path d="M19 15h1"/></svg></div>
                     <div class="material-info">
                         <strong>Orientaciones Tema 12</strong>
                         <span>Infancias y Adolescencias Trans y No Binarias • PDF</span>
@@ -436,11 +580,10 @@
         <!-- Descargar Todo -->
         <div class="download-all-section">
             <div class="download-all-text">
-                <h4>📦 Descargar Paquete Completo</h4>
+                <h4>Descargar Paquete Completo</h4>
                 <p>Descarga todos los materiales de esta sesión en un solo archivo ZIP</p>
             </div>
             <a href="pdfs/cte/sexta-sesion/sexta-sesion-completa.zip" class="download-all-btn" download>
-                <span style="font-size: 20px;">📥</span>
                 Descargar Todo
             </a>
         </div>
@@ -448,10 +591,10 @@
         <!-- Link SEP -->
         <div class="link-sep">
             <div class="link-sep-text">
-                <h4>🔗 Recursos Adicionales SEP</h4>
+                <h4>Recursos Adicionales SEP</h4>
                 <p>Insumos y materiales complementarios oficiales</p>
             </div>
-            <a href="https://www.gestion.cte.sep.gob.mx/insumos/#!/" target="_blank">
+            <a href="https://www.gestion.cte.sep.gob.mx/insumos/#!/" target="_blank" rel="noopener noreferrer">
                 Ir al Portal SEP <span>→</span>
             </a>
         </div>
@@ -462,7 +605,7 @@
 <div class="sesion-accordion">
     <div class="sesion-header" onclick="toggleSesion(this)">
         <div class="sesion-header-text">
-            <h2>📅 Quinta Sesión Ordinaria 2025-2026</h2>
+            <h2>Quinta Sesión Ordinaria 2025-2026</h2>
             <p>Materiales, presentaciones y video de la quinta sesión del Consejo Técnico Escolar</p>
         </div>
         <div class="sesion-toggle">▼</div>
@@ -472,12 +615,12 @@
 
         <!-- Videos -->
         <div class="video-container">
-            <h3>🎬 Opening de la Sesión</h3>
+            <h3>Opening de la Sesión</h3>
             <div class="video-wrapper">
                 <iframe 
                     width="560" 
                     height="315" 
-                    src="https://www.youtube.com/embed/J2PULvX4XwM?si=CSApvEPLuzuz3eeI" 
+                    data-src="https://www.youtube.com/embed/J2PULvX4XwM?si=CSApvEPLuzuz3eeI" 
                     title="Opening Quinta Sesión CTE" 
                     frameborder="0" 
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
@@ -488,16 +631,16 @@
         </div>
 
         <div class="video-container">
-            <h3>📹 Grabación de la Sesión</h3>
+            <h3>Grabación de la Sesión</h3>
             <div class="video-wrapper">
                 <iframe 
                     width="560" 
                     height="315" 
-                    src="https://www.youtube.com/embed/m0AFF56RSDw?si=0aW4a4H3jM39YDsS" 
+                    data-src="https://www.youtube.com/embed/m0AFF56RSDw?si=0aW4a4H3jM39YDsS" 
                     title="Grabación Quinta Sesión CTE" 
                     frameborder="0" 
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                    referrerpolicy="strict-origin-when-cross-cross" 
+                    referrerpolicy="strict-origin-when-cross-origin" 
                     allowfullscreen>
                 </iframe>
             </div>
@@ -505,12 +648,12 @@
 
         <!-- Materiales -->
         <div class="materiales-section">
-            <h3><span>📚</span> Materiales Individuales</h3>
+            <h3>Materiales Individuales</h3>
             
             <div class="materiales-grid">
                 <!-- Carta Descriptiva Tema 7 -->
                 <a href="pdfs/cte/quinta-sesion/carta-descriptiva-tema7.docx" class="material-item" download>
-                    <div class="material-icon">📝</div>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></div>
                     <div class="material-info">
                         <strong>Carta Descriptiva Tema 7</strong>
                         <span>Integración Curricular • DOCX</span>
@@ -519,7 +662,7 @@
 
                 <!-- Carta Descriptiva Tema 9 -->
                 <a href="pdfs/cte/quinta-sesion/carta-descriptiva-tema9.docx" class="material-item" download>
-                    <div class="material-icon">📝</div>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></div>
                     <div class="material-info">
                         <strong>Carta Descriptiva Tema 9</strong>
                         <span>Reflexión sobre la Práctica • DOCX</span>
@@ -528,7 +671,7 @@
 
                 <!-- Presentación Directores y Supervisores -->
                 <a href="pdfs/cte/quinta-sesion/presentacion-directores-supervisores.pptx" class="material-item" download>
-                    <div class="material-icon">📊</div>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="9" cy="10" r="2"/><path d="M13 8h4M13 12h4"/></svg></div>
                     <div class="material-info">
                         <strong>Presentación SEPRN</strong>
                         <span>Directores y Supervisores • PPTX</span>
@@ -537,7 +680,7 @@
 
                 <!-- Presentación Tema 7 -->
                 <a href="pdfs/cte/quinta-sesion/presentacion-tema7.pptx" class="material-item" download>
-                    <div class="material-icon">📊</div>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="9" cy="10" r="2"/><path d="M13 8h4M13 12h4"/></svg></div>
                     <div class="material-info">
                         <strong>Presentación Tema 7</strong>
                         <span>Integración Curricular • PPTX</span>
@@ -546,7 +689,7 @@
 
                 <!-- Presentación Tema 9 -->
                 <a href="pdfs/cte/quinta-sesion/presentacion-tema9.pptx" class="material-item" download>
-                    <div class="material-icon">📊</div>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="9" cy="10" r="2"/><path d="M13 8h4M13 12h4"/></svg></div>
                     <div class="material-info">
                         <strong>Presentación Tema 9</strong>
                         <span>Reflexión sobre la Práctica • PPTX</span>
@@ -557,11 +700,10 @@
 <!-- Descargar Todo -->
         <div class="download-all-section">
             <div class="download-all-text">
-                <h4>📦 Descargar Paquete Completo</h4>
+                <h4>Descargar Paquete Completo</h4>
                 <p>Descarga todos los materiales de esta sesión en un solo archivo ZIP</p>
             </div>
             <a href="pdfs/cte/quinta-sesion/quinta-sesion-completa.zip" class="download-all-btn" download>
-                <span style="font-size: 20px;">📥</span>
                 Descargar Todo
             </a>
         </div>
@@ -569,10 +711,10 @@
             <!-- Link SEP -->
             <div class="link-sep">
                 <div class="link-sep-text">
-                    <h4>🔗 Recursos Adicionales SEP</h4>
+                    <h4>Recursos Adicionales SEP</h4>
                     <p>Insumos y materiales complementarios oficiales</p>
                 </div>
-                <a href="https://gestion.cte.sep.gob.mx/insumos/#!/" target="_blank">
+                <a href="https://gestion.cte.sep.gob.mx/insumos/#!/" target="_blank" rel="noopener noreferrer">
                     Ir al Portal SEP <span>→</span>
                 </a>
             </div>
@@ -584,7 +726,7 @@
 <div class="sesion-accordion">
     <div class="sesion-header" onclick="toggleSesion(this)">
         <div class="sesion-header-text">
-            <h2>📅 Cuarta Sesión Ordinaria 2025-2026</h2>
+            <h2>Cuarta Sesión Ordinaria 2025-2026</h2>
             <p>Materiales, presentaciones y video de la cuarta sesión del Consejo Técnico Escolar</p>
         </div>
         <div class="sesion-toggle">▼</div>
@@ -594,12 +736,12 @@
 
         <!-- Video -->
         <div class="video-container">
-            <h3>📹 Video de la Sesión</h3>
+            <h3>Video de la Sesión</h3>
             <div class="video-wrapper">
                 <iframe 
                     width="560" 
                     height="315" 
-                    src="https://www.youtube.com/embed/lEZvJhxcHSE?si=Jjc4i5EbiahIRDN3" 
+                    data-src="https://www.youtube.com/embed/lEZvJhxcHSE?si=Jjc4i5EbiahIRDN3" 
                     title="YouTube video player" 
                     frameborder="0" 
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
@@ -615,7 +757,7 @@
 <div class="sesion-accordion">
     <div class="sesion-header" onclick="toggleSesion(this)">
         <div class="sesion-header-text">
-            <h2>📅 Taller Intensivo CTE 2025-2026</h2>
+            <h2>Taller Intensivo CTE 2025-2026</h2>
             <p>Materiales, presentaciones y video del Taller Intensivo del Consejo Técnico Escolar</p>
         </div>
         <div class="sesion-toggle">▼</div>
@@ -625,12 +767,12 @@
 
         <!-- Video -->
         <div class="video-container">
-            <h3>📹 Video de la Sesión</h3>
+            <h3>Video de la Sesión</h3>
             <div class="video-wrapper">
                 <iframe 
                     width="560" 
                     height="315" 
-                    src="https://www.youtube.com/embed/NPq6wjpFJsY?si=hpRqtV3fgBivACHI" 
+                    data-src="https://www.youtube.com/embed/NPq6wjpFJsY?si=hpRqtV3fgBivACHI" 
                     title="YouTube video player" 
                     frameborder="0" 
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
@@ -646,7 +788,7 @@
 <div class="sesion-accordion">
     <div class="sesion-header" onclick="toggleSesion(this)">
         <div class="sesion-header-text">
-            <h2>📅 Tercera Sesión Ordinaria 2025-2026</h2>
+            <h2>Tercera Sesión Ordinaria 2025-2026</h2>
             <p>Materiales, presentaciones y video de la tercera sesión del Consejo Técnico Escolar</p>
         </div>
         <div class="sesion-toggle">▼</div>
@@ -656,12 +798,12 @@
 
         <!-- Video -->
         <div class="video-container">
-            <h3>📹 Video de la Sesión</h3>
+            <h3>Video de la Sesión</h3>
             <div class="video-wrapper">
                 <iframe 
                     width="560" 
                     height="315" 
-                    src="https://www.youtube.com/embed/L7G7fwDi25A?si=28Ln6hRB9bTGdfIb" 
+                    data-src="https://www.youtube.com/embed/L7G7fwDi25A?si=28Ln6hRB9bTGdfIb" 
                     title="YouTube video player" 
                     frameborder="0" 
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
@@ -677,7 +819,7 @@
 <div class="sesion-accordion">
     <div class="sesion-header" onclick="toggleSesion(this)">
         <div class="sesion-header-text">
-            <h2>📅 Segunda Sesión Ordinaria 2025-2026</h2>
+            <h2>Segunda Sesión Ordinaria 2025-2026</h2>
             <p>Materiales, presentaciones y video de la segunda sesión del Consejo Técnico Escolar</p>
         </div>
         <div class="sesion-toggle">▼</div>
@@ -687,12 +829,12 @@
 
         <!-- Videos -->
         <div class="video-container">
-            <h3>🎬 Opening de la Sesión</h3>
+            <h3>Opening de la Sesión</h3>
             <div class="video-wrapper">
                 <iframe 
                     width="560" 
                     height="315" 
-                    src="https://www.youtube.com/embed/ysX2Lj3xx3s?si=QjOVbu7euB4YBzBa" 
+                    data-src="https://www.youtube.com/embed/ysX2Lj3xx3s?si=QjOVbu7euB4YBzBa" 
                     title="Opening Segunda Sesión CTE" 
                     frameborder="0" 
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
@@ -703,16 +845,16 @@
         </div>
 
         <div class="video-container">
-            <h3>📹 Grabación de la Sesión</h3>
+            <h3>Grabación de la Sesión</h3>
             <div class="video-wrapper">
                 <iframe 
                     width="560" 
                     height="315" 
-                    src="https://www.youtube.com/embed/E_8IdfhULeE?si=Thbl_leOt9zBWFxK" 
+                    data-src="https://www.youtube.com/embed/E_8IdfhULeE?si=Thbl_leOt9zBWFxK" 
                     title="Grabación Segunda Sesión CTE" 
                     frameborder="0" 
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                    referrerpolicy="strict-origin-when-cross-cross" 
+                    referrerpolicy="strict-origin-when-cross-origin" 
                     allowfullscreen>
                 </iframe>
             </div>
@@ -724,7 +866,7 @@
 <div class="sesion-accordion">
     <div class="sesion-header" onclick="toggleSesion(this)">
         <div class="sesion-header-text">
-            <h2>📅 Primera Sesión Ordinaria 2025-2026</h2>
+            <h2>Primera Sesión Ordinaria 2025-2026</h2>
             <p>Materiales, presentaciones y video de la primera sesión del Consejo Técnico Escolar</p>
         </div>
         <div class="sesion-toggle">▼</div>
@@ -734,12 +876,12 @@
 
         <!-- Video -->
         <div class="video-container">
-            <h3>📹 Video de la Sesión</h3>
+            <h3>Video de la Sesión</h3>
             <div class="video-wrapper">
                 <iframe 
                     width="560" 
                     height="315" 
-                    src="https://www.youtube.com/embed/1vFCnnWKkzg?si=z8ueRE2NUZ3Qw0Fw" 
+                    data-src="https://www.youtube.com/embed/1vFCnnWKkzg?si=z8ueRE2NUZ3Qw0Fw" 
                     title="YouTube video player" 
                     frameborder="0" 
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
@@ -755,7 +897,7 @@
 <div class="sesion-accordion">
     <div class="sesion-header" onclick="toggleSesion(this)">
         <div class="sesion-header-text">
-            <h2>📅 Fase Intensiva 2025-2026</h2>
+            <h2>Fase Intensiva 2025-2026</h2>
             <p>Materiales, presentaciones y video de la Fase Intensiva del Consejo Técnico Escolar</p>
         </div>
         <div class="sesion-toggle">▼</div>
@@ -765,12 +907,12 @@
 
         <!-- Video -->
         <div class="video-container">
-            <h3>📹 Video Opening de la Sesión</h3>
+            <h3>Video Opening de la Sesión</h3>
             <div class="video-wrapper">
                 <iframe 
                     width="560" 
                     height="315" 
-                    src="https://www.youtube.com/embed/djBBRNrFetE?si=cwf-nhilqou-CWCU" 
+                    data-src="https://www.youtube.com/embed/djBBRNrFetE?si=cwf-nhilqou-CWCU" 
                     title="YouTube video player" 
                     frameborder="0" 
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
@@ -788,7 +930,7 @@
         <div class="sesion-accordion">
             <div class="sesion-header" onclick="toggleSesion(this)">
                 <div class="sesion-header-text">
-                    <h2>📅 Cuarta Sesión Ordinaria 2025-2026</h2>
+                    <h2>Cuarta Sesión Ordinaria 2025-2026</h2>
                     <p>Materiales y video de la cuarta sesión ordinaria</p>
                 </div>
                 <div class="sesion-toggle">▶</div>
@@ -797,22 +939,22 @@
             <div class="sesion-content">
                 <div class="download-all-section">
                     <div class="download-all-text">
-                        <h4>📦 Descargar Paquete Completo</h4>
+                        <h4>Descargar Paquete Completo</h4>
                         <p>Descarga todos los materiales de esta sesión en un solo archivo ZIP</p>
                     </div>
                     <a href="pdfs/cte/cuarta-sesion/cuarta-sesion-completa.zip" class="download-all-btn" download>
-                        <span style="font-size: 20px;">📥</span>
+                        <span style="font-size: 20px;"></span>
                         Descargar Todo
                     </a>
                 </div>
 
                 <div class="video-container">
-                    <h3>📹 Video de la Sesión</h3>
+                    <h3>Video de la Sesión</h3>
                     <div class="video-wrapper">
                         <iframe 
                             width="560" 
                             height="315" 
-                            src="https://www.youtube.com/embed/TU_VIDEO_ID" 
+                            data-src="https://www.youtube.com/embed/TU_VIDEO_ID" 
                             title="YouTube video player" 
                             frameborder="0" 
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
@@ -822,7 +964,7 @@
                 </div>
 
                 <div class="materiales-section">
-                    <h3><span>📚</span> Materiales Individuales</h3>
+                    <h3>Materiales Individuales</h3>
                     <div class="materiales-grid">
                         Aquí van los materiales...
                     </div>
@@ -833,7 +975,7 @@
 
         <!-- Info Box -->
         <div class="info-box">
-            <h3>📆 Próximas Sesiones</h3>
+            <h3>Próximas Sesiones</h3>
             <p>Los materiales de las próximas sesiones del Consejo Técnico Escolar se publicarán aquí conforme estén disponibles. Mantente al pendiente de las actualizaciones.</p>
         </div>
 
@@ -848,12 +990,12 @@
             <p>Lunes a Viernes de 08:30 a 15:30 hrs</p>
             
             <div class="social-links">
-                <a href="https://www.facebook.com/SubNeza" target="_blank" title="Facebook">
+                <a href="https://www.facebook.com/SubNeza" target="_blank" rel="noopener noreferrer" title="Facebook">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                     </svg>
                 </a>
-                <a href="https://www.youtube.com/channel/UCvDb2DPSJxFyhH3bCPd5D2Q" target="_blank" title="YouTube">
+                <a href="https://www.youtube.com/channel/UCvDb2DPSJxFyhH3bCPd5D2Q" target="_blank" rel="noopener noreferrer" title="YouTube">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                     </svg>
@@ -870,19 +1012,23 @@
         function toggleSesion(header) {
             const accordion = header.parentElement;
             const wasActive = accordion.classList.contains('active');
-            
-            // Close all accordions
-            document.querySelectorAll('.sesion-accordion').forEach(acc => {
+
+            document.querySelectorAll('.sesion-accordion').forEach(function(acc) {
                 acc.classList.remove('active');
                 acc.querySelector('.sesion-toggle').textContent = '▶';
             });
-            
-            // Open clicked accordion if it wasn't active
+
             if (!wasActive) {
                 accordion.classList.add('active');
                 accordion.querySelector('.sesion-toggle').textContent = '▼';
+                // Lazy load iframes on first open
+                accordion.querySelectorAll('iframe[data-src]').forEach(function(iframe) {
+                    iframe.src = iframe.dataset.src;
+                    iframe.removeAttribute('data-src');
+                });
             }
         }
     </script>
+    <script src="script.js" defer></script>
 </body>
 </html>

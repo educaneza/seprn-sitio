@@ -8,9 +8,16 @@
 
 body {
     font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    color: #000000;
+    color: #333333;
     background: #fff;
     line-height: 1.6;
+}
+
+/* Focus visible for keyboard accessibility */
+:focus-visible {
+    outline: 2px solid #9F2241;
+    outline-offset: 3px;
+    border-radius: 3px;
 }
 
 /* Header Navigation */
@@ -55,6 +62,54 @@ nav a {
 
 nav a:hover {
     color: #9F2241;
+}
+
+nav a.active {
+    color: #9F2241;
+    font-weight: 600;
+    border-bottom: 2px solid #9F2241;
+    padding-bottom: 2px;
+}
+
+/* Hamburger toggle button — hidden on desktop */
+.nav-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.nav-toggle:hover {
+    background: rgba(86, 33, 47, 0.08);
+}
+
+.nav-toggle span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: #56212f;
+    border-radius: 2px;
+    transition: transform 0.3s, opacity 0.3s;
+    transform-origin: center;
+}
+
+.nav-toggle.open span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.nav-toggle.open span:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0);
+}
+
+.nav-toggle.open span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
 }
 
 /* Hero Section */
@@ -120,7 +175,7 @@ nav a:hover {
 
 .area-card p {
     font-size: 14px;
-    color: #000000;
+    color: #555555;
     font-weight: 400;
 }
 
@@ -179,7 +234,7 @@ nav a:hover {
 
 .leader p {
     font-size: 14px;
-    color: #000000;
+    color: #555555;
     font-weight: 400;
     line-height: 1.3;
 }
@@ -275,7 +330,7 @@ footer {
 .content-section p {
     font-size: 16px;
     line-height: 1.8;
-    color: #000000;
+    color: #333333;
     margin-bottom: 20px;
 }
 
@@ -287,7 +342,7 @@ footer {
 .content-section li {
     font-size: 16px;
     line-height: 1.8;
-    color: #000000;
+    color: #333333;
     margin-bottom: 15px;
     padding-left: 30px;
     position: relative;
@@ -349,38 +404,84 @@ footer {
 
 .video-info p {
     font-size: 14px;
-    color: #000000;
+    color: #555555;
     line-height: 1.5;
 }
 
-/* Responsive */
+/* Responsive — Mobile First */
 @media (max-width: 768px) {
     .hero h1 {
-        font-size: 40px;
+        font-size: 36px;
+        letter-spacing: -1px;
     }
 
     .hero p {
-        font-size: 19px;
+        font-size: 17px;
     }
 
     nav {
-        flex-direction: column;
-        gap: 20px;
+        padding: 16px 24px;
+        flex-wrap: wrap;
+        gap: 0;
+    }
+
+    .nav-toggle {
+        display: flex;
     }
 
     nav ul {
-        gap: 20px;
+        display: none;
+        width: 100%;
+        flex-direction: column;
+        gap: 0;
+        padding-top: 12px;
+        border-top: 1px solid #f0ede8;
+        margin-top: 12px;
+    }
+
+    nav ul.open {
+        display: flex;
+    }
+
+    nav ul li a {
+        display: block;
+        padding: 12px 4px;
+        border-bottom: 1px solid #f0ede8;
+        font-size: 15px;
+    }
+
+    nav ul li:last-child a {
+        border-bottom: none;
     }
 
     .areas {
         grid-template-columns: 1fr;
+        padding: 0 20px;
+    }
+
+    .content-section {
+        padding: 0 20px;
     }
 
     .content-section h1 {
-        font-size: 36px;
+        font-size: 32px;
     }
 
     .video-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero {
+        padding: 80px 20px 60px;
+    }
+
+    .hero h1 {
+        font-size: 28px;
+    }
+
+    .hero p {
+        font-size: 16px;
     }
 }
