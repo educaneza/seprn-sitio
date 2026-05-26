@@ -4,6 +4,37 @@ Sitio web institucional de la **Subdirección de Educación Primaria en la Regi�
 
 Cubre 18 municipios del oriente del Estado de México organizados en 13 sectores educativos, atendiendo 523 escuelas y más de 121,000 alumnas y alumnos.
 
+**URL de producción:** `https://educaneza.github.io/seprn-sitio/`
+
+---
+
+## Estado del proyecto
+
+Auditoría realizada en mayo 2026. El roadmap completo de mejoras está en [`docs/ROADMAP.md`](docs/ROADMAP.md).
+
+| Dimensión | Score actual | Score objetivo |
+|---|:---:|:---:|
+| UI | 5/10 | 8/10 |
+| UX | 5/10 | 8/10 |
+| Branding | 3/10 | 7/10 |
+| Profesionalismo | 5/10 | 9/10 |
+| Diseño móvil | 4/10 | 8/10 |
+| Performance percibida | 6/10 | 8/10 |
+
+### Completado en mayo 2026
+- Todos los bugs críticos resueltos (GA4 fuera de `<head>`, typo `referrerpolicy`, nav faltante en contacto)
+- Hamburger menu para móvil (`script.js` + `.nav-toggle` CSS)
+- `rel="noopener noreferrer"` en todos los `target="_blank"`
+- `text-align: justify` eliminado
+- Color de texto corregido (`#000` → `#333`)
+- Meta descriptions en páginas clave
+- Lazy loading de iframes en acordeones CTE colapsados
+- Emojis de headings reemplazados por SVG inline (CTE, Areas)
+- Séptima Sesión Ordinaria 2025-2026 agregada a CTE
+
+### Próxima sesión — Fase 1 (Quick Wins)
+Ver [`docs/ROADMAP.md`](docs/ROADMAP.md) para el plan detallado con código listo para aplicar.
+
 ---
 
 ## Stack tecnológico
@@ -12,11 +43,11 @@ Cubre 18 municipios del oriente del Estado de México organizados en 13 sectores
 |---|---|
 | Markup | HTML5 semántico |
 | Estilos | CSS3 (archivo único `styles.css`) |
-| Scripts | Vanilla JavaScript (inline, sin dependencias) |
+| Scripts | Vanilla JavaScript (`script.js` global + inline por página) |
 | Tipografía | Google Fonts — Montserrat (300–700) |
 | Analítica | Google Analytics 4 (`G-7D68DB8ELW`) |
 | Mapas | Google Maps Embed API |
-| Video | YouTube Embed (iframes responsivos) |
+| Video | YouTube Embed (lazy load en acordeones colapsados) |
 | Hosting | GitHub Pages (rama `main`) |
 
 No hay framework, bundler, ni dependencias npm. El sitio es completamente estático.
@@ -47,6 +78,11 @@ seprn-sitio/
 ├── juridico.html                 # Área: Asuntos Jurídicos
 │
 ├── styles.css                    # Hoja de estilos global (única)
+├── script.js                     # JS global: hamburger menu
+│
+├── docs/
+│   ├── ARCHITECTURE.md           # Arquitectura, componentes, convenciones
+│   └── ROADMAP.md                # Plan de mejoras: Fase 1 / 2 / 3
 │
 ├── pdfs/                         # Archivos descargables
 │   ├── chuka-guia-docentes.pdf
@@ -55,7 +91,8 @@ seprn-sitio/
 │   ├── MODELOS_DE_USO_DEL_AULA_DE_MEDIOS.pdf
 │   └── cte/
 │       ├── quinta-sesion/        # Materiales 5ª sesión (DOCX, PPTX, ZIP)
-│       └── sexta-sesion/         # Materiales 6ª sesión (DOCX, PPTX, PDF, ZIP)
+│       ├── sexta-sesion/         # Materiales 6ª sesión (DOCX, PPTX, PDF, ZIP)
+│       └── septima-sesion/       # Materiales 7ª sesión (PPTX, PDF, ZIP)
 │
 └── images/                       # Imágenes estáticas
     ├── CHUKA_INFOGRAFIA.png
@@ -105,10 +142,10 @@ Para actualizar:
 ## Convenciones de desarrollo
 
 - **Un archivo CSS global** (`styles.css`). Los estilos específicos de página van en un bloque `<style>` dentro del `<head>` de esa página.
-- **Sin JavaScript externo**. Todo el JS es inline, al final del `<body>`.
-- **Paleta de colores**: ver `ARCHITECTURE.md` para tokens completos.
-- **Navegación**: el header `<nav>` es idéntico en todas las páginas; al copiar una página nueva, actualizar el `<title>` y marcar el ítem activo con `class="active"`.
-- **Para agregar una nueva sesión CTE**: copiar el bloque `sesion-accordion` comentado al final de `cte.html` y rellenar los campos `src`, `href` y textos.
+- **`script.js`** para JS que aplica a todas las páginas. El JS específico de una página va inline al final del `<body>`.
+- **Paleta de colores y componentes**: ver [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+- **Navegación**: el header `<nav>` es idéntico en todas las páginas (incluye `<button class="nav-toggle">`). Al copiar una página nueva, actualizar `<title>`, meta description, y marcar el ítem activo con `class="active"`.
+- **Nueva sesión CTE**: ver instrucciones en `ARCHITECTURE.md §6`.
 
 ---
 
@@ -119,9 +156,11 @@ Para actualizar:
 | Guinda oscuro | `#56212f` | Textos principales, logo, footer bg |
 | Guinda medio | `#9F2241` | Acentos, hovers, CTA |
 | Arena cálida | `#d6d1ca` | Fondos de tarjetas, separadores |
-| Caramelo | `#977e5b` | Subtítulos secundarios |
+| Caramelo | `#977e5b` | Subtítulos secundarios (⚠ no pasa WCAG AA solo) |
+| Caramelo AA | `#6b5a44` | Versión AA-compliant de caramelo |
 | Dorado suave | `#c3b08f` | Footer copy, detalles |
 | Fondo neutro | `#f9f8f6` | Secciones de fondo alterno |
+| Texto principal | `#333333` | Cuerpo de texto |
 
 ---
 
@@ -129,8 +168,8 @@ Para actualizar:
 
 | Contenido | Archivo | Qué editar |
 |---|---|---|
-| Equipo directivo | `nosotros.html` | Bloque "Equipo de Trabajo" (líneas ~356–412) |
+| Equipo directivo | `nosotros.html` | Bloque "Equipo de Trabajo" |
 | Tarjetas de áreas | `areas.html` | `.area-card` → `area-responsable` |
-| Nueva sesión CTE | `cte.html` | Copiar bloque `sesion-accordion` comentado |
+| Nueva sesión CTE | `cte.html` | Nuevo bloque `sesion-accordion` al inicio |
 | Materiales CTE | `pdfs/cte/<sesion>/` | Subir archivo + agregar `<a>` en `cte.html` |
 | Datos de contacto | `contacto.html` + footer de todas las páginas | Dirección, horario |
