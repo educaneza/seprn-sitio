@@ -279,8 +279,25 @@
                 width: 100%;
                 justify-content: center;
             }
-            .materiales-grid { 
-                grid-template-columns: 1fr; 
+            .materiales-grid {
+                grid-template-columns: 1fr;
+            }
+            .material-item {
+                overflow: hidden;
+                max-width: 100%;
+            }
+            .material-info {
+                overflow: hidden;
+                min-width: 0;
+            }
+            .material-info strong {
+                white-space: normal;
+                overflow: visible;
+                text-overflow: clip;
+                word-break: break-word;
+            }
+            .material-info span {
+                word-break: break-word;
             }
             .sesion-header {
                 padding: 20px;
