@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Kit Digital · Taller OTDE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --guinda:     #9F2241;
+      --guinda-dk:  #7a1a30;
+      --guinda-lt:  #c4556a;
+      --dorado:     #bc955b;
+      --dorado-lt:  #ddc8a4;
+      --beige:      #faf6f0;
+      --beige-dk:   #e8e0d8;
+      --beige-md:   #f3eae0;
+      --negro:      #1a1008;
+      --gris:       #5a4a3a;
+      --gris-lt:    #9a8a7a;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--beige-dk);
+      font-family: 'DM Sans', Helvetica, Arial, sans-serif;
+      color: var(--negro);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ─────────────────────────────────────── */
+    header {
+      background: var(--guinda);
+      border-bottom: 3px solid var(--dorado);
+      padding: 0;
+    }
+
+    .header-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 22px 32px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .header-brand {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .header-sup {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      color: var(--dorado-lt);
+    }
+
+    .header-title {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.2;
+    }
+
+    .header-badge {
+      background: var(--guinda-dk);
+      border: 1px solid var(--guinda-lt);
+      border-radius: 6px;
+      padding: 8px 16px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .header-badge-label {
+      font-size: 8px;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--dorado-lt);
+      display: block;
+    }
+
+    .header-badge-value {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    /* ── HERO ───────────────────────────────────────── */
+    .hero {
+      background: var(--guinda-dk);
+      border-bottom: 2px solid var(--dorado);
+      padding: 40px 32px;
+      text-align: center;
+    }
+
+    .hero-inner { max-width: 700px; margin: 0 auto; }
+
+    .hero-eyebrow {
+      font-size: 10px;
+      letter-spacing: 2.4px;
+      text-transform: uppercase;
+      color: var(--dorado);
+      margin-bottom: 12px;
+    }
+
+    .hero-heading {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 38px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.15;
+      margin-bottom: 14px;
+    }
+
+    .hero-heading em {
+      font-style: italic;
+      color: var(--dorado-lt);
+    }
+
+    .hero-sub {
+      font-size: 14px;
+      font-weight: 300;
+      color: var(--dorado-lt);
+      line-height: 1.6;
+      max-width: 520px;
+      margin: 0 auto 24px;
+    }
+
+    .hero-divider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .hero-divider-line {
+      width: 60px; height: 1px;
+      background: var(--guinda-lt);
+    }
+
+    .hero-divider-dot {
+      width: 6px; height: 6px;
+      background: var(--dorado);
+      border-radius: 50%;
+    }
+
+    /* ── MAIN ───────────────────────────────────────── */
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 32px 60px;
+    }
+
+    .section-label {
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--guinda);
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .section-heading {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--negro);
+      margin-bottom: 20px;
+      border-bottom: 2px solid var(--dorado);
+      padding-bottom: 10px;
+    }
+
+    /* ── DOWNLOAD CARDS ─────────────────────────────── */
+    .cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+
+    @media (max-width: 640px) {
+      .cards { grid-template-columns: 1fr; }
+      .header-inner { flex-direction: column; align-items: flex-start; }
+      .hero-heading { font-size: 28px; }
+    }
+
+    .card {
+      background: var(--beige);
+      border: 1px solid #d6c5b5;
+      border-left: 4px solid var(--guinda);
+      border-radius: 8px;
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+
+    .card:hover {
+      box-shadow: 0 6px 24px rgba(159,34,65,0.12);
+      transform: translateY(-2px);
+    }
+
+    .card-type {
+      font-size: 9px;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      color: var(--gris-lt);
+      font-weight: 500;
+    }
+
+    .card-title {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--negro);
+      line-height: 1.25;
+    }
+
+    .card-desc {
+      font-size: 12px;
+      color: var(--gris);
+      line-height: 1.6;
+      flex-grow: 1;
+    }
+
+    .card-badges {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .card-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+
+    .card-tag.docx { background: #dbeafe; color: #1e40af; }
+    .card-tag.pdf  { background: #fee2e2; color: #991b1b; }
+
+    .card-download {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+      background: var(--guinda);
+      color: #fff;
+      border-radius: 5px;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+      text-decoration: none;
+      transition: background 0.15s;
+      align-self: flex-start;
+    }
+
+    .card-download:hover { background: var(--guinda-dk); }
+
+    .card-download svg {
+      width: 14px; height: 14px;
+      fill: currentColor;
+      flex-shrink: 0;
+    }
+
+    /* ── NOTA ───────────────────────────────────────── */
+    .nota {
+      background: var(--beige-md);
+      border: 1px solid #d6c5b5;
+      border-left: 4px solid var(--dorado);
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin-bottom: 48px;
+    }
+
+    .nota-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--guinda);
+      letter-spacing: 0.4px;
+      margin-bottom: 8px;
+    }
+
+    .nota p {
+      font-size: 13px;
+      color: var(--gris);
+      line-height: 1.65;
+    }
+
+    /* ── CONTACTO ───────────────────────────────────── */
+    .contacto {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 640px) {
+      .contacto { grid-template-columns: 1fr; }
+    }
+
+    .contacto-block {
+      background: var(--beige);
+      border: 1px solid #d6c5b5;
+      border-radius: 8px;
+      padding: 20px 22px;
+    }
+
+    .contacto-label {
+      font-size: 9px;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      color: var(--guinda);
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .contacto-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-size: 13px;
+      color: var(--negro);
+    }
+
+    .contacto-item:last-child { margin-bottom: 0; }
+
+    .contacto-icon {
+      color: var(--guinda);
+      font-size: 15px;
+      flex-shrink: 0;
+      line-height: 1.3;
+    }
+
+    .contacto-item a {
+      color: var(--guinda);
+      text-decoration: none;
+    }
+
+    .contacto-item a:hover { text-decoration: underline; }
+
+    /* ── FOOTER ─────────────────────────────────────── */
+    footer {
+      background: var(--guinda);
+      border-top: 2px solid var(--dorado);
+      padding: 18px 32px;
+    }
+
+    .footer-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .footer-copy {
+      font-size: 11px;
+      color: var(--dorado-lt);
+    }
+
+    .footer-redes {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .footer-red {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px; height: 28px;
+      background: var(--guinda-dk);
+      border: 1px solid var(--guinda-lt);
+      border-radius: 50%;
+      color: #fff;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 700;
+      transition: background 0.15s;
+    }
+
+    .footer-red:hover { background: var(--dorado); color: var(--negro); }
+  </style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <div class="header-brand">
+      <span class="header-sup">Subdirección de Educación Primaria · Nezahualcóyotl</span>
+      <span class="header-title">Oficina de Tecnología para el Desarrollo Educativo</span>
+    </div>
+    <div class="header-badge">
+      <span class="header-badge-label">Identificador</span>
+      <span class="header-badge-value">OTDE</span>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <p class="hero-eyebrow">Curso-taller · Integración de Recursos Digitales</p>
+    <h1 class="hero-heading">Tu <em>kit digital</em><br>del taller</h1>
+    <p class="hero-sub">
+      Aquí están todos los materiales que trabajamos hoy.
+      Descárgalos, edítalos y úsalos cuando los necesites en tu Aula de Medios.
+    </p>
+    <div class="hero-divider">
+      <div class="hero-divider-line"></div>
+      <div class="hero-divider-dot"></div>
+      <div class="hero-divider-line"></div>
+    </div>
+  </div>
+</section>
+
+<!-- MAIN -->
+<main>
+
+  <!-- ORGANIZADORES -->
+  <p class="section-label">Materiales de planeación</p>
+  <h2 class="section-heading">Organizadores Gráficos</h2>
+
+  <div class="cards">
+
+    <div class="card" style="grid-column: 1 / -1;">
+      <span class="card-type">Plantilla editable</span>
+      <span class="card-title">Organizadores Gráficos — 30:1 · 3:1 · 1:1</span>
+      <div class="card-badges">
+        <span class="card-tag docx">DOCX editable</span>
+      </div>
+      <p class="card-desc">
+        Las tres plantillas en un solo archivo: un equipo para todo el grupo (30:1),
+        equipos de tres alumnos por computadora (3:1) y una computadora por alumno (1:1).
+        Edítalas en Word o Google Docs. Cada plantilla incluye boleto de salida al reverso.
+      </p>
+      <a class="card-download" href="Organizadores_Gr%C3%A1ficos_Editable.docx"
+         download="Organizadores_Gráficos_Editable.docx">
+        <svg viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M10 13.5l-5-5h3.25V3h3.5v5.5H15l-5 5zM2 16h16v1.5H2V16z"/>
+        </svg>
+        Descargar
+      </a>
+    </div>
+
+  </div>
+
+  <!-- REFERENCIA PEDAGÓGICA -->
+  <p class="section-label">Referencia pedagógica</p>
+  <h2 class="section-heading">Herramientas de apoyo</h2>
+
+  <div class="cards">
+
+    <div class="card">
+      <span class="card-type">Marco conceptual</span>
+      <span class="card-title">Tabla SAMR — Niveles de Integración</span>
+      <div class="card-badges">
+        <span class="card-tag pdf">PDF</span>
+      </div>
+      <p class="card-desc">
+        Los cuatro niveles de integración tecnológica con ejemplos
+        contextualizados en primaria. Señales de cada nivel
+        y cómo avanzar al siguiente.
+      </p>
+      <a class="card-download" href="Tabla_SAMR_Niveles_Integraci%C3%B3n.pdf"
+         download="Tabla_SAMR_Niveles_Integración.pdf">
+        <svg viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M10 13.5l-5-5h3.25V3h3.5v5.5H15l-5 5zM2 16h16v1.5H2V16z"/>
+        </svg>
+        Descargar
+      </a>
+    </div>
+
+    <div class="card">
+      <span class="card-type">Banco de ideas</span>
+      <span class="card-title">Banco de Ideas NEM</span>
+      <div class="card-badges">
+        <span class="card-tag pdf">PDF</span>
+      </div>
+      <p class="card-desc">
+        Ideas de integración organizadas por los 6 Campos Formativos
+        de la Nueva Escuela Mexicana. Consignas listas para adaptar
+        a tu contexto y grupo.
+      </p>
+      <a class="card-download" href="Banco_de_Ideas_NEM.pdf" download>
+        <svg viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M10 13.5l-5-5h3.25V3h3.5v5.5H15l-5 5zM2 16h16v1.5H2V16z"/>
+        </svg>
+        Descargar
+      </a>
+    </div>
+
+    <div class="card" style="grid-column: 1 / -1;">
+      <span class="card-type">Guía técnica</span>
+      <span class="card-title">Instrucciones de acceso: BM offline · BM online · Chuka</span>
+      <div class="card-badges">
+        <span class="card-tag pdf">PDF</span>
+      </div>
+      <p class="card-desc">
+        Paso a paso para abrir el Banco de Materiales sin internet (Firefox abre el catálogo automáticamente),
+        con internet (red.dee.edu.mx), y Chuka en sus dos versiones. Incluye advertencia sobre actualizaciones
+        de Firefox y Flash, y tabla de decisión rápida para elegir el recurso según la situación del día.
+      </p>
+      <a class="card-download" href="Instrucciones_Acceso_BM_y_Chuka.pdf" download>
+        <svg viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M10 13.5l-5-5h3.25V3h3.5v5.5H15l-5 5zM2 16h16v1.5H2V16z"/>
+        </svg>
+        Descargar
+      </a>
+    </div>
+
+  </div>
+
+  <!-- GUÍAS CHUKA -->
+  <p class="section-label">Para compartir</p>
+  <h2 class="section-heading">Guías Chuka</h2>
+
+  <div class="cards">
+
+    <div class="card">
+      <span class="card-type">Guía de uso</span>
+      <span class="card-title">Chuka para Docentes</span>
+      <div class="card-badges">
+        <span class="card-tag pdf">PDF</span>
+      </div>
+      <p class="card-desc">
+        Instrucciones y orientaciones para usar Chuka en el aula.
+        Incluye acceso a la versión web y la aplicación.
+      </p>
+      <a class="card-download" href="chuka-guia-docentes.pdf" download>
+        <svg viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M10 13.5l-5-5h3.25V3h3.5v5.5H15l-5 5zM2 16h16v1.5H2V16z"/>
+        </svg>
+        Descargar
+      </a>
+    </div>
+
+    <div class="card">
+      <span class="card-type">Guía de uso</span>
+      <span class="card-title">Chuka para Familias</span>
+      <div class="card-badges">
+        <span class="card-tag pdf">PDF</span>
+      </div>
+      <p class="card-desc">
+        Guía sencilla para que madres y padres acompañen
+        a sus hijos en casa con la plataforma Chuka.
+      </p>
+      <a class="card-download" href="chuka-guia-familias.pdf" download>
+        <svg viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M10 13.5l-5-5h3.25V3h3.5v5.5H15l-5 5zM2 16h16v1.5H2V16z"/>
+        </svg>
+        Descargar
+      </a>
+    </div>
+
+  </div>
+
+  <!-- NOTA -->
+  <div class="nota">
+    <p class="nota-title">Sobre los archivos editables</p>
+    <p>
+      El organizador gráfico está en formato <strong>.docx</strong> para que puedas editarlo
+      en Word o en Google Docs. Si no tienes Word instalado, súbelo a tu Google Drive y ábrelo con
+      Google Docs — mantiene el formato y puedes rellenarlo directamente en el navegador.
+      Los demás documentos están en <strong>.pdf</strong> para lectura y consulta rápida.
+    </p>
+  </div>
+
+  <!-- CONTACTO -->
+  <p class="section-label">Apoyo técnico y pedagógico</p>
+  <h2 class="section-heading">Contacto OTDE</h2>
+
+  <div class="contacto">
+
+    <div class="contacto-block">
+      <p class="contacto-label">Comunicación directa</p>
+
+      <div class="contacto-item">
+        <span class="contacto-icon">&#9990;</span>
+        <span>55 3300 2400 <strong>ext. 9065</strong></span>
+      </div>
+      <div class="contacto-item">
+        <span class="contacto-icon">&#9993;</span>
+        <a href="mailto:otde.nezahualcoyotl@dee.edu.mx">otde.nezahualcoyotl@dee.edu.mx</a>
+      </div>
+      <div class="contacto-item">
+        <span class="contacto-icon">&#9679;</span>
+        <span>Av. Texcoco 116, Col. Juárez Pantitlán,<br>Nezahualcóyotl C.P. 57460</span>
+      </div>
+    </div>
+
+    <div class="contacto-block">
+      <p class="contacto-label">Redes y comunidad</p>
+
+      <div class="contacto-item">
+        <span class="contacto-icon">f</span>
+        <a href="https://www.facebook.com/SubNeza" target="_blank" rel="noopener">
+          Facebook · SubNeza
+        </a>
+      </div>
+      <div class="contacto-item">
+        <span class="contacto-icon">&#9654;</span>
+        <a href="https://www.youtube.com/@subneza" target="_blank" rel="noopener">
+          YouTube · @subneza
+        </a>
+      </div>
+      <div class="contacto-item">
+        <span class="contacto-icon">&#128172;</span>
+        <a href="https://whatsapp.com/channel/0029VbBDCG572WTz3WCjRS11" target="_blank" rel="noopener">
+          Comunidad WhatsApp OTDE
+        </a>
+      </div>
+      <div class="contacto-item">
+        <span class="contacto-icon">&#9670;</span>
+        <a href="https://educaneza.github.io/seprn-sitio/index.html" target="_blank" rel="noopener">
+          Sitio web SEPRN
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <span class="footer-copy">
+      &copy; 2026 · Oficina de Tecnología para el Desarrollo Educativo · SEPRN
+    </span>
+    <div class="footer-redes">
+      <a class="footer-red" href="https://www.facebook.com/SubNeza" target="_blank" rel="noopener"
+         title="Facebook SubNeza">f</a>
+      <a class="footer-red" href="https://www.youtube.com/@subneza" target="_blank" rel="noopener"
+         title="YouTube @subneza">&#9654;</a>
+      <a class="footer-red" href="https://whatsapp.com/channel/0029VbBDCG572WTz3WCjRS11"
+         target="_blank" rel="noopener" title="Canal WhatsApp">&#128172;</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
