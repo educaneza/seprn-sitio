@@ -8,24 +8,33 @@
 //   3. Implementar → Nueva implementación → Tipo: Aplicación web
 //      · Ejecutar como: Yo (tu cuenta)
 //      · Quién tiene acceso: Cualquier usuario
-//   4. Copia la URL y pégala en conferencia-ia.html (constante APPS_SCRIPT_URL)
+//   4. Copia la URL y pégala en:
+//      · conferencia-ia.html  → constante APPS_SCRIPT_URL
+//      · asistencia.html      → constante APPS_SCRIPT_URL
+//
+// IMPORTANTE: Cambia CHECKIN_PIN antes del evento.
 // ============================================================
 
 const HOJA_NOMBRE  = 'Registros_IA_2026';
 const CUPO_SECTOR  = 7;
-const CORREO_ADMIN = 'adg0086n@dee.edu.mx'; // correo de notificaciones internas
+const CORREO_ADMIN = 'adg0086n@dee.edu.mx';
+const CHECKIN_PIN  = '2026IA'; // ← cámbialo antes del evento
 
-// ── Sectores válidos ──
-const SECTORES_VALIDOS = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII','XIII','SEPRN'];
-
-// ── doGet: verifica cupo de un sector ──
+// ── doGet: cupo y check-in ──
 function doGet(e) {
   const action = e.parameter.action;
+
   if (action === 'cupo') {
-    const sector = e.parameter.sector;
-    const resultado = verificarCupo(sector);
-    return jsonResponse(resultado);
+    return jsonResponse(verificarCupo(e.parameter.sector));
   }
+
+  if (action === 'checkin') {
+    if (e.parameter.pin !== CHECKIN_PIN) {
+      return jsonResponse({ status: 'error', mensaje: 'PIN incorrecto' });
+    }
+    return jsonResponse(registrarAsistencia(e.parameter.folio));
+  }
+
   return jsonResponse({ status: 'ok', mensaje: 'Web App activa' });
 }
 
@@ -33,18 +42,17 @@ function doGet(e) {
 function doPost(e) {
   try {
     const datos = JSON.parse(e.postData.contents);
-    validarCampos(datos); // lanza Error si falta algo
+    validarCampos(datos);
 
-    const hoja     = obtenerHoja();
-    const sector   = datos.sector.trim().toUpperCase();
-    const conteo   = contarPorSector(hoja, sector);
-    const esSeprn  = sector === 'SEPRN';
-    const hayCupo  = esSeprn || conteo < CUPO_SECTOR;
-    const status   = hayCupo ? 'ok' : 'lista_espera';
-    const folio    = generarFolio(hoja, sector, hayCupo);
-    const ahora    = new Date();
+    const hoja    = obtenerHoja();
+    const sector  = datos.sector.trim().toUpperCase();
+    const conteo  = contarPorSector(hoja, sector);
+    const esSeprn = sector === 'SEPRN';
+    const hayCupo = esSeprn || conteo < CUPO_SECTOR;
+    const status  = hayCupo ? 'ok' : 'lista_espera';
+    const folio   = generarFolio(hoja, sector, hayCupo);
+    const ahora   = new Date();
 
-    // Guardar fila
     hoja.appendRow([
       ahora,
       folio,
@@ -58,9 +66,10 @@ function doPost(e) {
       datos.zona || '',
       datos.escuela,
       status,
+      '',   // Asistencia (col M)
+      '',   // Hora_Checkin (col N)
     ]);
 
-    // Enviar correo al registrado
     enviarComprobante(datos, folio, status, ahora);
 
     return jsonResponse({ status, folio, mensaje: hayCupo
@@ -72,17 +81,62 @@ function doPost(e) {
   }
 }
 
+// ── Registrar asistencia en el check-in ──
+function registrarAsistencia(folio) {
+  if (!folio) return { status: 'error', mensaje: 'Folio requerido' };
+
+  const hoja = obtenerHoja();
+  asegurarColumnasCheckin(hoja);
+  const vals = hoja.getDataRange().getValues();
+
+  for (let i = 1; i < vals.length; i++) {
+    if (String(vals[i][1]).trim().toUpperCase() !== folio.trim().toUpperCase()) continue;
+
+    const estadoRegistro = String(vals[i][11]); // ok | lista_espera
+    if (estadoRegistro === 'lista_espera') {
+      return { status: 'lista_espera', folio, nombre: vals[i][2],
+               mensaje: 'Este registro está en lista de espera, no tiene lugar confirmado.' };
+    }
+
+    const asistencia = String(vals[i][12]); // col M
+    if (asistencia === 'asistio') {
+      return { status: 'ya_registrado', folio,
+               nombre: vals[i][2], funcion: vals[i][6],
+               escuela: vals[i][10], sector: vals[i][8],
+               hora: vals[i][13], mensaje: 'Asistencia ya registrada.' };
+    }
+
+    const hora = Utilities.formatDate(new Date(), 'America/Mexico_City', 'HH:mm');
+    hoja.getRange(i + 1, 13).setValue('asistio');
+    hoja.getRange(i + 1, 14).setValue(hora);
+
+    return { status: 'ok', folio,
+             nombre: vals[i][2], funcion: vals[i][6],
+             escuela: vals[i][10], sector: vals[i][8], hora };
+  }
+
+  return { status: 'no_encontrado', folio, mensaje: 'Folio no encontrado en el sistema.' };
+}
+
+// ── Agrega encabezados M/N si la hoja ya existía sin ellos ──
+function asegurarColumnasCheckin(hoja) {
+  const header = hoja.getRange(1, 1, 1, Math.max(hoja.getLastColumn(), 14)).getValues()[0];
+  if (!header[12]) hoja.getRange(1, 13).setValue('Asistencia');
+  if (!header[13]) hoja.getRange(1, 14).setValue('Hora_Checkin');
+}
+
 // ── Obtener o crear la hoja ──
 function obtenerHoja() {
-  const ss   = SpreadsheetApp.getActiveSpreadsheet();
-  let hoja   = ss.getSheetByName(HOJA_NOMBRE);
+  const ss  = SpreadsheetApp.getActiveSpreadsheet();
+  let hoja  = ss.getSheetByName(HOJA_NOMBRE);
   if (!hoja) {
     hoja = ss.insertSheet(HOJA_NOMBRE);
     hoja.appendRow([
       'Fecha','Folio','Nombre','RFC','Teléfono','Correo',
-      'Función','CCT','Sector','Zona','Escuela/Unidad','Estado'
+      'Función','CCT','Sector','Zona','Escuela/Unidad','Estado',
+      'Asistencia','Hora_Checkin'
     ]);
-    hoja.getRange(1,1,1,12).setFontWeight('bold').setBackground('#0C1A2E').setFontColor('#F9F8F5');
+    hoja.getRange(1,1,1,14).setFontWeight('bold').setBackground('#0C1A2E').setFontColor('#F9F8F5');
     hoja.setFrozenRows(1);
   }
   return hoja;
@@ -98,20 +152,16 @@ function contarPorSector(hoja, sector) {
   }).length;
 }
 
-// ── Verificar cupo (para doGet) ──
+// ── Verificar cupo ──
 function verificarCupo(sector) {
   if (!sector) return { disponible: false, registrados: 0, mensaje: 'Sector requerido' };
   if (sector === 'SEPRN') return { disponible: true, registrados: 0, mensaje: 'Sin límite' };
-  const hoja       = obtenerHoja();
+  const hoja        = obtenerHoja();
   const registrados = contarPorSector(hoja, sector);
-  return {
-    disponible:  registrados < CUPO_SECTOR,
-    registrados,
-    cupo:        CUPO_SECTOR,
-  };
+  return { disponible: registrados < CUPO_SECTOR, registrados, cupo: CUPO_SECTOR };
 }
 
-// ── Generar folio ── formato: CONF-{SECTOR}-{nn}
+// ── Generar folio ──
 function generarFolio(hoja, sector, confirmado) {
   const datos  = hoja.getDataRange().getValues();
   const prefix = `CONF-${sector}-`;
@@ -121,32 +171,26 @@ function generarFolio(hoja, sector, confirmado) {
     .map(f => parseInt(f.replace(prefix,''), 10) || 0)
     .reduce((a, b) => Math.max(a, b), 0);
   const num    = String(maxNum + 1).padStart(2, '0');
-  const sufijo = confirmado ? '' : '-LE'; // LE = lista espera
-  return `${prefix}${num}${sufijo}`;
+  return `${prefix}${num}${confirmado ? '' : '-LE'}`;
 }
 
-// ── Validar campos obligatorios ──
+// ── Validar campos ──
 function validarCampos(d) {
   const requeridos = ['nombre','rfc','telefono','correo','funcion','cct','sector','escuela'];
   for (const campo of requeridos) {
-    if (!d[campo] || !String(d[campo]).trim()) {
-      throw new Error(`Campo requerido: ${campo}`);
-    }
+    if (!d[campo] || !String(d[campo]).trim()) throw new Error(`Campo requerido: ${campo}`);
   }
-  if (!/^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/i.test(d.rfc.trim())) {
-    throw new Error('RFC inválido');
-  }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.correo.trim())) {
-    throw new Error('Correo inválido');
-  }
+  if (!/^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/i.test(d.rfc.trim())) throw new Error('RFC inválido');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.correo.trim()))     throw new Error('Correo inválido');
 }
 
-// ── Enviar correo de confirmación ──
+// ── Enviar correo de confirmación con QR ──
 function enviarComprobante(datos, folio, status, fecha) {
   const esConfirmado = status === 'ok';
   const fechaStr     = Utilities.formatDate(fecha, 'America/Mexico_City', 'dd/MM/yyyy HH:mm');
-  const estadoLabel  = esConfirmado ? 'CONFIRMADO' : 'LISTA DE ESPERA';
-  const estadoColor  = esConfirmado ? '#1D9E75'    : '#d97706';
+  const estadoLabel  = esConfirmado ? 'CONFIRMADO'    : 'LISTA DE ESPERA';
+  const estadoColor  = esConfirmado ? '#1D9E75'       : '#d97706';
+  const qrUrl        = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(folio)}&bgcolor=F9F8F5&color=0C1A2E&format=png&margin=8`;
 
   const htmlBody = `
 <!DOCTYPE html>
@@ -176,18 +220,30 @@ function enviarComprobante(datos, folio, status, fecha) {
           </td>
         </tr>
 
-        <!-- Folio -->
+        <!-- Folio + QR -->
         <tr>
-          <td style="padding:28px 32px 16px;text-align:center;">
-            <p style="color:#6b7280;font-size:13px;margin:0 0 8px;">Tu folio de asistencia</p>
-            <p style="font-family:'Courier New',monospace;font-size:28px;font-weight:700;color:#0C1A2E;letter-spacing:.08em;margin:0;background:#f0fdf4;display:inline-block;padding:10px 28px;border-radius:8px;border:2px solid #1D9E75;">${folio}</p>
-            <p style="color:#6b7280;font-size:12px;margin:8px 0 0;">Guarda este folio como comprobante de asistencia</p>
+          <td style="padding:28px 32px 20px;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="vertical-align:middle;padding-right:24px;">
+                  <p style="color:#6b7280;font-size:13px;margin:0 0 8px;">Tu folio de asistencia</p>
+                  <p style="font-family:'Courier New',monospace;font-size:24px;font-weight:700;color:#0C1A2E;letter-spacing:.06em;margin:0 0 10px;background:#f0fdf4;display:inline-block;padding:8px 20px;border-radius:8px;border:2px solid #1D9E75;">${folio}</p>
+                  <p style="color:#6b7280;font-size:12px;margin:0;">Presenta el QR o el folio en la entrada del evento.</p>
+                </td>
+                ${esConfirmado ? `
+                <td style="vertical-align:middle;text-align:center;width:180px;">
+                  <img src="${qrUrl}" alt="QR ${folio}" width="160" height="160"
+                       style="border:3px solid #1D9E75;border-radius:8px;display:block;">
+                  <p style="color:#6b7280;font-size:10px;margin:4px 0 0;">Escanear en la entrada</p>
+                </td>` : ''}
+              </tr>
+            </table>
           </td>
         </tr>
 
         <!-- Datos del evento -->
         <tr>
-          <td style="padding:8px 32px 16px;">
+          <td style="padding:0 32px 16px;">
             <table width="100%" style="background:#f9fafb;border-radius:8px;padding:16px;" cellpadding="0" cellspacing="0">
               <tr><td style="padding:4px 0;">
                 <span style="font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">📅 Fecha</span><br>
@@ -221,13 +277,12 @@ function enviarComprobante(datos, folio, status, fecha) {
         </tr>
 
         ${!esConfirmado ? `
-        <!-- Aviso lista de espera -->
         <tr>
           <td style="padding:0 32px 24px;">
             <table width="100%" style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:14px 16px;" cellpadding="0" cellspacing="0">
               <tr><td>
                 <p style="color:#92400e;font-size:13px;margin:0;"><strong>⚠️ Lista de espera</strong></p>
-                <p style="color:#92400e;font-size:13px;margin:6px 0 0;">El cupo de tu sector está completo. Quedas en lista de espera. Te notificaremos si se libera un lugar antes del evento.</p>
+                <p style="color:#92400e;font-size:13px;margin:6px 0 0;">El cupo de tu sector está completo. Quedas en lista de espera. Te notificaremos si se libera un lugar.</p>
               </td></tr>
             </table>
           </td>
@@ -256,7 +311,6 @@ function enviarComprobante(datos, folio, status, fecha) {
   GmailApp.sendEmail(datos.correo, asunto, '', { htmlBody });
 }
 
-// helper para filas de la tabla en el correo
 function fila(label, valor) {
   if (!valor) return '';
   return `<tr>
@@ -265,7 +319,6 @@ function fila(label, valor) {
   </tr>`;
 }
 
-// ── Respuesta JSON con CORS ──
 function jsonResponse(obj) {
   return ContentService
     .createTextOutput(JSON.stringify(obj))
