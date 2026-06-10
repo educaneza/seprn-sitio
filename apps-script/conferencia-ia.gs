@@ -100,15 +100,20 @@ function registrarAsistencia(folio) {
 
     const asistencia = String(vals[i][12]); // col M
     if (asistencia === 'asistio') {
+      const horaRaw = vals[i][13];
+      const horaFmt = horaRaw instanceof Date
+        ? Utilities.formatDate(horaRaw, 'America/Mexico_City', 'HH:mm')
+        : String(horaRaw);
       return { status: 'ya_registrado', folio,
                nombre: vals[i][2], funcion: vals[i][6],
                escuela: vals[i][10], sector: vals[i][8],
-               hora: vals[i][13], mensaje: 'Asistencia ya registrada.' };
+               hora: horaFmt, mensaje: 'Asistencia ya registrada.' };
     }
 
     const hora = Utilities.formatDate(new Date(), 'America/Mexico_City', 'HH:mm');
     hoja.getRange(i + 1, 13).setValue('asistio');
-    hoja.getRange(i + 1, 14).setValue(hora);
+    // Forzar formato texto para que Sheets no reinterprete la hora como fecha
+    hoja.getRange(i + 1, 14).setNumberFormat('@STRING@').setValue(hora);
 
     return { status: 'ok', folio,
              nombre: vals[i][2], funcion: vals[i][6],
