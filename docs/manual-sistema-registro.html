@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manual del Sistema de Registro — Conferencia IA 2026 · SEPRN · OTDE</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0C1A2E;
+      --teal:    #1D9E75;
+      --teal-lt: #e6f7f2;
+      --text:    #1f2937;
+      --muted:   #6b7280;
+      --border:  #e5e7eb;
+      --warn:    #fffbeb;
+      --warn-b:  #fcd34d;
+      --info:    #eff6ff;
+      --info-b:  #93c5fd;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f9fafb;
+      color: var(--text);
+      line-height: 1.65;
+    }
+
+    /* ── PORTADA ── */
+    .cover {
+      background: var(--bg);
+      color: #F9F8F5;
+      padding: 3rem 2rem 2.5rem;
+      text-align: center;
+    }
+    .cover .org {
+      font-size: .8rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: .75rem;
+    }
+    .cover h1 {
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: .5rem;
+    }
+    .cover .subtitle {
+      font-size: .95rem;
+      opacity: .7;
+      margin-bottom: 1.5rem;
+    }
+    .cover .meta {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: .5rem 1.5rem;
+      font-size: .8rem;
+      opacity: .65;
+      justify-content: center;
+    }
+    .cover .badge {
+      display: inline-block;
+      background: var(--teal);
+      color: #fff;
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: .25rem .8rem;
+      border-radius: 999px;
+      margin-bottom: 1rem;
+    }
+
+    /* ── LAYOUT ── */
+    .wrapper {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 5rem;
+    }
+
+    /* ── ÍNDICE ── */
+    .toc {
+      background: var(--teal-lt);
+      border-left: 4px solid var(--teal);
+      border-radius: 0 8px 8px 0;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 3rem;
+    }
+    .toc h2 {
+      font-size: .85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--teal);
+      margin-bottom: .75rem;
+    }
+    .toc ol {
+      padding-left: 1.25rem;
+    }
+    .toc li { margin-bottom: .3rem; }
+    .toc a { color: var(--teal); text-decoration: none; font-size: .9rem; }
+    .toc a:hover { text-decoration: underline; }
+    .toc .sub { padding-left: 1rem; }
+    .toc .sub li { margin-bottom: .2rem; }
+    .toc .sub a { font-size: .85rem; color: var(--muted); }
+
+    /* ── SECCIONES ── */
+    .section {
+      margin-bottom: 3.5rem;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin-bottom: 1.25rem;
+      padding-bottom: .75rem;
+      border-bottom: 2px solid var(--teal);
+    }
+    .section-num {
+      background: var(--teal);
+      color: #fff;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800;
+      font-size: .9rem;
+      flex-shrink: 0;
+    }
+    .section-header h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--bg);
+    }
+
+    h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--bg);
+      margin: 1.5rem 0 .6rem;
+    }
+    p { margin-bottom: .75rem; font-size: .95rem; }
+    ul, ol { padding-left: 1.35rem; margin-bottom: .75rem; }
+    li { margin-bottom: .4rem; font-size: .95rem; }
+    strong { color: var(--bg); }
+
+    /* ── CAJAS ── */
+    .box {
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+      font-size: .9rem;
+    }
+    .box-tip    { background: var(--teal-lt); border-left: 4px solid var(--teal); }
+    .box-warn   { background: var(--warn);    border-left: 4px solid var(--warn-b); }
+    .box-info   { background: var(--info);    border-left: 4px solid var(--info-b); }
+    .box-dark   { background: #1e293b; color: #e2e8f0; border-left: 4px solid var(--teal); }
+    .box .box-title {
+      font-size: .75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: .4rem;
+    }
+    .box-tip  .box-title { color: var(--teal); }
+    .box-warn .box-title { color: #92400e; }
+    .box-info .box-title { color: #1d4ed8; }
+    .box-dark .box-title { color: var(--teal); }
+
+    /* ── PASOS ── */
+    .steps { list-style: none; padding: 0; }
+    .steps li {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.1rem;
+      align-items: flex-start;
+    }
+    .step-num {
+      background: var(--bg);
+      color: #fff;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700;
+      font-size: .8rem;
+      flex-shrink: 0;
+      margin-top: .1rem;
+    }
+    .step-body { flex: 1; font-size: .95rem; }
+    .step-body strong { display: block; margin-bottom: .15rem; }
+
+    /* ── FLUJO VISUAL ── */
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      align-items: center;
+      margin: 1.25rem 0;
+    }
+    .flow-box {
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: .6rem .9rem;
+      font-size: .8rem;
+      text-align: center;
+      min-width: 110px;
+    }
+    .flow-box .fb-icon { font-size: 1.2rem; display: block; margin-bottom: .2rem; }
+    .flow-box.teal { background: var(--teal); color: #fff; border-color: var(--teal); }
+    .flow-box.dark { background: var(--bg); color: #F9F8F5; border-color: var(--bg); }
+    .flow-arrow { color: var(--teal); font-size: 1.1rem; font-weight: 700; }
+
+    /* ── TABLA ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .875rem;
+      margin: 1rem 0;
+    }
+    th {
+      background: var(--bg);
+      color: #F9F8F5;
+      padding: .6rem .85rem;
+      text-align: left;
+      font-size: .8rem;
+      letter-spacing: .04em;
+    }
+    td { padding: .6rem .85rem; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: #f9fafb; }
+
+    /* ── GLOSARIO ── */
+    .glosario dt {
+      font-weight: 700;
+      color: var(--bg);
+      font-size: .9rem;
+      margin-top: .9rem;
+      font-family: 'Courier New', monospace;
+    }
+    .glosario dd {
+      margin-left: 1rem;
+      font-size: .875rem;
+      color: var(--text);
+    }
+
+    /* ── CÓDIGO/PATH ── */
+    code {
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: .1rem .4rem;
+      font-size: .85em;
+      font-family: 'Courier New', monospace;
+      color: #0f172a;
+    }
+
+    /* ── FOOTER ── */
+    .doc-footer {
+      background: var(--bg);
+      color: #6b7280;
+      text-align: center;
+      font-size: .78rem;
+      padding: 1.25rem;
+      margin-top: 4rem;
+    }
+    .doc-footer strong { color: var(--teal); }
+
+    @media print {
+      body { background: #fff; }
+      .cover { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .section-num, th, .flow-box.teal, .flow-box.dark { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .section { page-break-inside: avoid; }
+    }
+
+    @media (max-width: 600px) {
+      .flow { flex-direction: column; align-items: flex-start; }
+      .flow-arrow { transform: rotate(90deg); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- PORTADA -->
+<div class="cover">
+  <p class="org">SEPRN &middot; Oficina de Tecnología para el Desarrollo Educativo</p>
+  <span class="badge">Documento interno</span>
+  <h1>Manual del Sistema de Registro<br>Conferencia Inteligencia Artificial 2026</h1>
+  <p class="subtitle">Guía de uso para el equipo organizador &mdash; lenguaje sencillo</p>
+  <div class="meta">
+    <span>Evento: 17 de junio de 2026</span>
+    <span>Auditorio Regional 1 Neza</span>
+    <span>Versión: junio 2026</span>
+  </div>
+</div>
+
+<div class="wrapper">
+
+  <!-- ÍNDICE -->
+  <nav class="toc">
+    <h2>Contenido</h2>
+    <ol>
+      <li><a href="#s1">¿Qué es este sistema y para qué sirve?</a></li>
+      <li><a href="#s2">Las piezas del sistema</a></li>
+      <li><a href="#s3">Flujo completo: desde el registro hasta el evento</a>
+        <ol class="sub">
+          <li><a href="#s3a">Parte A &mdash; El participante se registra</a></li>
+          <li><a href="#s3b">Parte B &mdash; Lo que pasa automáticamente</a></li>
+          <li><a href="#s3c">Parte C &mdash; El correo de confirmación</a></li>
+          <li><a href="#s3d">Parte D &mdash; El día del evento: check-in con QR</a></li>
+        </ol>
+      </li>
+      <li><a href="#s4">Cómo ver los registros en Google Sheets</a></li>
+      <li><a href="#s5">Qué hacer si hay problemas el día del evento</a></li>
+      <li><a href="#s6">Mantenimiento y cierre del sistema</a></li>
+      <li><a href="#s7">Glosario de términos técnicos</a></li>
+    </ol>
+  </nav>
+
+
+  <!-- SECCIÓN 1 -->
+  <div class="section" id="s1">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <h2>¿Qué es este sistema y para qué sirve?</h2>
+    </div>
+
+    <p>Este sistema es el mecanismo digital que permite <strong>registrar anticipadamente a los asistentes</strong> a la conferencia, controlar los cupos disponibles por sector y registrar la asistencia el día del evento.</p>
+
+    <p>Antes de este sistema, el control de asistentes se hacía con listas en papel o formularios manuales. Ahora el proceso es completamente automático: el participante llena un formulario en línea, el sistema valida su información, reserva su lugar y le envía un comprobante por correo con un código QR.</p>
+
+    <p>El día del evento, el personal en la entrada utiliza ese mismo QR para registrar la asistencia con un solo escaneo, sin papeles.</p>
+
+    <div class="box box-tip">
+      <div class="box-title">Resumen en una línea</div>
+      El participante se registra &rarr; recibe un QR por correo &rarr; presenta el QR en la entrada &rarr; el sistema registra su asistencia automáticamente.
+    </div>
+  </div>
+
+
+  <!-- SECCIÓN 2 -->
+  <div class="section" id="s2">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <h2>Las piezas del sistema</h2>
+    </div>
+
+    <p>El sistema está formado por cuatro componentes que trabajan juntos:</p>
+
+    <table>
+      <thead>
+        <tr><th>Componente</th><th>¿Qué es?</th><th>¿Quién lo usa?</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Página de registro</strong><br><code>conferencia-ia.html</code></td>
+          <td>El formulario en línea donde los participantes se registran. Vive en el sitio web de la SEPRN.</td>
+          <td>Participantes (docentes, directivos, padres)</td>
+        </tr>
+        <tr>
+          <td><strong>Base de datos CCT</strong><br><code>js/cct-db.js</code></td>
+          <td>Una lista de 506 escuelas, supervisiones y jefaturas del sistema educativo. El formulario la usa para autocompletar datos de la escuela automáticamente.</td>
+          <td>Nadie directamente &mdash; trabaja en segundo plano</td>
+        </tr>
+        <tr>
+          <td><strong>Backend (Apps Script)</strong><br><code>conferencia-ia.gs</code></td>
+          <td>El &ldquo;cerebro&rdquo; del sistema. Recibe los registros, valida cupos, guarda los datos en Google Sheets y envía los correos de confirmación.</td>
+          <td>Nadie directamente &mdash; trabaja automáticamente</td>
+        </tr>
+        <tr>
+          <td><strong>Google Sheets</strong></td>
+          <td>La hoja de cálculo donde se guardan todos los registros. Desde aquí el organizador puede ver quién está inscrito.</td>
+          <td>Equipo organizador (consulta y administración)</td>
+        </tr>
+        <tr>
+          <td><strong>Página de check-in</strong><br><code>asistencia.html</code></td>
+          <td>La página que usa el personal en la entrada el día del evento para registrar asistencia escaneando el QR o tecleando el folio.</td>
+          <td>Personal operador en la puerta del auditorio</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="box box-info">
+      <div class="box-title">¿Dónde está cada cosa?</div>
+      Todo vive en el sitio web institucional de la SEPRN (GitHub Pages). No se necesita instalar nada ni tener un servidor propio. La única excepción es el Apps Script, que vive dentro del Google Sheets vinculado al evento.
+    </div>
+  </div>
+
+
+  <!-- SECCIÓN 3 -->
+  <div class="section" id="s3">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <h2>Flujo completo: desde el registro hasta el evento</h2>
+    </div>
+
+    <p>Así se ve el proceso completo de principio a fin:</p>
+
+    <div class="flow">
+      <div class="flow-box">
+        <span class="fb-icon">&#128100;</span>
+        Participante<br>llena formulario
+      </div>
+      <span class="flow-arrow">&#8594;</span>
+      <div class="flow-box teal">
+        <span class="fb-icon">&#9881;</span>
+        Sistema valida<br>y registra
+      </div>
+      <span class="flow-arrow">&#8594;</span>
+      <div class="flow-box">
+        <span class="fb-icon">&#128140;</span>
+        Correo con<br>folio + QR
+      </div>
+      <span class="flow-arrow">&#8594;</span>
+      <div class="flow-box">
+        <span class="fb-icon">&#128247;</span>
+        Día del evento:<br>escaneo QR
+      </div>
+      <span class="flow-arrow">&#8594;</span>
+      <div class="flow-box teal">
+        <span class="fb-icon">&#10003;</span>
+        Asistencia<br>registrada
+      </div>
+    </div>
+
+
+    <h3 id="s3a">Parte A &mdash; El participante se registra</h3>
+
+    <ul class="steps">
+      <li>
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <strong>Accede al formulario</strong>
+          El participante entra a la página de registro (por el link directo, el QR del flyer o el banner en la página principal de la SEPRN).
+        </div>
+      </li>
+      <li>
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <strong>Ve la convocatoria</strong>
+          Antes del formulario aparece el flyer del evento con la información general.
+        </div>
+      </li>
+      <li>
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <strong>Llena sus datos</strong>
+          Ingresa: nombre completo (obligatorio incluir dos apellidos), RFC, teléfono, correo electrónico y su función (director, docente, supervisor, etc.).
+        </div>
+      </li>
+      <li>
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <strong>Escribe su CCT</strong>
+          Al escribir la Clave del Centro de Trabajo, el sistema busca automáticamente en los 506 registros y completa el sector, zona y nombre de la escuela solo. Si la CCT no está en la lista, puede llenar esos datos manualmente.
+        </div>
+      </li>
+      <li>
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <strong>El sistema verifica el cupo</strong>
+          Mientras el participante escribe la CCT, el sistema consulta en tiempo real cuántos registros hay en su sector. Si el sector ya tiene 7 registros confirmados, muestra un aviso de &ldquo;cupo lleno&rdquo;.
+        </div>
+      </li>
+      <li>
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <strong>Envía el formulario</strong>
+          Hace clic en &ldquo;Registrarme al evento&rdquo;. El sistema valida todos los campos y envía los datos.
+        </div>
+      </li>
+    </ul>
+
+    <div class="box box-warn">
+      <div class="box-title">Regla de cupos</div>
+      Hay <strong>7 lugares por sector</strong> (Sectores I al XIII) y cupo ilimitado para personal SEPRN. Si un sector está lleno, el participante queda en <strong>lista de espera</strong> y recibe un correo diferente que lo indica. Su folio termina en <code>-LE</code> (por ejemplo: <code>CONF-III-02-LE</code>).
+    </div>
+
+
+    <h3 id="s3b">Parte B &mdash; Lo que pasa automáticamente</h3>
+
+    <p>En el momento en que el participante hace clic en &ldquo;Registrarme&rdquo;, el sistema hace todo esto sin intervención humana:</p>
+
+    <ul class="steps">
+      <li>
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <strong>Valida los datos</strong>
+          Verifica que el RFC tenga el formato correcto, que el correo sea válido y que ningún campo obligatorio esté vacío.
+        </div>
+      </li>
+      <li>
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <strong>Cuenta cuántos hay en el sector</strong>
+          Revisa la hoja de Google Sheets y cuenta cuántos registros confirmados (<code>ok</code>) hay en el mismo sector del participante.
+        </div>
+      </li>
+      <li>
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <strong>Genera el folio</strong>
+          Crea un código único para este registro. El formato es <code>CONF-[SECTOR]-[número]</code>. Por ejemplo: <code>CONF-III-04</code> significa &ldquo;cuarto registrado del Sector III&rdquo;. Si es lista de espera, el folio termina en <code>-LE</code>.
+        </div>
+      </li>
+      <li>
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <strong>Guarda en Google Sheets</strong>
+          Agrega una fila nueva en la hoja &ldquo;Registros_IA_2026&rdquo; con todos los datos del participante, la fecha y hora, el folio y el estado del registro.
+        </div>
+      </li>
+      <li>
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <strong>Envía el correo de confirmación</strong>
+          Manda un correo HTML al participante con su folio, los datos del evento y el código QR (solo si el registro fue confirmado, no para lista de espera).
+        </div>
+      </li>
+      <li>
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <strong>Muestra la pantalla de éxito</strong>
+          El formulario desaparece y aparece la pantalla de confirmación con el folio generado.
+        </div>
+      </li>
+    </ul>
+
+
+    <h3 id="s3c">Parte C &mdash; El correo de confirmación</h3>
+
+    <p>El participante recibe un correo con diseño institucional que contiene:</p>
+
+    <ul>
+      <li><strong>Banda de estado</strong> &mdash; verde si fue confirmado, naranja si está en lista de espera.</li>
+      <li><strong>Folio de asistencia</strong> &mdash; el código único de su registro (ej. <code>CONF-V-02</code>).</li>
+      <li><strong>Código QR</strong> &mdash; imagen escaneable que codifica su folio. Solo aparece en registros confirmados. Es la &ldquo;credencial digital&rdquo; para entrar al evento.</li>
+      <li><strong>Datos del evento</strong> &mdash; fecha, lugar y horario.</li>
+      <li><strong>Resumen de su registro</strong> &mdash; nombre, función, escuela, sector.</li>
+    </ul>
+
+    <div class="box box-info">
+      <div class="box-title">Sobre el QR en el correo</div>
+      El código QR no contiene ningún link ni información secreta. Solo codifica el folio (por ejemplo, el texto <code>CONF-V-02</code>). Cuando se escanea, devuelve ese texto. Eso es todo lo que necesita el sistema de check-in para identificar al participante.
+    </div>
+
+
+    <h3 id="s3d">Parte D &mdash; El día del evento: check-in con QR</h3>
+
+    <p>Este es el flujo que ocurre en la entrada del auditorio el 17 de junio. Es la parte que más preguntas genera, así que se explica con detalle.</p>
+
+    <div class="box box-dark">
+      <div class="box-title">¿Qué necesita el operador en la puerta?</div>
+      <ul style="margin:0;padding-left:1.2rem;">
+        <li>Un teléfono, tablet o laptop con internet</li>
+        <li>El navegador abierto en <code>asistencia.html</code> (del sitio web de la SEPRN)</li>
+        <li>El PIN de acceso (configurado por el administrador antes del evento)</li>
+        <li>Opcional: un lector QR físico conectado por USB o Bluetooth</li>
+      </ul>
+    </div>
+
+    <ul class="steps">
+      <li>
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <strong>El operador abre la página de check-in</strong>
+          Entra a <code>asistencia.html</code> desde su dispositivo. Aparece una pantalla de acceso con un campo de PIN.
+        </div>
+      </li>
+      <li>
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <strong>Ingresa el PIN</strong>
+          Escribe el PIN del operador. Esto protege la página para que solo el personal autorizado pueda registrar asistencias. Una vez ingresado, la sesión se guarda y no necesita volver a escribirlo mientras tenga la pestaña abierta.
+        </div>
+      </li>
+      <li>
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <strong>Aparece la pantalla de scanner</strong>
+          Se muestra un campo grande donde se ingresará el folio del participante.
+        </div>
+      </li>
+      <li>
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <strong>El participante presenta su QR</strong>
+          Muestra en su teléfono el correo de confirmación con el código QR visible.
+        </div>
+      </li>
+      <li>
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <strong>Se escanea o se teclea el folio</strong>
+          Aquí hay dos opciones:
+          <ul style="margin-top:.4rem;">
+            <li><strong>Con lector QR físico:</strong> Se apunta el lector al QR del participante. El lector escribe automáticamente el folio en el campo y presiona Enter. El sistema responde de inmediato.</li>
+            <li><strong>Sin lector QR:</strong> El operador lee el folio del participante (ej. <code>CONF-III-04</code>) y lo escribe manualmente en el campo, luego presiona &ldquo;Verificar y registrar&rdquo;.</li>
+          </ul>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <strong>El sistema responde en segundos</strong>
+          Aparece una tarjeta de color con el resultado:
+          <ul style="margin-top:.4rem;">
+            <li style="color:#065f46;"><strong>Verde &mdash; Asistencia registrada:</strong> Primera vez que se escanea. Se muestra el nombre, función y escuela del participante. Puede entrar.</li>
+            <li style="color:#713f12;"><strong>Amarillo &mdash; Ya registrado:</strong> Este folio ya fue escaneado antes. Se muestra la hora en que entró. Posible intento de doble entrada.</li>
+            <li style="color:#7c2d12;"><strong>Naranja &mdash; Lista de espera:</strong> El registro existe pero no tiene lugar confirmado. Atender según el criterio del organizador.</li>
+            <li style="color:#7f1d1d;"><strong>Rojo &mdash; No encontrado:</strong> El folio no existe en el sistema. Puede ser un error al teclear o un registro que no se completó.</li>
+          </ul>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <strong>Se presiona "Registrar otro"</strong>
+          El campo se limpia y el operador está listo para el siguiente asistente. El contador en pantalla va aumentando con cada asistencia registrada.
+        </div>
+      </li>
+      <li>
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <strong>El registro queda en Google Sheets</strong>
+          En la hoja de Sheets, la columna &ldquo;Asistencia&rdquo; cambia de vacío a <code>asistio</code> y se agrega la hora de entrada en &ldquo;Hora_Checkin&rdquo;.
+        </div>
+      </li>
+    </ul>
+
+    <div class="box box-warn">
+      <div class="box-title">Importante sobre el lector QR físico</div>
+      El lector QR físico (USB o Bluetooth) funciona como si fuera un teclado: cuando escanea un código, &ldquo;escribe&rdquo; el contenido en el campo activo y presiona Enter automáticamente. <strong>No se necesita ninguna app especial</strong>. Si no se cuenta con un lector físico, el folio se puede teclear manualmente &mdash; el sistema funciona igual.
+    </div>
+  </div>
+
+
+  <!-- SECCIÓN 4 -->
+  <div class="section" id="s4">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <h2>Cómo ver los registros en Google Sheets</h2>
+    </div>
+
+    <p>Todos los datos de los registros se guardan automáticamente en la hoja <strong>&ldquo;Registros_IA_2026&rdquo;</strong> del Google Sheets vinculado al sistema.</p>
+
+    <h3>Columnas de la hoja</h3>
+
+    <table>
+      <thead>
+        <tr><th>Columna</th><th>Contenido</th><th>Ejemplo</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>A &mdash; Fecha</td><td>Fecha y hora del registro</td><td>10/06/2026 13:52</td></tr>
+        <tr><td>B &mdash; Folio</td><td>Código único del registro</td><td>CONF-III-04</td></tr>
+        <tr><td>C &mdash; Nombre</td><td>Nombre completo del participante</td><td>María García López</td></tr>
+        <tr><td>D &mdash; RFC</td><td>RFC del participante</td><td>GALM800101ABC</td></tr>
+        <tr><td>E &mdash; Teléfono</td><td>Teléfono de contacto</td><td>(55) 1234-5678</td></tr>
+        <tr><td>F &mdash; Correo</td><td>Correo electrónico</td><td>mgarcial@dee.edu.mx</td></tr>
+        <tr><td>G &mdash; Función</td><td>Función declarada</td><td>Director(a)</td></tr>
+        <tr><td>H &mdash; CCT</td><td>Clave del centro de trabajo</td><td>15DPR0432N</td></tr>
+        <tr><td>I &mdash; Sector</td><td>Sector educativo</td><td>III</td></tr>
+        <tr><td>J &mdash; Zona</td><td>Zona escolar</td><td>Zona 8</td></tr>
+        <tr><td>K &mdash; Escuela/Unidad</td><td>Nombre de la escuela</td><td>Lic. Gabriel Ramos Millán</td></tr>
+        <tr><td>L &mdash; Estado</td><td>Estado del registro</td><td><code>ok</code> / <code>lista_espera</code></td></tr>
+        <tr><td>M &mdash; Asistencia</td><td>Si asistió el día del evento</td><td><code>asistio</code> / (vacío)</td></tr>
+        <tr><td>N &mdash; Hora_Checkin</td><td>Hora en que se registró la entrada</td><td>09:47</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Filtros útiles</h3>
+    <ul>
+      <li><strong>Ver todos los confirmados:</strong> Filtrar columna L = <code>ok</code></li>
+      <li><strong>Ver lista de espera:</strong> Filtrar columna L = <code>lista_espera</code></li>
+      <li><strong>Ver quién asistió:</strong> Filtrar columna M = <code>asistio</code></li>
+      <li><strong>Ver registros por sector:</strong> Filtrar columna I por el sector deseado</li>
+      <li><strong>Contar por sector:</strong> Usar <code>COUNTIF(I:I,"III")</code> en una celda aparte</li>
+    </ul>
+
+    <div class="box box-tip">
+      <div class="box-title">Consejo</div>
+      Nunca edites manualmente las columnas B (Folio) o L (Estado) si no es estrictamente necesario, ya que el sistema las usa como referencia para validar registros y cupos. Si necesitas corregir un nombre o correo, las columnas C y F son seguras de editar.
+    </div>
+  </div>
+
+
+  <!-- SECCIÓN 5 -->
+  <div class="section" id="s5">
+    <div class="section-header">
+      <div class="section-num">5</div>
+      <h2>Qué hacer si hay problemas el día del evento</h2>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Situación</th><th>Qué hacer</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>El participante no trajo su correo ni su folio</td>
+          <td>Buscar su nombre en Google Sheets (columna C) para obtener su folio y teclearlo manualmente en la página de check-in.</td>
+        </tr>
+        <tr>
+          <td>El QR en el correo no se ve o no escanea</td>
+          <td>Pedir al participante que diga su folio en voz alta y teclearlo. El folio está visible en el correo como texto además del QR.</td>
+        </tr>
+        <tr>
+          <td>El sistema dice &ldquo;no encontrado&rdquo; pero el participante sí se registró</td>
+          <td>Verificar en Sheets si existe su nombre. Si está, teclear el folio exacto (con guiones) prestando atención a los caracteres. Si no está en Sheets, el registro pudo no haberse completado.</td>
+        </tr>
+        <tr>
+          <td>El sistema dice &ldquo;ya registrado&rdquo;</td>
+          <td>El folio ya se usó. Verificar en Sheets la columna N (Hora_Checkin) para saber cuándo entró. Si hay duda, el organizador decide si permite el acceso.</td>
+        </tr>
+        <tr>
+          <td>La página de check-in no carga</td>
+          <td>Verificar la conexión a internet. La página necesita internet para consultar Google Sheets. Como respaldo, se puede abrir directamente la hoja de Google Sheets para verificar folios manualmente.</td>
+        </tr>
+        <tr>
+          <td>Alguien llega sin registro pero quiere entrar</td>
+          <td>Decisión del organizador. Si hay lugares disponibles, se puede registrar en ese momento en la página de registro usando cualquier dispositivo con internet.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- SECCIÓN 6 -->
+  <div class="section" id="s6">
+    <div class="section-header">
+      <div class="section-num">6</div>
+      <h2>Mantenimiento y cierre del sistema</h2>
+    </div>
+
+    <h3>Cerrar el registro (después del evento)</h3>
+    <p>Cuando el período de registro haya terminado, la página <code>conferencia-ia.html</code> puede desactivarse de dos formas:</p>
+    <ul>
+      <li><strong>Opción A (recomendada):</strong> Reemplazar el contenido del formulario con un mensaje de &ldquo;El registro está cerrado&rdquo;. El link sigue funcionando pero ya no acepta nuevos registros.</li>
+      <li><strong>Opción B:</strong> Eliminar el archivo del repositorio. El link dejará de funcionar (mostrará error 404).</li>
+    </ul>
+
+    <h3>Quitar el banner de la página principal</h3>
+    <p>En el archivo <code>index.html</code> hay un bloque marcado con el comentario <code>&lt;!-- BANNER EVENTO --&gt;</code>. Borrando ese bloque y haciendo <em>push</em> a GitHub, el banner desaparece de la portada.</p>
+
+    <h3>Reutilizar el sistema para otro evento</h3>
+    <p>Para el siguiente evento, los pasos son:</p>
+    <ol>
+      <li>Copiar <code>conferencia-ia.html</code> con un nuevo nombre (ej. <code>taller-evaluacion.html</code>).</li>
+      <li>Ajustar nombre del evento, fecha, lugar, sectores y cupos en las primeras líneas del archivo.</li>
+      <li>Copiar el archivo <code>.gs</code>, cambiar el nombre de la hoja (<code>HOJA_NOMBRE</code>) y el PIN.</li>
+      <li>Crear una nueva implementación en Apps Script y actualizar la URL en el nuevo HTML.</li>
+      <li>La base de datos CCT (<code>js/cct-db.js</code>) no necesita ningún cambio.</li>
+    </ol>
+
+    <div class="box box-tip">
+      <div class="box-title">Ventaja del sistema</div>
+      La base de datos CCT es compartida entre todos los formularios futuros. Solo se actualiza cuando hay cambios en la estructura de escuelas, sectores o zonas.
+    </div>
+  </div>
+
+
+  <!-- SECCIÓN 7 -->
+  <div class="section" id="s7">
+    <div class="section-header">
+      <div class="section-num">7</div>
+      <h2>Glosario de términos técnicos</h2>
+    </div>
+
+    <dl class="glosario">
+      <dt>Apps Script</dt>
+      <dd>Lenguaje de programación de Google que corre dentro de Google Workspace (Sheets, Drive, Gmail). Es el &ldquo;cerebro&rdquo; que procesa los registros, valida datos y envía correos. No necesita servidor propio.</dd>
+
+      <dt>CCT</dt>
+      <dd>Clave del Centro de Trabajo. Código alfanumérico de 10&ndash;12 caracteres que identifica de forma única a cada escuela, supervisión o jefatura en el sistema educativo mexicano. Ejemplo: <code>15DPR0432N</code>.</dd>
+
+      <dt>Folio</dt>
+      <dd>Código único que el sistema genera para cada registro. Formato: <code>CONF-[SECTOR]-[número]</code>. Sirve como comprobante de registro y como identificador para el check-in. Los folios de lista de espera terminan en <code>-LE</code>.</dd>
+
+      <dt>GitHub Pages</dt>
+      <dd>Servicio gratuito de GitHub que publica sitios web directamente desde el repositorio de código. Es donde vive el sitio web de la SEPRN. No requiere pagar hosting.</dd>
+
+      <dt>Lista de espera</dt>
+      <dd>Estado de un registro cuando el cupo del sector ya está lleno (7 registros confirmados). El participante queda anotado y puede ser promovido a confirmado si alguien cancela.</dd>
+
+      <dt>PIN</dt>
+      <dd>Contraseña numérica o alfanumérica corta que protege el acceso a la página de check-in (<code>asistencia.html</code>). Solo el personal operador debe conocerlo.</dd>
+
+      <dt>QR (código QR)</dt>
+      <dd>Imagen cuadrada con patrón de puntos que puede leerse con una cámara. En este sistema, el QR del correo de confirmación contiene el folio del participante. Al escanearlo, el lector &ldquo;escribe&rdquo; el folio automáticamente.</dd>
+
+      <dt>Lector QR físico</dt>
+      <dd>Dispositivo de hardware (parecido a un escáner de código de barras) que se conecta por USB o Bluetooth. Al apuntarlo a un código QR, lo lee y escribe el contenido como si fuera un teclado. No requiere instalar ningún software especial.</dd>
+
+      <dt>RFC</dt>
+      <dd>Registro Federal de Contribuyentes. Clave fiscal de 13 caracteres que identifica a personas físicas en México. Formato: 4 letras + 6 dígitos de fecha de nacimiento + 3 alfanuméricos.</dd>
+
+      <dt>Sector educativo</dt>
+      <dd>Agrupación administrativa de escuelas y zonas. La SEPRN tiene 13 sectores (I al XIII). El sistema reserva 7 lugares por sector para equilibrar la representación.</dd>
+
+      <dt>Web App</dt>
+      <dd>Modalidad de publicación del Apps Script que lo convierte en un servicio que puede recibir datos desde el formulario web y responder con información. Es el &ldquo;puente&rdquo; entre la página web y Google Sheets.</dd>
+    </dl>
+  </div>
+
+</div><!-- /wrapper -->
+
+<div class="doc-footer">
+  <strong>SEPRN &middot; Oficina de Tecnología para el Desarrollo Educativo</strong><br>
+  Documento de uso interno &mdash; Conferencia Inteligencia Artificial 2026<br>
+  Para soporte técnico: OTDE
+</div>
+
+</body>
+</html>
