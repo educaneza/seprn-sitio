@@ -373,6 +373,41 @@
   </div>
 </section>
 
+<!-- CONVOCATORIA -->
+<section style="background:#0a1525;padding:2.5rem 1.25rem;">
+  <div style="max-width:760px;margin:0 auto;">
+    <h2 style="color:#F9F8F5;font-size:1rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;text-align:center;margin-bottom:1.5rem;opacity:.7;">Convocatoria del evento</h2>
+
+    <!-- Tabs -->
+    <div style="display:flex;justify-content:center;gap:.5rem;margin-bottom:1.25rem;">
+      <button onclick="showFlyer('dark')" id="tab-dark"
+        style="background:#1D9E75;color:#fff;border:none;padding:.4rem 1.1rem;border-radius:999px;font-size:.8rem;font-weight:600;cursor:pointer;">
+        Versión oscura
+      </button>
+      <button onclick="showFlyer('light')" id="tab-light"
+        style="background:transparent;color:#1D9E75;border:1.5px solid #1D9E75;padding:.4rem 1.1rem;border-radius:999px;font-size:.8rem;font-weight:600;cursor:pointer;">
+        Versión clara
+      </button>
+    </div>
+
+    <div style="text-align:center;">
+      <img id="flyer-dark"  src="images/convocatoria-ia-2026-dark.jpg"
+           alt="Convocatoria Conferencia Inteligencia Artificial 2026"
+           style="max-width:100%;max-height:80vh;border-radius:10px;box-shadow:0 6px 32px rgba(0,0,0,.5);object-fit:contain;">
+      <img id="flyer-light" src="images/convocatoria-ia-2026-light.jpg"
+           alt="Convocatoria Conferencia Inteligencia Artificial 2026"
+           style="max-width:100%;max-height:80vh;border-radius:10px;box-shadow:0 6px 32px rgba(0,0,0,.5);object-fit:contain;display:none;">
+    </div>
+
+    <p style="text-align:center;margin-top:1rem;">
+      <a href="#registro-form"
+         style="display:inline-block;background:#1D9E75;color:#fff;font-size:.9rem;font-weight:700;padding:.6rem 1.75rem;border-radius:8px;text-decoration:none;margin-top:.5rem;">
+        Ir al formulario de registro ↓
+      </a>
+    </p>
+  </div>
+</section>
+
 <!-- FORM CONTAINER -->
 <div class="container">
   <div class="card">
@@ -764,6 +799,15 @@ function showConfirmation(data, payload) {
     document.getElementById('lista-espera-notice').style.display = 'block';
     document.querySelector('#confirmation h2').textContent = 'En lista de espera';
   }
+}
+
+function showFlyer(version) {
+  document.getElementById('flyer-dark').style.display  = version === 'dark'  ? '' : 'none';
+  document.getElementById('flyer-light').style.display = version === 'light' ? '' : 'none';
+  document.getElementById('tab-dark').style.background  = version === 'dark'  ? '#1D9E75' : 'transparent';
+  document.getElementById('tab-dark').style.color       = version === 'dark'  ? '#fff'    : '#1D9E75';
+  document.getElementById('tab-light').style.background = version === 'light' ? '#1D9E75' : 'transparent';
+  document.getElementById('tab-light').style.color      = version === 'light' ? '#fff'    : '#1D9E75';
 }
 </script>
 
