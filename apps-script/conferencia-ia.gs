@@ -245,17 +245,17 @@ function enviarComprobante(datos, folio, status, fecha) {
         <tr>
           <td style="padding:0 32px 16px;">
             <table width="100%" style="background:#f9fafb;border-radius:8px;padding:16px;" cellpadding="0" cellspacing="0">
-              <tr><td style="padding:4px 0;">
-                <span style="font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">&#128197; Fecha</span><br>
-                <strong style="font-size:15px;color:#111827;">Mi&#233;rcoles 17 de junio de 2026</strong>
+              <tr><td style="padding:6px 0;">
+                <span style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;font-weight:600;">Fecha</span><br>
+                <strong style="font-size:15px;color:#111827;">Mi&eacute;rcoles 17 de junio de 2026</strong>
               </td></tr>
-              <tr><td style="padding:4px 0;border-top:1px solid #e5e7eb;">
-                <span style="font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">&#128205; Lugar</span><br>
+              <tr><td style="padding:6px 0;border-top:1px solid #e5e7eb;">
+                <span style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;font-weight:600;">Lugar</span><br>
                 <strong style="font-size:15px;color:#111827;">Auditorio de la Regional 1 Neza</strong>
               </td></tr>
-              <tr><td style="padding:4px 0;border-top:1px solid #e5e7eb;">
-                <span style="font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">&#128336; Horario</span><br>
-                <strong style="font-size:15px;color:#111827;">Recepci&#243;n: 9:30 h &middot; Conferencia: 10:00 h</strong>
+              <tr><td style="padding:6px 0;border-top:1px solid #e5e7eb;">
+                <span style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;font-weight:600;">Horario</span><br>
+                <strong style="font-size:15px;color:#111827;">Recepci&oacute;n: 9:30 h &middot; Conferencia: 10:00 h</strong>
               </td></tr>
             </table>
           </td>
