@@ -124,17 +124,25 @@
             border-top-color: #56212f;
         }
         .map-wrapper { position: relative; }
+
+        @media (max-width: 768px) {
+            #cobertura-section { padding: 50px 20px !important; }
+            #cobertura-grid { grid-template-columns: 1fr !important; gap: 30px !important; }
+        }
+        @media (max-width: 480px) {
+            #municipios-grid { grid-template-columns: 1fr !important; }
+        }
     </style>
 
     <!-- Cobertura -->
-    <section style="padding: 80px 50px; background: #f9f8f6;">
+    <section id="cobertura-section" style="padding: 80px 50px; background: #f9f8f6;">
         <div style="max-width: 1100px; margin: 0 auto;">
             <div style="text-align: center; margin-bottom: 50px;">
                 <h2 style="font-size: 36px; font-weight: 700; color: #56212f; margin-bottom: 15px;">Nuestra Cobertura</h2>
                 <p style="font-size: 17px; color: #666; max-width: 600px; margin: 0 auto; line-height: 1.7;">Atendemos <strong style="color:#9F2241;">18 municipios</strong> del oriente y suroriente del Estado de México, organizados en <strong style="color:#9F2241;">13 sectores educativos</strong>.</p>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: start;">
+            <div id="cobertura-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: start;">
 
                 <!-- SVG Map -->
                 <div style="background: white; border-radius: 18px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.06);">
@@ -205,7 +213,7 @@
                 <!-- Municipios List -->
                 <div>
                     <p style="font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #9F2241; margin-bottom: 20px;">Municipios y Sectores</p>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div id="municipios-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                         <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
                             <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Amecameca</p>
                             <p style="font-size:11px; color:#977e5b; margin:0;">Sector I</p>

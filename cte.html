@@ -41,6 +41,10 @@
             justify-content: space-between;
             align-items: center;
             transition: all 0.3s;
+            width: 100%;
+            border: none;
+            font-family: inherit;
+            text-align: left;
         }
         .sesion-header:hover {
             background: linear-gradient(135deg, #6d2a3d 0%, #b32850 100%);
@@ -58,8 +62,9 @@
             color: white;
         }
         .sesion-toggle {
-            font-size: 28px;
-            font-weight: 300;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
             transition: transform 0.3s;
             color: white;
         }
@@ -344,13 +349,13 @@
 
 <!-- Séptima Sesión Ordinaria (ABIERTA POR DEFECTO) -->
 <div class="sesion-accordion active">
-    <div class="sesion-header" onclick="toggleSesion(this)">
+    <button class="sesion-header" type="button" onclick="toggleSesion(this)" aria-expanded="true">
         <div class="sesion-header-text">
             <h2>Séptima Sesión Ordinaria 2025-2026 <span style="display: inline-block; background: #ff3b3b; color: white; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 6px; margin-left: 10px; vertical-align: middle;">NUEVO</span></h2>
             <p>Materiales, presentaciones y video de la séptima sesión del Consejo Técnico Escolar</p>
         </div>
-        <div class="sesion-toggle">▼</div>
-    </div>
+        <div class="sesion-toggle"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+    </button>
 
     <div class="sesion-content">
 
@@ -476,13 +481,13 @@
 
 <!-- Sexta Sesión Ordinaria -->
 <div class="sesion-accordion">
-    <div class="sesion-header" onclick="toggleSesion(this)">
+    <button class="sesion-header" type="button" onclick="toggleSesion(this)" aria-expanded="false">
         <div class="sesion-header-text">
             <h2>Sexta Sesión Ordinaria 2025-2026</h2>
             <p>Materiales, presentaciones y video de la sexta sesión del Consejo Técnico Escolar</p>
         </div>
-        <div class="sesion-toggle">▼</div>
-    </div>
+        <div class="sesion-toggle"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+    </button>
     
     <div class="sesion-content">
 
@@ -624,13 +629,13 @@
         
         <!-- Quinta Sesión Ordinaria -->
 <div class="sesion-accordion">
-    <div class="sesion-header" onclick="toggleSesion(this)">
+    <button class="sesion-header" type="button" onclick="toggleSesion(this)" aria-expanded="false">
         <div class="sesion-header-text">
             <h2>Quinta Sesión Ordinaria 2025-2026</h2>
             <p>Materiales, presentaciones y video de la quinta sesión del Consejo Técnico Escolar</p>
         </div>
-        <div class="sesion-toggle">▼</div>
-    </div>
+        <div class="sesion-toggle"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+    </button>
     
     <div class="sesion-content">
 
@@ -745,13 +750,13 @@
 
         <!-- Cuarta Sesión Ordinaria (ABIERTA POR DEFECTO) -->
 <div class="sesion-accordion">
-    <div class="sesion-header" onclick="toggleSesion(this)">
+    <button class="sesion-header" type="button" onclick="toggleSesion(this)" aria-expanded="false">
         <div class="sesion-header-text">
             <h2>Cuarta Sesión Ordinaria 2025-2026</h2>
             <p>Materiales, presentaciones y video de la cuarta sesión del Consejo Técnico Escolar</p>
         </div>
-        <div class="sesion-toggle">▼</div>
-    </div>
+        <div class="sesion-toggle"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+    </button>
     
     <div class="sesion-content">
 
@@ -776,13 +781,13 @@
 
         <!-- Taller Intensivo CTE (ABIERTA POR DEFECTO) -->
 <div class="sesion-accordion">
-    <div class="sesion-header" onclick="toggleSesion(this)">
+    <button class="sesion-header" type="button" onclick="toggleSesion(this)" aria-expanded="false">
         <div class="sesion-header-text">
             <h2>Taller Intensivo CTE 2025-2026</h2>
             <p>Materiales, presentaciones y video del Taller Intensivo del Consejo Técnico Escolar</p>
         </div>
-        <div class="sesion-toggle">▼</div>
-    </div>
+        <div class="sesion-toggle"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+    </button>
     
     <div class="sesion-content">
 
@@ -807,13 +812,13 @@
 
         <!-- Tercera Sesión Ordinaria (ABIERTA POR DEFECTO) -->
 <div class="sesion-accordion">
-    <div class="sesion-header" onclick="toggleSesion(this)">
+    <button class="sesion-header" type="button" onclick="toggleSesion(this)" aria-expanded="false">
         <div class="sesion-header-text">
             <h2>Tercera Sesión Ordinaria 2025-2026</h2>
             <p>Materiales, presentaciones y video de la tercera sesión del Consejo Técnico Escolar</p>
         </div>
-        <div class="sesion-toggle">▼</div>
-    </div>
+        <div class="sesion-toggle"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+    </button>
     
     <div class="sesion-content">
 
@@ -838,13 +843,13 @@
 
         <!-- Segunda Sesión Ordinaria (ABIERTA POR DEFECTO) -->
 <div class="sesion-accordion">
-    <div class="sesion-header" onclick="toggleSesion(this)">
+    <button class="sesion-header" type="button" onclick="toggleSesion(this)" aria-expanded="false">
         <div class="sesion-header-text">
             <h2>Segunda Sesión Ordinaria 2025-2026</h2>
             <p>Materiales, presentaciones y video de la segunda sesión del Consejo Técnico Escolar</p>
         </div>
-        <div class="sesion-toggle">▼</div>
-    </div>
+        <div class="sesion-toggle"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+    </button>
     
     <div class="sesion-content">
 
@@ -885,13 +890,13 @@
 
         <!-- Primera Sesión Ordinaria (ABIERTA POR DEFECTO) -->
 <div class="sesion-accordion">
-    <div class="sesion-header" onclick="toggleSesion(this)">
+    <button class="sesion-header" type="button" onclick="toggleSesion(this)" aria-expanded="false">
         <div class="sesion-header-text">
             <h2>Primera Sesión Ordinaria 2025-2026</h2>
             <p>Materiales, presentaciones y video de la primera sesión del Consejo Técnico Escolar</p>
         </div>
-        <div class="sesion-toggle">▼</div>
-    </div>
+        <div class="sesion-toggle"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+    </button>
     
     <div class="sesion-content">
 
@@ -916,13 +921,13 @@
 
         <!-- Fase Intensiva (ABIERTA POR DEFECTO) -->
 <div class="sesion-accordion">
-    <div class="sesion-header" onclick="toggleSesion(this)">
+    <button class="sesion-header" type="button" onclick="toggleSesion(this)" aria-expanded="false">
         <div class="sesion-header-text">
             <h2>Fase Intensiva 2025-2026</h2>
             <p>Materiales, presentaciones y video de la Fase Intensiva del Consejo Técnico Escolar</p>
         </div>
-        <div class="sesion-toggle">▼</div>
-    </div>
+        <div class="sesion-toggle"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+    </button>
     
     <div class="sesion-content">
 
@@ -949,7 +954,7 @@
         <!-- Copia este bloque para agregar más sesiones -->
         <!--
         <div class="sesion-accordion">
-            <div class="sesion-header" onclick="toggleSesion(this)">
+            <button class="sesion-header" type="button" onclick="toggleSesion(this)" aria-expanded="false">
                 <div class="sesion-header-text">
                     <h2>Cuarta Sesión Ordinaria 2025-2026</h2>
                     <p>Materiales y video de la cuarta sesión ordinaria</p>
@@ -1036,13 +1041,12 @@
 
             document.querySelectorAll('.sesion-accordion').forEach(function(acc) {
                 acc.classList.remove('active');
-                acc.querySelector('.sesion-toggle').textContent = '▶';
+                acc.querySelector('.sesion-header').setAttribute('aria-expanded', 'false');
             });
 
             if (!wasActive) {
                 accordion.classList.add('active');
-                accordion.querySelector('.sesion-toggle').textContent = '▼';
-                // Lazy load iframes on first open
+                header.setAttribute('aria-expanded', 'true');
                 accordion.querySelectorAll('iframe[data-src]').forEach(function(iframe) {
                     iframe.src = iframe.dataset.src;
                     iframe.removeAttribute('data-src');
