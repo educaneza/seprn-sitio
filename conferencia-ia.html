@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro — Conferencia IA 2026 | SEPRN · OTDE</title>
+  <meta name="description" content="Registro para la conferencia Inteligencia Artificial — Una charla para docentes, padres y comunidad educativa. Miércoles 17 de junio de 2026, Auditorio Regional 1 Neza.">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0C1A2E;
+      --surface:   #F9F8F5;
+      --teal:      #1D9E75;
+      --teal-dark: #167a5a;
+      --text:      #1a1a2e;
+      --muted:     #6b7280;
+      --border:    #d1d5db;
+      --error:     #dc2626;
+      --warn-bg:   #fffbeb;
+      --warn-text: #92400e;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    .site-header {
+      background: var(--bg);
+      border-bottom: 2px solid var(--teal);
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .site-header .brand {
+      color: var(--surface);
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: .05em;
+    }
+    .site-header .brand span {
+      color: var(--teal);
+    }
+    .site-header .back-link {
+      margin-left: auto;
+      color: var(--teal);
+      text-decoration: none;
+      font-size: .875rem;
+    }
+    .site-header .back-link:hover { text-decoration: underline; }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(135deg, #0C1A2E 0%, #0f2540 60%, #0a2918 100%);
+      color: var(--surface);
+      padding: 3rem 1.5rem 2.5rem;
+      text-align: center;
+    }
+    .hero .badge {
+      display: inline-block;
+      background: var(--teal);
+      color: #fff;
+      font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: .3rem .9rem;
+      border-radius: 999px;
+      margin-bottom: 1rem;
+    }
+    .hero h1 {
+      font-size: clamp(1.5rem, 4vw, 2.4rem);
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: .75rem;
+    }
+    .hero h1 em {
+      color: var(--teal);
+      font-style: normal;
+    }
+    .hero .subtitle {
+      font-size: 1rem;
+      opacity: .85;
+      margin-bottom: 1.5rem;
+    }
+    .event-meta {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: .75rem 2rem;
+      font-size: .875rem;
+      opacity: .9;
+    }
+    .event-meta span::before { margin-right: .4rem; }
+    .event-meta .m-date::before  { content: '📅'; }
+    .event-meta .m-place::before { content: '📍'; }
+    .event-meta .m-time::before  { content: '🕙'; }
+
+    /* ── CONTAINER ── */
+    .container {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem;
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 4px 24px rgba(0,0,0,.35);
+    }
+    .card h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--bg);
+      margin-bottom: 1.5rem;
+      padding-bottom: .75rem;
+      border-bottom: 2px solid var(--teal);
+    }
+
+    /* ── FORM ── */
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+    label {
+      display: block;
+      font-size: .85rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: .35rem;
+    }
+    label .req { color: var(--error); margin-left: 2px; }
+
+    input, select {
+      width: 100%;
+      padding: .65rem .85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      font-size: .95rem;
+      color: var(--text);
+      background: #fff;
+      transition: border-color .15s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(29,158,117,.15);
+    }
+    input.error, select.error { border-color: var(--error); }
+    input[readonly] {
+      background: #f3f4f6;
+      color: var(--muted);
+      cursor: not-allowed;
+    }
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right .85rem center;
+      padding-right: 2.5rem;
+    }
+
+    .field-hint {
+      font-size: .78rem;
+      color: var(--muted);
+      margin-top: .3rem;
+    }
+    .field-error {
+      font-size: .78rem;
+      color: var(--error);
+      margin-top: .3rem;
+      display: none;
+    }
+    .field-error.visible { display: block; }
+
+    /* ── CCT ── */
+    .cct-wrapper { position: relative; }
+    #cct-suggestions {
+      position: absolute;
+      top: 100%;
+      left: 0; right: 0;
+      background: #fff;
+      border: 1.5px solid var(--teal);
+      border-top: none;
+      border-radius: 0 0 7px 7px;
+      z-index: 100;
+      max-height: 220px;
+      overflow-y: auto;
+      display: none;
+    }
+    #cct-suggestions li {
+      list-style: none;
+      padding: .55rem .85rem;
+      font-size: .875rem;
+      cursor: pointer;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    #cct-suggestions li:last-child { border-bottom: none; }
+    #cct-suggestions li:hover, #cct-suggestions li.active { background: #e6f7f2; }
+    #cct-suggestions li .cct-code { font-family: monospace; font-weight: 600; color: var(--teal); }
+    #cct-suggestions li .cct-name { color: var(--muted); font-size: .8rem; display: block; }
+
+    .cct-status {
+      margin-top: .4rem;
+      font-size: .8rem;
+      padding: .35rem .7rem;
+      border-radius: 5px;
+      display: none;
+    }
+    .cct-status.found { background: #d1fae5; color: #065f46; display: block; }
+    .cct-status.warn  { background: var(--warn-bg); color: var(--warn-text); display: block; }
+
+    .manual-fields {
+      background: #fffbeb;
+      border: 1px solid #fcd34d;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: .75rem;
+      display: none;
+    }
+    .manual-fields.visible { display: block; }
+    .manual-fields p {
+      font-size: .8rem;
+      color: var(--warn-text);
+      margin-bottom: .75rem;
+      font-weight: 500;
+    }
+
+    /* ── CUPO ── */
+    .cupo-status {
+      font-size: .8rem;
+      padding: .4rem .8rem;
+      border-radius: 6px;
+      margin-top: .4rem;
+      display: none;
+    }
+    .cupo-status.ok      { background: #d1fae5; color: #065f46; display: block; }
+    .cupo-status.lleno   { background: #fee2e2; color: #991b1b; display: block; }
+    .cupo-status.loading { background: #e0f2fe; color: #0369a1; display: block; }
+
+    /* ── SUBMIT ── */
+    .btn-submit {
+      width: 100%;
+      padding: .85rem;
+      background: var(--teal);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .2s, transform .1s;
+      margin-top: .5rem;
+    }
+    .btn-submit:hover:not(:disabled) { background: var(--teal-dark); }
+    .btn-submit:active:not(:disabled) { transform: scale(.98); }
+    .btn-submit:disabled { opacity: .5; cursor: not-allowed; }
+
+    .form-footer {
+      font-size: .78rem;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 1rem;
+    }
+
+    /* ── CONFIRMATION ── */
+    #confirmation {
+      display: none;
+      text-align: center;
+    }
+    #confirmation .check-icon {
+      width: 64px; height: 64px;
+      background: var(--teal);
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.25rem;
+    }
+    #confirmation .check-icon svg { width: 32px; height: 32px; }
+    #confirmation h2 {
+      font-size: 1.4rem;
+      color: var(--bg);
+      border: none;
+      margin-bottom: .5rem;
+    }
+    #confirmation p { color: var(--muted); font-size: .95rem; margin-bottom: .5rem; }
+    #confirmation .folio-box {
+      background: var(--bg);
+      color: var(--teal);
+      font-family: 'Courier New', monospace;
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      padding: .75rem 2rem;
+      border-radius: 8px;
+      display: inline-block;
+      margin: 1rem 0;
+    }
+    #confirmation .detail {
+      font-size: .85rem;
+      color: var(--text);
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      padding: .75rem 1rem;
+      text-align: left;
+      margin-top: 1rem;
+    }
+    #confirmation .detail dt {
+      font-size: .75rem;
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    #confirmation .detail dd { margin-bottom: .5rem; font-size: .9rem; }
+
+    #lista-espera-notice {
+      background: #fffbeb;
+      border: 1px solid #fcd34d;
+      border-radius: 8px;
+      padding: .75rem 1rem;
+      font-size: .85rem;
+      color: var(--warn-text);
+      margin-top: 1rem;
+      display: none;
+    }
+
+    /* ── SPINNER ── */
+    .spinner {
+      display: inline-block;
+      width: 18px; height: 18px;
+      border: 3px solid rgba(255,255,255,.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      vertical-align: middle;
+      margin-right: .4rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 500px) {
+      .card { padding: 1.5rem 1.125rem; }
+      .hero { padding: 2rem 1rem 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="brand">SEPRN <span>·</span> OTDE</div>
+  <a href="index.html" class="back-link">← Inicio</a>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <span class="badge">Evento presencial</span>
+  <h1>Inteligencia Artificial:<br><em>Una charla para docentes,<br>padres y comunidad educativa</em></h1>
+  <p class="subtitle">Regístrate para reservar tu lugar</p>
+  <div class="event-meta">
+    <span class="m-date">Miércoles 17 de junio de 2026</span>
+    <span class="m-place">Auditorio de la Regional 1 Neza</span>
+    <span class="m-time">Recepción 9:30 h · Conferencia 10:00 h</span>
+  </div>
+</section>
+
+<!-- FORM CONTAINER -->
+<div class="container">
+  <div class="card">
+
+    <!-- FORMULARIO -->
+    <form id="registro-form" novalidate>
+      <h2>Datos de registro</h2>
+
+      <!-- Nombre -->
+      <div class="form-group">
+        <label for="nombre">Nombre completo <span class="req">*</span></label>
+        <input type="text" id="nombre" name="nombre" autocomplete="name"
+               placeholder="Ej. María García López" maxlength="100">
+        <div class="field-error" id="err-nombre">Ingresa tu nombre completo.</div>
+      </div>
+
+      <!-- RFC -->
+      <div class="form-group">
+        <label for="rfc">RFC <span class="req">*</span></label>
+        <input type="text" id="rfc" name="rfc" autocomplete="off"
+               placeholder="AAAA000000XXX" maxlength="13"
+               style="text-transform:uppercase; font-family: monospace;">
+        <div class="field-hint">13 caracteres: 4 letras + 6 dígitos (fecha) + 3 alfanuméricos</div>
+        <div class="field-error" id="err-rfc">RFC inválido. Formato: AAAA######XXX</div>
+      </div>
+
+      <!-- Teléfono -->
+      <div class="form-group">
+        <label for="telefono">Teléfono <span class="req">*</span></label>
+        <input type="tel" id="telefono" name="telefono" autocomplete="tel"
+               placeholder="(55) 1234-5678" maxlength="14">
+        <div class="field-error" id="err-telefono">Ingresa un teléfono válido de 10 dígitos.</div>
+      </div>
+
+      <!-- Correo -->
+      <div class="form-group">
+        <label for="correo">Correo electrónico <span class="req">*</span></label>
+        <input type="email" id="correo" name="correo" autocomplete="email"
+               placeholder="tu@correo.com">
+        <div class="field-hint">El comprobante de registro se enviará a este correo.</div>
+        <div class="field-error" id="err-correo">Ingresa un correo válido.</div>
+      </div>
+
+      <!-- Función -->
+      <div class="form-group">
+        <label for="funcion">Función <span class="req">*</span></label>
+        <select id="funcion" name="funcion">
+          <option value="">— Selecciona tu función —</option>
+          <option value="Director(a)">Director(a)</option>
+          <option value="Docente">Docente</option>
+          <option value="Supervisor(a)">Supervisor(a)</option>
+          <option value="Jefe(a) de sector">Jefe(a) de sector</option>
+          <option value="ATP">ATP</option>
+          <option value="Personal SEPRN">Personal SEPRN</option>
+          <option value="Padre/madre de familia">Padre/madre de familia</option>
+          <option value="Otro">Otro</option>
+        </select>
+        <div class="field-error" id="err-funcion">Selecciona tu función.</div>
+      </div>
+
+      <!-- CCT -->
+      <div class="form-group">
+        <label for="cct">CCT (Clave del centro de trabajo) <span class="req">*</span></label>
+        <div class="cct-wrapper">
+          <input type="text" id="cct" name="cct" autocomplete="off"
+                 placeholder="Ej. 15DPR0432N" maxlength="15"
+                 style="text-transform:uppercase; font-family: monospace;">
+          <ul id="cct-suggestions" role="listbox"></ul>
+        </div>
+        <div class="cct-status" id="cct-status"></div>
+        <div class="field-error" id="err-cct">Ingresa una CCT válida.</div>
+
+        <!-- Campos autocompletados -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:.75rem; margin-top:.75rem;">
+          <div>
+            <label for="sector" style="font-size:.8rem;">Sector</label>
+            <input type="text" id="sector" name="sector" readonly placeholder="Autocompletado">
+          </div>
+          <div>
+            <label for="zona" style="font-size:.8rem;">Zona</label>
+            <input type="text" id="zona" name="zona" readonly placeholder="Autocompletado">
+          </div>
+        </div>
+        <div style="margin-top:.75rem;">
+          <label for="escuela" style="font-size:.8rem;">Nombre de la escuela / unidad</label>
+          <input type="text" id="escuela" name="escuela" readonly placeholder="Autocompletado">
+        </div>
+
+        <!-- Estado de cupo -->
+        <div class="cupo-status" id="cupo-status"></div>
+
+        <!-- Fallback manual si CCT no está en la base -->
+        <div class="manual-fields" id="manual-fields">
+          <p>⚠️ CCT no encontrada en la base. Completa los datos manualmente:</p>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:.75rem; margin-bottom:.75rem;">
+            <div>
+              <label for="sector-manual" style="font-size:.8rem;">Sector <span class="req">*</span></label>
+              <select id="sector-manual">
+                <option value="">— Sector —</option>
+                <option>I</option><option>II</option><option>III</option>
+                <option>IV</option><option>V</option><option>VI</option>
+                <option>VII</option><option>VIII</option><option>IX</option>
+                <option>X</option><option>XI</option><option>XII</option>
+                <option>XIII</option><option>SEPRN</option>
+              </select>
+            </div>
+            <div>
+              <label for="zona-manual" style="font-size:.8rem;">Zona</label>
+              <input type="number" id="zona-manual" placeholder="Núm." min="1" max="99">
+            </div>
+          </div>
+          <div>
+            <label for="escuela-manual" style="font-size:.8rem;">Nombre de escuela / unidad <span class="req">*</span></label>
+            <input type="text" id="escuela-manual" placeholder="Nombre de la escuela o área" maxlength="120">
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <button type="submit" class="btn-submit" id="btn-submit">
+        Registrarme al evento
+      </button>
+      <p class="form-footer">
+        Al registrarte recibirás un comprobante en tu correo. Los cupos son limitados (7 por sector).
+      </p>
+    </form>
+
+    <!-- CONFIRMACIÓN -->
+    <div id="confirmation">
+      <div class="check-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <h2>¡Registro confirmado!</h2>
+      <p>Tu folio de asistencia es:</p>
+      <div class="folio-box" id="folio-display">—</div>
+      <p style="font-size:.82rem; color:var(--muted);">Guarda este folio. Se ha enviado un comprobante a tu correo.</p>
+      <dl class="detail" id="confirm-detail"></dl>
+      <div id="lista-espera-notice">
+        ⚠️ El cupo de tu sector está lleno. Has quedado en <strong>lista de espera</strong>.
+        Te notificaremos si se libera un lugar.
+      </div>
+    </div>
+
+  </div><!-- /.card -->
+</div><!-- /.container -->
+
+<script src="js/cct-db.js"></script>
+<script>
+// ── CONSTANTE: reemplaza con la URL de tu Web App de Apps Script después de implementar ──
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxbqOCDTLncOjRr8G69tRQTNOz6jqRBu8ByAyi2zUQL-_mnFbrfd6FeFoMXpVuVI6T3/exec';
+
+// ── MÁSCARA TELÉFONO ──
+document.getElementById('telefono').addEventListener('input', function () {
+  let v = this.value.replace(/\D/g, '').slice(0, 10);
+  if (v.length > 6)      this.value = `(${v.slice(0,2)}) ${v.slice(2,6)}-${v.slice(6)}`;
+  else if (v.length > 2) this.value = `(${v.slice(0,2)}) ${v.slice(2)}`;
+  else if (v.length > 0) this.value = `(${v}`;
+  else                   this.value = v;
+});
+
+// ── RFC: mayúsculas automáticas ──
+document.getElementById('rfc').addEventListener('input', function () {
+  this.value = this.value.toUpperCase();
+});
+
+// ── CCT AUTOCOMPLETADO ──
+const cctInput   = document.getElementById('cct');
+const suggBox    = document.getElementById('cct-suggestions');
+const cctStatus  = document.getElementById('cct-status');
+const cupoStatus = document.getElementById('cupo-status');
+const manualFields = document.getElementById('manual-fields');
+let cupoTimer = null;
+
+function clearAutoFields() {
+  ['sector','zona','escuela'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  cctStatus.className = 'cct-status';
+  cctStatus.textContent = '';
+  cupoStatus.className = 'cupo-status';
+  cupoStatus.textContent = '';
+  manualFields.classList.remove('visible');
+}
+
+function fillFromRecord(rec) {
+  document.getElementById('sector').value  = rec.sector || '';
+  document.getElementById('zona').value    = rec.zona   != null ? `Zona ${rec.zona}` : '';
+  document.getElementById('escuela').value = rec.nombre || '';
+  manualFields.classList.remove('visible');
+  cctStatus.className = 'cct-status found';
+  cctStatus.textContent = `✓ ${rec.nombre} · Sector ${rec.sector}${rec.zona ? ' · Zona ' + rec.zona : ''}`;
+  checkCupo(rec.sector);
+}
+
+function showManualFallback() {
+  clearAutoFields();
+  manualFields.classList.add('visible');
+  cctStatus.className = 'cct-status warn';
+  cctStatus.textContent = 'CCT no encontrada. Completa los datos manualmente.';
+}
+
+function checkCupo(sector) {
+  if (!sector || sector === 'SEPRN') return;
+  cupoStatus.className = 'cupo-status loading';
+  cupoStatus.textContent = 'Verificando disponibilidad de cupo…';
+  fetch(`${APPS_SCRIPT_URL}?action=cupo&sector=${encodeURIComponent(sector)}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.disponible) {
+        cupoStatus.className = 'cupo-status ok';
+        cupoStatus.textContent = `✓ Hay lugar en Sector ${sector} (${data.registrados} de 7 registros)`;
+      } else {
+        cupoStatus.className = 'cupo-status lleno';
+        cupoStatus.textContent = `Sector ${sector} sin cupo (7/7). Podrás quedar en lista de espera.`;
+      }
+    })
+    .catch(() => {
+      cupoStatus.className = 'cupo-status';
+      cupoStatus.textContent = '';
+    });
+}
+
+cctInput.addEventListener('input', function () {
+  const val = this.value.toUpperCase();
+  this.value = val;
+  clearAutoFields();
+
+  const exacto = buscarCCT(val);
+  if (exacto) {
+    fillFromRecord(exacto);
+    suggBox.style.display = 'none';
+    return;
+  }
+
+  const sugs = sugerirCCT(val);
+  if (sugs.length) {
+    suggBox.innerHTML = sugs.map(r =>
+      `<li data-cct="${r.cct}">
+        <span class="cct-code">${r.cct}</span>
+        <span class="cct-name">${r.nombre} · Sector ${r.sector}</span>
+       </li>`
+    ).join('');
+    suggBox.style.display = 'block';
+  } else {
+    suggBox.style.display = 'none';
+    if (val.length >= 10) showManualFallback();
+  }
+});
+
+suggBox.addEventListener('click', function (e) {
+  const li = e.target.closest('li');
+  if (!li) return;
+  const rec = buscarCCT(li.dataset.cct);
+  if (rec) {
+    cctInput.value = rec.cct;
+    fillFromRecord(rec);
+  }
+  suggBox.style.display = 'none';
+});
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.cct-wrapper')) suggBox.style.display = 'none';
+});
+
+// sincronizar campos manuales → campos readonly cuando se usa fallback
+['sector-manual','zona-manual','escuela-manual'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    const s = document.getElementById('sector-manual').value;
+    const z = document.getElementById('zona-manual').value;
+    const n = document.getElementById('escuela-manual').value;
+    document.getElementById('sector').value  = s;
+    document.getElementById('zona').value    = z ? `Zona ${z}` : '';
+    document.getElementById('escuela').value = n;
+    if (s) {
+      clearTimeout(cupoTimer);
+      cupoTimer = setTimeout(() => checkCupo(s), 600);
+    }
+  });
+});
+
+// ── VALIDACIÓN ──
+const RFC_RE = /^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/;
+
+function showErr(id, show) {
+  const el = document.getElementById('err-' + id);
+  const inp = document.getElementById(id);
+  if (!el || !inp) return;
+  el.classList.toggle('visible', show);
+  inp.classList.toggle('error', show);
+}
+
+function validateForm() {
+  let ok = true;
+
+  const nombre = document.getElementById('nombre').value.trim();
+  showErr('nombre', nombre.length < 3);
+  if (nombre.length < 3) ok = false;
+
+  const rfc = document.getElementById('rfc').value.trim();
+  showErr('rfc', !RFC_RE.test(rfc));
+  if (!RFC_RE.test(rfc)) ok = false;
+
+  const tel = document.getElementById('telefono').value.replace(/\D/g,'');
+  showErr('telefono', tel.length !== 10);
+  if (tel.length !== 10) ok = false;
+
+  const correo = document.getElementById('correo').value.trim();
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
+  showErr('correo', !emailOk);
+  if (!emailOk) ok = false;
+
+  const funcion = document.getElementById('funcion').value;
+  showErr('funcion', !funcion);
+  if (!funcion) ok = false;
+
+  const cct = document.getElementById('cct').value.trim();
+  showErr('cct', cct.length < 6);
+  if (cct.length < 6) ok = false;
+
+  return ok;
+}
+
+// ── ENVÍO ──
+document.getElementById('registro-form').addEventListener('submit', async function (e) {
+  e.preventDefault();
+  if (!validateForm()) return;
+
+  const btn = document.getElementById('btn-submit');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Enviando registro…';
+
+  const sectorVal  = document.getElementById('sector').value;
+  const zonaVal    = document.getElementById('zona').value.replace('Zona ','');
+  const escuelaVal = document.getElementById('escuela').value;
+
+  const payload = {
+    nombre:   document.getElementById('nombre').value.trim(),
+    rfc:      document.getElementById('rfc').value.trim(),
+    telefono: document.getElementById('telefono').value.trim(),
+    correo:   document.getElementById('correo').value.trim(),
+    funcion:  document.getElementById('funcion').value,
+    cct:      document.getElementById('cct').value.trim(),
+    sector:   sectorVal,
+    zona:     zonaVal,
+    escuela:  escuelaVal,
+  };
+
+  try {
+    const resp = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    const data = await resp.json();
+
+    if (data.status === 'ok' || data.status === 'lista_espera') {
+      showConfirmation(data, payload);
+    } else {
+      alert('Error al procesar el registro: ' + (data.mensaje || 'Intenta de nuevo.'));
+      btn.disabled = false;
+      btn.textContent = 'Registrarme al evento';
+    }
+  } catch (err) {
+    alert('Error de conexión. Verifica tu internet e intenta de nuevo.');
+    btn.disabled = false;
+    btn.textContent = 'Registrarme al evento';
+  }
+});
+
+function showConfirmation(data, payload) {
+  document.getElementById('registro-form').style.display = 'none';
+
+  const conf = document.getElementById('confirmation');
+  conf.style.display = 'block';
+
+  document.getElementById('folio-display').textContent = data.folio || '—';
+
+  const detail = document.getElementById('confirm-detail');
+  detail.innerHTML = `
+    <dt>Nombre</dt><dd>${payload.nombre}</dd>
+    <dt>Función</dt><dd>${payload.funcion}</dd>
+    <dt>Escuela / Unidad</dt><dd>${payload.escuela}</dd>
+    <dt>Sector</dt><dd>${payload.sector}</dd>
+    <dt>Correo de confirmación</dt><dd>${payload.correo}</dd>
+  `;
+
+  if (data.status === 'lista_espera') {
+    document.getElementById('lista-espera-notice').style.display = 'block';
+    document.querySelector('#confirmation h2').textContent = 'En lista de espera';
+  }
+}
+</script>
+
+</body>
+</html>
