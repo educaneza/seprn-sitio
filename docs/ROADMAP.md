@@ -7,16 +7,17 @@ Objetivo: elevar el sitio de un nivel **5/10** (funcional-institucional 2019) a 
 
 ## Estado actual — Scores de auditoría
 
-| Dimensión | Score actual | Score objetivo |
-|-----------|:---:|:---:|
-| UI | 5/10 | 8/10 |
-| UX | 5/10 | 8/10 |
-| Branding | 3/10 | 7/10 |
-| Profesionalismo | 5/10 | 9/10 |
-| Claridad | 6/10 | 9/10 |
-| Conversión / Retención | 3/10 | 7/10 |
-| Diseño móvil | 4/10 | 8/10 |
-| Performance percibida | 6/10 | 8/10 |
+| Dimensión | Score original (may 2026) | Post Fase 1 (jun 2026) | Objetivo |
+|-----------|:---:|:---:|:---:|
+| UI | 5/10 | 6/10 | 8/10 |
+| UX | 5/10 | 6.5/10 | 8/10 |
+| Branding | 3/10 | 3.5/10 | 7/10 |
+| Profesionalismo | 5/10 | 6/10 | 9/10 |
+| Claridad | 6/10 | 6/10 | 9/10 |
+| Conversión / Retención | 3/10 | 3/10 | 7/10 |
+| Diseño móvil | 4/10 | 6/10 | 8/10 |
+| Performance percibida | 6/10 | 7/10 | 8/10 |
+| Accesibilidad | 3/10 | 6/10 | 8/10 |
 
 ---
 
@@ -38,7 +39,23 @@ Implementado para la **Conferencia IA 2026** (17 jun 2026, Auditorio Regional 1 
 
 ---
 
-## FASE 1 — Quick Wins
+## ~~FASE 1 — Quick Wins~~ — COMPLETADA (junio 2026)
+
+| # | Item | Commits |
+|---|---|---|
+| 1.1 | `class="active"` + `aria-current="page"` en nav de 16 páginas | `fd707cf` |
+| 1.2 | Layout cobertura mobile: grid 2→1 col, padding mobile | `9502c7f` |
+| 1.3 | Google Fonts: `@import` → `<link rel="preconnect">` en 16 páginas | `59086e9` |
+| 1.4 | Contraste hero: `#977e5b` → `#6b5a44` (WCAG AA) | `59086e9` |
+| 1.5 | Accordion: `<div onclick>` → `<button>` + `aria-expanded` | `9502c7f` |
+| 1.6 | `aria-current="page"` (simultáneo con 1.1) | `fd707cf` |
+| 1.7 | Touch targets mobile nav: `12px 4px` → `14px 12px` | `59086e9` |
+| 1.8 | `favicon.svg` creado + agregado a 18 páginas | `fd707cf` |
+| 1.9 | Toggle ▼/▶ → SVG chevron animado por CSS | `9502c7f` |
+
+---
+
+## FASE 1 — Quick Wins *(referencia histórica)*
 **Objetivo:** Corregir lo que está roto sin tocar la estructura visual. Todo debería quedar en un sprint de 1–2 horas de trabajo.
 
 ### 1.1 Bug crítico: nav activo en 14 páginas

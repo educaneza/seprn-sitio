@@ -21,6 +21,16 @@ Auditoría realizada en mayo 2026. El roadmap completo de mejoras está en [`doc
 | Diseño móvil | 4/10 | 8/10 |
 | Performance percibida | 6/10 | 8/10 |
 
+### Completado en junio 2026 — Fase 1 Quick Wins (sitio principal)
+- Google Fonts: `@import` bloqueante → `<link rel="preconnect">` en 16 páginas (performance mobile ~300–600ms)
+- Contraste hero: `#977e5b` → `#6b5a44` (ratio 3.5:1 → 4.8:1, pasa WCAG AA)
+- Touch targets mobile nav: `padding: 12px 4px` → `14px 12px`
+- `class="active"` + `aria-current="page"` en el nav de las 16 páginas
+- `favicon.svg` creado (cuadrado guinda, letras SP) + agregado a las 18 páginas
+- Sección Cobertura mobile: grid 2→1 columna en ≤768px; lista de municipios 2→1 en ≤480px
+- Accordeón CTE: `<div onclick>` → `<button type="button">` con `aria-expanded` sincronizado
+- Toggle ▼/▶ → SVG chevron animado por CSS en los 9 acordeones activos
+
 ### Completado en junio 2026 — Sistema de Registro de Eventos
 - **`conferencia-ia.html`** — formulario de registro para la Conferencia IA 2026 con autocompletado CCT, validación RFC/teléfono/nombre completo (3 palabras mín.), verificación de cupos en tiempo real y pantalla de confirmación con folio
 - **`js/cct-db.js`** — base de datos CCT con 506 registros reales (417 escuelas, 75 supervisiones, 13 jefaturas, subdirección) generada desde `OTDE_Base_Contactos_v2.xlsx`
@@ -41,8 +51,8 @@ Auditoría realizada en mayo 2026. El roadmap completo de mejoras está en [`doc
 - Emojis de headings reemplazados por SVG inline (CTE, Areas)
 - Séptima Sesión Ordinaria 2025-2026 agregada a CTE
 
-### Próxima sesión — Fase 1 (Quick Wins)
-Ver [`docs/ROADMAP.md`](docs/ROADMAP.md) para el plan detallado con código listo para aplicar.
+### Próxima sesión — Fase 2 (Elevación visual)
+Ver [`docs/ROADMAP.md`](docs/ROADMAP.md) para el plan detallado.
 
 ---
 

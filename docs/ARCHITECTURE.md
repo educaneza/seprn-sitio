@@ -393,19 +393,24 @@ const CHECKIN_PIN  = '2026IA';             // cambiar antes del evento
 | B8 | Color de texto `#000000` | `styles.css` | ✅ Resuelto |
 | B9 | Sin `<meta name="description">` | Páginas clave | ✅ Resuelto |
 
-### Pendientes (referenciados en el Roadmap)
+### Resueltos en Fase 1 (junio 2026)
+
+| # | Problema | Archivo(s) | Estado |
+|---|---|---|---|
+| P1 | Sin `class="active"` en nav de 14+ páginas | Todos los HTML | ✅ `fd707cf` |
+| P2 | Sección cobertura rota en mobile (sin media query) | `index.html` | ✅ `9502c7f` |
+| P3 | Google Fonts via `@import` (render-blocking) | `styles.css` + todos | ✅ `59086e9` |
+| P4 | Contraste subtítulo hero: `#977e5b` (ratio 3.5:1, falla WCAG AA) | `styles.css` | ✅ `59086e9` |
+| P5 | Accordion headers son `<div onclick>` (no semántico) | `cte.html` | ✅ `9502c7f` |
+| P6 | Sin `aria-current="page"` en ninguna página | Todos los HTML | ✅ `fd707cf` |
+| P7 | Touch targets insuficientes en nav mobile | `styles.css` | ✅ `59086e9` |
+| P8 | Sin favicon en ninguna página | Todos los HTML | ✅ `fd707cf` |
+| P9 | Toggles accordion con caracteres `▼▶` (no fluido) | `cte.html` | ✅ `9502c7f` |
+
+### Pendientes (Fase 2+)
 
 | # | Problema | Archivo(s) | Fase |
 |---|---|---|---|
-| P1 | Sin `class="active"` en nav de 14+ páginas | Todos los HTML | Fase 1.1 |
-| P2 | Sección cobertura rota en mobile (sin media query) | `index.html` | Fase 1.2 |
-| P3 | Google Fonts via `@import` (render-blocking) | `styles.css` + todos | Fase 1.3 |
-| P4 | Contraste subtítulo hero: `#977e5b` (ratio 3.5:1, falla WCAG AA) | `styles.css` | Fase 1.4 |
-| P5 | Accordion headers son `<div onclick>` (no semántico) | `cte.html` | Fase 1.5 |
-| P6 | Sin `aria-current="page"` en ninguna página | Todos los HTML | Fase 1.6 |
-| P7 | Touch targets insuficientes en nav mobile | `styles.css` | Fase 1.7 |
-| P8 | Sin favicon en ninguna página | Todos los HTML | Fase 1.8 |
-| P9 | Toggles accordion con caracteres `▼▶` (no fluido) | `cte.html` | Fase 1.9 |
 | P10 | CSS custom properties no implementadas | `styles.css` | Fase 2.7 |
 | P11 | Animación accordion con `max-height` (no lineal) | `cte.html` | Fase 2.3 |
 | P12 | Footer duplicado en 16 archivos | Todos los HTML | Deuda técnica |
@@ -422,8 +427,10 @@ Antes de hacer commit de una página nueva:
 - [ ] `<meta name="viewport" ...>`
 - [ ] `<meta name="description" content="...">`
 - [ ] `<title>[Sección] - SEPRN</title>`
+- [ ] `<link rel="preconnect" href="https://fonts.googleapis.com">` + `<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>` + `<link>` de Montserrat
+- [ ] `<link rel="icon" href="favicon.svg" type="image/svg+xml">`
 - [ ] `<link rel="stylesheet" href="styles.css">`
-- [ ] Nav completo con los 5 ítems + botón `nav-toggle` + `class="active"` en el ítem actual
+- [ ] Nav completo con los 5 ítems + botón `nav-toggle` + `class="active"` + `aria-current="page"` en el ítem actual
 - [ ] Footer completo (copiar del template)
 - [ ] `<script src="script.js" defer></script>` antes de `</body>`
 - [ ] `rel="noopener noreferrer"` en todos los `target="_blank"`
