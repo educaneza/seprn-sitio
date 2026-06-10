@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+/* Google Fonts cargado via <link> en cada HTML (no @import — bloquea render) */
 
 * {
     margin: 0;
@@ -131,7 +131,7 @@ nav a.active {
 
 .hero p {
     font-size: 21px;
-    color: #977e5b;
+    color: #6b5a44;
     font-weight: 400;
     line-height: 1.4;
     max-width: 700px;
@@ -445,7 +445,7 @@ footer {
 
     nav ul li a {
         display: block;
-        padding: 12px 4px;
+        padding: 14px 12px;
         border-bottom: 1px solid #f0ede8;
         font-size: 15px;
     }
