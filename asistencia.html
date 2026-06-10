@@ -202,6 +202,39 @@
     .counter strong { font-size: 1.4rem; color: var(--teal); display: block; }
 
     .pin-hint { font-size: .75rem; color: var(--muted); margin-top: .4rem; text-align: center; }
+
+    /* ── CÁMARA QR ── */
+    .btn-cam {
+      width: 100%;
+      padding: .7rem;
+      background: transparent;
+      border: 1.5px solid var(--teal);
+      color: var(--teal);
+      border-radius: 8px;
+      font-size: .9rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: .5rem;
+      transition: background .15s;
+    }
+    .btn-cam:hover { background: #e6f7f2; }
+    .btn-cam.active { background: #fee2e2; border-color: #dc2626; color: #dc2626; }
+
+    #cam-wrapper {
+      margin-top: .75rem;
+      border-radius: 10px;
+      overflow: hidden;
+      display: none;
+      border: 2px solid var(--teal);
+    }
+    #cam-wrapper.visible { display: block; }
+    #qr-reader { width: 100%; }
+    #qr-reader video { border-radius: 8px; }
+    /* ocultar branding de html5-qrcode */
+    #qr-reader__status_span,
+    #qr-reader__dashboard_section_swaplink,
+    #qr-reader img { display: none !important; }
+    #qr-reader__dashboard { padding: .5rem !important; background: #f9fafb; }
   </style>
 </head>
 <body>
@@ -227,12 +260,22 @@
 <div class="screen hidden" id="screen-scanner">
   <div class="card">
     <h2>Registro de asistencia</h2>
-    <p class="sub">Escribe o escanea el folio con el lector QR</p>
+    <p class="sub">Escanea el QR o escribe el folio manualmente</p>
 
     <input type="text" id="folio-input" placeholder="CONF-III-01"
            autocomplete="off" autocorrect="off" spellcheck="false">
 
     <button class="btn" id="btn-verificar">Verificar y registrar</button>
+
+    <button class="btn-cam" id="btn-cam">
+      &#9654; Escanear QR con cámara
+    </button>
+
+    <!-- Visor de cámara -->
+    <div id="cam-wrapper">
+      <div id="qr-reader"></div>
+    </div>
+
     <button class="btn btn-outline" id="btn-limpiar" style="margin-top:.5rem;display:none;">
       Registrar otro
     </button>
@@ -358,9 +401,54 @@ document.getElementById('btn-limpiar').addEventListener('click', () => {
   document.getElementById('folio-input').value = '';
   document.getElementById('result-card').style.display = 'none';
   document.getElementById('btn-limpiar').style.display = 'none';
+  detenerCamara();
   document.getElementById('folio-input').focus();
 });
+
+// ── CÁMARA QR ──
+let html5QrScanner = null;
+let camaraActiva = false;
+
+document.getElementById('btn-cam').addEventListener('click', () => {
+  camaraActiva ? detenerCamara() : iniciarCamara();
+});
+
+function iniciarCamara() {
+  if (!html5QrScanner) {
+    html5QrScanner = new Html5Qrcode('qr-reader');
+  }
+  document.getElementById('cam-wrapper').classList.add('visible');
+  document.getElementById('btn-cam').textContent = '&#9632; Detener cámara';
+  document.getElementById('btn-cam').classList.add('active');
+  camaraActiva = true;
+
+  html5QrScanner.start(
+    { facingMode: 'environment' },
+    { fps: 12, qrbox: { width: 240, height: 240 } },
+    (texto) => {
+      document.getElementById('folio-input').value = texto.trim().toUpperCase();
+      detenerCamara();
+      document.getElementById('btn-verificar').click();
+    },
+    () => {}
+  ).catch(() => {
+    detenerCamara();
+    alert('No se pudo acceder a la cámara. Verifica que el navegador tenga permiso.');
+  });
+}
+
+function detenerCamara() {
+  if (html5QrScanner && camaraActiva) {
+    html5QrScanner.stop().catch(() => {});
+  }
+  document.getElementById('cam-wrapper').classList.remove('visible');
+  const btn = document.getElementById('btn-cam');
+  btn.innerHTML = '&#9654; Escanear QR con cámara';
+  btn.classList.remove('active');
+  camaraActiva = false;
+}
 </script>
 
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </body>
 </html>
