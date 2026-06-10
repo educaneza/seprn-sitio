@@ -21,6 +21,15 @@ Auditoría realizada en mayo 2026. El roadmap completo de mejoras está en [`doc
 | Diseño móvil | 4/10 | 8/10 |
 | Performance percibida | 6/10 | 8/10 |
 
+### Completado en junio 2026 — Sistema de Registro de Eventos
+- **`conferencia-ia.html`** — formulario de registro para la Conferencia IA 2026 con autocompletado CCT, validación RFC/teléfono/nombre completo (3 palabras mín.), verificación de cupos en tiempo real y pantalla de confirmación con folio
+- **`js/cct-db.js`** — base de datos CCT con 506 registros reales (417 escuelas, 75 supervisiones, 13 jefaturas, subdirección) generada desde `OTDE_Base_Contactos_v2.xlsx`
+- **`apps-script/conferencia-ia.gs`** — Web App (Google Apps Script): registro en Sheets, generación de folios `CONF-{SECTOR}-{nn}`, control de cupos por sector (7 por sector), correo HTML con QR, endpoint de check-in protegido por PIN
+- **`asistencia.html`** — página de check-in para operador en puerta: PIN local (sin red), escáner de cámara QR vía `html5-qrcode`, lector físico compatible, tarjetas de resultado codificadas por color, contador de asistencias
+- **`docs/manual-sistema-registro.html`** — manual de uso interno en lenguaje llano (7 secciones + glosario)
+- Banner temporal en `index.html` → `conferencia-ia.html`
+- Correo de confirmación: nombre del remitente personalizado "SEPRN · OTDE", QR del folio embebido
+
 ### Completado en mayo 2026
 - Todos los bugs críticos resueltos (GA4 fuera de `<head>`, typo `referrerpolicy`, nav faltante en contacto)
 - Hamburger menu para móvil (`script.js` + `.nav-toggle` CSS)
@@ -42,15 +51,18 @@ Ver [`docs/ROADMAP.md`](docs/ROADMAP.md) para el plan detallado con código list
 | Capa | Tecnología |
 |---|---|
 | Markup | HTML5 semántico |
-| Estilos | CSS3 (archivo único `styles.css`) |
+| Estilos | CSS3 (archivo único `styles.css` + `<style>` inline por página especial) |
 | Scripts | Vanilla JavaScript (`script.js` global + inline por página) |
 | Tipografía | Google Fonts — Montserrat (300–700) |
 | Analítica | Google Analytics 4 (`G-7D68DB8ELW`) |
 | Mapas | Google Maps Embed API |
 | Video | YouTube Embed (lazy load en acordeones colapsados) |
 | Hosting | GitHub Pages (rama `main`) |
+| Backend eventos | Google Apps Script (Web App) + Google Sheets |
+| Correo | GmailApp (Apps Script) + api.qrserver.com para QR |
+| Scanner QR | html5-qrcode v2.3.8 vía CDN (solo `asistencia.html`) |
 
-No hay framework, bundler, ni dependencias npm. El sitio es completamente estático.
+No hay framework, bundler, ni dependencias npm. El sitio es completamente estático. El único backend externo es el Apps Script vinculado al Spreadsheet del evento.
 
 ---
 
@@ -80,9 +92,23 @@ seprn-sitio/
 ├── styles.css                    # Hoja de estilos global (única)
 ├── script.js                     # JS global: hamburger menu
 │
+├── conferencia-ia.html           # Formulario de registro — Conferencia IA 2026
+├── asistencia.html               # Check-in con QR para operador en puerta
+│
+├── js/
+│   └── cct-db.js                 # Base de datos CCT (506 registros) + buscarCCT() / sugerirCCT()
+│
+├── apps-script/
+│   └── conferencia-ia.gs         # Apps Script Web App (copiar en Google Apps Script)
+│
 ├── docs/
 │   ├── ARCHITECTURE.md           # Arquitectura, componentes, convenciones
-│   └── ROADMAP.md                # Plan de mejoras: Fase 1 / 2 / 3
+│   ├── ROADMAP.md                # Plan de mejoras: Fase 1 / 2 / 3
+│   └── manual-sistema-registro.html  # Manual de uso interno del sistema de registro
+│
+├── kit-digital/                  # Recursos digitales OTDE
+│   ├── Organizadores_Gráficos_Editable.docx
+│   └── Tabla_SAMR_Niveles_Integración.pdf
 │
 ├── pdfs/                         # Archivos descargables
 │   ├── chuka-guia-docentes.pdf
@@ -95,6 +121,7 @@ seprn-sitio/
 │       └── septima-sesion/       # Materiales 7ª sesión (PPTX, PDF, ZIP)
 │
 └── images/                       # Imágenes estáticas
+    ├── convocatoria-ia-2026.jpg  # Flyer de la Conferencia IA 2026
     ├── CHUKA_INFOGRAFIA.png
     ├── Firma_institucional_OTDE.png
     ├── Pleca 4x.png

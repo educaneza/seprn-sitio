@@ -18,7 +18,7 @@
 const HOJA_NOMBRE  = 'Registros_IA_2026';
 const CUPO_SECTOR  = 7;
 const CORREO_ADMIN = 'adg0086n@dee.edu.mx';
-const CHECKIN_PIN  = '2026IAOTDE'; // ← cámbialo antes del evento
+const CHECKIN_PIN  = '2026IA'; // ← cámbialo antes del evento
 
 // ── doGet: cupo y check-in ──
 function doGet(e) {
@@ -315,7 +315,7 @@ function enviarComprobante(datos, folio, status, fecha) {
 
   GmailApp.sendEmail(datos.correo, asunto, '', {
     htmlBody,
-    name: 'SEPRN · OTDE',
+    name: 'Oficina de Tecnología · Neza',
     replyTo: CORREO_ADMIN,
   });
 }

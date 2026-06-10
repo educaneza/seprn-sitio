@@ -308,10 +308,76 @@ Editar `nosotros.html` (bloque "Equipo de Trabajo") y `areas.html` (campo `area-
 | Portal SEP CTE | Link externo | `https://gestion.cte.sep.gob.mx/insumos/#!/` |
 | Facebook | Redes sociales | `https://www.facebook.com/SubNeza` |
 | YouTube Channel | Redes sociales | `https://www.youtube.com/channel/UCvDb2DPSJxFyhH3bCPd5D2Q` |
+| Google Apps Script | Backend registro de eventos | Web App con `doGet`/`doPost`; URL embebida en `conferencia-ia.html` y `asistencia.html` |
+| GmailApp (Apps Script) | Correo de confirmación | Envía HTML con QR; remitente: "Oficina de Tecnología · Neza" |
+| api.qrserver.com | Generación de QR en correo | URL dinámica con folio codificado; solo en correos de confirmación |
+| html5-qrcode v2.3.8 | Escáner QR en `asistencia.html` | CDN `unpkg.com`; modo cámara trasera `environment` |
 
 ---
 
-## 8. Bugs y deuda técnica
+## 8. Sistema de Registro de Eventos (Junio 2026)
+
+Arquitectura del sistema implementado para la Conferencia IA 2026. Reutilizable para futuros eventos con ajustes mínimos en el Apps Script y la base CCT.
+
+### Diagrama de flujo
+
+```
+Visitante
+  └── conferencia-ia.html
+        ├── js/cct-db.js (autocompletado CCT, 506 registros)
+        ├── fetch ?action=cupo  ──────────────────────────────────────┐
+        └── POST datos del formulario ─────────────────────────────── Apps Script Web App
+                                                                        │   (conferencia-ia.gs)
+                                                                        ├── Google Sheets (Registros_IA_2026)
+                                                                        └── GmailApp → correo HTML + QR
+
+Operador en puerta
+  └── asistencia.html
+        ├── PIN local (sessionStorage) — sin red
+        ├── html5-qrcode (cámara) o lector físico o tipeo manual
+        └── fetch ?action=checkin&folio=...&pin=... ──────────────── Apps Script Web App
+                                                                        └── Google Sheets (cols M + N)
+```
+
+### Estructura de la hoja `Registros_IA_2026`
+
+| Col | Nombre | Tipo | Notas |
+|---|---|---|---|
+| A | Fecha | DateTime | `appendRow` inserta objeto `Date` |
+| B | Folio | String | `CONF-{SECTOR}-{nn}` o `CONF-{SECTOR}-{nn}-LE` |
+| C | Nombre | String | Validado: mín. 3 palabras de ≥ 2 letras |
+| D | RFC | String | Regex `[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}` |
+| E | Teléfono | String | Máscara `(55) 1234-5678` |
+| F | Correo | String | Regex básica de email |
+| G | Función | String | docente / director / supervisor / familiar / otro |
+| H | CCT | String | Clave del Centro de Trabajo |
+| I | Sector | String | De la CCT seleccionada |
+| J | Zona | String | De la CCT seleccionada (puede ser vacío) |
+| K | Escuela/Unidad | String | Nombre del plantel de la CCT |
+| L | Estado | String | `ok` \| `lista_espera` |
+| M | Asistencia | String | Vacío → `asistio` al hacer check-in |
+| N | Hora_Checkin | String | `HH:mm` formateado; `@STRING@` para evitar reinterpretación |
+
+### Constantes clave del Apps Script
+
+```javascript
+const HOJA_NOMBRE  = 'Registros_IA_2026'; // cambiar por evento
+const CUPO_SECTOR  = 7;                    // cupo por sector (sin contar SEPRN)
+const CORREO_ADMIN = 'adg0086n@dee.edu.mx';
+const CHECKIN_PIN  = '2026IA';             // cambiar antes del evento
+```
+
+### Decisiones de diseño y limitaciones conocidas
+
+- **PIN en dos capas**: `asistencia.html` valida el PIN localmente (sin red) para mostrar el scanner; el Apps Script también valida el PIN en `?action=checkin` como segunda línea de defensa.
+- **Hora como texto**: Google Sheets convierte cadenas `HH:mm` a fracciones de día (float) si la celda tiene formato numérico. Forzar `@STRING@` en la columna N previene esta corrupción.
+- **QR por email**: Se genera dinámicamente con `api.qrserver.com`. Requiere que el cliente de correo cargue imágenes externas. iCloud Mail las carga correctamente.
+- **iCloud Mail y emojis**: Los clientes de correo de Apple no renderizan caracteres Unicode SMP (U+1F000+) aunque sean HTML entities. Solución: etiquetas de texto puro con estilo CSS.
+- **Cupo sector SEPRN**: El sector "SEPRN" (personal interno) no tiene límite de cupo (`CUPO_SECTOR` no aplica).
+
+---
+
+## 9. Bugs y deuda técnica
 
 ### Bugs resueltos (Mayo 2026)
 
@@ -346,7 +412,7 @@ Editar `nosotros.html` (bloque "Equipo de Trabajo") y `areas.html` (campo `area-
 
 ---
 
-## 9. Checklist para nuevas páginas
+## 10. Checklist para nuevas páginas
 
 Antes de hacer commit de una página nueva:
 

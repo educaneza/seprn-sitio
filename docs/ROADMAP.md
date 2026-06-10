@@ -20,6 +20,24 @@ Objetivo: elevar el sitio de un nivel **5/10** (funcional-institucional 2019) a 
 
 ---
 
+## Completado en junio 2026 — Sistema de Registro de Eventos
+
+Implementado para la **Conferencia IA 2026** (17 jun 2026, Auditorio Regional 1 Neza).
+
+| Item | Archivo(s) | Estado |
+|---|---|---|
+| Formulario de registro con autocompletado CCT (506 registros) | `conferencia-ia.html`, `js/cct-db.js` | ✅ |
+| Base de datos CCT extraída del Excel `OTDE_Base_Contactos_v2.xlsx` | `js/cct-db.js` | ✅ |
+| Backend Apps Script: registro en Sheets, control de cupos, correo HTML con QR | `apps-script/conferencia-ia.gs` | ✅ |
+| Página de check-in: PIN local, escáner QR por cámara, lector físico, tipeo manual | `asistencia.html` | ✅ |
+| Correo de confirmación: remitente personalizado "Oficina de Tecnología · Neza", QR del folio | `apps-script/conferencia-ia.gs` | ✅ |
+| Fix iCloud Mail: emojis SMP reemplazados por etiquetas CSS | `apps-script/conferencia-ia.gs` | ✅ |
+| Fix hora check-in: formato `@STRING@` en Sheets + `instanceof Date` check | `apps-script/conferencia-ia.gs` | ✅ |
+| Manual de uso interno del sistema (7 secciones + glosario) | `docs/manual-sistema-registro.html` | ✅ |
+| Banner temporal en `index.html` con link a `conferencia-ia.html` | `index.html` | ✅ |
+
+---
+
 ## FASE 1 — Quick Wins
 **Objetivo:** Corregir lo que está roto sin tocar la estructura visual. Todo debería quedar en un sprint de 1–2 horas de trabajo.
 
