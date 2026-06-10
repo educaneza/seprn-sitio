@@ -256,46 +256,36 @@
 
 <script>
 // ── Reemplaza con la URL real del Apps Script ──
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/TU_ID_AQUI/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxbqOCDTLncOjRr8G69tRQTNOz6jqRBu8ByAyi2zUQL-_mnFbrfd6FeFoMXpVuVI6T3/exec';
+
+// PIN local — debe coincidir con CHECKIN_PIN en conferencia-ia.gs
+const LOCAL_PIN = '2026IAOTDE';
 
 let sessionPin = sessionStorage.getItem('checkin_pin') || '';
 let asistenciasHoy = 0;
 
-// Restaurar sesión si ya tenía PIN
-if (sessionPin) iniciarScanner();
+// Restaurar sesión si el PIN ya estaba guardado en esta pestaña
+if (sessionPin === LOCAL_PIN) iniciarScanner();
 
-// ── PIN ──
+// ── PIN: validación local, sin necesidad de internet ──
 document.getElementById('pin-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') document.getElementById('btn-pin').click();
 });
 
-document.getElementById('btn-pin').addEventListener('click', async () => {
+document.getElementById('btn-pin').addEventListener('click', () => {
   const pin = document.getElementById('pin-input').value.trim();
   if (!pin) return;
 
-  const btn = document.getElementById('btn-pin');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>Verificando…';
-
-  try {
-    const r = await fetch(`${APPS_SCRIPT_URL}?action=checkin&folio=TEST_PIN&pin=${encodeURIComponent(pin)}`);
-    const d = await r.json();
-    if (d.status === 'error' && d.mensaje === 'PIN incorrecto') {
-      document.getElementById('pin-error').style.display = 'block';
-      document.getElementById('pin-input').value = '';
-    } else {
-      // Cualquier otra respuesta (incluido no_encontrado) significa que el PIN fue aceptado
-      sessionStorage.setItem('checkin_pin', pin);
-      sessionPin = pin;
-      iniciarScanner();
-    }
-  } catch {
-    document.getElementById('pin-error').textContent = 'Error de conexión.';
+  if (pin === LOCAL_PIN) {
+    sessionStorage.setItem('checkin_pin', pin);
+    sessionPin = pin;
+    iniciarScanner();
+  } else {
+    document.getElementById('pin-error').textContent = 'PIN incorrecto. Intenta de nuevo.';
     document.getElementById('pin-error').style.display = 'block';
+    document.getElementById('pin-input').value = '';
+    document.getElementById('pin-input').focus();
   }
-
-  btn.disabled = false;
-  btn.textContent = 'Acceder';
 });
 
 function iniciarScanner() {
