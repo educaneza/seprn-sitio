@@ -313,7 +313,11 @@ function enviarComprobante(datos, folio, status, fecha) {
     ? `✅ Registro confirmado — Conferencia IA 2026 · Folio ${folio}`
     : `⏳ Lista de espera — Conferencia IA 2026 · Folio ${folio}`;
 
-  GmailApp.sendEmail(datos.correo, asunto, '', { htmlBody });
+  GmailApp.sendEmail(datos.correo, asunto, '', {
+    htmlBody,
+    name: 'SEPRN · OTDE',
+    replyTo: CORREO_ADMIN,
+  });
 }
 
 function fila(label, valor) {
