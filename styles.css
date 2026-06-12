@@ -150,6 +150,51 @@ nav a.active {
     margin: 0 auto;
 }
 
+/* Hero CTAs */
+.hero-actions {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 2rem;
+}
+
+.btn-primary {
+    display: inline-block;
+    padding: 13px 30px;
+    background: var(--guinda);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.15s;
+}
+
+.btn-primary:hover {
+    background: var(--guinda-acento);
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    display: inline-block;
+    padding: 13px 30px;
+    background: transparent;
+    color: var(--guinda);
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 8px;
+    border: 2px solid var(--guinda);
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s, transform 0.15s;
+}
+
+.btn-secondary:hover {
+    background: var(--guinda);
+    color: #fff;
+    transform: translateY(-2px);
+}
+
 /* Main Areas Section */
 .areas {
     max-width: 1200px;
