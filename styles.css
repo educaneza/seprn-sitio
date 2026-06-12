@@ -159,7 +159,7 @@ nav a.active {
     margin-top: 2rem;
 }
 
-.btn-primary {
+a.btn-primary {
     display: inline-block;
     padding: 13px 30px;
     background: var(--guinda);
@@ -171,12 +171,13 @@ nav a.active {
     transition: background 0.2s, transform 0.15s;
 }
 
-.btn-primary:hover {
+a.btn-primary:hover {
     background: var(--guinda-acento);
+    color: #fff;
     transform: translateY(-2px);
 }
 
-.btn-secondary {
+a.btn-secondary {
     display: inline-block;
     padding: 13px 30px;
     background: transparent;
@@ -189,7 +190,7 @@ nav a.active {
     transition: background 0.2s, color 0.2s, transform 0.15s;
 }
 
-.btn-secondary:hover {
+a.btn-secondary:hover {
     background: var(--guinda);
     color: #fff;
     transform: translateY(-2px);
