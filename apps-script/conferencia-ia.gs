@@ -260,7 +260,7 @@ function enviarComprobante(datos, folio, status, fecha) {
               </td></tr>
               <tr><td style="padding:6px 0;border-top:1px solid #e5e7eb;">
                 <span style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;font-weight:600;">Horario</span><br>
-                <strong style="font-size:15px;color:#111827;">Recepci&oacute;n: 9:30 h &middot; Conferencia: 10:00 h</strong>
+                <strong style="font-size:15px;color:#111827;">Recepci&oacute;n: 9:30 h &middot; Inicio: 10:00 h</strong>
               </td></tr>
             </table>
           </td>
@@ -310,8 +310,8 @@ function enviarComprobante(datos, folio, status, fecha) {
 </html>`;
 
   const asunto = esConfirmado
-    ? `✅ Registro confirmado — Conferencia IA 2026 · Folio ${folio}`
-    : `⏳ Lista de espera — Conferencia IA 2026 · Folio ${folio}`;
+    ? `✅ Registro confirmado — Charla IA 2026 · Folio ${folio}`
+    : `⏳ Lista de espera — Charla IA 2026 · Folio ${folio}`;
 
   GmailApp.sendEmail(datos.correo, asunto, '', {
     htmlBody,
