@@ -33,21 +33,24 @@
             box-shadow: 0 8px 30px rgba(159,34,65,0.15);
         }
         .sesion-header {
-            background: linear-gradient(135deg, #56212f 0%, #9F2241 100%);
+            background: var(--guinda);
+            border-left: 4px solid var(--guinda-acento);
             padding: 25px 30px;
             color: white;
             cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: all 0.3s;
+            transition: background 0.2s;
             width: 100%;
-            border: none;
+            border-top: none;
+            border-right: none;
+            border-bottom: none;
             font-family: inherit;
             text-align: left;
         }
         .sesion-header:hover {
-            background: linear-gradient(135deg, #6d2a3d 0%, #b32850 100%);
+            background: #6d2a3d;
         }
         .sesion-header-text h2 {
             font-size: 22px;
@@ -82,7 +85,8 @@
             padding: 35px;
         }
         .download-all-section {
-            background: linear-gradient(135deg, #56212f 0%, #9F2241 100%);
+            background: var(--guinda);
+            border-left: 4px solid var(--guinda-acento);
             padding: 25px 35px;
             border-radius: 12px;
             margin-bottom: 30px;
