@@ -333,3 +333,42 @@ function jsonResponse(obj) {
     .createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
 }
+
+// ── Reenviar confirmación con QR a personas de lista de espera ──
+// Pasos previos:
+//   1. En la hoja "Registros_IA_2026", cambia el Estado de lista_espera → ok
+//      solo para quienes quieres confirmar.
+//   2. Selecciona esta función en el editor y presiona ▶ Ejecutar.
+function reenviarConfirmacionListaEspera() {
+  const hoja  = obtenerHoja();
+  const datos = hoja.getDataRange().getValues();
+  let enviados = 0;
+
+  for (let i = 1; i < datos.length; i++) {
+    const row    = datos[i];
+    const status = String(row[11]).trim().toLowerCase();
+    const folio  = String(row[1]).trim();
+
+    // Solo filas que ya cambiaste a 'ok' y cuyo folio terminaba en -LE
+    if (status !== 'ok' || !folio.endsWith('-LE')) continue;
+
+    const registrado = {
+      nombre:   row[2],
+      rfc:      row[3],
+      telefono: row[4],
+      correo:   row[5],
+      funcion:  row[6],
+      cct:      row[7],
+      sector:   row[8],
+      zona:     row[9],
+      escuela:  row[10],
+    };
+
+    enviarComprobante(registrado, folio, 'ok', row[0]);
+    Logger.log(`✅ Enviado: ${folio} → ${registrado.correo}`);
+    enviados++;
+    Utilities.sleep(1500);
+  }
+
+  Logger.log(`Proceso terminado. Correos enviados: ${enviados}`);
+}
