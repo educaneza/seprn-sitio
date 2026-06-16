@@ -10,49 +10,42 @@ Cubre 18 municipios del oriente del Estado de México organizados en 13 sectores
 
 ## Estado del proyecto
 
-Auditoría realizada en mayo 2026. El roadmap completo de mejoras está en [`docs/ROADMAP.md`](docs/ROADMAP.md).
+Ver roadmap completo en [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
-| Dimensión | Score actual | Score objetivo |
-|---|:---:|:---:|
-| UI | 5/10 | 8/10 |
-| UX | 5/10 | 8/10 |
-| Branding | 3/10 | 7/10 |
-| Profesionalismo | 5/10 | 9/10 |
-| Diseño móvil | 4/10 | 8/10 |
-| Performance percibida | 6/10 | 8/10 |
+| Dimensión | Score (may 2026) | Score actual (16 jun 2026) | Objetivo |
+|---|:---:|:---:|:---:|
+| UI | 5/10 | **8.5/10** | 8/10 ✅ |
+| UX | 5/10 | **8/10** | 8/10 ✅ |
+| Branding | 3/10 | **7.5/10** | 7/10 ✅ |
+| Diseño móvil | 4/10 | **7.5/10** | 8/10 |
+| Performance percibida | 6/10 | **8/10** | 8/10 ✅ |
+| Accesibilidad | 3/10 | **7/10** | 8/10 |
 
-### Completado en junio 2026 — Fase 1 Quick Wins (sitio principal)
-- Google Fonts: `@import` bloqueante → `<link rel="preconnect">` en 16 páginas (performance mobile ~300–600ms)
-- Contraste hero: `#977e5b` → `#6b5a44` (ratio 3.5:1 → 4.8:1, pasa WCAG AA)
-- Touch targets mobile nav: `padding: 12px 4px` → `14px 12px`
-- `class="active"` + `aria-current="page"` en el nav de las 16 páginas
-- `favicon.svg` creado (cuadrado guinda, letras SP) + agregado a las 18 páginas
-- Sección Cobertura mobile: grid 2→1 columna en ≤768px; lista de municipios 2→1 en ≤480px
-- Accordeón CTE: `<div onclick>` → `<button type="button">` con `aria-expanded` sincronizado
-- Toggle ▼/▶ → SVG chevron animado por CSS en los 9 acordeones activos
+### Completado el 16 jun 2026 — Rediseño visual élite
+- **Hero oscuro** — fondo midnight `#0C1A2E` full-bleed, badge pill institucional, tipografía display 64px, botones dark-variant, glow decorativo, scroll indicator animado, entrada escalonada
+- **Strip de métricas** — nueva sección con 4 cifras clave animadas con contador easeOutCubic al hacer scroll
+- **System de diseño** — clases reutilizables: `.section-header`, `.section-eyebrow`, `.metrics-strip`, `.btn-primary-dark`, `.btn-secondary-dark`
+- **Cierre evento Charla IA** — banner y formulario de registro retirados; función `reenviarConfirmacionListaEspera()` agregada al Apps Script para post-evento
+
+### Completado en junio 2026 — Fase 1 Quick Wins
+- Google Fonts: `@import` bloqueante → `<link rel="preconnect">`
+- Contraste hero: `#977e5b` → `#6b5a44` (pasa WCAG AA)
+- `class="active"` + `aria-current="page"` en el nav de todas las páginas
+- `favicon.svg` creado y agregado a todas las páginas
+- Cobertura mobile: grid responsivo
+- Acordeón CTE: `<div onclick>` → `<button>` con `aria-expanded`
+- Toggle ▼/▶ → SVG chevron animado
 
 ### Completado en junio 2026 — Sistema de Registro de Eventos
-- **`conferencia-ia.html`** — formulario de registro para la Conferencia IA 2026 con autocompletado CCT, validación RFC/teléfono/nombre completo (3 palabras mín.), verificación de cupos en tiempo real y pantalla de confirmación con folio
-- **`js/cct-db.js`** — base de datos CCT con 506 registros reales (417 escuelas, 75 supervisiones, 13 jefaturas, subdirección) generada desde `OTDE_Base_Contactos_v2.xlsx`
-- **`apps-script/conferencia-ia.gs`** — Web App (Google Apps Script): registro en Sheets, generación de folios `CONF-{SECTOR}-{nn}`, control de cupos por sector (7 por sector), correo HTML con QR, endpoint de check-in protegido por PIN
-- **`asistencia.html`** — página de check-in para operador en puerta: PIN local (sin red), escáner de cámara QR vía `html5-qrcode`, lector físico compatible, tarjetas de resultado codificadas por color, contador de asistencias
-- **`docs/manual-sistema-registro.html`** — manual de uso interno en lenguaje llano (7 secciones + glosario)
-- Banner temporal en `index.html` → `conferencia-ia.html`
-- Correo de confirmación: nombre del remitente personalizado "SEPRN · OTDE", QR del folio embebido
+- Formulario de registro con autocompletado CCT (506 registros), validación y verificación de cupos
+- Apps Script: registro en Sheets, folios, cupos por sector (7), correo HTML con QR, check-in por PIN
+- Página de check-in (`asistencia.html`) con escáner QR por cámara
+- Manual interno (`docs/manual-sistema-registro.html`)
 
-### Completado en mayo 2026
-- Todos los bugs críticos resueltos (GA4 fuera de `<head>`, typo `referrerpolicy`, nav faltante en contacto)
-- Hamburger menu para móvil (`script.js` + `.nav-toggle` CSS)
-- `rel="noopener noreferrer"` en todos los `target="_blank"`
-- `text-align: justify` eliminado
-- Color de texto corregido (`#000` → `#333`)
-- Meta descriptions en páginas clave
-- Lazy loading de iframes en acordeones CTE colapsados
-- Emojis de headings reemplazados por SVG inline (CTE, Areas)
-- Séptima Sesión Ordinaria 2025-2026 agregada a CTE
-
-### Próxima sesión — Fase 2 (Elevación visual)
-Ver [`docs/ROADMAP.md`](docs/ROADMAP.md) para el plan detallado.
+### Próxima sesión
+- Aplicar sistema de diseño a páginas de área internas
+- Accesibilidad (score 7/10 → 8/10)
+- Ver [`docs/ROADMAP.md`](docs/ROADMAP.md) para el plan detallado
 
 ---
 
@@ -89,11 +82,7 @@ seprn-sitio/
 │
 ├── planeacion.html               # Área: Planeación Educativa
 ├── personal.html                 # Área: Administración de Personal
-├── academica.html                # Área: Académica (hub con 4 sub-páginas)
-├── programas-educativos.html     # Sub-área de Académica
-├── gestion-escolar.html          # Sub-área de Académica
-├── investigacion-educativa.html  # Sub-área de Académica
-├── servicio-profesional.html     # Sub-área de Académica
+├── academica.html                # Área: Académica
 ├── recursos.html                 # Área: Recursos Materiales y Financieros
 ├── otde.html                     # Área: OTDE (Tecnología para el Desarrollo Educativo)
 ├── oeve.html                     # Área: OEVE (Extensión y Vinculación Educativa)

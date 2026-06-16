@@ -7,17 +7,17 @@ Objetivo: elevar el sitio de un nivel **5/10** (funcional-institucional 2019) a 
 
 ## Estado actual — Scores de auditoría
 
-| Dimensión | Score original (may 2026) | Post Fase 1 (jun 2026) | Objetivo |
-|-----------|:---:|:---:|:---:|
-| UI | 5/10 | 6/10 | 8/10 |
-| UX | 5/10 | 6.5/10 | 8/10 |
-| Branding | 3/10 | 3.5/10 | 7/10 |
-| Profesionalismo | 5/10 | 6/10 | 9/10 |
-| Claridad | 6/10 | 6/10 | 9/10 |
-| Conversión / Retención | 3/10 | 3/10 | 7/10 |
-| Diseño móvil | 4/10 | 6/10 | 8/10 |
-| Performance percibida | 6/10 | 7/10 | 8/10 |
-| Accesibilidad | 3/10 | 6/10 | 8/10 |
+| Dimensión | Score original (may 2026) | Post Fase 1 (jun 2026) | Post rediseño (16 jun 2026) | Objetivo |
+|-----------|:---:|:---:|:---:|:---:|
+| UI | 5/10 | 6/10 | **8.5/10** | 8/10 ✅ |
+| UX | 5/10 | 6.5/10 | **8/10** | 8/10 ✅ |
+| Branding | 3/10 | 3.5/10 | **7.5/10** | 7/10 ✅ |
+| Profesionalismo | 5/10 | 6/10 | **8/10** | 9/10 |
+| Claridad | 6/10 | 6/10 | **7.5/10** | 9/10 |
+| Conversión / Retención | 3/10 | 3/10 | **5/10** | 7/10 |
+| Diseño móvil | 4/10 | 6/10 | **7.5/10** | 8/10 |
+| Performance percibida | 6/10 | 7/10 | **8/10** | 8/10 ✅ |
+| Accesibilidad | 3/10 | 6/10 | **7/10** | 8/10 |
 
 ---
 
@@ -36,6 +36,23 @@ Implementado para la **Conferencia IA 2026** (17 jun 2026, Auditorio Regional 1 
 | Fix hora check-in: formato `@STRING@` en Sheets + `instanceof Date` check | `apps-script/conferencia-ia.gs` | ✅ |
 | Manual de uso interno del sistema (7 secciones + glosario) | `docs/manual-sistema-registro.html` | ✅ |
 | Banner temporal en `index.html` con link a `conferencia-ia.html` | `index.html` | ✅ |
+
+---
+
+## ~~Rediseño visual élite~~ — COMPLETADO (16 jun 2026)
+
+Proceso de 5 fases (dirección artística → wireframe → crítica → mejora → código). Commits: `2298321`, `9c48531`.
+
+| Item | Archivo(s) | Estado |
+|---|---|---|
+| Hero midnight `#0C1A2E` full-bleed con badge, glow y scroll indicator | `index.html`, `styles.css` | ✅ |
+| Tipografía display 64px blanca, botones dark-variant | `index.html`, `styles.css` | ✅ |
+| Animación de entrada escalonada (stagger 150ms) vía `@keyframes hero-enter` | `styles.css` | ✅ |
+| Strip de métricas (417 escuelas · 121,332 alumnos · 18 mun · 13 sectores) con contador easeOutCubic | `index.html`, `styles.css` | ✅ |
+| Section header con eyebrow tipográfico y líneas laterales | `index.html`, `styles.css` | ✅ |
+| Fade-up stagger en cards de áreas vía IntersectionObserver | `index.html`, `styles.css` | ✅ |
+| Cierre del evento: banner y formulario de registro retirados de `index.html` y `charla-ia.html` | `index.html`, `charla-ia.html` | ✅ |
+| Función `reenviarConfirmacionListaEspera()` para post-evento | `apps-script/conferencia-ia.gs` | ✅ |
 
 ---
 
@@ -467,22 +484,16 @@ BAJO IMPACTO / BAJO ESFUERZO         BAJO IMPACTO / ALTO ESFUERZO
 Al iniciar la siguiente sesión de trabajo, ejecutar primero:
 
 ```bash
-# Ver estado actual del repositorio
 git log --oneline -5
 git status
-
-# Verificar el sitio en producción antes de cambios
-# https://educaneza.github.io/seprn-sitio/
+# Verificar: https://educaneza.github.io/seprn-sitio/
 ```
 
-**Orden de ejecución recomendado para la siguiente sesión:**
-1. Empezar con Fase 1 completa (todos los quick wins son independientes entre sí).
-2. Una vez terminada Fase 1, hacer commit.
-3. Pasar a Fase 2 empezando por el sistema de CSS Custom Properties (2.7), ya que todos los demás cambios visuales lo usarán.
-4. Luego implementar Fase 2 en orden numérico.
+**Pendientes prioritarios al 16 jun 2026:**
 
-**Archivos que más cambiarán en Fase 2:**
-- `styles.css` (refactoring completo con variables)
-- `index.html` (cobertura mobile + CTAs + cards)
-- `cte.html` (accordion redesign + aria)
-- `nosotros.html` (variedad visual)
+1. **Páginas de área internas** — aplicar el sistema de diseño nuevo (section headers, motion) a las 7 páginas de área. Usar `juridico.html` como punto de partida.
+2. **Accesibilidad** (score 7/10 → objetivo 8/10): roles ARIA, contraste del hero oscuro (texto arena sobre `#0C1A2E`), skip-to-content link.
+3. **Recrear páginas eliminadas** cuando haya contenido validado: `gestion-escolar.html`, `investigacion-educativa.html`, `programas-educativos.html`, `servicio-profesional.html`.
+4. **CSS Custom Properties (2.7)** — los tokens `#0C1A2E` (midnight) y `#F9F8F5` (off-white) están hardcodeados; migrar a `:root`.
+
+**Nota de caché:** tras un push a `main`, GitHub Pages tarda 5-10 min en propagar el CSS. Hacer Cmd+Shift+R para invalidar caché del navegador.

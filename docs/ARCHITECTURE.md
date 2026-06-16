@@ -133,47 +133,41 @@ Toca este archivo solo cuando el cambio aplica a **todas** las páginas.
 
 ## 4. Sistema de diseño (Design Tokens)
 
-### Estado actual
-Los valores están hardcodeados en el CSS. La migración a CSS Custom Properties (`:root`) está planificada en **Fase 2.7** del roadmap.
-
 ### Paleta de colores
 
 ```css
-/* Propuesta de variables (Fase 2.7) */
+/* Variables implementadas en styles.css */
 :root {
-    --color-brand-dark:    #56212f;   /* Textos, headers, footer bg */
-    --color-brand-accent:  #9F2241;   /* Acentos, CTAs, hover states */
-    --color-brand-hover:   #6d2a3d;   /* Hover de brand-dark */
-
-    --color-sand:          #d6d1ca;   /* Fondos de tarjetas, separadores */
-    --color-sand-light:    #ebe9e4;
-    --color-caramel:       #977e5b;   /* Subtítulos (NO pasar solo WCAG AA) */
-    --color-caramel-dark:  #6b5a44;   /* Versión AA-compliant sobre blanco */
-    --color-gold:          #c3b08f;
-
-    --color-bg-white:      #ffffff;
-    --color-bg-warm:       #f9f8f6;
-    --color-bg-warm-alt:   #f0ede8;
-
-    --color-text-primary:  #333333;
-    --color-text-secondary:#555555;
-    --color-text-muted:    #6b5a44;   /* AA-compliant sobre blanco */
+    --guinda:          #56212f;   /* Identidad, títulos, footer bg */
+    --guinda-acento:   #9F2241;   /* Énfasis, números, links activos */
+    --arena:           #d6d1ca;   /* Fondos de tarjetas, separadores */
+    --caramelo:        #c3b08f;
+    --caramelo-hover:  #bc955b;
+    --caramelo-oscuro: #6b5a44;   /* AA-compliant sobre blanco */
+    --caramelo-claro:  #ddc8a4;
+    --texto:           #333333;
+    --texto-muted:     #555555;
 }
+
+/* Tokens adicionales (pendiente migrar a :root — Fase 2.7) */
+/* midnight:  #0C1A2E — hero oscuro, fondo de ancla */
+/* off-white: #F9F8F5 — fondos cálidos, strip de métricas */
 ```
 
 ### Tipografía
 
-| Elemento | Tamaño desktop | Tamaño mobile | Peso |
-|---|---|---|---|
-| Hero H1 | 56px | 40px | 600 |
-| Sección H1 | 48px | 36px | 600 |
-| H2 | 32–40px | — | 600 |
-| H3 | 24px | — | 600 |
-| Cuerpo | 16px | 16px | 400 |
-| Pequeño / label | 14px | — | 400–500 |
-| Micro / copyright | 12px | — | 400 |
+| Elemento | Tamaño desktop | Tamaño mobile | Peso | Tracking |
+|---|---|---|---|---|
+| Hero H1 | 64px | 40px | 700 | -2.5px |
+| Sección H1 | 48px | 32px | 600 | -1px |
+| H2 | 32–38px | — | 600–700 | -0.8px |
+| H3 | 24px | — | 600 | — |
+| Cuerpo | 16px | 16px | 400 | — |
+| Hero párrafo | 19px | 16px | 400 | — |
+| Label / eyebrow | 11px | — | 700 | +1.8px uppercase |
+| Micro / copyright | 12px | — | 400 | — |
 
-Reglas: letter-spacing negativo en headings (`-0.5px` a `-1.5px`). `line-height: 1.8` en cuerpos largos. **Sin `text-align: justify`**.
+Reglas: letter-spacing negativo en headings. `line-height: 1.8` en cuerpos largos. **Sin `text-align: justify`**.
 
 ### Espaciado (múltiplos de 8px)
 
@@ -199,7 +193,88 @@ Reglas: letter-spacing negativo en headings (`-0.5px` a `-1.5px`). `line-height:
 
 ---
 
-## 5. Componentes documentados
+## 5. Componentes del sistema de diseño (16 jun 2026)
+
+Clases reutilizables en `styles.css`. Usar estas en lugar de estilos inline cuando sea posible.
+
+### Hero oscuro (solo `index.html`)
+
+```html
+<section class="hero">
+    <div class="hero-inner">
+        <div class="hero-badge">Etiqueta institucional</div>
+        <h1>Título principal</h1>
+        <p>Subtítulo</p>
+        <div class="hero-actions">
+            <a href="#" class="btn-primary-dark">CTA primario</a>
+            <a href="#" class="btn-secondary-dark">CTA secundario</a>
+        </div>
+        <div class="hero-scroll" aria-hidden="true"></div>
+    </div>
+    <div class="hero-glow" aria-hidden="true"></div>
+</section>
+```
+
+- Fondo: `#0C1A2E` (midnight), full-bleed
+- Entrada: animaciones `hero-enter` escalonadas (stagger 150ms por elemento)
+- Scroll indicator: dot pulsante animado en loop
+
+### Métricas strip
+
+```html
+<div class="metrics-strip">
+    <div class="metrics-inner">
+        <div class="metric-item">
+            <span class="metric-number" data-target="417">0</span>
+            <span class="metric-label">Escuelas<br>oficiales</span>
+        </div>
+        <!-- repetir por cada métrica -->
+    </div>
+</div>
+```
+
+- Requiere el JS de `index.html` (IntersectionObserver + `animateCounter`)
+- 4 columnas en desktop, 2×2 en mobile
+- Separadores verticales automáticos con `::before`
+
+### Section header
+
+```html
+<div class="section-header">
+    <div class="section-eyebrow">Categoría · Subcategoría</div>
+    <h2 class="section-title">Título de la sección</h2>
+</div>
+```
+
+- Eyebrow: texto uppercase con líneas laterales (pseudo-elementos `::before` y `::after`)
+- Centrado por defecto
+
+### Botones
+
+| Clase | Fondo | Uso |
+|---|---|---|
+| `btn-primary` | guinda sólido | Fondos claros |
+| `btn-secondary` | transparente + borde guinda | Fondos claros |
+| `btn-primary-dark` | `#F9F8F5` sólido | **Fondos oscuros (hero)** |
+| `btn-secondary-dark` | transparente + borde blanco | **Fondos oscuros (hero)** |
+
+### Card de área con animación de entrada
+
+Las `.area-card` requieren IntersectionObserver para activar la clase `.visible`:
+
+```javascript
+const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.12 });
+document.querySelectorAll('.area-card').forEach((c, i) => {
+    c.style.transitionDelay = (i * 70) + 'ms';
+    obs.observe(c);
+});
+```
+
+---
+
+## 6. Componentes documentados (originales)
 
 ### Header / Nav (estado actual)
 
