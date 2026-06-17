@@ -18,4 +18,23 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     }
+
+    // Animar .area-card al entrar al viewport
+    var cards = document.querySelectorAll('.area-card');
+    if (cards.length > 0) {
+        if ('IntersectionObserver' in window) {
+            var observer = new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+            cards.forEach(function (card) { observer.observe(card); });
+        } else {
+            // Fallback para navegadores sin soporte
+            cards.forEach(function (card) { card.classList.add('visible'); });
+        }
+    }
 });
