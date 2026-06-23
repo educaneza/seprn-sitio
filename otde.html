@@ -20,31 +20,6 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="styles.css">
     <style>
-        .area-hero {
-            background: var(--guinda);
-            padding: 70px 50px;
-            border-radius: 18px;
-            margin-bottom: 50px;
-            text-align: center;
-        }
-        .area-hero h1 {
-            font-size: 38px;
-            font-weight: 700;
-            color: white;
-            margin-bottom: 10px;
-        }
-        .area-hero .subtitulo {
-            font-size: 18px;
-            color: #ddc8a4;
-            margin-bottom: 25px;
-        }
-        .area-hero p {
-            font-size: 16px;
-            color: rgba(255,255,255,0.9);
-            max-width: 750px;
-            margin: 0 auto;
-            line-height: 1.8;
-        }
         .seccion {
             margin-bottom: 60px;
         }
@@ -357,8 +332,6 @@
             background: #f0f0f0;
         }
         @media(max-width:768px){
-            .area-hero { padding: 50px 25px; }
-            .area-hero h1 { font-size: 28px; }
             .servicios-nav { flex-direction: column; }
             .servicio-tab { width: 100%; }
             .resource-grid { grid-template-columns: 1fr; }
@@ -389,13 +362,15 @@
     </nav>
 </header>
 
-<section class="content-section">
-    <!-- Hero Institucional -->
-    <div class="area-hero">
+<section class="hero hero-sm">
+    <div class="hero-inner">
+        <span class="hero-badge">OFICINA DE TECNOLOGÍA · SEPRN</span>
         <h1>OTDE</h1>
-        <p class="subtitulo">Oficina de Tecnología para el Desarrollo Educativo</p>
-        <p>Impulsamos la transformación digital de la educación mediante soluciones tecnológicas innovadoras, soporte técnico profesional y herramientas digitales que potencian el proceso de enseñanza-aprendizaje en la región de Nezahualcóyotl.</p>
+        <p>Tecnología para el Desarrollo Educativo</p>
     </div>
+    <div class="hero-glow"></div>
+</section>
+<section class="content-section">
 
     <!-- Objetivo -->
     <div class="seccion">

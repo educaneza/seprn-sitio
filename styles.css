@@ -158,9 +158,9 @@ nav a.active {
 }
 
 .hero h1 {
-    font-size: 64px;
+    font-size: 50px;
     font-weight: 700;
-    letter-spacing: -2.5px;
+    letter-spacing: -1.5px;
     line-height: 1.05;
     margin-bottom: 24px;
     color: #F9F8F5;
@@ -608,8 +608,8 @@ footer {
     }
 
     .hero h1 {
-        font-size: 40px;
-        letter-spacing: -1.5px;
+        font-size: 32px;
+        letter-spacing: -1px;
     }
 
     .hero p {
@@ -675,8 +675,8 @@ footer {
     }
 
     .hero h1 {
-        font-size: 34px;
-        letter-spacing: -1.5px;
+        font-size: 28px;
+        letter-spacing: -1px;
     }
 
     .hero p {
@@ -842,6 +842,27 @@ footer {
 @media (max-width: 480px) {
     .metric-number {
         font-size: 36px;
+        letter-spacing: -1px;
+    }
+}
+
+/* ── HERO VARIANTE PÁGINAS INTERNAS ── */
+.hero-sm .hero-inner {
+    padding: 100px 40px 80px;
+}
+
+.hero-sm h1 {
+    font-size: 36px;
+    letter-spacing: -1px;
+}
+
+@media (max-width: 768px) {
+    .hero-sm .hero-inner {
+        padding: 80px 24px 60px;
+    }
+
+    .hero-sm h1 {
+        font-size: 30px;
         letter-spacing: -1px;
     }
 }
