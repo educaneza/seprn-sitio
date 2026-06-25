@@ -191,15 +191,10 @@ Proceso de 5 fases (dirección artística → wireframe → crítica → mejora 
 ## FASE 2 — Elevación visual
 **Objetivo:** Elevar la calidad percibida. Modernizar los componentes que más dañan la percepción premium.
 
-Items 2.2, 2.3 y 2.4 completados en sesiones anteriores. Items 2.1, 2.5, 2.6, 2.7, 2.8 pendientes.
+Items 2.2, 2.3 y 2.4 completados en sesiones anteriores. Items 2.5 pendiente; 2.1, 2.6, 2.7 completados el 24 jun 2026.
 
-### 2.1 Rediseñar las tarjetas de áreas del index
-**Problema:** `background: #d6d1ca` con hover que oscurece el fondo. Evoca "tarjeta de presentación genérica". Sin ícono.
-**Archivo:** `styles.css`, `index.html`
-**Tarea:**
-- Cambiar a `background: white`, `border: 1px solid #ebe9e4`, `box-shadow: 0 2px 8px rgba(86,33,47,0.06)`.
-- Hover: `box-shadow: 0 12px 32px rgba(86,33,47,0.12)`, `border-color: #d6d1ca`, `transform: translateY(-4px)`.
-- Agregar íconos SVG a las 7 tarjetas del index (reutilizar los de `areas.html`).
+### ~~2.1 Rediseñar las tarjetas de áreas del index~~ ✅
+Íconos SVG y badge Subjefatura/Oficina agregados a las 7 tarjetas. Fondo de la sección cambiado a `var(--off-white)` para que las tarjetas blancas destaquen. Descripciones mejoradas.
 
 ### ~~2.2 Eliminar gradientes en CTE~~ ✅
 **Problema:** `linear-gradient(135deg, #56212f 0%, #9F2241 100%)` en los headers del acordeón. Los dos colores son tan similares que el gradiente se ve plano y sucio. Estética 2015.
@@ -304,7 +299,10 @@ Items 2.2, 2.3 y 2.4 completados en sesiones anteriores. Items 2.1, 2.5, 2.6, 2.
 **Archivos:** Footer en todos los HTML.
 **Estado:** El footer ya incluye "Órgano desconcentrado de SEIEM · Gobierno del Estado de México". Pendiente: agregar escudo/logo de SEIEM si se tiene el archivo oficial, y reforzar la mención de forma más visible.
 
-### 2.6 Romper la monotonía visual en nosotros.html
+### ~~2.6 Romper la monotonía visual en nosotros.html~~ ✅
+7 bandas de color completo alternantes (off-white, blanco, midnight, off-white, arena, blanco, guinda). Section-headers con eyebrows por sección. Tarjetas de valores y equipo adaptadas a fondo oscuro.
+
+### (referencia histórica) 2.6 Romper la monotonía visual en nosotros.html
 **Problema:** 6 bloques consecutivos con `background: #d6d1ca`, mismo radius, mismo padding. El ojo no tiene puntos de descanso.
 **Archivo:** `nosotros.html`
 **Tarea:** Alternar fondos:
@@ -316,7 +314,10 @@ Items 2.2, 2.3 y 2.4 completados en sesiones anteriores. Items 2.1, 2.5, 2.6, 2.
 - Organigrama: `background: white`.
 - Equipo: sin contenedor, grid directo sobre fondo de página.
 
-### 2.7 Sistema de CSS Custom Properties (Design Tokens)
+### ~~2.7 CSS Custom Properties (Design Tokens — parcial)~~ ✅
+`--midnight` y `--off-white` agregados a `:root`. Todos los `#0C1A2E` y `#F9F8F5` hardcodeados en `styles.css` migrados a variables.
+
+### (referencia histórica) 2.7 Sistema de CSS Custom Properties (Design Tokens)
 **Problema:** Los valores de color, espaciado y radio están hardcodeados en ~150 lugares distintos del CSS y HTML.
 **Archivo:** `styles.css` — inicio del archivo.
 **Tarea:** Agregar al inicio:
@@ -431,7 +432,10 @@ Alternativa con split layout:
 ```
 Esta barra debe actualizarse manualmente cada vez que se agrega una sesión. **Texto actual a usar:** "Octava Sesión Ordinaria 2025-2026".
 
-### 3.5 Footer rediseñado con navegación
+### ~~3.5 Footer multi-columna~~ ✅
+3 columnas (SEPRN/contacto, Sitio, Áreas) + barra inferior con redes y copyright. Aplicado en las 13 páginas del sitio mediante script Python.
+
+### (referencia histórica) 3.5 Footer rediseñado con navegación
 **Problema:** Footer solo muestra contacto y redes. Sin mapa de navegación.
 **Tarea:** Rediseñar el footer con columnas:
 ```
@@ -513,13 +517,12 @@ git status
 # Verificar: https://educaneza.github.io/seprn-sitio/
 ```
 
-**Pendientes al 24 jun 2026:**
+**Pendientes al 24 jun 2026 (actualizado):**
 
 1. **Recrear páginas eliminadas** cuando haya contenido validado con la Dra. Avelina Galindo Celix: `gestion-escolar.html`, `investigacion-educativa.html`, `programas-educativos.html`, `servicio-profesional.html`.
-2. **CSS Custom Properties (2.7)** — los tokens `#0C1A2E` (midnight) y `#F9F8F5` (off-white) están hardcodeados en varias páginas; migrar a variables `:root`.
-3. **Barra "Última actualización CTE" (3.4)** ✅ — implementada. Actualizar el texto en `index.html` (`.update-banner`) al agregar la novena sesión.
-4. **Accesibilidad restante** — roles ARIA en formularios (`contacto.html`, `otde.html`), contraste revisado en el hero oscuro (texto arena sobre `#0C1A2E`).
-5. **Footer multi-columna (3.5)** — actualmente solo contacto y redes; agregar columnas de navegación y áreas.
-6. **nosotros.html — variedad visual (2.6)** — bloques alternos de fondo ya planeados, pendientes de implementar.
+2. **Accesibilidad restante** — roles ARIA en formularios (`contacto.html`, `otde.html`).
+3. **Mapa SVG con touch (3.3)** — eventos `touchstart`/`touchend` para mobile en la sección Cobertura.
+4. **Logomark SEPRN (3.1)** — requiere archivo SVG de diseño gráfico.
+5. **Barra CTE** — actualizar texto en `index.html` al agregar la novena sesión.
 
 **Nota de caché:** tras un push a `main`, GitHub Pages tarda 5-10 min en propagar el CSS. Hacer Cmd+Shift+R para invalidar caché del navegador.

@@ -852,7 +852,30 @@ footer {
 /* ── AREAS WRAPPER ── */
 .areas-wrapper {
     padding: 90px 0 100px;
-    background: #fff;
+    background: var(--off-white);
+}
+
+.area-card .area-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(159, 34, 65, 0.08);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--guinda-acento);
+    margin-bottom: 18px;
+    flex-shrink: 0;
+}
+
+.area-card .area-tipo {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.6px;
+    color: var(--guinda-acento);
+    display: block;
+    margin-bottom: 6px;
 }
 
 /* Area card: entrada animada */
