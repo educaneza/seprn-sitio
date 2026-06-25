@@ -7,17 +7,17 @@ Objetivo: elevar el sitio de un nivel **5/10** (funcional-institucional 2019) a 
 
 ## Estado actual — Scores de auditoría
 
-| Dimensión | Score original (may 2026) | Post Fase 1 (jun 2026) | Post rediseño (16 jun 2026) | Post páginas internas (24 jun 2026) | Objetivo |
-|-----------|:---:|:---:|:---:|:---:|:---:|
-| UI | 5/10 | 6/10 | **8.5/10** | **8.5/10** | 8/10 ✅ |
-| UX | 5/10 | 6.5/10 | **8/10** | **8.5/10** | 8/10 ✅ |
-| Branding | 3/10 | 3.5/10 | **7.5/10** | **8/10** | 7/10 ✅ |
-| Profesionalismo | 5/10 | 6/10 | **8/10** | **8.5/10** | 9/10 |
-| Claridad | 6/10 | 6/10 | **7.5/10** | **8/10** | 9/10 |
-| Conversión / Retención | 3/10 | 3/10 | **5/10** | **5/10** | 7/10 |
-| Diseño móvil | 4/10 | 6/10 | **7.5/10** | **7.5/10** | 8/10 |
-| Performance percibida | 6/10 | 7/10 | **8/10** | **8/10** | 8/10 ✅ |
-| Accesibilidad | 3/10 | 6/10 | **7/10** | **7.5/10** | 8/10 |
+| Dimensión | Score original (may 2026) | Post Fase 1 (jun 2026) | Post rediseño (16 jun 2026) | Post páginas internas (24 jun 2026) | Post bug-fixes (24 jun 2026) | Objetivo |
+|-----------|:---:|:---:|:---:|:---:|:---:|:---:|
+| UI | 5/10 | 6/10 | **8.5/10** | **8.5/10** | **9/10** | 8/10 ✅ |
+| UX | 5/10 | 6.5/10 | **8/10** | **8.5/10** | **8.5/10** | 8/10 ✅ |
+| Branding | 3/10 | 3.5/10 | **7.5/10** | **8/10** | **8/10** | 7/10 ✅ |
+| Profesionalismo | 5/10 | 6/10 | **8/10** | **8.5/10** | **9/10** | 9/10 ✅ |
+| Claridad | 6/10 | 6/10 | **7.5/10** | **8/10** | **8/10** | 9/10 |
+| Conversión / Retención | 3/10 | 3/10 | **5/10** | **5/10** | **5/10** | 7/10 |
+| Diseño móvil | 4/10 | 6/10 | **7.5/10** | **7.5/10** | **7.5/10** | 8/10 |
+| Performance percibida | 6/10 | 7/10 | **8/10** | **8/10** | **8/10** | 8/10 ✅ |
+| Accesibilidad | 3/10 | 6/10 | **7/10** | **7.5/10** | **8/10** | 8/10 ✅ |
 
 ---
 
@@ -36,6 +36,20 @@ Implementado para la **Conferencia IA 2026** (17 jun 2026, Auditorio Regional 1 
 | Fix hora check-in: formato `@STRING@` en Sheets + `instanceof Date` check | `apps-script/conferencia-ia.gs` | ✅ |
 | Manual de uso interno del sistema (7 secciones + glosario) | `docs/manual-sistema-registro.html` | ✅ |
 | Banner temporal en `index.html` con link a `conferencia-ia.html` | `index.html` | ✅ |
+
+---
+
+## ~~Bug-fixes y pulido visual~~ — COMPLETADO (24 jun 2026, sesión continuación)
+
+| Item | Archivo(s) | Estado |
+|---|---|---|
+| Hero midnight universal — `areas.html`, `cte.html`, `contacto.html` sin hero → `hero-sm` | 3 páginas | ✅ |
+| Bug crítico: `--midnight: var(--midnight)` (autorreferencia) → corregido a `#0C1A2E` | `styles.css` | ✅ |
+| Emojis eliminados de `otde.html` (tabs, h2/h3, íconos decorativos) | `otde.html` | ✅ |
+| Emojis 👤/📧/📞 → SVG inline en secciones de contacto de 6 páginas de área | 6 páginas | ✅ |
+| URLs portal SEP: `#!/` obsoleto eliminado, `www.` corregido (4 instancias) | `cte.html` | ✅ |
+| `skip-link` + `id="main-content"` añadidos a `areas.html`, `cte.html`, `index.html` | 3 páginas | ✅ |
+| `aria-current="page"` añadido a nav de `areas.html` y `contacto.html` | 2 páginas | ✅ |
 
 ---
 

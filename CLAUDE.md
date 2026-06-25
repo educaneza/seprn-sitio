@@ -70,10 +70,10 @@ La sesión más reciente siempre debe ser el acordeón activo/abierto al cargar 
 | Archivo | Sección |
 |---|---|
 | `index.html` | Portada — hero midnight, métricas animadas, áreas, mapa SVG |
-| `nosotros.html` | Misión, visión, valores, equipo directivo (con hero midnight) |
-| `areas.html` | Listado de áreas |
-| `cte.html` | Sesiones CTE (acordeones + videos YouTube) |
-| `contacto.html` | Datos de contacto |
+| `nosotros.html` | Misión, visión, valores, equipo directivo (hero midnight) |
+| `areas.html` | Listado de áreas (hero midnight) |
+| `cte.html` | Sesiones CTE — acordeones + videos YouTube (hero midnight) |
+| `contacto.html` | Datos de contacto (hero midnight) |
 | `academica.html` | Subjefatura Académica |
 | `personal.html` | Subjefatura de Personal |
 | `planeacion.html` | Subjefatura de Planeación |
@@ -104,6 +104,8 @@ La sesión más reciente siempre debe ser el acordeón activo/abierto al cargar 
 4. Imágenes en `images/`, PDFs en `pdfs/cte/<nombre-sesion>/`
 5. Después de push: esperar 5-10 min o Cmd+Shift+R para invalidar caché de GitHub Pages
 6. Los PDFs de sesiones CTE se nombran con mayúsculas y acentos; URL-encodear la ó como `%C3%B3` en los hrefs
+7. **Sin emojis** en HTML — usar SVG inline para íconos de contacto (persona, correo, teléfono). Ver `contacto-icon` en cualquier página de área como referencia
+8. El portal SEP CTE usa la URL `https://gestion.cte.sep.gob.mx/insumos/` (sin `#!/` — ese sufijo era routing antiguo de AngularJS)
 
 ## Pendientes (al 24 jun 2026)
 - **Recrear páginas eliminadas** — `gestion-escolar.html`, `investigacion-educativa.html`, `programas-educativos.html`, `servicio-profesional.html`: requieren contenido validado con la Dra. Galindo

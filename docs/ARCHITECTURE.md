@@ -142,6 +142,10 @@ Toca este archivo solo cuando el cambio aplica a **todas** las páginas.
 
 **Nunca** redefinir clases que ya existen en `styles.css` (como `.area-card`) en estilos locales.
 
+**Íconos de contacto:** usar SVG inline en `<span class="contacto-icon">`, no emojis. Ver patrón en cualquier página de área (persona, correo, teléfono).
+
+> **Alerta — bug conocido:** No definir una CSS custom property con `var()` de sí misma (ej. `--midnight: var(--midnight)`). El browser descarta el valor y toda regla que use `var(--midnight)` queda inválida silenciosamente.
+
 ---
 
 ## 4. Sistema de diseño (Design Tokens)
@@ -552,6 +556,11 @@ const CHECKIN_PIN  = '2026IA';             // cambiar antes del evento
 | P11 | Footer multi-columna (3 cols + barra inferior) en las 13 páginas | Todos los HTML | ✅ 24 jun 2026 |
 | P13 | ARIA tabs + `aria-expanded` en formularios de `otde.html` | `otde.html` | ✅ 24 jun 2026 |
 | P14 | Mapa SVG sin soporte touch | `index.html` | ✅ 24 jun 2026 |
+| P15 | Bug: `--midnight: var(--midnight)` (autorreferencia) dejaba heroes transparentes | `styles.css` | ✅ 24 jun 2026 |
+| P16 | `areas.html` y `cte.html` sin hero midnight (inconsistencia visual) | `areas.html`, `cte.html`, `contacto.html` | ✅ 24 jun 2026 |
+| P17 | Emojis en `otde.html` (tabs, headings, íconos decorativos) | `otde.html` | ✅ 24 jun 2026 |
+| P18 | Emojis 👤/📧/📞 en secciones de contacto de páginas de área | 6 páginas de área | ✅ 24 jun 2026 |
+| P19 | URLs portal SEP con `#!/` obsoleto y `www.` incorrecto en `cte.html` | `cte.html` | ✅ 24 jun 2026 |
 
 ### Pendientes
 
