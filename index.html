@@ -215,7 +215,7 @@
                 <!-- SVG Map -->
                 <div style="background: white; border-radius: 18px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.06);">
                     <p style="text-align:center; font-size:13px; color:#977e5b; margin-bottom:15px; font-weight:600; text-transform:uppercase; letter-spacing:1px;">Estado de México — Región Oriente</p>
-                    <p style="text-align:center; font-size:12px; color:#aaa; margin-bottom:15px;">Pasa el cursor sobre cada municipio</p>
+                    <p style="text-align:center; font-size:12px; color:#aaa; margin-bottom:15px;">Pasa el cursor o toca un municipio</p>
                     <div class="map-wrapper">
                         <div class="map-tooltip" id="map-tooltip"></div>
                         <svg viewBox="0 0 400 420" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:auto;">
@@ -259,20 +259,41 @@
                     </div>
                     <script>
                         (function() {
-                            const tooltip = document.getElementById('map-tooltip');
+                            var tooltip = document.getElementById('map-tooltip');
+                            var touchTimer = null;
+
+                            function showTooltip(nombre, sector) {
+                                tooltip.innerHTML = '<strong>' + nombre + '</strong><br><span style="font-weight:400;font-size:11px;opacity:0.85">' + sector + '</span>';
+                                tooltip.style.opacity = '1';
+                            }
+
                             document.querySelectorAll('.mapa-municipio').forEach(function(el) {
-                                el.addEventListener('mouseenter', function(e) {
-                                    tooltip.innerHTML = '<strong>' + el.dataset.nombre + '</strong><br><span style="font-weight:400;font-size:11px;opacity:0.85">' + el.dataset.sector + '</span>';
-                                    tooltip.style.opacity = '1';
+                                // Mouse events
+                                el.addEventListener('mouseenter', function() {
+                                    tooltip.style.transform = '';
+                                    showTooltip(el.dataset.nombre, el.dataset.sector);
                                 });
                                 el.addEventListener('mousemove', function(e) {
-                                    const wrapper = tooltip.parentElement.getBoundingClientRect();
+                                    var wrapper = tooltip.parentElement.getBoundingClientRect();
                                     tooltip.style.left = (e.clientX - wrapper.left - tooltip.offsetWidth / 2) + 'px';
                                     tooltip.style.top = (e.clientY - wrapper.top - tooltip.offsetHeight - 14) + 'px';
                                 });
                                 el.addEventListener('mouseleave', function() {
                                     tooltip.style.opacity = '0';
                                 });
+
+                                // Touch events
+                                el.addEventListener('touchstart', function(e) {
+                                    e.preventDefault();
+                                    clearTimeout(touchTimer);
+                                    tooltip.style.left = '50%';
+                                    tooltip.style.top = '8px';
+                                    tooltip.style.transform = 'translateX(-50%)';
+                                    showTooltip(el.dataset.nombre, el.dataset.sector);
+                                    touchTimer = setTimeout(function() {
+                                        tooltip.style.opacity = '0';
+                                    }, 2800);
+                                }, { passive: false });
                             });
                         })();
                     </script>

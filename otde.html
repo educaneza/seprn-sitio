@@ -108,6 +108,7 @@
             transition: all 0.3s;
             font-size: 15px;
             font-weight: 600;
+            font-family: inherit;
             color: #56212f;
             text-align: center;
             min-width: 200px;
@@ -401,16 +402,16 @@
     </div>
 
     <!-- Navegación de Servicios -->
-    <div class="servicios-nav">
-        <div class="servicio-tab active" onclick="showServicio('correo')">📧 Correo Institucional</div>
-        <div class="servicio-tab" onclick="showServicio('mantenimiento')">🔧 Mantenimiento</div>
-        <div class="servicio-tab" onclick="showServicio('soporte')">🛠️ Soporte Técnico</div>
-        <div class="servicio-tab" onclick="showServicio('chuka')">🎮 Chuka</div>
-        <div class="servicio-tab" onclick="showServicio('recursos')">📚 Recursos</div>
+    <div class="servicios-nav" role="tablist" aria-label="Servicios OTDE">
+        <button class="servicio-tab active" role="tab" aria-selected="true"  aria-controls="correo"        onclick="showServicio('correo', this)">📧 Correo Institucional</button>
+        <button class="servicio-tab"        role="tab" aria-selected="false" aria-controls="mantenimiento" onclick="showServicio('mantenimiento', this)">🔧 Mantenimiento</button>
+        <button class="servicio-tab"        role="tab" aria-selected="false" aria-controls="soporte"       onclick="showServicio('soporte', this)">🛠️ Soporte Técnico</button>
+        <button class="servicio-tab"        role="tab" aria-selected="false" aria-controls="chuka"         onclick="showServicio('chuka', this)">🎮 Chuka</button>
+        <button class="servicio-tab"        role="tab" aria-selected="false" aria-controls="recursos"      onclick="showServicio('recursos', this)">📚 Recursos</button>
     </div>
 
     <!-- SERVICIO 1: Correo Institucional -->
-    <div id="correo" class="servicio-content active">
+    <div id="correo" class="servicio-content active" role="tabpanel" aria-label="Correo Institucional">
         <div class="servicio-header">
             <h2>📧 Cuentas de Correo Institucional</h2>
             <p>Gestionar ante las instancias correspondientes las cuentas institucionales de Microsoft para entregarlas a toda la estructura educativa y fomentar su utilización como medio de comunicación oficial y como una herramienta más de trabajo pedagógico y administrativo.</p>
@@ -427,19 +428,20 @@
                 <p>• <strong>Reset de autenticación de 2 pasos:</strong> Solicita el reseteo de la autenticación de 2 pasos de tu correo institucional.</p>
             </div>
 
-            <button class="form-button" onclick="toggleForm('form-correo')">
+            <button class="form-button" aria-expanded="false" onclick="toggleForm('form-correo', this)">
                 <span>📝</span>
                 <span id="form-correo-text">Solicitar Cuenta, Cambio de Contraseña o Reset de Autenticación</span>
                 <span id="form-correo-arrow">▼</span>
             </button>
             
             <div id="form-correo" class="form-container">
-                <iframe 
-                    src="https://docs.google.com/forms/d/e/1FAIpQLSfn9gi_nfTupbdk-BN7aK0B--8a2FdOxq9HIXOxZsVugoiD9A/viewform?embedded=true" 
-                    width="100%" 
-                    height="800" 
-                    frameborder="0" 
-                    marginheight="0" 
+                <iframe
+                    title="Formulario: Solicitud de cuenta o cambio de contraseña institucional"
+                    src="https://docs.google.com/forms/d/e/1FAIpQLSfn9gi_nfTupbdk-BN7aK0B--8a2FdOxq9HIXOxZsVugoiD9A/viewform?embedded=true"
+                    width="100%"
+                    height="800"
+                    frameborder="0"
+                    marginheight="0"
                     marginwidth="0"
                     style="border-radius: 12px; border: 2px solid #d6d1ca; margin-top: 20px;">
                     Cargando…
@@ -456,7 +458,7 @@
     </div>
 
     <!-- SERVICIO 2: Mantenimiento -->
-    <div id="mantenimiento" class="servicio-content">
+    <div id="mantenimiento" class="servicio-content" role="tabpanel" aria-label="Mantenimiento">
         <div class="servicio-header">
             <h2>🔧 Mantenimiento Preventivo y Correctivo</h2>
             <p>Rehabilitación y reactivación de Aula de Medios. Realizar mantenimiento preventivo y correctivo a los equipos de cómputo de la Subdirección de Educación Primaria y Centros de Trabajo de la estructura.</p>
@@ -501,7 +503,7 @@
     </div>
 
     <!-- SERVICIO 3: Soporte Técnico -->
-    <div id="soporte" class="servicio-content">
+    <div id="soporte" class="servicio-content" role="tabpanel" aria-label="Soporte Técnico">
         <div class="servicio-header">
             <h2>Soporte Técnico Remoto</h2>
             <p>Brindar asistencia técnica rápida y eficaz a todas las figuras de la Estructura Educativa, independientemente de su ubicación, mediante la herramienta TeamViewer.</p>
@@ -545,7 +547,7 @@
     </div>
 
     <!-- SERVICIO 4: Chuka -->
-    <div id="chuka" class="servicio-content">
+    <div id="chuka" class="servicio-content" role="tabpanel" aria-label="Chuka">
         <div class="servicio-header">
             <h2>🎮 Chuka - Rompe el Silencio</h2>
             <p>Concientizar a los alumnos para que pierdan sus miedos de una forma divertida y tengan un conocimiento de cómo actuar en una situación de acoso físico, psicológico y sexual.</p>
@@ -610,7 +612,7 @@
     </div>
 
     <!-- SERVICIO 5: Recursos -->
-    <div id="recursos" class="servicio-content">
+    <div id="recursos" class="servicio-content" role="tabpanel" aria-label="Recursos Educativos Digitales">
         <div class="servicio-header">
             <h2>📚 Recursos Educativos Digitales</h2>
             <p>Accede a materiales, tutoriales y herramientas diseñadas para potenciar el uso de la tecnología en el aula.</p>
@@ -631,10 +633,11 @@
             <h3>📹 Asesoría: Rehabilitación de Aulas de Medios</h3>
             <p>Tutorial en video sobre cómo rehabilitar y reactivar Aulas de Medios en tu centro educativo.</p>
             <div class="video-wrapper">
-                <iframe 
-                    src="https://www.youtube.com/embed/HMwcBPsJWb0" 
-                    frameborder="0" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                <iframe
+                    title="Video: Rehabilitación de Aulas de Medios — OTDE SEPRN"
+                    src="https://www.youtube.com/embed/HMwcBPsJWb0"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowfullscreen>
                 </iframe>
             </div>
@@ -726,37 +729,33 @@
     </footer>
 
 <script>
-    function showServicio(servicioId) {
-        // Hide all content
-        const contents = document.querySelectorAll('.servicio-content');
-        contents.forEach(content => content.classList.remove('active'));
-        
-        // Remove active from all tabs
-        const tabs = document.querySelectorAll('.servicio-tab');
-        tabs.forEach(tab => tab.classList.remove('active'));
-        
-        // Show selected content and activate tab
+    function showServicio(servicioId, btn) {
+        document.querySelectorAll('.servicio-content').forEach(function(c) { c.classList.remove('active'); });
+        document.querySelectorAll('.servicio-tab').forEach(function(t) {
+            t.classList.remove('active');
+            t.setAttribute('aria-selected', 'false');
+        });
         document.getElementById(servicioId).classList.add('active');
-        event.target.classList.add('active');
-        
-        // Scroll to servicios section
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
         document.querySelector('.servicios-nav').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    function toggleForm(formId) {
-        const container = document.getElementById(formId);
-        const text = document.getElementById(formId + '-text');
-        const arrow = document.getElementById(formId + '-arrow');
-        
+    function toggleForm(formId, btn) {
+        var container = document.getElementById(formId);
+        var text = document.getElementById(formId + '-text');
+        var arrow = document.getElementById(formId + '-arrow');
         if (container.classList.contains('active')) {
             container.classList.remove('active');
-            text.textContent = 'Solicitar Cuenta o Cambio de Contraseña';
+            text.textContent = 'Solicitar Cuenta, Cambio de Contraseña o Reset de Autenticación';
             arrow.textContent = '▼';
+            btn.setAttribute('aria-expanded', 'false');
         } else {
             container.classList.add('active');
             text.textContent = 'Ocultar Formulario';
             arrow.textContent = '▲';
-            setTimeout(() => {
+            btn.setAttribute('aria-expanded', 'true');
+            setTimeout(function() {
                 container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }, 400);
         }
