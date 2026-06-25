@@ -302,89 +302,9 @@ Items 2.2, 2.3 y 2.4 completados en sesiones anteriores. Items 2.5 pendiente; 2.
 ### ~~2.6 Romper la monotonía visual en nosotros.html~~ ✅
 7 bandas de color completo alternantes (off-white, blanco, midnight, off-white, arena, blanco, guinda). Section-headers con eyebrows por sección. Tarjetas de valores y equipo adaptadas a fondo oscuro.
 
-### (referencia histórica) 2.6 Romper la monotonía visual en nosotros.html
-**Problema:** 6 bloques consecutivos con `background: #d6d1ca`, mismo radius, mismo padding. El ojo no tiene puntos de descanso.
-**Archivo:** `nosotros.html`
-**Tarea:** Alternar fondos:
-- Misión: `background: white`, borde sutil.
-- Visión: `background: #f9f8f6`.
-- Valores: `background: #56212f` (fondo oscuro, texto blanco — momento de impacto visual).
-- Objetivo: `background: white`.
-- Población + Estadísticas: `background: #f9f8f6` con stats en tarjetas blancas.
-- Organigrama: `background: white`.
-- Equipo: sin contenedor, grid directo sobre fondo de página.
-
 ### ~~2.7 CSS Custom Properties (Design Tokens — parcial)~~ ✅
 `--midnight` y `--off-white` agregados a `:root`. Todos los `#0C1A2E` y `#F9F8F5` hardcodeados en `styles.css` migrados a variables.
 
-### (referencia histórica) 2.7 Sistema de CSS Custom Properties (Design Tokens)
-**Problema:** Los valores de color, espaciado y radio están hardcodeados en ~150 lugares distintos del CSS y HTML.
-**Archivo:** `styles.css` — inicio del archivo.
-**Tarea:** Agregar al inicio:
-```css
-:root {
-    /* Color — Institucional */
-    --color-brand-dark:    #56212f;
-    --color-brand-accent:  #9F2241;
-    --color-brand-hover:   #6d2a3d;
-
-    /* Color — Neutros cálidos */
-    --color-sand:          #d6d1ca;
-    --color-sand-light:    #ebe9e4;
-    --color-caramel:       #977e5b;
-    --color-caramel-dark:  #6b5a44;   /* versión AA-compliant */
-    --color-gold:          #c3b08f;
-
-    /* Color — Fondos */
-    --color-bg-white:      #ffffff;
-    --color-bg-warm:       #f9f8f6;
-    --color-bg-warm-alt:   #f0ede8;
-
-    /* Color — Texto */
-    --color-text-primary:  #333333;
-    --color-text-secondary:#555555;
-    --color-text-muted:    #6b5a44;   /* AA-compliant sobre blanco */
-
-    /* Tipografía */
-    --font-base:           'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
-    --text-xs:             12px;
-    --text-sm:             14px;
-    --text-base:           16px;
-    --text-lg:             18px;
-    --text-xl:             21px;
-    --text-2xl:            24px;
-    --text-3xl:            32px;
-    --text-4xl:            40px;
-    --text-5xl:            48px;
-    --text-hero:           56px;
-
-    /* Espaciado */
-    --space-xs:            8px;
-    --space-sm:            16px;
-    --space-md:            24px;
-    --space-lg:            40px;
-    --space-xl:            60px;
-    --space-2xl:           80px;
-    --space-3xl:           100px;
-
-    /* Bordes */
-    --radius-sm:           8px;
-    --radius-md:           12px;
-    --radius-lg:           18px;
-    --radius-pill:         999px;
-
-    /* Sombras */
-    --shadow-ambient:      0 2px 8px rgba(86,33,47,0.06);
-    --shadow-hover:        0 12px 32px rgba(86,33,47,0.12);
-    --shadow-card-active:  0 8px 30px rgba(159,34,65,0.15);
-
-    /* Transiciones */
-    --transition-fast:     0.15s ease;
-    --transition-base:     0.25s ease;
-    --transition-slow:     0.4s ease;
-}
-```
-Luego migrar `styles.css` para usar estas variables. Las páginas con estilos inline se migran en Fases posteriores.
 
 ---
 
@@ -413,12 +333,8 @@ Alternativa con split layout:
 - Columna izquierda: texto + CTAs.
 - Columna derecha: mapa SVG estilizado o datos estadísticos visuales.
 
-### 3.3 Mapa SVG responsive con touch
-**Problema:** El mapa solo funciona en hover (desktop). En mobile es una mancha decorativa sin información.
-**Tarea:**
-- Agregar `touchstart` y `touchend` events al JS del mapa.
-- En mobile (<768px): mostrar un label fijo con el nombre del municipio al tocar.
-- Considerar: reemplazar los polígonos aproximados por paths más precisos basados en GeoJSON real de los municipios.
+### ~~3.3 Mapa SVG responsive con touch~~ ✅
+`touchstart` con `{ passive: false }` + tooltip centrado fijo al tocar (`top: 8px; left: 50%; transform: translateX(-50%)`). Auto-cierre a los 2.8s. Implementado en `index.html`.
 
 ### ~~3.4 Barra de "Última actualización CTE"~~ ✅
 **Objetivo:** Retención. Los usuarios frecuentes (docentes, directores) vuelven al sitio principalmente para materiales CTE.
@@ -434,16 +350,6 @@ Esta barra debe actualizarse manualmente cada vez que se agrega una sesión. **T
 
 ### ~~3.5 Footer multi-columna~~ ✅
 3 columnas (SEPRN/contacto, Sitio, Áreas) + barra inferior con redes y copyright. Aplicado en las 13 páginas del sitio mediante script Python.
-
-### (referencia histórica) 3.5 Footer rediseñado con navegación
-**Problema:** Footer solo muestra contacto y redes. Sin mapa de navegación.
-**Tarea:** Rediseñar el footer con columnas:
-```
-Col 1: Logo + descripción institucional
-Col 2: Navegación (Inicio / Nosotros / Áreas / CTE / Contacto)
-Col 3: Áreas de atención (links a las 7 páginas de área)
-Col 4: Contacto + redes
-```
 
 ### 3.6 Página 404 personalizada
 **Problema:** Si un usuario llega a una URL inválida en GitHub Pages, ve la página 404 genérica de GitHub.

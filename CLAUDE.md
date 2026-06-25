@@ -18,18 +18,23 @@ Sitio web institucional de la **Subdirección de Educación Primaria en la Regi�
 | `--guinda-acento` | `#9F2241` | Énfasis, números, links activos |
 | `--arena` | `#d6d1ca` | Fondos alternos, separadores |
 | `--caramelo` | `#977e5b` | Labels secundarios |
-| Midnight | `#0C1A2E` | Hero oscuro (todas las páginas) |
-| Off-white | `#F9F8F5` | Fondos cálidos |
+| `--midnight` | `#0C1A2E` | Hero oscuro (todas las páginas) |
+| `--off-white` | `#F9F8F5` | Fondos cálidos |
 
 ## Sistema de diseño (implementado y extendido jun 2026)
 Clases reutilizables en `styles.css`:
-- `.section-header` + `.section-eyebrow` + `.section-title` — encabezado de sección centrado con eyebrow y líneas laterales. Usado en index y en todas las páginas de área internas.
+- `.section-header` + `.section-eyebrow` + `.section-title` — encabezado de sección centrado con eyebrow y líneas laterales
+- `.section-header-light` — modificador para `.section-header` sobre fondos oscuros (eyebrow y título en blanco/caramelo-claro)
 - `.metrics-strip` / `.metrics-inner` / `.metric-item` / `.metric-number` / `.metric-label` — tira de cifras clave con contador animado (solo `index.html`)
 - `.btn-primary-dark` / `.btn-secondary-dark` — botones para fondos oscuros (hero)
 - `.hero-badge` — pill de contexto institucional
+- `.area-card .area-icon` / `.area-card .area-tipo` — ícono SVG y badge de tipo en tarjetas de áreas del index
 - `.area-card.visible` — fade-up via IntersectionObserver (páginas de áreas en index)
 - `.fade-item.visible` — fade-up genérico para tarjetas internas (páginas de área individuales)
 - `.skip-link` — enlace de saltar al contenido principal (accesibilidad, visible solo con Tab)
+- `.ns-bloque` + `.ns-off-white` / `.ns-white` / `.ns-arena` / `.ns-midnight` / `.ns-guinda` — bandas de color completo en `nosotros.html`
+- `.ns-inner.visible` — animación fade-up para contenido de cada banda (IntersectionObserver)
+- `.footer-grid` / `.footer-col` / `.footer-col-title` / `.footer-links` / `.footer-bottom` — footer multi-columna (3 cols + barra inferior con redes y copyright)
 
 ### Eyebrows estándar en páginas de área
 Cuando se agrega o edita una sección en páginas de área, usar estos eyebrows:
@@ -100,9 +105,7 @@ La sesión más reciente siempre debe ser el acordeón activo/abierto al cargar 
 5. Después de push: esperar 5-10 min o Cmd+Shift+R para invalidar caché de GitHub Pages
 6. Los PDFs de sesiones CTE se nombran con mayúsculas y acentos; URL-encodear la ó como `%C3%B3` en los hrefs
 
-## Pendientes al 24 jun 2026
-- **Recrear páginas eliminadas** cuando haya contenido validado con la Dra. Galindo
-- **CSS Custom Properties** — migrar colores hardcodeados a variables `:root` (ver ROADMAP 2.7)
-- **Footer multi-columna** — actualmente solo contacto y redes (ver ROADMAP 3.5)
-- **nosotros.html** — variedad visual de fondos pendiente (ver ROADMAP 2.6)
-- **Accesibilidad restante** — roles ARIA en formularios de `otde.html` y `contacto.html`
+## Pendientes (al 24 jun 2026)
+- **Recrear páginas eliminadas** — `gestion-escolar.html`, `investigacion-educativa.html`, `programas-educativos.html`, `servicio-profesional.html`: requieren contenido validado con la Dra. Galindo
+- **Logomark SEPRN** — requiere archivo `logo.svg` (diseño gráfico pendiente)
+- **Barra CTE** — actualizar texto del `.update-banner` en `index.html` cuando se publique la 9ª sesión

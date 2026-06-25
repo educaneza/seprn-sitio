@@ -123,8 +123,11 @@ Toca este archivo solo cuando el cambio aplica a **todas** las páginas.
 | `.hero-badge` | Pill de contexto institucional |
 | `.fade-item` / `.fade-item.visible` | Fade-up genérico para tarjetas internas (IntersectionObserver) |
 | `.skip-link` | Saltar al contenido principal (accesibilidad) |
+| `.section-header-light` | Modificador de `.section-header` para fondos oscuros |
+| `.ns-bloque` / `.ns-*` | Bandas de color alternantes en `nosotros.html` |
+| `.ns-inner` / `.ns-inner.visible` | Fade-up de contenido en bandas nosotros |
 | `.leadership` | Sección de equipo directivo (portada) |
-| `footer` | Pie de página global |
+| `footer` / `.footer-grid` / `.footer-col` / `.footer-bottom` | Pie de página multi-columna |
 | `.content-section` | Contenedor de páginas internas |
 | `.video-grid` / `.video-card` | Grid de videos |
 | `@media (max-width: 768px)` | Breakpoint mobile principal |
@@ -134,7 +137,7 @@ Toca este archivo solo cuando el cambio aplica a **todas** las páginas.
 
 Úsalos **solo** para componentes que no existen en ninguna otra página:
 - `.sesion-accordion` — exclusivo de `cte.html`
-- `.info-section`, `.value-card`, `.stat-card` — exclusivo de `nosotros.html`
+- `.ns-texto-lead` — única clase local de `nosotros.html` (las bandas `.ns-bloque` y estilos de valores/equipo están en `styles.css`)
 - `.area-hero`, `.funciones-lista`, `.oficinas-grid` — exclusivo de páginas de área
 
 **Nunca** redefinir clases que ya existen en `styles.css` (como `.area-card`) en estilos locales.
@@ -155,13 +158,11 @@ Toca este archivo solo cuando el cambio aplica a **todas** las páginas.
     --caramelo-hover:  #bc955b;
     --caramelo-oscuro: #6b5a44;   /* AA-compliant sobre blanco */
     --caramelo-claro:  #ddc8a4;
+    --midnight:        #0C1A2E;   /* Hero oscuro, fondo de ancla */
+    --off-white:       #F9F8F5;   /* Fondos cálidos, strip de métricas */
     --texto:           #333333;
     --texto-muted:     #555555;
 }
-
-/* Tokens pendientes de migrar a :root (Fase 2.7) */
-/* midnight:  #0C1A2E — hero oscuro, fondo de ancla — hardcodeado en styles.css y páginas inline */
-/* off-white: #F9F8F5 — fondos cálidos, strip de métricas — hardcodeado en styles.css y páginas inline */
 ```
 
 ### Tipografía
@@ -397,7 +398,7 @@ Los paths de archivos con acentos o espacios deben estar URL-encoded (ej. `S%C3%
 
 ### Mapa SVG (Cobertura)
 
-Hardcodeado en `index.html`. Municipios como `<polygon>` con `data-nombre` y `data-sector`. El tooltip se maneja con JS inline. **Pendiente (Fase 3.3):** Agregar soporte touch.
+Hardcodeado en `index.html`. Municipios como `<polygon>` con `data-nombre` y `data-sector`. El tooltip se maneja con JS inline. Soporte touch implementado (`touchstart { passive: false }`, tooltip centrado fijo, auto-cierre 2.8s).
 
 ---
 
@@ -547,15 +548,16 @@ const CHECKIN_PIN  = '2026IA';             // cambiar antes del evento
 | P10e | Hero midnight en páginas de área | `*.html` | ✅ jun 2026 |
 | P10f | Section headers sistema de diseño en páginas internas | `*.html` | ✅ 24 jun 2026 |
 | P10g | `.skip-link` + `role="main"` en páginas de área | `*.html` | ✅ 24 jun 2026 |
+| P10h | Tokens `--midnight` y `--off-white` migrados a `:root` | `styles.css` | ✅ 24 jun 2026 |
+| P11 | Footer multi-columna (3 cols + barra inferior) en las 13 páginas | Todos los HTML | ✅ 24 jun 2026 |
+| P13 | ARIA tabs + `aria-expanded` en formularios de `otde.html` | `otde.html` | ✅ 24 jun 2026 |
+| P14 | Mapa SVG sin soporte touch | `index.html` | ✅ 24 jun 2026 |
 
 ### Pendientes
 
 | # | Problema | Archivo(s) | Fase |
 |---|---|---|---|
-| P10 | Tokens `#0C1A2E` y `#F9F8F5` hardcodeados (no en `:root`) | `styles.css` + páginas | Fase 2.7 |
-| P12 | Footer y nav duplicados en ~16 archivos | Todos los HTML | Deuda técnica |
-| P13 | ARIA en formularios de `otde.html` | `otde.html` | Accesibilidad |
-| P14 | Mapa SVG sin soporte touch | `index.html` | Fase 3.3 |
+| P12 | Footer y nav duplicados en ~16 archivos (sin componente compartido) | Todos los HTML | Deuda técnica |
 
 ---
 
