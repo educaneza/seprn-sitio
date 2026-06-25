@@ -10,8 +10,8 @@
     --caramelo-claro:  #ddc8a4;
     --texto:           #333333;
     --texto-muted:     #555555;
-    --midnight:        var(--midnight);
-    --off-white:       var(--off-white);
+    --midnight:        #0C1A2E;
+    --off-white:       #F9F8F5;
 }
 
 * {
