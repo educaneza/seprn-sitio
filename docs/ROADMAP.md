@@ -191,6 +191,8 @@ Proceso de 5 fases (dirección artística → wireframe → crítica → mejora 
 ## FASE 2 — Elevación visual
 **Objetivo:** Elevar la calidad percibida. Modernizar los componentes que más dañan la percepción premium.
 
+Items 2.2, 2.3 y 2.4 completados en sesiones anteriores. Items 2.1, 2.5, 2.6, 2.7, 2.8 pendientes.
+
 ### 2.1 Rediseñar las tarjetas de áreas del index
 **Problema:** `background: #d6d1ca` con hover que oscurece el fondo. Evoca "tarjeta de presentación genérica". Sin ícono.
 **Archivo:** `styles.css`, `index.html`
@@ -199,7 +201,7 @@ Proceso de 5 fases (dirección artística → wireframe → crítica → mejora 
 - Hover: `box-shadow: 0 12px 32px rgba(86,33,47,0.12)`, `border-color: #d6d1ca`, `transform: translateY(-4px)`.
 - Agregar íconos SVG a las 7 tarjetas del index (reutilizar los de `areas.html`).
 
-### 2.2 Eliminar gradientes en CTE
+### ~~2.2 Eliminar gradientes en CTE~~ ✅
 **Problema:** `linear-gradient(135deg, #56212f 0%, #9F2241 100%)` en los headers del acordeón. Los dos colores son tan similares que el gradiente se ve plano y sucio. Estética 2015.
 **Archivo:** `cte.html` (bloque `<style>`)
 **Tarea:**
@@ -207,7 +209,7 @@ Proceso de 5 fases (dirección artística → wireframe → crítica → mejora 
 - Agregar `border-left: 4px solid #9F2241` al header para dar el acento visual sin el gradiente.
 - Hover: `background: #6d2a3d`.
 
-### 2.3 Arreglar la animación del acordeón CTE
+### ~~2.3 Arreglar la animación del acordeón CTE~~ ✅
 **Problema:** `max-height: 0 → 2500px` con `ease-out` produce una animación no lineal percibida: el contenido aparece bruscamente y luego la transición se "extiende" en el vacío.
 **Archivo:** `cte.html`
 **Tarea — Reemplazar con la técnica `grid-template-rows`:**
@@ -243,7 +245,7 @@ Proceso de 5 fases (dirección artística → wireframe → crítica → mejora 
 ```
 > Nota: Requiere envolver `.sesion-content` en un `<div class="sesion-content-wrapper">` en el HTML.
 
-### 2.4 Agregar CTAs al hero del index
+### ~~2.4 Agregar CTAs al hero del index~~ ✅
 **Problema:** El hero termina sin ninguna acción. El usuario no tiene dirección.
 **Archivo:** `index.html`
 **Tarea:** Agregar después del `<p>` del hero:
@@ -297,13 +299,10 @@ Proceso de 5 fases (dirección artística → wireframe → crítica → mejora 
 }
 ```
 
-### 2.5 Señales de legitimidad institucional
+### 2.5 Señales de legitimidad institucional *(parcialmente hecho)*
 **Problema:** No hay ninguna señal de que este sea el sitio oficial. Sin escudo, sin referencia a SEIEM/SEEMx, sin código de la subdirección.
 **Archivos:** Footer en todos los HTML.
-**Tarea:**
-- Agregar en el footer, debajo del copyright: `<p>Dependencia de SEIEM — Servicios Educativos Integrados al Estado de México</p>`.
-- Agregar el escudo/logo de SEIEM como imagen SVG o PNG en el footer (si se tiene el archivo oficial).
-- Alternativa inmediata: agregar número oficial de la subdirección en el footer.
+**Estado:** El footer ya incluye "Órgano desconcentrado de SEIEM · Gobierno del Estado de México". Pendiente: agregar escudo/logo de SEIEM si se tiene el archivo oficial, y reforzar la mención de forma más visible.
 
 ### 2.6 Romper la monotonía visual en nosotros.html
 **Problema:** 6 bloques consecutivos con `background: #d6d1ca`, mismo radius, mismo padding. El ojo no tiene puntos de descanso.
@@ -426,11 +425,11 @@ Alternativa con split layout:
 ```html
 <div class="update-banner">
     <span>Nuevo</span>
-    Séptima Sesión Ordinaria 2025-2026 disponible
+    Octava Sesión Ordinaria 2025-2026 disponible
     <a href="cte.html">Ver materiales →</a>
 </div>
 ```
-Esta barra debe actualizarse manualmente cada vez que se agrega una sesión.
+Esta barra debe actualizarse manualmente cada vez que se agrega una sesión. **Texto actual a usar:** "Octava Sesión Ordinaria 2025-2026".
 
 ### 3.5 Footer rediseñado con navegación
 **Problema:** Footer solo muestra contacto y redes. Sin mapa de navegación.

@@ -14,10 +14,11 @@ El sitio es **100% estático**: HTML + CSS + JS. No hay servidor, base de datos,
 Browser
   └── Carga HTML (cualquiera de los ~16 archivos)
         ├── Descarga styles.css (único, cacheado)
-        ├── Descarga Montserrat desde Google Fonts (@import en styles.css — pendiente migrar a <link>)
+        ├── Descarga Montserrat desde Google Fonts (via <link rel="preconnect"> en cada página)
         ├── Ejecuta GA4 tag (en <head>)
         └── Ejecuta script.js (defer, al final del body)
-              └── Hamburger menu (nav-toggle)
+              ├── Hamburger menu (nav-toggle)
+              └── IntersectionObserver → .area-card.visible + .fade-item.visible
         └── Ejecuta JS inline del body (por página)
               ├── toggleSesion() + lazy load iframes (cte.html)
               ├── IntersectionObserver animaciones (nosotros.html)
@@ -48,13 +49,16 @@ Cada página sigue este esqueleto HTML:
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="[Descripción única ~150 chars]">
     <title>[Nombre Sección] - SEPRN</title>
-    <!-- PENDIENTE (Fase 1.3): reemplazar con <link rel="preconnect"> + <link> para Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="styles.css">
-    <!-- PENDIENTE (Fase 1.8): <link rel="icon" href="favicon.svg" type="image/svg+xml"> -->
     <!-- Estilos locales SOLO si son exclusivos de esta página -->
     <style> ... </style>
 </head>
 <body>
+    <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
     <!-- 1. Header/Nav (idéntico en todas las páginas) -->
     <header>
         <nav>
@@ -73,7 +77,7 @@ Cada página sigue este esqueleto HTML:
     </header>
 
     <!-- 2. Contenido principal -->
-    <section class="content-section"> ... </section>
+    <section class="content-section" id="main-content" role="main"> ... </section>
 
     <!-- 3. Footer (idéntico en todas las páginas) -->
     <footer> ... </footer>
@@ -91,7 +95,7 @@ Cada página sigue este esqueleto HTML:
 - GA4 siempre dentro de `<head>`, como primera línea.
 - `script.js` siempre al final del `<body>`, antes de cualquier JS inline de página.
 - Los 5 ítems de nav en este orden en TODAS las páginas.
-- Al página actual: `class="active"` + `aria-current="page"` en el `<a>` correspondiente (pendiente Fase 1.1 y 1.6).
+- Al página actual: `class="active"` + `aria-current="page"` en el `<a>` correspondiente.
 
 ---
 
@@ -103,7 +107,7 @@ Toca este archivo solo cuando el cambio aplica a **todas** las páginas.
 
 | Bloque CSS | Qué define |
 |---|---|
-| `@import` Google Fonts | Montserrat 300–700 (pendiente migrar a `<link>` — Fase 1.3) |
+| `<link rel="preconnect">` Google Fonts | Montserrat 300–700 (en `<head>` de cada página) |
 | `*` reset | `box-sizing`, `margin`, `padding` |
 | `body` | Fuente base, `color: #333333`, line-height |
 | `header` / `nav` | Barra de navegación sticky |
@@ -113,6 +117,12 @@ Toca este archivo solo cuando el cambio aplica a **todas** las páginas.
 | `:focus-visible` | Outline de accesibilidad 2px guinda |
 | `.hero` | Sección hero de la portada |
 | `.area-card` | Tarjetas de áreas en portada |
+| `.section-header` / `.section-eyebrow` / `.section-title` | Encabezados de sección con eyebrow y líneas |
+| `.metrics-strip` / `.metric-item` / `.metric-number` / `.metric-label` | Strip de métricas animadas (`index.html`) |
+| `.btn-primary-dark` / `.btn-secondary-dark` | Botones para fondos oscuros (hero) |
+| `.hero-badge` | Pill de contexto institucional |
+| `.fade-item` / `.fade-item.visible` | Fade-up genérico para tarjetas internas (IntersectionObserver) |
+| `.skip-link` | Saltar al contenido principal (accesibilidad) |
 | `.leadership` | Sección de equipo directivo (portada) |
 | `footer` | Pie de página global |
 | `.content-section` | Contenedor de páginas internas |
@@ -149,9 +159,9 @@ Toca este archivo solo cuando el cambio aplica a **todas** las páginas.
     --texto-muted:     #555555;
 }
 
-/* Tokens adicionales (pendiente migrar a :root — Fase 2.7) */
-/* midnight:  #0C1A2E — hero oscuro, fondo de ancla */
-/* off-white: #F9F8F5 — fondos cálidos, strip de métricas */
+/* Tokens pendientes de migrar a :root (Fase 2.7) */
+/* midnight:  #0C1A2E — hero oscuro, fondo de ancla — hardcodeado en styles.css y páginas inline */
+/* off-white: #F9F8F5 — fondos cálidos, strip de métricas — hardcodeado en styles.css y páginas inline */
 ```
 
 ### Tipografía
@@ -193,11 +203,11 @@ Reglas: letter-spacing negativo en headings. `line-height: 1.8` en cuerpos largo
 
 ---
 
-## 5. Componentes del sistema de diseño (16 jun 2026)
+## 5. Componentes del sistema de diseño (actualizado 24 jun 2026)
 
 Clases reutilizables en `styles.css`. Usar estas en lugar de estilos inline cuando sea posible.
 
-### Hero oscuro (solo `index.html`)
+### Hero oscuro — variante completa (`index.html`)
 
 ```html
 <section class="hero">
@@ -258,6 +268,47 @@ Clases reutilizables en `styles.css`. Usar estas en lugar de estilos inline cuan
 | `btn-primary-dark` | `#F9F8F5` sólido | **Fondos oscuros (hero)** |
 | `btn-secondary-dark` | transparente + borde blanco | **Fondos oscuros (hero)** |
 
+### Hero oscuro — variante compacta (`hero-sm`, páginas internas)
+
+```html
+<section class="hero hero-sm">
+    <div class="hero-inner">
+        <span class="hero-badge">NOMBRE ÁREA · SEPRN</span>
+        <h1>Título de la Página</h1>
+        <p>Subtítulo descriptivo breve</p>
+    </div>
+    <div class="hero-glow" aria-hidden="true"></div>
+</section>
+```
+
+- Idéntico al hero principal pero con `padding` reducido (via `.hero-sm`)
+- Usado en `nosotros.html` y todas las páginas de área internas
+
+### Fade-up genérico (`.fade-item`)
+
+Para animar tarjetas en páginas internas, agregar la clase `fade-item` al elemento:
+
+```html
+<div class="oficina-card fade-item">...</div>
+```
+
+El `script.js` global observa todos los `.fade-item` y les agrega `.visible` al entrar al viewport. No requiere JS adicional por página.
+
+### Skip to content (`.skip-link`)
+
+Primera línea del `<body>` en todas las páginas:
+
+```html
+<body>
+<a href="#main-content" class="skip-link">Saltar al contenido principal</a>
+```
+
+Y en la sección principal:
+
+```html
+<section class="content-section" id="main-content" role="main">
+```
+
 ### Card de área con animación de entrada
 
 Las `.area-card` requieren IntersectionObserver para activar la clase `.visible`:
@@ -298,7 +349,7 @@ document.querySelectorAll('.area-card').forEach((c, i) => {
 
 El `script.js` global maneja el toggle del menú hamburguesa (clase `.open` en `nav-toggle` y `nav ul`).
 
-**Pendiente (Fase 1.1 / 1.6):** Agregar `class="active"` + `aria-current="page"` al `<a>` de la página actual en los 16 archivos HTML.
+Todas las páginas tienen `class="active"` + `aria-current="page"` en el `<a>` correspondiente.
 
 ### Footer
 
@@ -308,26 +359,30 @@ Bloque idéntico en todas las páginas. Si cambia la dirección o el horario, ha
 
 ```html
 <div class="sesion-accordion [active]">
-    <div class="sesion-header" onclick="toggleSesion(this)">
+    <button class="sesion-header" type="button" onclick="toggleSesion(this)" aria-expanded="[true|false]">
         <div class="sesion-header-text">
             <h2>[Nombre Sesión] [Ciclo escolar]</h2>
             <p>[Descripción breve]</p>
         </div>
-        <div class="sesion-toggle">▼</div>
-    </div>
+        <div class="sesion-toggle">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"/>
+            </svg>
+        </div>
+    </button>
     <div class="sesion-content">
-        <!-- videos (src en activa, data-src en colapsadas), materiales, link SEP -->
+        <div class="sesion-content-inner">
+            <!-- videos (src en activa, data-src en colapsadas), materiales, link SEP -->
+        </div>
     </div>
 </div>
 ```
 
 **Estado actual:**
-- Solo la sesión más reciente lleva `class="active"`.
-- Los iframes de sesiones colapsadas usan `data-src` (lazy load al abrir).
+- Solo la sesión más reciente lleva `class="active"` y `aria-expanded="true"`. Las demás tienen `aria-expanded="false"`.
+- Los iframes de sesiones colapsadas usan `data-src` (lazy load al abrir el acordeón).
 - El JS en `cte.html` cierra todas las demás al abrir una y carga los iframes.
-- `max-height: 2500px` es un workaround para la animación — se reemplazará con `grid-template-rows` en Fase 2.3.
-
-**Pendiente (Fase 1.5 / 1.9):** Cambiar `<div onclick>` a `<button>` con `aria-expanded`, y `▼▶` a SVG chevron con CSS `rotate`.
+- La animación usa `grid-template-rows: 0fr → 1fr` con `transition: 0.35s ease` (técnica sin `max-height`).
 
 ### Grid de materiales (CTE)
 
@@ -377,7 +432,7 @@ Editar `nosotros.html` (bloque "Equipo de Trabajo") y `areas.html` (campo `area-
 | Servicio | Propósito | Configuración |
 |---|---|---|
 | Google Analytics 4 | Analítica de visitas | ID: `G-7D68DB8ELW` — en `<head>` de cada página |
-| Google Fonts | Tipografía Montserrat | `@import` en `styles.css` línea 1 (pendiente migrar a `<link>` — Fase 1.3) |
+| Google Fonts | Tipografía Montserrat | `<link rel="preconnect">` + `<link>` en `<head>` de cada página |
 | Google Maps Embed | Mapa en `contacto.html` | URL de embed en el `<iframe>` |
 | YouTube Embed | Videos de sesiones CTE | `src` (sesión activa) / `data-src` (colapsadas, lazy load) |
 | Portal SEP CTE | Link externo | `https://gestion.cte.sep.gob.mx/insumos/#!/` |
@@ -482,13 +537,25 @@ const CHECKIN_PIN  = '2026IA';             // cambiar antes del evento
 | P8 | Sin favicon en ninguna página | Todos los HTML | ✅ `fd707cf` |
 | P9 | Toggles accordion con caracteres `▼▶` (no fluido) | `cte.html` | ✅ `9502c7f` |
 
-### Pendientes (Fase 2+)
+### Resueltos en sesiones posteriores
+
+| # | Problema | Archivo(s) | Estado |
+|---|---|---|---|
+| P10b | Acordeón `<div onclick>` → `<button>` semántico con `aria-expanded` | `cte.html` | ✅ Fase 1.5 |
+| P10c | Toggles `▼▶` → SVG chevron animado con CSS `rotate` | `cte.html` | ✅ Fase 1.9 |
+| P10d | Animación acordeón `max-height` → `grid-template-rows` | `cte.html` | ✅ Fase 2.3 |
+| P10e | Hero midnight en páginas de área | `*.html` | ✅ jun 2026 |
+| P10f | Section headers sistema de diseño en páginas internas | `*.html` | ✅ 24 jun 2026 |
+| P10g | `.skip-link` + `role="main"` en páginas de área | `*.html` | ✅ 24 jun 2026 |
+
+### Pendientes
 
 | # | Problema | Archivo(s) | Fase |
 |---|---|---|---|
-| P10 | CSS custom properties no implementadas | `styles.css` | Fase 2.7 |
-| P11 | Animación accordion con `max-height` (no lineal) | `cte.html` | Fase 2.3 |
-| P12 | Footer duplicado en 16 archivos | Todos los HTML | Deuda técnica |
+| P10 | Tokens `#0C1A2E` y `#F9F8F5` hardcodeados (no en `:root`) | `styles.css` + páginas | Fase 2.7 |
+| P12 | Footer y nav duplicados en ~16 archivos | Todos los HTML | Deuda técnica |
+| P13 | ARIA en formularios de `otde.html` | `otde.html` | Accesibilidad |
+| P14 | Mapa SVG sin soporte touch | `index.html` | Fase 3.3 |
 
 ---
 
@@ -498,17 +565,19 @@ Antes de hacer commit de una página nueva:
 
 - [ ] `<html lang="es">`
 - [ ] GA4 tag **dentro** de `<head>` (primera línea de `<head>`)
-- [ ] `<meta charset="UTF-8">`
-- [ ] `<meta name="viewport" ...>`
-- [ ] `<meta name="description" content="...">`
+- [ ] `<meta charset="UTF-8">`, `<meta name="viewport" ...>`, `<meta name="description" content="...">`
 - [ ] `<title>[Sección] - SEPRN</title>`
-- [ ] `<link rel="preconnect" href="https://fonts.googleapis.com">` + `<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>` + `<link>` de Montserrat
+- [ ] `<link rel="preconnect">` × 2 + `<link>` de Montserrat
 - [ ] `<link rel="icon" href="favicon.svg" type="image/svg+xml">`
 - [ ] `<link rel="stylesheet" href="styles.css">`
-- [ ] Nav completo con los 5 ítems + botón `nav-toggle` + `class="active"` + `aria-current="page"` en el ítem actual
+- [ ] OG tags: `og:type`, `og:site_name`, `og:title`, `og:description`, `og:url`
+- [ ] Primera línea de `<body>`: `<a href="#main-content" class="skip-link">Saltar al contenido principal</a>`
+- [ ] Nav completo con los 5 ítems + `nav-toggle` + `class="active"` + `aria-current="page"` en el ítem actual
+- [ ] Sección hero: `<section class="hero hero-sm">` con `.hero-badge`, `<h1>`, `<p>`, `.hero-glow`
+- [ ] Contenido: `<section class="content-section" id="main-content" role="main">`
+- [ ] Secciones internas con `.section-header` + `.section-eyebrow` + `.section-title` (no `.seccion-titulo`)
+- [ ] Tarjetas con `class="oficina-card fade-item"` para animación al scroll
 - [ ] Footer completo (copiar del template)
 - [ ] `<script src="script.js" defer></script>` antes de `</body>`
 - [ ] `rel="noopener noreferrer"` en todos los `target="_blank"`
-- [ ] Sin `text-align: justify`
-- [ ] Texto de cuerpo en `#333333` (no `#000000`)
-- [ ] Sin emojis en headings (usar SVG inline o Unicode limpio)
+- [ ] Sin `text-align: justify`; texto de cuerpo en `#333333`
