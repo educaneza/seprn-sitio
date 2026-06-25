@@ -20,9 +20,6 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="styles.css">
     <style>
-        .areas-hero { text-align: center; margin-bottom: 60px; }
-        .areas-hero h1 { font-size: 42px; font-weight: 700; color: #56212f; margin-bottom: 15px; }
-        .areas-hero p { font-size: 18px; color: #666; max-width: 650px; margin: 0 auto; line-height: 1.7; }
         .areas-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
         .area-card { background: white; border: 2px solid #d6d1ca; border-radius: 18px; padding: 35px 30px; text-decoration: none; display: block; transition: all 0.3s; position: relative; overflow: hidden; }
         .area-card::before { content: ''; position: absolute; top: 0; left: 0; width: 5px; height: 100%; background: #d6d1ca; transition: all 0.3s; }
@@ -34,7 +31,6 @@
         .area-card p { font-size: 14px; color: #666; line-height: 1.7; margin-bottom: 20px; }
         .area-responsable { font-size: 13px; color: #977e5b; font-weight: 500; padding-top: 15px; border-top: 1px solid #f0f0f0; }
         .ver-mas { font-size: 14px; font-weight: 600; color: #9F2241; display: flex; align-items: center; gap: 6px; margin-top: 15px; }
-        @media(max-width:768px){ .areas-hero h1 { font-size: 30px; } }
     </style>
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="SEPRN">
@@ -43,6 +39,7 @@
     <meta property="og:url" content="https://educaneza.github.io/seprn-sitio/areas.html">
 </head>
 <body>
+<a href="#main-content" class="skip-link">Saltar al contenido principal</a>
 <header><nav><div class="logo">SEPRN</div>
         <button class="nav-toggle" aria-label="Abrir menú" aria-expanded="false">
             <span></span>
@@ -50,20 +47,24 @@
             <span></span>
         </button><ul>
 <li><a href="index.html">Inicio</a></li><li><a href="nosotros.html">Nosotros</a></li>
-<li><a href="areas.html" class="active">Áreas</a></li><li><a href="cte.html">CTE</a></li><li><a href="contacto.html">Contacto</a></li>
+<li><a href="areas.html" class="active" aria-current="page">Áreas</a></li><li><a href="cte.html">CTE</a></li><li><a href="contacto.html">Contacto</a></li>
 </ul></nav></header>
-<section class="content-section">
-    <div class="areas-hero">
+<section class="hero hero-sm">
+    <div class="hero-inner">
+        <span class="hero-badge">ESTRUCTURA ORGANIZACIONAL · SEPRN</span>
         <h1>Áreas de la Subdirección</h1>
-        <p>Conoce la estructura organizacional de la SEPRN y las funciones que cada área desempeña al servicio de la comunidad educativa en la Región de Nezahualcóyotl.</p>
+        <p>Organización interna al servicio de la comunidad educativa en los 18 municipios de la Región de Nezahualcóyotl.</p>
     </div>
+    <div class="hero-glow" aria-hidden="true"></div>
+</section>
+<section class="content-section" id="main-content" role="main">
     <div class="areas-grid">
         <a href="planeacion.html" class="area-card">
             <span class="area-icon"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="4" height="10" rx="1"/><rect x="10" y="6" width="4" height="15" rx="1"/><rect x="17" y="2" width="4" height="19" rx="1"/></svg></span>
             <span class="area-tipo">Subjefatura</span>
             <h2>Planeación Educativa</h2>
             <p>Integra y da seguimiento a la información institucional, estadística escolar y procesos de planeación y evaluación de la Subdirección.</p>
-            <div class="area-responsable">👤 Subjefe(a): Vacante</div>
+            <div class="area-responsable">Subjefe(a): Vacante</div>
             <div class="ver-mas">Ver más →</div>
         </a>
         <a href="personal.html" class="area-card">
@@ -71,7 +72,7 @@
             <span class="area-tipo">Subjefatura</span>
             <h2>Administración de Personal</h2>
             <p>Administra los recursos humanos de la Subdirección, gestionando trámites de movimientos, plantillas y expedientes del personal.</p>
-            <div class="area-responsable">👤 Subjefa: Lic. Laura Gilda Mejía García</div>
+            <div class="area-responsable">Subjefa: Lic. Laura Gilda Mejía García</div>
             <div class="ver-mas">Ver más →</div>
         </a>
         <a href="academica.html" class="area-card">
@@ -79,7 +80,7 @@
             <span class="area-tipo">Subjefatura</span>
             <h2>Académica</h2>
             <p>Dirige las acciones técnico-pedagógicas de apoyo al plan y programas de estudio, con cuatro oficinas especializadas al servicio docente.</p>
-            <div class="area-responsable">👤 Subjefa: Mtra. Araceli Islas García</div>
+            <div class="area-responsable">Subjefa: Mtra. Araceli Islas García</div>
             <div class="ver-mas">Ver más →</div>
         </a>
         <a href="recursos.html" class="area-card">
@@ -87,7 +88,7 @@
             <span class="area-tipo">Subjefatura</span>
             <h2>Recursos Materiales y Financieros</h2>
             <p>Controla la administración de recursos materiales y financieros, asegurando el equipamiento y presupuesto de los centros de trabajo.</p>
-            <div class="area-responsable">👤 Subjefa: Lic. Helga Adriana Díaz Álvarez</div>
+            <div class="area-responsable">Subjefa: Lic. Helga Adriana Díaz Álvarez</div>
             <div class="ver-mas">Ver más →</div>
         </a>
         <a href="otde.html" class="area-card">
@@ -95,7 +96,7 @@
             <span class="area-tipo">Oficina</span>
             <h2>OTDE</h2>
             <p>Oficina de Tecnología para el Desarrollo Educativo. Impulsa el uso de las TICCAD, gestiona cuentas institucionales y brinda soporte técnico a la estructura.</p>
-            <div class="area-responsable">👤 Mtro. Jorge Alberto Bonilla Torres</div>
+            <div class="area-responsable">Mtro. Jorge Alberto Bonilla Torres</div>
             <div class="ver-mas">Ver más →</div>
         </a>
         <a href="oeve.html" class="area-card">
@@ -103,7 +104,7 @@
             <span class="area-tipo">Oficina</span>
             <h2>OEVE</h2>
             <p>Oficina de Extensión y Vinculación Educativa. Organiza y evalúa los programas de participación social y vinculación entre escuela, familia y comunidad.</p>
-            <div class="area-responsable">👤 Mtro. José Chino Montiel</div>
+            <div class="area-responsable">Mtro. José Chino Montiel</div>
             <div class="ver-mas">Ver más →</div>
         </a>
         <a href="juridico.html" class="area-card">
@@ -111,7 +112,7 @@
             <span class="area-tipo">Oficina</span>
             <h2>Asuntos Jurídicos</h2>
             <p>Verifica y da seguimiento a la aplicación de normas jurídico-administrativas, brindando asesoría legal a los centros de trabajo de la región.</p>
-            <div class="area-responsable">👤 Dra. Rosminda Dolores Dávila Torres</div>
+            <div class="area-responsable">Dra. Rosminda Dolores Dávila Torres</div>
             <div class="ver-mas">Ver más →</div>
         </a>
     </div>
