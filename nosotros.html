@@ -20,197 +20,18 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="styles.css">
     <style>
-        .info-section {
-            max-width: 900px;
-            margin: 0 auto 80px;
-            padding: 50px;
-            background: #d6d1ca;
-            border-radius: 18px;
-            transition: transform 0.3s, box-shadow 0.3s;
-            opacity: 0;
-            transform: translateY(30px);
-        }
-
-        .info-section.animate-in {
-            animation: fadeInUp 0.6s ease-out forwards;
-        }
-
-        @keyframes fadeInUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .info-section:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 30px rgba(86, 33, 47, 0.12);
-        }
-
-        .info-section:nth-child(odd) {
-            background: #fff;
-            border-left: 4px solid #56212f;
-            box-shadow: 0 2px 12px rgba(86, 33, 47, 0.06);
-        }
-
-        .info-section h2 {
-            margin-top: 0;
-            font-size: 32px;
-            font-weight: 600;
-            color: #56212f;
-            margin-bottom: 25px;
-            letter-spacing: -0.5px;
-        }
-
-        .info-section p {
-            font-size: 16px;
-            line-height: 1.9;
-            color: #000;
-            margin-bottom: 20px;
-        }
-
-        .info-section p:last-child {
-            margin-bottom: 0;
-        }
-
-        .values-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 30px;
-            margin-top: 40px;
-        }
-
-        .value-card {
-            margin-top: 0;
+        /* Overrides locales nosotros.html */
+        .ns-texto-lead {
+            font-size: 19px;
+            line-height: 1.8;
+            color: var(--texto);
+            font-style: italic;
             text-align: center;
-            padding: 30px;
-            background: rgba(255, 255, 255, 0.5);
-            border-radius: 12px;
-            transition: transform 0.3s, background 0.3s;
-            opacity: 0;
-            transform: scale(0.9);
+            max-width: 720px;
+            margin: 0 auto;
         }
-
-        .value-card.animate-in {
-            animation: fadeInScale 0.5s ease-out forwards;
-        }
-
-        @keyframes fadeInScale {
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        .value-card:hover {
-            transform: translateY(-4px) scale(1.02);
-            background: rgba(255, 255, 255, 0.8);
-        }
-
-        .value-card h3 {
-            margin-top: 0;
-            font-size: 20px;
-            font-weight: 600;
-            color: #9F2241;
-            margin-bottom: 15px;
-        }
-
-        .value-card p {
-            font-size: 14px;
-            line-height: 1.7;
-            color: #000;
-            margin: 0;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 30px;
-            margin-top: 60px;
-        }
-
-        .stat-card {
-            text-align: center;
-            padding: 30px 20px;
-            opacity: 0;
-            transform: translateY(20px);
-        }
-
-        .stat-card.animate-in {
-            animation: fadeInUp 0.5s ease-out forwards;
-        }
-
-        .stat-number {
-            font-size: 48px;
-            font-weight: 600;
-            color: #9F2241;
-            line-height: 1;
-            margin-bottom: 10px;
-        }
-
-        .stat-label {
-            font-size: 14px;
-            color: #56212f;
-            font-weight: 500;
-        }
-
-        /* Redesigned Areas List */
-        .areas-list {
-            margin-top: 40px;
-            background: #f0ede8;
-            padding: 40px;
-            border-radius: 12px;
-        }
-
-        .areas-list h3 {
-            font-size: 24px;
-            font-weight: 600;
-            color: #56212f;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-
-        .areas-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-        }
-
-        .area-item {
-            padding: 20px 25px;
-            background: #f9f9f9;
-            border-radius: 10px;
-            border-left: 4px solid #9F2241;
-            transition: all 0.3s;
-            cursor: pointer;
-            text-decoration: none;
-            display: block;
-            opacity: 0;
-            transform: translateX(-20px);
-        }
-
-        .area-item.animate-in {
-            animation: slideInLeft 0.4s ease-out forwards;
-        }
-
-        @keyframes slideInLeft {
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        .area-item:hover {
-            background: #d6d1ca;
-            transform: translateX(5px);
-            box-shadow: 0 4px 15px rgba(86, 33, 47, 0.1);
-        }
-
-        .area-item h4 {
-            font-size: 16px;
-            font-weight: 600;
-            color: #56212f;
-            margin: 0;
+        .ns-midnight .ns-texto-lead {
+            color: rgba(255,255,255,0.82);
         }
     </style>
     <meta property="og:type" content="website">
@@ -249,207 +70,232 @@
         <div class="hero-glow"></div>
     </section>
 
-    <!-- Content -->
-    <section class="content-section" id="main-content" role="main">
+    <main id="main-content">
 
         <!-- Misión -->
-        <div class="info-section">
-            <h2>Misión</h2>
-            <p >Brindar un servicio educativo de excelencia en la Subdirección de Educación Primaria en la Región de Nezahualcóyotl, que promueva el desarrollo integral de niñas, niños y adolescentes a través de una práctica pedagógica humanista, inclusiva y equitativa, fortalecida por la mejora continua, el pensamiento crítico y una cultura de paz, en colaboración con las comunidades escolares y sociales.</p>
-        </div>
+        <section class="ns-bloque ns-off-white">
+            <div class="ns-inner">
+                <div class="section-header" style="margin-bottom: 28px;">
+                    <span class="section-eyebrow">IDENTIDAD INSTITUCIONAL</span>
+                    <h2 class="section-title" style="font-size: 30px;">Misión</h2>
+                </div>
+                <p class="ns-texto-lead">Brindar un servicio educativo de excelencia en la Subdirección de Educación Primaria en la Región de Nezahualcóyotl, que promueva el desarrollo integral de niñas, niños y adolescentes a través de una práctica pedagógica humanista, inclusiva y equitativa, fortalecida por la mejora continua, el pensamiento crítico y una cultura de paz, en colaboración con las comunidades escolares y sociales.</p>
+            </div>
+        </section>
 
         <!-- Visión -->
-        <div class="info-section">
-            <h2>Visión</h2>
-            <p >Ser una Subdirección reconocida por su liderazgo transformador, su compromiso con la mejora continua y su capacidad de respuesta ética, inclusiva y profesional, en favor de una educación básica de excelencia, adaptada a la diversidad social, cultura y territorial de la Subdirección de Educación Primara en la Región de Nezahualcóyotl.</p>
-        </div>
+        <section class="ns-bloque ns-white">
+            <div class="ns-inner">
+                <div class="section-header" style="margin-bottom: 28px;">
+                    <span class="section-eyebrow">HORIZONTE ESTRATÉGICO</span>
+                    <h2 class="section-title" style="font-size: 30px;">Visión</h2>
+                </div>
+                <p class="ns-texto-lead">Ser una Subdirección reconocida por su liderazgo transformador, su compromiso con la mejora continua y su capacidad de respuesta ética, inclusiva y profesional, en favor de una educación básica de excelencia, adaptada a la diversidad social, cultural y territorial de la Región de Nezahualcóyotl.</p>
+            </div>
+        </section>
 
-        <!-- Valores -->
-        <div class="info-section">
-            <h2>Valores</h2>
-            <div class="values-grid">
-                <div class="value-card">
-                    <h3>Lealtad</h3>
-                    <p>institucional.</p>
+        <!-- Valores — fondo midnight -->
+        <section class="ns-bloque ns-midnight">
+            <div class="ns-inner">
+                <div class="section-header section-header-light" style="margin-bottom: 28px;">
+                    <span class="section-eyebrow">CULTURA ORGANIZACIONAL</span>
+                    <h2 class="section-title" style="font-size: 30px;">Nuestros Valores</h2>
                 </div>
-                <div class="value-card">
-                    <h3>Compromiso</h3>
-                    <p>con la equidad y la inclusión.</p>
-                </div>
-                <div class="value-card">
-                    <h3>Respeto</h3>
-                    <p>a la diversidad y los derechos humanos.</p>
-                </div>
-                <div class="value-card">
-                    <h3>Ética</h3>
-                    <p>profesional y honestidad.</p>
-                </div>
-                <div class="value-card">
-                    <h3>Innovación</h3>
-                    <p>y mejora continua.</p>
-                </div>
-                <div class="value-card">
-                    <h3>Comunicación</h3>
-                    <p>efectiva y empática.</p>
-                </div>
-                <div class="value-card">
-                    <h3>Identidad</h3>
-                    <p>y pertenencia institucional.</p>
-                </div>
-                <div class="value-card">
-                    <h3>Trabajo</h3>
-                    <p>colaborativo e interdepartamental.</p>
+                <div class="valores-grid">
+                    <div class="valor-card">
+                        <h3>Lealtad</h3>
+                        <p>institucional.</p>
+                    </div>
+                    <div class="valor-card">
+                        <h3>Compromiso</h3>
+                        <p>con la equidad y la inclusión.</p>
+                    </div>
+                    <div class="valor-card">
+                        <h3>Respeto</h3>
+                        <p>a la diversidad y los derechos humanos.</p>
+                    </div>
+                    <div class="valor-card">
+                        <h3>Ética</h3>
+                        <p>profesional y honestidad.</p>
+                    </div>
+                    <div class="valor-card">
+                        <h3>Innovación</h3>
+                        <p>y mejora continua.</p>
+                    </div>
+                    <div class="valor-card">
+                        <h3>Comunicación</h3>
+                        <p>efectiva y empática.</p>
+                    </div>
+                    <div class="valor-card">
+                        <h3>Identidad</h3>
+                        <p>y pertenencia institucional.</p>
+                    </div>
+                    <div class="valor-card">
+                        <h3>Trabajo</h3>
+                        <p>colaborativo e interdepartamental.</p>
+                    </div>
                 </div>
             </div>
-        </div>
+        </section>
 
         <!-- Objetivo -->
-        <div class="info-section">
-            <h2>Objetivo</h2>
-            <p >Organizar, operar, controlar y evaluar la prestación del servicio de educación primaria a cargo de SEIEM, de conformidad con la normatividad establecida en materia técnico pedagógica y administrativa, a efecto de atender la demanda y elevar la calidad de la educación en la jurisdicción de su competencia.</p>
-        </div>
+        <section class="ns-bloque ns-off-white">
+            <div class="ns-inner">
+                <div class="section-header" style="margin-bottom: 28px;">
+                    <span class="section-eyebrow">PROPÓSITO</span>
+                    <h2 class="section-title" style="font-size: 30px;">Objetivo</h2>
+                </div>
+                <p class="ns-texto-lead">Organizar, operar, controlar y evaluar la prestación del servicio de educación primaria a cargo de SEIEM, de conformidad con la normatividad establecida en materia técnico pedagógica y administrativa, a efecto de atender la demanda y elevar la calidad de la educación en la jurisdicción de su competencia.</p>
+            </div>
+        </section>
 
-        <!-- Población Atendida -->
-        <div class="info-section">
-            <h2>Población Atendida</h2>
-            <p >La Subdirección de Educación Primaria en la Región de Nezahualcóyotl atiende a la población escolar de nivel primaria en los municipios que conforman la región, brindando servicios educativos de calidad a miles de alumnos y alumnas a través de nuestras escuelas, supervisiones de zona y jefaturas de sector.</p>
-            
-            <p >Nuestra jurisdicción comprende centros educativos ubicados en zonas urbanas y semiurbanas, atendiendo las necesidades particulares de cada comunidad escolar con un enfoque integral que considera aspectos académicos, administrativos y de infraestructura.</p>
-
-            <!-- Estadísticas -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-number">417</div>
-                    <div class="stat-label">Escuelas Oficiales</div>
+        <!-- Población Atendida — fondo arena -->
+        <section class="ns-bloque ns-arena">
+            <div class="ns-inner">
+                <div class="section-header" style="margin-bottom: 28px;">
+                    <span class="section-eyebrow">ALCANCE TERRITORIAL</span>
+                    <h2 class="section-title" style="font-size: 30px;">Población Atendida</h2>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-number">106</div>
-                    <div class="stat-label">Escuelas Particulares</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">121,332</div>
-                    <div class="stat-label">Alumnas y Alumnos</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">13</div>
-                    <div class="stat-label">Jefaturas de Sector</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">75</div>
-                    <div class="stat-label">Supervisiones Escolares</div>
+                <p class="ns-texto">La Subdirección de Educación Primaria en la Región de Nezahualcóyotl atiende a la población escolar de nivel primaria en los municipios que conforman la región, brindando servicios educativos de calidad a miles de alumnos y alumnas a través de nuestras escuelas, supervisiones de zona y jefaturas de sector.</p>
+                <p class="ns-texto">Nuestra jurisdicción comprende centros educativos ubicados en zonas urbanas y semiurbanas, atendiendo las necesidades particulares de cada comunidad escolar con un enfoque integral que considera aspectos académicos, administrativos y de infraestructura.</p>
+                <div class="stats-grid-ns">
+                    <div class="stat-ns">
+                        <span class="stat-ns-numero">417</span>
+                        <span class="stat-ns-etiqueta">Escuelas Oficiales</span>
+                    </div>
+                    <div class="stat-ns">
+                        <span class="stat-ns-numero">106</span>
+                        <span class="stat-ns-etiqueta">Escuelas Particulares</span>
+                    </div>
+                    <div class="stat-ns">
+                        <span class="stat-ns-numero">121,332</span>
+                        <span class="stat-ns-etiqueta">Alumnas y Alumnos</span>
+                    </div>
+                    <div class="stat-ns">
+                        <span class="stat-ns-numero">13</span>
+                        <span class="stat-ns-etiqueta">Jefaturas de Sector</span>
+                    </div>
+                    <div class="stat-ns">
+                        <span class="stat-ns-numero">75</span>
+                        <span class="stat-ns-etiqueta">Supervisiones Escolares</span>
+                    </div>
                 </div>
             </div>
-        </div>
+        </section>
 
         <!-- Organigrama -->
-        <div class="info-section">
-            <h2>Organigrama</h2>
-            <p style="margin-bottom: 30px;">La estructura organizacional de la Subdirección de Educación Primaria en la Región de Nezahualcóyotl está conformada por las siguientes áreas:</p>
-            
-            
-            <div class="areas-list">
-                <h3>Áreas de la Subdirección</h3>
-                <div class="areas-grid">
-                    <a href="areas.html" class="area-item">
-                        <h4>Oficina Particular</h4>
-                    </a>
-                    <a href="planeacion.html" class="area-item">
-                        <h4>Subjefatura de Planeación Educativa</h4>
-                    </a>
-                    <a href="personal.html" class="area-item">
-                        <h4>Subjefatura de Administración de Personal</h4>
-                    </a>
-                    <a href="academica.html" class="area-item">
-                        <h4>Subjefatura Académica de Educación Primaria</h4>
-                    </a>
-                    <a href="recursos.html" class="area-item">
-                        <h4>Subjefatura de Recursos Materiales y Financieros</h4>
-                    </a>
-                    <a href="otde.html" class="area-item">
-                        <h4>Oficina de Tecnología para el Desarrollo Educativo</h4>
-                    </a>
-                    <a href="juridico.html" class="area-item">
-                        <h4>Oficina de Seguimiento de Asuntos Jurídicos</h4>
-                    </a>
-                    <a href="oeve.html" class="area-item">
-                        <h4>Oficina de Extensión y Vinculación Educativa</h4>
-                    </a>
+        <section class="ns-bloque ns-white">
+            <div class="ns-inner">
+                <div class="section-header" style="margin-bottom: 28px;">
+                    <span class="section-eyebrow">ESTRUCTURA INTERNA</span>
+                    <h2 class="section-title" style="font-size: 30px;">Organigrama</h2>
+                </div>
+                <p class="ns-texto">La estructura organizacional de la Subdirección de Educación Primaria en la Región de Nezahualcóyotl está conformada por las siguientes áreas:</p>
+                <div class="areas-org">
+                    <a href="areas.html" class="area-org-item"><h4>Oficina Particular</h4></a>
+                    <a href="planeacion.html" class="area-org-item"><h4>Subjefatura de Planeación Educativa</h4></a>
+                    <a href="personal.html" class="area-org-item"><h4>Subjefatura de Administración de Personal</h4></a>
+                    <a href="academica.html" class="area-org-item"><h4>Subjefatura Académica de Educación Primaria</h4></a>
+                    <a href="recursos.html" class="area-org-item"><h4>Subjefatura de Recursos Materiales y Financieros</h4></a>
+                    <a href="otde.html" class="area-org-item"><h4>Oficina de Tecnología para el Desarrollo Educativo</h4></a>
+                    <a href="juridico.html" class="area-org-item"><h4>Oficina de Seguimiento de Asuntos Jurídicos</h4></a>
+                    <a href="oeve.html" class="area-org-item"><h4>Oficina de Extensión y Vinculación Educativa</h4></a>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <!-- Equipo Directivo -->
-        <div class="info-section">
-            <h2>Equipo de Trabajo</h2>
-            <p style="margin-bottom: 30px;">Conoce a las personas responsables de las áreas que conforman la Subdirección de Educación Primaria en la Región de Nezahualcóyotl.</p>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px;">
-
-                <div style="background: white; border-radius: 12px; padding: 22px 25px; border-left: 4px solid #9F2241;">
-                    <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #9F2241; font-weight: 700; margin-bottom: 6px;">Subdirección</p>
-                    <p style="font-size: 16px; font-weight: 600; color: #56212f; margin-bottom: 4px;">Dra. Avelina Galindo Celix</p>
-                    <p style="font-size: 13px; color: #666;">Encargada del Despacho</p>
+        <!-- Equipo de Trabajo — fondo guinda -->
+        <section class="ns-bloque ns-guinda">
+            <div class="ns-inner">
+                <div class="section-header section-header-light" style="margin-bottom: 28px;">
+                    <span class="section-eyebrow">LIDERAZGO</span>
+                    <h2 class="section-title" style="font-size: 30px;">Equipo de Trabajo</h2>
                 </div>
-
-                <div style="background: white; border-radius: 12px; padding: 22px 25px; border-left: 4px solid #9F2241;">
-                    <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #9F2241; font-weight: 700; margin-bottom: 6px;">Secretaría Particular</p>
-                    <p style="font-size: 16px; font-weight: 600; color: #56212f; margin-bottom: 4px;">Mtra. Angélica López Ramírez</p>
-                    <p style="font-size: 13px; color: #666;">Secretaria Particular</p>
+                <div class="equipo-grid">
+                    <div class="persona-card">
+                        <span class="persona-area">Subdirección</span>
+                        <span class="persona-nombre">Dra. Avelina Galindo Celix</span>
+                        <span class="persona-cargo">Encargada del Despacho</span>
+                    </div>
+                    <div class="persona-card">
+                        <span class="persona-area">Secretaría Particular</span>
+                        <span class="persona-nombre">Mtra. Angélica López Ramírez</span>
+                        <span class="persona-cargo">Secretaria Particular</span>
+                    </div>
+                    <div class="persona-card">
+                        <span class="persona-area">Planeación Educativa</span>
+                        <span class="persona-nombre">— — —</span>
+                        <span class="persona-cargo">Subjefe(a) de Planeación</span>
+                    </div>
+                    <div class="persona-card">
+                        <span class="persona-area">Administración de Personal</span>
+                        <span class="persona-nombre">Lic. Laura Gilda Mejía García</span>
+                        <span class="persona-cargo">Subjefa de Personal</span>
+                    </div>
+                    <div class="persona-card">
+                        <span class="persona-area">Subjefatura Académica</span>
+                        <span class="persona-nombre">Mtra. Araceli Islas García</span>
+                        <span class="persona-cargo">Subjefa Académica</span>
+                    </div>
+                    <div class="persona-card">
+                        <span class="persona-area">Recursos Materiales y Financieros</span>
+                        <span class="persona-nombre">Lic. Helga Adriana Díaz Álvarez</span>
+                        <span class="persona-cargo">Subjefa de Recursos</span>
+                    </div>
+                    <div class="persona-card">
+                        <span class="persona-area">OTDE</span>
+                        <span class="persona-nombre">Mtro. Jorge Alberto Bonilla Torres</span>
+                        <span class="persona-cargo">Jefe de Oficina OTDE</span>
+                    </div>
+                    <div class="persona-card">
+                        <span class="persona-area">OEVE</span>
+                        <span class="persona-nombre">Mtro. José Chino Montiel</span>
+                        <span class="persona-cargo">Jefe de Oficina OEVE</span>
+                    </div>
+                    <div class="persona-card">
+                        <span class="persona-area">Asuntos Jurídicos</span>
+                        <span class="persona-nombre">Dra. Rosminda Dolores Dávila Torres</span>
+                        <span class="persona-cargo">Jefa de Oficina Jurídico</span>
+                    </div>
                 </div>
-
-                <div style="background: white; border-radius: 12px; padding: 22px 25px; border-left: 4px solid #9F2241;">
-                    <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #9F2241; font-weight: 700; margin-bottom: 6px;">Planeación Educativa</p>
-                    <p style="font-size: 16px; font-weight: 600; color: #56212f; margin-bottom: 4px;">- - -</p>
-                    <p style="font-size: 13px; color: #666;">Subjefe(a) de Planeación</p>
-                </div>
-
-                <div style="background: white; border-radius: 12px; padding: 22px 25px; border-left: 4px solid #9F2241;">
-                    <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #9F2241; font-weight: 700; margin-bottom: 6px;">Administración de Personal</p>
-                    <p style="font-size: 16px; font-weight: 600; color: #56212f; margin-bottom: 4px;">Lic. Laura Gilda Mejía García</p>
-                    <p style="font-size: 13px; color: #666;">Subjefa de Personal</p>
-                </div>
-
-                <div style="background: white; border-radius: 12px; padding: 22px 25px; border-left: 4px solid #9F2241;">
-                    <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #9F2241; font-weight: 700; margin-bottom: 6px;">Subjefatura Académica</p>
-                    <p style="font-size: 16px; font-weight: 600; color: #56212f; margin-bottom: 4px;">Mtra. Araceli Islas García</p>
-                    <p style="font-size: 13px; color: #666;">Subjefa Académica</p>
-                </div>
-
-                <div style="background: white; border-radius: 12px; padding: 22px 25px; border-left: 4px solid #9F2241;">
-                    <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #9F2241; font-weight: 700; margin-bottom: 6px;">Recursos Materiales y Financieros</p>
-                    <p style="font-size: 16px; font-weight: 600; color: #56212f; margin-bottom: 4px;">Lic. Helga Adriana Díaz Álvarez</p>
-                    <p style="font-size: 13px; color: #666;">Subjefa de Recursos</p>
-                </div>
-
-                <div style="background: white; border-radius: 12px; padding: 22px 25px; border-left: 4px solid #9F2241;">
-                    <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #9F2241; font-weight: 700; margin-bottom: 6px;">OTDE</p>
-                    <p style="font-size: 16px; font-weight: 600; color: #56212f; margin-bottom: 4px;">Mtro. Jorge Alberto Bonilla Torres</p>
-                    <p style="font-size: 13px; color: #666;">Jefe de Oficina OTDE</p>
-                </div>
-
-                <div style="background: white; border-radius: 12px; padding: 22px 25px; border-left: 4px solid #9F2241;">
-                    <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #9F2241; font-weight: 700; margin-bottom: 6px;">OEVE</p>
-                    <p style="font-size: 16px; font-weight: 600; color: #56212f; margin-bottom: 4px;">Mtro. José Chino Montiel</p>
-                    <p style="font-size: 13px; color: #666;">Jefe de Oficina OEVE</p>
-                </div>
-
-                <div style="background: white; border-radius: 12px; padding: 22px 25px; border-left: 4px solid #9F2241;">
-                    <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #9F2241; font-weight: 700; margin-bottom: 6px;">Asuntos Jurídicos</p>
-                    <p style="font-size: 16px; font-weight: 600; color: #56212f; margin-bottom: 4px;">Dra. Rosminda Dolores Dávila Torres</p>
-                    <p style="font-size: 13px; color: #666;">Jefa de Oficina Jurídico</p>
-                </div>
-
             </div>
-        </div>
-    </section>
+        </section>
+
+    </main>
 
     <!-- Footer -->
     <footer>
-        <div class="footer-content">
-            <h3>Contacto</h3>
-            <p>Av. Texcoco #116, Col. Juárez Pantitlán</p>
-            <p>Nezahualcóyotl, Estado de México, C.P. 57460</p>
-            <p>Lunes a Viernes de 08:30 a 15:30 hrs</p>
-            
+        <div class="footer-grid">
+            <div class="footer-col">
+                <p class="footer-brand">SEPRN</p>
+                <p class="footer-desc">Subdirección de Educación Primaria<br>en la Región de Nezahualcóyotl</p>
+                <p class="footer-meta">Av. Texcoco #116, Col. Juárez Pantitlán<br>Nezahualcóyotl, Estado de México, C.P. 57460</p>
+                <p class="footer-meta">Lunes a Viernes · 08:30 – 15:30 h</p>
+            </div>
+            <div class="footer-col">
+                <p class="footer-col-title">Sitio</p>
+                <ul class="footer-links">
+                    <li><a href="index.html">Inicio</a></li>
+                    <li><a href="nosotros.html">Nosotros</a></li>
+                    <li><a href="areas.html">Áreas</a></li>
+                    <li><a href="cte.html">CTE</a></li>
+                    <li><a href="contacto.html">Contacto</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <p class="footer-col-title">Áreas</p>
+                <ul class="footer-links">
+                    <li><a href="academica.html">Subjefatura Académica</a></li>
+                    <li><a href="personal.html">Subjefatura de Personal</a></li>
+                    <li><a href="planeacion.html">Subjefatura de Planeación</a></li>
+                    <li><a href="recursos.html">Subjefatura de Recursos</a></li>
+                    <li><a href="otde.html">OTDE</a></li>
+                    <li><a href="oeve.html">OEVE</a></li>
+                    <li><a href="juridico.html">Asuntos Jurídicos</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
             <div class="social-links">
                 <a href="https://www.facebook.com/SubNeza" target="_blank" rel="noopener noreferrer" title="Facebook">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -462,80 +308,32 @@
                     </svg>
                 </a>
             </div>
-            
             <div class="copyright">
-                © 2026 SEPRN. Subdirección de Educación Primaria en la Región de Nezahualcóyotl<br>
+                © 2026 SEPRN · Subdirección de Educación Primaria en la Región de Nezahualcóyotl<br>
                 Órgano desconcentrado de SEIEM · Gobierno del Estado de México
             </div>
         </div>
     </footer>
 
     <script>
-        // Intersection Observer for scroll animations
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach((entry, index) => {
-                if (entry.isIntersecting) {
-                    // Add stagger delay for multiple elements
-                    setTimeout(() => {
-                        entry.target.classList.add('animate-in');
-                    }, index * 100);
-                }
-            });
-        }, observerOptions);
-
-        // Observe all animated elements
-        document.addEventListener('DOMContentLoaded', () => {
-            // Observe info sections
-            document.querySelectorAll('.info-section').forEach(section => {
-                observer.observe(section);
-            });
-
-            // Observe value cards with stagger
-            document.querySelectorAll('.value-card').forEach((card, index) => {
-                const delayedObserver = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
+        document.addEventListener('DOMContentLoaded', function () {
+            if ('IntersectionObserver' in window) {
+                var obs = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
                         if (entry.isIntersecting) {
-                            setTimeout(() => {
-                                entry.target.classList.add('animate-in');
-                            }, index * 100);
+                            entry.target.classList.add('visible');
+                            obs.unobserve(entry.target);
                         }
                     });
-                }, observerOptions);
-                delayedObserver.observe(card);
-            });
-
-            // Observe stat cards with stagger
-            document.querySelectorAll('.stat-card').forEach((card, index) => {
-                const delayedObserver = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            setTimeout(() => {
-                                entry.target.classList.add('animate-in');
-                            }, index * 80);
-                        }
-                    });
-                }, observerOptions);
-                delayedObserver.observe(card);
-            });
-
-            // Observe area items with stagger
-            document.querySelectorAll('.area-item').forEach((item, index) => {
-                const delayedObserver = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            setTimeout(() => {
-                                entry.target.classList.add('animate-in');
-                            }, index * 60);
-                        }
-                    });
-                }, observerOptions);
-                delayedObserver.observe(item);
-            });
+                }, { threshold: 0.08 });
+                document.querySelectorAll('.ns-inner').forEach(function (el) {
+                    obs.observe(el);
+                });
+            } else {
+                document.querySelectorAll('.ns-inner').forEach(function (el) {
+                    el.classList.add('visible');
+                });
+            }
         });
     </script>
     <script src="script.js" defer></script>
