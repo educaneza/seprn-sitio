@@ -7,17 +7,17 @@ Objetivo: elevar el sitio de un nivel **5/10** (funcional-institucional 2019) a 
 
 ## Estado actual — Scores de auditoría
 
-| Dimensión | Score original (may 2026) | Post Fase 1 (jun 2026) | Post rediseño (16 jun 2026) | Objetivo |
-|-----------|:---:|:---:|:---:|:---:|
-| UI | 5/10 | 6/10 | **8.5/10** | 8/10 ✅ |
-| UX | 5/10 | 6.5/10 | **8/10** | 8/10 ✅ |
-| Branding | 3/10 | 3.5/10 | **7.5/10** | 7/10 ✅ |
-| Profesionalismo | 5/10 | 6/10 | **8/10** | 9/10 |
-| Claridad | 6/10 | 6/10 | **7.5/10** | 9/10 |
-| Conversión / Retención | 3/10 | 3/10 | **5/10** | 7/10 |
-| Diseño móvil | 4/10 | 6/10 | **7.5/10** | 8/10 |
-| Performance percibida | 6/10 | 7/10 | **8/10** | 8/10 ✅ |
-| Accesibilidad | 3/10 | 6/10 | **7/10** | 8/10 |
+| Dimensión | Score original (may 2026) | Post Fase 1 (jun 2026) | Post rediseño (16 jun 2026) | Post páginas internas (24 jun 2026) | Objetivo |
+|-----------|:---:|:---:|:---:|:---:|:---:|
+| UI | 5/10 | 6/10 | **8.5/10** | **8.5/10** | 8/10 ✅ |
+| UX | 5/10 | 6.5/10 | **8/10** | **8.5/10** | 8/10 ✅ |
+| Branding | 3/10 | 3.5/10 | **7.5/10** | **8/10** | 7/10 ✅ |
+| Profesionalismo | 5/10 | 6/10 | **8/10** | **8.5/10** | 9/10 |
+| Claridad | 6/10 | 6/10 | **7.5/10** | **8/10** | 9/10 |
+| Conversión / Retención | 3/10 | 3/10 | **5/10** | **5/10** | 7/10 |
+| Diseño móvil | 4/10 | 6/10 | **7.5/10** | **7.5/10** | 8/10 |
+| Performance percibida | 6/10 | 7/10 | **8/10** | **8/10** | 8/10 ✅ |
+| Accesibilidad | 3/10 | 6/10 | **7/10** | **7.5/10** | 8/10 |
 
 ---
 
@@ -36,6 +36,31 @@ Implementado para la **Conferencia IA 2026** (17 jun 2026, Auditorio Regional 1 
 | Fix hora check-in: formato `@STRING@` en Sheets + `instanceof Date` check | `apps-script/conferencia-ia.gs` | ✅ |
 | Manual de uso interno del sistema (7 secciones + glosario) | `docs/manual-sistema-registro.html` | ✅ |
 | Banner temporal en `index.html` con link a `conferencia-ia.html` | `index.html` | ✅ |
+
+---
+
+## ~~Sistema de diseño en páginas internas~~ — COMPLETADO (24 jun 2026)
+
+Aplicado en sesión 24 jun 2026. Commits: `ab8b811`.
+
+| Item | Archivo(s) | Estado |
+|---|---|---|
+| Hero midnight (`hero-sm`) agregado a `nosotros.html` | `nosotros.html` | ✅ |
+| `.section-header` + `.section-eyebrow` + `.section-title` en 7 páginas de área (PROPÓSITO / RESPONSABILIDADES / ESTRUCTURA INTERNA) | `academica.html`, `personal.html`, `planeacion.html`, `recursos.html`, `otde.html`, `oeve.html`, `juridico.html` | ✅ |
+| Animación `.fade-item` (fade-up via IntersectionObserver) en tarjetas de oficinas | 4 páginas con grid | ✅ |
+| `.skip-link` + `role="main"` + `id="main-content"` en 8 páginas (accesibilidad) | Páginas de área + nosotros | ✅ |
+| `.fade-item` y `.skip-link` como clases globales en `styles.css` | `styles.css` | ✅ |
+| Observer unificado en `script.js` para `.area-card` y `.fade-item` | `script.js` | ✅ |
+
+---
+
+## ~~Contenido CTE~~ — AL DÍA (24 jun 2026)
+
+| Sesión | Opening | Grabación | Materiales | ZIP |
+|---|---|---|---|---|
+| Octava Sesión Ordinaria | `BRneovXdqL8` | No disponible | PPTX + PDF orientaciones | ✅ |
+| Séptima Sesión Ordinaria | `oUA9r4zKdgo` | No disponible | PPTX + 7 PDFs/materiales | ✅ |
+| Primera a Sexta Sesión | ✅ | ✅ (Fase Intensiva – Sexta) | ✅ | ✅ |
 
 ---
 
@@ -489,11 +514,13 @@ git status
 # Verificar: https://educaneza.github.io/seprn-sitio/
 ```
 
-**Pendientes prioritarios al 16 jun 2026:**
+**Pendientes al 24 jun 2026:**
 
-1. **Páginas de área internas** — aplicar el sistema de diseño nuevo (section headers, motion) a las 7 páginas de área. Usar `juridico.html` como punto de partida.
-2. **Accesibilidad** (score 7/10 → objetivo 8/10): roles ARIA, contraste del hero oscuro (texto arena sobre `#0C1A2E`), skip-to-content link.
-3. **Recrear páginas eliminadas** cuando haya contenido validado: `gestion-escolar.html`, `investigacion-educativa.html`, `programas-educativos.html`, `servicio-profesional.html`.
-4. **CSS Custom Properties (2.7)** — los tokens `#0C1A2E` (midnight) y `#F9F8F5` (off-white) están hardcodeados; migrar a `:root`.
+1. **Recrear páginas eliminadas** cuando haya contenido validado con la Dra. Avelina Galindo Celix: `gestion-escolar.html`, `investigacion-educativa.html`, `programas-educativos.html`, `servicio-profesional.html`.
+2. **CSS Custom Properties (2.7)** — los tokens `#0C1A2E` (midnight) y `#F9F8F5` (off-white) están hardcodeados en varias páginas; migrar a variables `:root`.
+3. **Barra "Última actualización CTE" (3.4)** — actualizar manualmente el texto cuando se agregue la novena sesión.
+4. **Accesibilidad restante** — roles ARIA en formularios (`contacto.html`, `otde.html`), contraste revisado en el hero oscuro (texto arena sobre `#0C1A2E`).
+5. **Footer multi-columna (3.5)** — actualmente solo contacto y redes; agregar columnas de navegación y áreas.
+6. **nosotros.html — variedad visual (2.6)** — bloques alternos de fondo ya planeados, pendientes de implementar.
 
 **Nota de caché:** tras un push a `main`, GitHub Pages tarda 5-10 min en propagar el CSS. Hacer Cmd+Shift+R para invalidar caché del navegador.
