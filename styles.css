@@ -846,6 +846,47 @@ footer {
     }
 }
 
+/* ── BARRA DE ACTUALIZACIÓN CTE ── */
+.update-banner {
+    background: var(--guinda-acento);
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.92);
+    flex-wrap: wrap;
+    text-align: center;
+}
+.update-banner-pill {
+    display: inline-block;
+    background: white;
+    color: var(--guinda-acento);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 999px;
+    flex-shrink: 0;
+}
+.update-banner a {
+    color: white;
+    font-weight: 700;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+    transition: border-color 0.2s;
+    white-space: nowrap;
+}
+.update-banner a:hover {
+    border-color: white;
+}
+@media (max-width: 480px) {
+    .update-banner { padding: 10px 16px; font-size: 13px; gap: 8px; }
+}
+
 /* ── SKIP TO CONTENT (accesibilidad) ── */
 .skip-link {
     position: absolute;

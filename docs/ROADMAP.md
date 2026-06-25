@@ -419,7 +419,7 @@ Alternativa con split layout:
 - En mobile (<768px): mostrar un label fijo con el nombre del municipio al tocar.
 - Considerar: reemplazar los polígonos aproximados por paths más precisos basados en GeoJSON real de los municipios.
 
-### 3.4 Barra de "Última actualización CTE"
+### ~~3.4 Barra de "Última actualización CTE"~~ ✅
 **Objetivo:** Retención. Los usuarios frecuentes (docentes, directores) vuelven al sitio principalmente para materiales CTE.
 **Tarea:** Agregar en `index.html`, debajo del nav, una barra de notificación:
 ```html
@@ -517,7 +517,7 @@ git status
 
 1. **Recrear páginas eliminadas** cuando haya contenido validado con la Dra. Avelina Galindo Celix: `gestion-escolar.html`, `investigacion-educativa.html`, `programas-educativos.html`, `servicio-profesional.html`.
 2. **CSS Custom Properties (2.7)** — los tokens `#0C1A2E` (midnight) y `#F9F8F5` (off-white) están hardcodeados en varias páginas; migrar a variables `:root`.
-3. **Barra "Última actualización CTE" (3.4)** — actualizar manualmente el texto cuando se agregue la novena sesión.
+3. **Barra "Última actualización CTE" (3.4)** ✅ — implementada. Actualizar el texto en `index.html` (`.update-banner`) al agregar la novena sesión.
 4. **Accesibilidad restante** — roles ARIA en formularios (`contacto.html`, `otde.html`), contraste revisado en el hero oscuro (texto arena sobre `#0C1A2E`).
 5. **Footer multi-columna (3.5)** — actualmente solo contacto y redes; agregar columnas de navegación y áreas.
 6. **nosotros.html — variedad visual (2.6)** — bloques alternos de fondo ya planeados, pendientes de implementar.
