@@ -19,9 +19,9 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Animar .area-card al entrar al viewport
-    var cards = document.querySelectorAll('.area-card');
-    if (cards.length > 0) {
+    // Animar elementos al entrar al viewport (.area-card y .fade-item)
+    var animTargets = document.querySelectorAll('.area-card, .fade-item');
+    if (animTargets.length > 0) {
         if ('IntersectionObserver' in window) {
             var observer = new IntersectionObserver(function (entries) {
                 entries.forEach(function (entry) {
@@ -31,10 +31,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 });
             }, { threshold: 0.1 });
-            cards.forEach(function (card) { observer.observe(card); });
+            animTargets.forEach(function (el) { observer.observe(el); });
         } else {
-            // Fallback para navegadores sin soporte
-            cards.forEach(function (card) { card.classList.add('visible'); });
+            animTargets.forEach(function (el) { el.classList.add('visible'); });
         }
     }
 });

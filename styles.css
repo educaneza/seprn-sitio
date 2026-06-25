@@ -846,6 +846,36 @@ footer {
     }
 }
 
+/* ── SKIP TO CONTENT (accesibilidad) ── */
+.skip-link {
+    position: absolute;
+    top: -100px;
+    left: 16px;
+    padding: 10px 20px;
+    background: var(--guinda);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    border-radius: 0 0 8px 8px;
+    z-index: 9999;
+    transition: top 0.2s;
+}
+.skip-link:focus {
+    top: 0;
+}
+
+/* ── FADE-UP GENÉRICO PARA TARJETAS INTERNAS ── */
+.fade-item {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.fade-item.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
 /* ── HERO VARIANTE PÁGINAS INTERNAS ── */
 .hero-sm .hero-inner {
     padding: 100px 40px 80px;
