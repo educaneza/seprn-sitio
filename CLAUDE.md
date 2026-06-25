@@ -18,22 +18,54 @@ Sitio web institucional de la **Subdirección de Educación Primaria en la Regi�
 | `--guinda-acento` | `#9F2241` | Énfasis, números, links activos |
 | `--arena` | `#d6d1ca` | Fondos alternos, separadores |
 | `--caramelo` | `#977e5b` | Labels secundarios |
-| Midnight | `#0C1A2E` | Hero oscuro (nuevo) |
-| Off-white | `#F9F8F5` | Fondos cálidos (nuevo) |
+| Midnight | `#0C1A2E` | Hero oscuro (todas las páginas) |
+| Off-white | `#F9F8F5` | Fondos cálidos |
 
-## Sistema de diseño (implementado 16 jun 2026)
+## Sistema de diseño (implementado y extendido jun 2026)
 Clases reutilizables en `styles.css`:
-- `.section-header` + `.section-eyebrow` + `.section-title` — encabezado de sección con eyebrow y líneas
-- `.metrics-strip` / `.metrics-inner` / `.metric-item` / `.metric-number` / `.metric-label` — tira de cifras clave con contador animado
+- `.section-header` + `.section-eyebrow` + `.section-title` — encabezado de sección centrado con eyebrow y líneas laterales. Usado en index y en todas las páginas de área internas.
+- `.metrics-strip` / `.metrics-inner` / `.metric-item` / `.metric-number` / `.metric-label` — tira de cifras clave con contador animado (solo `index.html`)
 - `.btn-primary-dark` / `.btn-secondary-dark` — botones para fondos oscuros (hero)
 - `.hero-badge` — pill de contexto institucional
-- `.area-card.visible` — fade-up via IntersectionObserver
+- `.area-card.visible` — fade-up via IntersectionObserver (páginas de áreas en index)
+- `.fade-item.visible` — fade-up genérico para tarjetas internas (páginas de área individuales)
+- `.skip-link` — enlace de saltar al contenido principal (accesibilidad, visible solo con Tab)
+
+### Eyebrows estándar en páginas de área
+Cuando se agrega o edita una sección en páginas de área, usar estos eyebrows:
+- Sección Objetivo → `PROPÓSITO`
+- Sección Funciones → `RESPONSABILIDADES`
+- Sección Oficinas Adscritas (grid) → `ESTRUCTURA INTERNA`
+
+## Estructura de una página de área típica
+Todas las páginas de área siguen este patrón:
+1. `<a href="#main-content" class="skip-link">` justo después de `<body>`
+2. `<section class="hero hero-sm">` con `.hero-badge`, `<h1>`, `<p>` y `.hero-glow`
+3. `<section class="content-section" id="main-content" role="main">` con secciones `.seccion`
+4. Cada sección usa `.section-header` + `.section-eyebrow` + `.section-title` en lugar de `.seccion-titulo`
+5. Las tarjetas de oficinas usan `class="oficina-card fade-item"` para animación al scroll
+
+## CTE — Sesiones publicadas (al 24 jun 2026)
+| Sesión | Opening YT | Grabación | Materiales | ZIP |
+|---|---|---|---|---|
+| Octava Ordinaria | `BRneovXdqL8` | — | PPTX + PDF orientaciones | ✅ |
+| Séptima Ordinaria | `oUA9r4zKdgo` | — | PPTX + 7 materiales | ✅ |
+| Sexta Ordinaria | `k3JZp4rLafA` | `yyAF0y0QPqA` | 8 materiales | ✅ |
+| Quinta Ordinaria | `J2PULvX4XwM` | `m0AFF56RSDw` | 5 materiales | ✅ |
+| Cuarta Ordinaria | — | `lEZvJhxcHSE` | — | — |
+| Taller Intensivo | — | `NPq6wjpFJsY` | — | — |
+| Tercera Ordinaria | — | `L7G7fwDi25A` | — | — |
+| Segunda Ordinaria | `ysX2Lj3xx3s` | `E_8IdfhULeE` | — | — |
+| Primera Ordinaria | — | `1vFCnnWKkzg` | — | — |
+| Fase Intensiva | `djBBRNrFetE` | — | — | — |
+
+La sesión más reciente siempre debe ser el acordeón activo/abierto al cargar la página, con badge NUEVO. Las sesiones anteriores se colapsan y sus iframes usan `data-src` (lazy loading).
 
 ## Páginas del sitio
 | Archivo | Sección |
 |---|---|
-| `index.html` | Portada — hero, métricas, áreas, mapa SVG |
-| `nosotros.html` | Misión, visión, valores, equipo directivo |
+| `index.html` | Portada — hero midnight, métricas animadas, áreas, mapa SVG |
+| `nosotros.html` | Misión, visión, valores, equipo directivo (con hero midnight) |
 | `areas.html` | Listado de áreas |
 | `cte.html` | Sesiones CTE (acordeones + videos YouTube) |
 | `contacto.html` | Datos de contacto |
@@ -48,7 +80,7 @@ Clases reutilizables en `styles.css`:
 | `charla-ia.html` | Página del evento IA jun 2026 (sin formulario) |
 | `404.html` | Página de error personalizada |
 
-## Páginas eliminadas (recrear cuando haya contenido)
+## Páginas eliminadas (recrear cuando haya contenido validado)
 - `gestion-escolar.html`
 - `investigacion-educativa.html`
 - `programas-educativos.html`
@@ -64,10 +96,13 @@ Clases reutilizables en `styles.css`:
 1. No introducir npm, frameworks ni build steps — stack estático puro
 2. Cambios globales de UI → `styles.css`; cambios específicos de página → `<style>` inline en el HTML
 3. Para modificar estilos del header/footer: son inline en cada página, no hay componente compartido
-4. Imágenes en `images/`, PDFs en `pdfs/`
+4. Imágenes en `images/`, PDFs en `pdfs/cte/<nombre-sesion>/`
 5. Después de push: esperar 5-10 min o Cmd+Shift+R para invalidar caché de GitHub Pages
+6. Los PDFs de sesiones CTE se nombran con mayúsculas y acentos; URL-encodear la ó como `%C3%B3` en los hrefs
 
-## Pendientes al 16 jun 2026
-- Aplicar sistema de diseño (section headers, motion) a páginas de área internas
-- Accesibilidad: roles ARIA, contraste hero oscuro, skip-to-content (score actual 7/10)
-- Recrear páginas eliminadas cuando haya contenido validado
+## Pendientes al 24 jun 2026
+- **Recrear páginas eliminadas** cuando haya contenido validado con la Dra. Galindo
+- **CSS Custom Properties** — migrar colores hardcodeados a variables `:root` (ver ROADMAP 2.7)
+- **Footer multi-columna** — actualmente solo contacto y redes (ver ROADMAP 3.5)
+- **nosotros.html** — variedad visual de fondos pendiente (ver ROADMAP 2.6)
+- **Accesibilidad restante** — roles ARIA en formularios de `otde.html` y `contacto.html`
