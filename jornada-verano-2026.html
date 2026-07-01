@@ -945,18 +945,22 @@
 
         <div class="form-group">
           <label for="funcion">Función <span class="req">*</span></label>
-          <select id="funcion" required>
+          <select id="funcion" required onchange="toggleOtraFuncion()">
             <option value="">— Selecciona una opción —</option>
             <option>Docente</option>
             <option>Director(a)</option>
             <option>Subdirector(a)</option>
             <option>ATP (Asesor Técnico Pedagógico)</option>
             <option>Supervisor(a)</option>
-            <option>JSSIT (Jefe de Sector)</option>
-            <option>Personal de apoyo</option>
+            <option>Jefe(a) de Sector</option>
+            <option>Personal de apoyo (PAAE)</option>
             <option>Otro</option>
           </select>
           <div class="field-error" id="funcion-error">Selecciona una función.</div>
+          <div id="otra-funcion-group" style="display:none;margin-top:.65rem;">
+            <input type="text" id="otra-funcion" placeholder="Especifica tu función" maxlength="80">
+            <div class="field-error" id="otra-funcion-error">Especifica tu función.</div>
+          </div>
         </div>
 
         <p class="form-section-title">Centro de trabajo</p>
@@ -1082,6 +1086,19 @@
   Object.keys(sectorZonas).forEach(s => {
     sectorZonas[s] = [...sectorZonas[s]].sort((a, b) => a - b);
   });
+
+  // ── Función "Otro" ──
+  function toggleOtraFuncion() {
+    const val = document.getElementById('funcion').value;
+    const grp = document.getElementById('otra-funcion-group');
+    grp.style.display = val === 'Otro' ? 'block' : 'none';
+    if (val !== 'Otro') {
+      const inp = document.getElementById('otra-funcion');
+      inp.value = '';
+      inp.classList.remove('error');
+      document.getElementById('otra-funcion-error').classList.remove('visible');
+    }
+  }
 
   // ── PASO 1: seleccionar / deseleccionar curso (multi-select) ──
   function seleccionarCurso(card) {
@@ -1324,7 +1341,9 @@
     return {
       nombre:  document.getElementById('nombre').value.trim(),
       rfc:     document.getElementById('rfc').value.trim().toUpperCase(),
-      funcion: document.getElementById('funcion').value,
+      funcion: document.getElementById('funcion').value === 'Otro'
+               ? document.getElementById('otra-funcion').value.trim()
+               : document.getElementById('funcion').value,
       cct:     document.getElementById('cct').value.trim().toUpperCase(),
       sector:  manual ? document.getElementById('sector-manual').value : document.getElementById('sector-val').value,
       zona:    manual ? document.getElementById('zona-manual').value   : document.getElementById('zona-val').value,
@@ -1358,6 +1377,17 @@
         errEl.classList.remove('visible');
       }
     });
+
+    // Validar campo libre cuando selecciona "Otro"
+    if (document.getElementById('funcion').value === 'Otro') {
+      const otraInp = document.getElementById('otra-funcion');
+      const otraErr = document.getElementById('otra-funcion-error');
+      if (!otraInp.value.trim()) {
+        otraInp.classList.add('error');
+        otraErr.classList.add('visible');
+        ok = false;
+      }
+    }
 
     const manual = document.getElementById('manual-fields').classList.contains('visible');
 
