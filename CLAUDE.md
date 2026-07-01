@@ -150,6 +150,7 @@ Página autónoma (no importa `styles.css` — estilos inline completos). Vincul
 - **Soporte Técnico Remoto**: se mantiene TeamViewer (no Quick Assist) como herramienta de control remoto. Se agregó un formulario "Solicitar Soporte Técnico Remoto" (nombre, CCT, función, WhatsApp, correo opcional, urgencia, descripción) que envía a `apps-script/soporte-remoto.gs`
 - **Validación de formulario**: el `<form>` usa `novalidate` + validación 100% en JS (`validarSoporteForm()`), mismo patrón que `jornada-verano-2026.html` — necesario porque los inputs `type="email"`/`required` nativos interceptan el `submit` antes de que corra el JS si no se desactiva la validación del navegador
 - **Referencia cruzada**: la pestaña Office enlaza a Soporte si hay problemas durante la instalación; Soporte enlaza de vuelta a Office si la consulta es sobre licencias — ambos via `showServicio()` con `onclick` (no back-forward real de navegador)
+- **CCT con autocomplete** (`js/cct-db.js`, mismo patrón que `jornada-verano-2026.html`): fallback manual de Sector/Zona/Escuela si la CCT no está en la base. Cada campo del fallback valida y muestra su propio error (Zona, Sector, Escuela) — no agrupar todo bajo el mensaje del campo CCT, es un anti-patrón ya corregido dos veces en el sitio. Detalle completo del patrón en `docs/ARCHITECTURE.md §11`
 
 ## Pendientes (al 1 jul 2026)
 - **Recrear páginas eliminadas** — `gestion-escolar.html`, `investigacion-educativa.html`, `programas-educativos.html`, `servicio-profesional.html`: requieren contenido validado con la Dra. Galindo

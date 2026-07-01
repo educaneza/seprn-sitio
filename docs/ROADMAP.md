@@ -21,6 +21,32 @@ Objetivo: elevar el sitio de un nivel **5/10** (funcional-institucional 2019) a 
 
 ---
 
+## ~~Instalador de Office + Soporte Técnico Remoto potenciado~~ — COMPLETADO (1 jul 2026)
+
+| Item | Archivo(s) | Estado |
+|---|---|---|
+| Pestaña "Licencias Office": instalador validado por CCT + guía de instalación paso a paso | `otde.html`, `descargas/` | ✅ |
+| Texto sobre el cambio de licenciamiento redactado sin atribuir culpa a SEIEM | `otde.html` | ✅ |
+| Formulario "Solicitar Soporte Técnico Remoto" con CCT autocomplete + fallback manual (mismo patrón que Jornada Verano) | `otde.html` | ✅ |
+| Función/Cargo: texto libre → `<select>` con opción "Otro" | `otde.html` | ✅ |
+| Campo de WhatsApp (obligatorio, 10 dígitos) + link `wa.me` en la notificación | `otde.html`, `apps-script/soporte-remoto.gs` | ✅ |
+| Notificación push por bot de Telegram al registrar una solicitud | `apps-script/soporte-remoto.gs` | ✅ |
+| Validación de error aislada por campo en el fallback manual (Sector/Zona/Escuela ya no comparten el mensaje de error del CCT) | `otde.html` | ✅ |
+| Referencia cruzada Licencias Office ↔ Soporte Técnico Remoto | `otde.html` | ✅ |
+| Smoke test completo del sitio (17 páginas, flujos críticos) sin hallazgos funcionales | — | ✅ |
+
+---
+
+## ~~Jornada de Capacitación Verano 2026~~ — COMPLETADO (1 jul 2026)
+
+| Item | Archivo(s) | Estado |
+|---|---|---|
+| Wizard 3 pasos: selección multi-curso, redirección a CoEEE, reporte OTDE NEZA | `jornada-verano-2026.html` | ✅ |
+| Registro secuencial (1 row por curso) para evitar race condition en folios | `jornada-verano-2026.html`, `apps-script/cursos-coeee-2026.gs` | ✅ |
+| Guía imprimible para difundir junto al oficio de convocatoria | `instructivo-jornada-verano-2026.html` | ✅ |
+
+---
+
 ## Completado en junio 2026 — Sistema de Registro de Eventos
 
 Implementado para la **Conferencia IA 2026** (17 jun 2026, Auditorio Regional 1 Neza).
@@ -437,12 +463,12 @@ git status
 # Verificar: https://educaneza.github.io/seprn-sitio/
 ```
 
-**Pendientes al 24 jun 2026 (actualizado):**
+**Pendientes al 1 jul 2026 (actualizado):**
 
 1. **Recrear páginas eliminadas** cuando haya contenido validado con la Dra. Avelina Galindo Celix: `gestion-escolar.html`, `investigacion-educativa.html`, `programas-educativos.html`, `servicio-profesional.html`.
-2. **Accesibilidad restante** — roles ARIA en formularios (`contacto.html`, `otde.html`).
-3. **Mapa SVG con touch (3.3)** — eventos `touchstart`/`touchend` para mobile en la sección Cobertura.
-4. **Logomark SEPRN (3.1)** — requiere archivo SVG de diseño gráfico.
-5. **Barra CTE** — actualizar texto en `index.html` al agregar la novena sesión.
+2. **Logomark SEPRN (3.1)** — requiere archivo SVG de diseño gráfico.
+3. **Barra CTE** — actualizar texto en `index.html` al agregar la novena sesión.
 
 **Nota de caché:** tras un push a `main`, GitHub Pages tarda 5-10 min en propagar el CSS. Hacer Cmd+Shift+R para invalidar caché del navegador.
+
+**Nota de pruebas locales:** el sandbox de este asistente tiene salida real a internet (confirmado — `script.google.com` responde de verdad), así que probar endpoints de Apps Script con `curl` o desde un navegador headless ejecuta `doPost` en producción de verdad. Para pruebas de UI sin riesgo, interceptar la llamada de red (`page.route()` en Playwright) en vez de dejarla llegar al backend real.

@@ -12,7 +12,7 @@ El sitio es **100% estático**: HTML + CSS + JS. No hay servidor, base de datos,
 
 ```
 Browser
-  └── Carga HTML (cualquiera de los ~16 archivos)
+  └── Carga HTML (cualquiera de los 17 archivos)
         ├── Descarga styles.css (único, cacheado)
         ├── Descarga Montserrat desde Google Fonts (via <link rel="preconnect"> en cada página)
         ├── Ejecuta GA4 tag (en <head>)
@@ -443,10 +443,11 @@ Editar `nosotros.html` (bloque "Equipo de Trabajo") y `areas.html` (campo `area-
 | Portal SEP CTE | Link externo | `https://gestion.cte.sep.gob.mx/insumos/#!/` |
 | Facebook | Redes sociales | `https://www.facebook.com/SubNeza` |
 | YouTube Channel | Redes sociales | `https://www.youtube.com/channel/UCvDb2DPSJxFyhH3bCPd5D2Q` |
-| Google Apps Script | Backend registro de eventos | Web App con `doGet`/`doPost`; URL embebida en `conferencia-ia.html` y `asistencia.html` |
-| GmailApp (Apps Script) | Correo de confirmación | Envía HTML con QR; remitente: "Oficina de Tecnología · Neza" |
+| Google Apps Script | 3 backends independientes | `conferencia-ia.gs` (evento IA), `cursos-coeee-2026.gs` (Jornada Verano), `soporte-remoto.gs` (Soporte OTDE) — cada uno Web App con `doGet`/`doPost`, URL embebida como constante en su página correspondiente |
+| GmailApp (Apps Script) | Correo de confirmación | Envía HTML con QR; remitente: "Oficina de Tecnología · Neza" (usado por `conferencia-ia.gs`) |
 | api.qrserver.com | Generación de QR en correo | URL dinámica con folio codificado; solo en correos de confirmación |
 | html5-qrcode v2.3.8 | Escáner QR en `asistencia.html` | CDN `unpkg.com`; modo cámara trasera `environment` |
+| Bot de Telegram (API `sendMessage`) | Notificación push de solicitudes de Soporte Remoto | Token y chat_id en Propiedades del script de `soporte-remoto.gs` (nunca hardcodeados); incluye link `wa.me` al WhatsApp del solicitante |
 
 ---
 
@@ -592,3 +593,19 @@ Antes de hacer commit de una página nueva:
 - [ ] `<script src="script.js" defer></script>` antes de `</body>`
 - [ ] `rel="noopener noreferrer"` en todos los `target="_blank"`
 - [ ] Sin `text-align: justify`; texto de cuerpo en `#333333`
+
+---
+
+## 11. Patrón: CCT con autocompletado + fallback manual (Julio 2026)
+
+Implementado primero en `jornada-verano-2026.html`, reutilizado en el formulario de Soporte Técnico Remoto de `otde.html`. Si se necesita en una tercera página, replicar este patrón en vez de inventar uno nuevo.
+
+**Piezas del patrón:**
+- `js/cct-db.js` — 506 registros `{cct, nombre, sector, zona, tipo}`. Cargar con `<script src="js/cct-db.js"></script>` antes del script inline de la página.
+- Input de texto con `<ul id="...-suggestions">` absoluto debajo, poblado en el evento `input` (mínimo 3 caracteres, máximo 10 resultados) y navegable con flechas/Enter/Escape.
+- Al seleccionar una sugerencia: llenar inputs ocultos `sector-val` / `zona-val` / `escuela-val` y marcar una bandera `cctEncontrada = true`.
+- Si el usuario escribe una CCT que no existe (evento `change` sin `cctEncontrada`): mostrar bloque `.manual-fields` con `<select>` de Sector (con opción `SEPRN` sin zona), `<select>` de Zona (poblado dinámicamente vía `actualizarZonas()` a partir de un mapa `sector → zonas[]` derivado de `CCT_DB`), e `<input>` de Escuela/Unidad.
+- **Validación por campo, no agrupada**: Sector, Zona y Escuela deben validar y mostrar su propio mensaje de error. Agrupar todo bajo el mensaje del campo CCT es un anti-patrón ya corregido dos veces (`jornada-verano-2026.html` lo resolvió como "BUG 4/5 fix"; `otde.html` lo resolvió en jul 2026) — Zona es obligatoria solo si el sector no es `SEPRN`.
+- El formulario que use este patrón debe llevar `novalidate` en el `<form>` y validación 100% en JS (`onchange`/`onsubmit`), porque los atributos `required`/`type="email"` nativos interceptan el `submit` antes de que corra la validación personalizada.
+
+**No es lo mismo que la validación de CCT en la pestaña "Licencias Office" de `otde.html`**: esa usa un CSV/Sheet publicado distinto (base de licenciamiento, no `cct-db.js`) y corre del lado del instalador `.bat`/`.exe`, no en el navegador.

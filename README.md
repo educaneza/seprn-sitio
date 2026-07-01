@@ -21,6 +21,16 @@ Ver roadmap completo en [`docs/ROADMAP.md`](docs/ROADMAP.md).
 | Performance percibida | 6/10 | **8/10** | 8/10 ✅ |
 | Accesibilidad | 3/10 | **7/10** | 8/10 |
 
+### Completado el 1 jul 2026 — Instalador de Office + Soporte Técnico Remoto potenciado
+- **Pestaña "Licencias Office"** en `otde.html`: instalador `descargas/Instalador_Office_2019_OTDE.exe` (validación por CCT, Office 2019 Professional Plus) con guía de instalación paso a paso basada en el `.bat` real
+- **Formulario "Solicitar Soporte Técnico Remoto"**: autocompletado de CCT idéntico al de `jornada-verano-2026.html` (`js/cct-db.js`, con fallback manual de Sector/Zona/Escuela y validación de error por campo), select de Función/Cargo con opción "Otro", campo de WhatsApp con link `wa.me` directo
+- **Backend nuevo** `apps-script/soporte-remoto.gs`: registra en Sheets y notifica por **bot de Telegram** al equipo OTDE
+- **Referencia cruzada** entre las pestañas Licencias Office ↔ Soporte Técnico Remoto
+
+### Completado el 1 jul 2026 — Jornada de Capacitación Verano 2026
+- `jornada-verano-2026.html`: wizard de 3 pasos, selección multi-curso, registro en Sheets (CoEEE + reporte OTDE NEZA)
+- `instructivo-jornada-verano-2026.html`: guía imprimible para difundir junto al oficio de la convocatoria
+
 ### Completado el 16 jun 2026 — Rediseño visual élite
 - **Hero oscuro** — fondo midnight `#0C1A2E` full-bleed, badge pill institucional, tipografía display 64px, botones dark-variant, glow decorativo, scroll indicator animado, entrada escalonada
 - **Strip de métricas** — nueva sección con 4 cifras clave animadas con contador easeOutCubic al hacer scroll
@@ -42,10 +52,11 @@ Ver roadmap completo en [`docs/ROADMAP.md`](docs/ROADMAP.md).
 - Página de check-in (`asistencia.html`) con escáner QR por cámara
 - Manual interno (`docs/manual-sistema-registro.html`)
 
-### Próxima sesión
-- Aplicar sistema de diseño a páginas de área internas
-- Accesibilidad (score 7/10 → 8/10)
-- Ver [`docs/ROADMAP.md`](docs/ROADMAP.md) para el plan detallado
+### Pendientes (al 1 jul 2026)
+- **Recrear páginas eliminadas** — `gestion-escolar.html`, `investigacion-educativa.html`, `programas-educativos.html`, `servicio-profesional.html`: requieren contenido validado con la Dra. Galindo
+- **Logomark SEPRN** — requiere archivo `logo.svg` (diseño gráfico pendiente)
+- **Barra CTE** — actualizar texto del `.update-banner` en `index.html` cuando se publique la 9ª sesión
+- Ver [`docs/ROADMAP.md`](docs/ROADMAP.md) para el histórico completo
 
 ---
 
@@ -63,9 +74,10 @@ Ver roadmap completo en [`docs/ROADMAP.md`](docs/ROADMAP.md).
 | Hosting | GitHub Pages (rama `main`) |
 | Backend eventos | Google Apps Script (Web App) + Google Sheets |
 | Correo | GmailApp (Apps Script) + api.qrserver.com para QR |
+| Notificaciones | Bot de Telegram (API `sendMessage`) — solicitudes de Soporte Remoto |
 | Scanner QR | html5-qrcode v2.3.8 vía CDN (solo `asistencia.html`) |
 
-No hay framework, bundler, ni dependencias npm. El sitio es completamente estático. El único backend externo es el Apps Script vinculado al Spreadsheet del evento.
+No hay framework, bundler, ni dependencias npm. El sitio es completamente estático. Los backends externos son 3 Google Apps Script independientes (uno por Spreadsheet/flujo): `conferencia-ia.gs`, `cursos-coeee-2026.gs`, `soporte-remoto.gs`.
 
 ---
 
@@ -84,30 +96,37 @@ seprn-sitio/
 ├── personal.html                 # Área: Administración de Personal
 ├── academica.html                # Área: Académica
 ├── recursos.html                 # Área: Recursos Materiales y Financieros
-├── otde.html                     # Área: OTDE (Tecnología para el Desarrollo Educativo)
+├── otde.html                     # Área: OTDE — Correo, Mantenimiento, Soporte Remoto, Licencias Office, Chuka, Recursos
 ├── oeve.html                     # Área: OEVE (Extensión y Vinculación Educativa)
 ├── juridico.html                 # Área: Asuntos Jurídicos
 │
 ├── styles.css                    # Hoja de estilos global (única)
-├── script.js                     # JS global: hamburger menu
+├── script.js                     # JS global: hamburger menu + IntersectionObserver
 │
-├── conferencia-ia.html           # Formulario de registro — Conferencia IA 2026
-├── asistencia.html               # Check-in con QR para operador en puerta
+├── charla-ia.html                # Página del evento IA jun 2026 (informativa, sin formulario)
+├── asistencia.html                # Check-in con QR/PIN para operador en puerta (evento IA)
+├── jornada-verano-2026.html      # Wizard 3 pasos: inscripción Jornada Capacitación Verano 2026
+├── instructivo-jornada-verano-2026.html  # Guía imprimible de la Jornada Verano 2026
+├── 404.html                      # Página de error personalizada
 │
 ├── js/
-│   └── cct-db.js                 # Base de datos CCT (506 registros) + buscarCCT() / sugerirCCT()
+│   └── cct-db.js                 # Base de datos CCT (506 registros), usada por jornada-verano-2026 y otde.html
 │
 ├── apps-script/
-│   └── conferencia-ia.gs         # Apps Script Web App (copiar en Google Apps Script)
+│   ├── conferencia-ia.gs         # Backend Conferencia IA 2026 (Sheets + correo QR)
+│   ├── cursos-coeee-2026.gs      # Backend Jornada Verano 2026 (Sheets, folios OTDE-V26-NNNN)
+│   └── soporte-remoto.gs         # Backend Soporte Técnico Remoto (Sheets + notificación Telegram)
+│
+├── descargas/                    # Instaladores/ejecutables descargables
+│   ├── Instalador_Office_2019_OTDE.exe
+│   └── Instalador_Office_OTDE.bat
 │
 ├── docs/
 │   ├── ARCHITECTURE.md           # Arquitectura, componentes, convenciones
 │   ├── ROADMAP.md                # Plan de mejoras: Fase 1 / 2 / 3
 │   └── manual-sistema-registro.html  # Manual de uso interno del sistema de registro
 │
-├── kit-digital/                  # Recursos digitales OTDE
-│   ├── Organizadores_Gráficos_Editable.docx
-│   └── Tabla_SAMR_Niveles_Integración.pdf
+├── kit-digital/                  # Recursos digitales OTDE (banco de materiales)
 │
 ├── pdfs/                         # Archivos descargables
 │   ├── chuka-guia-docentes.pdf
@@ -115,17 +134,9 @@ seprn-sitio/
 │   ├── Manual-Autenticacion-2FA.pdf
 │   ├── MODELOS_DE_USO_DEL_AULA_DE_MEDIOS.pdf
 │   └── cte/
-│       ├── quinta-sesion/        # Materiales 5ª sesión (DOCX, PPTX, ZIP)
-│       ├── sexta-sesion/         # Materiales 6ª sesión (DOCX, PPTX, PDF, ZIP)
-│       └── septima-sesion/       # Materiales 7ª sesión (PPTX, PDF, ZIP)
+│       ├── quinta-sesion/ · sexta-sesion/ · septima-sesion/ · octava-sesion/
 │
 └── images/                       # Imágenes estáticas
-    ├── convocatoria-ia-2026.jpg  # Flyer de la Conferencia IA 2026
-    ├── CHUKA_INFOGRAFIA.png
-    ├── Firma_institucional_OTDE.png
-    ├── Pleca 4x.png
-    ├── qr-guiones-docentes.png
-    └── qr-guiones-paae.png
 ```
 
 ---
@@ -199,3 +210,5 @@ Para actualizar:
 | Nueva sesión CTE | `cte.html` | Nuevo bloque `sesion-accordion` al inicio |
 | Materiales CTE | `pdfs/cte/<sesion>/` | Subir archivo + agregar `<a>` en `cte.html` |
 | Datos de contacto | `contacto.html` + footer de todas las páginas | Dirección, horario |
+| Instalador de Office | `descargas/` + `otde.html` (pestaña Licencias Office) | Reemplazar `.exe`/`.bat`, actualizar guía si cambia el flujo |
+| Notificaciones de Soporte Remoto | `apps-script/soporte-remoto.gs` | Propiedades del script `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` (ver instrucciones al final del archivo) |
