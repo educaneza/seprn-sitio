@@ -256,6 +256,55 @@
         .form-container.active {
             max-height: 3200px;
         }
+        .soporte-form-group { margin-bottom: 18px; }
+        .soporte-form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #56212f;
+            margin-bottom: 6px;
+        }
+        .soporte-form-group label .req { color: #9F2241; margin-left: 2px; }
+        .soporte-form-group input,
+        .soporte-form-group select,
+        .soporte-form-group textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid #d6d1ca;
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+            color: #333;
+            background: white;
+            transition: border-color 0.2s;
+        }
+        .soporte-form-group textarea { resize: vertical; min-height: 90px; }
+        .soporte-form-group input:focus,
+        .soporte-form-group select:focus,
+        .soporte-form-group textarea:focus {
+            outline: none;
+            border-color: #9F2241;
+            box-shadow: 0 0 0 3px rgba(159,34,65,0.12);
+        }
+        .soporte-submit-msg {
+            margin-top: 16px;
+            padding: 14px 18px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+        }
+        .soporte-submit-msg.ok {
+            display: block;
+            background: #f0f7f0;
+            border-left: 4px solid #2e7d32;
+            color: #2e7d32;
+        }
+        .soporte-submit-msg.error {
+            display: block;
+            background: #fdf0f0;
+            border-left: 4px solid #9F2241;
+            color: #9F2241;
+        }
         .video-wrapper {
             position: relative;
             padding-bottom: 56.25%;
@@ -418,6 +467,7 @@
         <button class="servicio-tab active" role="tab" aria-selected="true"  aria-controls="correo"        onclick="showServicio('correo', this)">Correo Institucional</button>
         <button class="servicio-tab"        role="tab" aria-selected="false" aria-controls="mantenimiento" onclick="showServicio('mantenimiento', this)">Mantenimiento</button>
         <button class="servicio-tab"        role="tab" aria-selected="false" aria-controls="soporte"       onclick="showServicio('soporte', this)">Soporte Técnico</button>
+        <button class="servicio-tab"        role="tab" aria-selected="false" aria-controls="office"        onclick="showServicio('office', this)">Licencias Office</button>
         <button class="servicio-tab"        role="tab" aria-selected="false" aria-controls="chuka"         onclick="showServicio('chuka', this)">Chuka</button>
         <button class="servicio-tab"        role="tab" aria-selected="false" aria-controls="recursos"      onclick="showServicio('recursos', this)">Recursos</button>
     </div>
@@ -519,16 +569,66 @@
             <p>Brindar asistencia técnica rápida y eficaz a todas las figuras de la Estructura Educativa, independientemente de su ubicación, mediante la herramienta TeamViewer.</p>
         </div>
 
+        <div class="highlight-box">
+            <p>¿Tu consulta es sobre la instalación o activación de Office? Consulta primero la pestaña <a href="#office" onclick="showServicio('office', document.querySelector('[aria-controls=office]')); return false;" style="color: #9F2241; font-weight: 600;">Licencias Office</a>, ahí encontrarás el instalador y una guía paso a paso. Si el problema persiste, aquí te damos soporte remoto.</p>
+        </div>
+
         <div class="content-block">
             <h3>¡Solicita Soporte Técnico Remoto!</h3>
             <p>Te compartimos algunos ejemplos de situaciones en las que te podemos ayudar de manera remota:</p>
-            
+
             <ul class="benefit-list">
                 <li>Solucionar problemas de software: Diagnosticar y solucionar problemas de software, como errores de aplicaciones, fallos del sistema operativo o problemas de configuración</li>
+                <li>Instalación y activación de Office institucional: Acompañamiento remoto cuando el instalador validado por CCT no puede completarse por cuenta propia</li>
                 <li>Eliminar malware y virus: Eliminar malware y virus de los equipos de los usuarios de forma remota</li>
                 <li>Realizar instalaciones y actualizaciones: Instalar software, actualizaciones y controladores en los equipos de forma remota</li>
                 <li>Configurar dispositivos: Configurar dispositivos como impresoras, routers o redes Wi-Fi de forma remota</li>
             </ul>
+
+            <button class="form-button" id="btn-soporte" aria-expanded="false" onclick="toggleSoporteForm(this)">
+                <span id="btn-soporte-text">Solicitar Soporte Técnico Remoto</span>
+                <span id="btn-soporte-arrow">▼</span>
+            </button>
+
+            <div id="form-soporte" class="form-container">
+                <form id="soporte-form" onsubmit="return enviarSolicitudSoporte(event)">
+                    <div class="soporte-form-group">
+                        <label for="sop-nombre">Nombre completo<span class="req">*</span></label>
+                        <input type="text" id="sop-nombre" required>
+                    </div>
+                    <div class="soporte-form-group">
+                        <label for="sop-cct">CCT o Centro de Trabajo<span class="req">*</span></label>
+                        <input type="text" id="sop-cct" required>
+                    </div>
+                    <div class="soporte-form-group">
+                        <label for="sop-funcion">Función/Cargo<span class="req">*</span></label>
+                        <input type="text" id="sop-funcion" required>
+                    </div>
+                    <div class="soporte-form-group">
+                        <label for="sop-contacto">Teléfono o correo de contacto<span class="req">*</span></label>
+                        <input type="text" id="sop-contacto" required>
+                    </div>
+                    <div class="soporte-form-group">
+                        <label for="sop-urgencia">Urgencia<span class="req">*</span></label>
+                        <select id="sop-urgencia" required>
+                            <option value="">Selecciona una opción</option>
+                            <option value="Alta">Alta — no puedo trabajar</option>
+                            <option value="Media">Media — puedo esperar unas horas</option>
+                            <option value="Baja">Baja — puede esperar 1-2 días</option>
+                        </select>
+                    </div>
+                    <div class="soporte-form-group">
+                        <label for="sop-descripcion">Describe el problema<span class="req">*</span></label>
+                        <textarea id="sop-descripcion" required></textarea>
+                    </div>
+
+                    <button type="submit" class="form-button" id="btn-soporte-submit">
+                        <span>Enviar Solicitud</span>
+                    </button>
+
+                    <div id="soporte-msg" class="soporte-submit-msg"></div>
+                </form>
+            </div>
         </div>
 
         <div class="content-block">
@@ -553,6 +653,78 @@
                 <p>• Puedes utilizar TeamViewer para conectarte a dispositivos móviles, así como a servidores y otros dispositivos.</p>
                 <p>• TeamViewer ofrece una amplia gama de funciones y opciones adicionales. Puedes consultar la documentación oficial para obtener más información.</p>
             </div>
+        </div>
+    </div>
+
+    <!-- SERVICIO: Licencias Office -->
+    <div id="office" class="servicio-content" role="tabpanel" aria-label="Licencias Office">
+        <div class="servicio-header">
+            <h2>Instalador de Office con Validación por CCT</h2>
+            <p>Herramienta para reinstalar y activar Microsoft Office en los equipos de la estructura educativa de la Subdirección de Educación Primaria Región Nezahualcóyotl.</p>
+        </div>
+
+        <div class="content-block">
+            <h3>¿Por qué necesito esto?</h3>
+            <p>Con la actualización del esquema de licenciamiento institucional de Office, algunos equipos están mostrando un aviso de expiración próxima de la licencia. Para regularizar la activación sin contratiempos, la OTDE distribuye este instalador validado por Clave de Centro de Trabajo (CCT), que reinstala y activa Microsoft Office 2019 Professional Plus bajo el nuevo esquema.</p>
+        </div>
+
+        <div class="highlight-box">
+            <p><strong>Antes de instalar:</strong></p>
+            <p>• Ten a la mano la CCT de tu centro de trabajo (formato 15DPR####X); el instalador la solicita para validar la activación.</p>
+            <p>• Este instalador es exclusivo para equipos institucionales de la estructura educativa de la Región Nezahualcóyotl.</p>
+            <p>• Necesitas conexión a Internet estable durante todo el proceso (10 a 40 minutos) y permisos de administrador en el equipo.</p>
+            <p>• Al ejecutarlo, Windows SmartScreen puede mostrar una advertencia por tratarse de un instalador sin firma comercial; selecciona "Más información" → "Ejecutar de todas formas" para continuar.</p>
+        </div>
+
+        <div class="content-block">
+            <h3>Guía rápida de instalación</h3>
+
+            <p><strong>1. Preparación:</strong></p>
+            <ul class="benefit-list">
+                <li>Cierra todos los programas abiertos, especialmente Word, Excel u otras aplicaciones de Office</li>
+                <li>Verifica que tu equipo tenga conexión estable a Internet</li>
+                <li>Ten a la mano la CCT de tu centro de trabajo</li>
+            </ul>
+
+            <p><strong>2. Ejecutar el instalador:</strong></p>
+            <ul class="benefit-list">
+                <li>Haz doble clic en el archivo descargado; el sistema solicitará permisos de administrador de forma automática (acepta el aviso de Windows)</li>
+                <li>Espera mientras el sistema valida la disponibilidad del servicio y descarga la base de datos institucional actualizada</li>
+            </ul>
+
+            <p><strong>3. Validar tu centro de trabajo:</strong></p>
+            <ul class="benefit-list">
+                <li>Ingresa la CCT de tu escuela cuando el sistema te lo solicite</li>
+                <li>El sistema confirmará el nombre de la escuela, zona y sector antes de continuar</li>
+            </ul>
+
+            <p><strong>4. Instalación:</strong></p>
+            <ul class="benefit-list">
+                <li>Si detecta una versión previa de Office, la desinstalará automáticamente (5-10 minutos aproximadamente)</li>
+                <li>Instalará Microsoft Office 2019 Professional Plus (10-30 minutos aproximadamente)</li>
+                <li>No apagues el equipo ni cierres la ventana durante este proceso</li>
+            </ul>
+
+            <p><strong>5. Finalización:</strong></p>
+            <ul class="benefit-list">
+                <li>Al terminar, verás el mensaje "Proceso finalizado exitosamente"</li>
+                <li>Abre cualquier aplicación de Office para confirmar que quedó activada correctamente</li>
+            </ul>
+
+            <div class="highlight-box">
+                <p><strong>Aviso de privacidad:</strong></p>
+                <p>El instalador registra únicamente la CCT, nombre de la escuela, usuario del equipo, marca/número de serie y resultado de la instalación, con fines de control estadístico institucional, gestión de licenciamiento educativo y soporte técnico.</p>
+            </div>
+
+            <p style="margin-top: 20px;">¿Dudas o problemas durante la instalación? Solicita <a href="#soporte" onclick="showServicio('soporte', document.querySelector('[aria-controls=soporte]')); return false;" style="color: #9F2241; font-weight: 600;">Soporte Técnico Remoto</a>.</p>
+        </div>
+
+        <div class="featured-box">
+            <h4>Descargar Instalador de Office</h4>
+            <p>Instalador ejecutable para Windows (.exe) · 4.3 MB</p>
+            <a href="descargas/Instalador_Office_2019_OTDE.exe" class="download-button" download>
+                Descargar Instalador <span>→</span>
+            </a>
         </div>
     </div>
 
@@ -764,6 +936,75 @@
                 container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }, 400);
         }
+    }
+
+    // ── Soporte Técnico Remoto: solicitud ──
+    const SOPORTE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbynU6hEtN7W-Q2MsTEbRZJeGH946n3YcQptGiW6w6fMzgZ98J6mu33bEqSoK_1Oxtk/exec';
+
+    function toggleSoporteForm(btn) {
+        var container = document.getElementById('form-soporte');
+        var text = document.getElementById('btn-soporte-text');
+        var arrow = document.getElementById('btn-soporte-arrow');
+        if (container.classList.contains('active')) {
+            container.classList.remove('active');
+            text.textContent = 'Solicitar Soporte Técnico Remoto';
+            arrow.textContent = '▼';
+            btn.setAttribute('aria-expanded', 'false');
+        } else {
+            container.classList.add('active');
+            text.textContent = 'Ocultar Formulario';
+            arrow.textContent = '▲';
+            btn.setAttribute('aria-expanded', 'true');
+            setTimeout(function() {
+                container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 400);
+        }
+    }
+
+    async function enviarSolicitudSoporte(evt) {
+        evt.preventDefault();
+        var msg = document.getElementById('soporte-msg');
+        var btnSubmit = document.getElementById('btn-soporte-submit');
+        msg.className = 'soporte-submit-msg';
+        msg.textContent = '';
+
+        var datos = {
+            nombre: document.getElementById('sop-nombre').value,
+            cct: document.getElementById('sop-cct').value,
+            funcion: document.getElementById('sop-funcion').value,
+            contacto: document.getElementById('sop-contacto').value,
+            urgencia: document.getElementById('sop-urgencia').value,
+            descripcion: document.getElementById('sop-descripcion').value
+        };
+
+        btnSubmit.disabled = true;
+        btnSubmit.style.opacity = '0.6';
+
+        try {
+            const res = await fetch(SOPORTE_APPS_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify(datos)
+            });
+            const data = await res.json();
+
+            if (data.status === 'ok') {
+                msg.classList.add('ok');
+                msg.textContent = 'Solicitud registrada (folio ' + data.folio + '). Un integrante de la OTDE te contactará en breve.';
+                document.getElementById('soporte-form').reset();
+            } else {
+                msg.classList.add('error');
+                msg.textContent = 'No se pudo registrar la solicitud: ' + data.mensaje;
+            }
+        } catch (err) {
+            msg.classList.add('error');
+            msg.textContent = 'No se pudo enviar la solicitud. Verifica tu conexión e intenta de nuevo.';
+        } finally {
+            btnSubmit.disabled = false;
+            btnSubmit.style.opacity = '1';
+        }
+
+        return false;
     }
 </script>
     <script src="script.js" defer></script>

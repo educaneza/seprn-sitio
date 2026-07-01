@@ -108,11 +108,21 @@ La sesión más reciente siempre debe ser el acordeón activo/abierto al cargar 
 - Usado por `jornada-verano-2026.html`; responde `Content-Type: text/plain` para evitar preflight CORS
 - Para cambios: copiar el `.gs` completo en Apps Script y re-desplegar como aplicación web (Cualquier usuario)
 
+### `apps-script/soporte-remoto.gs`
+- Conectado a Google Sheets (hoja `Solicitudes_Soporte_2026`, autocreada si no existe)
+- Folio: `OTDE-SOP-NNNN` (secuencial, autoincremental)
+- Columnas A-H: Fecha | Folio | Nombre | CCT/Centro de Trabajo | Función/Cargo | Contacto | Descripción | Urgencia
+- Al recibir `doPost`, además de guardar en Sheets envía una notificación push vía **bot de Telegram** (`notificarTelegram`); si Telegram falla, el registro en Sheets no se pierde (try/catch silencioso)
+- Requiere Propiedades del script configuradas manualmente en el editor de Apps Script (Project Settings → Script Properties): `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID` — instrucciones completas para obtenerlas están al final del propio archivo `.gs`
+- Usado por el formulario "Solicitar Soporte Técnico Remoto" en la pestaña Soporte Técnico de `otde.html`; responde `Content-Type: text/plain` para evitar preflight CORS
+- URL del deployment vive en `otde.html` en la constante `SOPORTE_APPS_SCRIPT_URL`
+- Para cambios: copiar el `.gs` completo en Apps Script y re-desplegar como aplicación web (Cualquier usuario) — **cuidado**: probar el endpoint con `curl -X POST` ejecuta `doPost` de verdad (escribe en Sheets y dispara Telegram) aunque el cliente muestre un error al seguir la redirección de Google; para pruebas usar datos claramente identificables como prueba
+
 ## Reglas de desarrollo
 1. No introducir npm, frameworks ni build steps — stack estático puro
 2. Cambios globales de UI → `styles.css`; cambios específicos de página → `<style>` inline en el HTML
 3. Para modificar estilos del header/footer: son inline en cada página, no hay componente compartido
-4. Imágenes en `images/`, PDFs en `pdfs/cte/<nombre-sesion>/`
+4. Imágenes en `images/`, PDFs en `pdfs/cte/<nombre-sesion>/`, instaladores/ejecutables descargables en `descargas/` (ej. `.exe`, `.bat`)
 5. Después de push: esperar 5-10 min o Cmd+Shift+R para invalidar caché de GitHub Pages
 6. Los PDFs de sesiones CTE se nombran con mayúsculas y acentos; URL-encodear la ó como `%C3%B3` en los hrefs
 7. **Sin emojis** en HTML — usar SVG inline para íconos de contacto (persona, correo, teléfono). Ver `contacto-icon` en cualquier página de área como referencia
@@ -129,6 +139,12 @@ Página autónoma (no importa `styles.css` — estilos inline completos). Vincul
 - **Función "Otro"**: al seleccionarla aparece un `<input>` libre; su valor (no "Otro") es lo que se envía al Sheet
 - **Marca**: OTDE NEZA en todo el flujo; CoEEE acreditada en el subtítulo del hero
 - **URL CoEEE**: `https://auladigital.dee.edu.mx`
+
+## `otde.html` — Pestañas "Licencias Office" y Soporte Técnico Remoto (jul 2026)
+- **Licencias Office**: nueva pestaña de servicio con instalador `descargas/Instalador_Office_2019_OTDE.exe` (self-extracting, incluye `Instalador_Office_OTDE.bat` + Office Deployment Tool) que valida por CCT contra una base de datos publicada en Sheets/CSV. El texto evita atribuir la causa a SEIEM directamente (se enmarca como "actualización del esquema de licenciamiento institucional")
+- **Guía rápida de instalación**: los 5 pasos del mini-manual están basados en el flujo real del `.bat` (autoelevación, validación CCT, desinstalación de Office previo si existe, instalación de Office 2019 Professional Plus, aviso de privacidad) — si el `.bat` cambia, actualizar el manual para que siga siendo preciso
+- **Soporte Técnico Remoto**: se mantiene TeamViewer (no Quick Assist) como herramienta de control remoto. Se agregó un formulario "Solicitar Soporte Técnico Remoto" (nombre, CCT, función, contacto, urgencia, descripción) que envía a `apps-script/soporte-remoto.gs`
+- **Referencia cruzada**: la pestaña Office enlaza a Soporte si hay problemas durante la instalación; Soporte enlaza de vuelta a Office si la consulta es sobre licencias — ambos via `showServicio()` con `onclick` (no back-forward real de navegador)
 
 ## Pendientes (al 1 jul 2026)
 - **Recrear páginas eliminadas** — `gestion-escolar.html`, `investigacion-educativa.html`, `programas-educativos.html`, `servicio-profesional.html`: requieren contenido validado con la Dra. Galindo
