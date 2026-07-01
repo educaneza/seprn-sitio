@@ -84,6 +84,7 @@ La sesión más reciente siempre debe ser el acordeón activo/abierto al cargar 
 | `asistencia.html` | Check-in de asistencia (eventos) |
 | `charla-ia.html` | Página del evento IA jun 2026 (sin formulario) |
 | `jornada-verano-2026.html` | Wizard 3 pasos: registro de inscripción a Jornada Capacitación Verano 2026 (CoEEE + OTDE NEZA) |
+| `instructivo-jornada-verano-2026.html` | Guía imprimible (hoja carta, `@media print`) para difundir junto al oficio de la Jornada |
 | `404.html` | Página de error personalizada |
 
 ## Páginas eliminadas (recrear cuando haya contenido validado)
