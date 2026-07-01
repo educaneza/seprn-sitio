@@ -1053,7 +1053,7 @@
     <h2>¡Registro confirmado!</h2>
     <p class="conf-sub">Tu participación quedó registrada en la Jornada de Capacitación Verano 2026 · OTDE NEZA.</p>
     <div class="folio-box" id="folio-display"></div>
-    <p style="font-size:.8rem;color:var(--muted);margin-bottom:1.5rem;">Guarda este folio como comprobante de tu reporte.</p>
+    <p id="folio-label" style="font-size:.8rem;color:var(--muted);margin-bottom:1.5rem;">Guarda este folio como comprobante de tu reporte.</p>
 
     <div class="conf-detail" id="conf-detalle">
       <dl id="conf-dl"></dl>
@@ -1312,28 +1312,31 @@
     btn.innerHTML = '<span class="spinner"></span> Enviando…';
     document.getElementById('error-global').classList.remove('visible');
 
-    const datos = recopilarDatos();
+    const base = recopilarDatos();
 
-    fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(datos)
-    })
-    .then(r => r.json())
-    .then(res => {
-      if (res.status === 'ok') {
-        mostrarConfirmacion(res.folio, datos);
-      } else {
-        throw new Error(res.mensaje || 'Error desconocido');
-      }
-    })
-    .catch(err => {
-      const eg = document.getElementById('error-global');
-      eg.textContent = 'Ocurrió un error al enviar: ' + err.message + '. Intenta de nuevo.';
-      eg.classList.add('visible');
-      btn.disabled = false;
-      btn.textContent = 'Confirmar inscripción';
-    });
+    // Una petición por cada curso seleccionado → una fila por curso en Sheets
+    const peticiones = cursosSeleccionados.map(c =>
+      fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ ...base, curso: c.nombre })
+      })
+      .then(r => r.json())
+      .then(res => {
+        if (res.status !== 'ok') throw new Error(res.mensaje || 'Error desconocido');
+        return { folio: res.folio, curso: c.nombre };
+      })
+    );
+
+    Promise.all(peticiones)
+      .then(resultados => { mostrarConfirmacion(resultados, base); })
+      .catch(err => {
+        const eg = document.getElementById('error-global');
+        eg.textContent = 'Ocurrió un error al enviar: ' + err.message + '. Intenta de nuevo.';
+        eg.classList.add('visible');
+        btn.disabled = false;
+        btn.textContent = 'Confirmar inscripción';
+      });
   }
 
   function recopilarDatos() {
@@ -1348,8 +1351,8 @@
       sector:  manual ? document.getElementById('sector-manual').value : document.getElementById('sector-val').value,
       zona:    manual ? document.getElementById('zona-manual').value   : document.getElementById('zona-val').value,
       escuela: manual ? document.getElementById('escuela-manual').value.trim() : document.getElementById('escuela-val').value,
-      correo:  document.getElementById('correo').value.trim(),
-      curso:   document.getElementById('curso-val').value
+      correo:  document.getElementById('correo').value.trim()
+      // 'curso' se agrega por separado en cada petición
     };
   }
 
@@ -1416,7 +1419,7 @@
     return ok;
   }
 
-  function mostrarConfirmacion(folio, datos) {
+  function mostrarConfirmacion(resultados, datos) {
     [1, 2, 3].forEach(i => {
       document.getElementById('paso-' + i).style.display = 'none';
     });
@@ -1428,18 +1431,41 @@
     document.getElementById('line-1-2').classList.add('done');
     document.getElementById('line-2-3').classList.add('done');
 
-    document.getElementById('folio-display').textContent = folio;
+    const folioDisplay = document.getElementById('folio-display');
+    const folioLabel   = document.getElementById('folio-label');
+    const dl           = document.getElementById('conf-dl');
 
-    const dl = document.getElementById('conf-dl');
-    dl.innerHTML = [
-      ['Curso',   datos.curso],
-      ['Nombre',  datos.nombre],
-      ['RFC',     datos.rfc],
-      ['Función', datos.funcion],
-      ['CCT',     datos.cct],
-      ['Sector',  datos.sector + (datos.zona ? ' · Zona ' + datos.zona : '')],
-      ['Correo',  datos.correo]
-    ].map(([k, v]) => `<dt>${k}</dt><dd>${v || '—'}</dd>`).join('');
+    if (resultados.length === 1) {
+      folioDisplay.textContent = resultados[0].folio;
+      folioLabel.textContent   = 'Guarda este folio como comprobante de tu reporte.';
+      dl.innerHTML = [
+        ['Curso',   resultados[0].curso],
+        ['Nombre',  datos.nombre],
+        ['RFC',     datos.rfc],
+        ['Función', datos.funcion],
+        ['CCT',     datos.cct],
+        ['Sector',  datos.sector + (datos.zona ? ' · Zona ' + datos.zona : '')],
+        ['Correo',  datos.correo]
+      ].map(([k, v]) => `<dt>${k}</dt><dd>${v || '—'}</dd>`).join('');
+    } else {
+      // Múltiples cursos: un folio por curso, apilados
+      folioDisplay.innerHTML = resultados
+        .map(r => `<span style="display:block;font-size:1.1rem;letter-spacing:.08em;">${r.folio}</span>`)
+        .join('');
+      folioLabel.textContent = 'Guarda estos folios como comprobante de tu reporte.';
+      const cursosHtml = resultados.map((r, i) =>
+        `<dt>Curso ${i + 1}</dt><dd>${r.curso}<br>` +
+        `<span style="font-family:monospace;font-size:.78rem;color:var(--muted);">${r.folio}</span></dd>`
+      ).join('');
+      dl.innerHTML = cursosHtml + [
+        ['Nombre',  datos.nombre],
+        ['RFC',     datos.rfc],
+        ['Función', datos.funcion],
+        ['CCT',     datos.cct],
+        ['Sector',  datos.sector + (datos.zona ? ' · Zona ' + datos.zona : '')],
+        ['Correo',  datos.correo]
+      ].map(([k, v]) => `<dt>${k}</dt><dd>${v || '—'}</dd>`).join('');
+    }
 
     document.getElementById('paso-confirmacion').style.display = 'block';
     window.scrollTo({ top: 0, behavior: 'smooth' });
