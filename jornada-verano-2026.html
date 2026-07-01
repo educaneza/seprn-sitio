@@ -183,70 +183,132 @@
     .cursos-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: .875rem;
-      margin-bottom: 1.5rem;
+      gap: 1rem;
+      margin-bottom: .75rem;
     }
     @media (max-width: 520px) { .cursos-grid { grid-template-columns: 1fr; } }
 
     .curso-card {
       background: var(--surface);
       border: 2px solid var(--border);
-      border-radius: 12px;
-      padding: 1.1rem;
+      border-radius: 14px;
+      padding: 0;
       cursor: pointer;
-      transition: border-color .2s, box-shadow .2s, transform .1s;
+      transition: border-color .2s, box-shadow .2s, transform .18s;
       user-select: none;
       position: relative;
       display: flex;
       flex-direction: column;
-      gap: .5rem;
+      overflow: hidden;
     }
     .curso-card:hover {
       border-color: var(--acento);
-      box-shadow: 0 4px 16px rgba(159,34,65,.15);
+      box-shadow: 0 8px 24px rgba(159,34,65,.18);
+      transform: translateY(-3px);
     }
     .curso-card.selected {
       border-color: var(--acento);
-      background: #fdf2f5;
-      box-shadow: 0 4px 20px rgba(159,34,65,.2);
+      border-width: 2.5px;
+      box-shadow: 0 6px 22px rgba(159,34,65,.22);
     }
-    .curso-card.selected::after {
-      content: '';
-      position: absolute;
-      top: .6rem;
-      right: .6rem;
-      width: 20px;
-      height: 20px;
-      background: var(--acento) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='white'%3E%3Cpath fill-rule='evenodd' d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z' clip-rule='evenodd'/%3E%3C/svg%3E") center/14px no-repeat;
-      border-radius: 50%;
-    }
-    .curso-icono {
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
+
+    /* Header de color por curso */
+    .cc-header {
+      padding: 1.375rem 1.125rem;
       display: flex;
       align-items: center;
       justify-content: center;
+      min-height: 96px;
+      position: relative;
       flex-shrink: 0;
     }
-    .curso-icono svg { width: 20px; height: 20px; }
+    .cc-icon {
+      width: 54px;
+      height: 54px;
+      background: rgba(255,255,255,.18);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform .18s;
+    }
+    .curso-card:hover .cc-icon { transform: scale(1.08); }
+    .cc-icon svg { width: 30px; height: 30px; color: #fff; }
+
+    /* Badge "Seleccionado" en header */
+    .cc-sel-badge {
+      position: absolute;
+      top: .6rem;
+      right: .6rem;
+      background: rgba(255,255,255,.96);
+      color: #15803d;
+      font-size: .62rem;
+      font-weight: 800;
+      padding: .18rem .55rem;
+      border-radius: 999px;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      opacity: 0;
+      transform: scale(.75);
+      transition: opacity .18s, transform .18s;
+      pointer-events: none;
+    }
+    .curso-card.selected .cc-sel-badge {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* Cuerpo de la tarjeta */
+    .cc-body {
+      padding: .875rem 1rem 1.1rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+    }
     .curso-nombre {
       font-size: .875rem;
       font-weight: 700;
       color: var(--text);
-      line-height: 1.3;
+      line-height: 1.35;
     }
-    .curso-meta {
-      font-size: .75rem;
-      color: var(--muted);
+    .cc-info {
       display: flex;
       flex-direction: column;
-      gap: .15rem;
+      gap: .25rem;
+      margin-top: .1rem;
     }
-    .curso-meta strong { color: var(--guinda); font-weight: 600; }
+    .cc-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
+      font-size: .72rem;
+      font-weight: 600;
+    }
+    .cc-pill svg { width: 11px; height: 11px; flex-shrink: 0; opacity: .7; }
+    .cc-pill-fecha { color: #475569; }
+    .cc-pill-hora  { color: var(--guinda); }
 
-    /* ── CARD FULL WIDTH (5th course) ── */
-    .cursos-grid .curso-card:nth-child(5) { grid-column: 1 / -1; }
+    /* 5ª tarjeta: ancho completo y layout horizontal */
+    .cursos-grid .curso-card:nth-child(5) { grid-column: 1 / -1; flex-direction: row; }
+    .cursos-grid .curso-card:nth-child(5) .cc-header { min-width: 130px; min-height: auto; }
+    .cursos-grid .curso-card:nth-child(5) .cc-body { justify-content: center; }
+    @media (max-width: 520px) {
+      .cursos-grid .curso-card:nth-child(5) { flex-direction: column; }
+      .cursos-grid .curso-card:nth-child(5) .cc-header { min-height: 96px; }
+    }
+
+    /* Contador de cursos seleccionados */
+    .seleccion-counter {
+      text-align: center;
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 1.1rem;
+      min-height: 1.2em;
+      transition: color .2s;
+    }
+    .seleccion-counter.activo { color: var(--acento); }
 
     /* ── BUTTONS ── */
     .btn-primary {
@@ -600,7 +662,7 @@
 <section class="hero">
   <span class="badge">OTDE NEZA · Verano 2026</span>
   <h1>Jornada de Capacitación<br><em>Verano 2026</em></h1>
-  <p class="subtitle">Una iniciativa de la Oficina de Tecnología · Región Nezahualcóyotl</p>
+  <p class="subtitle">CoEEE ofrece los cursos &middot; OTDE NEZA los impulsa y da seguimiento</p>
   <div class="hero-meta">
     <span class="m">
       <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
@@ -649,82 +711,136 @@
 
     <div class="cursos-grid">
 
-      <!-- Curso 1 -->
+      <!-- Curso 1: Excel -->
       <div class="curso-card" data-curso="Excel esencial para la gestión administrativa" data-fechas="10 al 14 de agosto 2026" data-horario="09:00–12:00 h" onclick="seleccionarCurso(this)">
-        <div class="curso-icono" style="background:#e0f2fe;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#0369a1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/>
-          </svg>
+        <div class="cc-header" style="background:linear-gradient(135deg,#0369a1,#0284c7);">
+          <div class="cc-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/>
+            </svg>
+          </div>
+          <span class="cc-sel-badge">✓ Seleccionado</span>
         </div>
-        <div class="curso-nombre">Excel esencial para la gestión administrativa</div>
-        <div class="curso-meta">
-          <span><strong>10–14 ago 2026</strong></span>
-          <span>09:00–12:00 h</span>
+        <div class="cc-body">
+          <div class="curso-nombre">Excel esencial para la gestión administrativa</div>
+          <div class="cc-info">
+            <span class="cc-pill cc-pill-fecha">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
+              10–14 ago 2026
+            </span>
+            <span class="cc-pill cc-pill-hora">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg>
+              09:00–12:00 h
+            </span>
+          </div>
         </div>
       </div>
 
-      <!-- Curso 2 -->
+      <!-- Curso 2: IA -->
       <div class="curso-card" data-curso="Introducción a la inteligencia artificial en educación" data-fechas="10 al 14 de agosto 2026" data-horario="14:00–17:00 h" onclick="seleccionarCurso(this)">
-        <div class="curso-icono" style="background:#f0fdf4;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="3"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2m-3.5-6.5-1.5 1.5M7 7 5.5 5.5M17 17l1.5 1.5M7 17l-1.5 1.5"/>
-          </svg>
+        <div class="cc-header" style="background:linear-gradient(135deg,#15803d,#16a34a);">
+          <div class="cc-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2m-3.5-6.5-1.5 1.5M7 7 5.5 5.5M17 17l1.5 1.5M7 17l-1.5 1.5"/>
+            </svg>
+          </div>
+          <span class="cc-sel-badge">✓ Seleccionado</span>
         </div>
-        <div class="curso-nombre">Introducción a la inteligencia artificial en educación</div>
-        <div class="curso-meta">
-          <span><strong>10–14 ago 2026</strong></span>
-          <span>14:00–17:00 h</span>
+        <div class="cc-body">
+          <div class="curso-nombre">Introducción a la inteligencia artificial en educación</div>
+          <div class="cc-info">
+            <span class="cc-pill cc-pill-fecha">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
+              10–14 ago 2026
+            </span>
+            <span class="cc-pill cc-pill-hora">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg>
+              14:00–17:00 h
+            </span>
+          </div>
         </div>
       </div>
 
-      <!-- Curso 3 -->
+      <!-- Curso 3: NotebookLM -->
       <div class="curso-card" data-curso="NotebookLM: tu Co-piloto digital en apoyo a la labor educativa" data-fechas="10 al 14 de agosto 2026" data-horario="14:00–18:00 h" onclick="seleccionarCurso(this)">
-        <div class="curso-icono" style="background:#fdf4ff;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#9333ea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-          </svg>
+        <div class="cc-header" style="background:linear-gradient(135deg,#7c3aed,#8b5cf6);">
+          <div class="cc-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+            </svg>
+          </div>
+          <span class="cc-sel-badge">✓ Seleccionado</span>
         </div>
-        <div class="curso-nombre">NotebookLM: tu Co-piloto digital en apoyo a la labor educativa</div>
-        <div class="curso-meta">
-          <span><strong>10–14 ago 2026</strong></span>
-          <span>14:00–18:00 h</span>
+        <div class="cc-body">
+          <div class="curso-nombre">NotebookLM: tu Co-piloto digital en apoyo a la labor educativa</div>
+          <div class="cc-info">
+            <span class="cc-pill cc-pill-fecha">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
+              10–14 ago 2026
+            </span>
+            <span class="cc-pill cc-pill-hora">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg>
+              14:00–18:00 h
+            </span>
+          </div>
         </div>
       </div>
 
-      <!-- Curso 4 -->
+      <!-- Curso 4: Scratch JR -->
       <div class="curso-card" data-curso="Aventuras en bloques: crea, juega y enseña con Scratch JR." data-fechas="17 al 20 de agosto 2026" data-horario="14:00–18:00 h" onclick="seleccionarCurso(this)">
-        <div class="curso-icono" style="background:#fff7ed;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#c2410c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="7" width="5" height="5" rx="1"/><rect x="9" y="7" width="5" height="5" rx="1"/><rect x="16" y="7" width="5" height="5" rx="1"/><rect x="5.5" y="12" width="5" height="5" rx="1"/><rect x="13" y="12" width="5" height="5" rx="1"/>
-          </svg>
+        <div class="cc-header" style="background:linear-gradient(135deg,#c2410c,#ea580c);">
+          <div class="cc-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="7" width="5" height="5" rx="1"/><rect x="9" y="7" width="5" height="5" rx="1"/><rect x="16" y="7" width="5" height="5" rx="1"/><rect x="5.5" y="12" width="5" height="5" rx="1"/><rect x="13" y="12" width="5" height="5" rx="1"/>
+            </svg>
+          </div>
+          <span class="cc-sel-badge">✓ Seleccionado</span>
         </div>
-        <div class="curso-nombre">Aventuras en bloques: crea, juega y enseña con Scratch JR.</div>
-        <div class="curso-meta">
-          <span><strong>17–20 ago 2026</strong></span>
-          <span>14:00–18:00 h</span>
+        <div class="cc-body">
+          <div class="curso-nombre">Aventuras en bloques: crea, juega y enseña con Scratch JR.</div>
+          <div class="cc-info">
+            <span class="cc-pill cc-pill-fecha">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
+              17–20 ago 2026
+            </span>
+            <span class="cc-pill cc-pill-hora">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg>
+              14:00–18:00 h
+            </span>
+          </div>
         </div>
       </div>
 
-      <!-- Curso 5 (full width) -->
+      <!-- Curso 5: Canva (ancho completo, layout horizontal) -->
       <div class="curso-card" data-curso="Canva: potencializando el aprendizaje con creatividad" data-fechas="17 al 21 de agosto 2026" data-horario="09:00–13:00 h" onclick="seleccionarCurso(this)">
-        <div style="display:flex; align-items:center; gap:.875rem;">
-          <div class="curso-icono" style="background:#fdf2f5;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <div class="cc-header" style="background:linear-gradient(135deg,#9F2241,#be123c);">
+          <div class="cc-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/>
             </svg>
           </div>
-          <div>
-            <div class="curso-nombre">Canva: potencializando el aprendizaje con creatividad</div>
-            <div class="curso-meta">
-              <span><strong>17–21 ago 2026</strong> &nbsp;·&nbsp; 09:00–13:00 h</span>
-            </div>
+          <span class="cc-sel-badge">✓ Seleccionado</span>
+        </div>
+        <div class="cc-body">
+          <div class="curso-nombre">Canva: potencializando el aprendizaje con creatividad</div>
+          <div class="cc-info">
+            <span class="cc-pill cc-pill-fecha">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
+              17–21 ago 2026
+            </span>
+            <span class="cc-pill cc-pill-hora">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg>
+              09:00–13:00 h
+            </span>
           </div>
         </div>
       </div>
 
     </div>
 
-    <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:.75rem 1rem;margin-bottom:1.25rem;font-size:.8rem;color:#0c4a6e;">
+    <p class="seleccion-counter" id="sel-counter">Puedes seleccionar uno o varios cursos</p>
+
+    <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:.7rem 1rem;margin-bottom:1.1rem;font-size:.8rem;color:#0c4a6e;">
       Todos los cursos son a distancia a través de <strong>Microsoft Teams</strong>. La sede es virtual.
     </div>
 
@@ -752,9 +868,9 @@
       </div>
     </div>
 
-    <div class="instruccion-box">
-      <p>Al presionar el botón se abrirá el portal oficial de CoEEE en una nueva pestaña.</p>
-      <p>Completa tu registro ahí y regresa a esta página para confirmar tu participación.</p>
+    <div class="instruccion-box" id="instruccion-p2">
+      <p id="instruccion-txt">Al presionar el botón se abrirá el portal oficial de CoEEE en una nueva pestaña.</p>
+      <p>Completa tu registro ahí y regresa a esta página para confirmar tu participación con OTDE NEZA.</p>
     </div>
 
     <a href="https://auladigital.dee.edu.mx" target="_blank" rel="noopener noreferrer"
@@ -783,6 +899,16 @@
     <div class="paso-header">
       <h2>Confirma tu participación con OTDE NEZA</h2>
       <p>Registra tu inscripción ante la Oficina de Tecnología de la región</p>
+    </div>
+
+    <!-- Disclaimer: deja claro qué es cada paso -->
+    <div style="background:#fff7ed;border:1.5px solid #fed7aa;border-radius:10px;padding:1rem 1.125rem;margin-bottom:1.25rem;">
+      <p style="font-size:.82rem;font-weight:700;color:#9a3412;margin-bottom:.35rem;">Importante — ¿Para qué es este formulario?</p>
+      <p style="font-size:.82rem;color:#7c2d12;line-height:1.55;">
+        Tu inscripción al curso ya se realizó en el portal de CoEEE (paso anterior).<br>
+        <strong>Este formulario no te inscribe al curso.</strong><br>
+        Solo es para que la OTDE NEZA tenga registro de tu participación y pueda darte seguimiento.
+      </p>
     </div>
 
     <div class="resumen-curso" id="resumen-p3" style="margin-bottom:1.25rem;">
@@ -942,9 +1068,9 @@
   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx2NeV838LWQB4ff4tb60U5qaJYVmcRKE-gT4a0jlg38eokkmrhHrawg-zle-S7SD8/exec';
 
   // ── Estado global ──
-  let cursoSeleccionado  = null;
-  let cctEncontrada      = false;
-  let regresoBtnTimeout  = null;
+  let cursosSeleccionados = [];   // multi-select
+  let cctEncontrada       = false;
+  let regresoBtnTimeout   = null;
 
   // ── Mapa sector → zonas (construido desde CCT_DB) ──
   const sectorZonas = {};
@@ -957,22 +1083,52 @@
     sectorZonas[s] = [...sectorZonas[s]].sort((a, b) => a - b);
   });
 
-  // ── PASO 1: seleccionar curso ──
+  // ── PASO 1: seleccionar / deseleccionar curso (multi-select) ──
   function seleccionarCurso(card) {
-    document.querySelectorAll('.curso-card').forEach(c => c.classList.remove('selected'));
-    card.classList.add('selected');
-    cursoSeleccionado = {
-      nombre:  card.dataset.curso,
-      fechas:  card.dataset.fechas,
-      horario: card.dataset.horario
-    };
-    document.getElementById('btn-paso1').disabled = false;
+    const idx = cursosSeleccionados.findIndex(c => c.nombre === card.dataset.curso);
+    if (idx >= 0) {
+      cursosSeleccionados.splice(idx, 1);
+      card.classList.remove('selected');
+    } else {
+      cursosSeleccionados.push({
+        nombre:  card.dataset.curso,
+        fechas:  card.dataset.fechas,
+        horario: card.dataset.horario
+      });
+      card.classList.add('selected');
+    }
+    const n = cursosSeleccionados.length;
+    const counter = document.getElementById('sel-counter');
+    if (n === 0) {
+      counter.textContent = 'Puedes seleccionar uno o varios cursos';
+      counter.classList.remove('activo');
+    } else {
+      counter.textContent = n === 1 ? '1 curso seleccionado' : n + ' cursos seleccionados';
+      counter.classList.add('activo');
+    }
+    document.getElementById('btn-paso1').disabled = n === 0;
   }
 
   function irPaso2() {
-    if (!cursoSeleccionado) return;
-    document.getElementById('rc-nombre-p2').textContent = cursoSeleccionado.nombre;
-    document.getElementById('rc-meta-p2').textContent   = cursoSeleccionado.fechas + ' · ' + cursoSeleccionado.horario;
+    if (!cursosSeleccionados.length) return;
+    const n = cursosSeleccionados.length;
+    // Resumen en Paso 2
+    if (n === 1) {
+      document.getElementById('rc-nombre-p2').textContent = cursosSeleccionados[0].nombre;
+      document.getElementById('rc-meta-p2').textContent   = cursosSeleccionados[0].fechas + ' · ' + cursosSeleccionados[0].horario;
+    } else {
+      document.getElementById('rc-nombre-p2').textContent = n + ' cursos seleccionados';
+      document.getElementById('rc-meta-p2').innerHTML = cursosSeleccionados
+        .map(c => `<span style="display:block;">${c.nombre} &middot; ${c.horario}</span>`)
+        .join('');
+    }
+    // Instrucción dinámica según cantidad
+    const instrTxt = document.getElementById('instruccion-txt');
+    if (n > 1) {
+      instrTxt.textContent = 'Deberás registrarte por separado en CoEEE para cada uno de los ' + n + ' cursos que seleccionaste.';
+    } else {
+      instrTxt.textContent = 'Al presionar el botón se abrirá el portal oficial de CoEEE en una nueva pestaña.';
+    }
     mostrarPaso(2);
   }
 
@@ -997,9 +1153,17 @@
   }
 
   function irPaso3() {
-    document.getElementById('rc-nombre-p3').textContent = cursoSeleccionado.nombre;
-    document.getElementById('rc-meta-p3').textContent   = cursoSeleccionado.fechas + ' · ' + cursoSeleccionado.horario;
-    document.getElementById('curso-val').value          = cursoSeleccionado.nombre;
+    const n = cursosSeleccionados.length;
+    if (n === 1) {
+      document.getElementById('rc-nombre-p3').textContent = cursosSeleccionados[0].nombre;
+      document.getElementById('rc-meta-p3').textContent   = cursosSeleccionados[0].fechas + ' · ' + cursosSeleccionados[0].horario;
+    } else {
+      document.getElementById('rc-nombre-p3').textContent = n + ' cursos seleccionados';
+      document.getElementById('rc-meta-p3').innerHTML = cursosSeleccionados
+        .map(c => `<span style="display:block;">${c.nombre} &middot; ${c.horario}</span>`)
+        .join('');
+    }
+    document.getElementById('curso-val').value = cursosSeleccionados.map(c => c.nombre).join(' · ');
     mostrarPaso(3);
   }
 
