@@ -1303,7 +1303,7 @@
   }
 
   // ── ENVÍO DEL FORMULARIO ──
-  function enviarFormulario(e) {
+  async function enviarFormulario(e) {
     e.preventDefault();
     if (!validarFormulario()) return;
 
@@ -1313,30 +1313,28 @@
     document.getElementById('error-global').classList.remove('visible');
 
     const base = recopilarDatos();
+    const resultados = [];
 
-    // Una petición por cada curso seleccionado → una fila por curso en Sheets
-    const peticiones = cursosSeleccionados.map(c =>
-      fetch(APPS_SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ ...base, curso: c.nombre })
-      })
-      .then(r => r.json())
-      .then(res => {
+    try {
+      // Secuencial: esperar a que cada row se escriba antes del siguiente fetch
+      // para evitar que generarFolio() lea el mismo maxNum en paralelo.
+      for (const c of cursosSeleccionados) {
+        const res = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ ...base, curso: c.nombre })
+        }).then(r => r.json());
         if (res.status !== 'ok') throw new Error(res.mensaje || 'Error desconocido');
-        return { folio: res.folio, curso: c.nombre };
-      })
-    );
-
-    Promise.all(peticiones)
-      .then(resultados => { mostrarConfirmacion(resultados, base); })
-      .catch(err => {
-        const eg = document.getElementById('error-global');
-        eg.textContent = 'Ocurrió un error al enviar: ' + err.message + '. Intenta de nuevo.';
-        eg.classList.add('visible');
-        btn.disabled = false;
-        btn.textContent = 'Confirmar inscripción';
-      });
+        resultados.push({ folio: res.folio, curso: c.nombre });
+      }
+      mostrarConfirmacion(resultados, base);
+    } catch (err) {
+      const eg = document.getElementById('error-global');
+      eg.textContent = 'Ocurrió un error al enviar: ' + err.message + '. Intenta de nuevo.';
+      eg.classList.add('visible');
+      btn.disabled = false;
+      btn.textContent = 'Confirmar inscripción';
+    }
   }
 
   function recopilarDatos() {
