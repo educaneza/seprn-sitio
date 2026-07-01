@@ -83,6 +83,7 @@ La sesión más reciente siempre debe ser el acordeón activo/abierto al cargar 
 | `juridico.html` | Oficina Jurídica |
 | `asistencia.html` | Check-in de asistencia (eventos) |
 | `charla-ia.html` | Página del evento IA jun 2026 (sin formulario) |
+| `jornada-verano-2026.html` | Wizard 3 pasos: registro de inscripción a Jornada Capacitación Verano 2026 (CoEEE + OTDE NEZA) |
 | `404.html` | Página de error personalizada |
 
 ## Páginas eliminadas (recrear cuando haya contenido validado)
@@ -92,10 +93,19 @@ La sesión más reciente siempre debe ser el acordeón activo/abierto al cargar 
 - `servicio-profesional.html`
 
 ## Backend (Apps Script)
-- Archivo: `apps-script/conferencia-ia.gs`
+
+### `apps-script/conferencia-ia.gs`
 - Conectado a Google Sheets (`Registros_IA_2026`)
 - Funciones clave: `doPost` (registro), `doGet` (cupo/checkin), `reenviarConfirmacionListaEspera` (post-evento)
 - Para cambios: copiar el `.gs` completo en el editor de Apps Script y re-desplegar
+
+### `apps-script/cursos-coeee-2026.gs`
+- Conectado a Google Sheets (hoja `Cursos_OTDE_Verano_2026`)
+- Folio: `OTDE-V26-NNNN` (secuencial, autoincremental)
+- Columnas A-K: Fecha | Folio | Nombre | RFC | Función | CCT | Sector | Zona | Escuela/Unidad | Curso | Correo
+- Funciones: `doPost` (un registro por llamada), `generarEstadisticas` (ejecución manual → hoja resumen)
+- Usado por `jornada-verano-2026.html`; responde `Content-Type: text/plain` para evitar preflight CORS
+- Para cambios: copiar el `.gs` completo en Apps Script y re-desplegar como aplicación web (Cualquier usuario)
 
 ## Reglas de desarrollo
 1. No introducir npm, frameworks ni build steps — stack estático puro
@@ -107,7 +117,19 @@ La sesión más reciente siempre debe ser el acordeón activo/abierto al cargar 
 7. **Sin emojis** en HTML — usar SVG inline para íconos de contacto (persona, correo, teléfono). Ver `contacto-icon` en cualquier página de área como referencia
 8. El portal SEP CTE usa la URL `https://gestion.cte.sep.gob.mx/insumos/` (sin `#!/` — ese sufijo era routing antiguo de AngularJS)
 
-## Pendientes (al 24 jun 2026)
+## `jornada-verano-2026.html` — Arquitectura y decisiones clave (jul 2026)
+Página autónoma (no importa `styles.css` — estilos inline completos). Vinculada desde `otde.html` mediante un banner destacado.
+
+- **Flujo**: wizard 3 pasos — (1) selección multi-curso con tarjetas visuales, (2) redirección al portal CoEEE, (3) formulario de reporte OTDE NEZA
+- **Multi-curso**: `cursosSeleccionados[]` acumula selecciones; al enviar, se hace un `await fetch()` **secuencial** por cada curso (no `Promise.all`) para evitar race condition en `generarFolio()` de Apps Script
+- **CCT**: autocomplete desde `js/cct-db.js` (506 registros). Si CCT no está en la base, muestra campos manuales de Sector/Zona/Escuela
+- **RFC** (no CURP): regex `/^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/i`
+- **Sin confirmación por correo** — CoEEE ya la envía; OTDE solo guarda el reporte
+- **Función "Otro"**: al seleccionarla aparece un `<input>` libre; su valor (no "Otro") es lo que se envía al Sheet
+- **Marca**: OTDE NEZA en todo el flujo; CoEEE acreditada en el subtítulo del hero
+- **URL CoEEE**: `https://auladigital.dee.edu.mx`
+
+## Pendientes (al 1 jul 2026)
 - **Recrear páginas eliminadas** — `gestion-escolar.html`, `investigacion-educativa.html`, `programas-educativos.html`, `servicio-profesional.html`: requieren contenido validado con la Dra. Galindo
 - **Logomark SEPRN** — requiere archivo `logo.svg` (diseño gráfico pendiente)
 - **Barra CTE** — actualizar texto del `.update-banner` en `index.html` cuando se publique la 9ª sesión
