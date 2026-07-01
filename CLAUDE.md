@@ -111,13 +111,16 @@ La sesión más reciente siempre debe ser el acordeón activo/abierto al cargar 
 ### `apps-script/soporte-remoto.gs`
 - Conectado a Google Sheets (hoja `Solicitudes_Soporte_2026`, autocreada si no existe)
 - Folio: `OTDE-SOP-NNNN` (secuencial, autoincremental)
-- Columnas A-I: Fecha | Folio | Nombre | CCT/Centro de Trabajo | Función/Cargo | WhatsApp | Correo | Descripción | Urgencia
+- Columnas A-L: Fecha | Folio | Nombre | CCT | Sector | Zona | Escuela/Unidad | Función/Cargo | WhatsApp | Correo | Descripción | Urgencia
+- **CCT con autocomplete**: mismo patrón que `jornada-verano-2026.html` (`js/cct-db.js`, 506 registros) — funciones `sopSeleccionarCct`/`sopResetCct`/`sopActualizarZonas` (prefijo `sop` para no chocar con las de jornada-verano, aunque viven en páginas distintas). Si la CCT no está en la base, aparecen campos manuales de Sector/Zona/Escuela (`#sop-manual-fields`)
+- **Función/Cargo** es un `<select>` (mismas opciones que jornada-verano-2026: Docente, Director(a), Subdirector(a), ATP, Supervisor(a), Jefe(a) de Sector, Personal de apoyo (PAAE), Otro) con campo libre si se elige "Otro"
 - WhatsApp es obligatorio (regex `/^\d{10}$/`, sin lada); Correo es opcional. La notificación de Telegram incluye un link `https://wa.me/52<whatsapp>` para abrir el chat con un tap
+- El `<form>` usa `novalidate` + validación 100% en JS (`validarSoporteForm()`) — necesario porque los `type="email"`/`required` nativos interceptan el `submit` antes de correr el JS si no se desactiva la validación del navegador
 - Al recibir `doPost`, además de guardar en Sheets envía una notificación push vía **bot de Telegram** (`notificarTelegram`); si Telegram falla, el registro en Sheets no se pierde (try/catch silencioso)
 - Requiere Propiedades del script configuradas manualmente en el editor de Apps Script (Project Settings → Script Properties): `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID` — instrucciones completas para obtenerlas están al final del propio archivo `.gs`
 - Usado por el formulario "Solicitar Soporte Técnico Remoto" en la pestaña Soporte Técnico de `otde.html`; responde `Content-Type: text/plain` para evitar preflight CORS
 - URL del deployment vive en `otde.html` en la constante `SOPORTE_APPS_SCRIPT_URL`
-- Para cambios: copiar el `.gs` completo en Apps Script y re-desplegar como aplicación web (Cualquier usuario) — **cuidado**: probar el endpoint con `curl -X POST` ejecuta `doPost` de verdad (escribe en Sheets y dispara Telegram) aunque el cliente muestre un error al seguir la redirección de Google; para pruebas usar datos claramente identificables como prueba
+- Para cambios: copiar el `.gs` completo en Apps Script y re-desplegar como aplicación web (Cualquier usuario) — **cuidado**: probar el endpoint con `curl -X POST`, o incluso desde un navegador headless con acceso real a internet (confirmado: el sandbox de pruebas SÍ tiene salida real a `script.google.com`), ejecuta `doPost` de verdad (escribe en Sheets y dispara Telegram). Para pruebas locales, interceptar la llamada de red (`page.route()` en Playwright) en vez de dejarla llegar al backend real
 
 ## Reglas de desarrollo
 1. No introducir npm, frameworks ni build steps — stack estático puro

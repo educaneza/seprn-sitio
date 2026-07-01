@@ -294,6 +294,58 @@
         .soporte-field-hint { font-size: 13px; color: #6b7280; margin-top: 6px; }
         .soporte-field-error { font-size: 13px; color: #dc2626; margin-top: 6px; display: none; }
         .soporte-field-error.visible { display: block; }
+
+        /* ── CCT autocomplete (Soporte) ── */
+        .sop-cct-wrapper { position: relative; }
+        #sop-cct-suggestions {
+            position: absolute;
+            top: 100%; left: 0; right: 0;
+            background: #fff;
+            border: 1.5px solid #9F2241;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            z-index: 100;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        #sop-cct-suggestions li {
+            padding: 8px 14px;
+            font-size: 14px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        #sop-cct-suggestions li:last-child { border-bottom: none; }
+        #sop-cct-suggestions li:hover, #sop-cct-suggestions li.active { background: #fdf2f5; }
+        #sop-cct-suggestions .sg-code { font-family: monospace; font-weight: 600; color: #9F2241; }
+        #sop-cct-suggestions .sg-name { color: #6b7280; font-size: 13px; display: block; }
+        .sop-cct-status {
+            font-size: 13px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            margin-top: 6px;
+            display: none;
+        }
+        .sop-cct-status.found { background: #d1fae5; color: #065f46; display: block; }
+        .sop-cct-status.warn  { background: #fffbeb; color: #92400e; display: block; }
+        .sop-manual-fields {
+            background: #fffbeb;
+            border: 1px solid #fcd34d;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 10px;
+            display: none;
+        }
+        .sop-manual-fields.visible { display: block; }
+        .sop-manual-fields .manual-aviso {
+            font-size: 13px;
+            color: #92400e;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
         .soporte-submit-msg {
             margin-top: 16px;
             padding: 14px 18px;
@@ -606,14 +658,71 @@
                         <div class="soporte-field-error" id="sop-nombre-error">Ingresa tu nombre completo.</div>
                     </div>
                     <div class="soporte-form-group">
-                        <label for="sop-cct">CCT o Centro de Trabajo<span class="req">*</span></label>
-                        <input type="text" id="sop-cct" placeholder="15DPR0000X" style="text-transform:uppercase;" required>
-                        <div class="soporte-field-error" id="sop-cct-error">Ingresa una CCT o centro de trabajo válido.</div>
+                        <label for="sop-cct">Clave de Centro de Trabajo (CCT)<span class="req">*</span></label>
+                        <div class="sop-cct-wrapper">
+                            <input type="text" id="sop-cct" placeholder="15DPR0000A" maxlength="10" autocomplete="off" style="text-transform:uppercase;font-family:monospace;" required>
+                            <ul id="sop-cct-suggestions"></ul>
+                        </div>
+                        <div class="sop-cct-status" id="sop-cct-status"></div>
+                        <div class="soporte-field-error" id="sop-cct-error">Ingresa una CCT válida.</div>
                     </div>
+
+                    <div class="sop-manual-fields" id="sop-manual-fields">
+                        <p class="manual-aviso">No encontramos esa CCT. Captura los datos manualmente:</p>
+                        <div class="soporte-form-group">
+                            <label for="sop-sector-manual">Sector<span class="req">*</span></label>
+                            <select id="sop-sector-manual" onchange="sopActualizarZonas()">
+                                <option value="">— Selecciona sector —</option>
+                                <option value="I">Sector I</option>
+                                <option value="II">Sector II</option>
+                                <option value="III">Sector III</option>
+                                <option value="IV">Sector IV</option>
+                                <option value="V">Sector V</option>
+                                <option value="VI">Sector VI</option>
+                                <option value="VII">Sector VII</option>
+                                <option value="VIII">Sector VIII</option>
+                                <option value="IX">Sector IX</option>
+                                <option value="X">Sector X</option>
+                                <option value="XI">Sector XI</option>
+                                <option value="XII">Sector XII</option>
+                                <option value="XIII">Sector XIII</option>
+                                <option value="SEPRN">SEPRN (Subdirección / Jefatura)</option>
+                            </select>
+                        </div>
+                        <div class="soporte-form-group" id="sop-zona-group" style="display:none;">
+                            <label for="sop-zona-manual">Zona escolar<span class="req">*</span></label>
+                            <select id="sop-zona-manual">
+                                <option value="">— Selecciona zona —</option>
+                            </select>
+                        </div>
+                        <div class="soporte-form-group">
+                            <label for="sop-escuela-manual">Nombre de la escuela o unidad<span class="req">*</span></label>
+                            <input type="text" id="sop-escuela-manual" placeholder="Nombre oficial">
+                        </div>
+                    </div>
+
+                    <input type="hidden" id="sop-sector-val">
+                    <input type="hidden" id="sop-zona-val">
+                    <input type="hidden" id="sop-escuela-val">
+
                     <div class="soporte-form-group">
                         <label for="sop-funcion">Función/Cargo<span class="req">*</span></label>
-                        <input type="text" id="sop-funcion" required>
-                        <div class="soporte-field-error" id="sop-funcion-error">Ingresa tu función o cargo.</div>
+                        <select id="sop-funcion" required onchange="sopToggleOtraFuncion()">
+                            <option value="">— Selecciona una opción —</option>
+                            <option>Docente</option>
+                            <option>Director(a)</option>
+                            <option>Subdirector(a)</option>
+                            <option>ATP (Asesor Técnico Pedagógico)</option>
+                            <option>Supervisor(a)</option>
+                            <option>Jefe(a) de Sector</option>
+                            <option>Personal de apoyo (PAAE)</option>
+                            <option>Otro</option>
+                        </select>
+                        <div class="soporte-field-error" id="sop-funcion-error">Selecciona tu función o cargo.</div>
+                        <div id="sop-otra-funcion-group" style="display:none;margin-top:10px;">
+                            <input type="text" id="sop-otra-funcion" placeholder="Especifica tu función" maxlength="80">
+                            <div class="soporte-field-error" id="sop-otra-funcion-error">Especifica tu función.</div>
+                        </div>
                     </div>
                     <div class="soporte-form-group">
                         <label for="sop-whatsapp">WhatsApp<span class="req">*</span></label>
@@ -926,6 +1035,7 @@
         </div>
     </footer>
 
+<script src="js/cct-db.js"></script>
 <script>
     function showServicio(servicioId, btn) {
         document.querySelectorAll('.servicio-content').forEach(function(c) { c.classList.remove('active'); });
@@ -982,12 +1092,138 @@
         }
     }
 
+    // ── Función "Otro" ──
+    function sopToggleOtraFuncion() {
+        var val = document.getElementById('sop-funcion').value;
+        var grp = document.getElementById('sop-otra-funcion-group');
+        grp.style.display = val === 'Otro' ? 'block' : 'none';
+        if (val !== 'Otro') {
+            var inp = document.getElementById('sop-otra-funcion');
+            inp.value = '';
+            inp.classList.remove('error');
+            document.getElementById('sop-otra-funcion-error').classList.remove('visible');
+        }
+    }
+
+    // ── CCT autocomplete (Soporte) ──
+    var sopCctEncontrada = false;
+    var sopSectorZonas = {};
+    if (typeof CCT_DB !== 'undefined') {
+        CCT_DB.forEach(function(e) {
+            if (!e.zona || e.tipo !== 'escuela') return;
+            if (!sopSectorZonas[e.sector]) sopSectorZonas[e.sector] = [];
+            if (sopSectorZonas[e.sector].indexOf(e.zona) === -1) sopSectorZonas[e.sector].push(e.zona);
+        });
+        Object.keys(sopSectorZonas).forEach(function(s) {
+            sopSectorZonas[s].sort(function(a, b) { return a - b; });
+        });
+    }
+
+    var sopInputCct, sopSuggestions, sopStatusBox, sopActiveSugg = -1;
+
+    function sopInitCctAutocomplete() {
+        sopInputCct = document.getElementById('sop-cct');
+        sopSuggestions = document.getElementById('sop-cct-suggestions');
+        sopStatusBox = document.getElementById('sop-cct-status');
+        if (!sopInputCct || typeof CCT_DB === 'undefined') return;
+
+        sopInputCct.addEventListener('input', function() {
+            var q = sopInputCct.value.trim().toUpperCase();
+            sopResetCct();
+            if (q.length < 3) { sopSuggestions.style.display = 'none'; return; }
+
+            var matches = CCT_DB.filter(function(e) {
+                return e.cct.includes(q) || e.nombre.toUpperCase().includes(q);
+            }).slice(0, 10);
+
+            if (!matches.length) { sopSuggestions.style.display = 'none'; return; }
+
+            sopSuggestions.innerHTML = '';
+            matches.forEach(function(m) {
+                var li = document.createElement('li');
+                li.innerHTML = '<span class="sg-code">' + m.cct + '</span> <span class="sg-name">' + m.nombre + ' — Sector ' + m.sector + (m.zona ? ', Zona ' + m.zona : '') + '</span>';
+                li.addEventListener('mousedown', function() { sopSeleccionarCct(m); });
+                sopSuggestions.appendChild(li);
+            });
+            sopSuggestions.style.display = 'block';
+            sopActiveSugg = -1;
+        });
+
+        sopInputCct.addEventListener('keydown', function(e) {
+            var items = sopSuggestions.querySelectorAll('li');
+            if (!items.length) return;
+            if (e.key === 'ArrowDown') { sopActiveSugg = Math.min(sopActiveSugg + 1, items.length - 1); sopHighlightSugg(items); e.preventDefault(); }
+            if (e.key === 'ArrowUp')   { sopActiveSugg = Math.max(sopActiveSugg - 1, 0);                sopHighlightSugg(items); e.preventDefault(); }
+            if (e.key === 'Enter' && sopActiveSugg >= 0) {
+                var q = sopInputCct.value.trim().toUpperCase();
+                var m = CCT_DB.filter(function(e) { return e.cct.includes(q) || e.nombre.toUpperCase().includes(q); })[sopActiveSugg];
+                if (m) { sopSeleccionarCct(m); e.preventDefault(); }
+            }
+            if (e.key === 'Escape') { sopSuggestions.style.display = 'none'; }
+        });
+
+        sopInputCct.addEventListener('blur', function() {
+            setTimeout(function() { sopSuggestions.style.display = 'none'; }, 150);
+        });
+
+        sopInputCct.addEventListener('change', function() {
+            if (!sopCctEncontrada && sopInputCct.value.trim().length >= 8) {
+                sopStatusBox.className = 'sop-cct-status warn';
+                sopStatusBox.textContent = 'CCT no encontrada en nuestra base. Puedes capturar los datos manualmente.';
+                document.getElementById('sop-manual-fields').classList.add('visible');
+            }
+        });
+    }
+
+    function sopHighlightSugg(items) {
+        items.forEach(function(li, i) { li.classList.toggle('active', i === sopActiveSugg); });
+    }
+
+    function sopSeleccionarCct(m) {
+        sopInputCct.value = m.cct;
+        sopSuggestions.style.display = 'none';
+        document.getElementById('sop-sector-val').value  = m.sector;
+        document.getElementById('sop-zona-val').value    = m.zona || '';
+        document.getElementById('sop-escuela-val').value = m.nombre || '';
+        sopStatusBox.className = 'sop-cct-status found';
+        sopStatusBox.textContent = 'Sector ' + m.sector + (m.zona ? ' · Zona ' + m.zona : '') + ' · ' + m.nombre;
+        document.getElementById('sop-manual-fields').classList.remove('visible');
+        sopCctEncontrada = true;
+    }
+
+    function sopResetCct() {
+        document.getElementById('sop-sector-val').value  = '';
+        document.getElementById('sop-zona-val').value    = '';
+        document.getElementById('sop-escuela-val').value = '';
+        sopStatusBox.className = 'sop-cct-status';
+        sopCctEncontrada = false;
+    }
+
+    function sopActualizarZonas() {
+        var sector = document.getElementById('sop-sector-manual').value;
+        var zonaGroup  = document.getElementById('sop-zona-group');
+        var zonaSelect = document.getElementById('sop-zona-manual');
+        zonaSelect.innerHTML = '<option value="">— Selecciona zona —</option>';
+
+        if (!sector || sector === 'SEPRN') {
+            zonaGroup.style.display = 'none';
+            return;
+        }
+        var zonas = sopSectorZonas[sector] || [];
+        zonas.forEach(function(z) {
+            var o = document.createElement('option');
+            o.value = z; o.textContent = 'Zona ' + z;
+            zonaSelect.appendChild(o);
+        });
+        zonaGroup.style.display = 'block';
+    }
+
+    sopInitCctAutocomplete();
+
     function validarSoporteForm() {
         var ok = true;
         var campos = [
             { id: 'sop-nombre',      err: 'sop-nombre-error',      test: function(v) { return v.trim().length >= 3; } },
-            { id: 'sop-cct',         err: 'sop-cct-error',         test: function(v) { return v.trim().length >= 3; } },
-            { id: 'sop-funcion',     err: 'sop-funcion-error',     test: function(v) { return v.trim().length > 0; } },
             { id: 'sop-whatsapp',    err: 'sop-whatsapp-error',    test: function(v) { return /^\d{10}$/.test(v.trim()); } },
             { id: 'sop-urgencia',    err: 'sop-urgencia-error',    test: function(v) { return v !== ''; } },
             { id: 'sop-descripcion', err: 'sop-descripcion-error', test: function(v) { return v.trim().length >= 5; } }
@@ -1005,6 +1241,55 @@
                 errEl.classList.remove('visible');
             }
         });
+
+        // Función: select requerido; si es "Otro" el campo libre también es requerido
+        var funcionInput = document.getElementById('sop-funcion');
+        var funcionErr = document.getElementById('sop-funcion-error');
+        if (funcionInput.value === '') {
+            funcionInput.classList.add('error');
+            funcionErr.classList.add('visible');
+            ok = false;
+        } else {
+            funcionInput.classList.remove('error');
+            funcionErr.classList.remove('visible');
+        }
+        if (funcionInput.value === 'Otro') {
+            var otraInp = document.getElementById('sop-otra-funcion');
+            var otraErr = document.getElementById('sop-otra-funcion-error');
+            if (!otraInp.value.trim()) {
+                otraInp.classList.add('error');
+                otraErr.classList.add('visible');
+                ok = false;
+            } else {
+                otraInp.classList.remove('error');
+                otraErr.classList.remove('visible');
+            }
+        }
+
+        // CCT: válida por autocomplete, o datos manuales completos
+        var cctInput = document.getElementById('sop-cct');
+        var cctErr = document.getElementById('sop-cct-error');
+        var manualVisible = document.getElementById('sop-manual-fields').classList.contains('visible');
+        var cctOk;
+        if (sopCctEncontrada) {
+            cctOk = true;
+        } else if (manualVisible) {
+            var sector = document.getElementById('sop-sector-manual').value;
+            var zonaReq = sector && sector !== 'SEPRN';
+            var zona = document.getElementById('sop-zona-manual').value;
+            var escuela = document.getElementById('sop-escuela-manual').value.trim();
+            cctOk = cctInput.value.trim().length >= 3 && sector !== '' && (!zonaReq || zona !== '') && escuela !== '';
+        } else {
+            cctOk = false;
+        }
+        if (!cctOk) {
+            cctInput.classList.add('error');
+            cctErr.classList.add('visible');
+            ok = false;
+        } else {
+            cctInput.classList.remove('error');
+            cctErr.classList.remove('visible');
+        }
 
         // Correo es opcional, pero si se captura debe ser válido
         var correoInput = document.getElementById('sop-correo');
@@ -1033,10 +1318,18 @@
             return false;
         }
 
+        var manualVisible = document.getElementById('sop-manual-fields').classList.contains('visible');
+        var funcionVal = document.getElementById('sop-funcion').value === 'Otro'
+            ? document.getElementById('sop-otra-funcion').value.trim()
+            : document.getElementById('sop-funcion').value;
+
         var datos = {
             nombre: document.getElementById('sop-nombre').value,
             cct: document.getElementById('sop-cct').value,
-            funcion: document.getElementById('sop-funcion').value,
+            sector: manualVisible ? document.getElementById('sop-sector-manual').value : document.getElementById('sop-sector-val').value,
+            zona: manualVisible ? document.getElementById('sop-zona-manual').value : document.getElementById('sop-zona-val').value,
+            escuela: manualVisible ? document.getElementById('sop-escuela-manual').value.trim() : document.getElementById('sop-escuela-val').value,
+            funcion: funcionVal,
             whatsapp: document.getElementById('sop-whatsapp').value,
             correo: document.getElementById('sop-correo').value,
             urgencia: document.getElementById('sop-urgencia').value,
@@ -1058,6 +1351,10 @@
                 msg.classList.add('ok');
                 msg.textContent = 'Solicitud registrada (folio ' + data.folio + '). Un integrante de la OTDE te contactará en breve.';
                 document.getElementById('soporte-form').reset();
+                document.getElementById('sop-manual-fields').classList.remove('visible');
+                document.getElementById('sop-zona-group').style.display = 'none';
+                document.getElementById('sop-otra-funcion-group').style.display = 'none';
+                sopResetCct();
             } else {
                 msg.classList.add('error');
                 msg.textContent = 'No se pudo registrar la solicitud: ' + data.mensaje;

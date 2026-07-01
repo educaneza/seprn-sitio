@@ -18,8 +18,9 @@
 //      en la constante SOPORTE_APPS_SCRIPT_URL
 //
 // COLUMNAS DE LA HOJA:
-//   A Fecha | B Folio | C Nombre | D CCT/Centro de Trabajo
-//   E Función/Cargo | F WhatsApp | G Correo | H Descripción | I Urgencia
+//   A Fecha | B Folio | C Nombre | D CCT | E Sector | F Zona
+//   G Escuela/Unidad | H Función/Cargo | I WhatsApp | J Correo
+//   K Descripción | L Urgencia
 // ============================================================
 
 const HOJA_SOPORTE = 'Solicitudes_Soporte_2026';
@@ -44,6 +45,9 @@ function doPost(e) {
       folio,
       datos.nombre.trim(),
       datos.cct.trim().toUpperCase(),
+      (datos.sector || '').trim(),
+      (datos.zona || '').toString().trim(),
+      (datos.escuela || '').trim(),
       datos.funcion.trim(),
       datos.whatsapp.trim(),
       (datos.correo || '').trim(),
@@ -68,16 +72,17 @@ function obtenerHojaSoporte() {
   if (!hoja) {
     hoja = ss.insertSheet(HOJA_SOPORTE);
     hoja.appendRow([
-      'Fecha', 'Folio', 'Nombre', 'CCT/Centro de Trabajo',
-      'Función/Cargo', 'WhatsApp', 'Correo', 'Descripción', 'Urgencia'
+      'Fecha', 'Folio', 'Nombre', 'CCT', 'Sector', 'Zona',
+      'Escuela/Unidad', 'Función/Cargo', 'WhatsApp', 'Correo', 'Descripción', 'Urgencia'
     ]);
-    const header = hoja.getRange(1, 1, 1, 9);
+    const header = hoja.getRange(1, 1, 1, 12);
     header.setFontWeight('bold')
           .setBackground('#56212f')
           .setFontColor('#F9F8F5');
     hoja.setFrozenRows(1);
     hoja.setColumnWidth(3, 180); // Nombre
-    hoja.setColumnWidth(8, 320); // Descripción
+    hoja.setColumnWidth(7, 200); // Escuela/Unidad
+    hoja.setColumnWidth(11, 320); // Descripción
   }
 
   return hoja;
@@ -97,7 +102,7 @@ function generarFolioSoporte(hoja) {
 
 // ── Validar campos requeridos ──
 function validarCampos(d) {
-  const requeridos = ['nombre', 'cct', 'funcion', 'whatsapp', 'descripcion', 'urgencia'];
+  const requeridos = ['nombre', 'cct', 'escuela', 'funcion', 'whatsapp', 'descripcion', 'urgencia'];
   for (const campo of requeridos) {
     if (!d[campo] || !String(d[campo]).trim()) {
       throw new Error('Campo requerido: ' + campo);
@@ -129,7 +134,8 @@ function notificarTelegram(folio, d) {
       'Folio: ' + folio + '\n' +
       'Urgencia: ' + d.urgencia + '\n' +
       'Nombre: ' + d.nombre.trim() + '\n' +
-      'CCT: ' + d.cct.trim().toUpperCase() + '\n' +
+      'CCT: ' + d.cct.trim().toUpperCase() + (d.escuela ? ' — ' + d.escuela.trim() : '') + '\n' +
+      (d.sector ? 'Sector ' + d.sector + (d.zona ? ' · Zona ' + d.zona : '') + '\n' : '') +
       'Función: ' + d.funcion.trim() + '\n' +
       'WhatsApp: ' + d.whatsapp.trim() + ' — [Abrir chat](' + whatsappLink + ')\n' +
       (d.correo && d.correo.trim() ? 'Correo: ' + d.correo.trim() + '\n' : '') +
