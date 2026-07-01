@@ -19,7 +19,7 @@
 //
 // COLUMNAS DE LA HOJA:
 //   A Fecha | B Folio | C Nombre | D CCT/Centro de Trabajo
-//   E Función/Cargo | F Contacto | G Descripción | H Urgencia
+//   E Función/Cargo | F WhatsApp | G Correo | H Descripción | I Urgencia
 // ============================================================
 
 const HOJA_SOPORTE = 'Solicitudes_Soporte_2026';
@@ -45,7 +45,8 @@ function doPost(e) {
       datos.nombre.trim(),
       datos.cct.trim().toUpperCase(),
       datos.funcion.trim(),
-      datos.contacto.trim(),
+      datos.whatsapp.trim(),
+      (datos.correo || '').trim(),
       datos.descripcion.trim(),
       datos.urgencia.trim()
     ]);
@@ -68,15 +69,15 @@ function obtenerHojaSoporte() {
     hoja = ss.insertSheet(HOJA_SOPORTE);
     hoja.appendRow([
       'Fecha', 'Folio', 'Nombre', 'CCT/Centro de Trabajo',
-      'Función/Cargo', 'Contacto', 'Descripción', 'Urgencia'
+      'Función/Cargo', 'WhatsApp', 'Correo', 'Descripción', 'Urgencia'
     ]);
-    const header = hoja.getRange(1, 1, 1, 8);
+    const header = hoja.getRange(1, 1, 1, 9);
     header.setFontWeight('bold')
           .setBackground('#56212f')
           .setFontColor('#F9F8F5');
     hoja.setFrozenRows(1);
     hoja.setColumnWidth(3, 180); // Nombre
-    hoja.setColumnWidth(7, 320); // Descripción
+    hoja.setColumnWidth(8, 320); // Descripción
   }
 
   return hoja;
@@ -96,11 +97,17 @@ function generarFolioSoporte(hoja) {
 
 // ── Validar campos requeridos ──
 function validarCampos(d) {
-  const requeridos = ['nombre', 'cct', 'funcion', 'contacto', 'descripcion', 'urgencia'];
+  const requeridos = ['nombre', 'cct', 'funcion', 'whatsapp', 'descripcion', 'urgencia'];
   for (const campo of requeridos) {
     if (!d[campo] || !String(d[campo]).trim()) {
       throw new Error('Campo requerido: ' + campo);
     }
+  }
+  if (!/^\d{10}$/.test(d.whatsapp.trim())) {
+    throw new Error('WhatsApp inválido: ' + d.whatsapp);
+  }
+  if (d.correo && String(d.correo).trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.correo.trim())) {
+    throw new Error('Correo inválido: ' + d.correo);
   }
 }
 
@@ -114,6 +121,8 @@ function notificarTelegram(folio, d) {
 
     const urgenciaEmoji = { 'Alta': '🔴', 'Media': '🟡', 'Baja': '🟢' };
     const marca = urgenciaEmoji[d.urgencia] || '⚪';
+    const whatsappDigits = d.whatsapp.trim().replace(/\D/g, '');
+    const whatsappLink = 'https://wa.me/52' + whatsappDigits;
 
     const mensaje =
       marca + ' *Nueva solicitud de Soporte Remoto*\n' +
@@ -122,7 +131,8 @@ function notificarTelegram(folio, d) {
       'Nombre: ' + d.nombre.trim() + '\n' +
       'CCT: ' + d.cct.trim().toUpperCase() + '\n' +
       'Función: ' + d.funcion.trim() + '\n' +
-      'Contacto: ' + d.contacto.trim() + '\n' +
+      'WhatsApp: ' + d.whatsapp.trim() + ' — [Abrir chat](' + whatsappLink + ')\n' +
+      (d.correo && d.correo.trim() ? 'Correo: ' + d.correo.trim() + '\n' : '') +
       'Descripción: ' + d.descripcion.trim();
 
     UrlFetchApp.fetch('https://api.telegram.org/bot' + token + '/sendMessage', {

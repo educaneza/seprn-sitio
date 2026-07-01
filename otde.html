@@ -286,6 +286,14 @@
             border-color: #9F2241;
             box-shadow: 0 0 0 3px rgba(159,34,65,0.12);
         }
+        .soporte-form-group input.error,
+        .soporte-form-group select.error,
+        .soporte-form-group textarea.error {
+            border-color: #dc2626;
+        }
+        .soporte-field-hint { font-size: 13px; color: #6b7280; margin-top: 6px; }
+        .soporte-field-error { font-size: 13px; color: #dc2626; margin-top: 6px; display: none; }
+        .soporte-field-error.visible { display: block; }
         .soporte-submit-msg {
             margin-top: 16px;
             padding: 14px 18px;
@@ -591,22 +599,33 @@
             </button>
 
             <div id="form-soporte" class="form-container">
-                <form id="soporte-form" onsubmit="return enviarSolicitudSoporte(event)">
+                <form id="soporte-form" onsubmit="return enviarSolicitudSoporte(event)" novalidate>
                     <div class="soporte-form-group">
                         <label for="sop-nombre">Nombre completo<span class="req">*</span></label>
                         <input type="text" id="sop-nombre" required>
+                        <div class="soporte-field-error" id="sop-nombre-error">Ingresa tu nombre completo.</div>
                     </div>
                     <div class="soporte-form-group">
                         <label for="sop-cct">CCT o Centro de Trabajo<span class="req">*</span></label>
-                        <input type="text" id="sop-cct" required>
+                        <input type="text" id="sop-cct" placeholder="15DPR0000X" style="text-transform:uppercase;" required>
+                        <div class="soporte-field-error" id="sop-cct-error">Ingresa una CCT o centro de trabajo válido.</div>
                     </div>
                     <div class="soporte-form-group">
                         <label for="sop-funcion">Función/Cargo<span class="req">*</span></label>
                         <input type="text" id="sop-funcion" required>
+                        <div class="soporte-field-error" id="sop-funcion-error">Ingresa tu función o cargo.</div>
                     </div>
                     <div class="soporte-form-group">
-                        <label for="sop-contacto">Teléfono o correo de contacto<span class="req">*</span></label>
-                        <input type="text" id="sop-contacto" required>
+                        <label for="sop-whatsapp">WhatsApp<span class="req">*</span></label>
+                        <input type="tel" id="sop-whatsapp" placeholder="5512345678" maxlength="10" inputmode="numeric" required>
+                        <div class="soporte-field-hint">10 dígitos, sin espacios ni guiones. Te contactaremos por este medio.</div>
+                        <div class="soporte-field-error" id="sop-whatsapp-error">Ingresa un número de WhatsApp válido (10 dígitos).</div>
+                    </div>
+                    <div class="soporte-form-group">
+                        <label for="sop-correo">Correo electrónico</label>
+                        <input type="email" id="sop-correo" placeholder="tucorreo@dee.edu.mx">
+                        <div class="soporte-field-hint">Opcional, para darte seguimiento por escrito.</div>
+                        <div class="soporte-field-error" id="sop-correo-error">Ingresa un correo válido.</div>
                     </div>
                     <div class="soporte-form-group">
                         <label for="sop-urgencia">Urgencia<span class="req">*</span></label>
@@ -616,10 +635,12 @@
                             <option value="Media">Media — puedo esperar unas horas</option>
                             <option value="Baja">Baja — puede esperar 1-2 días</option>
                         </select>
+                        <div class="soporte-field-error" id="sop-urgencia-error">Selecciona un nivel de urgencia.</div>
                     </div>
                     <div class="soporte-form-group">
                         <label for="sop-descripcion">Describe el problema<span class="req">*</span></label>
                         <textarea id="sop-descripcion" required></textarea>
+                        <div class="soporte-field-error" id="sop-descripcion-error">Describe brevemente el problema.</div>
                     </div>
 
                     <button type="submit" class="form-button" id="btn-soporte-submit">
@@ -961,6 +982,46 @@
         }
     }
 
+    function validarSoporteForm() {
+        var ok = true;
+        var campos = [
+            { id: 'sop-nombre',      err: 'sop-nombre-error',      test: function(v) { return v.trim().length >= 3; } },
+            { id: 'sop-cct',         err: 'sop-cct-error',         test: function(v) { return v.trim().length >= 3; } },
+            { id: 'sop-funcion',     err: 'sop-funcion-error',     test: function(v) { return v.trim().length > 0; } },
+            { id: 'sop-whatsapp',    err: 'sop-whatsapp-error',    test: function(v) { return /^\d{10}$/.test(v.trim()); } },
+            { id: 'sop-urgencia',    err: 'sop-urgencia-error',    test: function(v) { return v !== ''; } },
+            { id: 'sop-descripcion', err: 'sop-descripcion-error', test: function(v) { return v.trim().length >= 5; } }
+        ];
+
+        campos.forEach(function(c) {
+            var input = document.getElementById(c.id);
+            var errEl = document.getElementById(c.err);
+            if (!c.test(input.value)) {
+                input.classList.add('error');
+                errEl.classList.add('visible');
+                ok = false;
+            } else {
+                input.classList.remove('error');
+                errEl.classList.remove('visible');
+            }
+        });
+
+        // Correo es opcional, pero si se captura debe ser válido
+        var correoInput = document.getElementById('sop-correo');
+        var correoErr = document.getElementById('sop-correo-error');
+        var correoVal = correoInput.value.trim();
+        if (correoVal !== '' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoVal)) {
+            correoInput.classList.add('error');
+            correoErr.classList.add('visible');
+            ok = false;
+        } else {
+            correoInput.classList.remove('error');
+            correoErr.classList.remove('visible');
+        }
+
+        return ok;
+    }
+
     async function enviarSolicitudSoporte(evt) {
         evt.preventDefault();
         var msg = document.getElementById('soporte-msg');
@@ -968,11 +1029,16 @@
         msg.className = 'soporte-submit-msg';
         msg.textContent = '';
 
+        if (!validarSoporteForm()) {
+            return false;
+        }
+
         var datos = {
             nombre: document.getElementById('sop-nombre').value,
             cct: document.getElementById('sop-cct').value,
             funcion: document.getElementById('sop-funcion').value,
-            contacto: document.getElementById('sop-contacto').value,
+            whatsapp: document.getElementById('sop-whatsapp').value,
+            correo: document.getElementById('sop-correo').value,
             urgencia: document.getElementById('sop-urgencia').value,
             descripcion: document.getElementById('sop-descripcion').value
         };

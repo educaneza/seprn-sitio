@@ -111,7 +111,8 @@ La sesión más reciente siempre debe ser el acordeón activo/abierto al cargar 
 ### `apps-script/soporte-remoto.gs`
 - Conectado a Google Sheets (hoja `Solicitudes_Soporte_2026`, autocreada si no existe)
 - Folio: `OTDE-SOP-NNNN` (secuencial, autoincremental)
-- Columnas A-H: Fecha | Folio | Nombre | CCT/Centro de Trabajo | Función/Cargo | Contacto | Descripción | Urgencia
+- Columnas A-I: Fecha | Folio | Nombre | CCT/Centro de Trabajo | Función/Cargo | WhatsApp | Correo | Descripción | Urgencia
+- WhatsApp es obligatorio (regex `/^\d{10}$/`, sin lada); Correo es opcional. La notificación de Telegram incluye un link `https://wa.me/52<whatsapp>` para abrir el chat con un tap
 - Al recibir `doPost`, además de guardar en Sheets envía una notificación push vía **bot de Telegram** (`notificarTelegram`); si Telegram falla, el registro en Sheets no se pierde (try/catch silencioso)
 - Requiere Propiedades del script configuradas manualmente en el editor de Apps Script (Project Settings → Script Properties): `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID` — instrucciones completas para obtenerlas están al final del propio archivo `.gs`
 - Usado por el formulario "Solicitar Soporte Técnico Remoto" en la pestaña Soporte Técnico de `otde.html`; responde `Content-Type: text/plain` para evitar preflight CORS
@@ -143,7 +144,8 @@ Página autónoma (no importa `styles.css` — estilos inline completos). Vincul
 ## `otde.html` — Pestañas "Licencias Office" y Soporte Técnico Remoto (jul 2026)
 - **Licencias Office**: nueva pestaña de servicio con instalador `descargas/Instalador_Office_2019_OTDE.exe` (self-extracting, incluye `Instalador_Office_OTDE.bat` + Office Deployment Tool) que valida por CCT contra una base de datos publicada en Sheets/CSV. El texto evita atribuir la causa a SEIEM directamente (se enmarca como "actualización del esquema de licenciamiento institucional")
 - **Guía rápida de instalación**: los 5 pasos del mini-manual están basados en el flujo real del `.bat` (autoelevación, validación CCT, desinstalación de Office previo si existe, instalación de Office 2019 Professional Plus, aviso de privacidad) — si el `.bat` cambia, actualizar el manual para que siga siendo preciso
-- **Soporte Técnico Remoto**: se mantiene TeamViewer (no Quick Assist) como herramienta de control remoto. Se agregó un formulario "Solicitar Soporte Técnico Remoto" (nombre, CCT, función, contacto, urgencia, descripción) que envía a `apps-script/soporte-remoto.gs`
+- **Soporte Técnico Remoto**: se mantiene TeamViewer (no Quick Assist) como herramienta de control remoto. Se agregó un formulario "Solicitar Soporte Técnico Remoto" (nombre, CCT, función, WhatsApp, correo opcional, urgencia, descripción) que envía a `apps-script/soporte-remoto.gs`
+- **Validación de formulario**: el `<form>` usa `novalidate` + validación 100% en JS (`validarSoporteForm()`), mismo patrón que `jornada-verano-2026.html` — necesario porque los inputs `type="email"`/`required` nativos interceptan el `submit` antes de que corra el JS si no se desactiva la validación del navegador
 - **Referencia cruzada**: la pestaña Office enlaza a Soporte si hay problemas durante la instalación; Soporte enlaza de vuelta a Office si la consulta es sobre licencias — ambos via `showServicio()` con `onclick` (no back-forward real de navegador)
 
 ## Pendientes (al 1 jul 2026)
