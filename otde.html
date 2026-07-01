@@ -688,16 +688,19 @@
                                 <option value="XIII">Sector XIII</option>
                                 <option value="SEPRN">SEPRN (Subdirección / Jefatura)</option>
                             </select>
+                            <div class="soporte-field-error" id="sop-sector-manual-error">Selecciona un sector.</div>
                         </div>
                         <div class="soporte-form-group" id="sop-zona-group" style="display:none;">
                             <label for="sop-zona-manual">Zona escolar<span class="req">*</span></label>
                             <select id="sop-zona-manual">
                                 <option value="">— Selecciona zona —</option>
                             </select>
+                            <div class="soporte-field-error" id="sop-zona-manual-error">Selecciona una zona.</div>
                         </div>
                         <div class="soporte-form-group">
                             <label for="sop-escuela-manual">Nombre de la escuela o unidad<span class="req">*</span></label>
                             <input type="text" id="sop-escuela-manual" placeholder="Nombre oficial">
+                            <div class="soporte-field-error" id="sop-escuela-manual-error">Ingresa el nombre de la escuela o unidad.</div>
                         </div>
                     </div>
 
@@ -1266,29 +1269,68 @@
             }
         }
 
-        // CCT: válida por autocomplete, o datos manuales completos
+        // CCT: válida por autocomplete, o datos manuales completos.
+        // Cada campo del fallback manual valida y muestra su propio error
+        // (antes todo se agrupaba en el mensaje del CCT, incluso cuando lo
+        // que faltaba era, por ejemplo, la Zona).
         var cctInput = document.getElementById('sop-cct');
         var cctErr = document.getElementById('sop-cct-error');
         var manualVisible = document.getElementById('sop-manual-fields').classList.contains('visible');
-        var cctOk;
-        if (sopCctEncontrada) {
-            cctOk = true;
-        } else if (manualVisible) {
-            var sector = document.getElementById('sop-sector-manual').value;
-            var zonaReq = sector && sector !== 'SEPRN';
-            var zona = document.getElementById('sop-zona-manual').value;
-            var escuela = document.getElementById('sop-escuela-manual').value.trim();
-            cctOk = cctInput.value.trim().length >= 3 && sector !== '' && (!zonaReq || zona !== '') && escuela !== '';
+        var cctTextOk = cctInput.value.trim().length >= 3;
+
+        if (sopCctEncontrada || (manualVisible && cctTextOk)) {
+            cctInput.classList.remove('error');
+            cctErr.classList.remove('visible');
         } else {
-            cctOk = false;
-        }
-        if (!cctOk) {
             cctInput.classList.add('error');
             cctErr.classList.add('visible');
             ok = false;
-        } else {
-            cctInput.classList.remove('error');
-            cctErr.classList.remove('visible');
+        }
+
+        if (manualVisible) {
+            var sectorInput = document.getElementById('sop-sector-manual');
+            var zonaInput = document.getElementById('sop-zona-manual');
+            var escuelaInput = document.getElementById('sop-escuela-manual');
+            var sectorErr = document.getElementById('sop-sector-manual-error');
+            var zonaErr = document.getElementById('sop-zona-manual-error');
+            var escuelaErr = document.getElementById('sop-escuela-manual-error');
+            var sector = sectorInput.value;
+            var zona = zonaInput.value;
+            var escuela = escuelaInput.value.trim();
+            var zonaReq = sector && sector !== 'SEPRN';
+
+            if (!sector) {
+                sectorInput.classList.add('error');
+                sectorErr.classList.add('visible');
+                ok = false;
+            } else {
+                sectorInput.classList.remove('error');
+                sectorErr.classList.remove('visible');
+            }
+
+            if (zonaReq && !zona) {
+                zonaInput.classList.add('error');
+                zonaErr.classList.add('visible');
+                ok = false;
+            } else {
+                zonaInput.classList.remove('error');
+                zonaErr.classList.remove('visible');
+            }
+
+            if (!escuela) {
+                escuelaInput.classList.add('error');
+                escuelaErr.classList.add('visible');
+                ok = false;
+            } else {
+                escuelaInput.classList.remove('error');
+                escuelaErr.classList.remove('visible');
+            }
+        } else if (!sopCctEncontrada && cctTextOk) {
+            // CCT escrita pero no confirmada del dropdown → forzar apertura de manual (igual que jornada-verano)
+            document.getElementById('sop-manual-fields').classList.add('visible');
+            document.getElementById('sop-cct-status').className = 'sop-cct-status warn';
+            document.getElementById('sop-cct-status').textContent = 'Selecciona tu escuela de la lista o captura los datos manualmente.';
+            ok = false;
         }
 
         // Correo es opcional, pero si se captura debe ser válido
@@ -1354,6 +1396,8 @@
                 document.getElementById('sop-manual-fields').classList.remove('visible');
                 document.getElementById('sop-zona-group').style.display = 'none';
                 document.getElementById('sop-otra-funcion-group').style.display = 'none';
+                document.querySelectorAll('#soporte-form .error').forEach(function(el) { el.classList.remove('error'); });
+                document.querySelectorAll('#soporte-form .soporte-field-error.visible').forEach(function(el) { el.classList.remove('visible'); });
                 sopResetCct();
             } else {
                 msg.classList.add('error');
