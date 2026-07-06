@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Centro de Formación Docente | OTDE NEZA</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <meta name="description" content="Centro de Formación Docente OTDE NEZA — webinars, seminarios, diplomados, cursos autogestivos y proyectos didácticos para docentes de la Región de Nezahualcóyotl.">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --midnight:  #0C1A2E;
+      --guinda:    #56212f;
+      --acento:    #9F2241;
+      --surface:   #F9F8F5;
+      --text:      #1a1a2e;
+      --muted:     #6b7280;
+      --border:    #d1d5db;
+      --error:     #dc2626;
+      --success:   #065f46;
+      --success-bg:#d1fae5;
+      --warn-bg:   #fffbeb;
+      --warn-text: #92400e;
+    }
+
+    body {
+      background: #f3f4f6;
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    .site-header {
+      background: var(--midnight);
+      border-bottom: 2px solid var(--acento);
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .site-header .brand { color: var(--surface); font-size: 1.05rem; font-weight: 700; letter-spacing: .05em; }
+    .site-header .brand span { color: var(--acento); }
+    .site-header .back-link { margin-left: auto; color: #a0aec0; text-decoration: none; font-size: .85rem; }
+    .site-header .back-link:hover { color: var(--surface); text-decoration: underline; }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(135deg, #0C1A2E 0%, #1a0d12 60%, #2d0e1e 100%);
+      color: var(--surface);
+      padding: 3rem 1.5rem 2.5rem;
+      text-align: center;
+    }
+    .hero .badge {
+      display: inline-block;
+      background: var(--acento);
+      color: #fff;
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: .3rem 1rem;
+      border-radius: 999px;
+      margin-bottom: 1rem;
+    }
+    .hero h1 { font-size: clamp(1.5rem, 4vw, 2.2rem); font-weight: 700; line-height: 1.2; margin-bottom: .75rem; }
+    .hero h1 em { color: #f4a4bc; font-style: normal; }
+    .hero .subtitle { font-size: .95rem; opacity: .8; margin-bottom: 1.5rem; }
+    .hero-meta { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem 1.5rem; font-size: .8rem; opacity: .75; }
+    .hero-meta .m { display: flex; align-items: center; gap: .4rem; }
+
+    /* ── STEPS INDICATOR ── */
+    .steps-wrapper { background: var(--midnight); padding: 1.25rem 1.5rem 1.5rem; border-bottom: 1px solid rgba(159,34,65,.3); }
+    .steps { display: flex; align-items: center; justify-content: center; max-width: 400px; margin: 0 auto; gap: 0; }
+    .step { display: flex; flex-direction: column; align-items: center; gap: .3rem; flex-shrink: 0; }
+    .step-num {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 2px solid #334155; background: transparent; color: #64748b;
+      font-size: .85rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .25s;
+    }
+    .step-label { font-size: .68rem; color: #64748b; font-weight: 500; text-align: center; letter-spacing: .03em; transition: color .25s; max-width: 90px; line-height: 1.3; }
+    .step.active .step-num { border-color: var(--acento); background: var(--acento); color: #fff; }
+    .step.active .step-label { color: #f4a4bc; }
+    .step.done .step-num { border-color: #22c55e; background: #22c55e; color: #fff; }
+    .step.done .step-label { color: #86efac; }
+    .step-line { flex: 1; height: 2px; background: #334155; margin: 0 .5rem; margin-bottom: 1.2rem; transition: background .25s; }
+    .step-line.done { background: #22c55e; }
+
+    /* ── CONTAINER ── */
+    .container { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+
+    /* ── PASO HEADER ── */
+    .paso-header { text-align: center; margin-bottom: 1.75rem; }
+    .paso-header h2 { font-size: 1.25rem; font-weight: 700; color: var(--midnight); margin-bottom: .35rem; }
+    .paso-header p { font-size: .9rem; color: var(--muted); }
+
+    /* ── COURSE CARDS ── */
+    .cursos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: .75rem; }
+    @media (max-width: 560px) { .cursos-grid { grid-template-columns: 1fr; } }
+
+    .curso-card {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      cursor: pointer;
+      transition: border-color .2s, box-shadow .2s, transform .18s;
+      user-select: none;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .curso-card:hover { border-color: var(--acento); box-shadow: 0 8px 24px rgba(159,34,65,.18); transform: translateY(-3px); }
+    .curso-card.selected { border-color: var(--acento); border-width: 2.5px; box-shadow: 0 6px 22px rgba(159,34,65,.22); }
+
+    .cc-header { padding: 1.375rem 1.125rem; display: flex; align-items: center; justify-content: center; min-height: 88px; position: relative; flex-shrink: 0; }
+    .cc-icon { width: 50px; height: 50px; background: rgba(255,255,255,.18); border-radius: 14px; display: flex; align-items: center; justify-content: center; transition: transform .18s; }
+    .curso-card:hover .cc-icon { transform: scale(1.08); }
+    .cc-icon svg { width: 26px; height: 26px; color: #fff; }
+
+    .cc-sel-badge {
+      position: absolute; top: .6rem; right: .6rem;
+      background: rgba(255,255,255,.96); color: #15803d;
+      font-size: .62rem; font-weight: 800; padding: .18rem .55rem; border-radius: 999px;
+      letter-spacing: .05em; text-transform: uppercase;
+      opacity: 0; transform: scale(.75); transition: opacity .18s, transform .18s; pointer-events: none;
+    }
+    .curso-card.selected .cc-sel-badge { opacity: 1; transform: scale(1); }
+
+    .cc-body { padding: .875rem 1rem 1.1rem; flex: 1; display: flex; flex-direction: column; gap: .4rem; }
+    .cc-categoria { font-size: .66rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--acento); }
+    .curso-nombre { font-size: .875rem; font-weight: 700; color: var(--text); line-height: 1.35; }
+    .cc-info { display: flex; flex-direction: column; gap: .25rem; margin-top: .1rem; }
+    .cc-pill { display: inline-flex; align-items: center; gap: .3rem; font-size: .72rem; font-weight: 600; }
+    .cc-pill svg { width: 11px; height: 11px; flex-shrink: 0; opacity: .7; }
+    .cc-pill-fecha { color: #475569; }
+    .cc-pill-modalidad { color: var(--guinda); }
+
+    .seleccion-counter { text-align: center; font-size: .82rem; font-weight: 600; color: var(--muted); margin-bottom: 1.1rem; min-height: 1.2em; transition: color .2s; }
+    .seleccion-counter.activo { color: var(--acento); }
+
+    .catalogo-estado { text-align: center; padding: 2.5rem 1rem; color: var(--muted); font-size: .9rem; }
+    .catalogo-spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--acento); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 1rem; }
+
+    /* ── BUTTONS ── */
+    .btn-primary {
+      display: block; width: 100%; padding: .875rem; background: var(--acento); color: #fff;
+      border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer;
+      transition: background .2s, transform .1s, opacity .2s; text-align: center; text-decoration: none;
+    }
+    .btn-primary:hover:not(:disabled) { background: var(--guinda); }
+    .btn-primary:active:not(:disabled) { transform: scale(.98); }
+    .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+
+    .btn-secondary {
+      display: block; width: 100%; padding: .875rem; background: transparent; color: var(--acento);
+      border: 2px solid var(--acento); border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer;
+      transition: background .2s; text-align: center; text-decoration: none;
+    }
+    .btn-secondary:hover { background: rgba(159,34,65,.06); }
+
+    /* ── CARD / PANEL ── */
+    .card { background: var(--surface); border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 16px rgba(0,0,0,.08); margin-bottom: 1rem; }
+
+    /* ── RESUMEN DE SELECCIÓN (paso 2) ── */
+    .resumen-curso { background: #fdf2f5; border: 1.5px solid var(--acento); border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 1.25rem; }
+    .resumen-curso .rc-titulo { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--acento); margin-bottom: .5rem; }
+    .resumen-curso ul { list-style: none; }
+    .resumen-curso li { font-size: .875rem; color: var(--guinda); font-weight: 600; padding: .2rem 0; }
+    .resumen-curso li span { display: block; font-size: .75rem; color: var(--muted); font-weight: 500; }
+
+    /* ── FORM ── */
+    .form-section-title {
+      font-size: .8rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .07em;
+      margin: 1.5rem 0 .875rem; padding-bottom: .35rem; border-bottom: 1px solid var(--border);
+    }
+    .form-section-title:first-of-type { margin-top: 0; }
+    .form-group { margin-bottom: 1.1rem; }
+    label { display: block; font-size: .82rem; font-weight: 600; color: var(--text); margin-bottom: .3rem; }
+    label .req { color: var(--error); margin-left: 2px; }
+
+    input, select {
+      width: 100%; padding: .65rem .85rem; border: 1.5px solid var(--border); border-radius: 7px;
+      font-size: .95rem; color: var(--text); background: #fff; transition: border-color .15s;
+      -webkit-appearance: none; appearance: none;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--acento); box-shadow: 0 0 0 3px rgba(159,34,65,.12); }
+    input.error, select.error { border-color: var(--error); }
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right .85rem center; padding-right: 2.5rem;
+    }
+    .field-hint { font-size: .75rem; color: var(--muted); margin-top: .3rem; }
+    .field-error { font-size: .75rem; color: var(--error); margin-top: .3rem; display: none; }
+    .field-error.visible { display: block; }
+
+    /* ── CCT AUTOCOMPLETE ── */
+    .cct-wrapper { position: relative; }
+    #cct-suggestions {
+      position: absolute; top: 100%; left: 0; right: 0; background: #fff;
+      border: 1.5px solid var(--acento); border-top: none; border-radius: 0 0 7px 7px;
+      z-index: 100; max-height: 200px; overflow-y: auto; display: none; list-style: none;
+    }
+    #cct-suggestions li { padding: .5rem .85rem; font-size: .85rem; cursor: pointer; border-bottom: 1px solid #f0f0f0; }
+    #cct-suggestions li:last-child { border-bottom: none; }
+    #cct-suggestions li:hover, #cct-suggestions li.active { background: #fdf2f5; }
+    #cct-suggestions .sg-code { font-family: monospace; font-weight: 600; color: var(--acento); }
+    #cct-suggestions .sg-name { color: var(--muted); font-size: .78rem; display: block; }
+
+    .cct-status { font-size: .78rem; padding: .35rem .7rem; border-radius: 5px; margin-top: .35rem; display: none; }
+    .cct-status.found { background: var(--success-bg); color: var(--success); display: block; }
+    .cct-status.warn  { background: var(--warn-bg); color: var(--warn-text); display: block; }
+
+    .manual-fields { background: var(--warn-bg); border: 1px solid #fcd34d; border-radius: 8px; padding: 1rem; margin-top: .75rem; display: none; }
+    .manual-fields.visible { display: block; }
+    .manual-fields .manual-aviso { font-size: .8rem; color: var(--warn-text); font-weight: 500; margin-bottom: .875rem; }
+
+    /* ── SUBMIT ── */
+    .btn-submit {
+      width: 100%; padding: .9rem; background: var(--acento); color: #fff; border: none; border-radius: 8px;
+      font-size: 1rem; font-weight: 700; cursor: pointer; transition: background .2s, transform .1s; margin-top: .75rem;
+    }
+    .btn-submit:hover:not(:disabled) { background: var(--guinda); }
+    .btn-submit:active:not(:disabled) { transform: scale(.98); }
+    .btn-submit:disabled { opacity: .45; cursor: not-allowed; }
+
+    .form-footer { font-size: .75rem; color: var(--muted); text-align: center; margin-top: .875rem; line-height: 1.5; }
+
+    /* ── SPINNER ── */
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2.5px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: .4rem; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── CONFIRMACIÓN ── */
+    #paso-confirmacion { display: none; text-align: center; }
+    .check-icon { width: 68px; height: 68px; background: #22c55e; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1.25rem; }
+    .check-icon svg { width: 34px; height: 34px; }
+    #paso-confirmacion h2 { font-size: 1.5rem; font-weight: 700; color: var(--midnight); margin-bottom: .5rem; }
+    #paso-confirmacion .conf-sub { color: var(--muted); font-size: .95rem; margin-bottom: 1.25rem; }
+
+    .folio-item {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 1rem 1.25rem; text-align: left; margin-bottom: .875rem;
+    }
+    .folio-item .fi-curso { font-size: .875rem; font-weight: 700; color: var(--guinda); margin-bottom: .35rem; }
+    .folio-item .fi-folio {
+      font-family: 'Courier New', monospace; font-size: 1.1rem; font-weight: 700;
+      color: var(--acento); letter-spacing: .05em;
+    }
+    .folio-item .fi-dup { font-size: .78rem; color: var(--warn-text); margin-top: .35rem; }
+    .folio-item .fi-liga { display: inline-block; margin-top: .6rem; font-size: .82rem; color: var(--midnight); font-weight: 600; text-decoration: none; border-bottom: 1.5px solid var(--acento); }
+    .folio-item .fi-liga:hover { color: var(--acento); }
+
+    .error-global { background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px; padding: .875rem 1rem; font-size: .875rem; color: #991b1b; margin-bottom: 1rem; display: none; }
+    .error-global.visible { display: block; }
+
+    @media (max-width: 480px) { .card { padding: 1.25rem 1rem; } .step-label { font-size: .62rem; max-width: 70px; } }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="brand">OTDE <span>NEZA</span></div>
+  <a href="otde.html" class="back-link">← Tecnología Educativa</a>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <span class="badge">OTDE NEZA · Centro de Formación Docente</span>
+  <h1>Formación continua<br><em>para docentes de la región</em></h1>
+  <p class="subtitle">Webinars, seminarios, diplomados, cursos autogestivos y proyectos didácticos en un solo lugar</p>
+  <div class="hero-meta">
+    <span class="m">
+      <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
+      Región de Nezahualcóyotl
+    </span>
+  </div>
+</section>
+
+<!-- STEPS -->
+<div class="steps-wrapper">
+  <div class="steps">
+    <div class="step active" id="step-ind-1">
+      <div class="step-num">1</div>
+      <div class="step-label">Elige tu curso</div>
+    </div>
+    <div class="step-line" id="line-1-2"></div>
+    <div class="step" id="step-ind-2">
+      <div class="step-num">2</div>
+      <div class="step-label">Tus datos</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN CONTAINER -->
+<div class="container">
+
+  <!-- ══ PASO 1: SELECCIÓN DE CURSO(S) ══ -->
+  <div id="paso-1">
+    <div class="paso-header">
+      <h2>Selecciona uno o varios cursos</h2>
+      <p>Toca la tarjeta del curso o webinar al que deseas inscribirte</p>
+    </div>
+
+    <div id="catalogo-cargando" class="catalogo-estado">
+      <div class="catalogo-spinner"></div>
+      Cargando catálogo de cursos…
+    </div>
+
+    <div id="catalogo-vacio" class="catalogo-estado" style="display:none;">
+      No hay cursos disponibles en este momento. Vuelve a consultar pronto.
+    </div>
+
+    <div id="catalogo-error" class="catalogo-estado" style="display:none;">
+      No se pudo cargar el catálogo. <button class="btn-secondary" style="width:auto;display:inline-block;padding:.4rem 1rem;margin-top:.75rem;" onclick="cargarCatalogo()">Reintentar</button>
+    </div>
+
+    <div class="cursos-grid" id="cursos-grid" style="display:none;"></div>
+
+    <p class="seleccion-counter" id="sel-counter">Puedes seleccionar uno o varios cursos</p>
+
+    <button class="btn-primary" id="btn-paso1" disabled onclick="irPaso2()">
+      Continuar →
+    </button>
+  </div>
+
+  <!-- ══ PASO 2: FORMULARIO OTDE ══ -->
+  <div id="paso-2" style="display:none;">
+    <div class="paso-header">
+      <h2>Regístrate con OTDE NEZA</h2>
+      <p>Estos datos nos permiten dar seguimiento y generar reportes</p>
+    </div>
+
+    <div class="resumen-curso">
+      <div class="rc-titulo" id="rc-titulo">Curso seleccionado</div>
+      <ul id="rc-lista"></ul>
+    </div>
+
+    <div class="card">
+      <div class="error-global" id="error-global"></div>
+
+      <form id="form-otde" onsubmit="enviarFormulario(event)" novalidate>
+
+        <p class="form-section-title">Datos personales</p>
+
+        <div class="form-group">
+          <label for="nombre">Nombre completo <span class="req">*</span></label>
+          <input type="text" id="nombre" placeholder="Como aparece en documentos oficiales" autocomplete="name" required>
+          <div class="field-error" id="nombre-error">Este campo es requerido.</div>
+        </div>
+
+        <div class="form-group">
+          <label for="rfc">RFC <span class="req">*</span></label>
+          <input type="text" id="rfc" placeholder="ABCD000000ABC" maxlength="13" autocomplete="off" required style="text-transform:uppercase;font-family:monospace;">
+          <div class="field-hint">13 caracteres (personas físicas). Ej. HEGJ850101MV2</div>
+          <div class="field-error" id="rfc-error">RFC inválido. Verifica el formato.</div>
+        </div>
+
+        <div class="form-group">
+          <label for="funcion">Función <span class="req">*</span></label>
+          <select id="funcion" required onchange="toggleOtraFuncion()">
+            <option value="">— Selecciona una opción —</option>
+            <option>Docente</option>
+            <option>Director(a)</option>
+            <option>Subdirector(a)</option>
+            <option>ATP (Asesor Técnico Pedagógico)</option>
+            <option>Supervisor(a)</option>
+            <option>Jefe(a) de Sector</option>
+            <option>Personal de apoyo (PAAE)</option>
+            <option>Otro</option>
+          </select>
+          <div class="field-error" id="funcion-error">Selecciona una función.</div>
+          <div id="otra-funcion-group" style="display:none;margin-top:.65rem;">
+            <input type="text" id="otra-funcion" placeholder="Especifica tu función" maxlength="80">
+            <div class="field-error" id="otra-funcion-error">Especifica tu función.</div>
+          </div>
+        </div>
+
+        <p class="form-section-title">Centro de trabajo</p>
+
+        <div class="form-group">
+          <label for="cct">Clave de Centro de Trabajo (CCT) <span class="req">*</span></label>
+          <div class="cct-wrapper">
+            <input type="text" id="cct" placeholder="15DPR0000A" maxlength="10" autocomplete="off" required style="text-transform:uppercase;font-family:monospace;">
+            <ul id="cct-suggestions"></ul>
+          </div>
+          <div class="cct-status" id="cct-status"></div>
+          <div class="field-error" id="cct-error">Ingresa una CCT válida.</div>
+        </div>
+
+        <div class="manual-fields" id="manual-fields">
+          <p class="manual-aviso">No encontramos esa CCT. Captura los datos manualmente:</p>
+
+          <div class="form-group">
+            <label for="sector-manual">Sector <span class="req">*</span></label>
+            <select id="sector-manual" onchange="actualizarZonas()">
+              <option value="">— Selecciona sector —</option>
+              <option value="I">Sector I</option>
+              <option value="II">Sector II</option>
+              <option value="III">Sector III</option>
+              <option value="IV">Sector IV</option>
+              <option value="V">Sector V</option>
+              <option value="VI">Sector VI</option>
+              <option value="VII">Sector VII</option>
+              <option value="VIII">Sector VIII</option>
+              <option value="IX">Sector IX</option>
+              <option value="X">Sector X</option>
+              <option value="XI">Sector XI</option>
+              <option value="XII">Sector XII</option>
+              <option value="XIII">Sector XIII</option>
+              <option value="SEPRN">SEPRN (Subdirección / Jefatura)</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="zona-group" style="display:none;">
+            <label for="zona-manual">Zona escolar <span class="req">*</span></label>
+            <select id="zona-manual">
+              <option value="">— Selecciona zona —</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="escuela-manual">Nombre de la escuela o unidad <span class="req">*</span></label>
+            <input type="text" id="escuela-manual" placeholder="Nombre oficial">
+          </div>
+        </div>
+
+        <!-- Campos ocultos auto-llenados desde CCT_DB -->
+        <input type="hidden" id="sector-val">
+        <input type="hidden" id="zona-val">
+        <input type="hidden" id="escuela-val">
+        <input type="hidden" id="municipio-val">
+
+        <p class="form-section-title">Contacto</p>
+
+        <div class="form-group">
+          <label for="correo">Correo electrónico <span class="req">*</span></label>
+          <input type="email" id="correo" placeholder="tucorreo@dee.edu.mx" autocomplete="email" required>
+          <div class="field-error" id="correo-error">Ingresa un correo válido.</div>
+        </div>
+
+        <div class="form-group">
+          <label for="telefono">Teléfono <span class="req">*</span></label>
+          <input type="tel" id="telefono" placeholder="5511112222" maxlength="10" autocomplete="tel" required>
+          <div class="field-hint">10 dígitos, sin espacios ni guiones.</div>
+          <div class="field-error" id="telefono-error">Ingresa un teléfono válido (10 dígitos).</div>
+        </div>
+
+        <button type="submit" class="btn-submit" id="btn-submit">
+          Confirmar registro
+        </button>
+        <p class="form-footer">
+          Tus datos son resguardados por la OTDE NEZA para seguimiento y estadísticas internas.<br>
+          No se comparten con terceros.
+        </p>
+
+      </form>
+    </div>
+
+    <div style="margin-top:1rem;">
+      <button class="btn-secondary" onclick="regresarPaso1()">← Cambiar selección</button>
+    </div>
+  </div>
+
+  <!-- ══ CONFIRMACIÓN ══ -->
+  <div id="paso-confirmacion">
+    <div class="check-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+    </div>
+    <h2>¡Registro confirmado!</h2>
+    <p class="conf-sub">Tu participación quedó registrada en el Centro de Formación Docente · OTDE NEZA.</p>
+
+    <div id="folios-lista"></div>
+
+    <a href="otde.html" class="btn-primary" style="display:inline-block;width:auto;padding:.75rem 2rem;margin-top:.5rem;">
+      ← Volver a la OTDE
+    </a>
+  </div>
+
+</div><!-- /container -->
+
+<script src="js/cct-db.js"></script>
+<script>
+  // URL del Apps Script (reemplazar con la URL real al desplegar)
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/REEMPLAZAR_CON_TU_DEPLOYMENT_ID/exec';
+
+  // ── Estilo por categoría de curso ──
+  const CATEGORIA_STYLE = {
+    'Webinar': {
+      gradient: 'linear-gradient(135deg,#0369a1,#0284c7)',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-4v12l-6-4"/></svg>'
+    },
+    'Seminario': {
+      gradient: 'linear-gradient(135deg,#7c3aed,#8b5cf6)',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="12" rx="1"/><path d="M8 21h8M12 15v6"/></svg>'
+    },
+    'Conferencia': {
+      gradient: 'linear-gradient(135deg,#0f766e,#14b8a6)',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7"/><path d="M18.5 5.5a9 9 0 010 13"/></svg>'
+    },
+    'Curso autogestivo': {
+      gradient: 'linear-gradient(135deg,#15803d,#16a34a)',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>'
+    },
+    'Acción formativa': {
+      gradient: 'linear-gradient(135deg,#c2410c,#ea580c)',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>'
+    },
+    'Diplomado': {
+      gradient: 'linear-gradient(135deg,#9F2241,#be123c)',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg>'
+    },
+    'Proyecto didáctico': {
+      gradient: 'linear-gradient(135deg,#4338ca,#6366f1)',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a6 6 0 00-4 10.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A6 6 0 0012 2z"/></svg>'
+    },
+    '_default': {
+      gradient: 'linear-gradient(135deg,#334155,#475569)',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>'
+    }
+  };
+
+  const ICON_CALENDAR = '<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>';
+  const ICON_MODALIDAD = '<svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 5a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2h-4l1 2H7l1-2H4a2 2 0 01-2-2V5z"/></svg>';
+
+  // ── Estado global ──
+  let cursosSeleccionados = []; // [{id, nombre, categoria, liga}]
+  let cctEncontrada = false;
+
+  // ── Mapa sector → zonas (construido desde CCT_DB) ──
+  const sectorZonas = {};
+  CCT_DB.forEach(e => {
+    if (!e.zona || e.tipo !== 'escuela') return;
+    if (!sectorZonas[e.sector]) sectorZonas[e.sector] = new Set();
+    sectorZonas[e.sector].add(e.zona);
+  });
+  Object.keys(sectorZonas).forEach(s => {
+    sectorZonas[s] = [...sectorZonas[s]].sort((a, b) => a - b);
+  });
+
+  // ── Cargar catálogo dinámico de cursos ──
+  async function cargarCatalogo() {
+    document.getElementById('catalogo-cargando').style.display = 'block';
+    document.getElementById('catalogo-vacio').style.display = 'none';
+    document.getElementById('catalogo-error').style.display = 'none';
+    document.getElementById('cursos-grid').style.display = 'none';
+
+    try {
+      const res = await fetch(APPS_SCRIPT_URL).then(r => r.json());
+      document.getElementById('catalogo-cargando').style.display = 'none';
+
+      if (res.status !== 'ok') throw new Error(res.mensaje || 'Error desconocido');
+
+      if (!res.cursos.length) {
+        document.getElementById('catalogo-vacio').style.display = 'block';
+        return;
+      }
+
+      renderCursos(res.cursos);
+      document.getElementById('cursos-grid').style.display = 'grid';
+
+    } catch (err) {
+      document.getElementById('catalogo-cargando').style.display = 'none';
+      document.getElementById('catalogo-error').style.display = 'block';
+    }
+  }
+
+  function renderCursos(cursos) {
+    const grid = document.getElementById('cursos-grid');
+    grid.innerHTML = '';
+
+    cursos.forEach(curso => {
+      const style = CATEGORIA_STYLE[curso.categoria] || CATEGORIA_STYLE._default;
+
+      const card = document.createElement('div');
+      card.className = 'curso-card';
+      card.dataset.id = curso.id;
+      card.dataset.nombre = curso.nombre;
+      card.dataset.categoria = curso.categoria || '';
+      card.dataset.liga = curso.liga_convocatoria || '';
+      card.addEventListener('click', () => seleccionarCurso(card));
+
+      const rango = curso.fecha_inicio
+        ? (curso.fecha_fin && curso.fecha_fin !== curso.fecha_inicio ? curso.fecha_inicio + ' – ' + curso.fecha_fin : curso.fecha_inicio)
+        : '';
+
+      card.innerHTML = `
+        <div class="cc-header" style="background:${style.gradient};">
+          <div class="cc-icon">${style.icon}</div>
+          <span class="cc-sel-badge">✓ Seleccionado</span>
+        </div>
+        <div class="cc-body">
+          <div class="cc-categoria"></div>
+          <div class="curso-nombre"></div>
+          <div class="cc-info">
+            ${rango ? `<span class="cc-pill cc-pill-fecha">${ICON_CALENDAR} <span class="cc-fecha-txt"></span></span>` : ''}
+            ${curso.modalidad ? `<span class="cc-pill cc-pill-modalidad">${ICON_MODALIDAD} <span class="cc-modalidad-txt"></span></span>` : ''}
+          </div>
+        </div>
+      `;
+
+      // Texto vía textContent (evita inyección desde datos de la hoja)
+      card.querySelector('.cc-categoria').textContent = curso.categoria || '';
+      card.querySelector('.curso-nombre').textContent = curso.nombre || '';
+      if (rango) card.querySelector('.cc-fecha-txt').textContent = rango;
+      if (curso.modalidad) card.querySelector('.cc-modalidad-txt').textContent = curso.modalidad;
+
+      grid.appendChild(card);
+    });
+  }
+
+  // ── PASO 1: seleccionar / deseleccionar curso (multi-select) ──
+  function seleccionarCurso(card) {
+    const idx = cursosSeleccionados.findIndex(c => c.id === card.dataset.id);
+    if (idx >= 0) {
+      cursosSeleccionados.splice(idx, 1);
+      card.classList.remove('selected');
+    } else {
+      cursosSeleccionados.push({
+        id: card.dataset.id,
+        nombre: card.dataset.nombre,
+        categoria: card.dataset.categoria,
+        liga: card.dataset.liga
+      });
+      card.classList.add('selected');
+    }
+    const n = cursosSeleccionados.length;
+    const counter = document.getElementById('sel-counter');
+    if (n === 0) {
+      counter.textContent = 'Puedes seleccionar uno o varios cursos';
+      counter.classList.remove('activo');
+    } else {
+      counter.textContent = n === 1 ? '1 curso seleccionado' : n + ' cursos seleccionados';
+      counter.classList.add('activo');
+    }
+    document.getElementById('btn-paso1').disabled = n === 0;
+  }
+
+  function irPaso2() {
+    if (!cursosSeleccionados.length) return;
+    const n = cursosSeleccionados.length;
+    document.getElementById('rc-titulo').textContent = n === 1 ? 'Curso seleccionado' : n + ' cursos seleccionados';
+    const lista = document.getElementById('rc-lista');
+    lista.innerHTML = '';
+    cursosSeleccionados.forEach(c => {
+      const li = document.createElement('li');
+      li.textContent = c.nombre;
+      const span = document.createElement('span');
+      span.textContent = c.categoria;
+      li.appendChild(span);
+      lista.appendChild(li);
+    });
+    mostrarPaso(2);
+  }
+
+  function regresarPaso1() { mostrarPaso(1); }
+
+  function mostrarPaso(n) {
+    document.getElementById('paso-1').style.display = n === 1 ? 'block' : 'none';
+    document.getElementById('paso-2').style.display = n === 2 ? 'block' : 'none';
+    document.getElementById('paso-confirmacion').style.display = 'none';
+
+    const ind = { 1: ['active', ''], 2: ['done', 'active'] };
+    const clases = ind[n];
+    [1, 2].forEach((i, idx) => {
+      const el = document.getElementById('step-ind-' + i);
+      el.classList.remove('active', 'done');
+      if (clases[idx]) el.classList.add(clases[idx]);
+    });
+    document.getElementById('line-1-2').classList.toggle('done', n >= 2);
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── Función "Otro" ──
+  function toggleOtraFuncion() {
+    const val = document.getElementById('funcion').value;
+    const grp = document.getElementById('otra-funcion-group');
+    grp.style.display = val === 'Otro' ? 'block' : 'none';
+    if (val !== 'Otro') {
+      const inp = document.getElementById('otra-funcion');
+      inp.value = '';
+      inp.classList.remove('error');
+      document.getElementById('otra-funcion-error').classList.remove('visible');
+    }
+  }
+
+  // ── CCT AUTOCOMPLETE ──
+  const inputCct = document.getElementById('cct');
+  const suggestions = document.getElementById('cct-suggestions');
+  const statusBox = document.getElementById('cct-status');
+  let activeSugg = -1;
+
+  inputCct.addEventListener('input', () => {
+    const q = inputCct.value.trim().toUpperCase();
+    resetCct();
+    if (q.length < 3) { suggestions.style.display = 'none'; return; }
+
+    const matches = CCT_DB.filter(e =>
+      e.cct.includes(q) || e.nombre.toUpperCase().includes(q)
+    ).slice(0, 10);
+
+    if (!matches.length) { suggestions.style.display = 'none'; return; }
+
+    suggestions.innerHTML = '';
+    matches.forEach((m) => {
+      const li = document.createElement('li');
+      li.innerHTML = `<span class="sg-code">${m.cct}</span> <span class="sg-name">${m.nombre} — Sector ${m.sector}${m.zona ? ', Zona ' + m.zona : ''}</span>`;
+      li.addEventListener('mousedown', () => seleccionarCct(m));
+      suggestions.appendChild(li);
+    });
+    suggestions.style.display = 'block';
+    activeSugg = -1;
+  });
+
+  inputCct.addEventListener('keydown', e => {
+    const items = suggestions.querySelectorAll('li');
+    if (!items.length) return;
+    if (e.key === 'ArrowDown') { activeSugg = Math.min(activeSugg + 1, items.length - 1); highlightSugg(items); e.preventDefault(); }
+    if (e.key === 'ArrowUp')   { activeSugg = Math.max(activeSugg - 1, 0);                highlightSugg(items); e.preventDefault(); }
+    if (e.key === 'Enter' && activeSugg >= 0) {
+      const q = inputCct.value.trim().toUpperCase();
+      const m = CCT_DB.filter(e => e.cct.includes(q) || e.nombre.toUpperCase().includes(q))[activeSugg];
+      if (m) { seleccionarCct(m); e.preventDefault(); }
+    }
+    if (e.key === 'Escape') { suggestions.style.display = 'none'; }
+  });
+
+  inputCct.addEventListener('blur', () => setTimeout(() => { suggestions.style.display = 'none'; }, 150));
+
+  function highlightSugg(items) {
+    items.forEach((li, i) => li.classList.toggle('active', i === activeSugg));
+  }
+
+  function seleccionarCct(m) {
+    inputCct.value = m.cct;
+    suggestions.style.display = 'none';
+    document.getElementById('sector-val').value = m.sector;
+    document.getElementById('zona-val').value = m.zona || '';
+    document.getElementById('escuela-val').value = m.nombre || '';
+    document.getElementById('municipio-val').value = m.municipio || '';
+    statusBox.className = 'cct-status found';
+    statusBox.textContent = `Sector ${m.sector}${m.zona ? ' · Zona ' + m.zona : ''} · ${m.nombre} · ${m.municipio || ''}`;
+    document.getElementById('manual-fields').classList.remove('visible');
+    cctEncontrada = true;
+  }
+
+  function resetCct() {
+    document.getElementById('sector-val').value = '';
+    document.getElementById('zona-val').value = '';
+    document.getElementById('escuela-val').value = '';
+    document.getElementById('municipio-val').value = '';
+    statusBox.className = 'cct-status';
+    cctEncontrada = false;
+  }
+
+  inputCct.addEventListener('change', () => {
+    if (!cctEncontrada && inputCct.value.trim().length >= 8) {
+      statusBox.className = 'cct-status warn';
+      statusBox.textContent = 'CCT no encontrada en nuestra base. Puedes capturar los datos manualmente.';
+      document.getElementById('manual-fields').classList.add('visible');
+    }
+  });
+
+  // ── Zonas por sector ──
+  function actualizarZonas() {
+    const sector = document.getElementById('sector-manual').value;
+    const zonaGroup = document.getElementById('zona-group');
+    const zonaSelect = document.getElementById('zona-manual');
+    zonaSelect.innerHTML = '<option value="">— Selecciona zona —</option>';
+
+    if (!sector || sector === 'SEPRN') {
+      zonaGroup.style.display = 'none';
+      return;
+    }
+    const zonas = sectorZonas[sector] || [];
+    zonas.forEach(z => {
+      const o = document.createElement('option');
+      o.value = z; o.textContent = 'Zona ' + z;
+      zonaSelect.appendChild(o);
+    });
+    zonaGroup.style.display = 'block';
+  }
+
+  // ── ENVÍO DEL FORMULARIO ──
+  async function enviarFormulario(e) {
+    e.preventDefault();
+    if (!validarFormulario()) return;
+
+    const btn = document.getElementById('btn-submit');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Enviando…';
+    document.getElementById('error-global').classList.remove('visible');
+
+    const base = recopilarDatos();
+    const resultados = [];
+
+    try {
+      // Secuencial: evita que dos inserciones lean el mismo folio máximo en paralelo.
+      for (const c of cursosSeleccionados) {
+        const res = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ ...base, id_curso: c.id })
+        }).then(r => r.json());
+        if (res.status !== 'ok') throw new Error(res.mensaje || 'Error desconocido');
+        resultados.push({ folio: res.folio, duplicado: !!res.duplicado, curso: c });
+      }
+      mostrarConfirmacion(resultados);
+    } catch (err) {
+      const eg = document.getElementById('error-global');
+      eg.textContent = 'Ocurrió un error al enviar: ' + err.message + '. Intenta de nuevo.';
+      eg.classList.add('visible');
+      btn.disabled = false;
+      btn.textContent = 'Confirmar registro';
+    }
+  }
+
+  function recopilarDatos() {
+    const manual = document.getElementById('manual-fields').classList.contains('visible');
+    return {
+      nombre:   document.getElementById('nombre').value.trim(),
+      rfc:      document.getElementById('rfc').value.trim().toUpperCase(),
+      funcion:  document.getElementById('funcion').value === 'Otro'
+                ? document.getElementById('otra-funcion').value.trim()
+                : document.getElementById('funcion').value,
+      cct:      document.getElementById('cct').value.trim().toUpperCase(),
+      sector:   manual ? document.getElementById('sector-manual').value : document.getElementById('sector-val').value,
+      zona:     manual ? document.getElementById('zona-manual').value   : document.getElementById('zona-val').value,
+      escuela:  manual ? document.getElementById('escuela-manual').value.trim() : document.getElementById('escuela-val').value,
+      municipio: manual ? '' : document.getElementById('municipio-val').value,
+      correo:   document.getElementById('correo').value.trim(),
+      telefono: document.getElementById('telefono').value.trim()
+      // 'id_curso' se agrega por separado en cada petición
+    };
+  }
+
+  function validarFormulario() {
+    let ok = true;
+
+    const campos = [
+      { id: 'nombre',   err: 'nombre-error',   test: v => v.trim().length >= 3 },
+      { id: 'rfc',      err: 'rfc-error',      test: v => /^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/i.test(v.trim()) },
+      { id: 'funcion',  err: 'funcion-error',  test: v => v !== '' },
+      { id: 'cct',      err: 'cct-error',      test: v => v.trim().length >= 8 },
+      { id: 'correo',   err: 'correo-error',   test: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()) },
+      { id: 'telefono', err: 'telefono-error', test: v => /^\d{10}$/.test(v.trim()) }
+    ];
+
+    campos.forEach(({ id, err, test }) => {
+      const input = document.getElementById(id);
+      const errEl = document.getElementById(err);
+      const val = input.value;
+      if (!test(val)) {
+        input.classList.add('error');
+        errEl.classList.add('visible');
+        ok = false;
+      } else {
+        input.classList.remove('error');
+        errEl.classList.remove('visible');
+      }
+    });
+
+    if (document.getElementById('funcion').value === 'Otro') {
+      const otraInp = document.getElementById('otra-funcion');
+      const otraErr = document.getElementById('otra-funcion-error');
+      if (!otraInp.value.trim()) {
+        otraInp.classList.add('error');
+        otraErr.classList.add('visible');
+        ok = false;
+      }
+    }
+
+    const manual = document.getElementById('manual-fields').classList.contains('visible');
+
+    if (!cctEncontrada && !manual && document.getElementById('cct').value.trim().length >= 8) {
+      const st = document.getElementById('cct-status');
+      st.className = 'cct-status warn';
+      st.textContent = 'Selecciona tu escuela de la lista o captura los datos manualmente.';
+      document.getElementById('manual-fields').classList.add('visible');
+      ok = false;
+    }
+
+    if (manual) {
+      const sect = document.getElementById('sector-manual').value;
+      const zona = document.getElementById('zona-manual').value;
+      const esc = document.getElementById('escuela-manual').value.trim();
+      if (!sect) { ok = false; document.getElementById('sector-manual').classList.add('error'); }
+      if (!esc)  { ok = false; document.getElementById('escuela-manual').classList.add('error'); }
+      if (sect && sect !== 'SEPRN' && !zona) {
+        ok = false;
+        document.getElementById('zona-manual').classList.add('error');
+      }
+    }
+
+    return ok;
+  }
+
+  function mostrarConfirmacion(resultados) {
+    const cont = document.getElementById('folios-lista');
+    cont.innerHTML = '';
+
+    resultados.forEach(r => {
+      const item = document.createElement('div');
+      item.className = 'folio-item';
+
+      const nombre = document.createElement('div');
+      nombre.className = 'fi-curso';
+      nombre.textContent = r.curso.nombre;
+      item.appendChild(nombre);
+
+      const folio = document.createElement('div');
+      folio.className = 'fi-folio';
+      folio.textContent = r.folio;
+      item.appendChild(folio);
+
+      if (r.duplicado) {
+        const dup = document.createElement('div');
+        dup.className = 'fi-dup';
+        dup.textContent = 'Ya tenías un registro previo para este curso — se conservó tu folio original.';
+        item.appendChild(dup);
+      }
+
+      if (r.curso.liga) {
+        const liga = document.createElement('a');
+        liga.className = 'fi-liga';
+        liga.href = r.curso.liga;
+        liga.target = '_blank';
+        liga.rel = 'noopener noreferrer';
+        liga.textContent = 'Ver convocatoria / acceder al curso →';
+        item.appendChild(liga);
+      }
+
+      cont.appendChild(item);
+    });
+
+    document.getElementById('paso-1').style.display = 'none';
+    document.getElementById('paso-2').style.display = 'none';
+    document.getElementById('paso-confirmacion').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  cargarCatalogo();
+</script>
+</body>
+</html>

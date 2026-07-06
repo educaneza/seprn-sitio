@@ -443,7 +443,7 @@ Editar `nosotros.html` (bloque "Equipo de Trabajo") y `areas.html` (campo `area-
 | Portal SEP CTE | Link externo | `https://gestion.cte.sep.gob.mx/insumos/#!/` |
 | Facebook | Redes sociales | `https://www.facebook.com/SubNeza` |
 | YouTube Channel | Redes sociales | `https://www.youtube.com/channel/UCvDb2DPSJxFyhH3bCPd5D2Q` |
-| Google Apps Script | 3 backends independientes | `conferencia-ia.gs` (evento IA), `cursos-coeee-2026.gs` (Jornada Verano), `soporte-remoto.gs` (Soporte OTDE) — cada uno Web App con `doGet`/`doPost`, URL embebida como constante en su página correspondiente |
+| Google Apps Script | 4 backends independientes | `conferencia-ia.gs` (evento IA), `cursos-coeee-2026.gs` (Jornada Verano), `soporte-remoto.gs` (Soporte OTDE), `formacion-docente.gs` (Centro de Formación Docente) — cada uno Web App con `doGet`/`doPost`, URL embebida como constante en su página correspondiente |
 | GmailApp (Apps Script) | Correo de confirmación | Envía HTML con QR; remitente: "Oficina de Tecnología · Neza" (usado por `conferencia-ia.gs`) |
 | api.qrserver.com | Generación de QR en correo | URL dinámica con folio codificado; solo en correos de confirmación |
 | html5-qrcode v2.3.8 | Escáner QR en `asistencia.html` | CDN `unpkg.com`; modo cámara trasera `environment` |
@@ -598,14 +598,68 @@ Antes de hacer commit de una página nueva:
 
 ## 11. Patrón: CCT con autocompletado + fallback manual (Julio 2026)
 
-Implementado primero en `jornada-verano-2026.html`, reutilizado en el formulario de Soporte Técnico Remoto de `otde.html`. Si se necesita en una tercera página, replicar este patrón en vez de inventar uno nuevo.
+Implementado primero en `jornada-verano-2026.html`, reutilizado en el formulario de Soporte Técnico Remoto de `otde.html` y en `formacion-docente.html`. Si se necesita en una nueva página, replicar este patrón en vez de inventar uno nuevo.
 
 **Piezas del patrón:**
-- `js/cct-db.js` — 506 registros `{cct, nombre, sector, zona, tipo}`. Cargar con `<script src="js/cct-db.js"></script>` antes del script inline de la página.
+- `js/cct-db.js` — 506 registros `{cct, nombre, sector, zona, tipo, municipio}`. Cargar con `<script src="js/cct-db.js"></script>` antes del script inline de la página. El campo `municipio` (agregado jul 2026 desde `Catalogo SEPRN direcciones.xlsx`) se autocompleta igual que sector/zona/escuela — **no** se deriva del sector, porque un mismo sector puede abarcar varios municipios (ver mapa SVG de `index.html`); en el fallback manual (CCT no encontrada) el municipio queda vacío, no se le pide al usuario.
 - Input de texto con `<ul id="...-suggestions">` absoluto debajo, poblado en el evento `input` (mínimo 3 caracteres, máximo 10 resultados) y navegable con flechas/Enter/Escape.
 - Al seleccionar una sugerencia: llenar inputs ocultos `sector-val` / `zona-val` / `escuela-val` y marcar una bandera `cctEncontrada = true`.
 - Si el usuario escribe una CCT que no existe (evento `change` sin `cctEncontrada`): mostrar bloque `.manual-fields` con `<select>` de Sector (con opción `SEPRN` sin zona), `<select>` de Zona (poblado dinámicamente vía `actualizarZonas()` a partir de un mapa `sector → zonas[]` derivado de `CCT_DB`), e `<input>` de Escuela/Unidad.
 - **Validación por campo, no agrupada**: Sector, Zona y Escuela deben validar y mostrar su propio mensaje de error. Agrupar todo bajo el mensaje del campo CCT es un anti-patrón ya corregido dos veces (`jornada-verano-2026.html` lo resolvió como "BUG 4/5 fix"; `otde.html` lo resolvió en jul 2026) — Zona es obligatoria solo si el sector no es `SEPRN`.
 - El formulario que use este patrón debe llevar `novalidate` en el `<form>` y validación 100% en JS (`onchange`/`onsubmit`), porque los atributos `required`/`type="email"` nativos interceptan el `submit` antes de que corra la validación personalizada.
+
+---
+
+## 12. Centro de Formación Docente (Julio 2026)
+
+Nace de sistematizar el flujo real de convocatorias CoEEE (webinars, seminarios, conferencias, cursos autogestivos, acciones formativas, diplomados, proyectos didácticos), antes resuelto con un Google Form distinto por curso y sin seguimiento del ciclo de vida del participante. Diseño discutido y validado con Jorge antes de implementar.
+
+### Modelo de datos — 3 hojas relacionales en un solo Spreadsheet (no una hoja por curso)
+
+```
+Docentes                    Cursos                       Inscripciones
+─────────                   ──────                       ─────────────
+RFC (llave, upsert)          ID_Curso (llave)              Folio (llave, OTDE-CAP-NNNN)
+Nombre_completo              Categoria                      Fecha_registro
+Correo                       Nombre                         RFC_Docente     ──┐ FK
+Telefono                     Responsable                    ID_Curso        ──┤ FK
+CCT                          Modalidad                      Estado           │
+Escuela                      Fecha_inicio / Fecha_fin        Codigo_asistencia_capturado
+Sector / Zona / Municipio    Liga_convocatoria               Fecha_actualizacion_estado
+Funcion                      Requiere_codigo_asistencia      Notas
+Fecha_primer_registro        Codigo_asistencia
+Fecha_ultima_actualizacion   Activo (controla el catálogo)
+                             Notas
+```
+
+- **Upsert en `Docentes`**: si el RFC ya existe, se actualizan sus datos (por si cambió de escuela/correo/etc.) y `Fecha_ultima_actualizacion`; si no existe, se agrega. Un docente nunca se duplica aunque se inscriba a varios cursos a lo largo del ciclo — solo crece `Inscripciones`, una fila por (RFC, curso).
+- **Catálogo dinámico**: `Cursos` la administra OTDE a mano (agrega/edita filas directamente en Sheets). El `doGet` del Apps Script solo regresa las filas con `Activo=TRUE`. Abrir o cerrar una convocatoria es editar una celda, no tocar código ni hacer deploy — `formacion-docente.html` pide el catálogo en vivo vía `fetch`, no lo trae hardcodeado.
+- **Sin gestión de constancias**: confirmado con Jorge — los webinars/seminarios no las emiten (salvo conferencias UNETE) y en los demás programas la emite la plataforma de CoEEE. OTDE solo registra participación para estadística propia y reportes a CoEEE; por eso `Estado` en `Inscripciones` no tiene una etapa de "constancia pendiente/validada".
+- **Deduplicación de inscripción**: antes de insertar en `Inscripciones`, se busca si ya existe la combinación (RFC, ID_Curso); si existe, se regresa el folio original con `duplicado:true` en vez de crear una fila nueva.
+
+### Diagrama de flujo
+
+```
+Docente
+  └── formacion-docente.html
+        ├── fetch doGet ────────────────────────────────────────── Apps Script Web App
+        │     (catálogo de cursos Activo=TRUE)                       (formacion-docente.gs)
+        ├── selecciona 1+ cursos (multi-select, igual patrón que
+        │     jornada-verano-2026.html)
+        └── POST secuencial por curso (evita race condition        ├── upsert en Docentes
+              en generarFolio(), mismo patrón que                   ├── dedupe + folio en Inscripciones
+              cursos-coeee-2026.gs) ───────────────────────────────►└── Google Sheets
+```
+
+### Ciclo escolar y archivado
+
+Un Spreadsheet por ciclo (`Formacion_Docente_2026_2027`), con el `.gs` bound a él vía `CICLO_ESCOLAR = '2627'` (afecta el prefijo del `ID_Curso`). Al cerrar el ciclo: duplicar el Spreadsheet completo, actualizar la constante y volver a desplegar — no se acumulan datos de distintos ciclos en una misma hoja.
+
+### Fases futuras (no implementadas aún)
+
+Las columnas `Requiere_codigo_asistencia` / `Codigo_asistencia` en `Cursos` y `Codigo_asistencia_capturado` en `Inscripciones` ya existen en el modelo para cuando se active:
+- **Seguimiento con recordatorios automáticos** por estado (trigger de tiempo en Apps Script), cuidando la cuota diaria de correo compartida entre los 4 backends de la cuenta.
+- **Validación de asistencia en webinars** vía código de cierre anunciado al final de la transmisión.
+- **Dashboards por sector/zona** vía Looker Studio conectado directo a la hoja (sin construir autenticación/login propios).
 
 **No es lo mismo que la validación de CCT en la pestaña "Licencias Office" de `otde.html`**: esa usa un CSV/Sheet publicado distinto (base de licenciamiento, no `cct-db.js`) y corre del lado del instalador `.bat`/`.exe`, no en el navegador.

@@ -21,6 +21,14 @@ Ver roadmap completo en [`docs/ROADMAP.md`](docs/ROADMAP.md).
 | Performance percibida | 6/10 | **8/10** | 8/10 ✅ |
 | Accesibilidad | 3/10 | **7/10** | 8/10 |
 
+### En progreso (6 jul 2026) — Centro de Formación Docente
+- **Nueva iniciativa**: sistematiza el flujo actual de convocatorias CoEEE (webinars, seminarios, diplomados, cursos autogestivos, acciones formativas, proyectos didácticos), hoy disperso en Google Forms independientes por curso sin seguimiento
+- **Arquitectura relacional en Sheets** (no una hoja por curso): `Docentes` (upsert por RFC) + `Cursos` (catálogo administrado a mano, con columna `Activo`) + `Inscripciones` (transaccional)
+- `formacion-docente.html`: catálogo **dinámico** (se pide en vivo al backend, ya no hardcodeado) + formulario único de registro, mismo sistema de diseño que `jornada-verano-2026.html`
+- `apps-script/formacion-docente.gs`: `doGet` (catálogo activo), `doPost` (upsert + folio + detección de duplicados), menú "Generar ID de cursos faltantes", `generarEstadisticas()`
+- `js/cct-db.js` enriquecido con campo `municipio` (18 municipios, cruzado desde `Catalogo SEPRN direcciones.xlsx`) — se autocompleta igual que Sector/Zona/Escuela
+- Probado end-to-end con Playwright (catálogo, selección múltiple, autocomplete, validación) — **falta desplegar el backend real** (crear Spreadsheet, deploy del `.gs`, pegar URL real, dar de alta los primeros cursos)
+
 ### Completado el 1 jul 2026 — Instalador de Office + Soporte Técnico Remoto potenciado
 - **Pestaña "Licencias Office"** en `otde.html`: instalador `descargas/Instalador_Office_2019_OTDE.exe` (validación por CCT, Office 2019 Professional Plus) con guía de instalación paso a paso basada en el `.bat` real
 - **Formulario "Solicitar Soporte Técnico Remoto"**: autocompletado de CCT idéntico al de `jornada-verano-2026.html` (`js/cct-db.js`, con fallback manual de Sector/Zona/Escuela y validación de error por campo), select de Función/Cargo con opción "Otro", campo de WhatsApp con link `wa.me` directo
@@ -52,7 +60,8 @@ Ver roadmap completo en [`docs/ROADMAP.md`](docs/ROADMAP.md).
 - Página de check-in (`asistencia.html`) con escáner QR por cámara
 - Manual interno (`docs/manual-sistema-registro.html`)
 
-### Pendientes (al 1 jul 2026)
+### Pendientes (al 6 jul 2026)
+- **Centro de Formación Docente — deploy real**: crear el Spreadsheet `Formacion_Docente_2026_2027`, desplegar `apps-script/formacion-docente.gs`, reemplazar el placeholder de `APPS_SCRIPT_URL` en `formacion-docente.html`, y dar de alta los primeros cursos activos en la hoja `Cursos`
 - **Recrear páginas eliminadas** — `gestion-escolar.html`, `investigacion-educativa.html`, `programas-educativos.html`, `servicio-profesional.html`: requieren contenido validado con la Dra. Galindo
 - **Logomark SEPRN** — requiere archivo `logo.svg` (diseño gráfico pendiente)
 - **Barra CTE** — actualizar texto del `.update-banner` en `index.html` cuando se publique la 9ª sesión
@@ -77,7 +86,7 @@ Ver roadmap completo en [`docs/ROADMAP.md`](docs/ROADMAP.md).
 | Notificaciones | Bot de Telegram (API `sendMessage`) — solicitudes de Soporte Remoto |
 | Scanner QR | html5-qrcode v2.3.8 vía CDN (solo `asistencia.html`) |
 
-No hay framework, bundler, ni dependencias npm. El sitio es completamente estático. Los backends externos son 3 Google Apps Script independientes (uno por Spreadsheet/flujo): `conferencia-ia.gs`, `cursos-coeee-2026.gs`, `soporte-remoto.gs`.
+No hay framework, bundler, ni dependencias npm. El sitio es completamente estático. Los backends externos son 4 Google Apps Script independientes (uno por Spreadsheet/flujo): `conferencia-ia.gs`, `cursos-coeee-2026.gs`, `soporte-remoto.gs`, `formacion-docente.gs`.
 
 ---
 
@@ -107,15 +116,17 @@ seprn-sitio/
 ├── asistencia.html                # Check-in con QR/PIN para operador en puerta (evento IA)
 ├── jornada-verano-2026.html      # Wizard 3 pasos: inscripción Jornada Capacitación Verano 2026
 ├── instructivo-jornada-verano-2026.html  # Guía imprimible de la Jornada Verano 2026
+├── formacion-docente.html        # Centro de Formación Docente — catálogo dinámico + registro
 ├── 404.html                      # Página de error personalizada
 │
 ├── js/
-│   └── cct-db.js                 # Base de datos CCT (506 registros), usada por jornada-verano-2026 y otde.html
+│   └── cct-db.js                 # Base de datos CCT (506 registros, incluye municipio), usada por jornada-verano-2026, otde.html y formacion-docente.html
 │
 ├── apps-script/
 │   ├── conferencia-ia.gs         # Backend Conferencia IA 2026 (Sheets + correo QR)
 │   ├── cursos-coeee-2026.gs      # Backend Jornada Verano 2026 (Sheets, folios OTDE-V26-NNNN)
-│   └── soporte-remoto.gs         # Backend Soporte Técnico Remoto (Sheets + notificación Telegram)
+│   ├── soporte-remoto.gs         # Backend Soporte Técnico Remoto (Sheets + notificación Telegram)
+│   └── formacion-docente.gs      # Backend Centro de Formación Docente (Docentes/Cursos/Inscripciones, folios OTDE-CAP-NNNN)
 │
 ├── descargas/                    # Instaladores/ejecutables descargables
 │   ├── Instalador_Office_2019_OTDE.exe
@@ -212,3 +223,4 @@ Para actualizar:
 | Datos de contacto | `contacto.html` + footer de todas las páginas | Dirección, horario |
 | Instalador de Office | `descargas/` + `otde.html` (pestaña Licencias Office) | Reemplazar `.exe`/`.bat`, actualizar guía si cambia el flujo |
 | Notificaciones de Soporte Remoto | `apps-script/soporte-remoto.gs` | Propiedades del script `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` (ver instrucciones al final del archivo) |
+| Cursos del Centro de Formación Docente | Hoja `Cursos` del Spreadsheet `Formacion_Docente_2026_2027` | Agregar fila con Categoria/Nombre/Responsable/Modalidad/fechas/Liga y `Activo=TRUE`; usar el menú "OTDE Formación → Generar ID de cursos faltantes" para autocompletar `ID_Curso` |

@@ -85,6 +85,7 @@ La sesión más reciente siempre debe ser el acordeón activo/abierto al cargar 
 | `charla-ia.html` | Página del evento IA jun 2026 (sin formulario) |
 | `jornada-verano-2026.html` | Wizard 3 pasos: registro de inscripción a Jornada Capacitación Verano 2026 (CoEEE + OTDE NEZA) |
 | `instructivo-jornada-verano-2026.html` | Guía imprimible (hoja carta, `@media print`) para difundir junto al oficio de la Jornada |
+| `formacion-docente.html` | Centro de Formación Docente — catálogo dinámico (webinars, seminarios, diplomados, cursos autogestivos, acciones formativas, proyectos didácticos) + registro |
 | `404.html` | Página de error personalizada |
 
 ## Páginas eliminadas (recrear cuando haya contenido validado)
@@ -122,6 +123,17 @@ La sesión más reciente siempre debe ser el acordeón activo/abierto al cargar 
 - URL del deployment vive en `otde.html` en la constante `SOPORTE_APPS_SCRIPT_URL`
 - Para cambios: copiar el `.gs` completo en Apps Script y re-desplegar como aplicación web (Cualquier usuario) — **cuidado**: probar el endpoint con `curl -X POST`, o incluso desde un navegador headless con acceso real a internet (confirmado: el sandbox de pruebas SÍ tiene salida real a `script.google.com`), ejecuta `doPost` de verdad (escribe en Sheets y dispara Telegram). Para pruebas locales, interceptar la llamada de red (`page.route()` en Playwright) en vez de dejarla llegar al backend real
 
+### `apps-script/formacion-docente.gs`
+- Conectado a un Google Spreadsheet propio por ciclo escolar (`Formacion_Docente_2026_2027`), con **3 pestañas relacionales** en vez de una hoja plana: `Docentes` (llave RFC, upsert), `Cursos` (catálogo administrado a mano por OTDE, con columna `Activo`), `Inscripciones` (transaccional, FK a las otras dos)
+- **`doGet`** regresa el catálogo de cursos con `Activo=TRUE` — el formulario web ya no trae los cursos hardcodeados en HTML, los pide en vivo. Para abrir/cerrar una convocatoria solo se edita la columna `Activo` en la hoja `Cursos`, sin tocar código ni hacer deploy
+- **`doPost`** hace *upsert* en `Docentes` por RFC (si ya existe, actualiza sus datos; si no, lo agrega — nunca se duplica una persona aunque se inscriba a varios cursos) y agrega una fila en `Inscripciones` por cada curso. Si el RFC ya estaba inscrito a ese mismo curso, no duplica folio: regresa el folio existente con `duplicado:true`
+- Folio: `OTDE-CAP-NNNN` (secuencial, autoincremental, igual patrón que los demás `.gs`)
+- ID de curso: `PREFIJO-CICLO-NNN` (ej. `WEB-2627-001`); prefijos por categoría en la constante `PREFIJOS_CATEGORIA`. Menú personalizado en la hoja ("OTDE Formación → Generar ID de cursos faltantes") autocompleta el ID cuando OTDE da de alta un curso nuevo sin tener que escribirlo a mano
+- **No hay gestión de constancias**: los webinars/seminarios no las emiten (salvo UNETE) y en los demás programas las emite la plataforma de CoEEE — OTDE solo registra participación para fines estadísticos, `Estado` en `Inscripciones` llega hasta `Registrado`/`Participó`, nunca gestiona el documento
+- Usado por `formacion-docente.html`; responde `Content-Type: text/plain` para evitar preflight CORS, mismo patrón que el resto
+- Menú "OTDE Formación" también incluye `generarEstadisticas` (cruza las 3 hojas → conteos por curso, sector, municipio y estado, hoja `Estadisticas_Formacion`)
+- Para cambios: copiar el `.gs` completo en Apps Script y re-desplegar como aplicación web (Cualquier usuario)
+
 ## Reglas de desarrollo
 1. No introducir npm, frameworks ni build steps — stack estático puro
 2. Cambios globales de UI → `styles.css`; cambios específicos de página → `<style>` inline en el HTML
@@ -152,7 +164,21 @@ Página autónoma (no importa `styles.css` — estilos inline completos). Vincul
 - **Referencia cruzada**: la pestaña Office enlaza a Soporte si hay problemas durante la instalación; Soporte enlaza de vuelta a Office si la consulta es sobre licencias — ambos via `showServicio()` con `onclick` (no back-forward real de navegador)
 - **CCT con autocomplete** (`js/cct-db.js`, mismo patrón que `jornada-verano-2026.html`): fallback manual de Sector/Zona/Escuela si la CCT no está en la base. Cada campo del fallback valida y muestra su propio error (Zona, Sector, Escuela) — no agrupar todo bajo el mensaje del campo CCT, es un anti-patrón ya corregido dos veces en el sitio. Detalle completo del patrón en `docs/ARCHITECTURE.md §11`
 
-## Pendientes (al 1 jul 2026)
+## `formacion-docente.html` — Centro de Formación Docente (jul 2026)
+Página autónoma (no importa `styles.css`), mismo sistema de diseño que `jornada-verano-2026.html`. Vinculada desde `otde.html` mediante banner destacado. Nace de sistematizar el flujo de convocatorias CoEEE (webinars, seminarios, diplomados, cursos autogestivos, acciones formativas, proyectos didácticos) que antes se resolvía con un Google Form distinto por curso.
+
+- **Flujo**: 2 pasos — (1) selección multi-curso desde un catálogo **cargado dinámicamente** (`fetch` a `doGet` de `apps-script/formacion-docente.gs`, no hardcodeado en HTML), (2) formulario único de datos personales, envío secuencial por curso (mismo patrón anti-race-condition que jornada-verano)
+- **Sin paso de redirección externa**: a diferencia de `jornada-verano-2026.html` (que sí manda a CoEEE a mitad del wizard), aquí el acceso al curso/webinar se resuelve con el link `Liga_convocatoria` de cada curso, mostrado en la pantalla de confirmación — no todas las categorías (ej. webinars por Facebook/YouTube) tienen un "portal de registro" externo al que valga la pena interrumpir el flujo para visitar a mitad del formulario
+- **Campos**: Nombre completo, RFC, Correo, Teléfono (10 dígitos), CCT (autocomplete), Función — deliberadamente mínimo; Sector/Zona/Escuela/**Municipio** se autocompletan desde `cct-db.js` y no se le piden al docente
+- **Modelo de datos relacional en Sheets** (no una hoja por curso): `Docentes` + `Cursos` + `Inscripciones`, ver detalle en la sección de `apps-script/formacion-docente.gs` arriba
+- **Constancias fuera de alcance**: confirmado con Jorge que ni los webinars (salvo UNETE) ni los programas de CoEEE requieren que OTDE administre el documento — solo seguimiento estadístico
+- Pendiente de las fases 2-3 del proyecto (no implementado aún): seguimiento con recordatorios automáticos por estado, validación de asistencia con código de cierre en webinars (columnas `Requiere_codigo_asistencia`/`Codigo_asistencia` ya existen en `Cursos` para cuando se active), dashboards por sector/zona vía Looker Studio conectado directo a la hoja
+
+## `js/cct-db.js` — Campo `municipio` agregado (jul 2026)
+Los 506 registros se enriquecieron con `municipio` (18 municipios) cruzando por CCT contra `Catalogo SEPRN direcciones.xlsx` (columna `municip`, 612 filas, 100% poblada). El sector **no** determina el municipio de forma confiable — varios sectores abarcan múltiples municipios (ver mapa SVG de `index.html`) — por eso el municipio se deriva del CCT exacto, no del sector. Cualquier página que use el autocomplete de CCT puede ahora leer `m.municipio` igual que `m.sector`/`m.zona`/`m.nombre`.
+
+## Pendientes (al 6 jul 2026)
 - **Recrear páginas eliminadas** — `gestion-escolar.html`, `investigacion-educativa.html`, `programas-educativos.html`, `servicio-profesional.html`: requieren contenido validado con la Dra. Galindo
 - **Logomark SEPRN** — requiere archivo `logo.svg` (diseño gráfico pendiente)
 - **Barra CTE** — actualizar texto del `.update-banner` en `index.html` cuando se publique la 9ª sesión
+- **Centro de Formación Docente** — falta: crear el Spreadsheet real `Formacion_Docente_2026_2027`, desplegar `apps-script/formacion-docente.gs` y pegar la URL real en `APPS_SCRIPT_URL` de `formacion-docente.html` (hoy tiene un placeholder), y que OTDE dé de alta los primeros cursos activos en la hoja `Cursos` (con el menú "Generar ID de cursos faltantes")

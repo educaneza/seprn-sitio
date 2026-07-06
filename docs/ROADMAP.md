@@ -21,6 +21,25 @@ Objetivo: elevar el sitio de un nivel **5/10** (funcional-institucional 2019) a 
 
 ---
 
+## Centro de Formación Docente — EN PROGRESO (6 jul 2026)
+
+Sistematiza el flujo de convocatorias CoEEE (webinars, seminarios, conferencias, cursos autogestivos, acciones formativas, diplomados, proyectos didácticos), hoy resuelto con un Google Form distinto por curso y sin seguimiento. Discutido a fondo con Jorge antes de implementar: diagnóstico del flujo actual, diseño del modelo de datos, decisiones sobre constancias y municipio. Arquitectura completa en `docs/ARCHITECTURE.md §12`.
+
+| Item | Archivo(s) | Estado |
+|---|---|---|
+| Modelo relacional en Sheets: `Docentes` (upsert por RFC) + `Cursos` (catálogo, admin manual) + `Inscripciones` (transaccional) | Diseño validado con Jorge | ✅ |
+| `js/cct-db.js` enriquecido con `municipio` (18 municipios, cruzado desde `Catalogo SEPRN direcciones.xlsx`) | `js/cct-db.js` | ✅ |
+| Backend: `doGet` catálogo dinámico, `doPost` upsert + folio + dedupe, menú "Generar ID de cursos faltantes", `generarEstadisticas()` | `apps-script/formacion-docente.gs` | ✅ (código listo, no desplegado) |
+| Formulario web: catálogo dinámico por categoría, multi-selección, CCT autocomplete, validación por campo | `formacion-docente.html` | ✅ |
+| Banner de enlace desde `otde.html` | `otde.html` | ✅ |
+| Probado end-to-end con Playwright (catálogo, selección, autocomplete, validación) | — | ✅ |
+| **Deploy real**: crear Spreadsheet `Formacion_Docente_2026_2027`, desplegar el `.gs`, pegar URL real en `APPS_SCRIPT_URL` | — | ⬜ Pendiente |
+| **Poblar catálogo inicial**: dar de alta los primeros cursos activos en la hoja `Cursos` | — | ⬜ Pendiente |
+| Fase 2 (futuro): seguimiento con recordatorios automáticos por estado, cuidando cuota diaria de correo compartida entre los 4 backends | — | ⬜ No iniciado |
+| Fase 3 (futuro): validación de asistencia en webinars vía código de cierre; dashboards por sector/zona vía Looker Studio | — | ⬜ No iniciado |
+
+---
+
 ## ~~Instalador de Office + Soporte Técnico Remoto potenciado~~ — COMPLETADO (1 jul 2026)
 
 | Item | Archivo(s) | Estado |
@@ -463,11 +482,12 @@ git status
 # Verificar: https://educaneza.github.io/seprn-sitio/
 ```
 
-**Pendientes al 1 jul 2026 (actualizado):**
+**Pendientes al 6 jul 2026 (actualizado):**
 
-1. **Recrear páginas eliminadas** cuando haya contenido validado con la Dra. Avelina Galindo Celix: `gestion-escolar.html`, `investigacion-educativa.html`, `programas-educativos.html`, `servicio-profesional.html`.
-2. **Logomark SEPRN (3.1)** — requiere archivo SVG de diseño gráfico.
-3. **Barra CTE** — actualizar texto en `index.html` al agregar la novena sesión.
+1. **Centro de Formación Docente — deploy real**: crear el Spreadsheet `Formacion_Docente_2026_2027`, desplegar `apps-script/formacion-docente.gs` como Web App, pegar la URL real en `APPS_SCRIPT_URL` de `formacion-docente.html` (hoy tiene un placeholder), y dar de alta los primeros cursos activos en la hoja `Cursos` (usar el menú "Generar ID de cursos faltantes" para no escribir el `ID_Curso` a mano). Ver `docs/ARCHITECTURE.md §12`.
+2. **Recrear páginas eliminadas** cuando haya contenido validado con la Dra. Avelina Galindo Celix: `gestion-escolar.html`, `investigacion-educativa.html`, `programas-educativos.html`, `servicio-profesional.html`.
+3. **Logomark SEPRN (3.1)** — requiere archivo SVG de diseño gráfico.
+4. **Barra CTE** — actualizar texto en `index.html` al agregar la novena sesión.
 
 **Nota de caché:** tras un push a `main`, GitHub Pages tarda 5-10 min en propagar el CSS. Hacer Cmd+Shift+R para invalidar caché del navegador.
 
