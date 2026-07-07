@@ -1016,9 +1016,16 @@
         <input type="hidden" id="sector-val">
         <input type="hidden" id="zona-val">
         <input type="hidden" id="escuela-val">
+        <input type="hidden" id="municipio-val">
         <input type="hidden" id="curso-val">
 
         <p class="form-section-title">Contacto</p>
+
+        <div class="form-group">
+          <label for="telefono">WhatsApp / Teléfono <span class="req">*</span></label>
+          <input type="tel" id="telefono" placeholder="10 dígitos, sin lada" maxlength="10" autocomplete="tel" required>
+          <div class="field-error" id="telefono-error">Ingresa un teléfono válido (10 dígitos).</div>
+        </div>
 
         <div class="form-group">
           <label for="correo">Correo electrónico <span class="req">*</span></label>
@@ -1068,13 +1075,29 @@
 
 <script src="js/cct-db.js"></script>
 <script>
-  // URL del Apps Script (reemplazar con la URL real al desplegar)
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx2NeV838LWQB4ff4tb60U5qaJYVmcRKE-gT4a0jlg38eokkmrhHrawg-zle-S7SD8/exec';
+  // URL del Apps Script — Centro de Formación Docente (Formacion_Docente_2026_2027).
+  // Antes apuntaba a un Apps Script propio (apps-script/cursos-coeee-2026.gs);
+  // ahora reporta al modelo relacional nuevo (Docentes/Cursos/Inscripciones).
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz5UWWzv58tbGxqPaFc9LP-e5JHBhzsZsh_j-Ao7QOCucoiLiTnS96Fsfl7upp9S8E/exec';
 
   // ── Estado global ──
   let cursosSeleccionados = [];   // multi-select
   let cctEncontrada       = false;
   let regresoBtnTimeout   = null;
+
+  // ── Catálogo dinámico: nombre de curso → ID_Curso (hoja Cursos) ──
+  // Los 5 cursos de esta Jornada se dan de alta corriendo, una vez, el menú
+  // "OTDE Formación → Migrar Jornada Verano 2026" en el Apps Script nuevo.
+  let catalogoCursos = {};
+  async function cargarCatalogoCursos() {
+    try {
+      const res = await fetch(APPS_SCRIPT_URL).then(r => r.json());
+      (res.cursos || []).forEach(c => { catalogoCursos[c.nombre.trim()] = c.id; });
+    } catch (err) {
+      console.error('No se pudo cargar el catálogo de cursos:', err);
+    }
+  }
+  cargarCatalogoCursos();
 
   // ── Mapa sector → zonas (construido desde CCT_DB) ──
   const sectorZonas = {};
@@ -1257,9 +1280,10 @@
   function seleccionarCct(m) {
     inputCct.value = m.cct;
     suggestions.style.display = 'none';
-    document.getElementById('sector-val').value  = m.sector;
-    document.getElementById('zona-val').value    = m.zona   || '';
-    document.getElementById('escuela-val').value = m.nombre || '';
+    document.getElementById('sector-val').value    = m.sector;
+    document.getElementById('zona-val').value      = m.zona   || '';
+    document.getElementById('escuela-val').value   = m.nombre || '';
+    document.getElementById('municipio-val').value = m.municipio || '';
     statusBox.className  = 'cct-status found';
     statusBox.textContent = `Sector ${m.sector}${m.zona ? ' · Zona ' + m.zona : ''} · ${m.nombre}`;
     document.getElementById('manual-fields').classList.remove('visible');
@@ -1267,9 +1291,10 @@
   }
 
   function resetCct() {
-    document.getElementById('sector-val').value  = '';
-    document.getElementById('zona-val').value    = '';
-    document.getElementById('escuela-val').value = '';
+    document.getElementById('sector-val').value    = '';
+    document.getElementById('zona-val').value      = '';
+    document.getElementById('escuela-val').value   = '';
+    document.getElementById('municipio-val').value = '';
     statusBox.className = 'cct-status';
     cctEncontrada = false;
   }
@@ -1316,13 +1341,18 @@
     const resultados = [];
 
     try {
+      if (!Object.keys(catalogoCursos).length) await cargarCatalogoCursos();
+
       // Secuencial: esperar a que cada row se escriba antes del siguiente fetch
       // para evitar que generarFolio() lea el mismo maxNum en paralelo.
       for (const c of cursosSeleccionados) {
+        const idCurso = catalogoCursos[c.nombre.trim()];
+        if (!idCurso) throw new Error('No se encontró "' + c.nombre + '" en el catálogo de cursos. Contacta a OTDE NEZA.');
+
         const res = await fetch(APPS_SCRIPT_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({ ...base, curso: c.nombre })
+          body: JSON.stringify({ ...base, id_curso: idCurso })
         }).then(r => r.json());
         if (res.status !== 'ok') throw new Error(res.mensaje || 'Error desconocido');
         resultados.push({ folio: res.folio, curso: c.nombre });
@@ -1349,8 +1379,10 @@
       sector:  manual ? document.getElementById('sector-manual').value : document.getElementById('sector-val').value,
       zona:    manual ? document.getElementById('zona-manual').value   : document.getElementById('zona-val').value,
       escuela: manual ? document.getElementById('escuela-manual').value.trim() : document.getElementById('escuela-val').value,
+      municipio: manual ? '' : document.getElementById('municipio-val').value,
+      telefono: document.getElementById('telefono').value.trim(),
       correo:  document.getElementById('correo').value.trim()
-      // 'curso' se agrega por separado en cada petición
+      // 'id_curso' se agrega por separado en cada petición
     };
   }
 
@@ -1362,6 +1394,7 @@
       { id: 'rfc',     err: 'rfc-error',     test: v => /^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/i.test(v.trim()) },
       { id: 'funcion', err: 'funcion-error', test: v => v !== '' },
       { id: 'cct',     err: 'cct-error',     test: v => v.trim().length >= 8 },
+      { id: 'telefono', err: 'telefono-error', test: v => /^\d{10}$/.test(v.trim()) },
       { id: 'correo',  err: 'correo-error',  test: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()) }
     ];
 
@@ -1443,6 +1476,7 @@
         ['Función', datos.funcion],
         ['CCT',     datos.cct],
         ['Sector',  datos.sector + (datos.zona ? ' · Zona ' + datos.zona : '')],
+        ['Teléfono', datos.telefono],
         ['Correo',  datos.correo]
       ].map(([k, v]) => `<dt>${k}</dt><dd>${v || '—'}</dd>`).join('');
     } else {
@@ -1461,6 +1495,7 @@
         ['Función', datos.funcion],
         ['CCT',     datos.cct],
         ['Sector',  datos.sector + (datos.zona ? ' · Zona ' + datos.zona : '')],
+        ['Teléfono', datos.telefono],
         ['Correo',  datos.correo]
       ].map(([k, v]) => `<dt>${k}</dt><dd>${v || '—'}</dd>`).join('');
     }

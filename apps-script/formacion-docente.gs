@@ -292,6 +292,8 @@ function onOpen() {
     .createMenu('OTDE Formación')
     .addItem('Generar ID de cursos faltantes', 'generarIdsCursosFaltantes')
     .addItem('Generar estadísticas', 'generarEstadisticas')
+    .addSeparator()
+    .addItem('Migrar Jornada Verano 2026', 'migrarJornadaVerano')
     .addToUi();
 }
 
@@ -396,4 +398,122 @@ function generarEstadisticas() {
   resumen.setColumnWidth(2, 120);
 
   SpreadsheetApp.getUi().alert('Estadísticas generadas en la hoja "Estadisticas_Formacion".');
+}
+
+
+// ============================================================
+// MIGRACIÓN — Jornada de Capacitación Verano 2026
+// (ciclo 25-26, cursos CoEEE vía auladigital.dee.edu.mx)
+//
+// Trae al modelo relacional nuevo (Docentes/Cursos/Inscripciones)
+// los registros que ya existen en el Spreadsheet viejo de la
+// Jornada de Verano (apps-script/cursos-coeee-2026.gs), para que
+// jornada-verano-2026.html pueda apuntar aquí en vez de a su
+// Apps Script propio. Es un import histórico + alta de catálogo,
+// se corre UNA vez desde el menú "OTDE Formación → Migrar Jornada
+// Verano 2026" (usa tu acceso, no el de un tercero).
+// ============================================================
+
+const ID_SPREADSHEET_VERANO_2026 = '1k492VGkXhXAUFmIyYXCQzH0nilgZDzRMmo0NCEwDnK4';
+const HOJA_VERANO_2026 = 'Cursos_OTDE_Verano_2026';
+
+// Catálogo fijo de los 5 cursos de la Jornada de Verano 2026
+// (hardcodeados hoy en jornada-verano-2026.html). El nombre debe
+// coincidir EXACTO con el data-curso de cada tarjeta del wizard.
+const CURSOS_VERANO_2026 = [
+  { nombre: 'Excel esencial para la gestión administrativa', fecha_inicio: '2026-08-10', fecha_fin: '2026-08-14' },
+  { nombre: 'Introducción a la inteligencia artificial en educación', fecha_inicio: '2026-08-10', fecha_fin: '2026-08-14' },
+  { nombre: 'NotebookLM: tu Co-piloto digital en apoyo a la labor educativa', fecha_inicio: '2026-08-10', fecha_fin: '2026-08-14' },
+  { nombre: 'Aventuras en bloques: crea, juega y enseña con Scratch JR.', fecha_inicio: '2026-08-17', fecha_fin: '2026-08-20' },
+  { nombre: 'Canva: potencializando el aprendizaje con creatividad', fecha_inicio: '2026-08-17', fecha_fin: '2026-08-21' }
+];
+
+// CCT → Municipio, generado desde js/cct-db.js (506 registros, jul 2026)
+const CCT_MUNICIPIO_MAP = JSON.parse(`{"15DPR0432N":"Ayapango","15DPR0433M":"Amecameca","15DPR0434L":"Amecameca","15DPR0439G":"Ayapango","15DPR0441V":"Amecameca","15DPR2933V":"Amecameca","15DPR3028Z":"Ayapango","15DPR0866Z":"Tlalmanalco","15DPR0867Z":"Tlalmanalco","15DPR0868Y":"Tlalmanalco","15DPR0873J":"Tlalmanalco","15DPR2237Y":"Tlalmanalco","15DPR0865A":"Tenango del Aire","15DPR0869X":"Tenango del Aire","15DPR0871L":"Tenango del Aire","15DPR0872K":"Tenango del Aire","15DPR0877F":"Temamatla","15DPR2766O":"Temamatla","15DPR2978R":"Temamatla","15DPR3005O":"Tenango del Aire","15DPR0429Z":"Atlautla","15DPR0430P":"Atlautla","15DPR0435K":"Ozumba","15DPR0440W":"Ozumba","15DPR1300C":"Atlautla","15DPR3077H":"Ozumba","15DPR0876G":"Tlalmanalco","15DPR0878E":"Tlalmanalco","15DPR1525J":"Tlalmanalco","15DPR2946Z":"Tlalmanalco","15DPR0436J":"Amecameca","15DPR0438H":"Amecameca","15DPR1256F":"Atlautla","15DPR1760N":"Amecameca","15DPR2444F":"Ayapango","15DPR0431O":"Tepetlixpa","15DPR0437I":"Tepetlixpa","15DPR0442U":"Atlautla","15DPR0864B":"Juchitepec","15DPR0870M":"Juchitepec","15DPR1243B":"Juchitepec","15DPR1436Q":"Tepetlixpa","15DPR2236Z":"Juchitepec","15DPR2979Q":"Tepetlixpa","15DPR0456X":"Ixtapaluca","15DPR0462H":"Ixtapaluca","15DPR0465E":"Ixtapaluca","15DPR1666I":"Ixtapaluca","15DPR2613K":"Ixtapaluca","15DPR2704B":"Ixtapaluca","15DPR2937R":"Ixtapaluca","15DPR0457W":"Ixtapaluca","15DPR0458V":"Ixtapaluca","15DPR1670V":"Ixtapaluca","15DPR2612L":"Ixtapaluca","15DPR2860T":"Ixtapaluca","15DPR1623K":"Valle de Chalco Solidaridad","15DPR1972Q":"Valle de Chalco Solidaridad","15DPR2222W":"Valle de Chalco Solidaridad","15DPR2345F":"Valle de Chalco Solidaridad","15DPR2615I":"Valle de Chalco Solidaridad","15DPR2762S":"Valle de Chalco Solidaridad","15DPR1624J":"Valle de Chalco Solidaridad","15DPR1632S":"Valle de Chalco Solidaridad","15DPR2340K":"Valle de Chalco Solidaridad","15DPR2394O":"Valle de Chalco Solidaridad","15DPR2610N":"Valle de Chalco Solidaridad","15DPR2614J":"Valle de Chalco Solidaridad","15DPR3027Z":"Chalco","15DPR0461I":"Ixtapaluca","15DPR1676P":"Ixtapaluca","15DPR1957Y":"Valle de Chalco Solidaridad","15DPR2611M":"Valle de Chalco Solidaridad","15DPR2749Y":"Valle de Chalco Solidaridad","15DPR0893X":"Texcoco","15DPR0895V":"Texcoco","15DPR0898S":"Texcoco","15DPR1672T":"Texcoco","15DPR1807R":"Texcoco","15DPR2370E":"Texcoco","15DPR0896U":"Texcoco","15DPR0897T":"Texcoco","15DPR0899R":"Texcoco","15DPR0900Q":"Texcoco","15DPR0903N":"Texcoco","15DPR1776O":"Texcoco","15DPR3134I":"Texcoco","15DPR0534K":"Texcoco","15DPR0535J":"Texcoco","15DPR0536I":"Texcoco","15DPR0538G":"Texcoco","15DPR0541U":"Texcoco","15DPR0543S":"Texcoco","15DPR0545Q":"Texcoco","15DPR1413F":"Texcoco","15DPR1857Z":"Texcoco","15DPR2770A":"Texcoco","15DPR0528Z":"Texcoco","15DPR0537H":"Texcoco","15DPR0539F":"Texcoco","15DPR0540V":"Texcoco","15DPR0542T":"Texcoco","15DPR0544R":"Texcoco","15DPR2238X":"Texcoco","15DPR2245G":"Texcoco","15DPR2819C":"Texcoco","15DPR0530O":"Texcoco","15DPR0532M":"Texcoco","15DPR0533L":"Texcoco","15DPR0901P":"Texcoco","15DPR1076V":"Texcoco","15DPR1855A":"Texcoco","15DPR1923H":"Texcoco","15DPR0527A":"Texcoco","15DPR0529Z":"Texcoco","15DPR0531N":"Texcoco","15DPR0546P":"Texcoco","15DPR0550B":"Texcoco","15DPR0551A":"Texcoco","15DPR0560I":"Texcoco","15DPR0561H":"Texcoco","15DPR0793Y":"La Paz","15DPR0794X":"La Paz","15DPR1022R":"La Paz","15DPR1301B":"La Paz","15DPR1532T":"La Paz","15DPR2188F":"La Paz","15DPR2673Z":"La Paz","15DPR0336K":"La Paz","15DPR0795W":"La Paz","15DPR0797U":"La Paz","15DPR1785W":"La Paz","15DPR1885V":"La Paz","15DPR1898Z":"La Paz","15DPR0894W":"Chicoloapan","15DPR1254H":"Chicoloapan","15DPR1673S":"Chicoloapan","15DPR2247E":"Chicoloapan","15DPR3119Q":"Chicoloapan","15DPR0023J":"Chimalhuacán","15DPR0819P":"Chimalhuacán","15DPR1420P":"Chimalhuacán","15DPR1445Y":"Chimalhuacán","15DPR1781Z":"Chimalhuacán","15DPR1966F":"Chimalhuacán","15DPR2810L":"Chimalhuacán","15DPR2905Z":"Chimalhuacán","15DPR0821D":"La Paz","15DPR1583Z":"La Paz","15DPR3000T":"La Paz","15DPR3234H":"La Paz","15DPR0902O":"Chicoloapan","15DPR1667H":"Chicoloapan","15DPR1829C":"Chicoloapan","15DPR1899Y":"Chicoloapan","15DPR2601F":"Chicoloapan","15DPR0471P":"Nezahualcóyotl","15DPR0473N":"Nezahualcóyotl","15DPR0477J":"Nezahualcóyotl","15DPR1612E":"Nezahualcóyotl","15DPR2419G":"Nezahualcóyotl","15DPR0469A":"Nezahualcóyotl","15DPR0474M":"Nezahualcóyotl","15DPR1258D":"Nezahualcóyotl","15DPR1482B":"Nezahualcóyotl","15DPR1487X":"Nezahualcóyotl","15DPR1613D":"Nezahualcóyotl","15DPR0468B":"Nezahualcóyotl","15DPR0476K":"Nezahualcóyotl","15DPR1636O":"Nezahualcóyotl","15DPR2429N":"Nezahualcóyotl","15DPR0467C":"Nezahualcóyotl","15DPR0472O":"Nezahualcóyotl","15DPR1565K":"Nezahualcóyotl","15DPR2519F":"Nezahualcóyotl","15DPR0292D":"Nezahualcóyotl","15DPR0481W":"Nezahualcóyotl","15DPR0483U":"Nezahualcóyotl","15DPR1260S":"Nezahualcóyotl","15DPR0479H":"Nezahualcóyotl","15DPR0482V":"Nezahualcóyotl","15DPR1375T":"Nezahualcóyotl","15DPR2578V":"Nezahualcóyotl","15DPR0485S":"Nezahualcóyotl","15DPR0486R":"Nezahualcóyotl","15DPR2746A":"Nezahualcóyotl","15DPR0484T":"Nezahualcóyotl","15DPR0487Q":"Nezahualcóyotl","15DPR0488P":"Nezahualcóyotl","15DPR1262Q":"Nezahualcóyotl","15DPR1439N":"Nezahualcóyotl","15DPR0522F":"Nezahualcóyotl","15DPR0526B":"Nezahualcóyotl","15DPR1263P":"Nezahualcóyotl","15DPR1264O":"Nezahualcóyotl","15DPR1368J":"Nezahualcóyotl","15DPR1369I":"Nezahualcóyotl","15DPR0504Q":"Nezahualcóyotl","15DPR0507N":"Nezahualcóyotl","15DPR0860F":"Nezahualcóyotl","15DPR0861E":"Nezahualcóyotl","15DPR1253I":"Nezahualcóyotl","15DPR1533S":"Nezahualcóyotl","15DPR0506O":"Nezahualcóyotl","15DPR0859Q":"Nezahualcóyotl","15DPR1531U":"Nezahualcóyotl","15DPR0492B":"Nezahualcóyotl","15DPR0493A":"Nezahualcóyotl","15DPR0495Z":"Nezahualcóyotl","15DPR0497X":"Nezahualcóyotl","15DPR0498W":"Nezahualcóyotl","15DPR0494Z":"Nezahualcóyotl","15DPR0496Y":"Nezahualcóyotl","15DPR0500U":"Nezahualcóyotl","15DPR0503R":"Nezahualcóyotl","15DPR0505P":"Nezahualcóyotl","15DPR0512Z":"Nezahualcóyotl","15DPR0513Y":"Nezahualcóyotl","15DPR0514X":"Nezahualcóyotl","15DPR1650H":"Nezahualcóyotl","15DPR1734P":"Nezahualcóyotl","15DPR0854V":"Nezahualcóyotl","15DPR1117E":"Nezahualcóyotl","15DPR1416C":"Nezahualcóyotl","15DPR1524K":"Nezahualcóyotl","15DPR2298L":"Nezahualcóyotl","15DPR0519S":"Nezahualcóyotl","15DPR0523E":"Nezahualcóyotl","15DPR1827E":"Nezahualcóyotl","15DPR2466R":"Nezahualcóyotl","15DPR0509L":"Nezahualcóyotl","15DPR0510A":"Nezahualcóyotl","15DPR0511Z":"Nezahualcóyotl","15DPR0518T":"Nezahualcóyotl","15DPR0520H":"Nezahualcóyotl","15DPR0524D":"Nezahualcóyotl","15DPR0852X":"Nezahualcóyotl","15DPR0853W":"Nezahualcóyotl","15DPR0857S":"Nezahualcóyotl","15DPR1419Z":"Nezahualcóyotl","15DPR0182Y":"Valle de Chalco Solidaridad","15DPR0222I":"Valle de Chalco Solidaridad","15DPR0444S":"Valle de Chalco Solidaridad","15DPR1435R":"Valle de Chalco Solidaridad","15DPR0445R":"Chalco","15DPR1647U":"Chalco","15DPR1864I":"Chalco","15DPR2598I":"Chalco","15DPR0180Z":"Chalco","15DPR0447P":"Chalco","15DPR0451B":"Chalco","15DPR0455Y":"Chalco","15DPR0874I":"Temamatla","15DPR2240L":"Chalco","15DPR2405D":"Chalco","15DPR0454Z":"Chalco","15DPR0875H":"Chalco","15DPR1242C":"Chalco","15DPR1866G":"Chalco","15DPR3298S":"Chalco","15DPR0449N":"Chalco","15DPR1838K":"Valle de Chalco Solidaridad","15DPR1856Z":"Valle de Chalco Solidaridad","15DPR3256T":"Chalco","15DPR0231Q":"Chalco","15DPR0446Q":"Chalco","15DPR0452A":"Valle de Chalco Solidaridad","15DPR0453Z":"Chalco","15DPR2855H":"Chalco","15DPR2893K":"Valle de Chalco Solidaridad","15DPR2915F":"Chalco","15DPR2943B":"Chalco","15DPR3162E":"Chalco","15DPR3270M":"Chalco","15DPR3289K":"Chalco","15DPR3290Z":"Chalco","15DPR3299R":"Chalco","15DPR3308I":"Chalco","15DPR3317Q":"Chalco","15DPR3318P":"Chalco","15DPR3320D":"Chalco","15DPR0311B":"Nezahualcóyotl","15DPR0842Q":"Nezahualcóyotl","15DPR1070A":"Nezahualcóyotl","15DPR0489O":"Nezahualcóyotl","15DPR1261R":"Nezahualcóyotl","15DPR2748Z":"Nezahualcóyotl","15DPR0846M":"Nezahualcóyotl","15DPR0848K":"Nezahualcóyotl","15DPR1305Y":"Nezahualcóyotl","15DPR0844O":"Nezahualcóyotl","15DPR0847L":"Nezahualcóyotl","15DPR0851Y":"Nezahualcóyotl","15DPR1639L":"Nezahualcóyotl","15DPR0508M":"Nezahualcóyotl","15DPR0845N":"Nezahualcóyotl","15DPR0849J":"Nezahualcóyotl","15DPR1479O":"Nezahualcóyotl","15DPR1534R":"Nezahualcóyotl","15DPR1627G":"Nezahualcóyotl","15DPR1665J":"Nezahualcóyotl","15DPR2542G":"Nezahualcóyotl","15DPR2917D":"Nezahualcóyotl","15DPR0521G":"Nezahualcóyotl","15DPR0525C":"Nezahualcóyotl","15DPR1265N":"Nezahualcóyotl","15DPR1542Z":"Nezahualcóyotl","15DPR0757T":"Nezahualcóyotl","15DPR0760G":"Nezahualcóyotl","15DPR0773K":"Nezahualcóyotl","15DPR1834O":"Nezahualcóyotl","15DPR2299K":"Nezahualcóyotl","15DPR0369B":"Nezahualcóyotl","15DPR1250L":"Nezahualcóyotl","15DPR1463N":"Nezahualcóyotl","15DPR1744W":"Nezahualcóyotl","15DPR0758S":"Nezahualcóyotl","15DPR0761F":"Nezahualcóyotl","15DPR1307W":"Nezahualcóyotl","15DPR1433T":"Nezahualcóyotl","15DPR1740Z":"Nezahualcóyotl","15DPR2451P":"Nezahualcóyotl","15DPR0798T":"Chimalhuacán","15DPR1969C":"Chimalhuacán","15DPR2703C":"Chimalhuacán","15DPR2866N":"Chimalhuacán","15DPR2977S":"Chimalhuacán","15DPR3160G":"Chicoloapan","15DPR3235G":"Chicoloapan","15DPR0170T":"Chimalhuacán","15DPR1867F":"Chimalhuacán","15DPR2865O":"Chimalhuacán","15DPR2878S":"Chimalhuacán","15DPR0822C":"Chimalhuacán","15DPR0823B":"Chimalhuacán","15DPR1535Q":"Chimalhuacán","15DPR2447C":"Chimalhuacán","15DPR3023D":"Chimalhuacán","15DPR0820E":"Chimalhuacán","15DPR1347X":"Chimalhuacán","15DPR1442A":"Chimalhuacán","15DPR1959W":"Chimalhuacán","15DPR1964H":"Chimalhuacán","15DPR2225T":"Chimalhuacán","15DPR1443Z":"Chimalhuacán","15DPR1444Z":"Chimalhuacán","15DPR2420W":"Chimalhuacán","15DPR2932W":"Chimalhuacán","15DPR0022K":"Chimalhuacán","15DPR0818Q":"Chimalhuacán","15DPR2272D":"Chimalhuacán","15DPR2343H":"Chimalhuacán","15DPR2360Y":"Chimalhuacán","15DPR0470Q":"Nezahualcóyotl","15DPR0475L":"Nezahualcóyotl","15DPR1081G":"Nezahualcóyotl","15DPR1560P":"Nezahualcóyotl","15DPR1610G":"Nezahualcóyotl","15DPR1611F":"Nezahualcóyotl","15DPR1696C":"Nezahualcóyotl","15DPR0028E":"Nezahualcóyotl","15DPR0315Y":"Nezahualcóyotl","15DPR0316X":"Nezahualcóyotl","15DPR1259C":"Nezahualcóyotl","15DPR1371X":"Nezahualcóyotl","15DPR1372W":"Nezahualcóyotl","15DPR0480X":"Nezahualcóyotl","15DPR1446X":"Nezahualcóyotl","15DPR1449U":"Nezahualcóyotl","15DPR0843P":"Nezahualcóyotl","15DPR1733Q":"Nezahualcóyotl","15DPR1944U":"Nezahualcóyotl","15DPR2581I":"Nezahualcóyotl","15DPR0077N":"Chalco","15DPR0080A":"Chalco","15DPR0443T":"Chalco","15DPR0448O":"Chalco","15DPR1725H":"Chalco","15DPR3286N":"Chalco","15DPR3287M":"Chalco","15DPR0464F":"Ixtapaluca","15DPR2864P":"Ixtapaluca","15DPR3030N":"Ixtapaluca","15DPR3044Q":"Ixtapaluca","15DPR3045P":"Ixtapaluca","15DPR3063E":"Ixtapaluca","15DPR3076I":"Ixtapaluca","15DPR3166A":"Ixtapaluca","15DPR0450C":"Chalco","15DPR2235Z":"Chalco","15DPR3189L":"Chalco","15DPR3190A":"Ixtapaluca","15DPR3253W":"Chalco","15DPR3274I":"Chalco","15DPR3321C":"Chalco","15DPR0063K":"Ixtapaluca","15DPR0463G":"Ixtapaluca","15DPR0466D":"Ixtapaluca","15DPR1471W":"Ixtapaluca","15DPR2935T":"Ixtapaluca","15DPR3276G":"Chalco","15DPR3288L":"Chalco","15DPR0006T":"Ixtapaluca","15DPR0459U":"Ixtapaluca","15DPR0460J":"Ixtapaluca","15DPR1584Z":"Ixtapaluca","15DPR1675Q":"Ixtapaluca","15DPR2709X":"Ixtapaluca","15DPR3157T":"Ixtapaluca","15DPR3213V":"Ixtapaluca","15DPR3080V":"Ixtapaluca","15DPR3081U":"Ixtapaluca","15DPR3082T":"Ixtapaluca","15DPR3083S":"Ixtapaluca","15DPR3091A":"Ixtapaluca","15DPR3092Z":"Ixtapaluca","15DPR3114V":"Ixtapaluca","15FIZ0042V":"Amecameca","15FIZ0043U":"Tlalmanalco","15FIZ0044T":"Tenango del Aire","15FIZ0045S":"Valle de Chalco Solidaridad","15FIZ0046R":"Chalco","15FIZ0047Q":"Ixtapaluca","15FIZ0048P":"Ixtapaluca","15FIZ0049O":"La Paz","15FIZ0050D":"La Paz","15FIZ0051C":"Chicoloapan","15FIZ0052B":"Chimalhuacán","15FIZ0053A":"Texcoco","15FIZ0054Z":"Texcoco","15FIZ0055Z":"Texcoco","15FIZ0056Y":"Texcoco","15FIZ0057X":"Nezahualcóyotl","15FIZ0058W":"Nezahualcóyotl","15FIZ0059V":"Nezahualcóyotl","15FIZ0060K":"Nezahualcóyotl","15FIZ0061J":"Nezahualcóyotl","15FIZ0062I":"Nezahualcóyotl","15FIZ0063H":"Nezahualcóyotl","15FIZ0064G":"Nezahualcóyotl","15FIZ0065F":"Nezahualcóyotl","15FIZ0066E":"Nezahualcóyotl","15FIZ0067D":"Nezahualcóyotl","15FIZ0068C":"Nezahualcóyotl","15FIZ0069B":"Nezahualcóyotl","15FIZ0070R":"Chalco","15FIZ0071Q":"Nezahualcóyotl","15FIZ0072P":"Nezahualcóyotl","15FIZ0073O":"Nezahualcóyotl","15FIZ0074N":"Nezahualcóyotl","15FIZ0075M":"Nezahualcóyotl","15FIZ0076L":"Nezahualcóyotl","15FIZ0077K":"Nezahualcóyotl","15FIZ0078J":"Nezahualcóyotl","15FIZ0079I":"Nezahualcóyotl","15FIZ0080Y":"Nezahualcóyotl","15FIZ0081X":"Nezahualcóyotl","15FIZ0082W":"Nezahualcóyotl","15FIZ0083V":"Chalco","15FIZ0258U":"Ozumba","15FIZ0219S":"Tlalmanalco","15FIZ0220H":"Chalco","15FIZ0221G":"Chalco","15FIZ0222F":"Ixtapaluca","15FIZ0249M":"Valle de Chalco Solidaridad","15FIZ0250B":"Valle de Chalco Solidaridad","15FIZ0223E":"Ixtapaluca","15FIZ0224D":"Chimalhuacán","15FIZ0225C":"Chimalhuacán","15FIZ0226B":"Chimalhuacán","15FIZ0251A":"Texcoco","15FIZ0252Z":"Texcoco","15FIZ0253Z":"Atlautla","15FIZ0227A":"Nezahualcóyotl","15FIZ0254Y":"Nezahualcóyotl","15FIZ0228Z":"Nezahualcóyotl","15FIZ0229Z":"La Paz","15FIZ0255X":"Nezahualcóyotl","15FIZ0256W":"Chalco","15FIZ0257V":"Nezahualcóyotl","15FIZ0351Z":"Nezahualcóyotl","15FIZ0367A":"Ixtapaluca","15FIZ0368Z":"Chicoloapan","15FIZ0369Z":"Chimalhuacán","15FIZ0370O":"Nezahualcóyotl","15FIZ0371N":"Chalco","15FIZ0372M":"Tepetlixpa","15FIZ0373L":"Chimalhuacán","15FIZ0374K":"Chimalhuacán","15FIZ0412X":"Chalco","15FIZ0413W":"Ixtapaluca","15FIZ0414V":"Ixtapaluca","15FJS0015D":"Amecameca","15FJS0017B":"Ixtapaluca","15FJS0016C":"Texcoco","15FJS0014E":"La Paz","15FJS0018A":"Nezahualcóyotl","15FJS0019Z":"Nezahualcóyotl","15FJS0020P":"Nezahualcóyotl","15FJS0047W":"Chalco","15FJS0037P":"Nezahualcóyotl","15FJS0038O":"Nezahualcóyotl","15FJS0039N":"Chimalhuacán","15FJS0050J":"Nezahualcóyotl","15FJS0051I":"Ixtapaluca","15ADG0086N":"Nezahualcóyotl"}`);
+
+// ── Asegura que los 5 cursos de Verano existan en la hoja Cursos ──
+// Devuelve un mapa { nombreCurso: ID_Curso } para usar en la migración
+// y en el payload nuevo de jornada-verano-2026.html.
+function asegurarCursosVerano() {
+  const hoja  = obtenerHojaCursos();
+  const datos = hoja.getDataRange().getValues();
+  const mapa  = {};
+
+  CURSOS_VERANO_2026.forEach(curso => {
+    const filaExistente = datos.slice(1).find(row => String(row[2]).trim() === curso.nombre);
+    if (filaExistente) {
+      mapa[curso.nombre] = String(filaExistente[0]).trim();
+      return;
+    }
+
+    const prefijo = PREFIJOS_CATEGORIA['Curso autogestivo'];
+    const maxNum = datos.slice(1)
+      .map(row => String(row[0]))
+      .filter(id => id.startsWith(prefijo + '-' + CICLO_ESCOLAR + '-'))
+      .map(id => parseInt(id.split('-').pop(), 10) || 0)
+      .reduce((a, b) => Math.max(a, b), 0);
+    const idCurso = prefijo + '-' + CICLO_ESCOLAR + '-' + String(maxNum + 1).padStart(3, '0');
+
+    hoja.appendRow([
+      idCurso, 'Curso autogestivo', curso.nombre, 'CoEEE', 'En línea',
+      new Date(curso.fecha_inicio), new Date(curso.fecha_fin),
+      'https://auladigital.dee.edu.mx', 'FALSE', '', 'TRUE',
+      'Jornada de Capacitación Verano 2026'
+    ]);
+
+    datos.push([idCurso, 'Curso autogestivo', curso.nombre]); // para que maxNum considere el nuevo ID si hay más de uno por generar
+    mapa[curso.nombre] = idCurso;
+  });
+
+  return mapa;
+}
+
+// ── Migración histórica: Cursos_OTDE_Verano_2026 → Docentes/Inscripciones ──
+function migrarJornadaVerano() {
+  const ui = SpreadsheetApp.getUi();
+  const mapaCursos = asegurarCursosVerano();
+
+  const ssVerano = SpreadsheetApp.openById(ID_SPREADSHEET_VERANO_2026);
+  const hojaVerano = ssVerano.getSheetByName(HOJA_VERANO_2026);
+  if (!hojaVerano) {
+    ui.alert('No se encontró la hoja "' + HOJA_VERANO_2026 + '" en el spreadsheet viejo.');
+    return;
+  }
+
+  const filas = hojaVerano.getDataRange().getValues().slice(1);
+  if (!filas.length) {
+    ui.alert('La hoja de Jornada Verano no tiene registros todavía.');
+    return;
+  }
+
+  const hojaDocentes = obtenerHojaDocentes();
+  const hojaInscripciones = obtenerHojaInscripciones();
+  const inscripcionesExistentes = hojaInscripciones.getDataRange().getValues().slice(1);
+
+  let migrados = 0, saltados = 0, sinCurso = 0;
+
+  filas.forEach(fila => {
+    // A Fecha | B Folio | C Nombre | D RFC | E Función | F CCT | G Sector | H Zona | I Escuela/Unidad | J Curso | K Correo
+    const [fecha, folio, nombre, rfcRaw, funcion, cctRaw, sector, zona, escuela, cursoNombre, correo] = fila;
+    const rfc = String(rfcRaw).trim().toUpperCase();
+    const cct = String(cctRaw).trim().toUpperCase();
+    const idCurso = mapaCursos[String(cursoNombre).trim()];
+
+    if (!rfc || !idCurso) { sinCurso++; return; }
+
+    const yaExiste = inscripcionesExistentes.some(r => String(r[0]).trim() === String(folio).trim());
+    if (yaExiste) { saltados++; return; }
+
+    upsertDocente(hojaDocentes, {
+      nombre: nombre, correo: correo || '', telefono: '', cct: cct, escuela: escuela,
+      sector: sector, zona: zona, municipio: CCT_MUNICIPIO_MAP[cct] || '', funcion: funcion
+    }, rfc, fecha || new Date());
+
+    hojaInscripciones.appendRow([folio, fecha, rfc, idCurso, 'Registrado', '', '', 'Migrado de Jornada Verano 2026']);
+    inscripcionesExistentes.push([folio]);
+    migrados++;
+  });
+
+  ui.alert('Migración completa: ' + migrados + ' registro(s) migrado(s), ' +
+           saltados + ' ya existían, ' + sinCurso + ' sin RFC/curso válido.');
 }
