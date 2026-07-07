@@ -1,0 +1,422 @@
+<title>Guía operativa — Centro de Formación Docente</title>
+<style>
+  :root {
+    --midnight: #0C1A2E;
+    --guinda: #56212f;
+    --acento: #9F2241;
+    --arena: #d6d1ca;
+    --caramelo: #977e5b;
+    --off-white: #F9F8F5;
+
+    --bg: var(--off-white);
+    --bg-elevated: #ffffff;
+    --text: #201a1d;
+    --text-muted: #6b5f5a;
+    --border: #e0d9d2;
+    --border-strong: var(--arena);
+    --link: var(--acento);
+    --code-bg: #efe9e2;
+    --code-text: #56212f;
+
+    --ok-bg: #e6f2ea; --ok-text: #14532d; --ok-border: #b7dcc3;
+    --warn-bg: #fdf3e2; --warn-text: #7c4a12; --warn-border: #f0d4a0;
+    --danger-bg: #fbe9e9; --danger-text: #8f1d1d; --danger-border: #eec2c2;
+
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0C1A2E;
+      --bg-elevated: #14243b;
+      --text: #ede7e1;
+      --text-muted: #a9a0ae;
+      --border: #2a3b56;
+      --border-strong: #3a4d6b;
+      --link: #e8a3b8;
+      --code-bg: #1c2b45;
+      --code-text: #f4c9d6;
+
+      --ok-bg: #123626; --ok-text: #7fd8a3; --ok-border: #1e5b3d;
+      --warn-bg: #3a2c14; --warn-text: #f0c579; --warn-border: #5c451f;
+      --danger-bg: #3a1c1c; --danger-text: #f2a0a0; --danger-border: #5c2929;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0C1A2E; --bg-elevated: #14243b; --text: #ede7e1; --text-muted: #a9a0ae;
+    --border: #2a3b56; --border-strong: #3a4d6b; --link: #e8a3b8;
+    --code-bg: #1c2b45; --code-text: #f4c9d6;
+    --ok-bg: #123626; --ok-text: #7fd8a3; --ok-border: #1e5b3d;
+    --warn-bg: #3a2c14; --warn-text: #f0c579; --warn-border: #5c451f;
+    --danger-bg: #3a1c1c; --danger-text: #f2a0a0; --danger-border: #5c2929;
+  }
+  :root[data-theme="light"] {
+    --bg: #F9F8F5; --bg-elevated: #ffffff; --text: #201a1d; --text-muted: #6b5f5a;
+    --border: #e0d9d2; --border-strong: #d6d1ca; --link: #9F2241;
+    --code-bg: #efe9e2; --code-text: #56212f;
+    --ok-bg: #e6f2ea; --ok-text: #14532d; --ok-border: #b7dcc3;
+    --warn-bg: #fdf3e2; --warn-text: #7c4a12; --warn-border: #f0d4a0;
+    --danger-bg: #fbe9e9; --danger-text: #8f1d1d; --danger-border: #eec2c2;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text); font-family: var(--font-body);
+    font-size: 15.5px; line-height: 1.6; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: var(--font-mono); }
+
+  a { color: var(--link); }
+  a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+
+  .shell { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 0; max-width: 1180px; margin: 0 auto; }
+  @media (max-width: 860px) { .shell { grid-template-columns: 1fr; } }
+
+  /* ── SIDEBAR NAV ── */
+  nav.toc {
+    position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+    padding: 2rem 1.25rem 2rem 0; border-right: 1px solid var(--border);
+  }
+  @media (max-width: 860px) {
+    nav.toc {
+      position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border);
+      padding: 1rem 1.5rem; display: flex; gap: .3rem; overflow-x: auto; white-space: nowrap;
+    }
+  }
+  .toc-brand { font-size: .68rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--caramelo); margin-bottom: 1rem; }
+  @media (max-width: 860px) { .toc-brand { display: none; } }
+  nav.toc a {
+    display: block; padding: .4rem .6rem; border-radius: 6px; font-size: .85rem;
+    color: var(--text-muted); text-decoration: none; margin-bottom: .1rem;
+  }
+  nav.toc a:hover { background: var(--code-bg); color: var(--text); }
+  @media (max-width: 860px) { nav.toc a { flex-shrink: 0; } }
+
+  main { padding: 2.5rem 2rem 6rem; min-width: 0; }
+  @media (max-width: 860px) { main { padding: 1.75rem 1.25rem 4rem; } }
+
+  header.doc-head { margin-bottom: 2.75rem; }
+  .eyebrow { font-size: .72rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--acento); margin-bottom: .5rem; }
+  h1 { font-size: 1.9rem; font-weight: 800; color: var(--text); text-wrap: balance; margin: 0 0 .5rem; line-height: 1.15; }
+  .doc-sub { color: var(--text-muted); font-size: .95rem; max-width: 60ch; }
+
+  section { margin-bottom: 3rem; scroll-margin-top: 1.5rem; }
+  h2 {
+    font-size: 1.3rem; font-weight: 700; color: var(--text); margin: 0 0 .3rem;
+    padding-bottom: .6rem; border-bottom: 2px solid var(--border-strong);
+  }
+  h2 .h2-num { font-family: var(--font-mono); color: var(--acento); font-size: 1rem; margin-right: .5rem; }
+  h3 { font-size: 1.02rem; font-weight: 700; color: var(--text); margin: 1.5rem 0 .6rem; }
+  p { margin: 0 0 .9rem; max-width: 68ch; }
+  ul, ol { margin: 0 0 1rem; padding-left: 1.3rem; max-width: 68ch; }
+  li { margin-bottom: .35rem; }
+  strong { color: var(--text); }
+
+  /* ── CARD / CALLOUT ── */
+  .card {
+    background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.1rem 1.3rem; margin-bottom: 1.1rem;
+  }
+  .callout { border-radius: 10px; padding: .9rem 1.1rem; margin-bottom: 1.1rem; font-size: .9rem; border: 1px solid; }
+  .callout-title { font-weight: 700; font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; margin-bottom: .3rem; display: flex; align-items: center; gap: .4rem; }
+  .callout.ok { background: var(--ok-bg); color: var(--ok-text); border-color: var(--ok-border); }
+  .callout.warn { background: var(--warn-bg); color: var(--warn-text); border-color: var(--warn-border); }
+  .callout.danger { background: var(--danger-bg); color: var(--danger-text); border-color: var(--danger-border); }
+  .callout p, .callout ul { max-width: none; margin-bottom: .4rem; }
+  .callout ul:last-child, .callout p:last-child { margin-bottom: 0; }
+
+  /* ── DIAGRAM: 3 sheets ── */
+  .sheets-diagram {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem;
+  }
+  @media (max-width: 640px) { .sheets-diagram { grid-template-columns: 1fr; } }
+  .sheet-box {
+    border: 1.5px solid var(--border-strong); border-radius: 10px; padding: 1rem 1.1rem; background: var(--bg-elevated);
+    position: relative;
+  }
+  .sheet-box .sb-name { font-family: var(--font-mono); font-weight: 700; color: var(--guinda); font-size: .95rem; margin-bottom: .4rem; }
+  :root[data-theme="dark"] .sheet-box .sb-name { color: #e8a3b8; }
+  @media (prefers-color-scheme: dark) { .sheet-box .sb-name { color: #e8a3b8; } }
+  :root[data-theme="light"] .sheet-box .sb-name { color: var(--guinda); }
+  .sheet-box .sb-desc { font-size: .82rem; color: var(--text-muted); }
+  @media (min-width: 641px) {
+    .sheets-diagram { align-items: center; }
+    .sheet-box:not(:last-child)::after {
+      content: '→'; position: absolute; right: -1.35rem; top: 50%; transform: translateY(-50%);
+      color: var(--acento); font-size: 1.2rem; font-weight: 700;
+    }
+  }
+
+  /* ── TABLE ── */
+  .table-wrap { overflow-x: auto; margin-bottom: 1.25rem; border: 1px solid var(--border); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: .85rem; min-width: 560px; }
+  thead tr { background: var(--midnight); }
+  thead th { color: #fff; text-align: left; padding: .6rem .8rem; font-weight: 700; font-size: .74rem; letter-spacing: .04em; text-transform: uppercase; }
+  tbody td { padding: .55rem .8rem; border-top: 1px solid var(--border); vertical-align: top; }
+  tbody tr:nth-child(even) { background: var(--code-bg); }
+  td.col-name { font-family: var(--font-mono); font-weight: 600; color: var(--guinda); white-space: nowrap; }
+  :root[data-theme="dark"] td.col-name { color: var(--code-text); }
+  @media (prefers-color-scheme: dark) { td.col-name { color: var(--code-text); } }
+
+  /* ── CHIP (TRUE/FALSE, estado) ── */
+  .chip { display: inline-flex; align-items: center; gap: .3rem; font-family: var(--font-mono); font-size: .78rem; font-weight: 700; padding: .15rem .55rem; border-radius: 999px; border: 1px solid; }
+  .chip.true { background: var(--ok-bg); color: var(--ok-text); border-color: var(--ok-border); }
+  .chip.false { background: var(--danger-bg); color: var(--danger-text); border-color: var(--danger-border); }
+  .chip-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  /* ── MENU ITEM LIST ── */
+  .menu-item {
+    display: flex; gap: 1rem; align-items: flex-start; padding: 1rem 0; border-top: 1px solid var(--border);
+  }
+  .menu-item:first-child { border-top: none; }
+  .menu-item .mi-name {
+    font-family: var(--font-mono); font-size: .82rem; font-weight: 700; color: var(--acento);
+    background: var(--code-bg); padding: .35rem .6rem; border-radius: 6px; white-space: nowrap; flex-shrink: 0;
+  }
+  .menu-item .mi-body p { margin-bottom: .3rem; font-size: .88rem; }
+  .menu-item .mi-when { font-size: .8rem; color: var(--text-muted); }
+  @media (max-width: 560px) { .menu-item { flex-direction: column; gap: .5rem; } }
+
+  /* ── DECISION HELPER ── */
+  .decision {
+    border: 1.5px dashed var(--border-strong); border-radius: 10px; padding: 1rem 1.2rem; margin: 1rem 0 1.5rem;
+  }
+  .decision-q { font-weight: 700; margin-bottom: .6rem; }
+  .decision-row { display: flex; gap: .7rem; align-items: flex-start; margin-bottom: .5rem; font-size: .88rem; }
+  .decision-row:last-child { margin-bottom: 0; }
+
+  hr.divider { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+
+  footer.doc-foot { color: var(--text-muted); font-size: .78rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+</style>
+
+<div class="shell">
+  <nav class="toc">
+    <div class="toc-brand">OTDE NEZA</div>
+    <a href="#estructura">Estructura general</a>
+    <a href="#cursos">Dar de alta un curso</a>
+    <a href="#docentes">Docentes</a>
+    <a href="#inscripciones">Inscripciones</a>
+    <a href="#menu">Menú OTDE Formación</a>
+    <a href="#recordatorios">Recordatorios automáticos</a>
+    <a href="#problemas">Solución de problemas</a>
+    <a href="#referencia">Referencia rápida</a>
+  </nav>
+
+  <main>
+    <header class="doc-head">
+      <p class="eyebrow">Guía operativa · uso interno OTDE</p>
+      <h1>Centro de Formación Docente</h1>
+      <p class="doc-sub">Cómo administrar el Spreadsheet <code>Formacion_Docente_2026_2027</code> — para quien dé de alta cursos, revise inscripciones o le dé mantenimiento al Apps Script.</p>
+    </header>
+
+    <section id="estructura">
+      <h2><span class="h2-num">01</span>Estructura general</h2>
+      <p>Todo vive en un único Google Spreadsheet, con tres pestañas relacionadas entre sí. Tú administras <strong>Cursos</strong> a mano; <strong>Docentes</strong> e <strong>Inscripciones</strong> las llena solo el formulario público.</p>
+
+      <div class="sheets-diagram">
+        <div class="sheet-box">
+          <div class="sb-name">Docentes</div>
+          <div class="sb-desc">Una fila por persona. Llave: <code>RFC</code>. Se actualiza sola (upsert) cada vez que alguien se registra — nunca se duplica a un docente.</div>
+        </div>
+        <div class="sheet-box">
+          <div class="sb-name">Cursos</div>
+          <div class="sb-desc">El catálogo. La única pestaña que <strong>tú</strong> editas a mano: qué cursos existen, cuáles están visibles y cuáles requieren registro externo.</div>
+        </div>
+        <div class="sheet-box">
+          <div class="sb-name">Inscripciones</div>
+          <div class="sb-desc">Una fila por registro (docente + curso). Trae columnas de solo lectura que jalan el nombre del docente y del curso automáticamente.</div>
+        </div>
+      </div>
+
+      <div class="callout warn">
+        <div class="callout-title">Regla de oro</div>
+        <p>Nunca edites <strong>Docentes</strong> ni <strong>Inscripciones</strong> a mano salvo para corregir un error puntual — son datos transaccionales que el sistema mantiene solo. La única pestaña de trabajo diario es <strong>Cursos</strong>.</p>
+      </div>
+    </section>
+
+    <section id="cursos">
+      <h2><span class="h2-num">02</span>Dar de alta un curso nuevo</h2>
+      <p>Agrega una fila al final de la pestaña <code>Cursos</code> con estos datos. No escribas el <code>ID_Curso</code> tú mismo: déjalo vacío y usa el menú (ver sección 05).</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Columna</th><th>Qué va ahí</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="col-name">ID_Curso</td><td>Vacío — se autocompleta con el menú "Generar ID de cursos faltantes".</td></tr>
+            <tr><td class="col-name">Categoria</td><td>Una de: Webinar, Seminario, Conferencia, Curso autogestivo, Acción formativa, Diplomado, Proyecto didáctico. Debe coincidir exacto (define el prefijo del ID y el ícono en el sitio).</td></tr>
+            <tr><td class="col-name">Nombre</td><td>El nombre visible del curso. Este es el texto que ven los docentes.</td></tr>
+            <tr><td class="col-name">Responsable</td><td>Quién lo imparte (ej. "CoEEE", "OTDE NEZA").</td></tr>
+            <tr><td class="col-name">Modalidad</td><td>Ej. "En línea", "Presencial", "Híbrido".</td></tr>
+            <tr><td class="col-name">Fecha_inicio / Fecha_fin</td><td>Fechas del curso. Escríbelas directo en Sheets (no las pegues como texto plano de otra fuente).</td></tr>
+            <tr><td class="col-name">Liga_convocatoria</td><td>El link donde el docente se inscribe oficialmente o consulta la convocatoria, si existe.</td></tr>
+            <tr><td class="col-name">Activo</td><td><span class="chip true"><span class="chip-dot"></span>TRUE</span> = aparece en el catálogo del sitio ahora mismo. <span class="chip false"><span class="chip-dot"></span>FALSE</span> = oculto, pero sigue existiendo para quien ya se inscribió. Siempre gana sobre las fechas de abajo.</td></tr>
+            <tr><td class="col-name">Registro_previo_requerido</td><td>Ver el ayudante de decisión abajo.</td></tr>
+            <tr><td class="col-name">Notas</td><td>Libre, para tu propio control interno — no se muestra a los docentes.</td></tr>
+            <tr><td class="col-name">Visible_desde<br>Visible_hasta</td><td>Opcionales. Programan que el curso aparezca/desaparezca del catálogo solo, en esas fechas — sin que tengas que entrar a cambiar Activo a mano. Vacías las dos = sin restricción, como hasta ahora.</td></tr>
+            <tr><td class="col-name">Hora_inicio</td><td>Opcional. Solo aplica a eventos de un solo día (ej. webinars): la hora en que empiezan (ej. 16:00). La usa el recordatorio de "faltan unas horas" — ver sección 06.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="decision">
+        <div class="decision-q">¿Cuándo poner Registro_previo_requerido en TRUE?</div>
+        <div class="decision-row">
+          <span class="chip true"><span class="chip-dot"></span>TRUE</span>
+          <span>El curso tiene <strong>cupo limitado</strong> en una plataforma externa (diplomados, cursos autogestivos de CoEEE). El sitio obliga al docente a pasar por esa liga antes de llenar sus datos con OTDE.</span>
+        </div>
+        <div class="decision-row">
+          <span class="chip false"><span class="chip-dot"></span>FALSE</span>
+          <span>Webinars y conferencias sin cupo real (ej. transmisión por Facebook/YouTube). La liga, si existe, solo se muestra como referencia al final — sin forzar ningún paso.</span>
+        </div>
+      </div>
+
+      <div class="callout danger">
+        <div class="callout-title">Cuidado con los 5 cursos de Jornada Verano 2026</div>
+        <p>Mientras <code>jornada-verano-2026.html</code> siga publicada, esos 5 cursos deben seguir con <code>Activo=TRUE</code> y su <code>Nombre</code> exacto — esa página resuelve el curso por nombre, no por ID. Cambiar el texto o desactivarlos rompe el registro de esa página sin ningún aviso visible.</p>
+      </div>
+    </section>
+
+    <section id="docentes">
+      <h2><span class="h2-num">03</span>Docentes</h2>
+      <p>Se llena sola. Cuando alguien se registra, el sistema busca su <code>RFC</code>: si ya existe, actualiza sus datos (nombre, correo, teléfono, escuela...); si no, agrega una fila nueva. Un docente nunca se duplica, sin importar a cuántos cursos se inscriba.</p>
+      <p>Si un dato viene vacío en un registro nuevo (por ejemplo, un docente que deja el teléfono en blanco en un flujo antiguo), el sistema <strong>conserva el valor que ya tenías</strong> en vez de borrarlo — nunca vas a perder un dato bueno por un registro incompleto posterior.</p>
+    </section>
+
+    <section id="inscripciones">
+      <h2><span class="h2-num">04</span>Inscripciones</h2>
+      <p>Una fila por cada combinación docente + curso. El <code>Folio</code> tiene formato <code class="mono">OTDE-CAP-0001</code>, secuencial.</p>
+      <ul>
+        <li><strong>Estado</strong> — hoy solo se usa "Registrado". Las fases siguientes del proyecto (validar asistencia, marcar "Participó") escribirán aquí.</li>
+        <li><strong>Columnas I–O</strong> (Nombre_Docente, CCT, Escuela, Sector, Zona, Funcion, Nombre_Curso) — son fórmulas <code>VLOOKUP</code>, no datos capturados. Se actualizan solas si cambias algo en Docentes o Cursos; no las edites a mano, edítalas ahí.</li>
+      </ul>
+      <div class="callout ok">
+        <div class="callout-title">Si ves columnas I–O vacías en filas viejas</div>
+        <p>Corre <span class="chip true" style="font-weight:700;">Actualizar vista de Inscripciones</span> del menú — rellena la fórmula en cualquier fila que no la tenga, sin tocar los datos de A–H.</p>
+      </div>
+    </section>
+
+    <section id="menu">
+      <h2><span class="h2-num">05</span>El menú "OTDE Formación"</h2>
+      <p>Aparece dentro del Spreadsheet (junto a Archivo, Editar, Ver...) cada vez que lo abres. Si no lo ves, recarga la página del Spreadsheet.</p>
+
+      <div class="card" style="padding:.5rem 1.3rem;">
+        <div class="menu-item">
+          <span class="mi-name">Generar ID de cursos faltantes</span>
+          <div class="mi-body">
+            <p>Recorre <code>Cursos</code> y le pone <code>ID_Curso</code> a cualquier fila que tenga Categoría pero no ID.</p>
+            <p class="mi-when">Cuándo: después de agregar uno o varios cursos nuevos a mano.</p>
+          </div>
+        </div>
+        <div class="menu-item">
+          <span class="mi-name">Generar estadísticas</span>
+          <div class="mi-body">
+            <p>Crea/reemplaza la hoja <code>Estadisticas_Formacion</code> con conteos por curso, sector, municipio y estado.</p>
+            <p class="mi-when">Cuándo: cuando necesites un corte para un reporte. Se puede correr cuantas veces quieras.</p>
+          </div>
+        </div>
+        <div class="menu-item">
+          <span class="mi-name">Actualizar vista de Inscripciones</span>
+          <div class="mi-body">
+            <p>Rellena las columnas I–O (ver sección 04) en todas las filas de Inscripciones, incluyendo encabezados si faltan.</p>
+            <p class="mi-when">Cuándo: si ves esas columnas vacías, o después de una migración manual.</p>
+          </div>
+        </div>
+        <div class="menu-item">
+          <span class="mi-name">Migrar Jornada Verano 2026</span>
+          <div class="mi-body">
+            <p>Trae los registros del Spreadsheet viejo de Jornada de Verano y da de alta sus 5 cursos si no existen.</p>
+            <p class="mi-when">Cuándo: en teoría ya no hace falta correrlo de nuevo — quedó como respaldo por si aparece algún registro tardío en la hoja vieja.</p>
+          </div>
+        </div>
+        <div class="menu-item">
+          <span class="mi-name">Instalar recordatorios automáticos</span>
+          <div class="mi-body">
+            <p>Da de alta los dos disparadores que mandan los correos de la sección 06 (uno diario, uno cada hora). Sin esto, el código existe pero nadie lo llama.</p>
+            <p class="mi-when">Cuándo: una sola vez, al activar el sistema. Correrlo de nuevo no duplica nada.</p>
+          </div>
+        </div>
+        <div class="menu-item">
+          <span class="mi-name">Desinstalar recordatorios automáticos</span>
+          <div class="mi-body">
+            <p>Quita esos dos disparadores. No borra las columnas ni las banderas de "ya enviado".</p>
+            <p class="mi-when">Cuándo: si necesitas pausar los recordatorios por completo.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="recordatorios">
+      <h2><span class="h2-num">06</span>Recordatorios automáticos por correo</h2>
+      <p>Tres avisos que se mandan solos, calculados a partir de las fechas de cada curso — no hay que marcar nada a mano. Requieren haber corrido <span class="mi-name" style="font-size:.78rem;">Instalar recordatorios automáticos</span> una vez (ver sección 05).</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Aviso</th><th>Cuándo se dispara</th><th>Requiere</th></tr></thead>
+          <tbody>
+            <tr><td class="col-name">Empieza en 2 días</td><td>2 días antes de <code>Fecha_inicio</code>, en cualquier curso.</td><td>—</td></tr>
+            <tr><td class="col-name">Vas a la mitad</td><td>Al cruzar el punto medio entre <code>Fecha_inicio</code> y <code>Fecha_fin</code>, solo si el curso dura 30 días o más.</td><td>—</td></tr>
+            <tr><td class="col-name">Faltan unas horas</td><td>Entre 2 y 4 horas antes del inicio, solo en eventos de un solo día (<code>Fecha_inicio</code> = <code>Fecha_fin</code>).</td><td><code>Hora_inicio</code> capturada</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout ok">
+        <div class="callout-title">Un webinar puede recibir los dos primeros y el tercero</div>
+        <p>No son excluyentes a propósito: si un webinar se cataloga con varios días de anticipación, recibe el aviso de "empieza en 2 días" y, el mismo día, el de "faltan unas horas" con el link de transmisión. Es intencional — un aviso temprano más un empujón el mismo día.</p>
+      </div>
+
+      <div class="callout warn">
+        <div class="callout-title">Cuidado con la cuota de correo</div>
+        <p>El límite diario de <code>MailApp</code> (100 correos en cuentas normales de Gmail) lo comparten <strong>todos</strong> los Apps Script de tu cuenta de Google, no es exclusivo de este proyecto. Por eso cada aviso se manda como <strong>un solo correo por curso, con todos los inscritos en copia oculta (BCC)</strong> — no uno por persona — y antes de mandar se revisa cuánta cuota queda. Si no alcanza, ese aviso se salta ese día y se reintenta solo, al día siguiente (nunca se pierde, solo se retrasa).</p>
+      </div>
+
+      <p>Cada aviso tiene su propia bandera en <code>Cursos</code> (<code>Recordatorio_inicio_enviado</code>, <code>Recordatorio_medio_enviado</code>, <code>Recordatorio_webinar_enviado</code>) para no reenviarse dos veces. Si necesitas forzar un reenvío para un curso puntual, borra el <code>TRUE</code> de esa celda y se vuelve a evaluar en la siguiente corrida.</p>
+    </section>
+
+    <section id="problemas">
+      <h2><span class="h2-num">07</span>Solución de problemas</h2>
+
+      <h3>El catálogo aparece vacío en el sitio</h3>
+      <p>Revisa que al menos un curso en <code>Cursos</code> tenga <code>Activo=TRUE</code>. Si además usaste <code>Visible_desde</code>/<code>Visible_hasta</code>, confirma que la fecha de hoy caiga dentro de esa ventana — fuera de rango, el curso se oculta aunque Activo esté en TRUE.</p>
+
+      <h3>No están llegando los recordatorios</h3>
+      <p>Confirma que corriste <span class="mi-name" style="font-size:.78rem;">Instalar recordatorios automáticos</span> al menos una vez. Si sí, revisa las banderas <code>Recordatorio_*_enviado</code> del curso en cuestión — si ya están en TRUE, ya se mandó (o se marcó como ya no aplicable). Si el problema es que nunca llega, puede ser que se haya agotado la cuota diaria de correo ese día — se reintenta solo al siguiente.</p>
+
+      <h3>Modifiqué el código (.gs) y no veo el cambio</h3>
+      <p>Editar y guardar el script <strong>no actualiza</strong> la URL pública por sí solo. Hace falta: <strong>Implementar → Administrar implementaciones → editar (lápiz) → Versión: Nueva versión → Implementar</strong>. Si solo le das "Guardar" en el editor, el sitio sigue sirviendo la versión anterior.</p>
+
+      <h3>Un docente dice que el formulario se quedó "congelado"</h3>
+      <p>Desde julio 2026 todos los formularios tienen un límite de 30 segundos: si Apps Script no responde a tiempo, muestran un error en vez de quedarse pegados, y aclaran que es seguro reintentar (nunca se duplica un folio para el mismo RFC + curso). Si de verdad ves el problema, probablemente ya se registró — pídele al docente su RFC y busca en <code>Inscripciones</code> antes de asumir que se perdió.</p>
+
+      <h3>Acabo de publicar el sitio y no veo el cambio</h3>
+      <p>GitHub Pages tarda 5–10 minutos en propagar un <code>push</code>. Espera ese tiempo y haz recarga forzada (Cmd+Shift+R / Ctrl+Shift+R) antes de reportarlo como bug.</p>
+    </section>
+
+    <section id="referencia">
+      <h2><span class="h2-num">08</span>Referencia rápida</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Quiero...</th><th>Voy a...</th></tr></thead>
+          <tbody>
+            <tr><td>Abrir un curso nuevo al público</td><td>Fila nueva en <code class="mono">Cursos</code> + <span class="mi-name" style="font-size:.78rem;">Generar ID de cursos faltantes</span></td></tr>
+            <tr><td>Cerrar temporalmente un curso</td><td><code class="mono">Activo</code> → <span class="chip false"><span class="chip-dot"></span>FALSE</span> en su fila de <code class="mono">Cursos</code></td></tr>
+            <tr><td>Programar que aparezca/desaparezca solo</td><td>Llenar <code class="mono">Visible_desde</code> / <code class="mono">Visible_hasta</code> en su fila de <code class="mono">Cursos</code></td></tr>
+            <tr><td>Forzar que se registren primero en CoEEE</td><td><code class="mono">Registro_previo_requerido</code> → <span class="chip true"><span class="chip-dot"></span>TRUE</span> + llenar <code class="mono">Liga_convocatoria</code></td></tr>
+            <tr><td>Activar recordatorios por correo (primera vez)</td><td>Menú → <span class="mi-name" style="font-size:.78rem;">Instalar recordatorios automáticos</span></td></tr>
+            <tr><td>Que un webinar avise "faltan X horas"</td><td>Llenar <code class="mono">Hora_inicio</code> en su fila de <code class="mono">Cursos</code></td></tr>
+            <tr><td>Ver cuántos se inscribieron a qué curso</td><td>Menú → <span class="mi-name" style="font-size:.78rem;">Generar estadísticas</span></td></tr>
+            <tr><td>Buscar un registro puntual</td><td><code class="mono">Inscripciones</code>, filtrar por <code class="mono">RFC_Docente</code> o <code class="mono">Folio</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer class="doc-foot">
+      OTDE NEZA · Subdirección de Educación Primaria en la Región de Nezahualcóyotl — guía interna, no compartir fuera de la oficina.
+    </footer>
+  </main>
+</div>

@@ -1,0 +1,114 @@
+# Notas de QA — bugs reales ya cazados en este proyecto
+
+No es un checklist genérico de "revisa responsive/accesibilidad/contraste".
+Es una lista de bugs **concretos** que ya pasaron en este repo, con su causa
+raíz, para no reintroducirlos por accidente en un archivo nuevo que use el
+mismo patrón. Cada uno se descubrió y corrigió en julio 2026.
+
+## 1. `fetch()` sin timeout → botón congelado para siempre
+
+**Síntoma:** el usuario le da a "Enviar"/"Verificar", el botón queda
+deshabilitado con spinner, y nunca se recupera — ni éxito ni error.
+
+**Causa raíz:** `fetch()` se resuelve en cuanto llegan los **encabezados**
+de la respuesta, no cuando termina de llegar el **cuerpo**. Si el cuerpo se
+cuelga (pasa con Apps Script/Google Drive ocasionalmente), un `try/catch`
+alrededor de solo el `fetch()` no lo detecta.
+
+**Dónde ya pasó:** `formacion-docente.html`, `jornada-verano-2026.html`,
+`otde.html` (Soporte Remoto), `asistencia.html` (check-in de eventos) — el
+mismo bug apareció en 4 archivos porque se copió el patrón sin timeout de
+uno a otro antes de que se detectara.
+
+**Fix ya aplicado — `fetchJsonConTimeout()`:**
+```js
+async function fetchJsonConTimeout(url, options) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 30000);
+  try {
+    const r = await fetch(url, { ...options, signal: ctrl.signal });
+    return await r.json(); // el .json() va DENTRO del try, no fuera
+  } finally {
+    clearTimeout(t);
+  }
+}
+```
+**Si se agrega un `fetch()` nuevo en cualquier archivo del sitio, debe usar
+este patrón** (o llamar a la función si ya existe en ese archivo) — nunca
+un `fetch(...).then(r => r.json())` suelto con timeout solo alrededor del
+`fetch`.
+
+## 2. `appendRow([])` en Apps Script — arreglo vacío no es válido
+
+**Síntoma:** `Exception: El valor rowContents que se pasa a appendRow() no
+debe estar vacío.`
+
+**Causa raíz:** usar `hoja.appendRow([])` como truco para dejar una fila en
+blanco entre secciones de un reporte. Apps Script nunca lo permitió.
+
+**Fix:** `hoja.appendRow([''])` — un arreglo con un elemento vacío, mismo
+efecto visual, sí es válido.
+
+**Dónde ya pasó:** `generarEstadisticas()` en `apps-script/formacion-docente.gs`
+y en `apps-script/cursos-coeee-2026.gs` (mismo patrón copiado entre ambos).
+
+## 3. `new Date('YYYY-MM-DD')` se corre un día en Apps Script
+
+**Síntoma:** un curso capturado con fecha de inicio "10 de agosto" aparece
+en el catálogo como "09 de agosto".
+
+**Causa raíz:** `new Date('2026-08-10')` se interpreta como medianoche
+**UTC**. Al formatear después con `Utilities.formatDate(fecha,
+'America/Mexico_City', ...)`, el huso (UTC-6) recorre la fecha al día
+anterior.
+
+**Fix — construir la fecha con componentes explícitos, no parseando un
+string:**
+```js
+function fechaLocal(isoYYYYMMDD) {
+  const [y, m, d] = isoYYYYMMDD.split('-').map(Number);
+  return new Date(y, m - 1, d); // constructor con Y/M/D = hora local, no UTC
+}
+```
+Aplica a cualquier fecha que se escriba en una hoja de Sheets partiendo de
+un string ISO. Si la fecha ya viene como objeto `Date` (leída de
+`getValues()`), no aplica — ese objeto ya refleja la hora local correcta.
+
+## 4. Upsert que sobrescribe datos buenos con datos vacíos
+
+**Síntoma (potencial, detectado antes de causar daño real):** un docente ya
+tenía Teléfono/Correo capturados en un registro real; una migración
+histórica sin esos campos (la hoja vieja de Jornada Verano nunca capturó
+teléfono) vuelve a correr y los deja en blanco.
+
+**Causa raíz:** `upsertDocente()` sobrescribía las 9 columnas sin
+condición, sin importar si el valor nuevo venía vacío.
+
+**Fix — solo sobrescribir si el valor nuevo no viene vacío:**
+```js
+function valorOMantener(nuevo, actual) {
+  const n = (nuevo == null) ? '' : String(nuevo).trim();
+  return n ? n : (actual == null ? '' : String(actual).trim());
+}
+```
+Relevante para cualquier función de upsert/migración futura que combine
+datos de distintas fuentes con distinto nivel de completitud.
+
+## 5. Cuota de `MailApp`/`GmailApp` — es de la cuenta, no del script
+
+Antes de agregar cualquier envío de correo automático nuevo: el límite
+diario (100 en una cuenta de Gmail normal) lo comparten **todos** los Apps
+Script de esa cuenta de Google, no es exclusivo del proyecto que se esté
+tocando. Un envío en lote (BCC a todos los destinatarios en un solo
+`MailApp.sendEmail()`) en vez de uno por destinatario, más una revisión de
+`MailApp.getRemainingDailyQuota()` antes de enviar, ya está implementado en
+`apps-script/formacion-docente.gs` (recordatorios automáticos) — replicar
+ese patrón, no reinventar uno nuevo que mande un correo por persona.
+
+## Regla general al corregir cualquiera de estos patrones
+
+Cuando se encuentra uno de estos bugs en un archivo, **revisar si el mismo
+patrón se copió a otros archivos del sitio** antes de dar la corrección por
+terminada — ya pasó dos veces (el freeze de fetch en 4 archivos, el
+`appendRow([])` en 2 archivos) que un bug "corregido" seguía vivo en un
+archivo hermano que nadie revisó.
