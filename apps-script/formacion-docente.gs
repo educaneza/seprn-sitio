@@ -513,23 +513,23 @@ function generarEstadisticas() {
   resumen.appendRow(['ESTADÍSTICAS — Centro de Formación Docente OTDE']);
   resumen.appendRow(['Generado:', ahora]);
   resumen.appendRow(['Total de inscripciones:', inscripciones.length]);
-  resumen.appendRow([]);
+  resumen.appendRow(['']);
 
   resumen.appendRow(['POR CURSO', 'Inscripciones']);
   Object.entries(porCurso).sort((a, b) => b[1] - a[1])
     .forEach(([k, v]) => resumen.appendRow([k, v]));
 
-  resumen.appendRow([]);
+  resumen.appendRow(['']);
   resumen.appendRow(['POR SECTOR', 'Inscripciones']);
   Object.entries(porSector).sort((a, b) => a[0].localeCompare(b[0]))
     .forEach(([k, v]) => resumen.appendRow([k, v]));
 
-  resumen.appendRow([]);
+  resumen.appendRow(['']);
   resumen.appendRow(['POR MUNICIPIO', 'Inscripciones']);
   Object.entries(porMunicipio).sort((a, b) => b[1] - a[1])
     .forEach(([k, v]) => resumen.appendRow([k, v]));
 
-  resumen.appendRow([]);
+  resumen.appendRow(['']);
   resumen.appendRow(['POR ESTADO', 'Inscripciones']);
   Object.entries(porEstado).forEach(([k, v]) => resumen.appendRow([k, v]));
 

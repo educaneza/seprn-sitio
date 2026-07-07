@@ -148,18 +148,18 @@ function generarEstadisticas() {
   resumen.appendRow(['ESTADÍSTICAS — Jornada Capacitación Verano 2026']);
   resumen.appendRow(['Generado:', ahora]);
   resumen.appendRow(['Total de reportes:', datos.length]);
-  resumen.appendRow([]);
+  resumen.appendRow(['']);
 
   resumen.appendRow(['POR CURSO', 'Registros']);
   Object.entries(porCurso).sort((a, b) => b[1] - a[1])
     .forEach(([k, v]) => resumen.appendRow([k, v]));
 
-  resumen.appendRow([]);
+  resumen.appendRow(['']);
   resumen.appendRow(['POR SECTOR', 'Registros']);
   Object.entries(porSector).sort((a, b) => a[0].localeCompare(b[0]))
     .forEach(([k, v]) => resumen.appendRow(['Sector ' + k, v]));
 
-  resumen.appendRow([]);
+  resumen.appendRow(['']);
   resumen.appendRow(['POR ZONA', 'Registros']);
   Object.entries(porZona).sort((a, b) => {
     const na = parseInt(a[0].replace('Zona ', ''));
