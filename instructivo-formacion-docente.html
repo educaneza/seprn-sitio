@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instructivo — Centro de Formación Docente | OTDE NEZA</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --midnight: #0C1A2E;
+      --guinda:   #56212f;
+      --acento:   #9F2241;
+      --verde:    #14532d;
+      --surface:  #F9F8F5;
+      --text:     #1a1a2e;
+      --muted:    #6b7280;
+      --border:   #d1d5db;
+    }
+
+    @page {
+      size: letter portrait;
+      margin: 1.4cm 1.8cm;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      color: var(--text);
+      background: #fff;
+      font-size: 10.5pt;
+      line-height: 1.5;
+    }
+
+    .page {
+      max-width: 730px;
+      margin: 0 auto;
+      padding: 2rem 2.25rem 2.5rem;
+    }
+
+    /* ── HEADER ── */
+    .doc-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      border-bottom: 3px solid var(--guinda);
+      padding-bottom: .8rem;
+      margin-bottom: 1.25rem;
+    }
+    .brand { font-size: 1.15rem; font-weight: 800; color: var(--midnight); letter-spacing: .04em; }
+    .brand span { color: var(--acento); }
+    .brand-sub { font-size: .68rem; color: var(--muted); margin-top: .15rem; line-height: 1.4; }
+    .doc-fecha { font-size: .72rem; color: var(--muted); text-align: right; padding-top: .1rem; }
+
+    /* ── TITLE ── */
+    .doc-title { text-align: center; margin-bottom: 1.1rem; }
+    .eyebrow {
+      font-size: .65rem; font-weight: 700; letter-spacing: .15em; text-transform: uppercase;
+      color: var(--acento); margin-bottom: .3rem;
+    }
+    .doc-title h1 { font-size: 1.45rem; font-weight: 800; color: var(--midnight); line-height: 1.2; margin-bottom: .3rem; }
+    .doc-title .subtitle { font-size: .78rem; color: var(--muted); }
+
+    /* ── INTRO ── */
+    .intro-box {
+      background: #eff6ff; border-left: 4px solid var(--midnight); border-radius: 0 6px 6px 0;
+      padding: .65rem .95rem; margin-bottom: 1.25rem; font-size: .82rem; color: #1e3a5f; line-height: 1.6;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+
+    /* ── SECTION LABEL ── */
+    .section-label {
+      font-size: .65rem; font-weight: 700; letter-spacing: .13em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: .75rem; padding-bottom: .3rem; border-bottom: 1px solid var(--border);
+    }
+
+    /* ── STEPS ── */
+    .steps-list { display: flex; flex-direction: column; gap: .7rem; margin-bottom: 1.25rem; }
+    .step-item {
+      display: flex; gap: .875rem; align-items: flex-start; border: 1.5px solid var(--border);
+      border-radius: 8px; padding: .8rem .95rem; page-break-inside: avoid;
+    }
+    .step-num {
+      width: 30px; height: 30px; border-radius: 50%; color: #fff; font-size: .88rem; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .step-item:nth-child(1) .step-num { background: var(--midnight); }
+    .step-item:nth-child(2) .step-num { background: #9a3412; }
+    .step-item:nth-child(3) .step-num { background: var(--guinda); }
+    .step-item:nth-child(4) .step-num { background: var(--verde); }
+
+    .step-content h3 { font-size: .9rem; font-weight: 700; color: var(--midnight); margin-bottom: .25rem; }
+    .step-content p { font-size: .8rem; color: #374151; line-height: 1.55; }
+    .step-content ul { font-size: .8rem; color: #374151; line-height: 1.55; padding-left: 1.1rem; margin-top: .25rem; }
+    .step-content ul li { margin-bottom: .12rem; }
+    .step-note { margin-top: .4rem; font-size: .76rem; font-weight: 700; color: var(--verde); }
+    .step-warn { margin-top: .4rem; font-size: .76rem; font-weight: 700; color: #9a3412; }
+
+    /* ── CATEGORÍAS (legend) ── */
+    .cat-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem;
+      margin-bottom: 1.25rem;
+    }
+    .cat-chip {
+      display: flex; align-items: center; gap: .45rem; border: 1px solid var(--border);
+      border-radius: 6px; padding: .4rem .55rem; font-size: .74rem; color: var(--text);
+    }
+    .cat-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+    /* ── NOTA IMPORTANTE ── */
+    .note-box {
+      background: #fff7ed; border: 1.5px solid #fed7aa; border-radius: 8px; padding: .75rem .95rem;
+      margin-bottom: 1.1rem; page-break-inside: avoid;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .note-title { font-size: .7rem; font-weight: 800; color: #9a3412; text-transform: uppercase; letter-spacing: .08em; margin-bottom: .3rem; }
+    .note-box ul { font-size: .78rem; color: #7c2d12; line-height: 1.55; padding-left: 1.1rem; }
+    .note-box ul li { margin-bottom: .1rem; }
+
+    /* ── ACCESO / QR ── */
+    .access-box {
+      display: flex; align-items: center; gap: 1.25rem; border: 2px solid var(--midnight);
+      border-radius: 10px; padding: .875rem 1.1rem; page-break-inside: avoid;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .qr-block { flex-shrink: 0; text-align: center; }
+    .qr-block img { width: 88px; height: 88px; display: block; border: 1px solid #e5e7eb; border-radius: 4px; }
+    .qr-label { font-size: .62rem; color: var(--muted); margin-top: .2rem; }
+    .access-info .access-heading {
+      font-size: .65rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: .3rem;
+    }
+    .url-pill {
+      font-family: 'Courier New', monospace; font-size: .78rem; font-weight: 700; color: var(--midnight);
+      background: #f3f4f6; padding: .28rem .65rem; border-radius: 4px; display: inline-block;
+      margin-bottom: .5rem; word-break: break-all; border: 1px solid #e5e7eb;
+    }
+    .access-note { font-size: .75rem; color: var(--muted); line-height: 1.5; }
+
+    /* ── PIE DE DOCUMENTO ── */
+    .doc-footer {
+      margin-top: 1.25rem; padding-top: .6rem; border-top: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .doc-footer span { font-size: .65rem; color: #9ca3af; }
+
+    /* ── PANTALLA ── */
+    @media screen {
+      body { background: #e5e7eb; }
+      .page { background: #fff; margin: 2rem auto; box-shadow: 0 4px 32px rgba(0,0,0,.13); border-radius: 6px; }
+      .print-btn-bar {
+        max-width: 730px; margin: 0 auto 1rem; padding: 0 2.25rem;
+        display: flex; align-items: center; justify-content: flex-end; gap: .75rem;
+      }
+      .btn-print {
+        display: inline-flex; align-items: center; gap: .4rem; padding: .5rem 1.1rem;
+        background: var(--midnight); color: #fff; border: none; border-radius: 6px;
+        font-size: .82rem; font-weight: 700; cursor: pointer;
+      }
+      .btn-print:hover { background: var(--guinda); }
+      .btn-print svg { width: 15px; height: 15px; }
+      .btn-back { font-size: .82rem; color: var(--muted); text-decoration: none; }
+      .btn-back:hover { color: var(--midnight); }
+    }
+
+    /* ── IMPRESIÓN ── */
+    @media print {
+      .print-btn-bar { display: none !important; }
+      body { font-size: 10pt; background: #fff; }
+      .page { padding: 0; max-width: 100%; box-shadow: none; border-radius: 0; }
+    }
+
+    @media (max-width: 560px) {
+      .cat-grid { grid-template-columns: 1fr 1fr; }
+      .access-box { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Barra de acciones (solo pantalla) -->
+<div class="print-btn-bar">
+  <a href="formacion-docente.html" class="btn-back">← Ir al registro</a>
+  <button class="btn-print" onclick="window.print()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
+    </svg>
+    Imprimir / Guardar PDF
+  </button>
+</div>
+
+<div class="page">
+
+  <!-- ENCABEZADO -->
+  <div class="doc-header">
+    <div>
+      <div class="brand">OTDE <span>NEZA</span></div>
+      <div class="brand-sub">
+        Oficina de Tecnología para el Desarrollo Educativo<br>
+        Subdirección de Educación Primaria · Región Nezahualcóyotl
+      </div>
+    </div>
+    <div class="doc-fecha">Ciclo escolar 2026-2027</div>
+  </div>
+
+  <!-- TÍTULO -->
+  <div class="doc-title">
+    <p class="eyebrow">Instructivo de registro</p>
+    <h1>Centro de Formación Docente</h1>
+    <p class="subtitle">Webinars, seminarios, diplomados, cursos autogestivos y proyectos didácticos en un solo lugar</p>
+  </div>
+
+  <!-- INTRODUCCIÓN -->
+  <div class="intro-box">
+    El Centro de Formación Docente concentra las convocatorias de capacitación que la OTDE NEZA impulsa durante
+    el ciclo escolar. <strong>El catálogo cambia con el tiempo</strong> — se agregan y se cierran cursos conforme
+    van surgiendo, así que revisa la página de vez en cuando. Este formulario es de <strong>seguimiento y
+    estadística interna de OTDE</strong>; cuando un curso lo requiere, tu inscripción oficial se hace aparte, en
+    la plataforma que se indique.
+  </div>
+
+  <!-- PASOS -->
+  <p class="section-label">Cómo registrarte — paso a paso</p>
+  <div class="steps-list">
+
+    <div class="step-item">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h3>Ingresa y selecciona tu(s) curso(s)</h3>
+        <p>Escanea el código QR o escribe el enlace que aparece al final de este instructivo.</p>
+        <ul>
+          <li>Verás una tarjeta por cada curso o webinar disponible en ese momento (ver categorías más abajo).</li>
+          <li>Toca la tarjeta del curso que te interese. Puedes seleccionar uno o varios a la vez.</li>
+          <li>El contador en pantalla confirmará cuántos cursos elegiste.</li>
+          <li>Presiona <strong>Continuar</strong> para avanzar.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step-item">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h3>Si el curso lo pide, regístrate primero en la plataforma oficial</h3>
+        <p>Algunos cursos (los que tienen cupo limitado, como diplomados o cursos autogestivos de CoEEE) muestran
+        un aviso de <strong>"Cupo limitado"</strong> antes de continuar. Si te aparece:</p>
+        <ul>
+          <li>Da clic en <strong>"Ir a registrarme"</strong> — se abre una pestaña nueva.</li>
+          <li>Completa tu inscripción oficial ahí, en la plataforma indicada.</li>
+          <li>Regresa a la pestaña de OTDE NEZA (<strong>sin cerrarla</strong>) y confirma que ya te registraste.</li>
+        </ul>
+        <p class="step-warn">Si no ves este aviso, el curso no lo requiere — continúa directo al paso 3.</p>
+      </div>
+    </div>
+
+    <div class="step-item">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h3>Completa tus datos con OTDE NEZA</h3>
+        <p>Llena el formulario con tus datos personales y de tu centro de trabajo. Si seleccionaste varios
+        cursos, se registran todos con un solo llenado.</p>
+        <ul>
+          <li><strong>Nombre completo</strong> — como aparece en documentos oficiales.</li>
+          <li><strong>RFC</strong> — 13 caracteres (personas físicas). Ejemplo: HEGJ850101MV2.</li>
+          <li><strong>Función</strong> — selecciona la que corresponda a tu puesto.</li>
+          <li><strong>CCT</strong> — escribe las primeras letras o números y elige tu escuela de la lista.</li>
+          <li><strong>Correo</strong> y <strong>teléfono</strong> — para que la OTDE pueda contactarte si hace falta.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step-item">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h3>Guarda tu folio</h3>
+        <p>Presiona <strong>"Confirmar registro"</strong>. Recibirás un folio por cada curso, como comprobante
+        de que la OTDE NEZA ya tiene tu registro para fines de seguimiento.</p>
+        <p class="step-note">Si el curso tiene liga de convocatoria, también aparecerá en la confirmación — guárdala si aún no te has inscrito oficialmente.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CATEGORÍAS -->
+  <p class="section-label">Tipos de curso que puedes encontrar en el catálogo</p>
+  <div class="cat-grid">
+    <div class="cat-chip"><span class="cat-dot" style="background:#0284c7;"></span>Webinar</div>
+    <div class="cat-chip"><span class="cat-dot" style="background:#8b5cf6;"></span>Seminario</div>
+    <div class="cat-chip"><span class="cat-dot" style="background:#14b8a6;"></span>Conferencia</div>
+    <div class="cat-chip"><span class="cat-dot" style="background:#16a34a;"></span>Curso autogestivo</div>
+    <div class="cat-chip"><span class="cat-dot" style="background:#ea580c;"></span>Acción formativa</div>
+    <div class="cat-chip"><span class="cat-dot" style="background:#9F2241;"></span>Diplomado</div>
+    <div class="cat-chip"><span class="cat-dot" style="background:#6366f1;"></span>Proyecto didáctico</div>
+  </div>
+
+  <!-- NOTA IMPORTANTE -->
+  <div class="note-box">
+    <p class="note-title">Puntos importantes</p>
+    <ul>
+      <li>Este formulario <strong>no sustituye</strong> tu inscripción oficial cuando el curso la requiere — son dos acciones independientes.</li>
+      <li>Los cupos de las convocatorias externas son limitados: entre más pronto te registres ahí, mejor.</li>
+      <li><strong>La mayoría de los cursos no emite constancia</strong> (salvo webinars de UNETE); en los programas de CoEEE, la constancia la emite su propia plataforma, no la OTDE.</li>
+      <li>Si tienes dificultades con tu CCT, selecciona tu sector y zona manualmente en el formulario.</li>
+      <li>El catálogo cambia con el tiempo — si un curso que te interesó ya no aparece, probablemente su convocatoria cerró.</li>
+    </ul>
+  </div>
+
+  <!-- ACCESO -->
+  <div class="access-box">
+    <div class="qr-block">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=88x88&color=0C1A2E&bgcolor=FFFFFF&data=https://educaneza.github.io/seprn-sitio/formacion-docente.html"
+           alt="Código QR — Centro de Formación Docente">
+      <p class="qr-label">Escanea para abrir</p>
+    </div>
+    <div class="access-info">
+      <p class="access-heading">Enlace directo al registro</p>
+      <span class="url-pill">educaneza.github.io/seprn-sitio/formacion-docente.html</span>
+      <p class="access-note">
+        Escanea el código QR con la cámara de tu celular o escribe el enlace en tu navegador.<br>
+        Compatible con cualquier dispositivo: computadora, tableta o teléfono celular.
+      </p>
+    </div>
+  </div>
+
+  <!-- PIE -->
+  <div class="doc-footer">
+    <span>OTDE NEZA &nbsp;·&nbsp; Subdirección de Educación Primaria en la Región de Nezahualcóyotl</span>
+    <span>Centro de Formación Docente</span>
+  </div>
+
+</div>
+</body>
+</html>
