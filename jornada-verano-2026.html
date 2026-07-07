@@ -1017,7 +1017,6 @@
         <input type="hidden" id="zona-val">
         <input type="hidden" id="escuela-val">
         <input type="hidden" id="municipio-val">
-        <input type="hidden" id="curso-val">
 
         <p class="form-section-title">Contacto</p>
 
@@ -1203,7 +1202,6 @@
         .map(c => `<span style="display:block;">${c.nombre} &middot; ${c.horario}</span>`)
         .join('');
     }
-    document.getElementById('curso-val').value = cursosSeleccionados.map(c => c.nombre).join(' · ');
     mostrarPaso(3);
   }
 

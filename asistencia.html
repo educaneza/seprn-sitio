@@ -305,6 +305,23 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxbqOCDTLncOjRr
 // PIN local — debe coincidir con CHECKIN_PIN en conferencia-ia.gs
 const LOCAL_PIN = '2026IA';
 
+// Fetch + parseo JSON con timeout: si Apps Script no responde en TIMEOUT_MS
+// (ni en encabezados ni en el cuerpo de la respuesta), aborta en vez de
+// dejar el botón de verificar congelado indefinidamente durante el check-in
+// en vivo del evento. El .json() va DENTRO del try — fetch() se resuelve al
+// llegar los encabezados, pero el cuerpo puede tardar (o colgarse) aparte.
+const CHECKIN_TIMEOUT_MS = 30000;
+async function fetchJsonConTimeout(url) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), CHECKIN_TIMEOUT_MS);
+  try {
+    const r = await fetch(url, { signal: ctrl.signal });
+    return await r.json();
+  } finally {
+    clearTimeout(t);
+  }
+}
+
 let sessionPin = sessionStorage.getItem('checkin_pin') || '';
 let asistenciasHoy = 0;
 
@@ -357,11 +374,15 @@ document.getElementById('btn-verificar').addEventListener('click', async () => {
   card.style.display = 'none';
 
   try {
-    const r = await fetch(`${APPS_SCRIPT_URL}?action=checkin&folio=${encodeURIComponent(folio)}&pin=${encodeURIComponent(sessionPin)}`);
-    const d = await r.json();
+    const d = await fetchJsonConTimeout(`${APPS_SCRIPT_URL}?action=checkin&folio=${encodeURIComponent(folio)}&pin=${encodeURIComponent(sessionPin)}`);
     mostrarResultado(d);
-  } catch {
-    mostrarResultado({ status: 'error', mensaje: 'Error de conexión. Intenta de nuevo.' });
+  } catch (err) {
+    mostrarResultado({
+      status: 'error',
+      mensaje: err.name === 'AbortError'
+        ? 'El servidor tardó demasiado en responder. Intenta de nuevo — si ya se había registrado, no se duplica.'
+        : 'Error de conexión. Intenta de nuevo.'
+    });
   }
 
   btn.disabled = false;

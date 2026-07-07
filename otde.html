@@ -1087,6 +1087,24 @@
     // ── Soporte Técnico Remoto: solicitud ──
     const SOPORTE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbynU6hEtN7W-Q2MsTEbRZJeGH946n3YcQptGiW6w6fMzgZ98J6mu33bEqSoK_1Oxtk/exec';
 
+    // Fetch + parseo JSON con timeout: si Apps Script no responde en TIMEOUT_MS
+    // (ni en encabezados ni en el cuerpo de la respuesta), aborta en vez de
+    // dejar el botón congelado indefinidamente. El .json() va DENTRO del try
+    // — fetch() se resuelve al llegar los encabezados, pero el cuerpo puede
+    // tardar (o colgarse) por separado; si el timeout se cancelara al
+    // resolver fetch(), esa segunda espera quedaría sin protección.
+    const SOPORTE_TIMEOUT_MS = 30000;
+    async function fetchJsonConTimeout(url, options) {
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), SOPORTE_TIMEOUT_MS);
+        try {
+            const r = await fetch(url, options ? Object.assign({}, options, { signal: ctrl.signal }) : { signal: ctrl.signal });
+            return await r.json();
+        } finally {
+            clearTimeout(t);
+        }
+    }
+
     function toggleSoporteForm(btn) {
         var container = document.getElementById('form-soporte');
         var text = document.getElementById('btn-soporte-text');
@@ -1394,12 +1412,11 @@
         btnSubmit.style.opacity = '0.6';
 
         try {
-            const res = await fetch(SOPORTE_APPS_SCRIPT_URL, {
+            const data = await fetchJsonConTimeout(SOPORTE_APPS_SCRIPT_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain' },
                 body: JSON.stringify(datos)
             });
-            const data = await res.json();
 
             if (data.status === 'ok') {
                 msg.classList.add('ok');
@@ -1417,7 +1434,9 @@
             }
         } catch (err) {
             msg.classList.add('error');
-            msg.textContent = 'No se pudo enviar la solicitud. Verifica tu conexión e intenta de nuevo.';
+            msg.textContent = err.name === 'AbortError'
+                ? 'El servidor tardó demasiado en responder. Tu solicitud pudo haberse guardado igual; si no recibes contacto de la OTDE, intenta de nuevo.'
+                : 'No se pudo enviar la solicitud. Verifica tu conexión e intenta de nuevo.';
         } finally {
             btnSubmit.disabled = false;
             btnSubmit.style.opacity = '1';
