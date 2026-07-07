@@ -259,8 +259,18 @@ const ENCABEZADOS_CURSOS = [
   'ID_Curso', 'Categoria', 'Nombre', 'Responsable', 'Modalidad',
   'Fecha_inicio', 'Fecha_fin', 'Liga_convocatoria',
   'Requiere_codigo_asistencia', 'Codigo_asistencia', 'Activo', 'Notas',
-  'Registro_previo_requerido', 'Visible_desde', 'Visible_hasta'
+  'Registro_previo_requerido', 'Visible_desde', 'Visible_hasta',
+  'Hora_inicio', 'Recordatorio_inicio_enviado', 'Recordatorio_medio_enviado',
+  'Recordatorio_webinar_enviado'
 ];
+// P Hora_inicio (opcional, solo relevante en eventos de un solo día como
+// webinars): hora de inicio, ej. 16:00. Sin esto no se puede mandar el
+// recordatorio de "faltan X horas" — no hay forma de saber la hora exacta
+// solo con Fecha_inicio/Fecha_fin.
+// Q-S: banderas TRUE/FALSE que el propio sistema marca solo para no
+// mandar el mismo recordatorio dos veces — no las edites a mano salvo
+// para forzar un reenvío (bórralas y se vuelve a evaluar en la próxima
+// corrida del disparador).
 
 function obtenerHojaCursos() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -422,6 +432,9 @@ function onOpen() {
     .addItem('Actualizar vista de Inscripciones', 'actualizarVistaInscripciones')
     .addSeparator()
     .addItem('Migrar Jornada Verano 2026', 'migrarJornadaVerano')
+    .addSeparator()
+    .addItem('Instalar recordatorios automáticos', 'instalarRecordatoriosAutomaticos')
+    .addItem('Desinstalar recordatorios automáticos', 'desinstalarRecordatoriosAutomaticos')
     .addToUi();
 }
 
@@ -678,4 +691,203 @@ function migrarJornadaVerano() {
 
   ui.alert('Migración completa: ' + migrados + ' registro(s) migrado(s), ' +
            saltados + ' ya existían, ' + sinCurso + ' sin RFC/curso válido.');
+}
+
+// ============================================================
+// RECORDATORIOS AUTOMÁTICOS POR CORREO
+//
+// Tres tipos, cada uno se dispara solo cuando aplica — no hay que marcar
+// nada por curso, se calculan a partir de sus propias fechas:
+//
+//   1. "Empieza en 2 días"   — cualquier curso, DIAS_ANTES_RECORDATORIO_INICIO
+//      días antes de Fecha_inicio.
+//   2. "Vas a la mitad"      — solo cursos "largos" (Fecha_fin - Fecha_inicio
+//      >= DIAS_MINIMOS_CURSO_LARGO), el día que se cruza el punto medio.
+//   3. "Faltan unas horas"   — solo eventos de un solo día (Fecha_inicio ==
+//      Fecha_fin) que además tengan Hora_inicio capturada, entre
+//      HORAS_ANTES_WEBINAR_MAX y HORAS_ANTES_WEBINAR_MIN horas antes.
+//
+// Se manda UN solo correo por curso (destinatarios en copia oculta), no uno
+// por docente — la cuota diaria de MailApp la comparten TODOS los Apps
+// Script de la cuenta de Google, no es exclusiva de este proyecto, así que
+// hay que cuidarla. Antes de mandar cada lote se revisa cuánta cuota queda;
+// si no alcanza, ese aviso se salta HOY y se reintenta solo mañana (la
+// bandera "enviado" no se marca hasta que el correo sale de verdad).
+//
+// Requiere correr UNA vez el menú "Instalar recordatorios automáticos"
+// para dar de alta los disparadores (diario + cada hora). Sin eso, estas
+// funciones existen pero nadie las llama.
+// ============================================================
+
+const DIAS_ANTES_RECORDATORIO_INICIO = 2;
+const DIAS_MINIMOS_CURSO_LARGO = 30;
+const HORAS_ANTES_WEBINAR_MIN = 2;
+const HORAS_ANTES_WEBINAR_MAX = 4;
+
+const COL_HORA_INICIO = 15;                    // P (0-indexado: 15)
+const COL_RECORDATORIO_INICIO = 16;            // Q
+const COL_RECORDATORIO_MEDIO = 17;             // R
+const COL_RECORDATORIO_WEBINAR = 18;           // S
+
+// ── Combina la fecha (Y/M/D) de una celda con la hora (H:M) de otra ──
+function combinarFechaHora(fecha, hora) {
+  const f = new Date(fecha);
+  const h = new Date(hora);
+  return new Date(f.getFullYear(), f.getMonth(), f.getDate(), h.getHours(), h.getMinutes());
+}
+
+// ── Correos de todos los docentes con inscripción activa a un curso ──
+function obtenerCorreosInscritos(idCurso) {
+  const inscripciones = obtenerHojaInscripciones().getDataRange().getValues().slice(1);
+  const docentesPorRfc = {};
+  obtenerHojaDocentes().getDataRange().getValues().slice(1).forEach(r => {
+    docentesPorRfc[String(r[0]).trim().toUpperCase()] = r;
+  });
+
+  const correos = new Set();
+  inscripciones.forEach(row => {
+    if (String(row[3]).trim().toUpperCase() !== idCurso) return; // ID_Curso
+    const rfc = String(row[2]).trim().toUpperCase(); // RFC_Docente
+    const doc = docentesPorRfc[rfc];
+    const correo = doc ? String(doc[2]).trim() : ''; // Docentes!Correo
+    if (correo) correos.add(correo);
+  });
+  return [...correos];
+}
+
+// ── Envío en lote (BCC) con revisión de cuota. Devuelve true si se mandó. ──
+function enviarCorreoLote(destinatarios, asunto, cuerpoHtml) {
+  if (!destinatarios.length) return false;
+
+  if (MailApp.getRemainingDailyQuota() < 1) {
+    console.log('Cuota de correo agotada por hoy — se reintenta mañana: ' + asunto);
+    return false;
+  }
+
+  MailApp.sendEmail({
+    to: Session.getEffectiveUser().getEmail(),
+    bcc: destinatarios.join(','),
+    subject: asunto,
+    htmlBody: cuerpoHtml,
+    name: 'OTDE NEZA · Centro de Formación Docente'
+  });
+  return true;
+}
+
+// ── Recordatorios que se evalúan una vez al día (inicio + medio curso) ──
+function enviarRecordatoriosDiarios() {
+  const hoja  = obtenerHojaCursos();
+  const datos = hoja.getDataRange().getValues();
+  const hoy   = soloFecha(new Date());
+
+  for (let i = 1; i < datos.length; i++) {
+    const row = datos[i];
+    const idCurso = String(row[0]).trim().toUpperCase();
+    if (!idCurso || !row[5] || !row[6]) continue; // sin ID o sin fechas
+
+    const inicio = soloFecha(row[5]);
+    const fin    = soloFecha(row[6]);
+    const fila   = i + 1;
+
+    // 1. "Empieza en 2 días"
+    if (String(row[COL_RECORDATORIO_INICIO] || '').trim().toUpperCase() !== 'TRUE') {
+      const diasParaInicio = Math.round((inicio - hoy) / 86400000);
+      if (hoy > inicio) {
+        // El curso ya empezó y nunca se mandó — ya no tiene caso, se marca
+        // enviado para no seguir evaluándolo cada día.
+        hoja.getRange(fila, COL_RECORDATORIO_INICIO + 1).setValue('TRUE');
+      } else if (diasParaInicio === DIAS_ANTES_RECORDATORIO_INICIO) {
+        const correos = obtenerCorreosInscritos(idCurso);
+        const enviado = enviarCorreoLote(correos,
+          'Tu curso "' + row[2] + '" empieza en ' + DIAS_ANTES_RECORDATORIO_INICIO + ' días',
+          '<p>Hola,</p><p>Te recordamos que tu curso <strong>' + row[2] + '</strong> comienza el ' +
+          formatearFecha(row[5]) + '.</p>' +
+          (row[7] ? '<p>Convocatoria / acceso: <a href="' + row[7] + '">' + row[7] + '</a></p>' : '') +
+          '<p>OTDE NEZA</p>');
+        if (enviado) hoja.getRange(fila, COL_RECORDATORIO_INICIO + 1).setValue('TRUE');
+      }
+    }
+
+    // 2. "Vas a la mitad" — solo cursos largos
+    const duracionDias = Math.round((fin - inicio) / 86400000);
+    if (duracionDias >= DIAS_MINIMOS_CURSO_LARGO &&
+        String(row[COL_RECORDATORIO_MEDIO] || '').trim().toUpperCase() !== 'TRUE') {
+      const medio = new Date(inicio.getTime() + (fin - inicio) / 2);
+      if (hoy > fin) {
+        hoja.getRange(fila, COL_RECORDATORIO_MEDIO + 1).setValue('TRUE'); // ya terminó, no aplica
+      } else if (hoy >= soloFecha(medio)) {
+        const correos = obtenerCorreosInscritos(idCurso);
+        const enviado = enviarCorreoLote(correos,
+          'Vas a la mitad de "' + row[2] + '" — ¡sigue avanzando!',
+          '<p>Hola,</p><p>Ya vas a la mitad de tu curso <strong>' + row[2] + '</strong>. ' +
+          'Este es un recordatorio para que no lo dejes a medias — termina antes del ' +
+          formatearFecha(row[6]) + '.</p>' +
+          (row[7] ? '<p>Acceso al curso: <a href="' + row[7] + '">' + row[7] + '</a></p>' : '') +
+          '<p>OTDE NEZA</p>');
+        if (enviado) hoja.getRange(fila, COL_RECORDATORIO_MEDIO + 1).setValue('TRUE');
+      }
+    }
+  }
+}
+
+// ── Recordatorio de webinars/eventos de un día, evaluado cada hora ──
+function enviarRecordatoriosWebinar() {
+  const hoja  = obtenerHojaCursos();
+  const datos = hoja.getDataRange().getValues();
+  const ahora = new Date();
+
+  for (let i = 1; i < datos.length; i++) {
+    const row = datos[i];
+    const idCurso = String(row[0]).trim().toUpperCase();
+    if (!idCurso || !row[5] || !row[6] || !row[COL_HORA_INICIO]) continue;
+
+    const esDeUnDia = soloFecha(row[5]).getTime() === soloFecha(row[6]).getTime();
+    if (!esDeUnDia) continue;
+    if (String(row[COL_RECORDATORIO_WEBINAR] || '').trim().toUpperCase() === 'TRUE') continue;
+
+    const inicio = combinarFechaHora(row[5], row[COL_HORA_INICIO]);
+    const horasFaltantes = (inicio - ahora) / 3600000;
+    const fila = i + 1;
+
+    if (horasFaltantes < 0) {
+      hoja.getRange(fila, COL_RECORDATORIO_WEBINAR + 1).setValue('TRUE'); // ya pasó, no aplica
+      continue;
+    }
+    if (horasFaltantes <= HORAS_ANTES_WEBINAR_MAX && horasFaltantes >= HORAS_ANTES_WEBINAR_MIN) {
+      const correos = obtenerCorreosInscritos(idCurso);
+      const enviado = enviarCorreoLote(correos,
+        '"' + row[2] + '" empieza en unas horas',
+        '<p>Hola,</p><p>Tu webinar/evento <strong>' + row[2] + '</strong> empieza hoy a las ' +
+        Utilities.formatDate(new Date(row[COL_HORA_INICIO]), 'America/Mexico_City', 'HH:mm') + ' hrs.</p>' +
+        (row[7] ? '<p>Liga de acceso/transmisión: <a href="' + row[7] + '">' + row[7] + '</a></p>' : '') +
+        '<p>OTDE NEZA</p>');
+      if (enviado) hoja.getRange(fila, COL_RECORDATORIO_WEBINAR + 1).setValue('TRUE');
+    }
+  }
+}
+
+// ── Instala los disparadores (una sola vez, es seguro correrlo de nuevo) ──
+function instalarRecordatoriosAutomaticos() {
+  const existentes = ScriptApp.getProjectTriggers().map(t => t.getHandlerFunction());
+
+  if (!existentes.includes('enviarRecordatoriosDiarios')) {
+    ScriptApp.newTrigger('enviarRecordatoriosDiarios').timeBased().everyDays(1).atHour(8).create();
+  }
+  if (!existentes.includes('enviarRecordatoriosWebinar')) {
+    ScriptApp.newTrigger('enviarRecordatoriosWebinar').timeBased().everyHours(1).create();
+  }
+  SpreadsheetApp.getUi().alert('Recordatorios automáticos instalados: uno diario (8am) y uno cada hora.');
+}
+
+// ── Quita los disparadores de recordatorios (no borra las columnas) ──
+function desinstalarRecordatoriosAutomaticos() {
+  const triggers = ScriptApp.getProjectTriggers();
+  let quitados = 0;
+  triggers.forEach(t => {
+    if (t.getHandlerFunction() === 'enviarRecordatoriosDiarios' || t.getHandlerFunction() === 'enviarRecordatoriosWebinar') {
+      ScriptApp.deleteTrigger(t);
+      quitados++;
+    }
+  });
+  SpreadsheetApp.getUi().alert(quitados + ' disparador(es) de recordatorios eliminado(s).');
 }
