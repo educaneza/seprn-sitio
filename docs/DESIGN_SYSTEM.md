@@ -151,59 +151,94 @@ function animarEntrada(id) {
 }
 ```
 
-## Patrón: header ilustrado de tarjeta
+## Patrón: header de tarjeta (v2, jul 2026 — reemplaza la v1 de gradiente oscuro)
 
-Antes: rectángulo de color plano con un ícono centrado. Ahora es una
-composición en capas, reutilizable para cualquier tarjeta con "categoría +
-color":
+**Historial:** la v1 (commit `8d7e2b6`) usaba un gradiente saturado de 3
+paradas + glow radial + trama de puntos enmascarada. Se reemplazó por
+completo (commit `84606d5`) tras revisar una referencia visual concreta que
+Jorge compartió — la v2 es más simple y se lee más "producto", no la
+descartes por antigua, es la que está en producción:
 
-1. Gradiente propio de 3 paradas por categoría (`gradient` en
-   `CATEGORIA_STYLE`), más rico que un gradiente de 2 colores.
-2. `::before` — glow radial (blanco arriba-derecha, sombra abajo-izquierda)
-   con `mix-blend-mode: soft-light` para que el gradiente base se sienta con
-   profundidad, no plano.
-3. `::after` — trama de puntos (`radial-gradient` repetido cada 14px) con
-   `mask-image` en diagonal para que se desvanezca hacia una esquina, no
-   cubra parejo todo el header.
-4. El ícono va en un contenedor con `backdrop-filter: blur()`, borde
-   translúcido y sombra propia — no es un ícono suelto sobre el gradiente.
+1. Fondo **pastel plano** por categoría (`tint` en `CATEGORIA_STYLE`), sin
+   gradiente ni capas decorativas — `background: ${style.tint}`.
+2. Un solo `::before` con un glow radial blanco sutil arriba, nada más.
+3. El ícono va en un contenedor blanco (`.cc-icon-wrap`, 84×84px, radio 22px)
+   con el ícono grande (42px) coloreado con `style.solid` vía `color:` +
+   `stroke="currentColor"` en el SVG — no ícono blanco sobre fondo de color,
+   es ícono de color sobre fondo blanco. Este contrato importa: si agregas
+   una categoría nueva, su SVG debe usar `stroke="currentColor"`, no un color
+   fijo, o no heredará el tono correcto.
+4. El campo `gradient` de `CATEGORIA_STYLE` quedó sin uso — no lo borres
+   todavía por si se reutiliza en otro lado, pero no lo repliques en código
+   nuevo.
 
-Ver `.cc-header`, `.cc-header::before`, `.cc-header::after`, `.cc-icon` en
-`formacion-docente.html` para la implementación completa.
+Ver `.cc-header`, `.cc-icon-wrap` en `formacion-docente.html`.
 
-## Patrón: pill de categoría
+## Patrón: categoría como texto, no pill
 
-Cada entrada de `CATEGORIA_STYLE` trae, además del `gradient` e `icon` del
-header, un `tint` (fondo suave) y `solid` (color de texto/ícono) para la pill
-que aparece en el cuerpo de la tarjeta:
+La v1 envolvía la categoría en una pill con fondo tintado. La v2 la simplificó
+a texto simple en mayúsculas, coloreado con `style.solid` — más cercano a la
+referencia de Jorge y con menos ruido visual en una tarjeta que ya tiene
+harto color en el header. `.cc-categoria` + `style="color:${style.solid}"`.
 
-```js
-'Webinar': {
-  gradient: 'linear-gradient(150deg,#0c4a6e,#0284c7 65%,#38bdf8)',
-  tint: '#E6F4FC', solid: '#0369a1',
-  icon: '<svg ...>'
-}
-```
+## Patrón: pill "Seleccionado" + halo de selección
 
-Si se agrega una categoría nueva en el backend (`PREFIJOS_CATEGORIA` en
-`apps-script/formacion-docente.gs`), hay que agregar su entrada aquí también
-— si no, cae en `_default` (gris neutro), que no es necesariamente un error
-pero sí una categoría "sin marca visual propia".
+Al seleccionar, la tarjeta muestra una pill arriba-izquierda ("✓
+Seleccionado", fondo `--ok` sólido) en vez de un simple check circular en la
+esquina, y el borde/sombra combinan `--ok` (verde) en vez de `--acento`
+(guinda) — la selección se lee como "confirmado/aceptado", reservando el
+guinda para acciones primarias (botones). Ver `.cc-sel-badge`,
+`.curso-card.selected`.
 
-## Patrón: resumen sticky (barra flotante de selección)
+## Patrón: prueba social real (inscritos)
 
-Reemplaza el patrón viejo de "contador de texto + botón fijo en el flujo".
-Vive **dentro** de `#paso-1` (no como hermano) a propósito: al ocultarse
-`#paso-1` con `display:none` al cambiar de paso, la barra `position:fixed`
-se oculta con él sin necesitar lógica de visibilidad aparte — un elemento
-`fixed` dentro de un ancestro `display:none` no se renderiza.
+`doGet()` en `apps-script/formacion-docente.gs` cuenta las filas de
+`Inscripciones` por `ID_Curso` (`contarInscritosPorCurso()`) y lo manda como
+`inscritos` en cada curso del catálogo. El frontend solo lo muestra si
+`inscritos > 0` — nunca "0 inscritos", eso resta confianza en vez de darla.
+Los avatares (`ICON_AVATAR`) son siluetas abstractas genéricas, nunca fotos
+reales: los docentes no dieron consentimiento para aparecer, solo se expone
+el conteo agregado. **Si se agrega un dato de "prueba social" en cualquier
+pantalla nueva, la regla es la misma: dato real o no se muestra, nunca una
+cifra decorativa.**
 
-Piezas: `#resumen-sticky` (contenedor, clase `.visible` la muestra/oculta),
-`#rs-count-badge` (contador circular), `#rs-chips` (chips removibles, uno
-por curso elegido, con su propia × que llama a `quitarCurso(id)`), y el
-botón `#btn-paso1` reubicado dentro de la barra (mismo id de siempre, la
-lógica de habilitar/deshabilitar no cambió).
+## Patrón: resumen de selección — sidebar (escritorio) + sticky (móvil)
 
-Si se reutiliza este patrón en otra pantalla con selección múltiple, la
-función a copiar es `actualizarResumenSticky()` — centraliza contador, chips
-y estado del botón en un solo lugar en vez de tres actualizaciones sueltas.
+Un mismo estado (`cursosSeleccionados`) alimenta **dos** interfaces según el
+viewport, actualizadas juntas por una sola función (`actualizarResumenSticky()`
+— el nombre quedó de la v1, hoy actualiza ambas):
+
+- **`#resumen-sidebar`** (`≥960px`): panel `position: sticky` a la derecha de
+  la cuadrícula de cursos, dentro de `.paso1-body` (grid de 2 columnas,
+  `1fr 300px`). Lista vertical con ícono de categoría + nombre + botón ×
+  por curso, contador, y el botón Continuar (`#btn-paso1-desktop`).
+- **`#resumen-sticky`** (`<960px`): la barra flotante inferior de la v1 seguía
+  usándose tal cual, con chips horizontales y `#btn-paso1`.
+
+Ambos viven **dentro** de `#paso-1` a propósito: al ocultarse `#paso-1` con
+`display:none` al cambiar de paso, ambos se ocultan solos, sin lógica de
+visibilidad aparte — un elemento `fixed` o `sticky` dentro de un ancestro
+`display:none` no se renderiza.
+
+**Hay DOS botones "Continuar" con IDs distintos** (`btn-paso1` y
+`btn-paso1-desktop`) que deben habilitarse/deshabilitarse juntos — si se toca
+esta lógica, no olvidar el segundo. `quitarCurso(id)` funciona para ambas
+interfaces (chip del sticky y fila del sidebar llaman a la misma función).
+
+## Patrón: ancho de contenedor variable por paso
+
+`.container` es 1180px (no 720px como en la v1) para que la cuadrícula de
+3 columnas + sidebar de paso-1 tengan aire. Los demás pasos (`#paso-2`,
+`#paso-externo`, `#paso-confirmacion`) llevan la clase `.narrow`
+(`max-width: 640px; margin: 0 auto;`) para no quedar dispersos en un
+contenedor ancho pensado para otro layout. Si se agrega un paso nuevo de
+una sola columna, agrégale `.narrow`.
+
+## Franja de confianza — regla de honestidad
+
+`.confianza-franja` (4 chips al fondo de paso-1) **no promete nada que no
+sea cierto para todo el catálogo mixto**. En particular: nunca un chip
+genérico de "Certificado" — la mayoría de las categorías (webinars, salvo
+UNETE) no emiten constancia; el chip real dice "Constancia según programa".
+Si se agrega un chip nuevo aquí, debe ser verdadero para **cualquier**
+categoría del catálogo, no solo para la que se tenía en mente al escribirlo.
