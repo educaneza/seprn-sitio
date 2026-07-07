@@ -1091,7 +1091,7 @@
   let catalogoCursos = {};
   async function cargarCatalogoCursos() {
     try {
-      const res = await fetch(APPS_SCRIPT_URL).then(r => r.json());
+      const res = await fetchConTimeout(APPS_SCRIPT_URL).then(r => r.json());
       (res.cursos || []).forEach(c => { catalogoCursos[c.nombre.trim()] = c.id; });
     } catch (err) {
       console.error('No se pudo cargar el catálogo de cursos:', err);
@@ -1327,6 +1327,19 @@
     zonaGroup.style.display = 'block';
   }
 
+  // Fetch con timeout: si Apps Script no responde en TIMEOUT_MS, aborta en vez
+  // de dejar el botón "Enviando…" congelado indefinidamente.
+  const TIMEOUT_MS = 30000;
+  async function fetchConTimeout(url, options) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+    try {
+      return await fetch(url, options ? { ...options, signal: ctrl.signal } : { signal: ctrl.signal });
+    } finally {
+      clearTimeout(t);
+    }
+  }
+
   // ── ENVÍO DEL FORMULARIO ──
   async function enviarFormulario(e) {
     e.preventDefault();
@@ -1349,7 +1362,7 @@
         const idCurso = catalogoCursos[c.nombre.trim()];
         if (!idCurso) throw new Error('No se encontró "' + c.nombre + '" en el catálogo de cursos. Contacta a OTDE NEZA.');
 
-        const res = await fetch(APPS_SCRIPT_URL, {
+        const res = await fetchConTimeout(APPS_SCRIPT_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain' },
           body: JSON.stringify({ ...base, id_curso: idCurso })
@@ -1360,7 +1373,9 @@
       mostrarConfirmacion(resultados, base);
     } catch (err) {
       const eg = document.getElementById('error-global');
-      eg.textContent = 'Ocurrió un error al enviar: ' + err.message + '. Intenta de nuevo.';
+      eg.textContent = err.name === 'AbortError'
+        ? 'El servidor tardó demasiado en responder. Tu registro pudo haberse guardado igual — el sistema no duplica folios, así que puedes intentar de nuevo con confianza.'
+        : 'Ocurrió un error al enviar: ' + err.message + '. Intenta de nuevo.';
       eg.classList.add('visible');
       btn.disabled = false;
       btn.textContent = 'Confirmar inscripción';

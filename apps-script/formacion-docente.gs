@@ -36,6 +36,10 @@
 //     A Folio | B Fecha_registro | C RFC_Docente | D ID_Curso
 //     E Estado | F Codigo_asistencia_capturado
 //     G Fecha_actualizacion_estado | H Notas
+//     I-O: columnas de solo lectura con fórmula VLOOKUP (Nombre_Docente,
+//     CCT, Escuela, Sector, Zona, Funcion, Nombre_Curso) — se recalculan
+//     solas si cambian los datos del docente o del curso, no se escriben
+//     como valores estáticos. Ver agregarInscripcion().
 //
 // NOTA: el campo Codigo_asistencia_capturado y el flujo de cierre
 // de webinars (validar asistencia) se implementan en una fase
@@ -108,7 +112,7 @@ function doPost(e) {
     }
 
     const folio = generarFolio(hojaInscripciones);
-    hojaInscripciones.appendRow([folio, ahora, rfc, idCurso, 'Registrado', '', '', '']);
+    agregarInscripcion(hojaInscripciones, folio, ahora, rfc, idCurso, 'Registrado', '');
 
     return textResponse(JSON.stringify({ status: 'ok', folio: folio, duplicado: false }));
 
@@ -219,11 +223,64 @@ function obtenerHojaInscripciones() {
     hoja = ss.insertSheet(HOJA_INSCRIPCIONES);
     hoja.appendRow([
       'Folio', 'Fecha_registro', 'RFC_Docente', 'ID_Curso', 'Estado',
-      'Codigo_asistencia_capturado', 'Fecha_actualizacion_estado', 'Notas'
+      'Codigo_asistencia_capturado', 'Fecha_actualizacion_estado', 'Notas',
+      'Nombre_Docente', 'CCT', 'Escuela', 'Sector', 'Zona', 'Funcion', 'Nombre_Curso'
     ]);
-    estilizarEncabezado(hoja, 8);
+    estilizarEncabezado(hoja, 15);
+    hoja.setColumnWidth(9, 200);  // Nombre_Docente
+    hoja.setColumnWidth(11, 200); // Escuela
+    hoja.setColumnWidth(15, 240); // Nombre_Curso
   }
   return hoja;
+}
+
+// ── Agrega una fila a Inscripciones + fórmulas de vista (I-O) ──
+// Las columnas I-O son VLOOKUP en vivo contra Docentes/Cursos: si el
+// docente actualiza sus datos (otra inscripción) o cambia el nombre del
+// curso, se reflejan solas — no son una copia congelada al momento del
+// registro.
+function agregarInscripcion(hoja, folio, fecha, rfc, idCurso, estado, notas) {
+  hoja.appendRow([folio, fecha, rfc, idCurso, estado, '', '', notas || '']);
+  const fila = hoja.getLastRow();
+  hoja.getRange(fila, 9, 1, 7).setFormulas([formulasVistaInscripcion(fila)]);
+}
+
+// ── Fórmulas de vista para una fila dada de Inscripciones ──
+function formulasVistaInscripcion(fila) {
+  return [
+    '=IFERROR(VLOOKUP(C' + fila + ',Docentes!A:J,2,FALSE),"")',  // Nombre_Docente
+    '=IFERROR(VLOOKUP(C' + fila + ',Docentes!A:J,5,FALSE),"")',  // CCT
+    '=IFERROR(VLOOKUP(C' + fila + ',Docentes!A:J,6,FALSE),"")',  // Escuela
+    '=IFERROR(VLOOKUP(C' + fila + ',Docentes!A:J,7,FALSE),"")',  // Sector
+    '=IFERROR(VLOOKUP(C' + fila + ',Docentes!A:J,8,FALSE),"")',  // Zona
+    '=IFERROR(VLOOKUP(C' + fila + ',Docentes!A:J,10,FALSE),"")', // Funcion
+    '=IFERROR(VLOOKUP(D' + fila + ',Cursos!A:C,3,FALSE),"")'     // Nombre_Curso
+  ];
+}
+
+// ── Repara/rellena las columnas I-O para filas que no las tengan aún ──
+// (filas creadas antes de este cambio, o migradas manualmente). Segura
+// de correr varias veces — solo sobrescribe encabezados y fórmulas, no
+// los datos de las columnas A-H.
+function actualizarVistaInscripciones() {
+  const hoja = obtenerHojaInscripciones();
+
+  // Por si la hoja ya existía de antes (creada con solo 8 columnas):
+  // aseguramos los encabezados I-O sin tocar los de A-H.
+  hoja.getRange(1, 9, 1, 7).setValues([[
+    'Nombre_Docente', 'CCT', 'Escuela', 'Sector', 'Zona', 'Funcion', 'Nombre_Curso'
+  ]]);
+  hoja.getRange(1, 9, 1, 7).setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
+
+  const ultimaFila = hoja.getLastRow();
+  if (ultimaFila < 2) {
+    SpreadsheetApp.getUi().alert('Encabezados actualizados. Aún no hay inscripciones para rellenar.');
+    return;
+  }
+  for (let fila = 2; fila <= ultimaFila; fila++) {
+    hoja.getRange(fila, 9, 1, 7).setFormulas([formulasVistaInscripcion(fila)]);
+  }
+  SpreadsheetApp.getUi().alert('Vista actualizada en ' + (ultimaFila - 1) + ' inscripción(es).');
 }
 
 // ── Estilo estándar de encabezado (igual al resto del sitio) ──
@@ -292,6 +349,7 @@ function onOpen() {
     .createMenu('OTDE Formación')
     .addItem('Generar ID de cursos faltantes', 'generarIdsCursosFaltantes')
     .addItem('Generar estadísticas', 'generarEstadisticas')
+    .addItem('Actualizar vista de Inscripciones', 'actualizarVistaInscripciones')
     .addSeparator()
     .addItem('Migrar Jornada Verano 2026', 'migrarJornadaVerano')
     .addToUi();
@@ -509,7 +567,7 @@ function migrarJornadaVerano() {
       sector: sector, zona: zona, municipio: CCT_MUNICIPIO_MAP[cct] || '', funcion: funcion
     }, rfc, fecha || new Date());
 
-    hojaInscripciones.appendRow([folio, fecha, rfc, idCurso, 'Registrado', '', '', 'Migrado de Jornada Verano 2026']);
+    agregarInscripcion(hojaInscripciones, folio, fecha, rfc, idCurso, 'Registrado', 'Migrado de Jornada Verano 2026');
     inscripcionesExistentes.push([folio]);
     migrados++;
   });
