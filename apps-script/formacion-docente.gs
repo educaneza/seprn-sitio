@@ -105,6 +105,7 @@ function doGet() {
   try {
     const hoja  = obtenerHojaCursos();
     const datos = hoja.getDataRange().getValues().slice(1);
+    const inscritosPorCurso = contarInscritosPorCurso();
 
     const cursos = datos
       .filter(row =>
@@ -121,13 +122,27 @@ function doGet() {
         fecha_inicio:              formatearFecha(row[5]),
         fecha_fin:                 formatearFecha(row[6]),
         liga_convocatoria:         row[7] || '',
-        registro_previo_requerido: String(row[12]).trim().toUpperCase() === 'TRUE'
+        registro_previo_requerido: String(row[12]).trim().toUpperCase() === 'TRUE',
+        inscritos:                 inscritosPorCurso[row[0].toString().trim().toUpperCase()] || 0
       }));
 
     return textResponse(JSON.stringify({ status: 'ok', cursos }));
   } catch (err) {
     return textResponse(JSON.stringify({ status: 'error', mensaje: err.message, cursos: [] }));
   }
+}
+
+// ── Cuenta cuántas Inscripciones tiene cada ID_Curso ──
+// Prueba social real para el catálogo (nunca un número inventado).
+function contarInscritosPorCurso() {
+  const filas = obtenerHojaInscripciones().getDataRange().getValues().slice(1);
+  const conteo = {};
+  filas.forEach(row => {
+    const idCurso = String(row[3]).trim().toUpperCase(); // ID_Curso
+    if (!idCurso) return;
+    conteo[idCurso] = (conteo[idCurso] || 0) + 1;
+  });
+  return conteo;
 }
 
 // ── doPost: recibe un registro (docente + un curso) ──
