@@ -1091,7 +1091,7 @@
   let catalogoCursos = {};
   async function cargarCatalogoCursos() {
     try {
-      const res = await fetchConTimeout(APPS_SCRIPT_URL).then(r => r.json());
+      const res = await fetchJsonConTimeout(APPS_SCRIPT_URL);
       (res.cursos || []).forEach(c => { catalogoCursos[c.nombre.trim()] = c.id; });
     } catch (err) {
       console.error('No se pudo cargar el catálogo de cursos:', err);
@@ -1327,14 +1327,19 @@
     zonaGroup.style.display = 'block';
   }
 
-  // Fetch con timeout: si Apps Script no responde en TIMEOUT_MS, aborta en vez
-  // de dejar el botón "Enviando…" congelado indefinidamente.
+  // Fetch + parseo JSON con timeout: si Apps Script no responde en TIMEOUT_MS
+  // (ni en encabezados ni en el cuerpo de la respuesta), aborta en vez de
+  // dejar el botón "Enviando…" congelado indefinidamente. IMPORTANTE: el
+  // .json() va DENTRO del try — fetch() se resuelve al llegar los encabezados,
+  // pero el cuerpo puede tardar (o colgarse) por separado; si el timeout se
+  // cancelara al resolver fetch(), esa segunda espera quedaría sin protección.
   const TIMEOUT_MS = 30000;
-  async function fetchConTimeout(url, options) {
+  async function fetchJsonConTimeout(url, options) {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
     try {
-      return await fetch(url, options ? { ...options, signal: ctrl.signal } : { signal: ctrl.signal });
+      const r = await fetch(url, options ? { ...options, signal: ctrl.signal } : { signal: ctrl.signal });
+      return await r.json();
     } finally {
       clearTimeout(t);
     }
@@ -1362,11 +1367,11 @@
         const idCurso = catalogoCursos[c.nombre.trim()];
         if (!idCurso) throw new Error('No se encontró "' + c.nombre + '" en el catálogo de cursos. Contacta a OTDE NEZA.');
 
-        const res = await fetchConTimeout(APPS_SCRIPT_URL, {
+        const res = await fetchJsonConTimeout(APPS_SCRIPT_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain' },
           body: JSON.stringify({ ...base, id_curso: idCurso })
-        }).then(r => r.json());
+        });
         if (res.status !== 'ok') throw new Error(res.mensaje || 'Error desconocido');
         resultados.push({ folio: res.folio, curso: c.nombre });
       }
