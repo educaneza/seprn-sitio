@@ -16,8 +16,10 @@
 //      en la constante APPS_SCRIPT_URL
 //   6. Abre la hoja "Cursos" y da de alta tus cursos manualmente
 //      (Categoria, Nombre, Responsable, Modalidad, fechas, Liga,
-//      Activo=TRUE) — usa el menú "OTDE Formación → Generar ID de
-//      cursos faltantes" para que el ID_Curso se autocomplete
+//      Activo=TRUE, Registro_previo_requerido=TRUE solo si el curso
+//      tiene cupo real y limitado en una plataforma externa) — usa el
+//      menú "OTDE Formación → Generar ID de cursos faltantes" para que
+//      el ID_Curso se autocomplete
 //
 // HOJAS (pestañas dentro del mismo Spreadsheet):
 //
@@ -30,7 +32,15 @@
 //     A ID_Curso | B Categoria | C Nombre | D Responsable
 //     E Modalidad | F Fecha_inicio | G Fecha_fin | H Liga_convocatoria
 //     I Requiere_codigo_asistencia | J Codigo_asistencia
-//     K Activo | L Notas
+//     K Activo | L Notas | M Registro_previo_requerido
+//
+//   Registro_previo_requerido (TRUE/FALSE, tú lo decides por curso): si es
+//   TRUE y hay Liga_convocatoria, el formulario OBLIGA a pasar por esa liga
+//   externa antes de llenar los datos con OTDE (mismo patrón que
+//   jornada-verano-2026.html) — úsalo solo en cursos con cupo real y
+//   limitado en la plataforma externa (diplomados, cursos autogestivos).
+//   Si es FALSE, la liga solo se muestra como referencia al final, sin
+//   forzar el paso — para categorías sin cupo real (la mayoría de webinars).
 //
 //   Inscripciones — una fila por registro (transaccional)
 //     A Folio | B Fecha_registro | C RFC_Docente | D ID_Curso
@@ -71,14 +81,15 @@ function doGet() {
     const cursos = datos
       .filter(row => String(row[10]).trim().toUpperCase() === 'TRUE' && String(row[0]).trim())
       .map(row => ({
-        id:                row[0].toString().trim(),
-        categoria:         row[1],
-        nombre:            row[2],
-        responsable:       row[3],
-        modalidad:         row[4],
-        fecha_inicio:      formatearFecha(row[5]),
-        fecha_fin:         formatearFecha(row[6]),
-        liga_convocatoria: row[7] || ''
+        id:                        row[0].toString().trim(),
+        categoria:                 row[1],
+        nombre:                    row[2],
+        responsable:               row[3],
+        modalidad:                 row[4],
+        fecha_inicio:              formatearFecha(row[5]),
+        fecha_fin:                 formatearFecha(row[6]),
+        liga_convocatoria:         row[7] || '',
+        registro_previo_requerido: String(row[12]).trim().toUpperCase() === 'TRUE'
       }));
 
     return textResponse(JSON.stringify({ status: 'ok', cursos }));
@@ -206,11 +217,17 @@ function obtenerHojaCursos() {
     hoja.appendRow([
       'ID_Curso', 'Categoria', 'Nombre', 'Responsable', 'Modalidad',
       'Fecha_inicio', 'Fecha_fin', 'Liga_convocatoria',
-      'Requiere_codigo_asistencia', 'Codigo_asistencia', 'Activo', 'Notas'
+      'Requiere_codigo_asistencia', 'Codigo_asistencia', 'Activo', 'Notas',
+      'Registro_previo_requerido'
     ]);
-    estilizarEncabezado(hoja, 12);
+    estilizarEncabezado(hoja, 13);
     hoja.setColumnWidth(3, 280); // Nombre
     hoja.setColumnWidth(8, 220); // Liga_convocatoria
+  } else if (!hoja.getRange(1, 13).getValue()) {
+    // Hoja creada antes de agregar esta columna: se completa el encabezado
+    // sin tocar las columnas A-L existentes.
+    hoja.getRange(1, 13).setValue('Registro_previo_requerido')
+      .setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
   }
   return hoja;
 }
@@ -501,6 +518,13 @@ function asegurarCursosVerano() {
     const filaExistente = datos.slice(1).find(row => String(row[2]).trim() === curso.nombre);
     if (filaExistente) {
       mapa[curso.nombre] = String(filaExistente[0]).trim();
+      // Backfill: si esta fila se creó antes de agregar Registro_previo_requerido,
+      // la marcamos TRUE (CoEEE sí gestiona cupo real en auladigital.dee.edu.mx).
+      // datos[0] es el encabezado (fila 1), así que fila de hoja = índice + 1.
+      const filaSheet = datos.indexOf(filaExistente) + 1;
+      if (String(filaExistente[12] || '').trim().toUpperCase() !== 'TRUE') {
+        hoja.getRange(filaSheet, 13).setValue('TRUE');
+      }
       return;
     }
 
@@ -516,7 +540,7 @@ function asegurarCursosVerano() {
       idCurso, 'Curso autogestivo', curso.nombre, 'CoEEE', 'En línea',
       new Date(curso.fecha_inicio), new Date(curso.fecha_fin),
       'https://auladigital.dee.edu.mx', 'FALSE', '', 'TRUE',
-      'Jornada de Capacitación Verano 2026'
+      'Jornada de Capacitación Verano 2026', 'TRUE'
     ]);
 
     datos.push([idCurso, 'Curso autogestivo', curso.nombre]); // para que maxNum considere el nuevo ID si hay más de uno por generar

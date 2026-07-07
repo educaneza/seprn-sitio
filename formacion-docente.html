@@ -226,6 +226,28 @@
     .aviso-legal svg { flex-shrink: 0; width: 18px; height: 18px; margin-top: .1rem; }
     .aviso-legal strong { font-weight: 700; }
 
+    /* ── PASO REGISTRO EXTERNO (cursos con cupo real en CoEEE u otra plataforma) ── */
+    .externo-item {
+      border: 1px solid var(--border); border-radius: 8px; padding: .9rem 1rem; margin-bottom: .75rem;
+    }
+    .externo-item .ei-nombre { font-weight: 700; color: var(--midnight); margin-bottom: .5rem; font-size: .92rem; }
+    .externo-item .ei-cupo {
+      font-size: .78rem; color: var(--warn-text); background: var(--warn-bg);
+      border-radius: 5px; padding: .3rem .55rem; margin-bottom: .65rem; display: inline-block;
+    }
+    .externo-item .ei-link {
+      display: inline-flex; align-items: center; gap: .4rem; color: #fff; background: var(--midnight);
+      border-radius: 6px; padding: .5rem .9rem; font-size: .85rem; font-weight: 600; text-decoration: none;
+    }
+    .externo-item .ei-link:hover { background: var(--guinda); }
+    .externo-item .ei-link svg { width: 15px; height: 15px; }
+
+    .regreso-externo-box {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      padding: 1rem; margin-top: 1.25rem; text-align: center;
+    }
+    .regreso-externo-box p { font-size: .85rem; color: var(--muted); margin-bottom: .75rem; }
+
     /* ── SUBMIT ── */
     .btn-submit {
       width: 100%; padding: .9rem; background: var(--acento); color: #fff; border: none; border-radius: 8px;
@@ -338,6 +360,27 @@
     <button class="btn-primary" id="btn-paso1" disabled onclick="irPaso2()">
       Continuar →
     </button>
+  </div>
+
+  <!-- ══ PASO INTERMEDIO: REGISTRO OFICIAL EXTERNO (solo si algún curso seleccionado lo requiere) ══ -->
+  <div id="paso-externo" style="display:none;">
+    <div class="paso-header">
+      <h2>Antes de continuar, regístrate oficialmente</h2>
+      <p>Estos cursos tienen cupo limitado en su plataforma — tu registro con OTDE no reserva tu lugar</p>
+    </div>
+
+    <div id="externo-lista"></div>
+
+    <div class="regreso-externo-box">
+      <p>¿Ya completaste tu registro oficial en las convocatorias de arriba?</p>
+      <button class="btn-primary" onclick="continuarDesdeExterno()">
+        Sí, ya me registré — Continuar con OTDE NEZA
+      </button>
+    </div>
+
+    <div style="margin-top:1rem;">
+      <button class="btn-secondary" onclick="regresarPaso1()">← Cambiar selección</button>
+    </div>
   </div>
 
   <!-- ══ PASO 2: FORMULARIO OTDE ══ -->
@@ -656,6 +699,7 @@
       card.dataset.nombre = curso.nombre;
       card.dataset.categoria = curso.categoria || '';
       card.dataset.liga = curso.liga_convocatoria || '';
+      card.dataset.registroPrevio = curso.registro_previo_requerido ? '1' : '';
       card.addEventListener('click', () => seleccionarCurso(card));
 
       const rango = curso.fecha_inicio
@@ -698,7 +742,8 @@
         id: card.dataset.id,
         nombre: card.dataset.nombre,
         categoria: card.dataset.categoria,
-        liga: card.dataset.liga
+        liga: card.dataset.liga,
+        registroPrevio: !!card.dataset.registroPrevio
       });
       card.classList.add('selected');
     }
@@ -714,8 +759,56 @@
     document.getElementById('btn-paso1').disabled = n === 0;
   }
 
+  // ── PASO 1 → decide si hace falta el paso de registro externo primero ──
   function irPaso2() {
     if (!cursosSeleccionados.length) return;
+
+    const conRegistroPrevio = cursosSeleccionados.filter(c => c.registroPrevio && c.liga);
+    if (conRegistroPrevio.length) {
+      mostrarPasoExterno(conRegistroPrevio);
+    } else {
+      mostrarFormularioOtde();
+    }
+  }
+
+  // ── PASO INTERMEDIO: cursos con cupo real en plataforma externa ──
+  function mostrarPasoExterno(cursos) {
+    const cont = document.getElementById('externo-lista');
+    cont.innerHTML = '';
+
+    cursos.forEach(c => {
+      const item = document.createElement('div');
+      item.className = 'externo-item';
+
+      const nombre = document.createElement('div');
+      nombre.className = 'ei-nombre';
+      nombre.textContent = c.nombre;
+      item.appendChild(nombre);
+
+      const cupo = document.createElement('div');
+      cupo.className = 'ei-cupo';
+      cupo.textContent = 'Cupo limitado — regístrate cuanto antes';
+      item.appendChild(cupo);
+      item.appendChild(document.createElement('br'));
+
+      const link = document.createElement('a');
+      link.className = 'ei-link';
+      link.href = c.liga;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Ir a registrarme';
+      item.appendChild(link);
+
+      cont.appendChild(item);
+    });
+
+    mostrarPaso('externo');
+  }
+
+  function continuarDesdeExterno() { mostrarFormularioOtde(); }
+
+  // ── PASO 2: FORMULARIO OTDE (datos personales) ──
+  function mostrarFormularioOtde() {
     const n = cursosSeleccionados.length;
     document.getElementById('rc-titulo').textContent = n === 1 ? 'Curso seleccionado' : n + ' cursos seleccionados';
     const lista = document.getElementById('rc-lista');
@@ -735,17 +828,18 @@
 
   function mostrarPaso(n) {
     document.getElementById('paso-1').style.display = n === 1 ? 'block' : 'none';
+    document.getElementById('paso-externo').style.display = n === 'externo' ? 'block' : 'none';
     document.getElementById('paso-2').style.display = n === 2 ? 'block' : 'none';
     document.getElementById('paso-confirmacion').style.display = 'none';
 
-    const ind = { 1: ['active', ''], 2: ['done', 'active'] };
+    const ind = { 1: ['active', ''], externo: ['done', ''], 2: ['done', 'active'] };
     const clases = ind[n];
     [1, 2].forEach((i, idx) => {
       const el = document.getElementById('step-ind-' + i);
       el.classList.remove('active', 'done');
       if (clases[idx]) el.classList.add(clases[idx]);
     });
-    document.getElementById('line-1-2').classList.toggle('done', n >= 2);
+    document.getElementById('line-1-2').classList.toggle('done', n === 2);
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -1027,6 +1121,11 @@
         liga.rel = 'noopener noreferrer';
         liga.textContent = 'Inscríbete oficialmente / ver convocatoria →';
         item.appendChild(liga);
+
+        const nota = document.createElement('div');
+        nota.style.cssText = 'font-size:.72rem;color:var(--muted);margin-top:.3rem;';
+        nota.textContent = 'Este registro con OTDE no reserva tu lugar — los cupos de la convocatoria son limitados.';
+        item.appendChild(nota);
       }
 
       cont.appendChild(item);
