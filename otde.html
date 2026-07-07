@@ -484,7 +484,10 @@
 <section class="content-section" id="main-content" role="main">
 
     <!-- Banner: Jornada Verano 2026 -->
-    <div style="background:linear-gradient(135deg,#56212f 0%,#9F2241 100%);border-radius:12px;padding:1.5rem 1.75rem;margin-bottom:2.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+    <!-- Se retira solo, sin tocar código, el día después de terminar el último
+         curso (Canva, 17-21 ago 2026). Cambia FECHA_LIMITE_BANNER_VERANO abajo
+         si las fechas de la Jornada llegan a moverse. -->
+    <div id="banner-jornada-verano" style="background:linear-gradient(135deg,#56212f 0%,#9F2241 100%);border-radius:12px;padding:1.5rem 1.75rem;margin-bottom:2.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
         <div>
             <div style="font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#f4a4bc;margin-bottom:.35rem;">OTDE NEZA · Convocatoria activa</div>
             <div style="font-size:1.1rem;font-weight:700;color:#fff;margin-bottom:.2rem;">Jornada de Capacitación Verano 2026</div>
@@ -494,6 +497,16 @@
             Ver cursos e inscribirse →
         </a>
     </div>
+    <script>
+      (function() {
+        var FECHA_LIMITE_BANNER_VERANO = new Date(2026, 7, 22); // 22 ago 2026 (mes 0-indexado: 7 = agosto)
+        var hoy = new Date();
+        if (hoy >= FECHA_LIMITE_BANNER_VERANO) {
+          var banner = document.getElementById('banner-jornada-verano');
+          if (banner) banner.style.display = 'none';
+        }
+      })();
+    </script>
 
     <!-- Banner: Centro de Formación Docente -->
     <div style="background:linear-gradient(135deg,#0C1A2E 0%,#1a2e4a 100%);border-radius:12px;padding:1.5rem 1.75rem;margin-bottom:2.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">

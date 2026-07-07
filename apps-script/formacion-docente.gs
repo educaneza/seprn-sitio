@@ -33,6 +33,7 @@
 //     E Modalidad | F Fecha_inicio | G Fecha_fin | H Liga_convocatoria
 //     I Requiere_codigo_asistencia | J Codigo_asistencia
 //     K Activo | L Notas | M Registro_previo_requerido
+//     N Visible_desde | O Visible_hasta
 //
 //   Registro_previo_requerido (TRUE/FALSE, tú lo decides por curso): si es
 //   TRUE y hay Liga_convocatoria, el formulario OBLIGA a pasar por esa liga
@@ -41,6 +42,17 @@
 //   limitado en la plataforma externa (diplomados, cursos autogestivos).
 //   Si es FALSE, la liga solo se muestra como referencia al final, sin
 //   forzar el paso — para categorías sin cupo real (la mayoría de webinars).
+//
+//   Visible_desde / Visible_hasta (fechas, AMBAS OPCIONALES): programan la
+//   aparición/desaparición del curso en el catálogo sin que tengas que
+//   tocar Activo a mano. Se evalúan en doGet() cada vez que alguien visita
+//   el sitio (comparando solo año/mes/día) — no dependen de un disparador
+//   programado que pueda fallar en silencio. Reglas:
+//     - Vacías las dos → el curso se rige solo por Activo, como hasta ahora.
+//     - Visible_desde llena → el curso aparece automáticamente ese día.
+//     - Visible_hasta llena → el curso se oculta automáticamente al día
+//       siguiente de esa fecha (ese día todavía es visible).
+//     - Activo=FALSE siempre gana — apaga el curso sin importar las fechas.
 //
 //   Inscripciones — una fila por registro (transaccional)
 //     A Folio | B Fecha_registro | C RFC_Docente | D ID_Curso
@@ -72,6 +84,22 @@ const PREFIJOS_CATEGORIA = {
   'Proyecto didáctico':     'PRY'
 };
 
+// ── Fecha sin hora (año/mes/día), para comparar ventanas de visibilidad
+// sin depender de husos horarios ni de la hora exacta de la visita ──
+function soloFecha(valor) {
+  const d = new Date(valor);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+// ── ¿Este curso debe verse hoy, según Visible_desde/Visible_hasta? ──
+// Ambas vacías: sin restricción de fecha (comportamiento de siempre).
+function dentroDeVentanaVisible(visibleDesde, visibleHasta) {
+  const hoy = soloFecha(new Date());
+  if (visibleDesde && hoy < soloFecha(visibleDesde)) return false;
+  if (visibleHasta && hoy > soloFecha(visibleHasta)) return false;
+  return true;
+}
+
 // ── doGet: catálogo de cursos activos ──
 function doGet() {
   try {
@@ -79,7 +107,11 @@ function doGet() {
     const datos = hoja.getDataRange().getValues().slice(1);
 
     const cursos = datos
-      .filter(row => String(row[10]).trim().toUpperCase() === 'TRUE' && String(row[0]).trim())
+      .filter(row =>
+        String(row[10]).trim().toUpperCase() === 'TRUE' &&
+        String(row[0]).trim() &&
+        dentroDeVentanaVisible(row[13], row[14])
+      )
       .map(row => ({
         id:                        row[0].toString().trim(),
         categoria:                 row[1],
@@ -219,25 +251,36 @@ function obtenerHojaDocentes() {
 }
 
 // ── Obtener o crear hoja Cursos ──
+// Encabezados completos de Cursos, en orden. Si agregas una columna nueva
+// en el futuro, solo agrégala aquí — obtenerHojaCursos() completa sola el
+// encabezado que falte en hojas ya existentes, sin tocar las columnas
+// previas ni sus datos.
+const ENCABEZADOS_CURSOS = [
+  'ID_Curso', 'Categoria', 'Nombre', 'Responsable', 'Modalidad',
+  'Fecha_inicio', 'Fecha_fin', 'Liga_convocatoria',
+  'Requiere_codigo_asistencia', 'Codigo_asistencia', 'Activo', 'Notas',
+  'Registro_previo_requerido', 'Visible_desde', 'Visible_hasta'
+];
+
 function obtenerHojaCursos() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let hoja = ss.getSheetByName(HOJA_CURSOS);
   if (!hoja) {
     hoja = ss.insertSheet(HOJA_CURSOS);
-    hoja.appendRow([
-      'ID_Curso', 'Categoria', 'Nombre', 'Responsable', 'Modalidad',
-      'Fecha_inicio', 'Fecha_fin', 'Liga_convocatoria',
-      'Requiere_codigo_asistencia', 'Codigo_asistencia', 'Activo', 'Notas',
-      'Registro_previo_requerido'
-    ]);
-    estilizarEncabezado(hoja, 13);
+    hoja.appendRow(ENCABEZADOS_CURSOS);
+    estilizarEncabezado(hoja, ENCABEZADOS_CURSOS.length);
     hoja.setColumnWidth(3, 280); // Nombre
     hoja.setColumnWidth(8, 220); // Liga_convocatoria
-  } else if (!hoja.getRange(1, 13).getValue()) {
-    // Hoja creada antes de agregar esta columna: se completa el encabezado
-    // sin tocar las columnas A-L existentes.
-    hoja.getRange(1, 13).setValue('Registro_previo_requerido')
-      .setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
+  } else {
+    // Hoja creada antes de agregar alguna de estas columnas: se completa el
+    // encabezado faltante sin tocar las columnas ni los datos existentes.
+    const colsActuales = hoja.getLastColumn();
+    if (colsActuales < ENCABEZADOS_CURSOS.length) {
+      const faltantes = ENCABEZADOS_CURSOS.slice(colsActuales);
+      hoja.getRange(1, colsActuales + 1, 1, faltantes.length)
+        .setValues([faltantes])
+        .setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
+    }
   }
   return hoja;
 }
