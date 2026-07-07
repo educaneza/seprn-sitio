@@ -1087,6 +1087,21 @@
     // ── Soporte Técnico Remoto: solicitud ──
     const SOPORTE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbynU6hEtN7W-Q2MsTEbRZJeGH946n3YcQptGiW6w6fMzgZ98J6mu33bEqSoK_1Oxtk/exec';
 
+    // ── Normalizar mayúsculas/minúsculas de Nombre y Escuela manual ──
+    // Los docentes escriben en cualquier combinación (todo mayúsculas, todo
+    // minúsculas, mezclado); esto lo homologa a "Cada Palabra Así" para que
+    // la hoja de datos se vea consistente sin importar cómo lo tecleen.
+    function toTitleCase(str) {
+        return str.trim().replace(/\s+/g, ' ').toLowerCase()
+            .split(' ')
+            .map(function(w) { return w ? w.charAt(0).toUpperCase() + w.slice(1) : w; })
+            .join(' ');
+    }
+    ['sop-nombre', 'sop-escuela-manual'].forEach(function(id) {
+        var el = document.getElementById(id);
+        el.addEventListener('blur', function() { if (el.value.trim()) el.value = toTitleCase(el.value); });
+    });
+
     // Fetch + parseo JSON con timeout: si Apps Script no responde en TIMEOUT_MS
     // (ni en encabezados ni en el cuerpo de la respuesta), aborta en vez de
     // dejar el botón congelado indefinidamente. El .json() va DENTRO del try
@@ -1396,11 +1411,11 @@
             : document.getElementById('sop-funcion').value;
 
         var datos = {
-            nombre: document.getElementById('sop-nombre').value,
+            nombre: toTitleCase(document.getElementById('sop-nombre').value.trim()),
             cct: document.getElementById('sop-cct').value,
             sector: manualVisible ? document.getElementById('sop-sector-manual').value : document.getElementById('sop-sector-val').value,
             zona: manualVisible ? document.getElementById('sop-zona-manual').value : document.getElementById('sop-zona-val').value,
-            escuela: manualVisible ? document.getElementById('sop-escuela-manual').value.trim() : document.getElementById('sop-escuela-val').value,
+            escuela: manualVisible ? toTitleCase(document.getElementById('sop-escuela-manual').value.trim()) : document.getElementById('sop-escuela-val').value,
             funcion: funcionVal,
             whatsapp: document.getElementById('sop-whatsapp').value,
             correo: document.getElementById('sop-correo').value,

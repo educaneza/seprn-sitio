@@ -233,11 +233,21 @@
     .externo-item .ei-nombre { font-weight: 700; color: var(--midnight); margin-bottom: .5rem; font-size: .92rem; }
     .externo-item .ei-cupo {
       font-size: .78rem; color: var(--warn-text); background: var(--warn-bg);
-      border-radius: 5px; padding: .3rem .55rem; margin-bottom: .65rem; display: inline-block;
+      border-radius: 5px; padding: .3rem .55rem; margin-bottom: .75rem; display: inline-block;
+    }
+    .ei-pasos { list-style: none; margin: 0 0 .9rem; padding: 0; counter-reset: ei-paso; }
+    .ei-pasos li {
+      counter-increment: ei-paso; display: flex; gap: .6rem; align-items: flex-start;
+      font-size: .82rem; color: var(--text); line-height: 1.45; margin-bottom: .5rem;
+    }
+    .ei-pasos li::before {
+      content: counter(ei-paso); flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%;
+      background: var(--midnight); color: #fff; font-size: .72rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; margin-top: .05rem;
     }
     .externo-item .ei-link {
       display: inline-flex; align-items: center; gap: .4rem; color: #fff; background: var(--midnight);
-      border-radius: 6px; padding: .5rem .9rem; font-size: .85rem; font-weight: 600; text-decoration: none;
+      border-radius: 6px; padding: .55rem 1rem; font-size: .85rem; font-weight: 600; text-decoration: none;
     }
     .externo-item .ei-link:hover { background: var(--guinda); }
     .externo-item .ei-link svg { width: 15px; height: 15px; }
@@ -247,6 +257,10 @@
       padding: 1rem; margin-top: 1.25rem; text-align: center;
     }
     .regreso-externo-box p { font-size: .85rem; color: var(--muted); margin-bottom: .75rem; }
+    .regreso-externo-box .rb-aviso {
+      font-size: .78rem; color: var(--warn-text); background: var(--warn-bg);
+      border-radius: 6px; padding: .5rem .7rem; margin-bottom: 1rem; font-weight: 600;
+    }
 
     /* ── SUBMIT ── */
     .btn-submit {
@@ -372,6 +386,7 @@
     <div id="externo-lista"></div>
 
     <div class="regreso-externo-box">
+      <p class="rb-aviso">No cierres esta pestaña — ábrela en una pestaña nueva y regresa aquí cuando termines.</p>
       <p>¿Ya completaste tu registro oficial en las convocatorias de arriba?</p>
       <button class="btn-primary" onclick="continuarDesdeExterno()">
         Sí, ya me registré — Continuar con OTDE NEZA
@@ -789,7 +804,19 @@
       cupo.className = 'ei-cupo';
       cupo.textContent = 'Cupo limitado — regístrate cuanto antes';
       item.appendChild(cupo);
-      item.appendChild(document.createElement('br'));
+
+      const pasos = document.createElement('ol');
+      pasos.className = 'ei-pasos';
+      [
+        'Da clic en el botón "Ir a registrarme". Se abrirá una pestaña nueva.',
+        'En esa pestaña nueva, busca "' + c.nombre + '" y completa tu inscripción oficial ahí.',
+        'Regresa a ESTA pestaña (no la cierres) y confirma abajo que ya te registraste.'
+      ].forEach(texto => {
+        const li = document.createElement('li');
+        li.textContent = texto;
+        pasos.appendChild(li);
+      });
+      item.appendChild(pasos);
 
       const link = document.createElement('a');
       link.className = 'ei-link';
@@ -1011,7 +1038,7 @@
   function recopilarDatos() {
     const manual = document.getElementById('manual-fields').classList.contains('visible');
     return {
-      nombre:   document.getElementById('nombre').value.trim(),
+      nombre:   toTitleCase(document.getElementById('nombre').value.trim()),
       rfc:      document.getElementById('rfc').value.trim().toUpperCase(),
       funcion:  document.getElementById('funcion').value === 'Otro'
                 ? document.getElementById('otra-funcion').value.trim()
@@ -1019,7 +1046,7 @@
       cct:      document.getElementById('cct').value.trim().toUpperCase(),
       sector:   manual ? document.getElementById('sector-manual').value : document.getElementById('sector-val').value,
       zona:     manual ? document.getElementById('zona-manual').value   : document.getElementById('zona-val').value,
-      escuela:  manual ? document.getElementById('escuela-manual').value.trim() : document.getElementById('escuela-val').value,
+      escuela:  manual ? toTitleCase(document.getElementById('escuela-manual').value.trim()) : document.getElementById('escuela-val').value,
       municipio: manual ? '' : document.getElementById('municipio-val').value,
       correo:   document.getElementById('correo').value.trim(),
       telefono: document.getElementById('telefono').value.trim()
@@ -1136,6 +1163,21 @@
     document.getElementById('paso-confirmacion').style.display = 'block';
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+
+  // ── Normalizar mayúsculas/minúsculas de Nombre y Escuela manual ──
+  // Los docentes escriben en cualquier combinación (todo mayúsculas, todo
+  // minúsculas, mezclado); esto lo homologa a "Cada Palabra Así" para que
+  // la hoja de datos se vea consistente sin importar cómo lo tecleen.
+  function toTitleCase(str) {
+    return str.trim().replace(/\s+/g, ' ').toLowerCase()
+      .split(' ')
+      .map(w => w ? w.charAt(0).toUpperCase() + w.slice(1) : w)
+      .join(' ');
+  }
+  ['nombre', 'escuela-manual'].forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener('blur', () => { if (el.value.trim()) el.value = toTitleCase(el.value); });
+  });
 
   cargarCatalogo();
 </script>

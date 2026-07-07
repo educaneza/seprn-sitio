@@ -1388,7 +1388,7 @@
   function recopilarDatos() {
     const manual = document.getElementById('manual-fields').classList.contains('visible');
     return {
-      nombre:  document.getElementById('nombre').value.trim(),
+      nombre:  toTitleCase(document.getElementById('nombre').value.trim()),
       rfc:     document.getElementById('rfc').value.trim().toUpperCase(),
       funcion: document.getElementById('funcion').value === 'Otro'
                ? document.getElementById('otra-funcion').value.trim()
@@ -1396,7 +1396,7 @@
       cct:     document.getElementById('cct').value.trim().toUpperCase(),
       sector:  manual ? document.getElementById('sector-manual').value : document.getElementById('sector-val').value,
       zona:    manual ? document.getElementById('zona-manual').value   : document.getElementById('zona-val').value,
-      escuela: manual ? document.getElementById('escuela-manual').value.trim() : document.getElementById('escuela-val').value,
+      escuela: manual ? toTitleCase(document.getElementById('escuela-manual').value.trim()) : document.getElementById('escuela-val').value,
       municipio: manual ? '' : document.getElementById('municipio-val').value,
       telefono: document.getElementById('telefono').value.trim(),
       correo:  document.getElementById('correo').value.trim()
@@ -1535,6 +1535,21 @@
   // RFC: forzar mayúsculas al escribir
   document.getElementById('rfc').addEventListener('input', function() {
     this.value = this.value.toUpperCase();
+  });
+
+  // ── Normalizar mayúsculas/minúsculas de Nombre y Escuela manual ──
+  // Los docentes escriben en cualquier combinación (todo mayúsculas, todo
+  // minúsculas, mezclado); esto lo homologa a "Cada Palabra Así" para que
+  // la hoja de datos se vea consistente sin importar cómo lo tecleen.
+  function toTitleCase(str) {
+    return str.trim().replace(/\s+/g, ' ').toLowerCase()
+      .split(' ')
+      .map(w => w ? w.charAt(0).toUpperCase() + w.slice(1) : w)
+      .join(' ');
+  }
+  ['nombre', 'escuela-manual'].forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener('blur', () => { if (el.value.trim()) el.value = toTitleCase(el.value); });
   });
 </script>
 
