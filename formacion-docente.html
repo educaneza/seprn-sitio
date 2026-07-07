@@ -159,7 +159,7 @@
     }
 
     /* ── COURSE CARDS ── */
-    .cursos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+    .cursos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.15rem; margin-bottom: 6.5rem; }
     @media (max-width: 560px) { .cursos-grid { grid-template-columns: 1fr; } }
 
     .curso-card {
@@ -167,7 +167,7 @@
       border: 1px solid var(--hairline);
       border-radius: var(--radius-lg);
       cursor: pointer;
-      transition: box-shadow .3s var(--ease), transform .3s var(--ease), border-color .3s var(--ease);
+      transition: box-shadow .38s var(--ease), transform .38s var(--ease), border-color .38s var(--ease);
       user-select: none;
       position: relative;
       display: flex;
@@ -175,43 +175,134 @@
       overflow: hidden;
       box-shadow: var(--shadow-1);
     }
-    .curso-card:hover { border-color: transparent; box-shadow: var(--shadow-2); transform: translateY(-4px); }
+    .curso-card:hover { border-color: transparent; box-shadow: var(--shadow-2); transform: translateY(-5px); }
     .curso-card.selected {
       border-color: transparent;
-      box-shadow: var(--shadow-2), 0 0 0 2.5px var(--acento);
+      transform: translateY(-6px);
+      box-shadow:
+        0 0 0 2px var(--acento),
+        0 0 0 7px rgba(159,34,65,.1),
+        0 26px 44px -16px rgba(159,34,65,.38),
+        0 6px 16px -4px rgba(30,23,32,.14);
     }
 
-    .cc-header { padding: 1.6rem 1.25rem; display: flex; align-items: center; justify-content: center; min-height: 96px; position: relative; flex-shrink: 0; }
-    .cc-icon {
-      width: 52px; height: 52px; background: rgba(255,255,255,.16); border-radius: 16px;
-      display: flex; align-items: center; justify-content: center;
-      transition: transform .35s var(--ease); backdrop-filter: blur(2px);
+    /* Ilustración de encabezado: gradiente propio por categoría + capas
+       decorativas compartidas (blob de luz + trama de puntos) para que no
+       sea un rectángulo de color plano con un ícono al centro. */
+    .cc-header {
+      padding: 1.9rem 1.25rem; display: flex; align-items: flex-end; justify-content: flex-start;
+      min-height: 128px; position: relative; flex-shrink: 0; overflow: hidden;
     }
-    .curso-card:hover .cc-icon { transform: scale(1.08) rotate(-2deg); }
-    .cc-icon svg { width: 26px; height: 26px; color: #fff; }
+    .cc-header::before {
+      content: ''; position: absolute; inset: 0;
+      background:
+        radial-gradient(58% 85% at 82% 8%, rgba(255,255,255,.4), transparent 60%),
+        radial-gradient(65% 90% at -8% 118%, rgba(0,0,0,.22), transparent 55%);
+      mix-blend-mode: soft-light;
+    }
+    .cc-header::after {
+      content: ''; position: absolute; inset: 0; opacity: .5;
+      background-image: radial-gradient(rgba(255,255,255,.5) 1px, transparent 1.5px);
+      background-size: 14px 14px;
+      background-position: -4px -4px;
+      -webkit-mask-image: linear-gradient(200deg, #000 0%, transparent 55%);
+      mask-image: linear-gradient(200deg, #000 0%, transparent 55%);
+    }
+    .cc-icon {
+      position: relative; z-index: 1;
+      width: 50px; height: 50px; background: rgba(255,255,255,.2); border-radius: 15px;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform .4s var(--ease); backdrop-filter: blur(3px);
+      border: 1px solid rgba(255,255,255,.25);
+      box-shadow: 0 8px 20px -6px rgba(0,0,0,.25);
+    }
+    .curso-card:hover .cc-icon { transform: scale(1.08) rotate(-3deg); }
+    .curso-card.selected .cc-icon { transform: scale(1.04) rotate(-3deg); }
+    .cc-icon svg { width: 25px; height: 25px; color: #fff; }
 
     .cc-sel-badge {
-      position: absolute; top: .7rem; right: .7rem;
-      width: 26px; height: 26px; border-radius: 50%;
-      background: #fff; color: var(--ok);
+      position: absolute; top: .8rem; right: .8rem; z-index: 2;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--ok); color: #fff;
       display: flex; align-items: center; justify-content: center;
-      opacity: 0; transform: scale(.6); transition: opacity .22s var(--ease), transform .22s var(--ease); pointer-events: none;
-      box-shadow: 0 2px 8px rgba(0,0,0,.18);
+      opacity: 0; transform: scale(.4); pointer-events: none;
+      box-shadow: 0 4px 12px rgba(20,108,67,.4), 0 0 0 4px rgba(255,255,255,.85);
     }
-    .cc-sel-badge svg { width: 14px; height: 14px; }
-    .curso-card.selected .cc-sel-badge { opacity: 1; transform: scale(1); }
+    .cc-sel-badge svg { width: 15px; height: 15px; }
+    .curso-card.selected .cc-sel-badge {
+      opacity: 1; transform: scale(1);
+      transition: opacity .3s var(--ease), transform .5s cubic-bezier(.34,1.56,.64,1);
+    }
 
-    .cc-body { padding: 1.1rem 1.2rem 1.35rem; flex: 1; display: flex; flex-direction: column; gap: .55rem; }
-    .cc-categoria { font-size: .68rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--acento); }
-    .curso-nombre { font-family: var(--font-display); font-size: .96rem; font-weight: 700; color: var(--ink); line-height: 1.35; }
-    .cc-info { display: flex; flex-direction: column; gap: .35rem; margin-top: .15rem; }
-    .cc-pill { display: inline-flex; align-items: center; gap: .4rem; font-size: .78rem; font-weight: 500; color: var(--ink-soft); }
-    .cc-pill svg { width: 13px; height: 13px; flex-shrink: 0; opacity: .55; }
-
-    .seleccion-counter { text-align: center; font-size: .86rem; font-weight: 600; color: var(--ink-faint); margin-bottom: 1.5rem; min-height: 1.2em; transition: color .2s; }
-    .seleccion-counter.activo { color: var(--acento); }
+    .cc-body { padding: 1.15rem 1.25rem 1.4rem; flex: 1; display: flex; flex-direction: column; gap: .7rem; }
+    .cc-categoria-pill {
+      align-self: flex-start; display: inline-flex; align-items: center; gap: .4rem;
+      font-size: .68rem; font-weight: 700; letter-spacing: .04em;
+      padding: .3rem .7rem; border-radius: 999px;
+    }
+    .cc-categoria-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .curso-nombre { font-family: var(--font-display); font-size: .98rem; font-weight: 700; color: var(--ink); line-height: 1.35; }
+    .cc-info { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .1rem; }
+    .cc-pill {
+      display: inline-flex; align-items: center; gap: .35rem; font-size: .75rem; font-weight: 500;
+      color: var(--ink-soft); background: var(--canvas); border: 1px solid var(--hairline);
+      padding: .3rem .6rem; border-radius: 8px;
+    }
+    .cc-pill svg { width: 12px; height: 12px; flex-shrink: 0; opacity: .6; }
 
     .catalogo-estado { text-align: center; padding: 3.5rem 1rem; color: var(--ink-soft); font-size: .95rem; }
+
+    /* ── RESUMEN STICKY (barra flotante con la selección) ── */
+    .resumen-sticky {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+      display: flex; justify-content: center;
+      padding: 0 1.25rem calc(1.1rem + env(safe-area-inset-bottom, 0px));
+      transform: translateY(140%); opacity: 0;
+      transition: transform .4s var(--ease), opacity .3s var(--ease);
+      pointer-events: none;
+    }
+    .resumen-sticky.visible { transform: translateY(0); opacity: 1; pointer-events: auto; }
+    .rs-inner {
+      width: 100%; max-width: 680px;
+      background: var(--midnight);
+      border-radius: 20px;
+      padding: .9rem .9rem .9rem 1.3rem;
+      display: flex; align-items: center; gap: 1rem;
+      box-shadow: 0 1px 1px rgba(0,0,0,.1), 0 24px 48px -14px rgba(12,26,46,.55);
+      border: 1px solid rgba(255,255,255,.08);
+    }
+    .rs-chips { display: flex; align-items: center; gap: .5rem; overflow-x: auto; flex: 1; min-width: 0; scrollbar-width: none; }
+    .rs-chips::-webkit-scrollbar { display: none; }
+    .rs-count-badge {
+      flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      width: 34px; height: 34px; border-radius: 50%; background: var(--acento); color: #fff;
+      font-family: var(--font-display); font-weight: 800; font-size: .92rem;
+    }
+    .rs-chip {
+      flex-shrink: 0; display: flex; align-items: center; gap: .4rem;
+      background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12);
+      color: #F5F1EC; font-size: .8rem; font-weight: 500;
+      padding: .4rem .5rem .4rem .75rem; border-radius: 999px; max-width: 190px;
+    }
+    .rs-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .rs-chip button {
+      flex-shrink: 0; width: 18px; height: 18px; border-radius: 50%; border: none; cursor: pointer;
+      background: rgba(255,255,255,.14); color: #fff; display: flex; align-items: center; justify-content: center;
+      transition: background .15s;
+    }
+    .rs-chip button:hover { background: rgba(255,255,255,.28); }
+    .rs-chip button svg { width: 9px; height: 9px; }
+    .rs-btn {
+      flex-shrink: 0; width: auto !important; padding: .8rem 1.4rem !important;
+      background: var(--acento) !important; box-shadow: none !important;
+    }
+    .rs-btn:hover:not(:disabled) { background: #c23861 !important; }
+    @media (max-width: 560px) {
+      .resumen-sticky { padding-left: .75rem; padding-right: .75rem; }
+      .rs-inner { padding: .75rem .75rem .75rem 1rem; border-radius: 18px; }
+      .rs-chips { display: none; }
+      .rs-count-badge { display: flex; }
+    }
     .catalogo-spinner { width: 30px; height: 30px; border: 3px solid var(--hairline); border-top-color: var(--acento); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 1.25rem; }
 
     /* ── BUTTONS ── */
@@ -469,11 +560,17 @@
 
     <div class="cursos-grid" id="cursos-grid" style="display:none;"></div>
 
-    <p class="seleccion-counter" id="sel-counter">Puedes seleccionar uno o varios cursos</p>
-
-    <button class="btn-primary" id="btn-paso1" disabled onclick="irPaso2()">
-      Continuar →
-    </button>
+    <!-- Resumen sticky: aparece solo cuando hay al menos un curso elegido.
+         Vive dentro de paso-1 para que se oculte solo al cambiar de paso. -->
+    <div class="resumen-sticky" id="resumen-sticky">
+      <div class="rs-inner">
+        <div class="rs-count-badge" id="rs-count-badge">0</div>
+        <div class="rs-chips" id="rs-chips"></div>
+        <button class="btn-primary rs-btn" id="btn-paso1" disabled onclick="irPaso2()">
+          Continuar →
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- ══ PASO INTERMEDIO: REGISTRO OFICIAL EXTERNO (solo si algún curso seleccionado lo requiere) ══ -->
@@ -667,41 +764,63 @@
   // ── Estilo por categoría de curso ──
   const CATEGORIA_STYLE = {
     'Webinar': {
-      gradient: 'linear-gradient(135deg,#0369a1,#0284c7)',
+      gradient: 'linear-gradient(150deg,#0c4a6e,#0284c7 65%,#38bdf8)',
+      tint: '#E6F4FC', solid: '#0369a1',
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-4v12l-6-4"/></svg>'
     },
     'Seminario': {
-      gradient: 'linear-gradient(135deg,#7c3aed,#8b5cf6)',
+      gradient: 'linear-gradient(150deg,#4c1d95,#7c3aed 65%,#a78bfa)',
+      tint: '#F1EBFE', solid: '#7c3aed',
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="12" rx="1"/><path d="M8 21h8M12 15v6"/></svg>'
     },
     'Conferencia': {
-      gradient: 'linear-gradient(135deg,#0f766e,#14b8a6)',
+      gradient: 'linear-gradient(150deg,#134e4a,#0f766e 65%,#2dd4bf)',
+      tint: '#E6F7F4', solid: '#0f766e',
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7"/><path d="M18.5 5.5a9 9 0 010 13"/></svg>'
     },
     'Curso autogestivo': {
-      gradient: 'linear-gradient(135deg,#15803d,#16a34a)',
+      gradient: 'linear-gradient(150deg,#14532d,#15803d 65%,#4ade80)',
+      tint: '#E9F7EE', solid: '#15803d',
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>'
     },
     'Acción formativa': {
-      gradient: 'linear-gradient(135deg,#c2410c,#ea580c)',
+      gradient: 'linear-gradient(150deg,#7c2d12,#c2410c 65%,#fb923c)',
+      tint: '#FDECE1', solid: '#c2410c',
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>'
     },
     'Diplomado': {
-      gradient: 'linear-gradient(135deg,#9F2241,#be123c)',
+      gradient: 'linear-gradient(150deg,#56212f,#9F2241 65%,#e05a7e)',
+      tint: '#FBEAEF', solid: '#9F2241',
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg>'
     },
     'Proyecto didáctico': {
-      gradient: 'linear-gradient(135deg,#4338ca,#6366f1)',
+      gradient: 'linear-gradient(150deg,#312e81,#4338ca 65%,#818cf8)',
+      tint: '#ECEBFC', solid: '#4338ca',
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a6 6 0 00-4 10.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A6 6 0 0012 2z"/></svg>'
     },
     '_default': {
-      gradient: 'linear-gradient(135deg,#334155,#475569)',
+      gradient: 'linear-gradient(150deg,#1e293b,#475569 65%,#94a3b8)',
+      tint: '#EEF1F4', solid: '#475569',
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>'
     }
   };
 
   const ICON_CALENDAR = '<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>';
   const ICON_MODALIDAD = '<svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 5a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2h-4l1 2H7l1-2H4a2 2 0 01-2-2V5z"/></svg>';
+  const ICON_DURACION = '<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg>';
+  const ICON_CLOSE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+
+  // ── Duración legible a partir de dd/MM/yyyy (formato que manda el backend) ──
+  function calcularDuracion(fechaInicio, fechaFin) {
+    const parse = s => { const [d, m, y] = s.split('/').map(Number); return new Date(y, m - 1, d); };
+    try {
+      const dias = Math.round((parse(fechaFin) - parse(fechaInicio)) / 86400000) + 1;
+      if (dias <= 1) return '1 día';
+      if (dias < 7) return dias + ' días';
+      const semanas = Math.round(dias / 7);
+      return semanas === 1 ? '1 semana' : semanas + ' semanas';
+    } catch (e) { return ''; }
+  }
 
   // ── Estado global ──
   let cursosSeleccionados = []; // [{id, nombre, categoria, liga}]
@@ -820,6 +939,7 @@
       const rango = curso.fecha_inicio
         ? (curso.fecha_fin && curso.fecha_fin !== curso.fecha_inicio ? curso.fecha_inicio + ' – ' + curso.fecha_fin : curso.fecha_inicio)
         : '';
+      const duracion = (curso.fecha_inicio && curso.fecha_fin) ? calcularDuracion(curso.fecha_inicio, curso.fecha_fin) : '';
 
       card.innerHTML = `
         <div class="cc-header" style="background:${style.gradient};">
@@ -827,19 +947,21 @@
           <span class="cc-sel-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
         </div>
         <div class="cc-body">
-          <div class="cc-categoria"></div>
+          <span class="cc-categoria-pill" style="background:${style.tint};color:${style.solid};"><span class="dot"></span><span class="cc-categoria-txt"></span></span>
           <div class="curso-nombre"></div>
           <div class="cc-info">
-            ${rango ? `<span class="cc-pill cc-pill-fecha">${ICON_CALENDAR} <span class="cc-fecha-txt"></span></span>` : ''}
-            ${curso.modalidad ? `<span class="cc-pill cc-pill-modalidad">${ICON_MODALIDAD} <span class="cc-modalidad-txt"></span></span>` : ''}
+            ${rango ? `<span class="cc-pill">${ICON_CALENDAR} <span class="cc-fecha-txt"></span></span>` : ''}
+            ${duracion ? `<span class="cc-pill">${ICON_DURACION} <span class="cc-duracion-txt"></span></span>` : ''}
+            ${curso.modalidad ? `<span class="cc-pill">${ICON_MODALIDAD} <span class="cc-modalidad-txt"></span></span>` : ''}
           </div>
         </div>
       `;
 
       // Texto vía textContent (evita inyección desde datos de la hoja)
-      card.querySelector('.cc-categoria').textContent = curso.categoria || '';
+      card.querySelector('.cc-categoria-txt').textContent = curso.categoria || '';
       card.querySelector('.curso-nombre').textContent = curso.nombre || '';
       if (rango) card.querySelector('.cc-fecha-txt').textContent = rango;
+      if (duracion) card.querySelector('.cc-duracion-txt').textContent = duracion;
       if (curso.modalidad) card.querySelector('.cc-modalidad-txt').textContent = curso.modalidad;
 
       grid.appendChild(card);
@@ -862,16 +984,47 @@
       });
       card.classList.add('selected');
     }
+    actualizarResumenSticky();
+  }
+
+  // Quita un curso desde el chip del resumen sticky (sin tener que volver
+  // a buscar su tarjeta en la cuadrícula).
+  function quitarCurso(id) {
+    const idx = cursosSeleccionados.findIndex(c => c.id === id);
+    if (idx < 0) return;
+    cursosSeleccionados.splice(idx, 1);
+    const card = document.querySelector('.curso-card[data-id="' + CSS.escape(id) + '"]');
+    if (card) card.classList.remove('selected');
+    actualizarResumenSticky();
+  }
+
+  // ── Reconstruye la barra flotante (chips + contador + botón) ──
+  function actualizarResumenSticky() {
     const n = cursosSeleccionados.length;
-    const counter = document.getElementById('sel-counter');
-    if (n === 0) {
-      counter.textContent = 'Puedes seleccionar uno o varios cursos';
-      counter.classList.remove('activo');
-    } else {
-      counter.textContent = n === 1 ? '1 curso seleccionado' : n + ' cursos seleccionados';
-      counter.classList.add('activo');
-    }
+    const barra = document.getElementById('resumen-sticky');
+    barra.classList.toggle('visible', n > 0);
+    document.getElementById('rs-count-badge').textContent = n;
     document.getElementById('btn-paso1').disabled = n === 0;
+
+    const chips = document.getElementById('rs-chips');
+    chips.innerHTML = '';
+    cursosSeleccionados.forEach(c => {
+      const chip = document.createElement('div');
+      chip.className = 'rs-chip';
+
+      const span = document.createElement('span');
+      span.textContent = c.nombre;
+      chip.appendChild(span);
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.setAttribute('aria-label', 'Quitar ' + c.nombre);
+      btn.innerHTML = ICON_CLOSE;
+      btn.addEventListener('click', ev => { ev.stopPropagation(); quitarCurso(c.id); });
+      chip.appendChild(btn);
+
+      chips.appendChild(chip);
+    });
   }
 
   // ── PASO 1 → decide si hace falta el paso de registro externo primero ──
