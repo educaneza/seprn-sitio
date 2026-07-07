@@ -21,22 +21,24 @@ Objetivo: elevar el sitio de un nivel **5/10** (funcional-institucional 2019) a 
 
 ---
 
-## Centro de Formación Docente — EN PROGRESO (6 jul 2026)
+## ~~Centro de Formación Docente~~ — DESPLEGADO Y CON REDISEÑO PREMIUM (7 jul 2026)
 
-Sistematiza el flujo de convocatorias CoEEE (webinars, seminarios, conferencias, cursos autogestivos, acciones formativas, diplomados, proyectos didácticos), hoy resuelto con un Google Form distinto por curso y sin seguimiento. Discutido a fondo con Jorge antes de implementar: diagnóstico del flujo actual, diseño del modelo de datos, decisiones sobre constancias y municipio. Arquitectura completa en `docs/ARCHITECTURE.md §12`.
+Sistematiza el flujo de convocatorias CoEEE (webinars, seminarios, conferencias, cursos autogestivos, acciones formativas, diplomados, proyectos didácticos), antes resuelto con un Google Form distinto por curso y sin seguimiento. Arquitectura completa en `docs/ARCHITECTURE.md §12`, tokens de diseño en `docs/DESIGN_SYSTEM.md`.
 
 | Item | Archivo(s) | Estado |
 |---|---|---|
-| Modelo relacional en Sheets: `Docentes` (upsert por RFC) + `Cursos` (catálogo, admin manual) + `Inscripciones` (transaccional) | Diseño validado con Jorge | ✅ |
-| `js/cct-db.js` enriquecido con `municipio` (18 municipios, cruzado desde `Catalogo SEPRN direcciones.xlsx`) | `js/cct-db.js` | ✅ |
-| Backend: `doGet` catálogo dinámico, `doPost` upsert + folio + dedupe, menú "Generar ID de cursos faltantes", `generarEstadisticas()` | `apps-script/formacion-docente.gs` | ✅ (código listo, no desplegado) |
-| Formulario web: catálogo dinámico por categoría, multi-selección, CCT autocomplete, validación por campo | `formacion-docente.html` | ✅ |
-| Banner de enlace desde `otde.html` | `otde.html` | ✅ |
-| Probado end-to-end con Playwright (catálogo, selección, autocomplete, validación) | — | ✅ |
-| **Deploy real**: crear Spreadsheet `Formacion_Docente_2026_2027`, desplegar el `.gs`, pegar URL real en `APPS_SCRIPT_URL` | — | ⬜ Pendiente |
-| **Poblar catálogo inicial**: dar de alta los primeros cursos activos en la hoja `Cursos` | — | ⬜ Pendiente |
-| Fase 2 (futuro): seguimiento con recordatorios automáticos por estado, cuidando cuota diaria de correo compartida entre los 4 backends | — | ⬜ No iniciado |
-| Fase 3 (futuro): validación de asistencia en webinars vía código de cierre; dashboards por sector/zona vía Looker Studio | — | ⬜ No iniciado |
+| Modelo relacional en Sheets: `Docentes` (upsert por RFC) + `Cursos` (catálogo, admin manual) + `Inscripciones` (transaccional, con vista VLOOKUP) | Diseño validado con Jorge | ✅ |
+| `js/cct-db.js` enriquecido con `municipio` (18 municipios) | `js/cct-db.js` | ✅ |
+| Backend: `doGet` catálogo dinámico + ventanas de fecha + inscritos reales, `doPost` upsert (nunca sobrescribe con vacío) + folio + dedupe, menú completo | `apps-script/formacion-docente.gs` | ✅ Desplegado |
+| **Deploy real**: Spreadsheet `Formacion_Docente_2026_2027` creado, URL real en `APPS_SCRIPT_URL` | — | ✅ |
+| **Migración de Jornada Verano 2026**: cutover completo — `jornada-verano-2026.html` ya reporta a este backend, no al suyo propio | `apps-script/formacion-docente.gs`, `jornada-verano-2026.html` | ✅ |
+| Recordatorios automáticos por correo (inicio/medio-curso/webinar), con cuidado de cuota compartida | `apps-script/formacion-docente.gs` | ✅ |
+| Ventanas de fecha (`Visible_desde`/`Visible_hasta`) para abrir/cerrar cursos sin tocar `Activo` | `apps-script/formacion-docente.gs` | ✅ |
+| **Rediseño visual premium**: tipografía Inter/Inter Tight, tarjetas con fondo pastel + ícono grande, prueba social real de inscritos, panel lateral sticky (escritorio) / barra flotante (móvil) | `formacion-docente.html`, `instructivo-formacion-docente.html` | ✅ |
+| Smoke test completo + corrección de bugs reales (freeze de fetch sin timeout en 4 archivos, `appendRow([])` inválido, fecha -1 día por parseo UTC) | Ver `docs/QA-NOTES.md` | ✅ |
+| **Poblar catálogo del ciclo 26-27**: dar de alta los primeros cursos propios (hoy solo están los 5 migrados de Jornada Verano) | Hoja `Cursos` | ⬜ Pendiente |
+| Fase 2 (futuro): validación de asistencia en webinars vía código de cierre (columnas `Requiere_codigo_asistencia`/`Codigo_asistencia` ya existen) | — | ⬜ No iniciado |
+| Fase 3 (futuro): dashboards por sector/zona — decisión previa: Looker Studio conectado directo a la hoja, no un dashboard custom (revisar con Jorge si esto cambió) | — | ⬜ No iniciado |
 
 ---
 

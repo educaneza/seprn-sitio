@@ -610,56 +610,92 @@ Implementado primero en `jornada-verano-2026.html`, reutilizado en el formulario
 
 ---
 
-## 12. Centro de Formación Docente (Julio 2026)
+## 12. Centro de Formación Docente (Julio 2026 — desplegado en producción)
 
-Nace de sistematizar el flujo real de convocatorias CoEEE (webinars, seminarios, conferencias, cursos autogestivos, acciones formativas, diplomados, proyectos didácticos), antes resuelto con un Google Form distinto por curso y sin seguimiento del ciclo de vida del participante. Diseño discutido y validado con Jorge antes de implementar.
+Nace de sistematizar el flujo real de convocatorias CoEEE (webinars, seminarios, conferencias, cursos autogestivos, acciones formativas, diplomados, proyectos didácticos), antes resuelto con un Google Form distinto por curso y sin seguimiento del ciclo de vida del participante. Diseño discutido y validado con Jorge antes de implementar. Desplegado en el Spreadsheet real `Formacion_Docente_2026_2027`; `jornada-verano-2026.html` hizo cutover a este mismo backend (ver §14).
 
 ### Modelo de datos — 3 hojas relacionales en un solo Spreadsheet (no una hoja por curso)
 
 ```
-Docentes                    Cursos                       Inscripciones
-─────────                   ──────                       ─────────────
-RFC (llave, upsert)          ID_Curso (llave)              Folio (llave, OTDE-CAP-NNNN)
-Nombre_completo              Categoria                      Fecha_registro
-Correo                       Nombre                         RFC_Docente     ──┐ FK
-Telefono                     Responsable                    ID_Curso        ──┤ FK
-CCT                          Modalidad                      Estado           │
-Escuela                      Fecha_inicio / Fecha_fin        Codigo_asistencia_capturado
-Sector / Zona / Municipio    Liga_convocatoria               Fecha_actualizacion_estado
-Funcion                      Requiere_codigo_asistencia      Notas
-Fecha_primer_registro        Codigo_asistencia
-Fecha_ultima_actualizacion   Activo (controla el catálogo)
-                             Notas
+Docentes                    Cursos                              Inscripciones
+─────────                   ──────                              ─────────────
+RFC (llave, upsert)          ID_Curso (llave)                     Folio (llave, OTDE-CAP-NNNN)
+Nombre_completo              Categoria                             Fecha_registro
+Correo                       Nombre                                RFC_Docente     ──┐ FK
+Telefono                     Responsable                           ID_Curso        ──┤ FK
+CCT                          Modalidad                             Estado           │
+Escuela                      Fecha_inicio / Fecha_fin               Codigo_asistencia_capturado
+Sector / Zona / Municipio    Liga_convocatoria                      Fecha_actualizacion_estado
+Funcion                      Requiere_codigo_asistencia             Notas
+Fecha_primer_registro        Codigo_asistencia                      I-O: vista VLOOKUP (Nombre_Docente,
+Fecha_ultima_actualizacion   Activo (controla el catálogo)              CCT, Escuela, Sector, Zona,
+                             Notas                                      Funcion, Nombre_Curso) — en vivo,
+                             Registro_previo_requerido                  nunca se escriben como valor fijo
+                             Visible_desde / Visible_hasta
+                             Hora_inicio
+                             Recordatorio_inicio_enviado
+                             Recordatorio_medio_enviado
+                             Recordatorio_webinar_enviado
 ```
 
-- **Upsert en `Docentes`**: si el RFC ya existe, se actualizan sus datos (por si cambió de escuela/correo/etc.) y `Fecha_ultima_actualizacion`; si no existe, se agrega. Un docente nunca se duplica aunque se inscriba a varios cursos a lo largo del ciclo — solo crece `Inscripciones`, una fila por (RFC, curso).
-- **Catálogo dinámico**: `Cursos` la administra OTDE a mano (agrega/edita filas directamente en Sheets). El `doGet` del Apps Script solo regresa las filas con `Activo=TRUE`. Abrir o cerrar una convocatoria es editar una celda, no tocar código ni hacer deploy — `formacion-docente.html` pide el catálogo en vivo vía `fetch`, no lo trae hardcodeado.
-- **Sin gestión de constancias**: confirmado con Jorge — los webinars/seminarios no las emiten (salvo conferencias UNETE) y en los demás programas la emite la plataforma de CoEEE. OTDE solo registra participación para estadística propia y reportes a CoEEE; por eso `Estado` en `Inscripciones` no tiene una etapa de "constancia pendiente/validada".
-- **Deduplicación de inscripción**: antes de insertar en `Inscripciones`, se busca si ya existe la combinación (RFC, ID_Curso); si existe, se regresa el folio original con `duplicado:true` en vez de crear una fila nueva.
+`obtenerHojaCursos()` completa sola cualquier encabezado que falte en una hoja ya creada antes de agregar una columna nueva (compara `ENCABEZADOS_CURSOS` contra `getLastColumn()`) — no hace falta migrar nada a mano cuando el modelo crece.
+
+- **Upsert en `Docentes`**: si el RFC ya existe, se actualizan sus datos y `Fecha_ultima_actualizacion`; si no existe, se agrega. **Un valor nuevo vacío nunca sobrescribe uno bueno que ya hubiera** (`valorOMantener()`) — importante para migraciones históricas incompletas (ej. la de Jornada Verano, que no capturaba Teléfono).
+- **Catálogo dinámico + ventanas de fecha**: `Cursos` la administra OTDE a mano. El `doGet` regresa las filas con `Activo=TRUE` **y**, si `Visible_desde`/`Visible_hasta` están llenas, dentro de esa ventana (comparación por año/mes/día vía `soloFecha()`, sin depender de un trigger que pueda fallar en silencio — se evalúa en cada visita al sitio). `Activo=FALSE` siempre gana sobre las fechas.
+- **Prueba social real**: `doGet` también manda `inscritos` (conteo de `Inscripciones` por `ID_Curso`, `contarInscritosPorCurso()`) — el frontend solo lo muestra si es mayor a 0, nunca un número inventado.
+- **Sin gestión de constancias**: los webinars/seminarios no las emiten (salvo conferencias UNETE) y en los demás programas la emite la plataforma de CoEEE. OTDE solo registra participación para estadística propia.
+- **Deduplicación de inscripción**: antes de insertar en `Inscripciones`, se busca si ya existe la combinación (RFC, ID_Curso); si existe, se regresa el folio original con `duplicado:true`.
+
+### Registro previo externo (paso condicional, no global)
+
+A diferencia de `jornada-verano-2026.html` (que siempre manda a un solo portal CoEEE), aquí el catálogo mezcla categorías con y sin cupo real. `Registro_previo_requerido=TRUE` en un curso (más `Liga_convocatoria` llena) hace que el wizard inserte un paso intermedio — lista esa convocatoria, exige abrir el link y confirmar "ya me registré" antes de pasar al formulario de OTDE. Si ningún curso seleccionado lo requiere, no aparece ningún paso extra. Detalle de implementación en `docs/DESIGN_SYSTEM.md`.
+
+### Recordatorios automáticos por correo
+
+Tres avisos calculados a partir de las propias fechas del curso, sin marcar nada a mano:
+
+| Aviso | Se dispara | Requiere |
+|---|---|---|
+| "Empieza en 2 días" | 2 días antes de `Fecha_inicio`, cualquier curso | — |
+| "Vas a la mitad" | Al cruzar el punto medio `Fecha_inicio`/`Fecha_fin`, solo cursos de 30+ días | — |
+| "Faltan unas horas" | Entre 2 y 4 horas antes del inicio, solo eventos de un solo día | `Hora_inicio` capturada |
+
+Un webinar catalogado con anticipación puede recibir el primero y el tercero — es intencional, no un bug (aviso temprano + empujón el mismo día). Cada aviso se manda como **un solo correo por curso, con BCC a todos los inscritos** (no uno por persona) y se revisa `MailApp.getRemainingDailyQuota()` antes de enviar — la cuota diaria la comparten TODOS los Apps Script de la cuenta de Google, no es exclusiva de este proyecto; si no alcanza, el aviso se salta ese día y se reintenta solo al siguiente (la bandera `Recordatorio_*_enviado` no se marca hasta que el correo sale de verdad). Requiere correr una vez el menú "OTDE Formación → Instalar recordatorios automáticos" para dar de alta los disparadores (`enviarRecordatoriosDiarios` una vez al día, `enviarRecordatoriosWebinar` cada hora).
 
 ### Diagrama de flujo
 
 ```
 Docente
-  └── formacion-docente.html
+  └── formacion-docente.html  ◄──────────────────────────  jornada-verano-2026.html (cutover, §14)
         ├── fetch doGet ────────────────────────────────────────── Apps Script Web App
-        │     (catálogo de cursos Activo=TRUE)                       (formacion-docente.gs)
-        ├── selecciona 1+ cursos (multi-select, igual patrón que
-        │     jornada-verano-2026.html)
-        └── POST secuencial por curso (evita race condition        ├── upsert en Docentes
-              en generarFolio(), mismo patrón que                   ├── dedupe + folio en Inscripciones
-              cursos-coeee-2026.gs) ───────────────────────────────►└── Google Sheets
+        │     (catálogo Activo=TRUE + ventana de fecha + inscritos)  (formacion-docente.gs)
+        ├── selecciona 1+ cursos (multi-select)
+        ├── [paso condicional] registro previo externo si aplica
+        └── POST secuencial por curso (evita race condition        ├── upsert en Docentes (valorOMantener)
+              en generarFolio())  ─────────────────────────────────►├── dedupe + folio en Inscripciones
+                                                                     └── Google Sheets
+
+                                    Disparadores de tiempo (independientes de doGet/doPost)
+                                    ├── enviarRecordatoriosDiarios() — 1x/día
+                                    └── enviarRecordatoriosWebinar() — 1x/hora
 ```
 
 ### Ciclo escolar y archivado
 
-Un Spreadsheet por ciclo (`Formacion_Docente_2026_2027`), con el `.gs` bound a él vía `CICLO_ESCOLAR = '2627'` (afecta el prefijo del `ID_Curso`). Al cerrar el ciclo: duplicar el Spreadsheet completo, actualizar la constante y volver a desplegar — no se acumulan datos de distintos ciclos en una misma hoja.
+Un Spreadsheet por ciclo (`Formacion_Docente_2026_2027`), con el `.gs` bound a él vía `CICLO_ESCOLAR = '2627'` (afecta el prefijo del `ID_Curso`). Al cerrar el ciclo: duplicar el Spreadsheet completo, actualizar la constante y volver a desplegar.
 
 ### Fases futuras (no implementadas aún)
 
 Las columnas `Requiere_codigo_asistencia` / `Codigo_asistencia` en `Cursos` y `Codigo_asistencia_capturado` en `Inscripciones` ya existen en el modelo para cuando se active:
-- **Seguimiento con recordatorios automáticos** por estado (trigger de tiempo en Apps Script), cuidando la cuota diaria de correo compartida entre los 4 backends de la cuenta.
 - **Validación de asistencia en webinars** vía código de cierre anunciado al final de la transmisión.
-- **Dashboards por sector/zona** vía Looker Studio conectado directo a la hoja (sin construir autenticación/login propios).
+- **Dashboards por sector/zona** vía Looker Studio conectado directo a la hoja (sin construir autenticación/login propios) — decisión previa a confirmar con Jorge si en algún momento se prefiere algo más custom.
 
 **No es lo mismo que la validación de CCT en la pestaña "Licencias Office" de `otde.html`**: esa usa un CSV/Sheet publicado distinto (base de licenciamiento, no `cct-db.js`) y corre del lado del instalador `.bat`/`.exe`, no en el navegador.
+
+## 13. Bugs reales corregidos (julio 2026) — ver también `docs/QA-NOTES.md`
+
+Cinco bugs concretos detectados y corregidos en esta ronda, documentados con causa raíz en `docs/QA-NOTES.md` para no reintroducirlos: (1) `fetch()` sin timeout → botón congelado indefinidamente, presente en 4 archivos (`formacion-docente.html`, `jornada-verano-2026.html`, `otde.html`, `asistencia.html`) antes de corregirse en todos; (2) `appendRow([])` inválido en Apps Script, en 2 archivos; (3) `new Date('YYYY-MM-DD')` corre la fecha un día por interpretarse como UTC; (4) upsert que sobrescribía datos buenos con vacíos en migraciones; (5) cuota de `MailApp` compartida entre todos los Apps Script de la cuenta, no por proyecto.
+
+## 14. Cutover de Jornada Verano 2026 a Formación Docente (julio 2026)
+
+`jornada-verano-2026.html` dejó de usar su propio backend (`apps-script/cursos-coeee-2026.gs`, que queda desplegado pero congelado como archivo histórico) y ahora reporta a `apps-script/formacion-docente.gs`, el mismo backend del Centro de Formación Docente. Los 5 cursos de la Jornada se dieron de alta en la hoja `Cursos` vía `asegurarCursosVerano()`/`migrarJornadaVerano()` (menú "OTDE Formación → Migrar Jornada Verano 2026", idempotente). Acoplamiento importante: el wizard de `jornada-verano-2026.html` resuelve `id_curso` por **nombre exacto** contra el catálogo — si se edita el texto del `Nombre` de esos 5 cursos en Sheets, o se pone `Activo=FALSE` mientras la página siga publicada, el registro se rompe en silencio. El banner que enlaza a esta página desde `otde.html` se retira solo (chequeo de fecha en JS) a partir del 22 de agosto 2026; la página en sí permanece viva.

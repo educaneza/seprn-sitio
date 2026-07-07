@@ -21,13 +21,15 @@ Ver roadmap completo en [`docs/ROADMAP.md`](docs/ROADMAP.md).
 | Performance percibida | 6/10 | **8/10** | 8/10 ✅ |
 | Accesibilidad | 3/10 | **7/10** | 8/10 |
 
-### En progreso (6 jul 2026) — Centro de Formación Docente
-- **Nueva iniciativa**: sistematiza el flujo actual de convocatorias CoEEE (webinars, seminarios, diplomados, cursos autogestivos, acciones formativas, proyectos didácticos), hoy disperso en Google Forms independientes por curso sin seguimiento
-- **Arquitectura relacional en Sheets** (no una hoja por curso): `Docentes` (upsert por RFC) + `Cursos` (catálogo administrado a mano, con columna `Activo`) + `Inscripciones` (transaccional)
-- `formacion-docente.html`: catálogo **dinámico** (se pide en vivo al backend, ya no hardcodeado) + formulario único de registro, mismo sistema de diseño que `jornada-verano-2026.html`
-- `apps-script/formacion-docente.gs`: `doGet` (catálogo activo), `doPost` (upsert + folio + detección de duplicados), menú "Generar ID de cursos faltantes", `generarEstadisticas()`
-- `js/cct-db.js` enriquecido con campo `municipio` (18 municipios, cruzado desde `Catalogo SEPRN direcciones.xlsx`) — se autocompleta igual que Sector/Zona/Escuela
-- Probado end-to-end con Playwright (catálogo, selección múltiple, autocomplete, validación) — **falta desplegar el backend real** (crear Spreadsheet, deploy del `.gs`, pegar URL real, dar de alta los primeros cursos)
+### Completado el 7 jul 2026 — Centro de Formación Docente: deploy + rediseño premium + cutover
+- **Desplegado en producción**: Spreadsheet real `Formacion_Docente_2026_2027`, `apps-script/formacion-docente.gs` con URL real en `APPS_SCRIPT_URL`
+- **Arquitectura relacional en Sheets** (no una hoja por curso): `Docentes` (upsert por RFC, nunca sobrescribe con vacío) + `Cursos` (catálogo administrado a mano: `Activo`, ventanas de fecha `Visible_desde`/`Visible_hasta`, `Registro_previo_requerido`, `Hora_inicio`) + `Inscripciones` (transaccional, con vista VLOOKUP en vivo)
+- **Cutover de Jornada Verano 2026**: `jornada-verano-2026.html` reporta ahora a este mismo backend, no al suyo propio (`cursos-coeee-2026.gs` queda congelado como histórico). Sus 5 cursos se migraron a la hoja `Cursos`
+- **Recordatorios automáticos por correo** (inicio de curso, medio de curso, horas antes de webinar), con cuidado de la cuota de `MailApp` compartida entre backends
+- **Prueba social real**: conteo de inscritos por curso desde `Inscripciones`, nunca un número inventado
+- **Rediseño visual premium**: tipografía Inter/Inter Tight, tarjetas con fondo pastel + ícono grande, panel lateral sticky (escritorio) / barra flotante (móvil) para el resumen de selección — ver `docs/DESIGN_SYSTEM.md`
+- Smoke test completo + corrección de bugs reales (freeze de `fetch()` sin timeout en 4 archivos, `appendRow([])` inválido en Apps Script, fecha corrida -1 día por parseo UTC) — ver `docs/QA-NOTES.md`
+- **Pendiente**: dar de alta los primeros cursos propios del ciclo 26-27 en la hoja `Cursos` (hoy solo están los 5 migrados de Verano)
 
 ### Completado el 1 jul 2026 — Instalador de Office + Soporte Técnico Remoto potenciado
 - **Pestaña "Licencias Office"** en `otde.html`: instalador `descargas/Instalador_Office_2019_OTDE.exe` (validación por CCT, Office 2019 Professional Plus) con guía de instalación paso a paso basada en el `.bat` real
@@ -60,12 +62,12 @@ Ver roadmap completo en [`docs/ROADMAP.md`](docs/ROADMAP.md).
 - Página de check-in (`asistencia.html`) con escáner QR por cámara
 - Manual interno (`docs/manual-sistema-registro.html`)
 
-### Pendientes (al 6 jul 2026)
-- **Centro de Formación Docente — deploy real**: crear el Spreadsheet `Formacion_Docente_2026_2027`, desplegar `apps-script/formacion-docente.gs`, reemplazar el placeholder de `APPS_SCRIPT_URL` en `formacion-docente.html`, y dar de alta los primeros cursos activos en la hoja `Cursos`
+### Pendientes (al 7 jul 2026)
+- **Centro de Formación Docente**: dar de alta los primeros cursos propios del ciclo 26-27 en la hoja `Cursos` (hoy el catálogo solo tiene los 5 cursos migrados de Jornada Verano)
 - **Recrear páginas eliminadas** — `gestion-escolar.html`, `investigacion-educativa.html`, `programas-educativos.html`, `servicio-profesional.html`: requieren contenido validado con la Dra. Galindo
 - **Logomark SEPRN** — requiere archivo `logo.svg` (diseño gráfico pendiente)
 - **Barra CTE** — actualizar texto del `.update-banner` en `index.html` cuando se publique la 9ª sesión
-- Ver [`docs/ROADMAP.md`](docs/ROADMAP.md) para el histórico completo
+- Ver [`docs/ROADMAP.md`](docs/ROADMAP.md) para el histórico completo, [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md) para los tokens del rediseño, y [`docs/QA-NOTES.md`](docs/QA-NOTES.md) para bugs reales ya corregidos
 
 ---
 
@@ -86,7 +88,7 @@ Ver roadmap completo en [`docs/ROADMAP.md`](docs/ROADMAP.md).
 | Notificaciones | Bot de Telegram (API `sendMessage`) — solicitudes de Soporte Remoto |
 | Scanner QR | html5-qrcode v2.3.8 vía CDN (solo `asistencia.html`) |
 
-No hay framework, bundler, ni dependencias npm. El sitio es completamente estático. Los backends externos son 4 Google Apps Script independientes (uno por Spreadsheet/flujo): `conferencia-ia.gs`, `cursos-coeee-2026.gs`, `soporte-remoto.gs`, `formacion-docente.gs`.
+No hay framework, bundler, ni dependencias npm. El sitio es completamente estático. Los backends externos son 4 Google Apps Script (uno por Spreadsheet/flujo): `conferencia-ia.gs`, `cursos-coeee-2026.gs` (congelado desde jul 2026, ver abajo), `soporte-remoto.gs`, `formacion-docente.gs`. Desde el cutover de julio 2026, tanto `formacion-docente.html` como `jornada-verano-2026.html` reportan al mismo backend (`formacion-docente.gs`) — la cuota diaria de `MailApp`/`GmailApp` la comparten los 4, no es por proyecto.
 
 ---
 
@@ -114,9 +116,10 @@ seprn-sitio/
 │
 ├── charla-ia.html                # Página del evento IA jun 2026 (informativa, sin formulario)
 ├── asistencia.html                # Check-in con QR/PIN para operador en puerta (evento IA)
-├── jornada-verano-2026.html      # Wizard 3 pasos: inscripción Jornada Capacitación Verano 2026
+├── jornada-verano-2026.html      # Wizard 3 pasos: inscripción Jornada Capacitación Verano 2026 (reporta a formacion-docente.gs)
 ├── instructivo-jornada-verano-2026.html  # Guía imprimible de la Jornada Verano 2026
-├── formacion-docente.html        # Centro de Formación Docente — catálogo dinámico + registro
+├── formacion-docente.html        # Centro de Formación Docente — catálogo dinámico + registro, diseño premium propio
+├── instructivo-formacion-docente.html  # Guía imprimible del Centro de Formación Docente
 ├── 404.html                      # Página de error personalizada
 │
 ├── js/
@@ -124,9 +127,9 @@ seprn-sitio/
 │
 ├── apps-script/
 │   ├── conferencia-ia.gs         # Backend Conferencia IA 2026 (Sheets + correo QR)
-│   ├── cursos-coeee-2026.gs      # Backend Jornada Verano 2026 (Sheets, folios OTDE-V26-NNNN)
+│   ├── cursos-coeee-2026.gs      # Backend Jornada Verano 2026 — CONGELADO desde jul 2026 (cutover a formacion-docente.gs), queda como histórico
 │   ├── soporte-remoto.gs         # Backend Soporte Técnico Remoto (Sheets + notificación Telegram)
-│   └── formacion-docente.gs      # Backend Centro de Formación Docente (Docentes/Cursos/Inscripciones, folios OTDE-CAP-NNNN)
+│   └── formacion-docente.gs      # Backend Centro de Formación Docente + Jornada Verano (Docentes/Cursos/Inscripciones, folios OTDE-CAP-NNNN, recordatorios automáticos)
 │
 ├── descargas/                    # Instaladores/ejecutables descargables
 │   ├── Instalador_Office_2019_OTDE.exe
@@ -135,7 +138,10 @@ seprn-sitio/
 ├── docs/
 │   ├── ARCHITECTURE.md           # Arquitectura, componentes, convenciones
 │   ├── ROADMAP.md                # Plan de mejoras: Fase 1 / 2 / 3
-│   └── manual-sistema-registro.html  # Manual de uso interno del sistema de registro
+│   ├── DESIGN_SYSTEM.md          # Tokens/patrones del rediseño premium de Formación Docente
+│   ├── QA-NOTES.md               # Bugs reales ya cazados, con causa raíz — consultar antes de fetch()/appendRow() nuevos
+│   ├── manual-sistema-registro.html    # Manual de uso interno del sistema de registro (Conferencia IA)
+│   └── manual-formacion-docente.html   # Manual de uso interno del Centro de Formación Docente
 │
 ├── kit-digital/                  # Recursos digitales OTDE (banco de materiales)
 │
@@ -223,4 +229,4 @@ Para actualizar:
 | Datos de contacto | `contacto.html` + footer de todas las páginas | Dirección, horario |
 | Instalador de Office | `descargas/` + `otde.html` (pestaña Licencias Office) | Reemplazar `.exe`/`.bat`, actualizar guía si cambia el flujo |
 | Notificaciones de Soporte Remoto | `apps-script/soporte-remoto.gs` | Propiedades del script `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` (ver instrucciones al final del archivo) |
-| Cursos del Centro de Formación Docente | Hoja `Cursos` del Spreadsheet `Formacion_Docente_2026_2027` | Agregar fila con Categoria/Nombre/Responsable/Modalidad/fechas/Liga y `Activo=TRUE`; usar el menú "OTDE Formación → Generar ID de cursos faltantes" para autocompletar `ID_Curso` |
+| Cursos del Centro de Formación Docente | Hoja `Cursos` del Spreadsheet `Formacion_Docente_2026_2027` | Agregar fila con Categoria/Nombre/Responsable/Modalidad/fechas/Liga y `Activo=TRUE`; usar el menú "OTDE Formación → Generar ID de cursos faltantes" para autocompletar `ID_Curso`. Opcional: `Registro_previo_requerido=TRUE` si tiene cupo real externo, `Visible_desde`/`Visible_hasta` para programar aparición/desaparición, `Hora_inicio` si se quiere el recordatorio de "faltan unas horas" (ver `docs/DESIGN_SYSTEM.md`) |
