@@ -21,6 +21,10 @@ Ver roadmap completo en [`docs/ROADMAP.md`](docs/ROADMAP.md).
 | Performance percibida | 6/10 | **8/10** | 8/10 ✅ |
 | Accesibilidad | 3/10 | **7/10** | 8/10 |
 
+### Completado el 13 jul 2026 — Retiro de Jornada Verano 2026
+- Cerró el periodo de inscripciones a la Jornada de Capacitación Verano 2026: se eliminó el banner en `otde.html` y se borraron `jornada-verano-2026.html` e `instructivo-jornada-verano-2026.html` — ya nadie debe llegar a ese wizard
+- El backend `apps-script/formacion-docente.gs` sigue vivo (también sirve a `formacion-docente.html`); solo se perdió la parte específica de esas 2 páginas
+
 ### Completado el 7 jul 2026 — Centro de Formación Docente: deploy + rediseño premium + cutover
 - **Desplegado en producción**: Spreadsheet real `Formacion_Docente_2026_2027`, `apps-script/formacion-docente.gs` con URL real en `APPS_SCRIPT_URL`
 - **Arquitectura relacional en Sheets** (no una hoja por curso): `Docentes` (upsert por RFC, nunca sobrescribe con vacío) + `Cursos` (catálogo administrado a mano: `Activo`, ventanas de fecha `Visible_desde`/`Visible_hasta`, `Registro_previo_requerido`, `Hora_inicio`) + `Inscripciones` (transaccional, con vista VLOOKUP en vivo)
@@ -33,7 +37,7 @@ Ver roadmap completo en [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ### Completado el 1 jul 2026 — Instalador de Office + Soporte Técnico Remoto potenciado
 - **Pestaña "Licencias Office"** en `otde.html`: instalador `descargas/Instalador_Office_2019_OTDE.exe` (validación por CCT, Office 2019 Professional Plus) con guía de instalación paso a paso basada en el `.bat` real
-- **Formulario "Solicitar Soporte Técnico Remoto"**: autocompletado de CCT idéntico al de `jornada-verano-2026.html` (`js/cct-db.js`, con fallback manual de Sector/Zona/Escuela y validación de error por campo), select de Función/Cargo con opción "Otro", campo de WhatsApp con link `wa.me` directo
+- **Formulario "Solicitar Soporte Técnico Remoto"**: autocompletado de CCT (`js/cct-db.js`, con fallback manual de Sector/Zona/Escuela y validación de error por campo), select de Función/Cargo con opción "Otro", campo de WhatsApp con link `wa.me` directo
 - **Backend nuevo** `apps-script/soporte-remoto.gs`: registra en Sheets y notifica por **bot de Telegram** al equipo OTDE
 - **Referencia cruzada** entre las pestañas Licencias Office ↔ Soporte Técnico Remoto
 
@@ -88,7 +92,7 @@ Ver roadmap completo en [`docs/ROADMAP.md`](docs/ROADMAP.md).
 | Notificaciones | Bot de Telegram (API `sendMessage`) — solicitudes de Soporte Remoto |
 | Scanner QR | html5-qrcode v2.3.8 vía CDN (solo `asistencia.html`) |
 
-No hay framework, bundler, ni dependencias npm. El sitio es completamente estático. Los backends externos son 4 Google Apps Script (uno por Spreadsheet/flujo): `conferencia-ia.gs`, `cursos-coeee-2026.gs` (congelado desde jul 2026, ver abajo), `soporte-remoto.gs`, `formacion-docente.gs`. Desde el cutover de julio 2026, tanto `formacion-docente.html` como `jornada-verano-2026.html` reportan al mismo backend (`formacion-docente.gs`) — la cuota diaria de `MailApp`/`GmailApp` la comparten los 4, no es por proyecto.
+No hay framework, bundler, ni dependencias npm. El sitio es completamente estático. Los backends externos son 4 Google Apps Script (uno por Spreadsheet/flujo): `conferencia-ia.gs`, `cursos-coeee-2026.gs` (congelado desde jul 2026, ver abajo), `soporte-remoto.gs`, `formacion-docente.gs`. La cuota diaria de `MailApp`/`GmailApp` la comparten los 4, no es por proyecto.
 
 ---
 
@@ -116,14 +120,12 @@ seprn-sitio/
 │
 ├── charla-ia.html                # Página del evento IA jun 2026 (informativa, sin formulario)
 ├── asistencia.html                # Check-in con QR/PIN para operador en puerta (evento IA)
-├── jornada-verano-2026.html      # Wizard 3 pasos: inscripción Jornada Capacitación Verano 2026 (reporta a formacion-docente.gs)
-├── instructivo-jornada-verano-2026.html  # Guía imprimible de la Jornada Verano 2026
 ├── formacion-docente.html        # Centro de Formación Docente — catálogo dinámico + registro, diseño premium propio
 ├── instructivo-formacion-docente.html  # Guía imprimible del Centro de Formación Docente
 ├── 404.html                      # Página de error personalizada
 │
 ├── js/
-│   └── cct-db.js                 # Base de datos CCT (506 registros, incluye municipio), usada por jornada-verano-2026, otde.html y formacion-docente.html
+│   └── cct-db.js                 # Base de datos CCT (506 registros, incluye municipio), usada por otde.html y formacion-docente.html
 │
 ├── apps-script/
 │   ├── conferencia-ia.gs         # Backend Conferencia IA 2026 (Sheets + correo QR)
