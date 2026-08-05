@@ -130,6 +130,78 @@ La sesión más reciente siempre debe ser el acordeón activo/abierto al cargar 
 - URL del deployment vive en `otde.html` en la constante `SOPORTE_APPS_SCRIPT_URL`
 - Para cambios: copiar el `.gs` completo en Apps Script y re-desplegar como aplicación web (Cualquier usuario) — **cuidado**: probar el endpoint con `curl -X POST`, o incluso desde un navegador headless con acceso real a internet (confirmado: el sandbox de pruebas SÍ tiene salida real a `script.google.com`), ejecuta `doPost` de verdad (escribe en Sheets y dispara Telegram). Para pruebas locales, interceptar la llamada de red (`page.route()` en Playwright) en vez de dejarla llegar al backend real
 
+### `apps-script/mantenimiento.gs`
+- **Nuevo (ago 2026)**: conectado a un Google Sheet propio (hojas `Solicitudes` y
+  `Contactos_Zona_Sector`, ambas autocreadas si no existen)
+- Folio: `OTDE-MAN-NNNN` (secuencial, autoincremental, mismo patrón que `soporte-remoto.gs`)
+- **No sustituye el oficio de solicitud** — Jorge confirmó que el oficio sigue siendo el
+  respaldo administrativo oficial. El webform es un complemento: digitaliza los datos (que
+  antes Jorge transcribía a mano a la hoja "seguimiento" del sistema de Reportes de Visitas,
+  un proyecto v8.5 aparte que vive solo en Apps Script, sin copia local) y adjunta el oficio ya
+  firmado como PDF/foto en vez de que viaje solo en papel
+- **Cae en "Pendiente de validar"**, no directo a producción — Jorge revisa el oficio adjunto
+  antes de promoverlo a mano a la hoja "seguimiento" real. La promoción automática entre ambos
+  sistemas queda pendiente de una futura sesión (no se tocó el proyecto v8.5)
+- **Columnas de `Solicitudes`**: Fecha | Folio | Nombre | Función | CCT | Sector | Zona |
+  Escuela | Turno | WhatsApp | Correo | Equipos con falla | Oficio (link Drive) | Estatus |
+  Notas de revisión
+- **`Contactos_Zona_Sector`** la llena Jorge a mano (Sector, Zona, Correo, Teléfono) — sin
+  datos ahí, la solicitud se registra igual pero no se notifica a nadie más que a OTDE
+- El oficio adjunto se sube en base64 desde el cliente (`FileReader.readAsDataURL` + recorte
+  del prefijo `data:...;base64,`) y `doPost` lo decodifica con `Utilities.base64Decode` y lo
+  guarda en una carpeta de Drive ("Oficios de Mantenimiento", autocreada), compartida como
+  "cualquiera con el link, solo ver" para que el link quede usable desde la hoja
+- Notifica por Telegram a OTDE (mismo patrón que `soporte-remoto.gs`, **Propiedades del script
+  configuradas por separado** — son por proyecto, no se comparten aunque sea el mismo bot) y
+  por correo a la Zona/Sector correspondiente si hay contacto registrado (informativo, no
+  bloquea el registro si falla)
+- **CCT con autocomplete** (`js/cct-db.js`): mismo patrón que el resto del sitio
+  (`manSeleccionarCct`/`manResetCct`/`manActualizarZonas`, prefijo `man`), con fallback manual
+  de Sector/Zona/Escuela si la CCT no está en la base
+- Usado por el formulario "Solicitar Mantenimiento" en la pestaña Mantenimiento de `otde.html`
+- Límite de archivo: 5MB validado en el cliente, 8MB de margen validado en el servidor
+- Para desplegar: crear el Spreadsheet, pegar `mantenimiento.gs` completo en Apps Script,
+  configurar Propiedades del script (Telegram), implementar como aplicación web (Cualquier
+  usuario), pegar la URL en `otde.html` en la constante `MANTENIMIENTO_APPS_SCRIPT_URL` (hoy
+  tiene el placeholder `'PENDIENTE_DE_DESPLEGAR'`)
+
+### `apps-script/asesorias.gs`
+- **Nuevo (ago 2026)**: mismo patrón que `mantenimiento.gs` (Sheet propio con hojas
+  `Solicitudes` y `Contactos_Zona_Sector`, ambas autocreadas), folio `OTDE-ASE-NNNN`
+- **Contexto del trámite**: la asesoría (capacitación grupal sobre Banco de Materiales/Chuka)
+  se ofrece tras una visita de mantenimiento — no es un trámite que llegue "en frío". Hoy ese
+  control se lleva en un Excel simple sin nada automatizado ("SGA-OTDE Track 1", pausado). Este
+  script solo digitaliza la captura inicial, igual filosofía que Mantenimiento: **el oficio
+  sigue siendo obligatorio**, el webform lo complementa (se adjunta como PDF/foto) en vez de
+  sustituirlo
+- **Cae en "Pendiente de validar"**, Jorge promueve a mano a su control real — la
+  automatización del resto del flujo (agenda, visita, reporte) queda fuera de alcance por
+  ahora; la parte pedagógica del taller (Carta Descriptiva, Campos Formativos NEM, etc.) ya
+  está resuelta aparte y no se tocó
+- **Columnas de `Solicitudes`**: Fecha | Folio | Tipo de Asesoría | Nombre | Función | CCT |
+  Sector | Zona | Escuela | Turno | Número de Docentes | WhatsApp | Correo | Observaciones |
+  Oficio (link Drive) | Estatus | Notas de revisión
+- **Tipo de Asesoría** y **casilla de confirmación de mantenimiento previo** (ago 2026): la
+  única asesoría que se ofrece hoy (Banco de Materiales + Chuka) requiere que la escuela ya haya
+  recibido mantenimiento con esos recursos instalados — sin eso, la asesoría no se puede dar. No
+  se valida automáticamente contra el sistema de Reportes de Visitas (viven ahí, no en este
+  proyecto, y la mayoría de escuelas ya atendidas lo fueron antes de que existiera este webform,
+  así que cruzar contra datos parciales sería peor que no cruzar nada). En vez de eso, el
+  formulario pide una casilla obligatoria de confirmación explícita — no lo garantiza, pero deja
+  rastro y evita el supuesto silencioso; Jorge revisa esto como parte de su validación del
+  oficio. El selector de "Tipo de Asesoría" ya está listo para crecer (hoy 1 sola opción) cuando
+  se separen Banco de Materiales/Chuka o se agreguen asesorías nuevas — replanteo pedagógico
+  pendiente, deliberadamente fuera de alcance por ahora
+- Notifica por Telegram a OTDE y por correo a la Zona/Sector correspondiente (mismo mecanismo
+  que `mantenimiento.gs`, Propiedades del script configuradas por separado en este proyecto)
+- **CCT con autocomplete** (`js/cct-db.js`): mismo patrón, prefijo `ase`
+  (`aseSeleccionarCct`/`aseResetCct`/`aseActualizarZonas`)
+- Usado por el formulario "Solicitar Asesoría" en la nueva pestaña Asesorías de `otde.html`
+- Para desplegar: mismo procedimiento que `mantenimiento.gs` — crear Spreadsheet, pegar el
+  código, configurar Propiedades del script (Telegram), implementar como aplicación web, pegar
+  la URL en la constante `ASESORIAS_APPS_SCRIPT_URL` de `otde.html` (hoy tiene el placeholder
+  `'PENDIENTE_DE_DESPLEGAR'`)
+
 ### `apps-script/formacion-docente.gs`
 **Desplegado en producción desde jul 2026** (Spreadsheet real `Formacion_Docente_2026_2027`, URL real ya pegada en `APPS_SCRIPT_URL` de `formacion-docente.html`; la extinta `jornada-verano-2026.html` compartió este mismo backend hasta su eliminación el 13 jul 2026).
 
@@ -154,6 +226,74 @@ La sesión más reciente siempre debe ser el acordeón activo/abierto al cargar 
 6. Los PDFs de sesiones CTE se nombran con mayúsculas y acentos; URL-encodear la ó como `%C3%B3` en los hrefs
 7. **Sin emojis** en HTML — usar SVG inline para íconos de contacto (persona, correo, teléfono). Ver `contacto-icon` en cualquier página de área como referencia
 8. El portal SEP CTE usa la URL `https://gestion.cte.sep.gob.mx/insumos/` (sin `#!/` — ese sufijo era routing antiguo de AngularJS)
+
+## `otde.html` — Correo Institucional: webform de Alta en paralelo al Form viejo (ago 2026)
+- La tab Correo ahora tiene un switcher de 2 botones (`.correo-panel-btn`,
+  `mostrarCorreoPanel('alta'|'otros')`): **"Alta de cuenta"** muestra el webform nuevo;
+  **"Cambio de contraseña / Reset 2FA / Otro"** muestra el `<iframe>` del Google Form de
+  siempre, **sin cambios** — todavía cubre esos 3 tipos porque solo se construyó Alta
+  hasta ahora
+- **No se tocó el sistema en vivo** (`Correos-institucionales`, Code.gs/OnFormSubmit.gs/
+  OnEditTrigger.gs/ResumenSemanal.gs, atado al Form viejo) — el webform nuevo es un proyecto
+  de Apps Script **separado y en paralelo**: `Correos-institucionales/webform-2026-2027/`
+  (`Config.gs`, `WebApp.gs`, `Alta.gs`, `OnEditAlta.gs`), pensado para una Spreadsheet nueva
+  del ciclo 2026-2027. El corte real solo pasa cuando Jorge decida retirar el panel "otros"
+  y el Form viejo por completo
+- **Dominio auto-derivado, no preguntado**: usa `otdeDominioParaCCT(cct, tipoCuenta)` (nueva
+  en `js/cct-db.js`, regla verificada en vivo contra SIGEE — ver `docs/` o el historial de
+  conversación del 5 ago 2026 si hace falta el detalle). El formulario nunca pregunta
+  "¿@dee.edu.mx o @aulamexiquense.mx?" directamente:
+  - CCT con `tipo` ≠ escuela (supervisión/jefatura/subdirección) → dominio fijo
+    `dee.edu.mx`, sin preguntar nada más
+  - CCT con `tipo` = escuela y Función = Docente/ATP/PAAE/etc. → dominio fijo
+    `aulamexiquense.mx`, sin preguntar nada más
+  - CCT con `tipo` = escuela y Función = Director(a)/Subdirector(a) → sí se muestra el
+    selector "Tipo de cuenta" (Personal/Oficina), porque solo esa función puede pedir la
+    cuenta de oficina de la escuela
+  - CCT en fallback manual (no encontrado en `cct-db.js`) → no hay forma de derivarlo, se
+    pide un selector explícito de dominio y queda marcado para que Marcos lo confirme
+  - Toda la lógica vive en `altActualizarDominio()`/`altCalcularDominio()`, se recalcula en
+    cada cambio de CCT/Función/Tipo de cuenta, y se muestra como confirmación
+    (`#alt-dominio-preview`) antes de enviar
+- **Campos del webform de Alta**: CCT (autocomplete + fallback manual, prefijo `alt`),
+  Función (mismas opciones que el resto del sitio), Nombre/Apellido Paterno/Apellido
+  Materno/RFC/CURP (campos separados — ver encabezados reales confirmados por Jorge el 5 ago
+  2026), Correo personal, Teléfono, Observaciones
+- Mismo patrón de validación 100% JS + `novalidate` + `fetchJsonConTimeout()` que el resto
+  del sitio
+- **Pendiente antes de producción**: desplegar `webform-2026-2027` como aplicación web, pegar
+  la URL real en `ALTA_CORREO_APPS_SCRIPT_URL` (placeholder hoy), ejecutar
+  `recrearTriggerAlta()` una vez desde el editor de Apps Script para instalar el trigger de
+  entrega de credenciales
+- **Los 4 tipos ya están completos (ago 2026)**: el panel "otros" ya no tiene el `<iframe>`
+  del Google Form — tiene su propio sub-switcher de 3 botones (Cambio de Contraseña / Reset
+  2FA / Incidencias), cada uno con su formulario, prefijos `cam`/`rst`/`inc`. El `<iframe>`
+  quedó completamente retirado del código; el corte real hacia producción solo pasa cuando se
+  despliegue `webform-2026-2027` y se reemplacen los 4 placeholders `PENDIENTE_DE_DESPLEGAR`
+  (`ALTA_CORREO_APPS_SCRIPT_URL`, `CAMBIO_APPS_SCRIPT_URL`, `RESET_APPS_SCRIPT_URL`,
+  `INCIDENCIA_APPS_SCRIPT_URL`) — hasta entonces el sistema viejo (Form + `Code.gs` en
+  `Correos-institucionales`) sigue siendo el que funciona en producción, sin tocar
+- **`crearCctAutocomplete(prefijo)`**: con 4 formularios usando CCT autocomplete solo en la tab
+  Correo (Alta, Cambio, Reset, Incidencias), se factorizó en una función compartida — a
+  diferencia de Soporte/Mantenimiento/Asesorías, que mantienen su propia copia del patrón (era
+  la 4ª repetición casi idéntica en el mismo archivo, distinto criterio al resto del sitio
+  donde cada tab tiene 1 sola copia)
+
+## `otde.html` — Pestaña "Mantenimiento" con webform (ago 2026)
+- La tab Mantenimiento ya no es solo texto ("solicita por oficio y vía estructura") — tiene un
+  formulario "Solicitar Mantenimiento" (botón `#btn-mantenimiento` + `toggleMantenimientoForm`,
+  mismo patrón que Soporte) que digitaliza la captura sin quitarle el oficio: pide adjuntarlo
+  ya firmado en vez de sustituirlo. Ver detalle completo del backend en
+  `apps-script/mantenimiento.gs` arriba
+- Mismo patrón de validación 100% JS con `novalidate` que el resto del sitio
+  (`validarMantenimientoForm()`), y mismo `fetchJsonConTimeout()` para evitar el freeze
+  documentado en `docs/QA-NOTES.md #1`
+- **Adjuntar oficio**: `input type="file"` con límite de 5MB validado en `validarMantenimientoForm()`
+  antes de leer el archivo; la lectura a base64 (`manLeerArchivoBase64()`, usa
+  `FileReader.readAsDataURL`) solo ocurre ya validado, dentro de `enviarSolicitudMantenimiento()`
+- **Pendiente antes de que funcione en producción**: `MANTENIMIENTO_APPS_SCRIPT_URL` todavía
+  tiene el placeholder `'PENDIENTE_DE_DESPLEGAR'` — hay que desplegar `mantenimiento.gs` como
+  aplicación web y pegar la URL real ahí
 
 ## `otde.html` — Pestañas "Licencias Office" y Soporte Técnico Remoto (jul 2026)
 - **Licencias Office**: nueva pestaña de servicio con instalador `descargas/Instalador_Office_2019_OTDE.exe` (self-extracting, incluye `Instalador_Office_OTDE.bat` + Office Deployment Tool) que valida por CCT contra una base de datos publicada en Sheets/CSV. El texto evita atribuir la causa a SEIEM directamente (se enmarca como "actualización del esquema de licenciamiento institucional")

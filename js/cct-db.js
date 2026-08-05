@@ -522,3 +522,19 @@ function sugerirCCT(cctInput, limite = 8) {
   if (q.length < 3) return [];
   return CCT_DB.filter(r => r.cct.toUpperCase().startsWith(q)).slice(0, limite);
 }
+
+// Regla de dominio de correo institucional — verificada en vivo contra
+// SIGEE (consultar_cuentas.php) el 2026-08-05 con un CCT de cada `tipo`:
+//   - supervision / jefatura / subdireccion → siempre @dee.edu.mx,
+//     sin importar personal/oficina.
+//   - escuela → depende de tipoCuenta: "oficina" (una por escuela,
+//     representa al CT/directivo) → @dee.edu.mx; "personal" (cualquier
+//     docente/PAAE/ATP de esa escuela) → @aulamexiquense.mx.
+// Devuelve null si el CCT no está en la base (fallback manual, sin
+// forma de auto-derivar el dominio).
+function otdeDominioParaCCT(cct, tipoCuenta) {
+  const registro = buscarCCT(cct);
+  if (!registro) return null;
+  if (registro.tipo !== 'escuela') return 'dee.edu.mx';
+  return tipoCuenta === 'oficina' ? 'dee.edu.mx' : 'aulamexiquense.mx';
+}
