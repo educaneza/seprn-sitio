@@ -3,6 +3,11 @@
 Documento generado a partir de la auditoría UX/UI completa del 26 de mayo de 2026.
 Objetivo: elevar el sitio de un nivel **5/10** (funcional-institucional 2019) a un **8.5/10** (producto digital premium institucional) sin cambiar el stack tecnológico (HTML/CSS/JS puro).
 
+**Este documento es solo para lo pendiente/futuro** (consolidación del 5 ago 2026) — el
+historial de qué ya se completó y cuándo vive en `docs/BITACORA.md`. Las secciones de FASE 1 y
+FASE 2 de abajo se conservan como referencia técnica de patrones de implementación ya en uso
+(la mayoría de sus ítems ya están hechos, marcados `✅`), no como trabajo pendiente.
+
 ---
 
 ## Estado actual — Scores de auditoría
@@ -21,142 +26,6 @@ Objetivo: elevar el sitio de un nivel **5/10** (funcional-institucional 2019) a 
 
 ---
 
-## ~~Centro de Formación Docente~~ — DESPLEGADO Y CON REDISEÑO PREMIUM (7 jul 2026)
-
-Sistematiza el flujo de convocatorias CoEEE (webinars, seminarios, conferencias, cursos autogestivos, acciones formativas, diplomados, proyectos didácticos), antes resuelto con un Google Form distinto por curso y sin seguimiento. Arquitectura completa en `docs/ARCHITECTURE.md §12`, tokens de diseño en `docs/DESIGN_SYSTEM.md`.
-
-| Item | Archivo(s) | Estado |
-|---|---|---|
-| Modelo relacional en Sheets: `Docentes` (upsert por RFC) + `Cursos` (catálogo, admin manual) + `Inscripciones` (transaccional, con vista VLOOKUP) | Diseño validado con Jorge | ✅ |
-| `js/cct-db.js` enriquecido con `municipio` (18 municipios) | `js/cct-db.js` | ✅ |
-| Backend: `doGet` catálogo dinámico + ventanas de fecha + inscritos reales, `doPost` upsert (nunca sobrescribe con vacío) + folio + dedupe, menú completo | `apps-script/formacion-docente.gs` | ✅ Desplegado |
-| **Deploy real**: Spreadsheet `Formacion_Docente_2026_2027` creado, URL real en `APPS_SCRIPT_URL` | — | ✅ |
-| **Migración de Jornada Verano 2026**: cutover completo — `jornada-verano-2026.html` ya reporta a este backend, no al suyo propio | `apps-script/formacion-docente.gs`, `jornada-verano-2026.html` | ✅ |
-| Recordatorios automáticos por correo (inicio/medio-curso/webinar), con cuidado de cuota compartida | `apps-script/formacion-docente.gs` | ✅ |
-| Ventanas de fecha (`Visible_desde`/`Visible_hasta`) para abrir/cerrar cursos sin tocar `Activo` | `apps-script/formacion-docente.gs` | ✅ |
-| **Rediseño visual premium**: tipografía Inter/Inter Tight, tarjetas con fondo pastel + ícono grande, prueba social real de inscritos, panel lateral sticky (escritorio) / barra flotante (móvil) | `formacion-docente.html`, `instructivo-formacion-docente.html` | ✅ |
-| Smoke test completo + corrección de bugs reales (freeze de fetch sin timeout en 4 archivos, `appendRow([])` inválido, fecha -1 día por parseo UTC) | Ver `docs/QA-NOTES.md` | ✅ |
-| **Poblar catálogo del ciclo 26-27**: dar de alta los primeros cursos propios (hoy solo están los 5 migrados de Jornada Verano) | Hoja `Cursos` | ⬜ Pendiente |
-| Fase 2 (futuro): validación de asistencia en webinars vía código de cierre (columnas `Requiere_codigo_asistencia`/`Codigo_asistencia` ya existen) | — | ⬜ No iniciado |
-| Fase 3 (futuro): dashboards por sector/zona — decisión previa: Looker Studio conectado directo a la hoja, no un dashboard custom (revisar con Jorge si esto cambió) | — | ⬜ No iniciado |
-
----
-
-## ~~Instalador de Office + Soporte Técnico Remoto potenciado~~ — COMPLETADO (1 jul 2026)
-
-| Item | Archivo(s) | Estado |
-|---|---|---|
-| Pestaña "Licencias Office": instalador validado por CCT + guía de instalación paso a paso | `otde.html`, `descargas/` | ✅ |
-| Texto sobre el cambio de licenciamiento redactado sin atribuir culpa a SEIEM | `otde.html` | ✅ |
-| Formulario "Solicitar Soporte Técnico Remoto" con CCT autocomplete + fallback manual (mismo patrón que Jornada Verano) | `otde.html` | ✅ |
-| Función/Cargo: texto libre → `<select>` con opción "Otro" | `otde.html` | ✅ |
-| Campo de WhatsApp (obligatorio, 10 dígitos) + link `wa.me` en la notificación | `otde.html`, `apps-script/soporte-remoto.gs` | ✅ |
-| Notificación push por bot de Telegram al registrar una solicitud | `apps-script/soporte-remoto.gs` | ✅ |
-| Validación de error aislada por campo en el fallback manual (Sector/Zona/Escuela ya no comparten el mensaje de error del CCT) | `otde.html` | ✅ |
-| Referencia cruzada Licencias Office ↔ Soporte Técnico Remoto | `otde.html` | ✅ |
-| Smoke test completo del sitio (17 páginas, flujos críticos) sin hallazgos funcionales | — | ✅ |
-
----
-
-## ~~Jornada de Capacitación Verano 2026~~ — COMPLETADO (1 jul 2026)
-
-| Item | Archivo(s) | Estado |
-|---|---|---|
-| Wizard 3 pasos: selección multi-curso, redirección a CoEEE, reporte OTDE NEZA | `jornada-verano-2026.html` | ✅ |
-| Registro secuencial (1 row por curso) para evitar race condition en folios | `jornada-verano-2026.html`, `apps-script/cursos-coeee-2026.gs` | ✅ |
-| Guía imprimible para difundir junto al oficio de convocatoria | `instructivo-jornada-verano-2026.html` | ✅ |
-
----
-
-## Completado en junio 2026 — Sistema de Registro de Eventos
-
-Implementado para la **Conferencia IA 2026** (17 jun 2026, Auditorio Regional 1 Neza).
-
-| Item | Archivo(s) | Estado |
-|---|---|---|
-| Formulario de registro con autocompletado CCT (506 registros) | `conferencia-ia.html`, `js/cct-db.js` | ✅ |
-| Base de datos CCT extraída del Excel `OTDE_Base_Contactos_v2.xlsx` | `js/cct-db.js` | ✅ |
-| Backend Apps Script: registro en Sheets, control de cupos, correo HTML con QR | `apps-script/conferencia-ia.gs` | ✅ |
-| Página de check-in: PIN local, escáner QR por cámara, lector físico, tipeo manual | `asistencia.html` | ✅ |
-| Correo de confirmación: remitente personalizado "Oficina de Tecnología · Neza", QR del folio | `apps-script/conferencia-ia.gs` | ✅ |
-| Fix iCloud Mail: emojis SMP reemplazados por etiquetas CSS | `apps-script/conferencia-ia.gs` | ✅ |
-| Fix hora check-in: formato `@STRING@` en Sheets + `instanceof Date` check | `apps-script/conferencia-ia.gs` | ✅ |
-| Manual de uso interno del sistema (7 secciones + glosario) | `docs/manual-sistema-registro.html` | ✅ |
-| Banner temporal en `index.html` con link a `conferencia-ia.html` | `index.html` | ✅ |
-
----
-
-## ~~Bug-fixes y pulido visual~~ — COMPLETADO (24 jun 2026, sesión continuación)
-
-| Item | Archivo(s) | Estado |
-|---|---|---|
-| Hero midnight universal — `areas.html`, `cte.html`, `contacto.html` sin hero → `hero-sm` | 3 páginas | ✅ |
-| Bug crítico: `--midnight: var(--midnight)` (autorreferencia) → corregido a `#0C1A2E` | `styles.css` | ✅ |
-| Emojis eliminados de `otde.html` (tabs, h2/h3, íconos decorativos) | `otde.html` | ✅ |
-| Emojis 👤/📧/📞 → SVG inline en secciones de contacto de 6 páginas de área | 6 páginas | ✅ |
-| URLs portal SEP: `#!/` obsoleto eliminado, `www.` corregido (4 instancias) | `cte.html` | ✅ |
-| `skip-link` + `id="main-content"` añadidos a `areas.html`, `cte.html`, `index.html` | 3 páginas | ✅ |
-| `aria-current="page"` añadido a nav de `areas.html` y `contacto.html` | 2 páginas | ✅ |
-
----
-
-## ~~Sistema de diseño en páginas internas~~ — COMPLETADO (24 jun 2026)
-
-Aplicado en sesión 24 jun 2026. Commits: `ab8b811`.
-
-| Item | Archivo(s) | Estado |
-|---|---|---|
-| Hero midnight (`hero-sm`) agregado a `nosotros.html` | `nosotros.html` | ✅ |
-| `.section-header` + `.section-eyebrow` + `.section-title` en 7 páginas de área (PROPÓSITO / RESPONSABILIDADES / ESTRUCTURA INTERNA) | `academica.html`, `personal.html`, `planeacion.html`, `recursos.html`, `otde.html`, `oeve.html`, `juridico.html` | ✅ |
-| Animación `.fade-item` (fade-up via IntersectionObserver) en tarjetas de oficinas | 4 páginas con grid | ✅ |
-| `.skip-link` + `role="main"` + `id="main-content"` en 8 páginas (accesibilidad) | Páginas de área + nosotros | ✅ |
-| `.fade-item` y `.skip-link` como clases globales en `styles.css` | `styles.css` | ✅ |
-| Observer unificado en `script.js` para `.area-card` y `.fade-item` | `script.js` | ✅ |
-
----
-
-## ~~Contenido CTE~~ — AL DÍA (24 jun 2026)
-
-| Sesión | Opening | Grabación | Materiales | ZIP |
-|---|---|---|---|---|
-| Octava Sesión Ordinaria | `BRneovXdqL8` | No disponible | PPTX + PDF orientaciones | ✅ |
-| Séptima Sesión Ordinaria | `oUA9r4zKdgo` | No disponible | PPTX + 7 PDFs/materiales | ✅ |
-| Primera a Sexta Sesión | ✅ | ✅ (Fase Intensiva – Sexta) | ✅ | ✅ |
-
----
-
-## ~~Rediseño visual élite~~ — COMPLETADO (16 jun 2026)
-
-Proceso de 5 fases (dirección artística → wireframe → crítica → mejora → código). Commits: `2298321`, `9c48531`.
-
-| Item | Archivo(s) | Estado |
-|---|---|---|
-| Hero midnight `#0C1A2E` full-bleed con badge, glow y scroll indicator | `index.html`, `styles.css` | ✅ |
-| Tipografía display 64px blanca, botones dark-variant | `index.html`, `styles.css` | ✅ |
-| Animación de entrada escalonada (stagger 150ms) vía `@keyframes hero-enter` | `styles.css` | ✅ |
-| Strip de métricas (417 escuelas · 121,332 alumnos · 18 mun · 13 sectores) con contador easeOutCubic | `index.html`, `styles.css` | ✅ |
-| Section header con eyebrow tipográfico y líneas laterales | `index.html`, `styles.css` | ✅ |
-| Fade-up stagger en cards de áreas vía IntersectionObserver | `index.html`, `styles.css` | ✅ |
-| Cierre del evento: banner y formulario de registro retirados de `index.html` y `charla-ia.html` | `index.html`, `charla-ia.html` | ✅ |
-| Función `reenviarConfirmacionListaEspera()` para post-evento | `apps-script/conferencia-ia.gs` | ✅ |
-
----
-
-## ~~FASE 1 — Quick Wins~~ — COMPLETADA (junio 2026)
-
-| # | Item | Commits |
-|---|---|---|
-| 1.1 | `class="active"` + `aria-current="page"` en nav de 16 páginas | `fd707cf` |
-| 1.2 | Layout cobertura mobile: grid 2→1 col, padding mobile | `9502c7f` |
-| 1.3 | Google Fonts: `@import` → `<link rel="preconnect">` en 16 páginas | `59086e9` |
-| 1.4 | Contraste hero: `#977e5b` → `#6b5a44` (WCAG AA) | `59086e9` |
-| 1.5 | Accordion: `<div onclick>` → `<button>` + `aria-expanded` | `9502c7f` |
-| 1.6 | `aria-current="page"` (simultáneo con 1.1) | `fd707cf` |
-| 1.7 | Touch targets mobile nav: `12px 4px` → `14px 12px` | `59086e9` |
-| 1.8 | `favicon.svg` creado + agregado a 18 páginas | `fd707cf` |
-| 1.9 | Toggle ▼/▶ → SVG chevron animado por CSS | `9502c7f` |
-
----
 
 ## FASE 1 — Quick Wins *(referencia histórica)*
 **Objetivo:** Corregir lo que está roto sin tocar la estructura visual. Todo debería quedar en un sprint de 1–2 horas de trabajo.
@@ -469,8 +338,8 @@ BAJO IMPACTO / BAJO ESFUERZO         BAJO IMPACTO / ALTO ESFUERZO
 | 6 | Archivos PDF con acentos en el nombre (riesgo en algunos servidores) | `pdfs/cte/` | Baja |
 | 7 | Sección cobertura sin breakpoint mobile | `index.html` | Alta |
 | 8 | `<div onclick>` en acordeones (no semántico) | `cte.html` | Alta |
-| 9 | Sin `aria-current` en ninguna página | Todos | Media |
-| 10 | Sin favicon en ninguna página | Todos | Media |
+| ~~9~~ | ~~Sin `aria-current` en ninguna página~~ — resuelto Fase 1, ver `docs/ARCHITECTURE.md` (P6, `fd707cf`) | Todos | ✅ |
+| ~~10~~ | ~~Sin favicon en ninguna página~~ — resuelto Fase 1, ver `docs/ARCHITECTURE.md` (P8, `fd707cf`) | Todos | ✅ |
 
 ---
 
@@ -484,12 +353,13 @@ git status
 # Verificar: https://educaneza.github.io/seprn-sitio/
 ```
 
-**Pendientes al 6 jul 2026 (actualizado):**
+**Pendientes vigentes** (la lista fechada "al 6 jul 2026" que vivía aquí ya se resolvió o se
+movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue abierto):
 
-1. **Centro de Formación Docente — deploy real**: crear el Spreadsheet `Formacion_Docente_2026_2027`, desplegar `apps-script/formacion-docente.gs` como Web App, pegar la URL real en `APPS_SCRIPT_URL` de `formacion-docente.html` (hoy tiene un placeholder), y dar de alta los primeros cursos activos en la hoja `Cursos` (usar el menú "Generar ID de cursos faltantes" para no escribir el `ID_Curso` a mano). Ver `docs/ARCHITECTURE.md §12`.
-2. **Recrear páginas eliminadas** cuando haya contenido validado con la Dra. Avelina Galindo Celix: `gestion-escolar.html`, `investigacion-educativa.html`, `programas-educativos.html`, `servicio-profesional.html`.
-3. **Logomark SEPRN (3.1)** — requiere archivo SVG de diseño gráfico.
-4. **Barra CTE** — actualizar texto en `index.html` al agregar la novena sesión.
+1. **Recrear páginas eliminadas** cuando haya contenido validado con la Dra. Avelina Galindo Celix: `gestion-escolar.html`, `investigacion-educativa.html`, `programas-educativos.html`, `servicio-profesional.html`.
+2. **Logomark SEPRN (3.1)** — requiere archivo SVG de diseño gráfico.
+3. **Barra CTE** — actualizar texto en `index.html` al agregar la novena sesión.
+4. **Desplegar webforms de Correo/Mantenimiento/Asesorías (ago 2026)** — los 3 backends nuevos siguen con placeholder `PENDIENTE_DE_DESPLEGAR`. Ver `CLAUDE.md` §"Pendientes vigentes" para el detalle por trámite.
 
 **Nota de caché:** tras un push a `main`, GitHub Pages tarda 5-10 min en propagar el CSS. Hacer Cmd+Shift+R para invalidar caché del navegador.
 

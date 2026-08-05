@@ -227,84 +227,95 @@ La sesión más reciente siempre debe ser el acordeón activo/abierto al cargar 
 7. **Sin emojis** en HTML — usar SVG inline para íconos de contacto (persona, correo, teléfono). Ver `contacto-icon` en cualquier página de área como referencia
 8. El portal SEP CTE usa la URL `https://gestion.cte.sep.gob.mx/insumos/` (sin `#!/` — ese sufijo era routing antiguo de AngularJS)
 
-## `otde.html` — Correo Institucional: webform de Alta en paralelo al Form viejo (ago 2026)
-- La tab Correo ahora tiene un switcher de 2 botones (`.correo-panel-btn`,
-  `mostrarCorreoPanel('alta'|'otros')`): **"Alta de cuenta"** muestra el webform nuevo;
-  **"Cambio de contraseña / Reset 2FA / Otro"** muestra el `<iframe>` del Google Form de
-  siempre, **sin cambios** — todavía cubre esos 3 tipos porque solo se construyó Alta
-  hasta ahora
-- **No se tocó el sistema en vivo** (`Correos-institucionales`, Code.gs/OnFormSubmit.gs/
-  OnEditTrigger.gs/ResumenSemanal.gs, atado al Form viejo) — el webform nuevo es un proyecto
-  de Apps Script **separado y en paralelo**: `Correos-institucionales/webform-2026-2027/`
-  (`Config.gs`, `WebApp.gs`, `Alta.gs`, `OnEditAlta.gs`), pensado para una Spreadsheet nueva
-  del ciclo 2026-2027. El corte real solo pasa cuando Jorge decida retirar el panel "otros"
-  y el Form viejo por completo
-- **Dominio auto-derivado, no preguntado**: usa `otdeDominioParaCCT(cct, tipoCuenta)` (nueva
-  en `js/cct-db.js`, regla verificada en vivo contra SIGEE — ver `docs/` o el historial de
-  conversación del 5 ago 2026 si hace falta el detalle). El formulario nunca pregunta
-  "¿@dee.edu.mx o @aulamexiquense.mx?" directamente:
-  - CCT con `tipo` ≠ escuela (supervisión/jefatura/subdirección) → dominio fijo
-    `dee.edu.mx`, sin preguntar nada más
-  - CCT con `tipo` = escuela y Función = Docente/ATP/PAAE/etc. → dominio fijo
-    `aulamexiquense.mx`, sin preguntar nada más
-  - CCT con `tipo` = escuela y Función = Director(a)/Subdirector(a) → sí se muestra el
-    selector "Tipo de cuenta" (Personal/Oficina), porque solo esa función puede pedir la
-    cuenta de oficina de la escuela
-  - CCT en fallback manual (no encontrado en `cct-db.js`) → no hay forma de derivarlo, se
-    pide un selector explícito de dominio y queda marcado para que Marcos lo confirme
-  - Toda la lógica vive en `altActualizarDominio()`/`altCalcularDominio()`, se recalcula en
-    cada cambio de CCT/Función/Tipo de cuenta, y se muestra como confirmación
-    (`#alt-dominio-preview`) antes de enviar
-- **Campos del webform de Alta**: CCT (autocomplete + fallback manual, prefijo `alt`),
-  Función (mismas opciones que el resto del sitio), Nombre/Apellido Paterno/Apellido
-  Materno/RFC/CURP (campos separados — ver encabezados reales confirmados por Jorge el 5 ago
-  2026), Correo personal, Teléfono, Observaciones
-- Mismo patrón de validación 100% JS + `novalidate` + `fetchJsonConTimeout()` que el resto
-  del sitio
-- **Pendiente antes de producción**: desplegar `webform-2026-2027` como aplicación web, pegar
-  la URL real en `ALTA_CORREO_APPS_SCRIPT_URL` (placeholder hoy), ejecutar
-  `recrearTriggerAlta()` una vez desde el editor de Apps Script para instalar el trigger de
-  entrega de credenciales
-- **Los 4 tipos ya están completos (ago 2026)**: el panel "otros" ya no tiene el `<iframe>`
-  del Google Form — tiene su propio sub-switcher de 3 botones (Cambio de Contraseña / Reset
-  2FA / Incidencias), cada uno con su formulario, prefijos `cam`/`rst`/`inc`. El `<iframe>`
-  quedó completamente retirado del código; el corte real hacia producción solo pasa cuando se
-  despliegue `webform-2026-2027` y se reemplacen los 4 placeholders `PENDIENTE_DE_DESPLEGAR`
-  (`ALTA_CORREO_APPS_SCRIPT_URL`, `CAMBIO_APPS_SCRIPT_URL`, `RESET_APPS_SCRIPT_URL`,
-  `INCIDENCIA_APPS_SCRIPT_URL`) — hasta entonces el sistema viejo (Form + `Code.gs` en
-  `Correos-institucionales`) sigue siendo el que funciona en producción, sin tocar
-- **`crearCctAutocomplete(prefijo)`**: con 4 formularios usando CCT autocomplete solo en la tab
-  Correo (Alta, Cambio, Reset, Incidencias), se factorizó en una función compartida — a
-  diferencia de Soporte/Mantenimiento/Asesorías, que mantienen su propia copia del patrón (era
-  la 4ª repetición casi idéntica en el mismo archivo, distinto criterio al resto del sitio
-  donde cada tab tiene 1 sola copia)
+## `otde.html` — Oficina de Tecnología (OTDE)
 
-## `otde.html` — Pestaña "Mantenimiento" con webform (ago 2026)
-- La tab Mantenimiento ya no es solo texto ("solicita por oficio y vía estructura") — tiene un
-  formulario "Solicitar Mantenimiento" (botón `#btn-mantenimiento` + `toggleMantenimientoForm`,
-  mismo patrón que Soporte) que digitaliza la captura sin quitarle el oficio: pide adjuntarlo
-  ya firmado en vez de sustituirlo. Ver detalle completo del backend en
-  `apps-script/mantenimiento.gs` arriba
-- Mismo patrón de validación 100% JS con `novalidate` que el resto del sitio
-  (`validarMantenimientoForm()`), y mismo `fetchJsonConTimeout()` para evitar el freeze
-  documentado en `docs/QA-NOTES.md #1`
-- **Adjuntar oficio**: `input type="file"` con límite de 5MB validado en `validarMantenimientoForm()`
-  antes de leer el archivo; la lectura a base64 (`manLeerArchivoBase64()`, usa
-  `FileReader.readAsDataURL`) solo ocurre ya validado, dentro de `enviarSolicitudMantenimiento()`
-- **Pendiente antes de que funcione en producción**: `MANTENIMIENTO_APPS_SCRIPT_URL` todavía
-  tiene el placeholder `'PENDIENTE_DE_DESPLEGAR'` — hay que desplegar `mantenimiento.gs` como
-  aplicación web y pegar la URL real ahí
+7 tabs, en este orden (los comentarios `<!-- SERVICIO N: ... -->` en el HTML deben coincidir
+con esta numeración — si se agrega o reordena una tab, actualizarlos ahí también):
+**1** Correo Institucional · **2** Mantenimiento · **3** Asesorías · **4** Soporte Técnico ·
+**5** Licencias Office · **6** Chuka · **7** Recursos.
 
-## `otde.html` — Pestañas "Licencias Office" y Soporte Técnico Remoto (jul 2026)
-- **Licencias Office**: nueva pestaña de servicio con instalador `descargas/Instalador_Office_2019_OTDE.exe` (self-extracting, incluye `Instalador_Office_OTDE.bat` + Office Deployment Tool) que valida por CCT contra una base de datos publicada en Sheets/CSV. El texto evita atribuir la causa a SEIEM directamente (se enmarca como "actualización del esquema de licenciamiento institucional")
-- **Guía rápida de instalación**: los 5 pasos del mini-manual están basados en el flujo real del `.bat` (autoelevación, validación CCT, desinstalación de Office previo si existe, instalación de Office 2019 Professional Plus, aviso de privacidad) — si el `.bat` cambia, actualizar el manual para que siga siendo preciso
-- **Soporte Técnico Remoto**: se mantiene TeamViewer (no Quick Assist) como herramienta de control remoto. Se agregó un formulario "Solicitar Soporte Técnico Remoto" (nombre, CCT, función, WhatsApp, correo opcional, urgencia, descripción) que envía a `apps-script/soporte-remoto.gs`
-- **Validación de formulario**: el `<form>` usa `novalidate` + validación 100% en JS (`validarSoporteForm()`) — necesario porque los inputs `type="email"`/`required` nativos interceptan el `submit` antes de que corra el JS si no se desactiva la validación del navegador
-- **`fetchJsonConTimeout()`** en el envío — mismo bug de freeze corregido aquí que en `formacion-docente.html`/`asistencia.html` (ver `docs/QA-NOTES.md #1`)
-- **Nombre y Escuela (manual)** homologados a Title Case
-- **Referencia cruzada**: la pestaña Office enlaza a Soporte si hay problemas durante la instalación; Soporte enlaza de vuelta a Office si la consulta es sobre licencias — ambos via `showServicio()` con `onclick` (no back-forward real de navegador)
-- **CCT con autocomplete** (`js/cct-db.js`): fallback manual de Sector/Zona/Escuela si la CCT no está en la base. Cada campo del fallback valida y muestra su propio error (Zona, Sector, Escuela) — no agrupar todo bajo el mensaje del campo CCT, es un anti-patrón ya corregido dos veces en el sitio. Detalle completo del patrón en `docs/ARCHITECTURE.md §11`
-- **Banners de convocatoria** (hoy solo Formación Docente; el de Jornada Verano se retiró 13 jul 2026): clases reutilizables `.otde-banner`/`.otde-banner-cta`/`.otde-banner-link` (sombra en capas, glow sutil, hover con elevación). Usan **Montserrat** a propósito, no Inter — es la tipografía ya establecida en esta página, meter una fuente distinta solo en el banner se vería ajeno
+Patrón compartido por las tabs con formulario propio (Correo/Mantenimiento/Asesorías/
+Soporte): validación 100% en JS con `novalidate` en el `<form>` (los `type="email"`/
+`required` nativos interceptan el `submit` antes de correr el JS si no se desactiva la
+validación del navegador), `fetchJsonConTimeout()` para evitar el freeze de `fetch()` sin
+timeout documentado en `docs/QA-NOTES.md #1`, CCT con autocomplete + fallback manual de
+Sector/Zona/Escuela (`js/cct-db.js`, detalle del patrón en `docs/ARCHITECTURE.md §11`; cada
+campo del fallback valida y muestra su propio error — no agrupar todo bajo el mensaje del CCT,
+anti-patrón ya corregido dos veces), y Nombre/Escuela manual homologados a Title Case.
+
+### Correo Institucional
+Reemplaza en código, tipo por tipo, al `<iframe>` del Google Form viejo — ver el modelo de
+arquitectura completo en `docs/ARCHITECTURE.md §16`. Resumen operativo:
+
+- Switcher de 2 botones (`.correo-panel-btn`, `mostrarCorreoPanel('alta'|'otros')`): **"Alta de
+  cuenta"** y **"Cambio de contraseña / Reset 2FA / Otro"** (este último con su propio
+  sub-switcher de 3 botones, prefijos `cam`/`rst`/`inc`). Los 4 tipos ya están completos — el
+  `<iframe>` quedó retirado por completo del código.
+- **No se tocó el sistema en vivo** (`Correos-institucionales`, `Code.gs`/`OnFormSubmit.gs`/
+  `OnEditTrigger.gs`/`ResumenSemanal.gs`, atado al Form viejo que sigue usando Marcos) — el
+  backend nuevo es un proyecto de Apps Script separado y en paralelo,
+  `Correos-institucionales/webform-2026-2027/` (`Config.gs`, `WebApp.gs`, `Alta.gs`,
+  `CambioContrasena.gs`, `Reset2FA.gs`, `Incidencias.gs`, `OnEdit.gs` — un solo trigger
+  `onEditWebform` que enruta por nombre de hoja), pensado para una Spreadsheet nueva del ciclo
+  2026-2027. El corte real hacia producción solo pasa cuando se despliegue ese proyecto y se
+  reemplacen los 4 placeholders `PENDIENTE_DE_DESPLEGAR` (`ALTA_CORREO_APPS_SCRIPT_URL`,
+  `CAMBIO_APPS_SCRIPT_URL`, `RESET_APPS_SCRIPT_URL`, `INCIDENCIA_APPS_SCRIPT_URL`).
+- **Dominio auto-derivado, no preguntado** (solo en Alta — Cambio/Reset/Incidencias leen el
+  dominio del correo institucional que la persona ya tiene): usa
+  `otdeDominioParaCCT(cct, tipoCuenta)` en `js/cct-db.js`, regla verificada en vivo contra
+  SIGEE. El formulario nunca pregunta "¿@dee.edu.mx o @aulamexiquense.mx?" directamente — ver
+  la regla completa en `docs/ARCHITECTURE.md §16`. Toda la lógica del lado del cliente vive en
+  `altActualizarDominio()`/`altCalcularDominio()`, se recalcula en cada cambio de
+  CCT/Función/Tipo de cuenta, y se muestra como confirmación (`#alt-dominio-preview`) antes de
+  enviar.
+- **Campos de Alta**: CCT, Función, Nombre/Apellido Paterno/Apellido Materno/RFC/CURP (campos
+  separados), Correo personal, Teléfono, Observaciones — encabezados reales confirmados por
+  Jorge el 5 ago 2026 contra el Sheet viejo.
+- **`crearCctAutocomplete(prefijo)`**: con 4 formularios usando CCT autocomplete en esta misma
+  tab (Alta/Cambio/Reset/Incidencias), se factorizó en una función compartida — única
+  excepción en el sitio a "cada tab mantiene su propia copia del patrón" (Soporte/
+  Mantenimiento/Asesorías sí la mantienen; aquí la 4ª repetición casi idéntica en el mismo
+  archivo cruzó el umbral).
+
+### Mantenimiento
+Ya no es solo texto ("solicita por oficio y vía estructura") — formulario "Solicitar
+Mantenimiento" (`#btn-mantenimiento` + `toggleMantenimientoForm`) que digitaliza la captura sin
+quitarle el oficio: pide adjuntarlo ya firmado en vez de sustituirlo. Detalle completo del
+backend en `apps-script/mantenimiento.gs` y `docs/ARCHITECTURE.md §15`.
+
+- **Adjuntar oficio**: `input type="file"`, límite de 5MB validado en
+  `validarMantenimientoForm()` antes de leer el archivo; la lectura a base64
+  (`manLeerArchivoBase64()`, `FileReader.readAsDataURL`) solo ocurre ya validado, dentro de
+  `enviarSolicitudMantenimiento()`.
+- **Pendiente antes de producción**: `MANTENIMIENTO_APPS_SCRIPT_URL` con placeholder
+  `'PENDIENTE_DE_DESPLEGAR'`.
+
+### Asesorías
+Tab nueva (no existía como trámite — antes solo había un video suelto en Recursos). Mismo
+patrón que Mantenimiento (oficio obligatorio + captura digital), más selector de "Tipo de
+asesoría" y casilla de confirmación de mantenimiento previo (Banco de Materiales/Chuka ya
+instalados) — detalle de por qué en `apps-script/asesorias.gs` y `docs/ARCHITECTURE.md §15`.
+Prefijo de IDs/funciones: `ase`. Pendiente antes de producción: `ASESORIAS_APPS_SCRIPT_URL`
+con placeholder.
+
+### Soporte Técnico Remoto
+TeamViewer (no Quick Assist) como herramienta de control remoto. Formulario "Solicitar Soporte
+Técnico Remoto" (nombre, CCT, función, WhatsApp, correo opcional, urgencia, descripción) →
+`apps-script/soporte-remoto.gs`. Referencia cruzada con Licencias Office: cada tab enlaza a la
+otra vía `showServicio()` con `onclick` si el problema es de instalación/licencias.
+
+### Licencias Office
+Instalador `descargas/Instalador_Office_2019_OTDE.exe` (self-extracting, incluye
+`Instalador_Office_OTDE.bat` + Office Deployment Tool) que valida por CCT. El texto evita
+atribuir la causa a SEIEM directamente (se enmarca como "actualización del esquema de
+licenciamiento institucional"). Los 5 pasos de la guía rápida están basados en el flujo real
+del `.bat` — si el `.bat` cambia, actualizar el manual para que siga siendo preciso.
+
+### Banners de convocatoria
+Hoy solo Formación Docente (el de Jornada Verano se retiró 13 jul 2026): clases reutilizables
+`.otde-banner`/`.otde-banner-cta`/`.otde-banner-link` (sombra en capas, glow sutil, hover con
+elevación). Usan **Montserrat** a propósito, no Inter — es la tipografía ya establecida en esta
+página, meter una fuente distinta solo en el banner se vería ajeno.
 
 ## `formacion-docente.html` — Centro de Formación Docente (jul 2026, DESPLEGADO)
 Página autónoma (no importa `styles.css`). Vinculada desde `otde.html` mediante banner destacado. Nace de sistematizar el flujo de convocatorias CoEEE (webinars, seminarios, diplomados, cursos autogestivos, acciones formativas, proyectos didácticos) que antes se resolvía con un Google Form distinto por curso.
@@ -321,8 +332,28 @@ Página autónoma (no importa `styles.css`). Vinculada desde `otde.html` mediant
 ## `js/cct-db.js` — Campo `municipio` agregado (jul 2026)
 Los 506 registros se enriquecieron con `municipio` (18 municipios) cruzando por CCT contra `Catalogo SEPRN direcciones.xlsx` (columna `municip`, 612 filas, 100% poblada). El sector **no** determina el municipio de forma confiable — varios sectores abarcan múltiples municipios (ver mapa SVG de `index.html`) — por eso el municipio se deriva del CCT exacto, no del sector. Cualquier página que use el autocomplete de CCT puede ahora leer `m.municipio` igual que `m.sector`/`m.zona`/`m.nombre`.
 
-## Pendientes (al 7 jul 2026)
+## Ritual de cierre de sesión
+Automatizado en el skill `/close` (`.claude/skills/close/SKILL.md`) — invocarlo al terminar una
+sesión de trabajo en vez de repetir este ritual a mano. Tabla de qué documento actualizar según
+qué cambió (el skill defiere a esta tabla, no la duplica — si cambia, solo se edita aquí):
+
+| Documento | Actualizar cuando la sesión… |
+|---|---|
+| `docs/BITACORA.md` | **Siempre.** Agregar un checkpoint nuevo arriba del anterior (orden cronológico inverso) |
+| `docs/ARCHITECTURE.md` | Cambió estructura de archivos, arquitectura de un backend, o un flujo técnico nuevo (patrón §11-16 como referencia) |
+| `docs/ROADMAP.md` | Se resolvió o se agregó un pendiente genuinamente futuro (no "qué se hizo", eso va a `BITACORA.md`) |
+| `README.md` | Cambió cómo se levanta/despliega el proyecto, o la estructura de archivos en disco |
+| `CLAUDE.md` (este archivo) | Se acordó una regla o convención de desarrollo nueva, o una página/tab cambió lo suficiente para que su sección aquí quede desactualizada |
+| `docs/QA-NOTES.md` | Se cazó un bug real con causa raíz identificada |
+
+Regla de esta tabla: **no tocar todos los documentos por costumbre** — solo los que el trabajo
+de la sesión realmente volvió obsoletos.
+
+## Pendientes vigentes
+Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/Identidad) y
+`docs/BITACORA.md` para el historial de qué ya se hizo. Resumen de lo genuinamente abierto:
 - **Recrear páginas eliminadas** — `gestion-escolar.html`, `investigacion-educativa.html`, `programas-educativos.html`, `servicio-profesional.html`: requieren contenido validado con la Dra. Galindo
 - **Logomark SEPRN** — requiere archivo `logo.svg` (diseño gráfico pendiente)
 - **Barra CTE** — actualizar texto del `.update-banner` en `index.html` cuando se publique la 9ª sesión
-- **Centro de Formación Docente** — ya desplegado y con rediseño premium; falta que OTDE dé de alta los primeros cursos propios del ciclo 26-27 en la hoja `Cursos` (hoy el catálogo solo tiene los 5 de Jornada Verano, migrados). Recordar setear `Registro_previo_requerido` y, si aplica, `Hora_inicio` en cada curso nuevo
+- **Centro de Formación Docente** — dar de alta los primeros cursos propios del ciclo 26-27 en la hoja `Cursos` (hoy el catálogo solo tiene los 5 de Jornada Verano, migrados)
+- **Correo/Mantenimiento/Asesorías (ago 2026)** — desplegar los 3 backends nuevos (siguen con placeholder `PENDIENTE_DE_DESPLEGAR`), ver sus secciones arriba

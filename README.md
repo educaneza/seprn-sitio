@@ -21,57 +21,13 @@ Ver roadmap completo en [`docs/ROADMAP.md`](docs/ROADMAP.md).
 | Performance percibida | 6/10 | **8/10** | 8/10 ✅ |
 | Accesibilidad | 3/10 | **7/10** | 8/10 |
 
-### Completado el 13 jul 2026 — Retiro de Jornada Verano 2026
-- Cerró el periodo de inscripciones a la Jornada de Capacitación Verano 2026: se eliminó el banner en `otde.html` y se borraron `jornada-verano-2026.html` e `instructivo-jornada-verano-2026.html` — ya nadie debe llegar a ese wizard
-- El backend `apps-script/formacion-docente.gs` sigue vivo (también sirve a `formacion-docente.html`); solo se perdió la parte específica de esas 2 páginas
+**Lo más reciente** (5 ago 2026): webforms nuevos de Correo (Alta), Mantenimiento y Asesorías —
+ver el checkpoint completo en [`docs/BITACORA.md`](docs/BITACORA.md).
 
-### Completado el 7 jul 2026 — Centro de Formación Docente: deploy + rediseño premium + cutover
-- **Desplegado en producción**: Spreadsheet real `Formacion_Docente_2026_2027`, `apps-script/formacion-docente.gs` con URL real en `APPS_SCRIPT_URL`
-- **Arquitectura relacional en Sheets** (no una hoja por curso): `Docentes` (upsert por RFC, nunca sobrescribe con vacío) + `Cursos` (catálogo administrado a mano: `Activo`, ventanas de fecha `Visible_desde`/`Visible_hasta`, `Registro_previo_requerido`, `Hora_inicio`) + `Inscripciones` (transaccional, con vista VLOOKUP en vivo)
-- **Cutover de Jornada Verano 2026**: `jornada-verano-2026.html` reporta ahora a este mismo backend, no al suyo propio (`cursos-coeee-2026.gs` queda congelado como histórico). Sus 5 cursos se migraron a la hoja `Cursos`
-- **Recordatorios automáticos por correo** (inicio de curso, medio de curso, horas antes de webinar), con cuidado de la cuota de `MailApp` compartida entre backends
-- **Prueba social real**: conteo de inscritos por curso desde `Inscripciones`, nunca un número inventado
-- **Rediseño visual premium**: tipografía Inter/Inter Tight, tarjetas con fondo pastel + ícono grande, panel lateral sticky (escritorio) / barra flotante (móvil) para el resumen de selección — ver `docs/DESIGN_SYSTEM.md`
-- Smoke test completo + corrección de bugs reales (freeze de `fetch()` sin timeout en 4 archivos, `appendRow([])` inválido en Apps Script, fecha corrida -1 día por parseo UTC) — ver `docs/QA-NOTES.md`
-- **Pendiente**: dar de alta los primeros cursos propios del ciclo 26-27 en la hoja `Cursos` (hoy solo están los 5 migrados de Verano)
-
-### Completado el 1 jul 2026 — Instalador de Office + Soporte Técnico Remoto potenciado
-- **Pestaña "Licencias Office"** en `otde.html`: instalador `descargas/Instalador_Office_2019_OTDE.exe` (validación por CCT, Office 2019 Professional Plus) con guía de instalación paso a paso basada en el `.bat` real
-- **Formulario "Solicitar Soporte Técnico Remoto"**: autocompletado de CCT (`js/cct-db.js`, con fallback manual de Sector/Zona/Escuela y validación de error por campo), select de Función/Cargo con opción "Otro", campo de WhatsApp con link `wa.me` directo
-- **Backend nuevo** `apps-script/soporte-remoto.gs`: registra en Sheets y notifica por **bot de Telegram** al equipo OTDE
-- **Referencia cruzada** entre las pestañas Licencias Office ↔ Soporte Técnico Remoto
-
-### Completado el 1 jul 2026 — Jornada de Capacitación Verano 2026
-- `jornada-verano-2026.html`: wizard de 3 pasos, selección multi-curso, registro en Sheets (CoEEE + reporte OTDE NEZA)
-- `instructivo-jornada-verano-2026.html`: guía imprimible para difundir junto al oficio de la convocatoria
-
-### Completado el 16 jun 2026 — Rediseño visual élite
-- **Hero oscuro** — fondo midnight `#0C1A2E` full-bleed, badge pill institucional, tipografía display 64px, botones dark-variant, glow decorativo, scroll indicator animado, entrada escalonada
-- **Strip de métricas** — nueva sección con 4 cifras clave animadas con contador easeOutCubic al hacer scroll
-- **System de diseño** — clases reutilizables: `.section-header`, `.section-eyebrow`, `.metrics-strip`, `.btn-primary-dark`, `.btn-secondary-dark`
-- **Cierre evento Charla IA** — banner y formulario de registro retirados; función `reenviarConfirmacionListaEspera()` agregada al Apps Script para post-evento
-
-### Completado en junio 2026 — Fase 1 Quick Wins
-- Google Fonts: `@import` bloqueante → `<link rel="preconnect">`
-- Contraste hero: `#977e5b` → `#6b5a44` (pasa WCAG AA)
-- `class="active"` + `aria-current="page"` en el nav de todas las páginas
-- `favicon.svg` creado y agregado a todas las páginas
-- Cobertura mobile: grid responsivo
-- Acordeón CTE: `<div onclick>` → `<button>` con `aria-expanded`
-- Toggle ▼/▶ → SVG chevron animado
-
-### Completado en junio 2026 — Sistema de Registro de Eventos
-- Formulario de registro con autocompletado CCT (506 registros), validación y verificación de cupos
-- Apps Script: registro en Sheets, folios, cupos por sector (7), correo HTML con QR, check-in por PIN
-- Página de check-in (`asistencia.html`) con escáner QR por cámara
-- Manual interno (`docs/manual-sistema-registro.html`)
-
-### Pendientes (al 7 jul 2026)
-- **Centro de Formación Docente**: dar de alta los primeros cursos propios del ciclo 26-27 en la hoja `Cursos` (hoy el catálogo solo tiene los 5 cursos migrados de Jornada Verano)
-- **Recrear páginas eliminadas** — `gestion-escolar.html`, `investigacion-educativa.html`, `programas-educativos.html`, `servicio-profesional.html`: requieren contenido validado con la Dra. Galindo
-- **Logomark SEPRN** — requiere archivo `logo.svg` (diseño gráfico pendiente)
-- **Barra CTE** — actualizar texto del `.update-banner` en `index.html` cuando se publique la 9ª sesión
-- Ver [`docs/ROADMAP.md`](docs/ROADMAP.md) para el histórico completo, [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md) para los tokens del rediseño, y [`docs/QA-NOTES.md`](docs/QA-NOTES.md) para bugs reales ya corregidos
+Para el historial completo de qué se hizo y cuándo, ver [`docs/BITACORA.md`](docs/BITACORA.md).
+Para lo genuinamente pendiente, ver [`docs/ROADMAP.md`](docs/ROADMAP.md). Para tokens del
+rediseño, [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md); para bugs reales ya corregidos,
+[`docs/QA-NOTES.md`](docs/QA-NOTES.md).
 
 ---
 
@@ -92,7 +48,7 @@ Ver roadmap completo en [`docs/ROADMAP.md`](docs/ROADMAP.md).
 | Notificaciones | Bot de Telegram (API `sendMessage`) — solicitudes de Soporte Remoto |
 | Scanner QR | html5-qrcode v2.3.8 vía CDN (solo `asistencia.html`) |
 
-No hay framework, bundler, ni dependencias npm. El sitio es completamente estático. Los backends externos son 4 Google Apps Script (uno por Spreadsheet/flujo): `conferencia-ia.gs`, `cursos-coeee-2026.gs` (congelado desde jul 2026, ver abajo), `soporte-remoto.gs`, `formacion-docente.gs`. La cuota diaria de `MailApp`/`GmailApp` la comparten los 4, no es por proyecto.
+No hay framework, bundler, ni dependencias npm. El sitio es completamente estático. Los backends externos son 6 Google Apps Script (uno por Spreadsheet/flujo): `conferencia-ia.gs`, `cursos-coeee-2026.gs` (congelado desde jul 2026, ver abajo), `soporte-remoto.gs`, `formacion-docente.gs`, `mantenimiento.gs` y `asesorias.gs` (ago 2026). La cuota diaria de `MailApp`/`GmailApp` la comparten los 6, no es por proyecto. Aparte, el webform nuevo de Correo Institucional (Alta/Cambio/Reset/Incidencias) vive en un proyecto de Apps Script separado, `Correos-institucionales/webform-2026-2027/` — no en este repo — en paralelo al Google Form que sigue en producción; ver `docs/ARCHITECTURE.md §16`.
 
 ---
 
@@ -111,7 +67,7 @@ seprn-sitio/
 ├── personal.html                 # Área: Administración de Personal
 ├── academica.html                # Área: Académica
 ├── recursos.html                 # Área: Recursos Materiales y Financieros
-├── otde.html                     # Área: OTDE — Correo, Mantenimiento, Soporte Remoto, Licencias Office, Chuka, Recursos
+├── otde.html                     # Área: OTDE — Correo, Mantenimiento, Asesorías, Soporte Remoto, Licencias Office, Chuka, Recursos
 ├── oeve.html                     # Área: OEVE (Extensión y Vinculación Educativa)
 ├── juridico.html                 # Área: Asuntos Jurídicos
 │
@@ -131,7 +87,9 @@ seprn-sitio/
 │   ├── conferencia-ia.gs         # Backend Conferencia IA 2026 (Sheets + correo QR)
 │   ├── cursos-coeee-2026.gs      # Backend Jornada Verano 2026 — CONGELADO desde jul 2026 (cutover a formacion-docente.gs), queda como histórico
 │   ├── soporte-remoto.gs         # Backend Soporte Técnico Remoto (Sheets + notificación Telegram)
-│   └── formacion-docente.gs      # Backend Centro de Formación Docente + Jornada Verano (Docentes/Cursos/Inscripciones, folios OTDE-CAP-NNNN, recordatorios automáticos)
+│   ├── formacion-docente.gs      # Backend Centro de Formación Docente + Jornada Verano (Docentes/Cursos/Inscripciones, folios OTDE-CAP-NNNN, recordatorios automáticos)
+│   ├── mantenimiento.gs          # Backend Mantenimiento (ago 2026) — webform complementa el oficio, no lo sustituye
+│   └── asesorias.gs              # Backend Asesorías (ago 2026) — mismo patrón que mantenimiento.gs
 │
 ├── descargas/                    # Instaladores/ejecutables descargables
 │   ├── Instalador_Office_2019_OTDE.exe
@@ -139,7 +97,8 @@ seprn-sitio/
 │
 ├── docs/
 │   ├── ARCHITECTURE.md           # Arquitectura, componentes, convenciones
-│   ├── ROADMAP.md                # Plan de mejoras: Fase 1 / 2 / 3
+│   ├── BITACORA.md               # Bitácora cronológica: qué se hizo y cuándo (checkpoints por sesión)
+│   ├── ROADMAP.md                # Solo lo pendiente/futuro — el historial vive en BITACORA.md
 │   ├── DESIGN_SYSTEM.md          # Tokens/patrones del rediseño premium de Formación Docente
 │   ├── QA-NOTES.md               # Bugs reales ya cazados, con causa raíz — consultar antes de fetch()/appendRow() nuevos
 │   ├── manual-sistema-registro.html    # Manual de uso interno del sistema de registro (Conferencia IA)

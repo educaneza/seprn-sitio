@@ -701,3 +701,82 @@ Cinco bugs concretos detectados y corregidos en esta ronda, documentados con cau
 **Nota (13 jul 2026):** `jornada-verano-2026.html` e `instructivo-jornada-verano-2026.html` se eliminaron del sitio porque cerró el periodo de inscripciones. Esta sección queda como registro histórico de la decisión de arquitectura (por qué compartía backend con Formación Docente); ya no describe una página en producción.
 
 `jornada-verano-2026.html` dejó de usar su propio backend (`apps-script/cursos-coeee-2026.gs`, que queda desplegado pero congelado como archivo histórico) y pasó a reportar a `apps-script/formacion-docente.gs`, el mismo backend del Centro de Formación Docente. Los 5 cursos de la Jornada se dieron de alta en la hoja `Cursos` vía `asegurarCursosVerano()`/`migrarJornadaVerano()` (menú "OTDE Formación → Migrar Jornada Verano 2026", idempotente). Acoplamiento que existió mientras la página vivió: el wizard resolvía `id_curso` por **nombre exacto** contra el catálogo — editar el texto del `Nombre` de esos 5 cursos en Sheets, o poner `Activo=FALSE`, rompía el registro en silencio mientras la página siguiera publicada.
+
+## 15. Mantenimiento y Asesorías: webform que complementa el oficio, no lo sustituye (agosto 2026)
+
+Antes de estos dos entregables, ambos trámites llegaban por oficio en papel/PDF y alguien de
+OTDE lo transcribía a mano a un control en Excel/Sheets. La decisión de arquitectura clave,
+confirmada con Jorge en ambos casos: **el oficio sigue siendo el respaldo oficial** — el
+webform no lo reemplaza, lo complementa (se adjunta como PDF/foto en vez de viajar solo en
+papel) y digitaliza la captura de datos que antes se tecleaba a mano.
+
+Mismo patrón en los dos (`apps-script/mantenimiento.gs`, `apps-script/asesorias.gs`), calcado
+del ya probado `soporte-remoto.gs`:
+
+- Sheet propio (no comparten spreadsheet con nada más), hoja `Solicitudes` con folio
+  secuencial (`OTDE-MAN-####` / `OTDE-ASE-####`) y estatus inicial `Pendiente de validar` — no
+  caen directo a producción, Jorge revisa el oficio adjunto antes de promover a mano al
+  control real (`seguimiento` del sistema de Reportes de Visitas para Mantenimiento; el Excel
+  de asesorías para Asesorías — ninguno de los dos sistemas de control real se tocó ni se
+  integró automáticamente, es una decisión deliberada para no arriesgar sistemas en producción
+  ajenos a este entregable).
+- Hoja `Contactos_Zona_Sector` (Sector, Zona, Correo, Teléfono) que Jorge mantiene a mano —
+  si hay contacto registrado, se notifica también a esa Zona/Sector por correo, además del
+  aviso a OTDE por Telegram.
+- El oficio adjunto se sube en base64 desde el cliente (`FileReader.readAsDataURL`), se
+  decodifica en `doPost` con `Utilities.base64Decode` y se guarda en una carpeta de Drive
+  dedicada por trámite, compartida "cualquiera con el link, solo ver".
+- Mismo patrón de CCT con autocompletado + fallback manual que el resto del sitio (§11),
+  prefijos `man`/`ase` en los IDs para no chocar entre tabs.
+
+Asesorías añade una validación de negocio propia: la asesoría de Banco de Materiales/Chuka
+requiere que la escuela ya haya recibido mantenimiento con esos recursos instalados. No hay
+forma de validarlo automáticamente sin integrar con el sistema de Reportes de Visitas (fuera de
+alcance — y la mayoría de escuelas ya atendidas lo fueron antes de que existiera el webform de
+Mantenimiento, así que cruzar contra datos parciales sería peor que no cruzar nada). En su
+lugar, el formulario pide una casilla de confirmación obligatoria y dejó listo un selector de
+"Tipo de asesoría" (hoy una sola opción) para cuando se decida separar Banco de
+Materiales/Chuka o agregar asesorías nuevas — decisión pedagógica pendiente, deliberadamente
+fuera de alcance de este entregable.
+
+## 16. Webform de Correo Institucional en paralelo al Google Form (agosto 2026)
+
+`otde.html` reemplazó, en código, el `<iframe>` del Google Form que hasta ahora capturaba las
+4 solicitudes de correo institucional (Alta, Cambio de Contraseña, Reset 2FA, Incidencias).
+Decisión de arquitectura central: el backend nuevo vive en un **proyecto de Apps Script
+separado y paralelo** — `Correos-institucionales/webform-2026-2027/` (repo aparte, no
+documentado en este archivo) — pensado para una Spreadsheet nueva del ciclo 2026-2027. El
+sistema en vivo que usa Marcos hoy (`Correos-institucionales/Code.gs` +
+`OnFormSubmit.gs`/`OnEditTrigger.gs`, atado al Form actual) **no se tocó**. El corte real hacia
+producción solo pasa cuando se despliegue el proyecto nuevo y se reemplacen los 4 placeholders
+`PENDIENTE_DE_DESPLEGAR` en `otde.html` (`ALTA_CORREO_APPS_SCRIPT_URL`,
+`CAMBIO_APPS_SCRIPT_URL`, `RESET_APPS_SCRIPT_URL`, `INCIDENCIA_APPS_SCRIPT_URL`).
+
+Se aprovechó el rediseño para consolidar 6 tipos de solicitud del sistema viejo (Alta dee, Alta
+aulamexiquense, Cambio Contr dee, Cambio Contr aulamexiquense, Reset 2FA, Incidencias) en 4
+(Alta, Cambio de Contraseña, Reset 2FA, Incidencias) — el dominio ya no es una rama separada
+del flujo, es un dato calculado.
+
+**Regla de dominio, verificada en vivo contra SIGEE** (el sistema real de CoEEE donde se
+aprovisionan las cuentas, no hay API — ver `otdeDominioParaCCT(cct, tipoCuenta)` en
+`js/cct-db.js`):
+- CCT con `tipo` ∈ {supervision, jefatura, subdireccion} → dominio siempre `dee.edu.mx`.
+- CCT con `tipo` = escuela → depende de si la cuenta es "personal" (`aulamexiquense.mx`) o "de
+  oficina" (`dee.edu.mx`, una por escuela, representa al CT/directivo) — y esa pregunta solo se
+  le muestra al solicitante si su Función es Director(a)/Subdirector(a); para el resto se fija
+  en "personal" sin preguntar.
+- CCT en fallback manual (no encontrado en `cct-db.js`) → no se puede derivar, se pide un
+  selector explícito y queda marcado para revisión manual.
+
+Esto significa que el docente promedio **nunca ve la pregunta** "¿tu correo es @dee.edu.mx o
+@aulamexiquense.mx?" — el formulario se la resuelve.
+
+Cambio de Contraseña, Reset 2FA e Incidencias son más simples: el dominio no se deriva, se lee
+directo del sufijo del correo institucional que la persona ya tiene (no hace falta cruzar
+contra `cct-db.js` para una cuenta que ya existe).
+
+Refactor notable de esta ronda: con 4 formularios en la misma tab usando CCT-autocompletado
+(§11), se factorizó `crearCctAutocomplete(prefijo)` en `otde.html` como función compartida —
+única vez en el sitio que se hizo esto (Soporte/Mantenimiento/Asesorías mantienen su propia
+copia del patrón, es la convención normal del resto del sitio; aquí la 4ª repetición casi
+idéntica en un mismo archivo cruzó el umbral).
