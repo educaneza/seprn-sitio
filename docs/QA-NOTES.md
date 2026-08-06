@@ -105,6 +105,45 @@ tocando. Un envío en lote (BCC a todos los destinatarios en un solo
 `apps-script/formacion-docente.gs` (recordatorios automáticos) — replicar
 ese patrón, no reinventar uno nuevo que mande un correo por persona.
 
+## 6. Mensaje de error de un campo que no se limpia al corregirse por selección (no por tecleo)
+
+**Síntoma:** el usuario selecciona una CCT válida del autocomplete en
+`formacion-docente.html`, el campo queda bien (status box verde con
+Sector/Zona/Escuela), pero el mensaje rojo "Ingresa una CCT válida" se
+queda visible hasta el siguiente clic en "Confirmar registro".
+
+**Causa raíz:** `validarFormulario()` sí limpia la clase `error` del input
+y `visible` del `<div>` de error, pero solo corre al enviar el formulario.
+`seleccionarCct(m)` (la función que corre al hacer clic en una sugerencia)
+nunca tocaba esas clases — a diferencia de teclear en el campo, que sí
+puede disparar una re-validación en algunos flujos.
+
+**Fix:** cualquier función que corrija un campo por una vía distinta a
+que el usuario teclee directamente (clic en sugerencia, autocompletado,
+valor puesto por JS) debe limpiar `error`/`visible` de ese campo ahí
+mismo, no asumir que la próxima validación lo hará.
+
+**Dónde ya pasó:** `seleccionarCct()` en `formacion-docente.html`.
+
+## 7. Correo HTML sin `<meta charset="utf-8">` — acentos corruptos
+
+**Síntoma:** al previsualizar un correo HTML generado por Apps Script
+fuera de `MailApp` (ej. sirviéndolo con un server local para revisar el
+diseño), los acentos aparecen como "Ã³n", "Â±", "â€"" en vez de "ón", "±", "—".
+
+**Causa raíz:** el HTML no declaraba `<meta charset="utf-8">`, así que
+cualquier cliente/visor que no reciba (o no respete) el charset por la
+cabecera MIME tiene que adivinar la codificación de los bytes — y suele
+adivinar mal con UTF-8 multibyte. `MailApp.sendEmail` normalmente sí pone
+el charset correcto en la cabecera MIME real, pero declararlo también en
+el `<meta>` del HTML es la práctica estándar para correos y evita
+depender de que cada cliente/proxy de correo respete la cabecera.
+
+**Fix:** todo HTML que se mande como `htmlBody` de un correo debe incluir
+`<head><meta charset="utf-8"></head>` como lo primero en el documento.
+
+**Dónde ya pasó:** `construirCorreoHtml()` en `apps-script/formacion-docente.gs`.
+
 ## Regla general al corregir cualquiera de estos patrones
 
 Cuando se encuentra uno de estos bugs en un archivo, **revisar si el mismo

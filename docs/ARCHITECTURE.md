@@ -652,15 +652,19 @@ A diferencia de `jornada-verano-2026.html` (que siempre manda a un solo portal C
 
 ### Recordatorios automáticos por correo
 
-Tres avisos calculados a partir de las propias fechas del curso, sin marcar nada a mano:
+Tres avisos calculados a partir de las propias fechas del curso, sin marcar nada a mano (reglas ajustadas con Jorge, ago 2026):
 
 | Aviso | Se dispara | Requiere |
 |---|---|---|
-| "Empieza en 2 días" | 2 días antes de `Fecha_inicio`, cualquier curso | — |
+| "Empieza en 1 día" | 1 día antes de `Fecha_inicio`, cursos de varios días **siempre** + cursos de un solo día **sin** `Hora_inicio` (fallback) | — |
 | "Vas a la mitad" | Al cruzar el punto medio `Fecha_inicio`/`Fecha_fin`, solo cursos de 30+ días | — |
-| "Faltan unas horas" | Entre 2 y 4 horas antes del inicio, solo eventos de un solo día | `Hora_inicio` capturada |
+| "Empieza en 30 minutos" | Entre 20 y 40 minutos antes del inicio exacto, cualquier curso (de uno o varios días) | `Hora_inicio` capturada |
 
-Un webinar catalogado con anticipación puede recibir el primero y el tercero — es intencional, no un bug (aviso temprano + empujón el mismo día). Cada aviso se manda como **un solo correo por curso, con BCC a todos los inscritos** (no uno por persona) y se revisa `MailApp.getRemainingDailyQuota()` antes de enviar — la cuota diaria la comparten TODOS los Apps Script de la cuenta de Google, no es exclusiva de este proyecto; si no alcanza, el aviso se salta ese día y se reintenta solo al siguiente (la bandera `Recordatorio_*_enviado` no se marca hasta que el correo sale de verdad). Requiere correr una vez el menú "OTDE Formación → Instalar recordatorios automáticos" para dar de alta los disparadores (`enviarRecordatoriosDiarios` una vez al día, `enviarRecordatoriosWebinar` cada hora).
+Un curso de varios días con `Hora_inicio` capturada recibe el primero y el tercero — son avisos independientes, uno no sustituye al otro (aviso temprano + empujón el mismo día). Un curso de un solo día con `Hora_inicio` recibe **solo** el tercero (el primero se salta para no duplicar con un aviso tan cercano). Cada aviso se manda como **un solo correo por curso, con BCC a todos los inscritos** (no uno por persona), con una plantilla HTML propia (`construirCorreoHtml()`, con la paleta institucional — ver ejemplo en `docs/DESIGN_SYSTEM.md`), y se revisa `MailApp.getRemainingDailyQuota()` antes de enviar — la cuota diaria la comparten TODOS los Apps Script de la cuenta de Google, no es exclusiva de este proyecto; si no alcanza, el aviso se salta ese día y se reintenta el siguiente (la bandera `Recordatorio_*_enviado` no se marca hasta que el correo sale de verdad; el aviso de "1 día antes" usa un rango, no una igualdad exacta, para poder reintentar al día siguiente sin perderse en silencio).
+
+El aviso de "30 minutos" necesita precisión de minutos, así que su disparador corre **cada 15 minutos** (no cada hora como antes) — requiere volver a correr el menú "OTDE Formación → Instalar recordatorios automáticos" después de desplegar una nueva versión, porque `instalarRecordatoriosAutomaticos()` borra y recrea ambos activadores en cada corrida (antes solo los creaba si faltaban, así que un cambio de intervalo no se aplicaba solo). `enviarRecordatoriosDiarios()` además llama a `verificarActivadoresInstalados()` al inicio, que manda un correo de alerta a Jorge (máximo una vez al día, vía `PropertiesService`) si alguno de los dos activadores desapareció.
+
+**Diseño del correo y protección de respuestas (ago 2026):** `construirCorreoHtml()` genera un correo con header midnight/guinda, chip de categoría, caja de detalle del curso, botón CTA a la convocatoria/acceso, y un footer con 3 íconos de redes (Facebook `facebook.com/SubNeza`, YouTube del canal institucional, Canal de WhatsApp de OTDE — mismas URLs reales que usa el footer del sitio, constante `REDES_SOCIALES`). Todo el HTML declara `<meta charset="utf-8">` explícito — sin eso los acentos se corrompen en clientes/visores que no respeten el charset de la cabecera MIME (ver `docs/QA-NOTES.md #7`). `enviarCorreoLote()` manda con `replyTo: CORREO_REPLY_TO_INSTITUCIONAL` (`otde.nezahualcoyotl@dee.edu.mx`) porque `Session.getEffectiveUser().getEmail()` — el remitente real — resuelve a esa dirección como *alias* de la cuenta de Gmail que en realidad es dueña del proyecto de Apps Script; sin `replyTo` explícito, un "Responder" del destinatario habría ido a esa cuenta de Gmail en vez de a la institucional. Mismo patrón de `replyTo` que ya usan `mantenimiento.gs`/`asesorias.gs`.
 
 ### Diagrama de flujo
 

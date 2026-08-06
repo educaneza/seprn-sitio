@@ -1330,6 +1330,8 @@
     statusBox.textContent = `Sector ${m.sector}${m.zona ? ' · Zona ' + m.zona : ''} · ${m.nombre} · ${m.municipio || ''}`;
     document.getElementById('manual-fields').classList.remove('visible');
     cctEncontrada = true;
+    inputCct.classList.remove('error');
+    document.getElementById('cct-error').classList.remove('visible');
   }
 
   function resetCct() {

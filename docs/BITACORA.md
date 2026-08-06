@@ -14,6 +14,21 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-08-06 · Smoke test de Formación Docente + rediseño de recordatorios automáticos
+
+| | |
+|---|---|
+| **Fecha** | 2026-08-06 |
+| **Sesión** | Jorge pidió un smoke test completo del Centro de Formación Docente y verificar que los recordatorios automáticos funcionaran de verdad, con calificación argumentada (8.5/10) y plan de mejora. A partir de ahí pidió ajustar los tiempos de los recordatorios, rediseñar el correo, agregar redes sociales y proteger las respuestas hacia su cuenta institucional — y desplegar todo a producción en la misma sesión. |
+| **Smoke test** | Flujo completo probado en producción vía navegador (catálogo dinámico, selección multi-curso, paso de registro previo externo, validación de formulario, autocomplete de CCT + fallback manual, layout móvil) sin disparar el `doPost` real. Recordatorios verificados de forma solo-lectura en Apps Script (`Mis activadores`/`Mis ejecuciones`): ambos triggers instalados y corriendo con 0% de tasa de error. 2 bugs reales encontrados: error de CCT que no se limpiaba al seleccionar una sugerencia válida, y el aviso "empieza en 2 días" se perdía en silencio si la cuota de correo se agotaba justo ese día — ver `docs/QA-NOTES.md #6`. |
+| **Tiempos de recordatorio reescritos** | Regla nueva acordada con Jorge: "empieza en 1 día" para cursos de varios días (+ fallback en cursos de un solo día sin `Hora_inicio`), "vas a la mitad" sin cambios (30+ días), "empieza en 30 minutos" (ventana 20-40 min) para cualquier curso con `Hora_inicio` capturada — evaluado con un disparador nuevo cada 15 min (antes cada hora). `instalarRecordatoriosAutomaticos()` ahora borra y recrea los activadores en cada corrida en vez de solo agregar si faltan, para que el cambio de intervalo se aplique de verdad. Se agregó `verificarActivadoresInstalados()`: alerta a Jorge por correo (máx. 1x/día) si algún activador desaparece. |
+| **Correo rediseñado** | `construirCorreoHtml()` nuevo: plantilla HTML con paleta institucional, chip de categoría, caja de detalle del curso, botón CTA, y 3 íconos de redes sociales en el footer (Facebook `facebook.com/SubNeza`, YouTube y Canal de WhatsApp institucionales — mismas URLs reales del sitio). Bug real encontrado en la propia revisión visual: faltaba `<meta charset="utf-8">`, los acentos se corrompían — ver `docs/QA-NOTES.md #7`. `enviarCorreoLote()` ahora manda `replyTo: otde.nezahualcoyotl@dee.edu.mx` — Jorge reportó que un "Responder" le llegaba a su Gmail; se confirmó en el propio deployment que esa cuenta institucional es un *alias* de su Gmail real, de ahí el bug. |
+| **Despliegue a producción** | Proyecto de Apps Script renombrado ("Proyecto sin título" → "Formacion Docente - Backend (formacion-docente.gs)"), código pegado y Versión 8 desplegada (mismo ID de implementación, no hizo falta tocar `APPS_SCRIPT_URL` en `formacion-docente.html`), y menú "OTDE Formación → Instalar recordatorios automáticos" corrido de nuevo desde la hoja real — confirmado por el propio mensaje del sistema y por `Mis activadores` (trigger de 15 min recreado bajo el proyecto ya renombrado). |
+| **Verificación** | `node --check` sobre `apps-script/formacion-docente.gs` (copiado a `.js`) y sobre el `<script>` extraído de `formacion-docente.html`, sin errores. Los 3 correos (empieza en 1 día / vas a la mitad / 30 minutos) generados desde la función real `construirCorreoHtml()` y revisados visualmente en el navegador (escritorio, móvil, con y sin liga) antes de desplegar. |
+| **Commits** | Pendiente — ver propuesta de commit de cierre abajo. |
+
+---
+
 ## CHECKPOINT — 2026-08-05 · Auditoría de cimientos + 3 webforms nuevos (Correo Alta, Mantenimiento, Asesorías)
 
 | | |
