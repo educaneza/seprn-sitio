@@ -717,16 +717,22 @@ function migrarJornadaVerano() {
 //   1. "Empieza en 1 día"    — cursos de varios días (Fecha_fin > Fecha_inicio)
 //      SIEMPRE, más los de un solo día que no tengan Hora_inicio capturada
 //      (fallback, para que no se queden sin ningún aviso). Se evalúa con un
-//      rango (diasParaInicio <= 1) y no con igualdad exacta, para que si
-//      falla por cuota el día exacto se reintente al día siguiente en vez
-//      de perderse en silencio.
+//      rango (diasParaInicio <= 1, sin piso) y no con igualdad exacta: si la
+//      evaluación de hoy llega tarde (activador no instalado, redeploy a
+//      media mañana, etc.) y el curso ya inició, reintenta en cada corrida
+//      subsecuente con el mensaje ajustado a "ya inició" en vez de marcarse
+//      enviado sin haber mandado nada — solo se resigna cuando el curso ya
+//      terminó por completo (hoy > Fecha_fin). Ver docs/QA-NOTES.md #8.
 //   2. "Vas a la mitad"      — solo cursos "largos" (Fecha_fin - Fecha_inicio
 //      >= DIAS_MINIMOS_CURSO_LARGO), el día que se cruza el punto medio.
 //   3. "Empieza en 30 min"   — cualquier curso (de uno o varios días) que
-//      tenga Hora_inicio capturada, entre MINUTOS_ANTES_INICIO_MIN y
-//      MINUTOS_ANTES_INICIO_MAX minutos antes — es ADICIONAL al aviso 1
-//      cuando el curso dura varios días (dos avisos independientes), y es
-//      el ÚNICO aviso cuando el curso es de un solo día con hora capturada.
+//      tenga Hora_inicio capturada, a partir de MINUTOS_ANTES_INICIO_MAX
+//      minutos antes — es ADICIONAL al aviso 1 cuando el curso dura varios
+//      días (dos avisos independientes), y es el ÚNICO aviso cuando el
+//      curso es de un solo día con hora capturada. Mismo criterio de
+//      reintento que el aviso 1: si se evalúa tarde y el curso ya comenzó
+//      pero no ha terminado, manda un aviso de "ya comenzó" en vez de
+//      perder el aviso en silencio.
 //
 // Se manda UN solo correo por curso (destinatarios en copia oculta), no uno
 // por docente — la cuota diaria de MailApp la comparten TODOS los Apps
@@ -746,7 +752,6 @@ function migrarJornadaVerano() {
 
 const DIAS_ANTES_RECORDATORIO_INICIO = 1;
 const DIAS_MINIMOS_CURSO_LARGO = 30;
-const MINUTOS_ANTES_INICIO_MIN = 20;
 const MINUTOS_ANTES_INICIO_MAX = 40;
 
 // Si alguien le da "Responder" a un recordatorio, que llegue aquí (cuenta
@@ -933,23 +938,28 @@ function enviarRecordatoriosDiarios() {
     const aplicaUnDiaAntes = !esDeUnDia || !tieneHora;
     if (aplicaUnDiaAntes && String(row[COL_RECORDATORIO_INICIO] || '').trim().toUpperCase() !== 'TRUE') {
       const diasParaInicio = Math.round((inicio - hoy) / 86400000);
-      if (hoy > inicio) {
-        // El curso ya empezó y nunca se mandó — ya no tiene caso, se marca
-        // enviado para no seguir evaluándolo cada día.
+      if (hoy > fin) {
+        // El curso ya terminó por completo y nunca se mandó ningún aviso —
+        // ya no hay nada útil que decir, se marca enviado para dejar de
+        // reevaluarlo.
         hoja.getRange(fila, COL_RECORDATORIO_INICIO + 1).setValue('TRUE');
-      } else if (diasParaInicio <= DIAS_ANTES_RECORDATORIO_INICIO && diasParaInicio >= 0) {
-        // Rango (no igualdad exacta) para que, si falla por cuota el día
-        // exacto, se reintente al día siguiente en vez de perderse en
-        // silencio — mismo criterio ya usado abajo en "vas a la mitad".
-        const cuando = diasParaInicio === 0 ? 'hoy' : 'mañana';
+      } else if (diasParaInicio <= DIAS_ANTES_RECORDATORIO_INICIO) {
+        // Sin piso en diasParaInicio: si la evaluación de hoy llega tarde
+        // (curso ya iniciado, hoy <= fin) reintenta con mensaje ajustado en
+        // vez de resignarse la primera vez que se evalúa tarde — ver
+        // docs/QA-NOTES.md #8.
+        const yaEmpezo = diasParaInicio < 0;
+        const cuando = yaEmpezo ? 'ya inició' : (diasParaInicio === 0 ? 'hoy' : 'mañana');
         const correos = obtenerCorreosInscritos(idCurso);
         const enviado = enviarCorreoLote(correos,
-          'Tu curso "' + row[2] + '" empieza ' + cuando,
+          'Tu curso "' + row[2] + '" ' + (yaEmpezo ? 'ya inició' : 'empieza ' + cuando),
           construirCorreoHtml({
-            chip: 'TU CURSO EMPIEZA PRONTO',
-            titulo: 'Tu curso "' + row[2] + '" empieza ' + cuando,
-            cuerpo: 'Hola, te recordamos que tu curso <strong>' + row[2] + '</strong> comienza el <strong>' +
-              formatearFecha(row[5]) + '</strong>. Prepárate con anticipación para sacarle el máximo provecho.',
+            chip: yaEmpezo ? 'TU CURSO YA COMENZÓ' : 'TU CURSO EMPIEZA PRONTO',
+            titulo: 'Tu curso "' + row[2] + '" ' + (yaEmpezo ? 'ya inició' : 'empieza ' + cuando),
+            cuerpo: yaEmpezo
+              ? 'Hola, tu curso <strong>' + row[2] + '</strong> ya comenzó el <strong>' + formatearFecha(row[5]) + '</strong>. Aún puedes sumarte.'
+              : 'Hola, te recordamos que tu curso <strong>' + row[2] + '</strong> comienza el <strong>' +
+                formatearFecha(row[5]) + '</strong>. Prepárate con anticipación para sacarle el máximo provecho.',
             detalle: 'Curso: ' + row[2] + '<br>Inicio: ' + formatearFecha(row[5]) +
               (esDeUnDia ? '' : '<br>Término: ' + formatearFecha(row[6])),
             liga: row[7] || '',
@@ -992,6 +1002,7 @@ function enviarRecordatoriosWebinar() {
   const hoja  = obtenerHojaCursos();
   const datos = hoja.getDataRange().getValues();
   const ahora = new Date();
+  const hoy   = soloFecha(ahora);
 
   for (let i = 1; i < datos.length; i++) {
     const row = datos[i];
@@ -1000,23 +1011,33 @@ function enviarRecordatoriosWebinar() {
     if (String(row[COL_RECORDATORIO_WEBINAR] || '').trim().toUpperCase() === 'TRUE') continue;
 
     const inicio = combinarFechaHora(row[5], row[COL_HORA_INICIO]);
+    const fin = soloFecha(row[6]);
     const minutosFaltantes = (inicio - ahora) / 60000;
     const fila = i + 1;
 
-    if (minutosFaltantes < 0) {
-      hoja.getRange(fila, COL_RECORDATORIO_WEBINAR + 1).setValue('TRUE'); // ya pasó, no aplica
+    if (hoy > fin) {
+      // El curso ya terminó por completo y nunca se mandó — ya no hay nada
+      // útil que avisar, se marca enviado para dejar de reevaluarlo — ver
+      // docs/QA-NOTES.md #8.
+      hoja.getRange(fila, COL_RECORDATORIO_WEBINAR + 1).setValue('TRUE');
       continue;
     }
-    if (minutosFaltantes <= MINUTOS_ANTES_INICIO_MAX && minutosFaltantes >= MINUTOS_ANTES_INICIO_MIN) {
+    // Sin piso en minutosFaltantes: si la evaluación llega tarde (curso ya
+    // comenzado, hoy <= fin) reintenta en la siguiente corrida (cada 15 min)
+    // con el mensaje ajustado a "ya comenzó" en vez de perder el aviso.
+    if (minutosFaltantes <= MINUTOS_ANTES_INICIO_MAX) {
+      const yaEmpezo = minutosFaltantes < 0;
       const horaTexto = Utilities.formatDate(new Date(row[COL_HORA_INICIO]), 'America/Mexico_City', 'HH:mm');
       const correos = obtenerCorreosInscritos(idCurso);
       const enviado = enviarCorreoLote(correos,
-        '"' + row[2] + '" empieza en 30 minutos',
+        yaEmpezo ? '"' + row[2] + '" ya comenzó — conéctate ahora' : '"' + row[2] + '" empieza en 30 minutos',
         construirCorreoHtml({
-          chip: 'EMPIEZA EN 30 MINUTOS',
-          titulo: '"' + row[2] + '" empieza en media hora',
-          cuerpo: 'Tu curso/webinar <strong>' + row[2] + '</strong> empieza hoy a las <strong>' + horaTexto +
-            ' hrs</strong>. Ten a la mano tu conexión y materiales.',
+          chip: yaEmpezo ? 'YA COMENZÓ' : 'EMPIEZA EN 30 MINUTOS',
+          titulo: yaEmpezo ? '"' + row[2] + '" ya comenzó' : '"' + row[2] + '" empieza en media hora',
+          cuerpo: yaEmpezo
+            ? 'Tu curso/webinar <strong>' + row[2] + '</strong> ya comenzó hoy a las <strong>' + horaTexto + ' hrs</strong>. Conéctate ahora.'
+            : 'Tu curso/webinar <strong>' + row[2] + '</strong> empieza hoy a las <strong>' + horaTexto +
+              ' hrs</strong>. Ten a la mano tu conexión y materiales.',
           detalle: 'Curso: ' + row[2] + '<br>Hoy a las: ' + horaTexto + ' hrs',
           liga: row[7] || '',
           textoLiga: 'Ir a la transmisión / acceso'

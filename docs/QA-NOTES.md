@@ -4,7 +4,7 @@ No es un checklist genérico de "revisa responsive/accesibilidad/contraste".
 Es una lista de bugs **concretos** que ya pasaron en este repo, con su causa
 raíz, para no reintroducirlos por accidente en un archivo nuevo que use el
 mismo patrón. La mayoría se descubrió y corrigió en julio 2026; los ítems 8 y 9 se agregaron el
-6 de agosto de 2026 (el 8 sigue pendiente de corregir, el 9 es comportamiento a conocer, no un
+6 de agosto de 2026 (el 8 ya corregido ese mismo día, el 9 es comportamiento a conocer, no un
 bug con fix).
 
 ## 1. `fetch()` sin timeout → botón congelado para siempre
@@ -163,10 +163,13 @@ fallo.
 entre estudiantes" (4 ago 2026, sin `Hora_inicio` capturada) — la columna quedó en `TRUE` pero
 no existe ningún correo real enviado para ese curso.
 
-**Pendiente de corregir:** hacer que el aviso de "1 día antes" reintente en días subsecuentes
-mientras el curso no haya iniciado, en vez de resignarse silenciosamente la primera vez que se
-evalúa tarde. Aplica también al branch equivalente de `enviarRecordatoriosWebinar()`
-(`minutosFaltantes < 0`).
+**Corregido (6 ago 2026):** ambos avisos ("1 día antes" en `enviarRecordatoriosDiarios()` y "30
+minutos antes" en `enviarRecordatoriosWebinar()`) ya no se resignan la primera vez que se
+evalúan tarde. Se les quitó el piso inferior (`diasParaInicio >= 0` / `minutosFaltantes >= 0`):
+si el curso ya inició pero no ha terminado (`hoy <= Fecha_fin`), reintentan en cada corrida
+subsecuente con el mensaje ajustado a "ya inició"/"ya comenzó" en vez de "empieza en...". Solo
+se marca `TRUE` sin enviar cuando el curso ya terminó por completo (`hoy > Fecha_fin`) — ahí sí
+ya no hay nada útil que avisar.
 
 **Dónde ya pasó:** `enviarRecordatoriosDiarios()` en `apps-script/formacion-docente.gs`.
 

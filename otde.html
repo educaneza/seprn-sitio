@@ -2574,6 +2574,9 @@
     document.getElementById('ase-escuela-manual').addEventListener('blur', function() {
         if (this.value.trim()) this.value = toTitleCase(this.value);
     });
+    document.getElementById('ase-confirma-mantenimiento').addEventListener('change', function() {
+        if (this.checked) document.getElementById('ase-confirma-mantenimiento-error').classList.remove('visible');
+    });
 
     function aseToggleOtraFuncion() {
         var val = document.getElementById('ase-funcion').value;
@@ -2896,6 +2899,7 @@
                 whatsapp: document.getElementById('ase-whatsapp').value,
                 correo: document.getElementById('ase-correo').value,
                 observaciones: document.getElementById('ase-observaciones').value,
+                confirmaMantenimiento: document.getElementById('ase-confirma-mantenimiento').checked,
                 oficioBase64: oficioBase64,
                 oficioNombre: oficioFile.name,
                 oficioTipo: oficioFile.type

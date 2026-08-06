@@ -35,7 +35,7 @@
 //   A Fecha | B Folio | C Tipo de Asesoría | D Nombre | E Función | F CCT
 //   G Sector | H Zona | I Escuela | J Turno | K Número de Docentes
 //   L WhatsApp | M Correo | N Observaciones | O Oficio (link Drive)
-//   P Estatus | Q Notas de revisión
+//   P Estatus | Q Notas de revisión | R Confirmó Mantenimiento Previo
 //
 // COLUMNAS DE LA HOJA "Contactos_Zona_Sector" (Jorge la llena a mano):
 //   A Sector | B Zona | C Correo | D Teléfono
@@ -45,6 +45,13 @@ const HOJA_ASE_SOLICITUDES = 'Solicitudes';
 const HOJA_ASE_CONTACTOS = 'Contactos_Zona_Sector';
 const CARPETA_ASE_OFICIOS = 'Oficios de Asesorías';
 const ASE_TAMANO_MAX_BYTES = 8 * 1024 * 1024; // 8MB, margen sobre el límite de 5MB validado en el cliente
+
+const ENCABEZADOS_ASE_SOLICITUDES = [
+  'Fecha', 'Folio', 'Tipo de Asesoría', 'Nombre', 'Función', 'CCT', 'Sector', 'Zona',
+  'Escuela', 'Turno', 'Número de Docentes', 'WhatsApp', 'Correo',
+  'Observaciones', 'Oficio (link Drive)', 'Estatus', 'Notas de revisión',
+  'Confirmó Mantenimiento Previo'
+];
 
 // ── doGet: verificación de estado ──
 function doGet() {
@@ -80,7 +87,8 @@ function doPost(e) {
       (datos.observaciones || '').trim(),
       oficioUrl,
       'Pendiente de validar',
-      ''
+      '',
+      datos.confirmaMantenimiento ? 'Sí' : 'No'
     ]);
 
     aseNotificarTelegram(folio, datos, oficioUrl);
@@ -104,12 +112,8 @@ function aseObtenerHojaSolicitudes() {
 
   if (!hoja) {
     hoja = ss.insertSheet(HOJA_ASE_SOLICITUDES);
-    hoja.appendRow([
-      'Fecha', 'Folio', 'Tipo de Asesoría', 'Nombre', 'Función', 'CCT', 'Sector', 'Zona',
-      'Escuela', 'Turno', 'Número de Docentes', 'WhatsApp', 'Correo',
-      'Observaciones', 'Oficio (link Drive)', 'Estatus', 'Notas de revisión'
-    ]);
-    const header = hoja.getRange(1, 1, 1, 17);
+    hoja.appendRow(ENCABEZADOS_ASE_SOLICITUDES);
+    const header = hoja.getRange(1, 1, 1, ENCABEZADOS_ASE_SOLICITUDES.length);
     header.setFontWeight('bold')
           .setBackground('#56212f')
           .setFontColor('#F9F8F5');
@@ -118,6 +122,16 @@ function aseObtenerHojaSolicitudes() {
     hoja.setColumnWidth(9, 200);  // Escuela
     hoja.setColumnWidth(14, 260); // Observaciones
     hoja.setColumnWidth(15, 220); // Oficio
+  } else {
+    // Hoja creada antes de agregar esta columna: se completa el encabezado
+    // faltante sin tocar las columnas ni los datos ya existentes.
+    const colsActuales = hoja.getLastColumn();
+    if (colsActuales < ENCABEZADOS_ASE_SOLICITUDES.length) {
+      const faltantes = ENCABEZADOS_ASE_SOLICITUDES.slice(colsActuales);
+      hoja.getRange(1, colsActuales + 1, 1, faltantes.length)
+        .setValues([faltantes])
+        .setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
+    }
   }
 
   aseAsegurarHojaContactos(ss);
@@ -159,6 +173,9 @@ function aseValidarCampos(d) {
     if (d[campo] === undefined || d[campo] === null || !String(d[campo]).trim()) {
       throw new Error('Campo requerido: ' + campo);
     }
+  }
+  if (!d.confirmaMantenimiento) {
+    throw new Error('Debes confirmar que el Aula de Medios ya recibió mantenimiento con Banco de Materiales y Chuka instalados.');
   }
   if (!/^\d{10}$/.test(d.whatsapp.trim())) {
     throw new Error('WhatsApp inválido: ' + d.whatsapp);
