@@ -14,6 +14,22 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-08-06 · Corrección de los 3 bugs de QA encontrados en la sesión anterior
+
+| | |
+|---|---|
+| **Fecha** | 2026-08-06 |
+| **Sesión** | Continuación del mismo día: Jorge pidió una lista de pendientes priorizada y, a partir de ahí, corregir los 2 bugs de Asesorías y el bug de recordatorios de Formación Docente encontrados en la ronda de QA de la sesión anterior (ver checkpoint de abajo). |
+| **Asesorías — checkbox sin viajar al backend** | El checkbox de confirmación de mantenimiento previo se validaba en el cliente pero nunca se incluía en el `datos` enviado a `asesorias.gs`, así que el Sheet nunca quedaba con evidencia de la confirmación. Se agregó la columna `Confirmó Mantenimiento Previo` (col. R) a `ENCABEZADOS_ASE_SOLICITUDES`, con auto-completado de encabezado en la hoja ya desplegada (mismo patrón que `obtenerHojaCursos()` en `formacion-docente.gs`, sin migración manual), validación server-side en `aseValidarCampos()`, y el envío real del campo desde `otde.html`. |
+| **Asesorías — error del checkbox no se limpiaba** | Se agregó un listener `change` en `ase-confirma-mantenimiento` que quita la clase `visible` del mensaje de error en cuanto se marca, igual que el resto de los campos del formulario. |
+| **Formación Docente — recordatorio marcado "enviado" sin mandarse** | `enviarRecordatoriosDiarios()` y `enviarRecordatoriosWebinar()` tenían un piso inferior en su ventana de evaluación (`diasParaInicio >= 0` / `minutosFaltantes >= 0`) que marcaba la columna de recordatorio en `TRUE` sin enviar nada si el curso ya había iniciado al momento de evaluarse. Se quitó ese piso: ahora reintentan en cada corrida subsecuente con el texto ajustado a "ya inició"/"ya comenzó" mientras el curso no haya terminado (`hoy <= Fecha_fin`); solo se resignan sin enviar cuando el curso ya concluyó por completo. Se eliminó la constante `MINUTOS_ANTES_INICIO_MIN`, que quedó sin uso. |
+| **Documentación** | `CLAUDE.md` (tachados los 3 pendientes ya resueltos en "Pendientes vigentes"), `docs/QA-NOTES.md` (ítem 8 marcado como corregido), `docs/ROADMAP.md` (corregida la nota desactualizada que aún marcaba los 3 backends de ago 2026 como pendientes de desplegar — ya lo estaban desde el checkpoint anterior). |
+| **Verificación** | `node --check` sobre `apps-script/asesorias.gs`, `apps-script/formacion-docente.gs`, y sobre los 2 bloques `<script>` extraídos de `otde.html` — sin errores. `git show --stat` del commit confirma 5 archivos, 91 inserciones/46 eliminaciones. |
+| **Commits** | `0d1eba6` (fix de los 3 bugs), más el de esta actualización de documentación (ver `git log`). |
+| **Pendiente para Jorge** | Re-desplegar `asesorias.gs` y `formacion-docente.gs` en Apps Script (Administrar implementaciones → Nueva versión) para que ambos fixes lleguen a producción — el repo ya tiene el código correcto, los proyectos en vivo siguen con la versión anterior. |
+
+---
+
 ## CHECKPOINT — 2026-08-06 · Despliegue de 3 backends, QA pre-producción e incidente de recordatorio en vivo
 
 | | |

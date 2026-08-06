@@ -359,7 +359,11 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
 1. **Recrear páginas eliminadas** cuando haya contenido validado con la Dra. Avelina Galindo Celix: `gestion-escolar.html`, `investigacion-educativa.html`, `programas-educativos.html`, `servicio-profesional.html`.
 2. **Logomark SEPRN (3.1)** — requiere archivo SVG de diseño gráfico.
 3. **Barra CTE** — actualizar texto en `index.html` al agregar la novena sesión.
-4. **Desplegar webforms de Correo/Mantenimiento/Asesorías (ago 2026)** — los 3 backends nuevos siguen con placeholder `PENDIENTE_DE_DESPLEGAR`. Ver `CLAUDE.md` §"Pendientes vigentes" para el detalle por trámite.
+
+Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
+`docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue
+abierto de esa entrega (decisión de notificación de cierre de ticket, limpieza de función
+temporal en Apps Script).
 
 **Nota de caché:** tras un push a `main`, GitHub Pages tarda 5-10 min en propagar el CSS. Hacer Cmd+Shift+R para invalidar caché del navegador.
 
