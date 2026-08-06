@@ -2165,7 +2165,7 @@
     }
 
     // ── Mantenimiento: solicitud ──
-    const MANTENIMIENTO_APPS_SCRIPT_URL = 'PENDIENTE_DE_DESPLEGAR';
+    const MANTENIMIENTO_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxxhyMUI8VuuxC29fWgkMWULwLdB7OhNJ-XawgtdseZY5hgV9P6I9uHFfiCMbAJzZb1/exec';
     const MAN_TAMANO_MAX_BYTES = 5 * 1024 * 1024;
 
     function toggleMantenimientoForm(btn) {
@@ -2546,7 +2546,7 @@
     }
 
     // ── Asesorías: solicitud ──
-    const ASESORIAS_APPS_SCRIPT_URL = 'PENDIENTE_DE_DESPLEGAR';
+    const ASESORIAS_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxwJFE7d9P4b2e7lVYvBx7FK9bBws53T9V6Q3yU7W-NboeecvnZCvWdkJG0nL8Pmz8q/exec';
 
     function toggleAsesoriaForm(btn) {
         var container = document.getElementById('form-asesoria');
@@ -2938,7 +2938,7 @@
     // Convive con el <iframe> del Google Form viejo (panel "otros") hasta
     // que Jorge decida retirarlo por completo. Ver apps-script/webform-2026-2027
     // en el proyecto Correos-institucionales para el backend.
-    const ALTA_CORREO_APPS_SCRIPT_URL = 'PENDIENTE_DE_DESPLEGAR';
+    const ALTA_CORREO_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwjy-jx1J0riVAlcAkuwAqKq9LMQVIxs4R_ikBIRPXXntO3FwMkGTPBf90W5A8FPAD7/exec';
 
     function mostrarCorreoPanel(tipo) {
         var esAlta = tipo === 'alta';
@@ -3365,9 +3365,9 @@
 
     // ── Correo — Cambio de Contraseña / Reset 2FA / Incidencias (webform nuevo, ago 2026) ──
     // Mismo backend que Alta (Correos-institucionales/webform-2026-2027), URLs propias.
-    const CAMBIO_APPS_SCRIPT_URL = 'PENDIENTE_DE_DESPLEGAR';
-    const RESET_APPS_SCRIPT_URL = 'PENDIENTE_DE_DESPLEGAR';
-    const INCIDENCIA_APPS_SCRIPT_URL = 'PENDIENTE_DE_DESPLEGAR';
+    const CAMBIO_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwjy-jx1J0riVAlcAkuwAqKq9LMQVIxs4R_ikBIRPXXntO3FwMkGTPBf90W5A8FPAD7/exec';
+    const RESET_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwjy-jx1J0riVAlcAkuwAqKq9LMQVIxs4R_ikBIRPXXntO3FwMkGTPBf90W5A8FPAD7/exec';
+    const INCIDENCIA_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwjy-jx1J0riVAlcAkuwAqKq9LMQVIxs4R_ikBIRPXXntO3FwMkGTPBf90W5A8FPAD7/exec';
 
     function mostrarOtrosPanel(tipo) {
         ['cam', 'rst', 'inc'].forEach(function(t) {
