@@ -160,10 +160,15 @@ La sesión más reciente siempre debe ser el acordeón activo/abierto al cargar 
   de Sector/Zona/Escuela si la CCT no está en la base
 - Usado por el formulario "Solicitar Mantenimiento" en la pestaña Mantenimiento de `otde.html`
 - Límite de archivo: 5MB validado en el cliente, 8MB de margen validado en el servidor
-- Para desplegar: crear el Spreadsheet, pegar `mantenimiento.gs` completo en Apps Script,
-  configurar Propiedades del script (Telegram), implementar como aplicación web (Cualquier
-  usuario), pegar la URL en `otde.html` en la constante `MANTENIMIENTO_APPS_SCRIPT_URL` (hoy
-  tiene el placeholder `'PENDIENTE_DE_DESPLEGAR'`)
+- **Desplegado (6 ago 2026)**: Spreadsheet `Solicitudes_Mantenimiento_2026`, proyecto Apps
+  Script "Mantenimiento - Backend (mantenimiento.gs)", URL real ya pegada en `otde.html` en
+  `MANTENIMIENTO_APPS_SCRIPT_URL`. **Telegram deliberadamente sin configurar** (decisión de
+  Jorge, 6 ago 2026): el código llama a `manNotificarTelegram()` sin condición, pero sin
+  `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID` en Propiedades del script es un no-op silencioso — no
+  "arreglar" esto configurando esas propiedades sin confirmar con Jorge primero.
+  `Contactos_Zona_Sector` ya está poblada (6 ago 2026, 88 filas: 75 por Zona + 13 de respaldo
+  por Sector) a partir de `OTDE_Base_Contactos_v2.xlsx` (hojas `Supervisiones`/`Sectores` —
+  correo real de cada jefatura, sin teléfono porque el xlsx no lo trae)
 
 ### `apps-script/asesorias.gs`
 - **Nuevo (ago 2026)**: mismo patrón que `mantenimiento.gs` (Sheet propio con hojas
@@ -197,10 +202,12 @@ La sesión más reciente siempre debe ser el acordeón activo/abierto al cargar 
 - **CCT con autocomplete** (`js/cct-db.js`): mismo patrón, prefijo `ase`
   (`aseSeleccionarCct`/`aseResetCct`/`aseActualizarZonas`)
 - Usado por el formulario "Solicitar Asesoría" en la nueva pestaña Asesorías de `otde.html`
-- Para desplegar: mismo procedimiento que `mantenimiento.gs` — crear Spreadsheet, pegar el
-  código, configurar Propiedades del script (Telegram), implementar como aplicación web, pegar
-  la URL en la constante `ASESORIAS_APPS_SCRIPT_URL` de `otde.html` (hoy tiene el placeholder
-  `'PENDIENTE_DE_DESPLEGAR'`)
+- **Desplegado (6 ago 2026)**: Spreadsheet `Solicitudes_Asesorias_2026`, proyecto Apps Script
+  "Asesorias - Backend (asesorias.gs)", URL real ya pegada en `otde.html` en
+  `ASESORIAS_APPS_SCRIPT_URL`. Mismo caso que Mantenimiento: Telegram deliberadamente sin
+  configurar (decisión de Jorge, 6 ago 2026 — no es un pendiente, es la elección), y
+  `Contactos_Zona_Sector` ya poblada igual que en Mantenimiento (mismas 88 filas, misma fuente
+  `OTDE_Base_Contactos_v2.xlsx`)
 
 ### `apps-script/formacion-docente.gs`
 **Desplegado en producción desde jul 2026** (Spreadsheet real `Formacion_Docente_2026_2027`, URL real ya pegada en `APPS_SCRIPT_URL` de `formacion-docente.html`; la extinta `jornada-verano-2026.html` compartió este mismo backend hasta su eliminación el 13 jul 2026).
@@ -211,7 +218,8 @@ La sesión más reciente siempre debe ser el acordeón activo/abierto al cargar 
 - Folio: `OTDE-CAP-NNNN`. ID de curso: `PREFIJO-CICLO-NNN` (ej. `WEB-2627-001`, prefijos en `PREFIJOS_CATEGORIA`)
 - **Columnas de `Cursos`** (A-S): ID_Curso, Categoria, Nombre, Responsable, Modalidad, Fecha_inicio, Fecha_fin, Liga_convocatoria, Requiere_codigo_asistencia, Codigo_asistencia, Activo, Notas, Registro_previo_requerido, Visible_desde, Visible_hasta, Hora_inicio, Recordatorio_inicio_enviado, Recordatorio_medio_enviado, Recordatorio_webinar_enviado. `obtenerHojaCursos()` completa sola cualquier encabezado que falte en hojas ya creadas antes de agregar una columna — no hay que migrar nada a mano
 - **Recordatorios automáticos por correo** (jul 2026, tiempos y diseño ajustados ago 2026): "empieza en 1 día" (cursos de varios días, + fallback en cursos de un solo día sin `Hora_inicio`), "vas a la mitad" (solo cursos de 30+ días), "empieza en 30 minutos" (cualquier curso con `Hora_inicio` capturada, ventana de 20-40 min). Un solo correo por curso con BCC a todos los inscritos (no uno por persona), plantilla HTML propia con paleta institucional + íconos de redes (`construirCorreoHtml()`) y `replyTo` a la cuenta institucional (`otde.nezahualcoyotl@dee.edu.mx`, no al Gmail real que envía), y revisión de `MailApp.getRemainingDailyQuota()` antes de enviar — la cuota diaria la comparten TODOS los Apps Script de la cuenta de Google, no es exclusiva de este proyecto. El disparador de "30 minutos" corre cada 15 min (antes cada hora); requiere volver a correr el menú "OTDE Formación → Instalar recordatorios automáticos" después de cada redeploy, porque `instalarRecordatoriosAutomaticos()` borra y recrea ambos activadores en cada corrida. `enviarRecordatoriosDiarios()` avisa a Jorge por correo (máx. 1x/día) si algún activador desaparece. Detalle completo en `docs/DESIGN_SYSTEM.md` y `docs/ARCHITECTURE.md §12`
-- **No hay gestión de constancias**: los webinars/seminarios no las emiten (salvo UNETE) y en los demás programas las emite la plataforma de CoEEE — OTDE solo registra participación para fines estadísticos
+- **Los recordatorios automáticos SÍ llegan a Recibidos, no a Enviados** (confirmado 6 ago 2026): `enviarCorreoLote()` manda `to: Session.getEffectiveUser().getEmail()` (copia a la misma cuenta que corre el script) con los inscritos en `bcc`. Gmail archiva esa copia-a-sí-mismo como correo recibido, no como enviado — mismo patrón en **todas** las automatizaciones de OTDE, incluido el SGCI viejo de `Correos-institucionales`. Si Jorge reporta "no veo nada en Enviados", el correo probablemente sí salió — hay que revisar Recibidos de la cuenta de Google que tiene instalados los activadores (`otde.nezahualcoyotl@gmail.com`), no Enviados ni ninguna cuenta de Outlook/Microsoft.
+- **Bug confirmado en producción (6 ago 2026)**: si `enviarRecordatoriosDiarios()` evalúa un curso *después* de que su ventana de envío ya pasó (`hoy > inicio`), marca la columna de recordatorio en `TRUE` **sin haber mandado nunca el correo** — comportamiento intencional para dejar de reevaluar, pero significa que el aviso se pierde en silencio. Pasó de verdad con el Seminario "Convivencia digital entre estudiantes" (4 ago 2026, sin `Hora_inicio`): nunca llegó ningún correo. Pendiente: hacer que el "1 día antes" reintente en días subsecuentes hasta que el curso inicie, no solo se resigne.
 - Menú "OTDE Formación" completo: Generar ID de cursos faltantes · Generar estadísticas · Actualizar vista de Inscripciones · Migrar Jornada Verano 2026 · Instalar/Desinstalar recordatorios automáticos
 - Responde `Content-Type: text/plain` para evitar preflight CORS, mismo patrón que el resto
 - **Cuidado con `appendRow([])`**: Apps Script no acepta un arreglo vacío — usar `appendRow([''])` para filas en blanco. Ver `docs/QA-NOTES.md` para este y otros bugs reales ya corregidos (fetch sin timeout, fecha -1 día por parseo UTC, etc.)
@@ -256,10 +264,20 @@ arquitectura completo en `docs/ARCHITECTURE.md §16`. Resumen operativo:
   backend nuevo es un proyecto de Apps Script separado y en paralelo,
   `Correos-institucionales/webform-2026-2027/` (`Config.gs`, `WebApp.gs`, `Alta.gs`,
   `CambioContrasena.gs`, `Reset2FA.gs`, `Incidencias.gs`, `OnEdit.gs` — un solo trigger
-  `onEditWebform` que enruta por nombre de hoja), pensado para una Spreadsheet nueva del ciclo
-  2026-2027. El corte real hacia producción solo pasa cuando se despliegue ese proyecto y se
-  reemplacen los 4 placeholders `PENDIENTE_DE_DESPLEGAR` (`ALTA_CORREO_APPS_SCRIPT_URL`,
-  `CAMBIO_APPS_SCRIPT_URL`, `RESET_APPS_SCRIPT_URL`, `INCIDENCIA_APPS_SCRIPT_URL`).
+  `onEditWebform` que enruta por nombre de hoja). **Desplegado (6 ago 2026)**: Spreadsheet
+  `Solicitudes_Correo_2026_2027`, proyecto "Webform Correo 2026-2027 - Backend", las 4
+  constantes (`ALTA_CORREO_APPS_SCRIPT_URL`, `CAMBIO_APPS_SCRIPT_URL`, `RESET_APPS_SCRIPT_URL`,
+  `INCIDENCIA_APPS_SCRIPT_URL`) apuntan a la misma URL real (`WebApp.gs` enruta los 4 tipos por
+  `datos.tipo`, un solo despliegue). El switcher del sitio ya mostraba los 4 tipos nativos desde
+  antes de este despliegue, así que técnicamente el webform ya está en producción — pero el
+  sistema viejo de Marcos sigue vivo en paralelo; retirarlo es una decisión de Jorge, no
+  automática por haber desplegado esto.
+- **Telegram deliberadamente parcial** (decisión de Jorge, 6 ago 2026): solo los tipos
+  "urgentes" (alguien no puede entrar a su cuenta ahora mismo) avisan por Telegram —
+  `Reset2FA.gs`/`Incidencias.gs` sin condición, `CambioContrasena.gs` solo si
+  `dominio === 'dee.edu.mx'` (`@aulamexiquense.mx` no avisa), `Alta.gs` no llama a Telegram en
+  absoluto (alta de cuenta no bloquea a nadie). Detalle completo en
+  `Correos-institucionales/CLAUDE.md`.
 - **Dominio auto-derivado, no preguntado** (solo en Alta — Cambio/Reset/Incidencias leen el
   dominio del correo institucional que la persona ya tiene): usa
   `otdeDominioParaCCT(cct, tipoCuenta)` en `js/cct-db.js`, regla verificada en vivo contra
@@ -355,5 +373,12 @@ Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/I
 - **Recrear páginas eliminadas** — `gestion-escolar.html`, `investigacion-educativa.html`, `programas-educativos.html`, `servicio-profesional.html`: requieren contenido validado con la Dra. Galindo
 - **Logomark SEPRN** — requiere archivo `logo.svg` (diseño gráfico pendiente)
 - **Barra CTE** — actualizar texto del `.update-banner` en `index.html` cuando se publique la 9ª sesión
-- **Centro de Formación Docente** — dar de alta los primeros cursos propios del ciclo 26-27 en la hoja `Cursos` (hoy el catálogo solo tiene los 5 de Jornada Verano, migrados)
-- **Correo/Mantenimiento/Asesorías (ago 2026)** — desplegar los 3 backends nuevos (siguen con placeholder `PENDIENTE_DE_DESPLEGAR`), ver sus secciones arriba
+- **Centro de Formación Docente** — dar de alta los primeros cursos propios del ciclo 26-27 en la hoja `Cursos` (hoy el catálogo solo tiene 2 webinars; Jorge los va agregando conforme haya más oferta)
+- **Correo/Mantenimiento/Asesorías** — los 3 backends nuevos ya están desplegados y con `Contactos_Zona_Sector` poblado (6 ago 2026, ver sus secciones arriba); Telegram parcial es decisión final, no pendiente.
+- **QA pre-producción (6 ago 2026)** — hallazgos pendientes de atender antes de confiar el flujo completo:
+  - **Asesorías**: el checkbox de confirmación de asesoría previa no viaja en el payload al backend — el Sheet nunca queda con evidencia de que la persona confirmó, contradiciendo la intención de "dejar rastro". Bug de código, requiere fix.
+  - **Asesorías**: el mensaje de error del checkbox no se limpia al marcarlo — persiste visualmente hasta el siguiente intento de envío (misma clase de bug ya corregido antes en Formación Docente/CCT).
+  - **Mantenimiento/Asesorías no cierran el ciclo automáticamente con el solicitante** — tienen columna `Estatus`/`Notas de revisión`, pero a diferencia de Correo (que manda automáticamente las credenciales cuando la cuenta está lista), aquí nadie le avisa al solicitante cuando su ticket se resolvió. Puede ser aceptable porque un técnico va físicamente a la escuela, pero es una decisión que vale la pena confirmar con Jorge explícitamente, no asumir.
+  - Recordatorio operativo (no de código): "NP SIGEE" en la hoja de Alta se llena a mano por Marcos y es el paso crítico que sostiene la trazabilidad — sin ese llenado, se vuelve a caer en "adivinar por fecha/sector/zona".
+  - Correo (Alta/Cambio de Contraseña/Reset 2FA/Incidencias) probado de punta a punta el 6 ago 2026: los 4 sub-formularios, el autocompletado de CCT y su fallback manual, la regla de dominio Director(a)+Cuenta de oficina, y los payloads reales — todo correcto, sin bugs encontrados.
+- **Centro de Formación Docente** — función temporal `enviarAhoraManual_WEB2627001()` sigue pegada en el editor de Apps Script del proyecto en vivo (no en este repo) — se usó el 6 ago 2026 para mandar a mano el aviso de un webinar cuyo recordatorio automático se había perdido (ver `docs/QA-NOTES.md`). Quitarla del editor cuando ya no haga falta, para que el código desplegado no diverja del repo en silencio.

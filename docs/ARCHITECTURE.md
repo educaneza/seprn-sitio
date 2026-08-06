@@ -751,10 +751,13 @@ Decisión de arquitectura central: el backend nuevo vive en un **proyecto de App
 separado y paralelo** — `Correos-institucionales/webform-2026-2027/` (repo aparte, no
 documentado en este archivo) — pensado para una Spreadsheet nueva del ciclo 2026-2027. El
 sistema en vivo que usa Marcos hoy (`Correos-institucionales/Code.gs` +
-`OnFormSubmit.gs`/`OnEditTrigger.gs`, atado al Form actual) **no se tocó**. El corte real hacia
-producción solo pasa cuando se despliegue el proyecto nuevo y se reemplacen los 4 placeholders
-`PENDIENTE_DE_DESPLEGAR` en `otde.html` (`ALTA_CORREO_APPS_SCRIPT_URL`,
-`CAMBIO_APPS_SCRIPT_URL`, `RESET_APPS_SCRIPT_URL`, `INCIDENCIA_APPS_SCRIPT_URL`).
+`OnFormSubmit.gs`/`OnEditTrigger.gs`, atado al Form actual) **no se tocó**, sigue corriendo en
+paralelo — retirarlo es decisión de Jorge, no automática. **Desplegado (6 ago 2026)**:
+Spreadsheet `Solicitudes_Correo_2026_2027`, proyecto "Webform Correo 2026-2027 - Backend"; las
+4 constantes en `otde.html` (`ALTA_CORREO_APPS_SCRIPT_URL`, `CAMBIO_APPS_SCRIPT_URL`,
+`RESET_APPS_SCRIPT_URL`, `INCIDENCIA_APPS_SCRIPT_URL`) ya no tienen el placeholder
+`PENDIENTE_DE_DESPLEGAR` — las 4 apuntan a la misma URL real, porque `WebApp.gs` enruta los 4
+tipos por `datos.tipo` en un solo despliegue.
 
 Se aprovechó el rediseño para consolidar 6 tipos de solicitud del sistema viejo (Alta dee, Alta
 aulamexiquense, Cambio Contr dee, Cambio Contr aulamexiquense, Reset 2FA, Incidencias) en 4

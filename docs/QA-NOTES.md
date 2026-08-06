@@ -3,7 +3,9 @@
 No es un checklist genérico de "revisa responsive/accesibilidad/contraste".
 Es una lista de bugs **concretos** que ya pasaron en este repo, con su causa
 raíz, para no reintroducirlos por accidente en un archivo nuevo que use el
-mismo patrón. Cada uno se descubrió y corrigió en julio 2026.
+mismo patrón. La mayoría se descubrió y corrigió en julio 2026; los ítems 8 y 9 se agregaron el
+6 de agosto de 2026 (el 8 sigue pendiente de corregir, el 9 es comportamiento a conocer, no un
+bug con fix).
 
 ## 1. `fetch()` sin timeout → botón congelado para siempre
 
@@ -143,6 +145,52 @@ depender de que cada cliente/proxy de correo respete la cabecera.
 `<head><meta charset="utf-8"></head>` como lo primero en el documento.
 
 **Dónde ya pasó:** `construirCorreoHtml()` en `apps-script/formacion-docente.gs`.
+
+## 8. Recordatorio marcado "enviado" sin haberse mandado nunca — evaluación tardía
+
+**Síntoma:** la columna `Recordatorio_inicio_enviado` en `Cursos` queda en `TRUE`, pero nunca
+llegó ningún correo a los inscritos ni copia a la cuenta que corre el script.
+
+**Causa raíz:** `enviarRecordatoriosDiarios()` evalúa una vez al día si un curso está dentro de
+su ventana de aviso. Si por cualquier motivo (activador no instalado ese día, redeploy a media
+mañana, etc.) el curso llega a evaluarse **después** de que su fecha de inicio ya pasó
+(`hoy > inicio`), el código marca la columna en `TRUE` para dejar de reevaluarlo — pero nunca
+llamó a `enviarCorreoLote()`. Es intencional (evita reintentos infinitos sobre un curso ya
+vencido), pero el efecto es que el aviso se pierde en silencio, sin ningún registro visible del
+fallo.
+
+**Confirmado en producción (6 ago 2026):** pasó de verdad con el Seminario "Convivencia digital
+entre estudiantes" (4 ago 2026, sin `Hora_inicio` capturada) — la columna quedó en `TRUE` pero
+no existe ningún correo real enviado para ese curso.
+
+**Pendiente de corregir:** hacer que el aviso de "1 día antes" reintente en días subsecuentes
+mientras el curso no haya iniciado, en vez de resignarse silenciosamente la primera vez que se
+evalúa tarde. Aplica también al branch equivalente de `enviarRecordatoriosWebinar()`
+(`minutosFaltantes < 0`).
+
+**Dónde ya pasó:** `enviarRecordatoriosDiarios()` en `apps-script/formacion-docente.gs`.
+
+## 9. Correo con `to: Session.getEffectiveUser().getEmail()` cae en Recibidos, no en Enviados
+
+**Síntoma:** un recordatorio automático se manda de verdad (el registro de ejecuciones de Apps
+Script lo confirma como "Completada", 0% de error, y la columna de la Sheet queda en `TRUE`),
+pero no aparece en la carpeta "Enviados" de ninguna cuenta de correo.
+
+**Causa raíz:** `enviarCorreoLote()` (y el mismo patrón en el resto de las automatizaciones de
+OTDE, incluido el SGCI viejo de `Correos-institucionales`) manda el correo con
+`to: Session.getEffectiveUser().getEmail()` (una copia a la misma cuenta de Google que corre el
+script) y los destinatarios reales en `bcc`. Gmail archiva esa copia-a-sí-mismo como correo
+**recibido**, no como enviado — es el comportamiento normal de Gmail para un mensaje donde el
+remitente y el destinatario visible (`to`) son la misma cuenta, no un bug de código.
+
+**No es un bug — es un comportamiento a conocer.** Si alguien reporta "no veo nada en
+Enviados", el correo probablemente sí salió: hay que revisar **Recibidos** de la cuenta de
+Google que tiene instalados los activadores del proyecto (`otde.nezahualcoyotl@gmail.com` para
+Formación Docente), nunca una cuenta de Outlook/Microsoft — el `replyTo` institucional solo
+redirige las *respuestas*, el envío real siempre sale de esa cuenta de Gmail.
+
+**Dónde ya pasó:** confirmado en `apps-script/formacion-docente.gs` (6 ago 2026); mismo patrón
+en `mantenimiento.gs`/`asesorias.gs` y en el sistema viejo de `Correos-institucionales`.
 
 ## Regla general al corregir cualquiera de estos patrones
 
