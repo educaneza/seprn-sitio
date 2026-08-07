@@ -743,6 +743,37 @@ lugar, el formulario pide una casilla de confirmación obligatoria y dejó listo
 Materiales/Chuka o agregar asesorías nuevas — decisión pedagógica pendiente, deliberadamente
 fuera de alcance de este entregable.
 
+**Cierre automático del ticket (agosto 2026).** El hallazgo de QA "nadie le avisa al
+solicitante cuando su ticket se resolvió" se cerró con un trigger `onEdit` **instalable** (no
+un trigger simple — esos corren sin autorización y no pueden llamar `MailApp`) en cada
+proyecto: `manOnEditCierre` / `aseOnEditCierre`. Se instala una sola vez por proyecto corriendo
+`manInstalarTriggerCierre()` / `aseInstalarTriggerCierre()` desde el editor de Apps Script (o
+desde el menú `OTDE Mantenimiento` / `OTDE Asesorías` que agrega `onOpen()`) — no se reinstala
+solo al pegar una versión nueva del código.
+
+- La columna `Estatus` pasó de texto libre a un dropdown con lista fija
+  (`SpreadsheetApp.newDataValidation().requireValueInList(...)`): `Pendiente de validar` ·
+  `Validado` · `En atención` · `Resuelto` · `Rechazado`. Sin esto el trigger no tendría un
+  valor confiable contra el cual comparar.
+- Al detectar que la columna editada incluye `Estatus` y el nuevo valor es exactamente
+  `'Resuelto'`, envía dos correos reusando la infraestructura ya existente: uno al solicitante
+  (columna `Correo` de la fila) y otro a la Zona/Sector vía el mismo
+  `manBuscarContactoZonaSector`/`aseBuscarContactoZonaSector` que ya usa el aviso de alta.
+  `Rechazado` queda en el dropdown pero deliberadamente sin lógica todavía — mismo mecanismo,
+  se puede sumar después sin rediseñar nada.
+- Una columna nueva `Notificación de cierre enviada` (auto-heal de encabezados, mismo patrón
+  que ya usaba `aseObtenerHojaSolicitudes()`) evita reenviar si Jorge cambia el Estatus fuera de
+  `Resuelto` y vuelve a `Resuelto`.
+- Todo el envío está envuelto en try/catch silencioso, mismo criterio que el resto del
+  archivo: un fallo de `MailApp` nunca debe impedir que la edición del Sheet se guarde.
+
+Explícitamente fuera de alcance de esta ronda: migrar a webform el reporte de cierre que llena
+el técnico al terminar un mantenimiento (es el mismo "Sistema Automatizado de Reportes de
+Visitas" ya maduro, con generación de PDF y envío automático — reimplementar eso desde cero no
+compensaba el beneficio, mayormente cosmético, para un flujo de uso interno) y el formulario de
+feedback de Asesorías que redirige al Kit Digital (totalmente desconectado del Sheet de
+`asesorias.gs`, es un loop pedagógico aparte que no bloqueaba el hallazgo de QA).
+
 ## 16. Webform de Correo Institucional en paralelo al Google Form (agosto 2026)
 
 `otde.html` reemplazó, en código, el `<iframe>` del Google Form que hasta ahora capturaba las

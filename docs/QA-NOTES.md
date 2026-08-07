@@ -195,6 +195,31 @@ redirige las *respuestas*, el envío real siempre sale de esa cuenta de Gmail.
 **Dónde ya pasó:** confirmado en `apps-script/formacion-docente.gs` (6 ago 2026); mismo patrón
 en `mantenimiento.gs`/`asesorias.gs` y en el sistema viejo de `Correos-institucionales`.
 
+## 10. Un fix "corregido" en el repo no está corregido hasta que se redespliega
+
+**Síntoma:** un checkpoint anterior de `docs/BITACORA.md` da por corregido un bug, con commit
+y todo, pero el bug sigue pasando en producción semanas después.
+
+**Causa raíz:** el flujo de este proyecto para Apps Script es copiar el `.gs` completo al
+editor en vivo y crear una nueva implementación — son 2 pasos manuales separados de "corregir
+el código en el repo", y ninguno de los dos ocurre solo. Un "Pendiente para Jorge" anotado en
+la bitácora es fácil de perder de vista si nadie vuelve a verificarlo.
+
+**Confirmado en producción (7 ago 2026):** el checkpoint del 6 ago 2026 corrigió 3 bugs de QA
+(commit `0d1eba6`) y dejó anotado "Pendiente para Jorge: redesplegar". Al verificar un día
+después, ninguno de los dos proyectos (Asesorías, Formación Docente) tenía el fix en el código
+desplegado — se había quedado solo en el repo.
+
+**Cómo verificarlo de verdad (no basta con ver la fecha de la implementación activa):** buscar
+en el editor de Apps Script en vivo (`Cmd+F`) un string específico que el fix haya
+agregado/quitado — por ejemplo `confirmaMantenimiento` (debe existir si el fix de Asesorías
+llegó) o `MINUTOS_ANTES_INICIO_MIN` (debe **no** existir si el fix de Formación Docente llegó).
+La fecha/número de la implementación activa en "Administrar las implementaciones" no es
+suficiente evidencia — puede estar desactualizada por el mismo motivo.
+
+**Dónde ya pasó:** `apps-script/asesorias.gs` y `apps-script/formacion-docente.gs` (6→7 ago
+2026).
+
 ## Regla general al corregir cualquiera de estos patrones
 
 Cuando se encuentra uno de estos bugs en un archivo, **revisar si el mismo

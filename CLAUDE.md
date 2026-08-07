@@ -305,16 +305,20 @@ backend en `apps-script/mantenimiento.gs` y `docs/ARCHITECTURE.md §15`.
   `validarMantenimientoForm()` antes de leer el archivo; la lectura a base64
   (`manLeerArchivoBase64()`, `FileReader.readAsDataURL`) solo ocurre ya validado, dentro de
   `enviarSolicitudMantenimiento()`.
-- **Pendiente antes de producción**: `MANTENIMIENTO_APPS_SCRIPT_URL` con placeholder
-  `'PENDIENTE_DE_DESPLEGAR'`.
+- **Desplegado (6 ago 2026)**: `MANTENIMIENTO_APPS_SCRIPT_URL` con la URL real del
+  deployment — ver detalle en `apps-script/mantenimiento.gs` arriba.
+- **Cierre automático (7 ago 2026)**: al marcar Estatus = `Resuelto` en el Sheet, un trigger
+  `onEdit` instalable notifica por correo al solicitante y a la Zona/Sector. Requiere haber
+  corrido `manInstalarTriggerCierre()` una vez por proyecto — ver `docs/ARCHITECTURE.md §15`.
 
 ### Asesorías
 Tab nueva (no existía como trámite — antes solo había un video suelto en Recursos). Mismo
 patrón que Mantenimiento (oficio obligatorio + captura digital), más selector de "Tipo de
 asesoría" y casilla de confirmación de mantenimiento previo (Banco de Materiales/Chuka ya
 instalados) — detalle de por qué en `apps-script/asesorias.gs` y `docs/ARCHITECTURE.md §15`.
-Prefijo de IDs/funciones: `ase`. Pendiente antes de producción: `ASESORIAS_APPS_SCRIPT_URL`
-con placeholder.
+Prefijo de IDs/funciones: `ase`. **Desplegado (6 ago 2026)**: `ASESORIAS_APPS_SCRIPT_URL` con
+la URL real del deployment. **Cierre automático (7 ago 2026)**: mismo mecanismo que
+Mantenimiento (`aseOnEditCierre` / `aseInstalarTriggerCierre`).
 
 ### Soporte Técnico Remoto
 TeamViewer (no Quick Assist) como herramienta de control remoto. Formulario "Solicitar Soporte
@@ -378,7 +382,15 @@ Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/I
 - **QA pre-producción (6 ago 2026)** — hallazgos pendientes de atender antes de confiar el flujo completo:
   - ~~**Asesorías**: el checkbox de confirmación de asesoría previa no viaja en el payload al backend~~ — corregido: `otde.html` ahora manda `confirmaMantenimiento` en el payload, `asesorias.gs` lo valida server-side y lo guarda en la columna nueva `Confirmó Mantenimiento Previo` (col. R, autocompletada en la hoja ya desplegada vía el mismo patrón de auto-heal de encabezados que `formacion-docente.gs`).
   - ~~**Asesorías**: el mensaje de error del checkbox no se limpia al marcarlo~~ — corregido: listener `change` en `ase-confirma-mantenimiento` limpia el error apenas se marca.
-  - **Mantenimiento/Asesorías no cierran el ciclo automáticamente con el solicitante** — tienen columna `Estatus`/`Notas de revisión`, pero a diferencia de Correo (que manda automáticamente las credenciales cuando la cuenta está lista), aquí nadie le avisa al solicitante cuando su ticket se resolvió. Puede ser aceptable porque un técnico va físicamente a la escuela, pero es una decisión que vale la pena confirmar con Jorge explícitamente, no asumir.
+  - ~~**Mantenimiento/Asesorías no cierran el ciclo automáticamente con el solicitante**~~ —
+    corregido (7 ago 2026): trigger `onEdit` instalable que notifica al solicitante y a la
+    Zona/Sector al marcar Estatus = `Resuelto`. Ver `docs/ARCHITECTURE.md §15`.
   - Recordatorio operativo (no de código): "NP SIGEE" en la hoja de Alta se llena a mano por Marcos y es el paso crítico que sostiene la trazabilidad — sin ese llenado, se vuelve a caer en "adivinar por fecha/sector/zona".
   - Correo (Alta/Cambio de Contraseña/Reset 2FA/Incidencias) probado de punta a punta el 6 ago 2026: los 4 sub-formularios, el autocompletado de CCT y su fallback manual, la regla de dominio Director(a)+Cuenta de oficina, y los payloads reales — todo correcto, sin bugs encontrados.
-- **Centro de Formación Docente** — función temporal `enviarAhoraManual_WEB2627001()` sigue pegada en el editor de Apps Script del proyecto en vivo (no en este repo) — se usó el 6 ago 2026 para mandar a mano el aviso de un webinar cuyo recordatorio automático se había perdido (ver `docs/QA-NOTES.md`). Quitarla del editor cuando ya no haga falta, para que el código desplegado no diverja del repo en silencio.
+- ~~**Centro de Formación Docente** — función temporal `enviarAhoraManual_WEB2627001()` seguía
+  pegada en el editor de Apps Script del proyecto en vivo~~ — eliminada del editor (7 ago 2026).
+- ~~**Asesorías/Formación Docente — fixes de QA sin redesplegar**~~ — corregido (7 ago 2026):
+  el código de ambos proyectos en el repo tenía los 3 fixes de QA del checkpoint anterior, pero
+  nunca se habían pegado ni redesplegado en Apps Script (verificado en vivo: `confirmaMantenimiento`
+  no existía en el código desplegado de Asesorías, `MINUTOS_ANTES_INICIO_MIN` seguía presente en
+  Formación Docente). Ya redesplegados los dos.

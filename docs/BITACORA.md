@@ -14,6 +14,22 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-08-07 · Redeploy de fixes QA pendientes + cierre automático de tickets
+
+| | |
+|---|---|
+| **Fecha** | 2026-08-07 |
+| **Sesión** | Jorge pidió verificar si el "Pendiente para Jorge" del checkpoint anterior (redesplegar `asesorias.gs`/`formacion-docente.gs`) ya estaba resuelto — no lo estaba. Después, a partir de dos preguntas exploratorias sobre migrar a webform el reporte de cierre del técnico (sistema v8.5 de Reportes de Visitas) y el feedback de Asesorías, se acordó que lo que realmente faltaba era el cierre automático del ciclo hacia el solicitante y la Zona/Sector — los otros dos Google Forms se dejaron fuera de alcance. |
+| **Verificación del redeploy pendiente** | Confirmado en vivo (no solo por fecha de versión) que ninguno de los 2 fixes había llegado a producción: `confirmaMantenimiento`/`Confirmó Mantenimiento Previo` no existían en el código desplegado de Asesorías (0 resultados), y `const MINUTOS_ANTES_INICIO_MIN = 20;` seguía presente en el de Formación Docente. Se repegó el código actual del repo en ambos editores de Apps Script y se desplegó nueva versión (mismo ID de implementación en los dos, no hizo falta tocar `otde.html`/`formacion-docente.html`). |
+| **Cierre automático de Mantenimiento/Asesorías** | Nuevo trigger `onEdit` instalable por proyecto (`manOnEditCierre`/`aseOnEditCierre`, instalado vía `manInstalarTriggerCierre()`/`aseInstalarTriggerCierre()` — no un trigger simple, esos no pueden llamar `MailApp`): al marcar Estatus = `Resuelto` en la hoja `Solicitudes`, notifica por correo al solicitante y a la Zona/Sector (reusando `manBuscarContactoZonaSector`/`aseBuscarContactoZonaSector` ya existentes). La columna `Estatus` pasó de texto libre a dropdown (`Pendiente de validar` · `Validado` · `En atención` · `Resuelto` · `Rechazado`) para que el trigger tenga un valor confiable; se agregó una columna `Notificación de cierre enviada` para evitar reenvíos. `Rechazado` queda en el dropdown sin lógica todavía, deliberadamente. |
+| **Prueba de punta a punta** | En los 2 Sheets reales (`Solicitudes_Mantenimiento_2026`, `Solicitudes_Asesorias_2026`, ambos sin datos de producción todavía): fila de prueba + contacto de prueba con correo propio (no un contacto real de Zona/Sector), Estatus → `Resuelto` desde la UI real de Sheets, confirmado en el registro de Ejecuciones de Apps Script (Mantenimiento: 5.44s, Asesorías: 1.437s, ambas "Completada", 0% error) y en la columna de control en `Sí`. Filas de prueba eliminadas después. |
+| **Limpieza** | Se eliminó del editor en vivo de Formación Docente la función temporal `enviarAhoraManual_WEB2627001()` que había quedado pegada ahí desde el incidente del checkpoint anterior — no vivía en este repo. |
+| **Documentación** | `CLAUDE.md` (cierre automático documentado en Mantenimiento/Asesorías, 3 ítems resueltos en "Pendientes vigentes"), `docs/ARCHITECTURE.md §15` (mecanismo de cierre automático + alcance explícitamente descartado), `docs/QA-NOTES.md` (ítem 10 nuevo: fix en el repo ≠ fix en producción si no se redespliega). |
+| **Verificación** | `node --check` sobre `apps-script/mantenimiento.gs` y `apps-script/asesorias.gs` — sin errores. `git diff --stat`: 4 archivos, 405 inserciones/14 eliminaciones (191 en `mantenimiento.gs`, 173 en `asesorias.gs`, 24 en `CLAUDE.md`, 31 en `docs/ARCHITECTURE.md`). |
+| **Commits** | Pendiente — ver el de esta actualización de documentación. |
+
+---
+
 ## CHECKPOINT — 2026-08-06 · Corrección de los 3 bugs de QA encontrados en la sesión anterior
 
 | | |
