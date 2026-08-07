@@ -30,15 +30,33 @@
 //   A Fecha | B Folio | C Nombre | D Función | E CCT | F Sector
 //   G Zona | H Escuela | I Turno | J WhatsApp | K Correo
 //   L Equipos con falla | M Oficio (link Drive) | N Estatus | O Notas de revisión
+//   P Notificación de cierre enviada
 //
 // COLUMNAS DE LA HOJA "Contactos_Zona_Sector" (Jorge la llena a mano):
 //   A Sector | B Zona | C Correo | D Teléfono
+//
+// CIERRE AUTOMÁTICO: al marcar Estatus = "Resuelto" en la hoja "Solicitudes",
+// un trigger onEdit instalable (manOnEditCierre) notifica por correo al
+// solicitante y a la Zona/Sector. Requiere correr UNA vez
+// manInstalarTriggerCierre() (o el menú "OTDE Mantenimiento" que crea
+// onOpen()) después de pegar esta versión — los triggers no se reinstalan
+// solos al redesplegar.
 // ============================================================
 
 const HOJA_MAN_SOLICITUDES = 'Solicitudes';
 const HOJA_MAN_CONTACTOS = 'Contactos_Zona_Sector';
 const CARPETA_MAN_OFICIOS = 'Oficios de Mantenimiento';
 const MAN_TAMANO_MAX_BYTES = 8 * 1024 * 1024; // 8MB, margen sobre el límite de 5MB validado en el cliente
+
+const ENCABEZADOS_MAN_SOLICITUDES = [
+  'Fecha', 'Folio', 'Nombre', 'Función', 'CCT', 'Sector', 'Zona',
+  'Escuela', 'Turno', 'WhatsApp', 'Correo', 'Equipos con falla',
+  'Oficio (link Drive)', 'Estatus', 'Notas de revisión',
+  'Notificación de cierre enviada'
+];
+const COL_MAN_ESTATUS = 14;
+const COL_MAN_NOTIFICACION_CIERRE = 16;
+const ESTADOS_MAN_VALIDOS = ['Pendiente de validar', 'Validado', 'En atención', 'Resuelto', 'Rechazado'];
 
 // ── doGet: verificación de estado ──
 function doGet() {
@@ -72,6 +90,7 @@ function doPost(e) {
       datos.equipos.trim(),
       oficioUrl,
       'Pendiente de validar',
+      '',
       ''
     ]);
 
@@ -96,12 +115,8 @@ function manObtenerHojaSolicitudes() {
 
   if (!hoja) {
     hoja = ss.insertSheet(HOJA_MAN_SOLICITUDES);
-    hoja.appendRow([
-      'Fecha', 'Folio', 'Nombre', 'Función', 'CCT', 'Sector', 'Zona',
-      'Escuela', 'Turno', 'WhatsApp', 'Correo', 'Equipos con falla',
-      'Oficio (link Drive)', 'Estatus', 'Notas de revisión'
-    ]);
-    const header = hoja.getRange(1, 1, 1, 15);
+    hoja.appendRow(ENCABEZADOS_MAN_SOLICITUDES);
+    const header = hoja.getRange(1, 1, 1, ENCABEZADOS_MAN_SOLICITUDES.length);
     header.setFontWeight('bold')
           .setBackground('#56212f')
           .setFontColor('#F9F8F5');
@@ -110,11 +125,31 @@ function manObtenerHojaSolicitudes() {
     hoja.setColumnWidth(8, 200);  // Escuela
     hoja.setColumnWidth(12, 260); // Equipos con falla
     hoja.setColumnWidth(13, 220); // Oficio
+  } else {
+    // Hoja creada antes de agregar la columna de cierre: se completa el
+    // encabezado faltante sin tocar las columnas ni los datos ya existentes.
+    const colsActuales = hoja.getLastColumn();
+    if (colsActuales < ENCABEZADOS_MAN_SOLICITUDES.length) {
+      const faltantes = ENCABEZADOS_MAN_SOLICITUDES.slice(colsActuales);
+      hoja.getRange(1, colsActuales + 1, 1, faltantes.length)
+        .setValues([faltantes])
+        .setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
+    }
   }
 
+  manAplicarValidacionEstatus(hoja);
   manAsegurarHojaContactos(ss);
 
   return hoja;
+}
+
+// ── Dropdown de valores válidos en la columna Estatus (idempotente) ──
+function manAplicarValidacionEstatus(hoja) {
+  const regla = SpreadsheetApp.newDataValidation()
+    .requireValueInList(ESTADOS_MAN_VALIDOS, true)
+    .setAllowInvalid(false)
+    .build();
+  hoja.getRange(2, COL_MAN_ESTATUS, 1000, 1).setDataValidation(regla);
 }
 
 // ── Crear la hoja de contactos vacía si no existe (Jorge la llena a mano) ──
@@ -275,6 +310,150 @@ function manNotificarZonaSector(folio, d, contacto) {
   } catch (err) {
     // Silencioso: la solicitud ya quedó registrada aunque falle este aviso
   }
+}
+
+// ── onEdit instalable: dispara al marcar Estatus = "Resuelto" ──
+// No se llama "onEdit" a propósito: así solo corre vía el trigger instalable
+// (manInstalarTriggerCierre), nunca como trigger simple sin autorización
+// para MailApp.
+function manOnEditCierre(e) {
+  try {
+    if (!e || !e.range) return;
+    const hoja = e.range.getSheet();
+    if (hoja.getName() !== HOJA_MAN_SOLICITUDES) return;
+
+    const colInicio = e.range.getColumn();
+    const colFin = e.range.getLastColumn();
+    if (COL_MAN_ESTATUS < colInicio || COL_MAN_ESTATUS > colFin) return;
+
+    const filaInicio = Math.max(e.range.getRow(), 2);
+    const filaFin = e.range.getRow() + e.range.getNumRows() - 1;
+
+    for (let fila = filaInicio; fila <= filaFin; fila++) {
+      const estatus = String(hoja.getRange(fila, COL_MAN_ESTATUS).getValue()).trim();
+      if (estatus !== 'Resuelto') continue;
+
+      const yaNotificado = String(hoja.getRange(fila, COL_MAN_NOTIFICACION_CIERRE).getValue()).trim();
+      if (yaNotificado === 'Sí') continue;
+
+      const datosFila = hoja.getRange(fila, 1, 1, ENCABEZADOS_MAN_SOLICITUDES.length).getValues()[0];
+      manNotificarCierre(datosFila);
+      hoja.getRange(fila, COL_MAN_NOTIFICACION_CIERRE).setValue('Sí');
+    }
+  } catch (err) {
+    // Silencioso: un fallo aquí no debe romper la edición del Sheet
+  }
+}
+
+// ── Arma y despacha los 2 avisos de cierre a partir de la fila ──
+function manNotificarCierre(fila) {
+  const folio = fila[1];
+  const nombre = fila[2];
+  const cct = fila[4];
+  const sector = fila[5];
+  const zona = fila[6];
+  const escuela = fila[7];
+  const correo = fila[10];
+  const notas = fila[14];
+
+  if (correo) {
+    manNotificarCierreSolicitante(folio, escuela, cct, notas, correo);
+  }
+
+  const contacto = manBuscarContactoZonaSector(sector, zona);
+  if (contacto) {
+    manNotificarCierreZonaSector(folio, nombre, escuela, cct, contacto);
+  }
+}
+
+// ── Avisa al solicitante que su ticket fue resuelto ──
+function manNotificarCierreSolicitante(folio, escuela, cct, notas, correo) {
+  try {
+    const asunto = 'Tu solicitud de mantenimiento fue resuelta — ' + folio;
+    const html =
+      '<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;">' +
+      '<div style="background-color:#56212f;padding:16px 20px;border-radius:8px 8px 0 0;">' +
+      '<p style="margin:0;color:#fff;font-size:15px;font-weight:bold;">OTDE — Solicitud de mantenimiento resuelta</p>' +
+      '</div>' +
+      '<div style="border:1px solid #d6d1ca;border-top:none;border-radius:0 0 8px 8px;padding:18px 20px;">' +
+      '<p style="margin:0 0 10px 0;font-size:14px;color:#333;">Tu solicitud de mantenimiento fue marcada como resuelta por OTDE.</p>' +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Folio:</strong> ' + folio + '</p>' +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Escuela / CCT:</strong> ' + (escuela || '') + ' — ' + cct + '</p>' +
+      (notas ? '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Notas:</strong> ' + notas + '</p>' : '') +
+      '</div></div>';
+
+    MailApp.sendEmail({
+      to: correo,
+      subject: asunto,
+      htmlBody: html,
+      name: 'OTDE | Oficina de Tecnología para el Desarrollo Educativo',
+      replyTo: 'otde.nezahualcoyotl@dee.edu.mx'
+    });
+  } catch (err) {
+    // Silencioso: el Sheet ya quedó actualizado aunque falle este aviso
+  }
+}
+
+// ── Avisa a la Zona/Sector que el ticket de su centro de trabajo se cerró ──
+function manNotificarCierreZonaSector(folio, nombre, escuela, cct, contacto) {
+  try {
+    const asunto = 'Solicitud de mantenimiento resuelta — ' + (escuela || cct);
+    const html =
+      '<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;">' +
+      '<div style="background-color:#9F2241;padding:16px 20px;border-radius:8px 8px 0 0;">' +
+      '<p style="margin:0;color:#fff;font-size:15px;font-weight:bold;">OTDE — Solicitud de mantenimiento resuelta</p>' +
+      '</div>' +
+      '<div style="border:1px solid #d6d1ca;border-top:none;border-radius:0 0 8px 8px;padding:18px 20px;">' +
+      '<p style="margin:0 0 10px 0;font-size:14px;color:#333;">La solicitud de mantenimiento de un centro de trabajo de tu Zona/Sector fue atendida y marcada como resuelta. Solo es informativo.</p>' +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Folio:</strong> ' + folio + '</p>' +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Escuela / CCT:</strong> ' + (escuela || '') + ' — ' + cct + '</p>' +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Solicitó:</strong> ' + nombre + '</p>' +
+      '</div></div>';
+
+    MailApp.sendEmail({
+      to: contacto.correo,
+      subject: asunto,
+      htmlBody: html,
+      name: 'OTDE | Oficina de Tecnología para el Desarrollo Educativo',
+      replyTo: 'otde.nezahualcoyotl@dee.edu.mx'
+    });
+  } catch (err) {
+    // Silencioso: el Sheet ya quedó actualizado aunque falle este aviso
+  }
+}
+
+// ── Instala el trigger de cierre automático (seguro correrlo de nuevo:
+// borra cualquier instalación previa antes de crear una nueva) ──
+function manInstalarTriggerCierre() {
+  ScriptApp.getProjectTriggers().forEach(t => {
+    if (t.getHandlerFunction() === 'manOnEditCierre') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('manOnEditCierre')
+    .forSpreadsheet(SpreadsheetApp.getActiveSpreadsheet())
+    .onEdit()
+    .create();
+  try { SpreadsheetApp.getUi().alert('Trigger de cierre automático instalado.'); } catch (err) {}
+}
+
+// ── Quita el trigger de cierre automático ──
+function manDesinstalarTriggerCierre() {
+  let quitados = 0;
+  ScriptApp.getProjectTriggers().forEach(t => {
+    if (t.getHandlerFunction() === 'manOnEditCierre') {
+      ScriptApp.deleteTrigger(t);
+      quitados++;
+    }
+  });
+  try { SpreadsheetApp.getUi().alert(quitados + ' trigger(s) de cierre eliminado(s).'); } catch (err) {}
+}
+
+// ── Menú del Sheet ──
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu('OTDE Mantenimiento')
+    .addItem('Instalar trigger de cierre automático', 'manInstalarTriggerCierre')
+    .addItem('Desinstalar trigger de cierre automático', 'manDesinstalarTriggerCierre')
+    .addToUi();
 }
 
 // ── Respuesta de texto plano (evita preflight CORS) ──
