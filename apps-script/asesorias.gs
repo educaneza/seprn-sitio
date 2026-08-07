@@ -190,7 +190,7 @@ function aseGenerarFolio(hoja) {
 
 // ── Validar campos requeridos ──
 function aseValidarCampos(d) {
-  const requeridos = ['tipoAsesoria', 'nombre', 'cct', 'escuela', 'turno', 'funcion', 'numDocentes', 'whatsapp'];
+  const requeridos = ['tipoAsesoria', 'nombre', 'cct', 'escuela', 'turno', 'funcion', 'numDocentes', 'whatsapp', 'correo'];
   for (const campo of requeridos) {
     if (d[campo] === undefined || d[campo] === null || !String(d[campo]).trim()) {
       throw new Error('Campo requerido: ' + campo);
@@ -205,7 +205,7 @@ function aseValidarCampos(d) {
   if (!/^\d+$/.test(String(d.numDocentes).trim()) || parseInt(d.numDocentes, 10) < 1) {
     throw new Error('Número de docentes inválido: ' + d.numDocentes);
   }
-  if (d.correo && String(d.correo).trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.correo.trim())) {
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(d.correo).trim())) {
     throw new Error('Correo inválido: ' + d.correo);
   }
   if (!d.oficioBase64 || !d.oficioNombre) {

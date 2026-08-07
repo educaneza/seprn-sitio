@@ -30,7 +30,8 @@
 //   A Fecha | B Folio | C Nombre | D Función | E CCT | F Sector
 //   G Zona | H Escuela | I Turno | J WhatsApp | K Correo
 //   L Equipos con falla | M Oficio (link Drive) | N Estatus | O Notas de revisión
-//   P Notificación de cierre enviada
+//   P Notificación de cierre enviada | Q Tipo de equipo | R Cantidad (Aula de medios)
+//   S Cantidad (Administrativas) | T Marca/Modelo | U Estado de instalación
 //
 // COLUMNAS DE LA HOJA "Contactos_Zona_Sector" (Jorge la llena a mano):
 //   A Sector | B Zona | C Correo | D Teléfono
@@ -52,7 +53,8 @@ const ENCABEZADOS_MAN_SOLICITUDES = [
   'Fecha', 'Folio', 'Nombre', 'Función', 'CCT', 'Sector', 'Zona',
   'Escuela', 'Turno', 'WhatsApp', 'Correo', 'Equipos con falla',
   'Oficio (link Drive)', 'Estatus', 'Notas de revisión',
-  'Notificación de cierre enviada'
+  'Notificación de cierre enviada', 'Tipo de equipo', 'Cantidad (Aula de medios)',
+  'Cantidad (Administrativas)', 'Marca/Modelo', 'Estado de instalación'
 ];
 const COL_MAN_ESTATUS = 14;
 const COL_MAN_NOTIFICACION_CIERRE = 16;
@@ -91,7 +93,12 @@ function doPost(e) {
       oficioUrl,
       'Pendiente de validar',
       '',
-      ''
+      '',
+      (datos.tipoEquipo || '').trim(),
+      (datos.cantidadAula || '').trim(),
+      (datos.cantidadAdmin || '').trim(),
+      (datos.marcaModelo || '').trim(),
+      (datos.estadoEquipo || '').trim()
     ]);
 
     manNotificarTelegram(folio, datos, oficioUrl);
@@ -181,7 +188,7 @@ function manGenerarFolio(hoja) {
 
 // ── Validar campos requeridos ──
 function manValidarCampos(d) {
-  const requeridos = ['nombre', 'cct', 'escuela', 'turno', 'funcion', 'whatsapp', 'equipos'];
+  const requeridos = ['nombre', 'cct', 'escuela', 'turno', 'funcion', 'whatsapp', 'correo', 'equipos', 'tipoEquipo'];
   for (const campo of requeridos) {
     if (!d[campo] || !String(d[campo]).trim()) {
       throw new Error('Campo requerido: ' + campo);
@@ -266,6 +273,7 @@ function manNotificarTelegram(folio, d, oficioUrl) {
       (d.sector ? 'Sector ' + d.sector + (d.zona ? ' · Zona ' + d.zona : '') + '\n' : '') +
       'Turno: ' + d.turno.trim() + '\n' +
       'WhatsApp: ' + d.whatsapp.trim() + '\n' +
+      (d.tipoEquipo ? 'Tipo de equipo: ' + d.tipoEquipo + '\n' : '') +
       'Equipos con falla: ' + d.equipos.trim() + '\n' +
       'Oficio: ' + oficioUrl;
 

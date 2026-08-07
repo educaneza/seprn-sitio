@@ -20,7 +20,7 @@
 // COLUMNAS DE LA HOJA:
 //   A Fecha | B Folio | C Nombre | D CCT | E Sector | F Zona
 //   G Escuela/Unidad | H Función/Cargo | I WhatsApp | J Correo
-//   K Descripción | L Urgencia
+//   K Descripción | L Urgencia | M Tipo de ayuda
 // ============================================================
 
 const HOJA_SOPORTE = 'Solicitudes_Soporte_2026';
@@ -52,7 +52,8 @@ function doPost(e) {
       datos.whatsapp.trim(),
       (datos.correo || '').trim(),
       datos.descripcion.trim(),
-      datos.urgencia.trim()
+      datos.urgencia.trim(),
+      (datos.tipoAyuda || '').trim()
     ]);
 
     notificarTelegram(folio, datos);
@@ -73,9 +74,9 @@ function obtenerHojaSoporte() {
     hoja = ss.insertSheet(HOJA_SOPORTE);
     hoja.appendRow([
       'Fecha', 'Folio', 'Nombre', 'CCT', 'Sector', 'Zona',
-      'Escuela/Unidad', 'Función/Cargo', 'WhatsApp', 'Correo', 'Descripción', 'Urgencia'
+      'Escuela/Unidad', 'Función/Cargo', 'WhatsApp', 'Correo', 'Descripción', 'Urgencia', 'Tipo de ayuda'
     ]);
-    const header = hoja.getRange(1, 1, 1, 12);
+    const header = hoja.getRange(1, 1, 1, 13);
     header.setFontWeight('bold')
           .setBackground('#56212f')
           .setFontColor('#F9F8F5');
@@ -102,7 +103,7 @@ function generarFolioSoporte(hoja) {
 
 // ── Validar campos requeridos ──
 function validarCampos(d) {
-  const requeridos = ['nombre', 'cct', 'escuela', 'funcion', 'whatsapp', 'descripcion', 'urgencia'];
+  const requeridos = ['nombre', 'cct', 'escuela', 'funcion', 'whatsapp', 'correo', 'descripcion', 'urgencia', 'tipoAyuda'];
   for (const campo of requeridos) {
     if (!d[campo] || !String(d[campo]).trim()) {
       throw new Error('Campo requerido: ' + campo);
@@ -111,7 +112,7 @@ function validarCampos(d) {
   if (!/^\d{10}$/.test(d.whatsapp.trim())) {
     throw new Error('WhatsApp inválido: ' + d.whatsapp);
   }
-  if (d.correo && String(d.correo).trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.correo.trim())) {
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(d.correo).trim())) {
     throw new Error('Correo inválido: ' + d.correo);
   }
 }
@@ -137,6 +138,7 @@ function notificarTelegram(folio, d) {
       'CCT: ' + d.cct.trim().toUpperCase() + (d.escuela ? ' — ' + d.escuela.trim() : '') + '\n' +
       (d.sector ? 'Sector ' + d.sector + (d.zona ? ' · Zona ' + d.zona : '') + '\n' : '') +
       'Función: ' + d.funcion.trim() + '\n' +
+      'Tipo de ayuda: ' + (d.tipoAyuda || '').trim() + '\n' +
       'WhatsApp: ' + d.whatsapp.trim() + ' — [Abrir chat](' + whatsappLink + ')\n' +
       (d.correo && d.correo.trim() ? 'Correo: ' + d.correo.trim() + '\n' : '') +
       'Descripción: ' + d.descripcion.trim();

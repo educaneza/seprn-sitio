@@ -279,6 +279,7 @@
             transition: border-color 0.2s;
         }
         .soporte-form-group textarea { resize: vertical; min-height: 90px; }
+        .soporte-form-group input[type="checkbox"] { width: auto; padding: 0; }
         .soporte-form-group input:focus,
         .soporte-form-group select:focus,
         .soporte-form-group textarea:focus {
@@ -598,12 +599,12 @@
                 <p><strong>Servicios Disponibles:</strong></p>
                 <p>• <strong>Alta de cuenta:</strong> Solicita tu cuenta de correo electrónico institucional con dominio @dee.edu.mx o @aulamexiquense.mx</p>
                 <p>• <strong>Cambio de contraseña:</strong> Solicita el cambio de contraseña de correo electrónico institucional con dominio @dee.edu.mx o @aulamexiquense.mx</p>
-                <p>• <strong>Reset de autenticación de 2 pasos:</strong> Solicita el reseteo de la autenticación de 2 pasos de tu correo institucional.</p>
+                <p>• <strong>Eliminar método de autenticación:</strong> Solicita que te quitemos el código de seguridad extra (verificación en dos pasos) de tu correo institucional cuando se traba o deja de llegar.</p>
             </div>
 
             <div style="display:flex;gap:10px;flex-wrap:wrap;margin:24px 0 0 0;">
                 <button type="button" id="btn-correo-panel-alta" class="correo-panel-btn active" onclick="mostrarCorreoPanel('alta')">Alta de cuenta</button>
-                <button type="button" id="btn-correo-panel-otros" class="correo-panel-btn" onclick="mostrarCorreoPanel('otros')">Cambio de contraseña / Reset 2FA / Otro</button>
+                <button type="button" id="btn-correo-panel-otros" class="correo-panel-btn" onclick="mostrarCorreoPanel('otros')">Cambio de contraseña / Eliminar autenticación / Otro</button>
             </div>
             <style>
                 .correo-panel-btn { padding:10px 18px; border-radius:8px; border:2px solid #d6d1ca; background:#fff; color:#56212f; font-weight:600; font-size:14px; cursor:pointer; transition:all .2s; }
@@ -634,6 +635,17 @@
                         <div class="sop-manual-fields" id="alt-manual-fields">
                             <p class="manual-aviso">No encontramos esa CCT. Captura los datos manualmente:</p>
                             <div class="soporte-form-group">
+                                <label for="alt-tipo-cct-manual">Tipo de CCT<span class="req">*</span></label>
+                                <select id="alt-tipo-cct-manual" onchange="altActualizarTipoCct()">
+                                    <option value="">— Selecciona una opción —</option>
+                                    <option value="escuela">Escuela</option>
+                                    <option value="supervision">Zona escolar (Supervisión)</option>
+                                    <option value="jefatura">Sector educativo (Jefatura)</option>
+                                    <option value="subdireccion">SEPRN</option>
+                                </select>
+                                <div class="soporte-field-error" id="alt-tipo-cct-manual-error">Selecciona el tipo de CCT.</div>
+                            </div>
+                            <div class="soporte-form-group" id="alt-sector-group" style="display:none;">
                                 <label for="alt-sector-manual">Sector<span class="req">*</span></label>
                                 <select id="alt-sector-manual" onchange="altActualizarZonas()">
                                     <option value="">— Selecciona sector —</option>
@@ -650,7 +662,6 @@
                                     <option value="XI">Sector XI</option>
                                     <option value="XII">Sector XII</option>
                                     <option value="XIII">Sector XIII</option>
-                                    <option value="SEPRN">SEPRN (Subdirección / Jefatura)</option>
                                 </select>
                                 <div class="soporte-field-error" id="alt-sector-manual-error">Selecciona un sector.</div>
                             </div>
@@ -681,19 +692,12 @@
                         <input type="hidden" id="alt-sector-val">
                         <input type="hidden" id="alt-zona-val">
                         <input type="hidden" id="alt-escuela-val">
+                        <input type="hidden" id="alt-tipo-cct-val">
 
                         <div class="soporte-form-group">
                             <label for="alt-funcion">Función/Cargo<span class="req">*</span></label>
                             <select id="alt-funcion" required onchange="altToggleOtraFuncion(); altActualizarDominio();">
                                 <option value="">— Selecciona una opción —</option>
-                                <option>Docente</option>
-                                <option>Director(a)</option>
-                                <option>Subdirector(a)</option>
-                                <option>ATP (Asesor Técnico Pedagógico)</option>
-                                <option>Supervisor(a)</option>
-                                <option>Jefe(a) de Sector</option>
-                                <option>Personal de apoyo (PAAE)</option>
-                                <option>Otro</option>
                             </select>
                             <div class="soporte-field-error" id="alt-funcion-error">Selecciona tu función o cargo.</div>
                             <div id="alt-otra-funcion-group" style="display:none;margin-top:10px;">
@@ -743,12 +747,13 @@
                         <div class="soporte-form-group">
                             <label for="alt-correo-personal">Correo electrónico personal<span class="req">*</span></label>
                             <input type="email" id="alt-correo-personal" placeholder="tucorreo@gmail.com" required>
-                            <div class="soporte-field-hint">Aquí te avisaremos cuando tu cuenta esté lista y te mandaremos tus datos de acceso.</div>
+                            <div class="soporte-field-hint">Aquí te avisaremos cuando tu cuenta esté lista y te mandaremos tus datos de acceso. Usa uno activo — revisa spam / correo no deseado si no ves nuestro mensaje.</div>
                             <div class="soporte-field-error" id="alt-correo-personal-error">Ingresa un correo válido.</div>
                         </div>
                         <div class="soporte-form-group">
-                            <label for="alt-telefono">Teléfono<span class="req">*</span></label>
+                            <label for="alt-telefono">Teléfono (WhatsApp)<span class="req">*</span></label>
                             <input type="tel" id="alt-telefono" placeholder="5512345678" maxlength="10" inputmode="numeric" required>
+                            <div class="soporte-field-hint">Al dejar este número autorizas que OTDE te contacte por WhatsApp para dar seguimiento a tu solicitud.</div>
                             <div class="soporte-field-error" id="alt-telefono-error">Ingresa un teléfono válido (10 dígitos).</div>
                         </div>
                         <div class="soporte-form-group">
@@ -765,11 +770,11 @@
                 </div>
             </div>
 
-            <!-- Panel: Cambio de contraseña / Reset 2FA / Incidencias (webform nuevo, ago 2026) -->
+            <!-- Panel: Cambio de contraseña / Eliminar método de autenticación / Incidencias (webform nuevo, ago 2026) -->
             <div id="correo-panel-otros" style="display:none;">
                 <div style="display:flex;gap:10px;flex-wrap:wrap;margin:0 0 16px 0;">
                     <button type="button" id="btn-otros-panel-cam" class="correo-panel-btn active" onclick="mostrarOtrosPanel('cam')">Cambio de Contraseña</button>
-                    <button type="button" id="btn-otros-panel-rst" class="correo-panel-btn" onclick="mostrarOtrosPanel('rst')">Reset de Autenticación (2FA)</button>
+                    <button type="button" id="btn-otros-panel-rst" class="correo-panel-btn" onclick="mostrarOtrosPanel('rst')">Eliminar Método de Autenticación</button>
                     <button type="button" id="btn-otros-panel-inc" class="correo-panel-btn" onclick="mostrarOtrosPanel('inc')">No puedo acceder a mi cuenta</button>
                 </div>
 
@@ -798,6 +803,17 @@
                             <div class="sop-manual-fields" id="cam-manual-fields">
                                 <p class="manual-aviso">No encontramos esa CCT. Captura los datos manualmente:</p>
                                 <div class="soporte-form-group">
+                                    <label for="cam-tipo-cct-manual">Tipo de CCT<span class="req">*</span></label>
+                                    <select id="cam-tipo-cct-manual" onchange="otdeActualizarTipoCct('cam')">
+                                        <option value="">— Selecciona una opción —</option>
+                                        <option value="escuela">Escuela</option>
+                                        <option value="supervision">Zona escolar (Supervisión)</option>
+                                        <option value="jefatura">Sector educativo (Jefatura)</option>
+                                        <option value="subdireccion">SEPRN</option>
+                                    </select>
+                                    <div class="soporte-field-error" id="cam-tipo-cct-manual-error">Selecciona el tipo de CCT.</div>
+                                </div>
+                                <div class="soporte-form-group" id="cam-sector-group" style="display:none;">
                                     <label for="cam-sector-manual">Sector<span class="req">*</span></label>
                                     <select id="cam-sector-manual" onchange="camActualizarZonas()">
                                         <option value="">— Selecciona sector —</option>
@@ -805,7 +821,7 @@
                                         <option value="IV">Sector IV</option><option value="V">Sector V</option><option value="VI">Sector VI</option>
                                         <option value="VII">Sector VII</option><option value="VIII">Sector VIII</option><option value="IX">Sector IX</option>
                                         <option value="X">Sector X</option><option value="XI">Sector XI</option><option value="XII">Sector XII</option>
-                                        <option value="XIII">Sector XIII</option><option value="SEPRN">SEPRN (Subdirección / Jefatura)</option>
+                                        <option value="XIII">Sector XIII</option>
                                     </select>
                                     <div class="soporte-field-error" id="cam-sector-manual-error">Selecciona un sector.</div>
                                 </div>
@@ -820,7 +836,7 @@
                                     <div class="soporte-field-error" id="cam-escuela-manual-error">Ingresa el nombre de la escuela o unidad.</div>
                                 </div>
                             </div>
-                            <input type="hidden" id="cam-sector-val"><input type="hidden" id="cam-zona-val"><input type="hidden" id="cam-escuela-val">
+                            <input type="hidden" id="cam-sector-val"><input type="hidden" id="cam-zona-val"><input type="hidden" id="cam-escuela-val"><input type="hidden" id="cam-tipo-cct-val">
 
                             <div class="soporte-form-group">
                                 <label for="cam-nombre">Nombre completo<span class="req">*</span></label>
@@ -830,12 +846,13 @@
                             <div class="soporte-form-group">
                                 <label for="cam-correo-personal">Correo electrónico personal<span class="req">*</span></label>
                                 <input type="email" id="cam-correo-personal" placeholder="tucorreo@gmail.com" required>
-                                <div class="soporte-field-hint">Aquí te avisaremos cuando tengamos tu nueva contraseña.</div>
+                                <div class="soporte-field-hint">Aquí te avisaremos cuando tengamos tu nueva contraseña. Usa uno activo — revisa spam / correo no deseado si no ves nuestro mensaje.</div>
                                 <div class="soporte-field-error" id="cam-correo-personal-error">Ingresa un correo válido.</div>
                             </div>
                             <div class="soporte-form-group">
-                                <label for="cam-telefono">Teléfono<span class="req">*</span></label>
+                                <label for="cam-telefono">Teléfono (WhatsApp)<span class="req">*</span></label>
                                 <input type="tel" id="cam-telefono" placeholder="5512345678" maxlength="10" inputmode="numeric" required>
+                                <div class="soporte-field-hint">Al dejar este número autorizas que OTDE te contacte por WhatsApp para dar seguimiento a tu solicitud.</div>
                                 <div class="soporte-field-error" id="cam-telefono-error">Ingresa un teléfono válido (10 dígitos).</div>
                             </div>
                             <div class="soporte-form-group">
@@ -848,10 +865,13 @@
                     </div>
                 </div>
 
-                <!-- Sub-panel: Reset 2FA -->
+                <!-- Sub-panel: Eliminar método de autenticación (antes "Reset 2FA") -->
                 <div id="otros-panel-rst" style="display:none;">
+                    <div class="highlight-box">
+                        <p>Es el código de seguridad extra (verificación en dos pasos) que a veces se traba o no llega. Aquí puedes pedir que te lo quitemos para poder volver a activarlo.</p>
+                    </div>
                     <button class="form-button" id="btn-rst" aria-expanded="false" onclick="toggleRstForm(this)">
-                        <span id="btn-rst-text">Solicitar Reset de Autenticación de 2 Pasos</span>
+                        <span id="btn-rst-text">Solicitar Eliminación de Método de Autenticación</span>
                         <span id="btn-rst-arrow">▼</span>
                     </button>
                     <div id="form-rst" class="form-container">
@@ -873,6 +893,17 @@
                             <div class="sop-manual-fields" id="rst-manual-fields">
                                 <p class="manual-aviso">No encontramos esa CCT. Captura los datos manualmente:</p>
                                 <div class="soporte-form-group">
+                                    <label for="rst-tipo-cct-manual">Tipo de CCT<span class="req">*</span></label>
+                                    <select id="rst-tipo-cct-manual" onchange="otdeActualizarTipoCct('rst')">
+                                        <option value="">— Selecciona una opción —</option>
+                                        <option value="escuela">Escuela</option>
+                                        <option value="supervision">Zona escolar (Supervisión)</option>
+                                        <option value="jefatura">Sector educativo (Jefatura)</option>
+                                        <option value="subdireccion">SEPRN</option>
+                                    </select>
+                                    <div class="soporte-field-error" id="rst-tipo-cct-manual-error">Selecciona el tipo de CCT.</div>
+                                </div>
+                                <div class="soporte-form-group" id="rst-sector-group" style="display:none;">
                                     <label for="rst-sector-manual">Sector<span class="req">*</span></label>
                                     <select id="rst-sector-manual" onchange="rstActualizarZonas()">
                                         <option value="">— Selecciona sector —</option>
@@ -880,7 +911,7 @@
                                         <option value="IV">Sector IV</option><option value="V">Sector V</option><option value="VI">Sector VI</option>
                                         <option value="VII">Sector VII</option><option value="VIII">Sector VIII</option><option value="IX">Sector IX</option>
                                         <option value="X">Sector X</option><option value="XI">Sector XI</option><option value="XII">Sector XII</option>
-                                        <option value="XIII">Sector XIII</option><option value="SEPRN">SEPRN (Subdirección / Jefatura)</option>
+                                        <option value="XIII">Sector XIII</option>
                                     </select>
                                     <div class="soporte-field-error" id="rst-sector-manual-error">Selecciona un sector.</div>
                                 </div>
@@ -895,7 +926,7 @@
                                     <div class="soporte-field-error" id="rst-escuela-manual-error">Ingresa el nombre de la escuela o unidad.</div>
                                 </div>
                             </div>
-                            <input type="hidden" id="rst-sector-val"><input type="hidden" id="rst-zona-val"><input type="hidden" id="rst-escuela-val">
+                            <input type="hidden" id="rst-sector-val"><input type="hidden" id="rst-zona-val"><input type="hidden" id="rst-escuela-val"><input type="hidden" id="rst-tipo-cct-val">
 
                             <div class="soporte-form-group">
                                 <label for="rst-nombre">Nombre completo<span class="req">*</span></label>
@@ -905,12 +936,13 @@
                             <div class="soporte-form-group">
                                 <label for="rst-correo-personal">Correo electrónico personal<span class="req">*</span></label>
                                 <input type="email" id="rst-correo-personal" placeholder="tucorreo@gmail.com" required>
-                                <div class="soporte-field-hint">Aquí te avisaremos cuando el reset esté listo.</div>
+                                <div class="soporte-field-hint">Aquí te avisaremos cuando el reset esté listo. Usa uno activo — revisa spam / correo no deseado si no ves nuestro mensaje.</div>
                                 <div class="soporte-field-error" id="rst-correo-personal-error">Ingresa un correo válido.</div>
                             </div>
                             <div class="soporte-form-group">
-                                <label for="rst-telefono">Teléfono<span class="req">*</span></label>
+                                <label for="rst-telefono">Teléfono (WhatsApp)<span class="req">*</span></label>
                                 <input type="tel" id="rst-telefono" placeholder="5512345678" maxlength="10" inputmode="numeric" required>
+                                <div class="soporte-field-hint">Al dejar este número autorizas que OTDE te contacte por WhatsApp para dar seguimiento a tu solicitud.</div>
                                 <div class="soporte-field-error" id="rst-telefono-error">Ingresa un teléfono válido (10 dígitos).</div>
                             </div>
                             <div class="soporte-form-group">
@@ -951,6 +983,17 @@
                             <div class="sop-manual-fields" id="inc-manual-fields">
                                 <p class="manual-aviso">No encontramos esa CCT. Captura los datos manualmente:</p>
                                 <div class="soporte-form-group">
+                                    <label for="inc-tipo-cct-manual">Tipo de CCT<span class="req">*</span></label>
+                                    <select id="inc-tipo-cct-manual" onchange="otdeActualizarTipoCct('inc')">
+                                        <option value="">— Selecciona una opción —</option>
+                                        <option value="escuela">Escuela</option>
+                                        <option value="supervision">Zona escolar (Supervisión)</option>
+                                        <option value="jefatura">Sector educativo (Jefatura)</option>
+                                        <option value="subdireccion">SEPRN</option>
+                                    </select>
+                                    <div class="soporte-field-error" id="inc-tipo-cct-manual-error">Selecciona el tipo de CCT.</div>
+                                </div>
+                                <div class="soporte-form-group" id="inc-sector-group" style="display:none;">
                                     <label for="inc-sector-manual">Sector<span class="req">*</span></label>
                                     <select id="inc-sector-manual" onchange="incActualizarZonas()">
                                         <option value="">— Selecciona sector —</option>
@@ -958,7 +1001,7 @@
                                         <option value="IV">Sector IV</option><option value="V">Sector V</option><option value="VI">Sector VI</option>
                                         <option value="VII">Sector VII</option><option value="VIII">Sector VIII</option><option value="IX">Sector IX</option>
                                         <option value="X">Sector X</option><option value="XI">Sector XI</option><option value="XII">Sector XII</option>
-                                        <option value="XIII">Sector XIII</option><option value="SEPRN">SEPRN (Subdirección / Jefatura)</option>
+                                        <option value="XIII">Sector XIII</option>
                                     </select>
                                     <div class="soporte-field-error" id="inc-sector-manual-error">Selecciona un sector.</div>
                                 </div>
@@ -973,7 +1016,7 @@
                                     <div class="soporte-field-error" id="inc-escuela-manual-error">Ingresa el nombre de la escuela o unidad.</div>
                                 </div>
                             </div>
-                            <input type="hidden" id="inc-sector-val"><input type="hidden" id="inc-zona-val"><input type="hidden" id="inc-escuela-val">
+                            <input type="hidden" id="inc-sector-val"><input type="hidden" id="inc-zona-val"><input type="hidden" id="inc-escuela-val"><input type="hidden" id="inc-tipo-cct-val">
 
                             <div class="soporte-form-group">
                                 <label for="inc-nombre">Nombre completo<span class="req">*</span></label>
@@ -983,12 +1026,13 @@
                             <div class="soporte-form-group">
                                 <label for="inc-correo-personal">Correo electrónico personal<span class="req">*</span></label>
                                 <input type="email" id="inc-correo-personal" placeholder="tucorreo@gmail.com" required>
-                                <div class="soporte-field-hint">Aquí te enviaremos tus nuevos datos de acceso.</div>
+                                <div class="soporte-field-hint">Aquí te enviaremos tus nuevos datos de acceso. Usa uno activo — revisa spam / correo no deseado si no ves nuestro mensaje.</div>
                                 <div class="soporte-field-error" id="inc-correo-personal-error">Ingresa un correo válido.</div>
                             </div>
                             <div class="soporte-form-group">
-                                <label for="inc-telefono">Teléfono<span class="req">*</span></label>
+                                <label for="inc-telefono">Teléfono (WhatsApp)<span class="req">*</span></label>
                                 <input type="tel" id="inc-telefono" placeholder="5512345678" maxlength="10" inputmode="numeric" required>
+                                <div class="soporte-field-hint">Al dejar este número autorizas que OTDE te contacte por WhatsApp para dar seguimiento a tu solicitud.</div>
                                 <div class="soporte-field-error" id="inc-telefono-error">Ingresa un teléfono válido (10 dígitos).</div>
                             </div>
                             <div class="soporte-form-group">
@@ -1045,7 +1089,7 @@
 
         <div class="content-block">
             <h3>¡Solicita Mantenimiento!</h3>
-            <p>Solicita el mantenimiento a los equipos de cómputo de uso escolar (aula de medios) o de uso administrativo (Dirección, Zona Escolar o Sector Educativo). El oficio de solicitud sigue siendo el respaldo oficial — adjúntalo aquí ya firmado para que no tengas que enviarlo por otro medio; con esto agilizamos el registro y te contactamos en breve.</p>
+            <p>Solicita el mantenimiento a los equipos de cómputo de uso escolar (aula de medios) o de uso administrativo (Dirección, Zona Escolar o Sector Educativo), y a la red/internet si ya existe infraestructura instalada. No damos servicio a impresoras (solo apoyo de conexión en red si hay condiciones) ni a proyectores; instalaciones nuevas de red o eléctricas se canalizan a CoEEE. El oficio de solicitud sigue siendo el respaldo oficial — adjúntalo aquí ya firmado en PDF (debes entregar también el original en físico en OTDE); con esto agilizamos el registro y te contactamos en breve.</p>
 
             <button class="form-button" id="btn-mantenimiento" aria-expanded="false" onclick="toggleMantenimientoForm(this)">
                 <span id="btn-mantenimiento-text">Solicitar Mantenimiento</span>
@@ -1072,6 +1116,17 @@
                     <div class="sop-manual-fields" id="man-manual-fields">
                         <p class="manual-aviso">No encontramos esa CCT. Captura los datos manualmente:</p>
                         <div class="soporte-form-group">
+                            <label for="man-tipo-cct-manual">Tipo de CCT<span class="req">*</span></label>
+                            <select id="man-tipo-cct-manual" onchange="manActualizarTipoCct()">
+                                <option value="">— Selecciona una opción —</option>
+                                <option value="escuela">Escuela</option>
+                                <option value="supervision">Zona escolar (Supervisión)</option>
+                                <option value="jefatura">Sector educativo (Jefatura)</option>
+                                <option value="subdireccion">SEPRN</option>
+                            </select>
+                            <div class="soporte-field-error" id="man-tipo-cct-manual-error">Selecciona el tipo de CCT.</div>
+                        </div>
+                        <div class="soporte-form-group" id="man-sector-group" style="display:none;">
                             <label for="man-sector-manual">Sector<span class="req">*</span></label>
                             <select id="man-sector-manual" onchange="manActualizarZonas()">
                                 <option value="">— Selecciona sector —</option>
@@ -1088,7 +1143,6 @@
                                 <option value="XI">Sector XI</option>
                                 <option value="XII">Sector XII</option>
                                 <option value="XIII">Sector XIII</option>
-                                <option value="SEPRN">SEPRN (Subdirección / Jefatura)</option>
                             </select>
                             <div class="soporte-field-error" id="man-sector-manual-error">Selecciona un sector.</div>
                         </div>
@@ -1109,6 +1163,7 @@
                     <input type="hidden" id="man-sector-val">
                     <input type="hidden" id="man-zona-val">
                     <input type="hidden" id="man-escuela-val">
+                    <input type="hidden" id="man-tipo-cct-val">
 
                     <div class="soporte-form-group">
                         <label for="man-turno">Turno<span class="req">*</span></label>
@@ -1127,14 +1182,6 @@
                         <label for="man-funcion">Función/Cargo<span class="req">*</span></label>
                         <select id="man-funcion" required onchange="manToggleOtraFuncion()">
                             <option value="">— Selecciona una opción —</option>
-                            <option>Docente</option>
-                            <option>Director(a)</option>
-                            <option>Subdirector(a)</option>
-                            <option>ATP (Asesor Técnico Pedagógico)</option>
-                            <option>Supervisor(a)</option>
-                            <option>Jefe(a) de Sector</option>
-                            <option>Personal de apoyo (PAAE)</option>
-                            <option>Otro</option>
                         </select>
                         <div class="soporte-field-error" id="man-funcion-error">Selecciona tu función o cargo.</div>
                         <div id="man-otra-funcion-group" style="display:none;margin-top:10px;">
@@ -1144,27 +1191,89 @@
                     </div>
 
                     <div class="soporte-form-group">
-                        <label for="man-whatsapp">WhatsApp<span class="req">*</span></label>
+                        <label for="man-whatsapp">Teléfono (WhatsApp)<span class="req">*</span></label>
                         <input type="tel" id="man-whatsapp" placeholder="5512345678" maxlength="10" inputmode="numeric" required>
-                        <div class="soporte-field-hint">10 dígitos, sin espacios ni guiones. Te contactaremos por este medio.</div>
+                        <div class="soporte-field-hint">10 dígitos, sin espacios ni guiones. Al dejar este número autorizas que OTDE te contacte por WhatsApp para dar seguimiento a tu solicitud.</div>
                         <div class="soporte-field-error" id="man-whatsapp-error">Ingresa un número de WhatsApp válido (10 dígitos).</div>
                     </div>
                     <div class="soporte-form-group">
-                        <label for="man-correo">Correo electrónico</label>
-                        <input type="email" id="man-correo" placeholder="tucorreo@dee.edu.mx">
-                        <div class="soporte-field-hint">Opcional, para darte seguimiento por escrito.</div>
+                        <label for="man-correo">Correo electrónico<span class="req">*</span></label>
+                        <input type="email" id="man-correo" placeholder="tucorreo@dee.edu.mx" required>
+                        <div class="soporte-field-hint">De preferencia tu correo institucional. Si no tienes uno activo, usa otro que revises seguido — recuerda revisar spam / correo no deseado.</div>
                         <div class="soporte-field-error" id="man-correo-error">Ingresa un correo válido.</div>
                     </div>
+
                     <div class="soporte-form-group">
-                        <label for="man-equipos">Equipos con falla y descripción<span class="req">*</span></label>
-                        <textarea id="man-equipos" placeholder="Ej. 5 computadoras del aula de medios no encienden; 2 con Windows dañado."></textarea>
-                        <div class="soporte-field-error" id="man-equipos-error">Describe brevemente los equipos con falla.</div>
+                        <label>Equipos con falla<span class="req">*</span></label>
+                        <div class="highlight-box" style="margin:0 0 12px 0;">
+                            <p style="margin:0;font-size:14px;"><strong>OTDE da mantenimiento a:</strong> computadoras de aula de medios y de uso administrativo, y apoya con red/internet solo si ya hay infraestructura instalada.<br><strong>No damos servicio a:</strong> impresoras (solo ayudamos a conectarlas en red si hay condiciones) ni proyectores. Si necesitas instalación nueva de red o eléctrica, ese trámite se canaliza a CoEEE.</p>
+                        </div>
+                        <label style="display:flex;align-items:flex-start;gap:8px;font-weight:normal;margin-bottom:8px;">
+                            <input type="checkbox" id="man-equipo-aula" onchange="manToggleCantidad('aula')" style="margin-top:3px;">
+                            <span>Computadora(s) de aula de medios</span>
+                        </label>
+                        <div class="soporte-form-group" id="man-cantidad-aula-group" style="display:none;margin:0 0 12px 26px;">
+                            <label for="man-cantidad-aula">Cantidad aproximada<span class="req">*</span></label>
+                            <select id="man-cantidad-aula">
+                                <option value="">— Selecciona —</option>
+                                <option value="1">1</option>
+                                <option value="2-3">2-3</option>
+                                <option value="4-5">4-5</option>
+                                <option value="6-10">6-10</option>
+                                <option value="Más de 10">Más de 10</option>
+                            </select>
+                            <div class="soporte-field-error" id="man-cantidad-aula-error">Selecciona la cantidad aproximada.</div>
+                        </div>
+                        <label style="display:flex;align-items:flex-start;gap:8px;font-weight:normal;margin-bottom:8px;">
+                            <input type="checkbox" id="man-equipo-admin" onchange="manToggleCantidad('admin')" style="margin-top:3px;">
+                            <span>Computadora(s) de uso administrativo</span>
+                        </label>
+                        <div class="soporte-form-group" id="man-cantidad-admin-group" style="display:none;margin:0 0 12px 26px;">
+                            <label for="man-cantidad-admin">Cantidad aproximada<span class="req">*</span></label>
+                            <select id="man-cantidad-admin">
+                                <option value="">— Selecciona —</option>
+                                <option value="1">1</option>
+                                <option value="2-3">2-3</option>
+                                <option value="4-5">4-5</option>
+                                <option value="6-10">6-10</option>
+                                <option value="Más de 10">Más de 10</option>
+                            </select>
+                            <div class="soporte-field-error" id="man-cantidad-admin-error">Selecciona la cantidad aproximada.</div>
+                        </div>
+                        <label style="display:flex;align-items:flex-start;gap:8px;font-weight:normal;margin-bottom:8px;">
+                            <input type="checkbox" id="man-equipo-red" onchange="manToggleCantidad('red')" style="margin-top:3px;">
+                            <span>Red/Internet (ya hay infraestructura instalada)</span>
+                        </label>
+                        <label style="display:flex;align-items:flex-start;gap:8px;font-weight:normal;margin-bottom:8px;">
+                            <input type="checkbox" id="man-equipo-otro" onchange="manToggleCantidad('otro')" style="margin-top:3px;">
+                            <span>Otro</span>
+                        </label>
+                        <div class="soporte-field-error" id="man-equipo-tipo-error">Selecciona al menos un tipo de equipo.</div>
+
+                        <div class="soporte-form-group" id="man-marca-modelo-group" style="display:none;">
+                            <label for="man-marca-modelo">Marca y modelo (opcional, si lo sabes)</label>
+                            <input type="text" id="man-marca-modelo" placeholder="Ej. HP ProDesk, Dell OptiPlex...">
+                        </div>
+                        <div class="soporte-form-group" id="man-estado-equipo-group" style="display:none;">
+                            <label for="man-estado-equipo">Estado actual<span class="req">*</span></label>
+                            <select id="man-estado-equipo">
+                                <option value="">— Selecciona una opción —</option>
+                                <option>Instaladas y en uso (con falla)</option>
+                                <option>Guardadas / sin instalar</option>
+                                <option>Abandonadas / posible baja</option>
+                            </select>
+                            <div class="soporte-field-error" id="man-estado-equipo-error">Selecciona el estado actual de los equipos.</div>
+                        </div>
+
+                        <label for="man-equipos" style="margin-top:12px;display:block;">Describe la falla<span class="req">*</span></label>
+                        <textarea id="man-equipos" placeholder="Ej. No encienden; 2 con Windows dañado; pantalla azul al iniciar."></textarea>
+                        <div class="soporte-field-error" id="man-equipos-error">Describe brevemente la falla.</div>
                     </div>
                     <div class="soporte-form-group">
-                        <label for="man-oficio">Oficio de solicitud (PDF o foto)<span class="req">*</span></label>
-                        <input type="file" id="man-oficio" accept="application/pdf,image/*" required>
-                        <div class="soporte-field-hint">Máximo 5MB. Debe estar firmado por quien autoriza la solicitud.</div>
-                        <div class="soporte-field-error" id="man-oficio-error">Adjunta el oficio firmado.</div>
+                        <label for="man-oficio">Oficio de solicitud (solo PDF)<span class="req">*</span></label>
+                        <input type="file" id="man-oficio" accept="application/pdf" required>
+                        <div class="soporte-field-hint">Máximo 5MB, formato PDF. Debe estar firmado por quien autoriza la solicitud. Aun así, debes entregar el oficio original en físico en las oficinas de OTDE — este adjunto es un complemento digital, no lo sustituye.</div>
+                        <div class="soporte-field-error" id="man-oficio-error">Adjunta el oficio firmado en formato PDF.</div>
                     </div>
 
                     <button type="submit" class="form-button" id="btn-mantenimiento-submit">
@@ -1232,6 +1341,17 @@
                     <div class="sop-manual-fields" id="ase-manual-fields">
                         <p class="manual-aviso">No encontramos esa CCT. Captura los datos manualmente:</p>
                         <div class="soporte-form-group">
+                            <label for="ase-tipo-cct-manual">Tipo de CCT<span class="req">*</span></label>
+                            <select id="ase-tipo-cct-manual" onchange="aseActualizarTipoCct()">
+                                <option value="">— Selecciona una opción —</option>
+                                <option value="escuela">Escuela</option>
+                                <option value="supervision">Zona escolar (Supervisión)</option>
+                                <option value="jefatura">Sector educativo (Jefatura)</option>
+                                <option value="subdireccion">SEPRN</option>
+                            </select>
+                            <div class="soporte-field-error" id="ase-tipo-cct-manual-error">Selecciona el tipo de CCT.</div>
+                        </div>
+                        <div class="soporte-form-group" id="ase-sector-group" style="display:none;">
                             <label for="ase-sector-manual">Sector<span class="req">*</span></label>
                             <select id="ase-sector-manual" onchange="aseActualizarZonas()">
                                 <option value="">— Selecciona sector —</option>
@@ -1248,7 +1368,6 @@
                                 <option value="XI">Sector XI</option>
                                 <option value="XII">Sector XII</option>
                                 <option value="XIII">Sector XIII</option>
-                                <option value="SEPRN">SEPRN (Subdirección / Jefatura)</option>
                             </select>
                             <div class="soporte-field-error" id="ase-sector-manual-error">Selecciona un sector.</div>
                         </div>
@@ -1269,6 +1388,7 @@
                     <input type="hidden" id="ase-sector-val">
                     <input type="hidden" id="ase-zona-val">
                     <input type="hidden" id="ase-escuela-val">
+                    <input type="hidden" id="ase-tipo-cct-val">
 
                     <div class="soporte-form-group">
                         <label for="ase-turno">Turno<span class="req">*</span></label>
@@ -1286,11 +1406,6 @@
                         <label for="ase-funcion">Función/Cargo<span class="req">*</span></label>
                         <select id="ase-funcion" required onchange="aseToggleOtraFuncion()">
                             <option value="">— Selecciona una opción —</option>
-                            <option>Director(a)</option>
-                            <option>Subdirector(a)</option>
-                            <option>Docente</option>
-                            <option>ATP (Asesor Técnico Pedagógico)</option>
-                            <option>Otro</option>
                         </select>
                         <div class="soporte-field-error" id="ase-funcion-error">Selecciona tu función o cargo.</div>
                         <div id="ase-otra-funcion-group" style="display:none;margin-top:10px;">
@@ -1306,15 +1421,15 @@
                     </div>
 
                     <div class="soporte-form-group">
-                        <label for="ase-whatsapp">WhatsApp<span class="req">*</span></label>
+                        <label for="ase-whatsapp">Teléfono (WhatsApp)<span class="req">*</span></label>
                         <input type="tel" id="ase-whatsapp" placeholder="5512345678" maxlength="10" inputmode="numeric" required>
-                        <div class="soporte-field-hint">10 dígitos, sin espacios ni guiones. Te contactaremos por este medio.</div>
+                        <div class="soporte-field-hint">10 dígitos, sin espacios ni guiones. Al dejar este número autorizas que OTDE te contacte por WhatsApp para dar seguimiento a tu solicitud.</div>
                         <div class="soporte-field-error" id="ase-whatsapp-error">Ingresa un número de WhatsApp válido (10 dígitos).</div>
                     </div>
                     <div class="soporte-form-group">
-                        <label for="ase-correo">Correo electrónico</label>
-                        <input type="email" id="ase-correo" placeholder="tucorreo@dee.edu.mx">
-                        <div class="soporte-field-hint">Opcional, para darte seguimiento por escrito.</div>
+                        <label for="ase-correo">Correo electrónico<span class="req">*</span></label>
+                        <input type="email" id="ase-correo" placeholder="tucorreo@dee.edu.mx" required>
+                        <div class="soporte-field-hint">De preferencia tu correo institucional. Si no tienes uno activo, usa otro que revises seguido — recuerda revisar spam / correo no deseado.</div>
                         <div class="soporte-field-error" id="ase-correo-error">Ingresa un correo válido.</div>
                     </div>
                     <div class="soporte-form-group">
@@ -1322,10 +1437,10 @@
                         <textarea id="ase-observaciones" placeholder="Opcional: horario preferido, temas de interés, etc."></textarea>
                     </div>
                     <div class="soporte-form-group">
-                        <label for="ase-oficio">Oficio de solicitud (PDF o foto)<span class="req">*</span></label>
-                        <input type="file" id="ase-oficio" accept="application/pdf,image/*" required>
-                        <div class="soporte-field-hint">Máximo 5MB. Debe estar firmado por quien autoriza la solicitud.</div>
-                        <div class="soporte-field-error" id="ase-oficio-error">Adjunta el oficio firmado.</div>
+                        <label for="ase-oficio">Oficio de solicitud (solo PDF)<span class="req">*</span></label>
+                        <input type="file" id="ase-oficio" accept="application/pdf" required>
+                        <div class="soporte-field-hint">Máximo 5MB, formato PDF. Debe estar firmado por quien autoriza la solicitud. Aun así, debes entregar el oficio original en físico en las oficinas de OTDE — este adjunto es un complemento digital, no lo sustituye.</div>
+                        <div class="soporte-field-error" id="ase-oficio-error">Adjunta el oficio firmado en formato PDF.</div>
                     </div>
 
                     <button type="submit" class="form-button" id="btn-asesoria-submit">
@@ -1386,6 +1501,17 @@
                     <div class="sop-manual-fields" id="sop-manual-fields">
                         <p class="manual-aviso">No encontramos esa CCT. Captura los datos manualmente:</p>
                         <div class="soporte-form-group">
+                            <label for="sop-tipo-cct-manual">Tipo de CCT<span class="req">*</span></label>
+                            <select id="sop-tipo-cct-manual" onchange="sopActualizarTipoCct()">
+                                <option value="">— Selecciona una opción —</option>
+                                <option value="escuela">Escuela</option>
+                                <option value="supervision">Zona escolar (Supervisión)</option>
+                                <option value="jefatura">Sector educativo (Jefatura)</option>
+                                <option value="subdireccion">SEPRN</option>
+                            </select>
+                            <div class="soporte-field-error" id="sop-tipo-cct-manual-error">Selecciona el tipo de CCT.</div>
+                        </div>
+                        <div class="soporte-form-group" id="sop-sector-group" style="display:none;">
                             <label for="sop-sector-manual">Sector<span class="req">*</span></label>
                             <select id="sop-sector-manual" onchange="sopActualizarZonas()">
                                 <option value="">— Selecciona sector —</option>
@@ -1402,7 +1528,6 @@
                                 <option value="XI">Sector XI</option>
                                 <option value="XII">Sector XII</option>
                                 <option value="XIII">Sector XIII</option>
-                                <option value="SEPRN">SEPRN (Subdirección / Jefatura)</option>
                             </select>
                             <div class="soporte-field-error" id="sop-sector-manual-error">Selecciona un sector.</div>
                         </div>
@@ -1423,19 +1548,12 @@
                     <input type="hidden" id="sop-sector-val">
                     <input type="hidden" id="sop-zona-val">
                     <input type="hidden" id="sop-escuela-val">
+                    <input type="hidden" id="sop-tipo-cct-val">
 
                     <div class="soporte-form-group">
                         <label for="sop-funcion">Función/Cargo<span class="req">*</span></label>
                         <select id="sop-funcion" required onchange="sopToggleOtraFuncion()">
                             <option value="">— Selecciona una opción —</option>
-                            <option>Docente</option>
-                            <option>Director(a)</option>
-                            <option>Subdirector(a)</option>
-                            <option>ATP (Asesor Técnico Pedagógico)</option>
-                            <option>Supervisor(a)</option>
-                            <option>Jefe(a) de Sector</option>
-                            <option>Personal de apoyo (PAAE)</option>
-                            <option>Otro</option>
                         </select>
                         <div class="soporte-field-error" id="sop-funcion-error">Selecciona tu función o cargo.</div>
                         <div id="sop-otra-funcion-group" style="display:none;margin-top:10px;">
@@ -1444,16 +1562,30 @@
                         </div>
                     </div>
                     <div class="soporte-form-group">
-                        <label for="sop-whatsapp">WhatsApp<span class="req">*</span></label>
+                        <label for="sop-whatsapp">Teléfono (WhatsApp)<span class="req">*</span></label>
                         <input type="tel" id="sop-whatsapp" placeholder="5512345678" maxlength="10" inputmode="numeric" required>
-                        <div class="soporte-field-hint">10 dígitos, sin espacios ni guiones. Te contactaremos por este medio.</div>
+                        <div class="soporte-field-hint">10 dígitos, sin espacios ni guiones. Al dejar este número autorizas que OTDE te contacte por WhatsApp para dar seguimiento a tu solicitud.</div>
                         <div class="soporte-field-error" id="sop-whatsapp-error">Ingresa un número de WhatsApp válido (10 dígitos).</div>
                     </div>
                     <div class="soporte-form-group">
-                        <label for="sop-correo">Correo electrónico</label>
-                        <input type="email" id="sop-correo" placeholder="tucorreo@dee.edu.mx">
-                        <div class="soporte-field-hint">Opcional, para darte seguimiento por escrito.</div>
+                        <label for="sop-correo">Correo electrónico<span class="req">*</span></label>
+                        <input type="email" id="sop-correo" placeholder="tucorreo@dee.edu.mx" required>
+                        <div class="soporte-field-hint">De preferencia tu correo institucional. Si no tienes uno activo, usa otro que revises seguido — recuerda revisar spam / correo no deseado.</div>
                         <div class="soporte-field-error" id="sop-correo-error">Ingresa un correo válido.</div>
+                    </div>
+                    <div class="soporte-form-group">
+                        <label for="sop-tipo-ayuda">¿Qué tipo de ayuda necesitas?<span class="req">*</span></label>
+                        <select id="sop-tipo-ayuda" required>
+                            <option value="">— Selecciona una opción —</option>
+                            <option>Correo institucional</option>
+                            <option>Office/Licencias</option>
+                            <option>Impresora</option>
+                            <option>Antivirus/Seguridad</option>
+                            <option>Internet/Red</option>
+                            <option>Equipo de cómputo (hardware)</option>
+                            <option>Otro</option>
+                        </select>
+                        <div class="soporte-field-error" id="sop-tipo-ayuda-error">Selecciona el tipo de ayuda que necesitas.</div>
                     </div>
                     <div class="soporte-form-group">
                         <label for="sop-urgencia">Urgencia<span class="req">*</span></label>
@@ -1824,6 +1956,24 @@
         }
     }
 
+    // Repuebla un <select> de Función/Cargo según el tipo de CCT (escuela | supervision |
+    // jefatura | subdireccion — ver otdeOpcionesFuncion en js/cct-db.js), compartida por los
+    // 4 formularios que preguntan Función (Alta de correo, Mantenimiento, Asesorías, Soporte).
+    // Conserva la selección previa si sigue siendo válida en la nueva lista.
+    function otdePoblarFuncion(selectId, tipo) {
+        var select = document.getElementById(selectId);
+        if (!select) return;
+        var valorPrevio = select.value;
+        var opciones = otdeOpcionesFuncion(tipo);
+        select.innerHTML = '<option value="">— Selecciona una opción —</option>';
+        opciones.forEach(function(op) {
+            var o = document.createElement('option');
+            o.textContent = op;
+            select.appendChild(o);
+        });
+        select.value = opciones.indexOf(valorPrevio) !== -1 ? valorPrevio : '';
+    }
+
     function toggleSoporteForm(btn) {
         var container = document.getElementById('form-soporte');
         var text = document.getElementById('btn-soporte-text');
@@ -1937,27 +2087,48 @@
         document.getElementById('sop-sector-val').value  = m.sector;
         document.getElementById('sop-zona-val').value    = m.zona || '';
         document.getElementById('sop-escuela-val').value = m.nombre || '';
+        document.getElementById('sop-tipo-cct-val').value = m.tipo || '';
         sopStatusBox.className = 'sop-cct-status found';
         sopStatusBox.textContent = 'Sector ' + m.sector + (m.zona ? ' · Zona ' + m.zona : '') + ' · ' + m.nombre;
         document.getElementById('sop-manual-fields').classList.remove('visible');
         sopCctEncontrada = true;
+        otdePoblarFuncion('sop-funcion', m.tipo);
     }
 
     function sopResetCct() {
         document.getElementById('sop-sector-val').value  = '';
         document.getElementById('sop-zona-val').value    = '';
         document.getElementById('sop-escuela-val').value = '';
+        document.getElementById('sop-tipo-cct-val').value = '';
         sopStatusBox.className = 'sop-cct-status';
         sopCctEncontrada = false;
+        otdePoblarFuncion('sop-funcion', null);
+    }
+
+    // Tipo de CCT capturado a mano (cuando la CCT no se encontró): controla si se piden
+    // Sector/Zona (escuela y zona escolar los necesitan, sector solo Sector, SEPRN ninguno)
+    // y repuebla Función/Cargo con las opciones que correspondan a ese tipo.
+    function sopActualizarTipoCct() {
+        var tipo = document.getElementById('sop-tipo-cct-manual').value;
+        var sectorGroup = document.getElementById('sop-sector-group');
+        sectorGroup.style.display = (tipo === 'escuela' || tipo === 'supervision' || tipo === 'jefatura') ? 'block' : 'none';
+        if (tipo !== 'escuela' && tipo !== 'supervision') {
+            document.getElementById('sop-zona-group').style.display = 'none';
+        } else {
+            sopActualizarZonas();
+        }
+        document.getElementById('sop-tipo-cct-val').value = tipo;
+        otdePoblarFuncion('sop-funcion', tipo);
     }
 
     function sopActualizarZonas() {
+        var tipo = document.getElementById('sop-tipo-cct-manual').value;
         var sector = document.getElementById('sop-sector-manual').value;
         var zonaGroup  = document.getElementById('sop-zona-group');
         var zonaSelect = document.getElementById('sop-zona-manual');
         zonaSelect.innerHTML = '<option value="">— Selecciona zona —</option>';
 
-        if (!sector || sector === 'SEPRN') {
+        if (!sector || (tipo !== 'escuela' && tipo !== 'supervision')) {
             zonaGroup.style.display = 'none';
             return;
         }
@@ -1971,12 +2142,14 @@
     }
 
     sopInitCctAutocomplete();
+    otdePoblarFuncion('sop-funcion', null);
 
     function validarSoporteForm() {
         var ok = true;
         var campos = [
             { id: 'sop-nombre',      err: 'sop-nombre-error',      test: function(v) { return v.trim().length >= 3; } },
             { id: 'sop-whatsapp',    err: 'sop-whatsapp-error',    test: function(v) { return /^\d{10}$/.test(v.trim()); } },
+            { id: 'sop-tipo-ayuda',  err: 'sop-tipo-ayuda-error',  test: function(v) { return v !== ''; } },
             { id: 'sop-urgencia',    err: 'sop-urgencia-error',    test: function(v) { return v !== ''; } },
             { id: 'sop-descripcion', err: 'sop-descripcion-error', test: function(v) { return v.trim().length >= 5; } }
         ];
@@ -2037,6 +2210,18 @@
         }
 
         if (manualVisible) {
+            var tipoCctInput = document.getElementById('sop-tipo-cct-manual');
+            var tipoCctErr = document.getElementById('sop-tipo-cct-manual-error');
+            var tipoCct = tipoCctInput.value;
+            if (!tipoCct) {
+                tipoCctInput.classList.add('error');
+                tipoCctErr.classList.add('visible');
+                ok = false;
+            } else {
+                tipoCctInput.classList.remove('error');
+                tipoCctErr.classList.remove('visible');
+            }
+
             var sectorInput = document.getElementById('sop-sector-manual');
             var zonaInput = document.getElementById('sop-zona-manual');
             var escuelaInput = document.getElementById('sop-escuela-manual');
@@ -2046,9 +2231,10 @@
             var sector = sectorInput.value;
             var zona = zonaInput.value;
             var escuela = escuelaInput.value.trim();
-            var zonaReq = sector && sector !== 'SEPRN';
+            var sectorReq = tipoCct === 'escuela' || tipoCct === 'supervision' || tipoCct === 'jefatura';
+            var zonaReq = tipoCct === 'escuela' || tipoCct === 'supervision';
 
-            if (!sector) {
+            if (sectorReq && !sector) {
                 sectorInput.classList.add('error');
                 sectorErr.classList.add('visible');
                 ok = false;
@@ -2082,11 +2268,10 @@
             ok = false;
         }
 
-        // Correo es opcional, pero si se captura debe ser válido
         var correoInput = document.getElementById('sop-correo');
         var correoErr = document.getElementById('sop-correo-error');
         var correoVal = correoInput.value.trim();
-        if (correoVal !== '' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoVal)) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoVal)) {
             correoInput.classList.add('error');
             correoErr.classList.add('visible');
             ok = false;
@@ -2123,6 +2308,7 @@
             funcion: funcionVal,
             whatsapp: document.getElementById('sop-whatsapp').value,
             correo: document.getElementById('sop-correo').value,
+            tipoAyuda: document.getElementById('sop-tipo-ayuda').value,
             urgencia: document.getElementById('sop-urgencia').value,
             descripcion: document.getElementById('sop-descripcion').value
         };
@@ -2287,27 +2473,45 @@
         document.getElementById('man-sector-val').value  = m.sector;
         document.getElementById('man-zona-val').value    = m.zona || '';
         document.getElementById('man-escuela-val').value = m.nombre || '';
+        document.getElementById('man-tipo-cct-val').value = m.tipo || '';
         manStatusBox.className = 'sop-cct-status found';
         manStatusBox.textContent = 'Sector ' + m.sector + (m.zona ? ' · Zona ' + m.zona : '') + ' · ' + m.nombre;
         document.getElementById('man-manual-fields').classList.remove('visible');
         manCctEncontrada = true;
+        otdePoblarFuncion('man-funcion', m.tipo);
     }
 
     function manResetCct() {
         document.getElementById('man-sector-val').value  = '';
         document.getElementById('man-zona-val').value    = '';
         document.getElementById('man-escuela-val').value = '';
+        document.getElementById('man-tipo-cct-val').value = '';
         manStatusBox.className = 'sop-cct-status';
         manCctEncontrada = false;
+        otdePoblarFuncion('man-funcion', null);
+    }
+
+    function manActualizarTipoCct() {
+        var tipo = document.getElementById('man-tipo-cct-manual').value;
+        var sectorGroup = document.getElementById('man-sector-group');
+        sectorGroup.style.display = (tipo === 'escuela' || tipo === 'supervision' || tipo === 'jefatura') ? 'block' : 'none';
+        if (tipo !== 'escuela' && tipo !== 'supervision') {
+            document.getElementById('man-zona-group').style.display = 'none';
+        } else {
+            manActualizarZonas();
+        }
+        document.getElementById('man-tipo-cct-val').value = tipo;
+        otdePoblarFuncion('man-funcion', tipo);
     }
 
     function manActualizarZonas() {
+        var tipo = document.getElementById('man-tipo-cct-manual').value;
         var sector = document.getElementById('man-sector-manual').value;
         var zonaGroup  = document.getElementById('man-zona-group');
         var zonaSelect = document.getElementById('man-zona-manual');
         zonaSelect.innerHTML = '<option value="">— Selecciona zona —</option>';
 
-        if (!sector || sector === 'SEPRN') {
+        if (!sector || (tipo !== 'escuela' && tipo !== 'supervision')) {
             zonaGroup.style.display = 'none';
             return;
         }
@@ -2321,6 +2525,22 @@
     }
 
     manInitCctAutocomplete();
+    otdePoblarFuncion('man-funcion', null);
+
+    // Muestra/oculta el desplegable de cantidad según qué checkbox de tipo de equipo
+    // se marcó, y el bloque de marca/modelo + estado si hay al menos una computadora marcada.
+    function manToggleCantidad(cual) {
+        if (cual === 'aula' || cual === 'admin') {
+            var marcada = document.getElementById('man-equipo-' + cual).checked;
+            document.getElementById('man-cantidad-' + cual + '-group').style.display = marcada ? 'block' : 'none';
+            if (!marcada) document.getElementById('man-cantidad-' + cual).value = '';
+        }
+        var hayComputadora = document.getElementById('man-equipo-aula').checked || document.getElementById('man-equipo-admin').checked;
+        document.getElementById('man-marca-modelo-group').style.display = hayComputadora ? 'block' : 'none';
+        document.getElementById('man-estado-equipo-group').style.display = hayComputadora ? 'block' : 'none';
+        var algunoMarcado = hayComputadora || document.getElementById('man-equipo-red').checked || document.getElementById('man-equipo-otro').checked;
+        if (algunoMarcado) document.getElementById('man-equipo-tipo-error').classList.remove('visible');
+    }
 
     // Lee el archivo del oficio como base64 (sin el prefijo "data:...;base64,")
     function manLeerArchivoBase64(file) {
@@ -2396,6 +2616,18 @@
         }
 
         if (manualVisible) {
+            var tipoCctInput = document.getElementById('man-tipo-cct-manual');
+            var tipoCctErr = document.getElementById('man-tipo-cct-manual-error');
+            var tipoCct = tipoCctInput.value;
+            if (!tipoCct) {
+                tipoCctInput.classList.add('error');
+                tipoCctErr.classList.add('visible');
+                ok = false;
+            } else {
+                tipoCctInput.classList.remove('error');
+                tipoCctErr.classList.remove('visible');
+            }
+
             var sectorInput = document.getElementById('man-sector-manual');
             var zonaInput = document.getElementById('man-zona-manual');
             var escuelaInput = document.getElementById('man-escuela-manual');
@@ -2405,9 +2637,10 @@
             var sector = sectorInput.value;
             var zona = zonaInput.value;
             var escuela = escuelaInput.value.trim();
-            var zonaReq = sector && sector !== 'SEPRN';
+            var sectorReq = tipoCct === 'escuela' || tipoCct === 'supervision' || tipoCct === 'jefatura';
+            var zonaReq = tipoCct === 'escuela' || tipoCct === 'supervision';
 
-            if (!sector) {
+            if (sectorReq && !sector) {
                 sectorInput.classList.add('error');
                 sectorErr.classList.add('visible');
                 ok = false;
@@ -2443,7 +2676,7 @@
         var correoInput = document.getElementById('man-correo');
         var correoErr = document.getElementById('man-correo-error');
         var correoVal = correoInput.value.trim();
-        if (correoVal !== '' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoVal)) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoVal)) {
             correoInput.classList.add('error');
             correoErr.classList.add('visible');
             ok = false;
@@ -2452,18 +2685,61 @@
             correoErr.classList.remove('visible');
         }
 
+        // Equipos con falla: al menos un tipo marcado; aula/admin marcados piden cantidad;
+        // cualquier computadora marcada pide estado actual.
+        var equipoAula = document.getElementById('man-equipo-aula').checked;
+        var equipoAdmin = document.getElementById('man-equipo-admin').checked;
+        var equipoRed = document.getElementById('man-equipo-red').checked;
+        var equipoOtro = document.getElementById('man-equipo-otro').checked;
+        var equipoTipoErr = document.getElementById('man-equipo-tipo-error');
+        if (!equipoAula && !equipoAdmin && !equipoRed && !equipoOtro) {
+            equipoTipoErr.classList.add('visible');
+            ok = false;
+        } else {
+            equipoTipoErr.classList.remove('visible');
+        }
+
+        [['aula', equipoAula], ['admin', equipoAdmin]].forEach(function(par) {
+            var cantidadInput = document.getElementById('man-cantidad-' + par[0]);
+            var cantidadErr = document.getElementById('man-cantidad-' + par[0] + '-error');
+            if (par[1] && !cantidadInput.value) {
+                cantidadInput.classList.add('error');
+                cantidadErr.classList.add('visible');
+                ok = false;
+            } else {
+                cantidadInput.classList.remove('error');
+                cantidadErr.classList.remove('visible');
+            }
+        });
+
+        var estadoInput = document.getElementById('man-estado-equipo');
+        var estadoErr = document.getElementById('man-estado-equipo-error');
+        if ((equipoAula || equipoAdmin) && !estadoInput.value) {
+            estadoInput.classList.add('error');
+            estadoErr.classList.add('visible');
+            ok = false;
+        } else {
+            estadoInput.classList.remove('error');
+            estadoErr.classList.remove('visible');
+        }
+
         var oficioInput = document.getElementById('man-oficio');
         var oficioErr = document.getElementById('man-oficio-error');
         var oficioFile = oficioInput.files[0];
         if (!oficioFile) {
             oficioInput.classList.add('error');
             oficioErr.classList.add('visible');
-            oficioErr.textContent = 'Adjunta el oficio firmado.';
+            oficioErr.textContent = 'Adjunta el oficio firmado en formato PDF.';
+            ok = false;
+        } else if (oficioFile.type !== 'application/pdf') {
+            oficioInput.classList.add('error');
+            oficioErr.classList.add('visible');
+            oficioErr.textContent = 'Solo se aceptan archivos en formato PDF.';
             ok = false;
         } else if (oficioFile.size > MAN_TAMANO_MAX_BYTES) {
             oficioInput.classList.add('error');
             oficioErr.classList.add('visible');
-            oficioErr.textContent = 'El archivo pesa más de 5MB. Comprímelo o toma la foto con menor resolución.';
+            oficioErr.textContent = 'El archivo pesa más de 5MB. Comprímelo e intenta de nuevo.';
             ok = false;
         } else {
             oficioInput.classList.remove('error');
@@ -2496,6 +2772,12 @@
         try {
             var oficioBase64 = await manLeerArchivoBase64(oficioFile);
 
+            var tipoEquipo = [];
+            if (document.getElementById('man-equipo-aula').checked) tipoEquipo.push('Aula de medios');
+            if (document.getElementById('man-equipo-admin').checked) tipoEquipo.push('Administrativa');
+            if (document.getElementById('man-equipo-red').checked) tipoEquipo.push('Red/Internet');
+            if (document.getElementById('man-equipo-otro').checked) tipoEquipo.push('Otro');
+
             var datos = {
                 nombre: toTitleCase(document.getElementById('man-nombre').value.trim()),
                 cct: document.getElementById('man-cct').value,
@@ -2507,6 +2789,11 @@
                 whatsapp: document.getElementById('man-whatsapp').value,
                 correo: document.getElementById('man-correo').value,
                 equipos: document.getElementById('man-equipos').value,
+                tipoEquipo: tipoEquipo.join(', '),
+                cantidadAula: document.getElementById('man-cantidad-aula').value,
+                cantidadAdmin: document.getElementById('man-cantidad-admin').value,
+                marcaModelo: document.getElementById('man-marca-modelo').value.trim(),
+                estadoEquipo: document.getElementById('man-estado-equipo').value,
                 oficioBase64: oficioBase64,
                 oficioNombre: oficioFile.name,
                 oficioTipo: oficioFile.type
@@ -2523,8 +2810,11 @@
                 msg.textContent = 'Solicitud registrada (folio ' + data.folio + '). Un integrante de la OTDE te contactará en breve.';
                 document.getElementById('mantenimiento-form').reset();
                 document.getElementById('man-manual-fields').classList.remove('visible');
+                document.getElementById('man-sector-group').style.display = 'none';
                 document.getElementById('man-zona-group').style.display = 'none';
                 document.getElementById('man-otra-funcion-group').style.display = 'none';
+                manToggleCantidad('aula');
+                manToggleCantidad('admin');
                 document.querySelectorAll('#mantenimiento-form .error').forEach(function(el) { el.classList.remove('error'); });
                 document.querySelectorAll('#mantenimiento-form .soporte-field-error.visible').forEach(function(el) { el.classList.remove('visible'); });
                 manResetCct();
@@ -2670,27 +2960,45 @@
         document.getElementById('ase-sector-val').value  = m.sector;
         document.getElementById('ase-zona-val').value    = m.zona || '';
         document.getElementById('ase-escuela-val').value = m.nombre || '';
+        document.getElementById('ase-tipo-cct-val').value = m.tipo || '';
         aseStatusBox.className = 'sop-cct-status found';
         aseStatusBox.textContent = 'Sector ' + m.sector + (m.zona ? ' · Zona ' + m.zona : '') + ' · ' + m.nombre;
         document.getElementById('ase-manual-fields').classList.remove('visible');
         aseCctEncontrada = true;
+        otdePoblarFuncion('ase-funcion', m.tipo);
     }
 
     function aseResetCct() {
         document.getElementById('ase-sector-val').value  = '';
         document.getElementById('ase-zona-val').value    = '';
         document.getElementById('ase-escuela-val').value = '';
+        document.getElementById('ase-tipo-cct-val').value = '';
         aseStatusBox.className = 'sop-cct-status';
         aseCctEncontrada = false;
+        otdePoblarFuncion('ase-funcion', null);
+    }
+
+    function aseActualizarTipoCct() {
+        var tipo = document.getElementById('ase-tipo-cct-manual').value;
+        var sectorGroup = document.getElementById('ase-sector-group');
+        sectorGroup.style.display = (tipo === 'escuela' || tipo === 'supervision' || tipo === 'jefatura') ? 'block' : 'none';
+        if (tipo !== 'escuela' && tipo !== 'supervision') {
+            document.getElementById('ase-zona-group').style.display = 'none';
+        } else {
+            aseActualizarZonas();
+        }
+        document.getElementById('ase-tipo-cct-val').value = tipo;
+        otdePoblarFuncion('ase-funcion', tipo);
     }
 
     function aseActualizarZonas() {
+        var tipo = document.getElementById('ase-tipo-cct-manual').value;
         var sector = document.getElementById('ase-sector-manual').value;
         var zonaGroup  = document.getElementById('ase-zona-group');
         var zonaSelect = document.getElementById('ase-zona-manual');
         zonaSelect.innerHTML = '<option value="">— Selecciona zona —</option>';
 
-        if (!sector || sector === 'SEPRN') {
+        if (!sector || (tipo !== 'escuela' && tipo !== 'supervision')) {
             zonaGroup.style.display = 'none';
             return;
         }
@@ -2704,6 +3012,7 @@
     }
 
     aseInitCctAutocomplete();
+    otdePoblarFuncion('ase-funcion', null);
 
     function validarAsesoriaForm() {
         var ok = true;
@@ -2786,6 +3095,18 @@
         }
 
         if (manualVisible) {
+            var tipoCctInput = document.getElementById('ase-tipo-cct-manual');
+            var tipoCctErr = document.getElementById('ase-tipo-cct-manual-error');
+            var tipoCct = tipoCctInput.value;
+            if (!tipoCct) {
+                tipoCctInput.classList.add('error');
+                tipoCctErr.classList.add('visible');
+                ok = false;
+            } else {
+                tipoCctInput.classList.remove('error');
+                tipoCctErr.classList.remove('visible');
+            }
+
             var sectorInput = document.getElementById('ase-sector-manual');
             var zonaInput = document.getElementById('ase-zona-manual');
             var escuelaInput = document.getElementById('ase-escuela-manual');
@@ -2795,9 +3116,10 @@
             var sector = sectorInput.value;
             var zona = zonaInput.value;
             var escuela = escuelaInput.value.trim();
-            var zonaReq = sector && sector !== 'SEPRN';
+            var sectorReq = tipoCct === 'escuela' || tipoCct === 'supervision' || tipoCct === 'jefatura';
+            var zonaReq = tipoCct === 'escuela' || tipoCct === 'supervision';
 
-            if (!sector) {
+            if (sectorReq && !sector) {
                 sectorInput.classList.add('error');
                 sectorErr.classList.add('visible');
                 ok = false;
@@ -2833,7 +3155,7 @@
         var correoInput = document.getElementById('ase-correo');
         var correoErr = document.getElementById('ase-correo-error');
         var correoVal = correoInput.value.trim();
-        if (correoVal !== '' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoVal)) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoVal)) {
             correoInput.classList.add('error');
             correoErr.classList.add('visible');
             ok = false;
@@ -2848,12 +3170,17 @@
         if (!oficioFile) {
             oficioInput.classList.add('error');
             oficioErr.classList.add('visible');
-            oficioErr.textContent = 'Adjunta el oficio firmado.';
+            oficioErr.textContent = 'Adjunta el oficio firmado en formato PDF.';
+            ok = false;
+        } else if (oficioFile.type !== 'application/pdf') {
+            oficioInput.classList.add('error');
+            oficioErr.classList.add('visible');
+            oficioErr.textContent = 'Solo se aceptan archivos en formato PDF.';
             ok = false;
         } else if (oficioFile.size > MAN_TAMANO_MAX_BYTES) {
             oficioInput.classList.add('error');
             oficioErr.classList.add('visible');
-            oficioErr.textContent = 'El archivo pesa más de 5MB. Comprímelo o toma la foto con menor resolución.';
+            oficioErr.textContent = 'El archivo pesa más de 5MB. Comprímelo e intenta de nuevo.';
             ok = false;
         } else {
             oficioInput.classList.remove('error');
@@ -2916,6 +3243,7 @@
                 msg.textContent = 'Solicitud registrada (folio ' + data.folio + '). Un integrante de la OTDE te contactará en breve.';
                 document.getElementById('asesoria-form').reset();
                 document.getElementById('ase-manual-fields').classList.remove('visible');
+                document.getElementById('ase-sector-group').style.display = 'none';
                 document.getElementById('ase-zona-group').style.display = 'none';
                 document.getElementById('ase-otra-funcion-group').style.display = 'none';
                 document.querySelectorAll('#asesoria-form .error').forEach(function(el) { el.classList.remove('error'); });
@@ -3080,11 +3408,13 @@
         document.getElementById('alt-sector-val').value  = m.sector;
         document.getElementById('alt-zona-val').value    = m.zona || '';
         document.getElementById('alt-escuela-val').value = m.nombre || '';
+        document.getElementById('alt-tipo-cct-val').value = m.tipo || '';
         altStatusBox.className = 'sop-cct-status found';
         altStatusBox.textContent = 'Sector ' + m.sector + (m.zona ? ' · Zona ' + m.zona : '') + ' · ' + m.nombre;
         document.getElementById('alt-manual-fields').classList.remove('visible');
         altCctEncontrada = true;
         altCctTipo = m.tipo;
+        otdePoblarFuncion('alt-funcion', m.tipo);
         altActualizarDominio();
     }
 
@@ -3092,19 +3422,39 @@
         document.getElementById('alt-sector-val').value  = '';
         document.getElementById('alt-zona-val').value    = '';
         document.getElementById('alt-escuela-val').value = '';
+        document.getElementById('alt-tipo-cct-val').value = '';
         altStatusBox.className = 'sop-cct-status';
         altCctEncontrada = false;
         altCctTipo = null;
+        otdePoblarFuncion('alt-funcion', null);
+        altActualizarDominio();
+    }
+
+    // Tipo de CCT capturado a mano: controla si se piden Sector/Zona y repuebla
+    // Función/Cargo, igual que en Mantenimiento/Asesorías/Soporte.
+    function altActualizarTipoCct() {
+        var tipo = document.getElementById('alt-tipo-cct-manual').value;
+        var sectorGroup = document.getElementById('alt-sector-group');
+        sectorGroup.style.display = (tipo === 'escuela' || tipo === 'supervision' || tipo === 'jefatura') ? 'block' : 'none';
+        if (tipo !== 'escuela' && tipo !== 'supervision') {
+            document.getElementById('alt-zona-group').style.display = 'none';
+        } else {
+            altActualizarZonas();
+        }
+        document.getElementById('alt-tipo-cct-val').value = tipo;
+        altCctTipo = tipo;
+        otdePoblarFuncion('alt-funcion', tipo);
         altActualizarDominio();
     }
 
     function altActualizarZonas() {
+        var tipo = document.getElementById('alt-tipo-cct-manual').value;
         var sector = document.getElementById('alt-sector-manual').value;
         var zonaGroup  = document.getElementById('alt-zona-group');
         var zonaSelect = document.getElementById('alt-zona-manual');
         zonaSelect.innerHTML = '<option value="">— Selecciona zona —</option>';
 
-        if (!sector || sector === 'SEPRN') {
+        if (!sector || (tipo !== 'escuela' && tipo !== 'supervision')) {
             zonaGroup.style.display = 'none';
             return;
         }
@@ -3118,6 +3468,7 @@
     }
 
     altInitCctAutocomplete();
+    otdePoblarFuncion('alt-funcion', null);
 
     // ── Dominio: calcula y refleja en pantalla cuál dominio le toca al
     // solicitante, según CCT + tipo de cuenta (ver otdeDominioParaCCT en
@@ -3226,6 +3577,18 @@
         }
 
         if (manualVisible) {
+            var tipoCctInput = document.getElementById('alt-tipo-cct-manual');
+            var tipoCctErr = document.getElementById('alt-tipo-cct-manual-error');
+            var tipoCct = tipoCctInput.value;
+            if (!tipoCct) {
+                tipoCctInput.classList.add('error');
+                tipoCctErr.classList.add('visible');
+                ok = false;
+            } else {
+                tipoCctInput.classList.remove('error');
+                tipoCctErr.classList.remove('visible');
+            }
+
             var sectorInput = document.getElementById('alt-sector-manual');
             var zonaInput = document.getElementById('alt-zona-manual');
             var escuelaInput = document.getElementById('alt-escuela-manual');
@@ -3237,9 +3600,10 @@
             var sector = sectorInput.value;
             var zona = zonaInput.value;
             var escuela = escuelaInput.value.trim();
-            var zonaReq = sector && sector !== 'SEPRN';
+            var sectorReq = tipoCct === 'escuela' || tipoCct === 'supervision' || tipoCct === 'jefatura';
+            var zonaReq = tipoCct === 'escuela' || tipoCct === 'supervision';
 
-            if (!sector) {
+            if (sectorReq && !sector) {
                 sectorInput.classList.add('error');
                 sectorErr.classList.add('visible');
                 ok = false;
@@ -3345,6 +3709,7 @@
                 msg.textContent = 'Solicitud registrada (folio ' + data.folio + '). Te avisaremos a tu correo personal en cuanto tu cuenta esté lista.';
                 document.getElementById('alta-form').reset();
                 document.getElementById('alt-manual-fields').classList.remove('visible');
+                document.getElementById('alt-sector-group').style.display = 'none';
                 document.getElementById('alt-zona-group').style.display = 'none';
                 document.getElementById('alt-otra-funcion-group').style.display = 'none';
                 document.querySelectorAll('#alta-form .error').forEach(function(el) { el.classList.remove('error'); });
@@ -3393,6 +3758,23 @@
     // punto donde SÍ conviene una función compartida en vez de
     // copiar el bloque una cuarta vez.
     // ============================================================
+    // Tipo de CCT capturado a mano para cam/rst/inc (no tienen Función, solo controla si se
+    // piden Sector/Zona — ver manActualizarTipoCct/aseActualizarTipoCct/sopActualizarTipoCct
+    // para el equivalente en los formularios que sí ramifican Función). actualizarZonas()
+    // vive como closure interna de crearCctAutocomplete (no expuesta en window), así que
+    // re-disparar el evento "change" del select de Sector reutiliza esa lógica sin duplicarla.
+    function otdeActualizarTipoCct(prefijo) {
+        var tipo = document.getElementById(prefijo + '-tipo-cct-manual').value;
+        var sectorGroup = document.getElementById(prefijo + '-sector-group');
+        sectorGroup.style.display = (tipo === 'escuela' || tipo === 'supervision' || tipo === 'jefatura') ? 'block' : 'none';
+        document.getElementById(prefijo + '-tipo-cct-val').value = tipo;
+        if (tipo !== 'escuela' && tipo !== 'supervision') {
+            document.getElementById(prefijo + '-zona-group').style.display = 'none';
+        } else {
+            document.getElementById(prefijo + '-sector-manual').dispatchEvent(new Event('change'));
+        }
+    }
+
     function crearCctAutocomplete(prefijo) {
         var estado = { encontrada: false, sectorZonas: {}, input: null, suggestions: null, statusBox: null, activeSugg: -1 };
 
@@ -3411,6 +3793,7 @@
             document.getElementById(prefijo + '-sector-val').value  = '';
             document.getElementById(prefijo + '-zona-val').value    = '';
             document.getElementById(prefijo + '-escuela-val').value = '';
+            document.getElementById(prefijo + '-tipo-cct-val').value = '';
             estado.statusBox.className = 'sop-cct-status';
             estado.encontrada = false;
         }
@@ -3421,6 +3804,7 @@
             document.getElementById(prefijo + '-sector-val').value  = m.sector;
             document.getElementById(prefijo + '-zona-val').value    = m.zona || '';
             document.getElementById(prefijo + '-escuela-val').value = m.nombre || '';
+            document.getElementById(prefijo + '-tipo-cct-val').value = m.tipo || '';
             estado.statusBox.className = 'sop-cct-status found';
             estado.statusBox.textContent = 'Sector ' + m.sector + (m.zona ? ' · Zona ' + m.zona : '') + ' · ' + m.nombre;
             document.getElementById(prefijo + '-manual-fields').classList.remove('visible');
@@ -3432,11 +3816,12 @@
         }
 
         function actualizarZonas() {
+            var tipo = document.getElementById(prefijo + '-tipo-cct-manual').value;
             var sector = document.getElementById(prefijo + '-sector-manual').value;
             var zonaGroup  = document.getElementById(prefijo + '-zona-group');
             var zonaSelect = document.getElementById(prefijo + '-zona-manual');
             zonaSelect.innerHTML = '<option value="">— Selecciona zona —</option>';
-            if (!sector || sector === 'SEPRN') { zonaGroup.style.display = 'none'; return; }
+            if (!sector || (tipo !== 'escuela' && tipo !== 'supervision')) { zonaGroup.style.display = 'none'; return; }
             (estado.sectorZonas[sector] || []).forEach(function(z) {
                 var o = document.createElement('option');
                 o.value = z; o.textContent = 'Zona ' + z;
@@ -3519,14 +3904,21 @@
         }
 
         if (manualVisible) {
+            var tipoCctInput = document.getElementById(prefijo + '-tipo-cct-manual');
+            var tipoCctErr = document.getElementById(prefijo + '-tipo-cct-manual-error');
+            var tipoCct = tipoCctInput.value;
+            if (!tipoCct) { tipoCctInput.classList.add('error'); tipoCctErr.classList.add('visible'); ok = false; }
+            else { tipoCctInput.classList.remove('error'); tipoCctErr.classList.remove('visible'); }
+
             var sectorInput = document.getElementById(prefijo + '-sector-manual');
             var zonaInput = document.getElementById(prefijo + '-zona-manual');
             var escuelaInput = document.getElementById(prefijo + '-escuela-manual');
             var sector = sectorInput.value, zona = zonaInput.value, escuela = escuelaInput.value.trim();
-            var zonaReq = sector && sector !== 'SEPRN';
+            var sectorReq = tipoCct === 'escuela' || tipoCct === 'supervision' || tipoCct === 'jefatura';
+            var zonaReq = tipoCct === 'escuela' || tipoCct === 'supervision';
 
             var sectorErr = document.getElementById(prefijo + '-sector-manual-error');
-            if (!sector) { sectorInput.classList.add('error'); sectorErr.classList.add('visible'); ok = false; }
+            if (sectorReq && !sector) { sectorInput.classList.add('error'); sectorErr.classList.add('visible'); ok = false; }
             else { sectorInput.classList.remove('error'); sectorErr.classList.remove('visible'); }
 
             var zonaErr = document.getElementById(prefijo + '-zona-manual-error');
@@ -3558,10 +3950,12 @@
 
     function resetFormularioCctManual(prefijo, estado) {
         document.getElementById(prefijo + '-manual-fields').classList.remove('visible');
+        document.getElementById(prefijo + '-sector-group').style.display = 'none';
         document.getElementById(prefijo + '-zona-group').style.display = 'none';
         document.getElementById(prefijo + '-sector-val').value  = '';
         document.getElementById(prefijo + '-zona-val').value    = '';
         document.getElementById(prefijo + '-escuela-val').value = '';
+        document.getElementById(prefijo + '-tipo-cct-val').value = '';
         document.getElementById(prefijo + '-cct-status').className = 'sop-cct-status';
         estado.encontrada = false;
     }
@@ -3633,13 +4027,13 @@
         return false;
     }
 
-    // ── Reset 2FA ──
+    // ── Eliminar método de autenticación (antes "Reset 2FA") ──
     function toggleRstForm(btn) {
         var container = document.getElementById('form-rst');
         var text = document.getElementById('btn-rst-text');
         var arrow = document.getElementById('btn-rst-arrow');
         if (container.classList.contains('active')) {
-            container.classList.remove('active'); text.textContent = 'Solicitar Reset de Autenticación de 2 Pasos'; arrow.textContent = '▼'; btn.setAttribute('aria-expanded', 'false');
+            container.classList.remove('active'); text.textContent = 'Solicitar Eliminación de Método de Autenticación'; arrow.textContent = '▼'; btn.setAttribute('aria-expanded', 'false');
         } else {
             container.classList.add('active'); text.textContent = 'Ocultar Formulario'; arrow.textContent = '▲'; btn.setAttribute('aria-expanded', 'true');
             setTimeout(function() { container.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 400);
