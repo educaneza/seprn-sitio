@@ -117,17 +117,19 @@ La sesión más reciente siempre debe ser el acordeón activo/abierto al cargar 
 - Para cambios: copiar el `.gs` completo en Apps Script y re-desplegar como aplicación web (Cualquier usuario)
 
 ### `apps-script/soporte-remoto.gs`
-- Conectado a Google Sheets (hoja `Solicitudes_Soporte_2026`, autocreada si no existe)
+- Conectado a Google Sheets (hoja `Solicitudes_Soporte_2026`, autocreada si no existe; el archivo de Drive que la contiene se llama "Soporte Técnico Remoto", **no** igual que la hoja interna)
 - Folio: `OTDE-SOP-NNNN` (secuencial, autoincremental)
-- Columnas A-L: Fecha | Folio | Nombre | CCT | Sector | Zona | Escuela/Unidad | Función/Cargo | WhatsApp | Correo | Descripción | Urgencia
-- **CCT con autocomplete**: mismo patrón usado en `otde.html`/`formacion-docente.html` (`js/cct-db.js`, 506 registros) — funciones `sopSeleccionarCct`/`sopResetCct`/`sopActualizarZonas` (prefijo `sop` para no chocar con las de otras páginas). Si la CCT no está en la base, aparecen campos manuales de Sector/Zona/Escuela (`#sop-manual-fields`)
-- **Función/Cargo** es un `<select>` (mismas opciones que el resto del sitio: Docente, Director(a), Subdirector(a), ATP, Supervisor(a), Jefe(a) de Sector, Personal de apoyo (PAAE), Otro) con campo libre si se elige "Otro"
-- WhatsApp es obligatorio (regex `/^\d{10}$/`, sin lada); Correo es opcional. La notificación de Telegram incluye un link `https://wa.me/52<whatsapp>` para abrir el chat con un tap
+- Columnas A-M: Fecha | Folio | Nombre | CCT | Sector | Zona | Escuela/Unidad | Función/Cargo | WhatsApp | Correo | Descripción | Urgencia | Tipo de ayuda
+- **CCT con autocomplete**: mismo patrón usado en `otde.html`/`formacion-docente.html` (`js/cct-db.js`, 506 registros) — funciones `sopSeleccionarCct`/`sopResetCct`/`sopActualizarZonas`/`sopActualizarTipoCct` (prefijo `sop` para no chocar con las de otras páginas). Si la CCT no está en la base, aparecen campos manuales de Tipo de CCT/Sector/Zona/Escuela (`#sop-manual-fields`) — ver `docs/ARCHITECTURE.md §11`
+- **Función/Cargo** es un `<select>` que se repuebla según el tipo de CCT (`otdePoblarFuncion()`, ver `docs/ARCHITECTURE.md §11`) con campo libre si se elige "Otro"
+- **Tipo de ayuda** (ago 2026, columna M): `<select>` obligatorio — Correo institucional, Office/Licencias, Impresora, Antivirus/Seguridad, Internet/Red, Equipo de cómputo (hardware), Otro — complementa, no reemplaza, la descripción libre
+- WhatsApp y Correo son obligatorios (ago 2026: Correo pasó de opcional a obligatorio, es el medio principal de contacto). WhatsApp valida `/^\d{10}$/`, sin lada. La notificación de Telegram incluye un link `https://wa.me/52<whatsapp>` para abrir el chat con un tap
 - El `<form>` usa `novalidate` + validación 100% en JS (`validarSoporteForm()`) — necesario porque los `type="email"`/`required` nativos interceptan el `submit` antes de correr el JS si no se desactiva la validación del navegador
 - Al recibir `doPost`, además de guardar en Sheets envía una notificación push vía **bot de Telegram** (`notificarTelegram`); si Telegram falla, el registro en Sheets no se pierde (try/catch silencioso)
 - Requiere Propiedades del script configuradas manualmente en el editor de Apps Script (Project Settings → Script Properties): `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID` — instrucciones completas para obtenerlas están al final del propio archivo `.gs`
 - Usado por el formulario "Solicitar Soporte Técnico Remoto" en la pestaña Soporte Técnico de `otde.html`; responde `Content-Type: text/plain` para evitar preflight CORS
 - URL del deployment vive en `otde.html` en la constante `SOPORTE_APPS_SCRIPT_URL`
+- **Redesplegado (7 ago 2026, versión 4)**: mismo ID de implementación de siempre, no cambió `SOPORTE_APPS_SCRIPT_URL`. La columna `Tipo de ayuda` se agregó a mano al final de la hoja real (este proyecto no tiene auto-heal de encabezados, a diferencia de `mantenimiento.gs`/`formacion-docente.gs`)
 - Para cambios: copiar el `.gs` completo en Apps Script y re-desplegar como aplicación web (Cualquier usuario) — **cuidado**: probar el endpoint con `curl -X POST`, o incluso desde un navegador headless con acceso real a internet (confirmado: el sandbox de pruebas SÍ tiene salida real a `script.google.com`), ejecuta `doPost` de verdad (escribe en Sheets y dispara Telegram). Para pruebas locales, interceptar la llamada de red (`page.route()` en Playwright) en vez de dejarla llegar al backend real
 
 ### `apps-script/mantenimiento.gs`
@@ -144,7 +146,11 @@ La sesión más reciente siempre debe ser el acordeón activo/abierto al cargar 
   sistemas queda pendiente de una futura sesión (no se tocó el proyecto v8.5)
 - **Columnas de `Solicitudes`**: Fecha | Folio | Nombre | Función | CCT | Sector | Zona |
   Escuela | Turno | WhatsApp | Correo | Equipos con falla | Oficio (link Drive) | Estatus |
-  Notas de revisión
+  Notas de revisión | Notificación de cierre enviada | Tipo de equipo | Cantidad (Aula de
+  medios) | Cantidad (Administrativas) | Marca/Modelo | Estado de instalación (las últimas 5,
+  ago 2026, agregadas **al final** a propósito para no correr `COL_MAN_ESTATUS`/
+  `COL_MAN_NOTIFICACION_CIERRE` del cierre automático — se auto-completan solas en la próxima
+  solicitud real, mismo patrón que `obtenerHojaCursos()` de `formacion-docente.gs`)
 - **`Contactos_Zona_Sector`** la llena Jorge a mano (Sector, Zona, Correo, Teléfono) — sin
   datos ahí, la solicitud se registra igual pero no se notifica a nadie más que a OTDE
 - El oficio adjunto se sube en base64 desde el cliente (`FileReader.readAsDataURL` + recorte
@@ -156,10 +162,21 @@ La sesión más reciente siempre debe ser el acordeón activo/abierto al cargar 
   por correo a la Zona/Sector correspondiente si hay contacto registrado (informativo, no
   bloquea el registro si falla)
 - **CCT con autocomplete** (`js/cct-db.js`): mismo patrón que el resto del sitio
-  (`manSeleccionarCct`/`manResetCct`/`manActualizarZonas`, prefijo `man`), con fallback manual
-  de Sector/Zona/Escuela si la CCT no está en la base
+  (`manSeleccionarCct`/`manResetCct`/`manActualizarZonas`/`manActualizarTipoCct`, prefijo
+  `man`), con fallback manual de Tipo de CCT/Sector/Zona/Escuela si la CCT no está en la base —
+  ver `docs/ARCHITECTURE.md §11`. **Función/Cargo** se repuebla según ese tipo de CCT
+  (`otdePoblarFuncion()`, mismo `§11`)
+- **"Equipos con falla" estructurado (ago 2026)**: checklist (aula de medios / administrativas
+  / red-si-ya-hay-infraestructura / otro, `manToggleCantidad()`) en vez del textarea libre
+  original — el textarea se conserva solo para "Describe la falla". Ver detalle en
+  `docs/ARCHITECTURE.md §15`
+- **Correo obligatorio (ago 2026)**: antes opcional, ahora requerido tanto en cliente como en
+  `manValidarCampos()` — es el medio principal de contacto, WhatsApp queda como alternativo
 - Usado por el formulario "Solicitar Mantenimiento" en la pestaña Mantenimiento de `otde.html`
-- Límite de archivo: 5MB validado en el cliente, 8MB de margen validado en el servidor
+- Límite de archivo: 5MB validado en el cliente, 8MB de margen validado en el servidor. **Solo
+  PDF (ago 2026)**: antes aceptaba `application/pdf,image/*`, ahora solo PDF (`accept`,
+  validación de `file.type` en el cliente) — el backend no cambió, sigue guardando cualquier
+  `mimeType` que reciba
 - **Desplegado (6 ago 2026)**: Spreadsheet `Solicitudes_Mantenimiento_2026`, proyecto Apps
   Script "Mantenimiento - Backend (mantenimiento.gs)", URL real ya pegada en `otde.html` en
   `MANTENIMIENTO_APPS_SCRIPT_URL`. **Telegram deliberadamente sin configurar** (decisión de
@@ -169,6 +186,9 @@ La sesión más reciente siempre debe ser el acordeón activo/abierto al cargar 
   `Contactos_Zona_Sector` ya está poblada (6 ago 2026, 88 filas: 75 por Zona + 13 de respaldo
   por Sector) a partir de `OTDE_Base_Contactos_v2.xlsx` (hojas `Supervisiones`/`Sectores` —
   correo real de cada jefatura, sin teléfono porque el xlsx no lo trae)
+- **Redesplegado (7 ago 2026, versión 5)**: checklist de equipos + correo obligatorio + oficio
+  solo PDF de arriba. Mismo ID de implementación de siempre, no cambió
+  `MANTENIMIENTO_APPS_SCRIPT_URL`
 
 ### `apps-script/asesorias.gs`
 - **Nuevo (ago 2026)**: mismo patrón que `mantenimiento.gs` (Sheet propio con hojas
@@ -200,14 +220,20 @@ La sesión más reciente siempre debe ser el acordeón activo/abierto al cargar 
 - Notifica por Telegram a OTDE y por correo a la Zona/Sector correspondiente (mismo mecanismo
   que `mantenimiento.gs`, Propiedades del script configuradas por separado en este proyecto)
 - **CCT con autocomplete** (`js/cct-db.js`): mismo patrón, prefijo `ase`
-  (`aseSeleccionarCct`/`aseResetCct`/`aseActualizarZonas`)
+  (`aseSeleccionarCct`/`aseResetCct`/`aseActualizarZonas`/`aseActualizarTipoCct`), fallback
+  manual con Tipo de CCT (ver `docs/ARCHITECTURE.md §11`). **Función/Cargo** se repuebla según
+  ese tipo (`otdePoblarFuncion()`, mismo `§11`)
+- **Correo obligatorio (ago 2026)**: antes opcional, ahora requerido en cliente y en
+  `aseValidarCampos()`. **Oficio solo PDF (ago 2026)**: antes aceptaba
+  `application/pdf,image/*`, ahora solo PDF — el backend no cambió
 - Usado por el formulario "Solicitar Asesoría" en la nueva pestaña Asesorías de `otde.html`
 - **Desplegado (6 ago 2026)**: Spreadsheet `Solicitudes_Asesorias_2026`, proyecto Apps Script
   "Asesorias - Backend (asesorias.gs)", URL real ya pegada en `otde.html` en
   `ASESORIAS_APPS_SCRIPT_URL`. Mismo caso que Mantenimiento: Telegram deliberadamente sin
   configurar (decisión de Jorge, 6 ago 2026 — no es un pendiente, es la elección), y
   `Contactos_Zona_Sector` ya poblada igual que en Mantenimiento (mismas 88 filas, misma fuente
-  `OTDE_Base_Contactos_v2.xlsx`)
+  `OTDE_Base_Contactos_v2.xlsx`). **Redesplegado (7 ago 2026, versión 5)**: solo el cambio de
+  correo obligatorio arriba, mismo ID de implementación
 
 ### `apps-script/formacion-docente.gs`
 **Desplegado en producción desde jul 2026** (Spreadsheet real `Formacion_Docente_2026_2027`, URL real ya pegada en `APPS_SCRIPT_URL` de `formacion-docente.html`; la extinta `jornada-verano-2026.html` compartió este mismo backend hasta su eliminación el 13 jul 2026).
@@ -256,9 +282,14 @@ Reemplaza en código, tipo por tipo, al `<iframe>` del Google Form viejo — ver
 arquitectura completo en `docs/ARCHITECTURE.md §16`. Resumen operativo:
 
 - Switcher de 2 botones (`.correo-panel-btn`, `mostrarCorreoPanel('alta'|'otros')`): **"Alta de
-  cuenta"** y **"Cambio de contraseña / Reset 2FA / Otro"** (este último con su propio
-  sub-switcher de 3 botones, prefijos `cam`/`rst`/`inc`). Los 4 tipos ya están completos — el
-  `<iframe>` quedó retirado por completo del código.
+  cuenta"** y **"Cambio de contraseña / Eliminar autenticación / Otro"** (este último con su
+  propio sub-switcher de 3 botones, prefijos `cam`/`rst`/`inc`). Los 4 tipos ya están completos
+  — el `<iframe>` quedó retirado por completo del código.
+- **"2FA" renombrado a "Eliminar método de autenticación" (ago 2026)**: mismo término que usa
+  SIGEE (para que Jorge/Marcos mapeen 1:1 al procesar), con una aclaración en paréntesis para
+  docentes ("código de seguridad extra que a veces se traba"). El identificador interno que
+  viaja al backend (`tipo: 'reset2FA'`) no cambió — es contrato con `Reset2FA.gs`, no texto
+  visible.
 - **No se tocó el sistema en vivo** (`Correos-institucionales`, `Code.gs`/`OnFormSubmit.gs`/
   `OnEditTrigger.gs`/`ResumenSemanal.gs`, atado al Form viejo que sigue usando Marcos) — el
   backend nuevo es un proyecto de Apps Script separado y en paralelo,
@@ -288,7 +319,14 @@ arquitectura completo en `docs/ARCHITECTURE.md §16`. Resumen operativo:
   enviar.
 - **Campos de Alta**: CCT, Función, Nombre/Apellido Paterno/Apellido Materno/RFC/CURP (campos
   separados), Correo personal, Teléfono, Observaciones — encabezados reales confirmados por
-  Jorge el 5 ago 2026 contra el Sheet viejo.
+  Jorge el 5 ago 2026 contra el Sheet viejo. **Función se repuebla según el tipo de CCT** (ago
+  2026, `otdePoblarFuncion()`, ver `docs/ARCHITECTURE.md §11`) y el fallback manual de CCT
+  (cuando no se encuentra) pide "Tipo de CCT" explícito en vez de meter SEPRN como una opción
+  más de Sector — mismo patrón en los 4 sub-formularios de esta tab (Alta/Cambio/Reset/
+  Incidencias), aunque solo Alta usa el tipo para ramificar Función (los otros 3 no preguntan
+  Función).
+- **Teléfono unificado a "Teléfono (WhatsApp)" + correo con aviso de spam (ago 2026)**: mismo
+  wording y aviso de contacto que el resto del sitio, en los 4 sub-formularios de esta tab.
 - **`crearCctAutocomplete(prefijo)`**: con 4 formularios usando CCT autocomplete en esta misma
   tab (Alta/Cambio/Reset/Incidencias), se factorizó en una función compartida — única
   excepción en el sitio a "cada tab mantiene su propia copia del patrón" (Soporte/
@@ -310,6 +348,9 @@ backend en `apps-script/mantenimiento.gs` y `docs/ARCHITECTURE.md §15`.
 - **Cierre automático (7 ago 2026)**: al marcar Estatus = `Resuelto` en el Sheet, un trigger
   `onEdit` instalable notifica por correo al solicitante y a la Zona/Sector. Requiere haber
   corrido `manInstalarTriggerCierre()` una vez por proyecto — ver `docs/ARCHITECTURE.md §15`.
+- **Repaso de UX (7 ago 2026)**: "Equipos con falla" pasó de textarea libre a checklist
+  estructurado, Correo pasó a obligatorio, oficio restringido a solo PDF, Función/Cargo se
+  repuebla por tipo de CCT — ver `docs/ARCHITECTURE.md §11` y `§15`. Redesplegado como versión 5.
 
 ### Asesorías
 Tab nueva (no existía como trámite — antes solo había un video suelto en Recursos). Mismo
@@ -318,13 +359,17 @@ asesoría" y casilla de confirmación de mantenimiento previo (Banco de Material
 instalados) — detalle de por qué en `apps-script/asesorias.gs` y `docs/ARCHITECTURE.md §15`.
 Prefijo de IDs/funciones: `ase`. **Desplegado (6 ago 2026)**: `ASESORIAS_APPS_SCRIPT_URL` con
 la URL real del deployment. **Cierre automático (7 ago 2026)**: mismo mecanismo que
-Mantenimiento (`aseOnEditCierre` / `aseInstalarTriggerCierre`).
+Mantenimiento (`aseOnEditCierre` / `aseInstalarTriggerCierre`). **Repaso de UX (7 ago 2026)**:
+Correo obligatorio, oficio solo PDF, Función/Cargo por tipo de CCT — mismo detalle que
+Mantenimiento arriba, redesplegado como versión 5.
 
 ### Soporte Técnico Remoto
 TeamViewer (no Quick Assist) como herramienta de control remoto. Formulario "Solicitar Soporte
-Técnico Remoto" (nombre, CCT, función, WhatsApp, correo opcional, urgencia, descripción) →
+Técnico Remoto" (nombre, CCT, función, WhatsApp, correo, tipo de ayuda, urgencia, descripción) →
 `apps-script/soporte-remoto.gs`. Referencia cruzada con Licencias Office: cada tab enlaza a la
-otra vía `showServicio()` con `onclick` si el problema es de instalación/licencias.
+otra vía `showServicio()` con `onclick` si el problema es de instalación/licencias. **Repaso de
+UX (7 ago 2026)**: Correo pasó de opcional a obligatorio, nuevo campo "Tipo de ayuda"
+(select obligatorio), Función/Cargo por tipo de CCT — redesplegado como versión 4.
 
 ### Licencias Office
 Instalador `descargas/Instalador_Office_2019_OTDE.exe` (self-extracting, incluye

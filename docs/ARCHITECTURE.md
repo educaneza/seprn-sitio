@@ -604,9 +604,10 @@ Implementado primero en `jornada-verano-2026.html`, reutilizado en el formulario
 - `js/cct-db.js` — 506 registros `{cct, nombre, sector, zona, tipo, municipio}`. Cargar con `<script src="js/cct-db.js"></script>` antes del script inline de la página. El campo `municipio` (agregado jul 2026 desde `Catalogo SEPRN direcciones.xlsx`) se autocompleta igual que sector/zona/escuela — **no** se deriva del sector, porque un mismo sector puede abarcar varios municipios (ver mapa SVG de `index.html`); en el fallback manual (CCT no encontrada) el municipio queda vacío, no se le pide al usuario.
 - Input de texto con `<ul id="...-suggestions">` absoluto debajo, poblado en el evento `input` (mínimo 3 caracteres, máximo 10 resultados) y navegable con flechas/Enter/Escape.
 - Al seleccionar una sugerencia: llenar inputs ocultos `sector-val` / `zona-val` / `escuela-val` y marcar una bandera `cctEncontrada = true`.
-- Si el usuario escribe una CCT que no existe (evento `change` sin `cctEncontrada`): mostrar bloque `.manual-fields` con `<select>` de Sector (con opción `SEPRN` sin zona), `<select>` de Zona (poblado dinámicamente vía `actualizarZonas()` a partir de un mapa `sector → zonas[]` derivado de `CCT_DB`), e `<input>` de Escuela/Unidad.
-- **Validación por campo, no agrupada**: Sector, Zona y Escuela deben validar y mostrar su propio mensaje de error. Agrupar todo bajo el mensaje del campo CCT es un anti-patrón ya corregido dos veces (`jornada-verano-2026.html` lo resolvió como "BUG 4/5 fix"; `otde.html` lo resolvió en jul 2026) — Zona es obligatoria solo si el sector no es `SEPRN`.
+- Si el usuario escribe una CCT que no existe (evento `change` sin `cctEncontrada`): mostrar bloque `.manual-fields` con un `<select>` de **Tipo de CCT** primero (Escuela / Zona escolar-Supervisión / Sector educativo-Jefatura / SEPRN, función `*ActualizarTipoCct()`), que decide si se muestran Sector+Zona (escuela/supervision), solo Sector (jefatura) o ninguno de los dos (subdireccion/SEPRN) — reemplaza, desde agosto 2026, al diseño anterior donde `SEPRN` era una opción más dentro del `<select>` de Sector (ese diseño viejo tenía un bug real: una CCT de tipo `jefatura` quedaba forzada a contestar también "Zona", que no le aplica). El `<select>` de Zona sigue poblándose dinámicamente vía `actualizarZonas()` a partir de un mapa `sector → zonas[]` derivado de `CCT_DB`, e `<input>` de Escuela/Unidad sin cambios.
+- **Validación por campo, no agrupada**: Tipo de CCT, Sector, Zona y Escuela deben validar y mostrar su propio mensaje de error. Agrupar todo bajo el mensaje del campo CCT es un anti-patrón ya corregido dos veces (`jornada-verano-2026.html` lo resolvió como "BUG 4/5 fix"; `otde.html` lo resolvió en jul 2026) — Sector es obligatorio salvo en SEPRN, Zona solo en escuela/zona escolar.
 - El formulario que use este patrón debe llevar `novalidate` en el `<form>` y validación 100% en JS (`onchange`/`onsubmit`), porque los atributos `required`/`type="email"` nativos interceptan el `submit` antes de que corra la validación personalizada.
+- **Función/Cargo ramificada por tipo de CCT (agosto 2026)**: `js/cct-db.js` ya traía un campo `tipo` por registro (`escuela|supervision|jefatura|subdireccion`) que antes solo alimentaba el cálculo de dominio de correo (ver §16). La función compartida `otdeOpcionesFuncion(tipo)` (en `cct-db.js`) devuelve la lista de roles válida para ese tipo — escuela: Director(a)/Subdirector(a)/Docente/Personal de apoyo (PAAE); zona: Supervisor(a) Escolar/ATP/PAAE; sector: Supervisor(a) General/ATP/PAAE; SEPRN: Encargado(a) del Despacho/Subjefe(a)/Jefe(a) de Oficina/ATP/Administrativo (PAAE); siempre con "Otro" al final — y el helper de DOM `otdePoblarFuncion(selectId, tipo)` en `otde.html` repuebla el `<select>` de Función conservando la selección previa si sigue siendo válida. Se llama tanto al encontrar la CCT por autocompletado (usa `m.tipo` de `CCT_DB`) como al elegir el Tipo de CCT manual — los 4 formularios que preguntan Función (Alta, Mantenimiento, Asesorías, Soporte) lo usan. No requirió cambios de backend: los `.gs` correspondientes solo validan que `funcion` no venga vacío.
 
 ---
 
@@ -773,6 +774,22 @@ Visitas" ya maduro, con generación de PDF y envío automático — reimplementa
 compensaba el beneficio, mayormente cosmético, para un flujo de uso interno) y el formulario de
 feedback de Asesorías que redirige al Kit Digital (totalmente desconectado del Sheet de
 `asesorias.gs`, es un loop pedagógico aparte que no bloqueaba el hallazgo de QA).
+
+**"Equipos con falla" estructurado + correo obligatorio (agosto 2026).** El textarea libre de
+Mantenimiento se reemplazó por un checklist (`man-equipo-aula`/`man-equipo-admin`/
+`man-equipo-red`/`man-equipo-otro`, función `manToggleCantidad()`) que refleja lo que OTDE
+realmente atiende — computadoras de aula de medios y administrativas (cada una con su propio
+desplegable de cantidad aproximada, para estimar tiempo de atención), red/internet solo si ya
+hay infraestructura instalada — y lo que no (impresoras, proyectores, instalación nueva de
+red/eléctrica se canaliza a CoEEE), con marca/modelo opcional y estado de instalación
+condicionales a marcar alguna categoría de cómputo. `ENCABEZADOS_MAN_SOLICITUDES` ganó 5
+columnas nuevas (`Tipo de equipo`, `Cantidad (Aula de medios)`, `Cantidad
+(Administrativas)`, `Marca/Modelo`, `Estado de instalación`) agregadas **al final** del arreglo
+a propósito, para no correr los índices fijos `COL_MAN_ESTATUS`/`COL_MAN_NOTIFICACION_CIERRE`
+que usa el trigger de cierre automático de arriba. El campo Correo, antes opcional en
+Mantenimiento/Asesorías/Soporte, ahora es obligatorio en los tres (validado también
+server-side en los 3 `.gs`) — es el medio principal de contacto, WhatsApp queda como
+alternativo.
 
 ## 16. Webform de Correo Institucional en paralelo al Google Form (agosto 2026)
 

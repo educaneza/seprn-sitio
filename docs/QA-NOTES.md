@@ -220,6 +220,25 @@ suficiente evidencia — puede estar desactualizada por el mismo motivo.
 **Dónde ya pasó:** `apps-script/asesorias.gs` y `apps-script/formacion-docente.gs` (6→7 ago
 2026).
 
+## 11. Regla de ancho compartida (`input { width:100% }`) también estira los checkboxes
+
+**Síntoma:** un `<input type="checkbox">` dentro de `.soporte-form-group` aparece pegado al
+borde izquierdo del formulario y su texto (`<span>` o el propio contenido del `<label>`) queda
+lejos, a la derecha — como si hubiera un espacio en blanco enorme entre la casilla y su
+etiqueta.
+
+**Causa raíz:** `.soporte-form-group input, .soporte-form-group select, .soporte-form-group
+textarea { width: 100%; ... }` se pensó para inputs de texto, pero el selector `input` también
+alcanza a `type="checkbox"` — lo estira a todo el ancho del contenedor flex, empujando el
+`<span>` de al lado hasta el extremo opuesto.
+
+**Fix:** `.soporte-form-group input[type="checkbox"] { width: auto; padding: 0; }`.
+
+**Dónde ya pasó:** encontrado al construir el checklist de "Equipos con falla" en Mantenimiento
+(ago 2026) — pero el mismo problema ya existía, sin que nadie lo hubiera notado, en el checkbox
+de confirmación de mantenimiento previo de Asesorías (`ase-confirma-mantenimiento`, agregado en
+agosto 2026); el fix general lo corrigió también ahí.
+
 ## Regla general al corregir cualquiera de estos patrones
 
 Cuando se encuentra uno de estos bugs en un archivo, **revisar si el mismo
