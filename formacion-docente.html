@@ -942,6 +942,7 @@
       } catch (e) { /* caché corrupta, seguir con carga normal */ }
     }
 
+    document.getElementById('catalogo-cargando-txt').textContent = 'Cargando catálogo de cursos…';
     document.getElementById('catalogo-cargando').style.display = 'block';
     document.getElementById('catalogo-vacio').style.display = 'none';
     document.getElementById('catalogo-error').style.display = 'none';
@@ -952,9 +953,18 @@
         'Cargando catálogo de cursos… esto puede tardar unos segundos.';
     }, 3000);
 
+    // El primer aviso ("unos segundos") se queda corto cuando Apps Script tiene un cold
+    // start real (medido hasta 15-25s en pruebas) — sin este segundo aviso, el usuario solo
+    // ve un spinner genérico e indefinido y no sabe si el sitio sigue vivo o ya se rompió.
+    const avisoMuyLento = setTimeout(() => {
+      document.getElementById('catalogo-cargando-txt').textContent =
+        'Esto está tardando más de lo usual — seguimos esperando la respuesta del servidor.';
+    }, 10000);
+
     try {
       const res = await fetchJsonConTimeout(APPS_SCRIPT_URL);
       clearTimeout(avisoLento);
+      clearTimeout(avisoMuyLento);
       document.getElementById('catalogo-cargando').style.display = 'none';
 
       if (res.status !== 'ok') throw new Error(res.mensaje || 'Error desconocido');
@@ -971,6 +981,7 @@
 
     } catch (err) {
       clearTimeout(avisoLento);
+      clearTimeout(avisoMuyLento);
       document.getElementById('catalogo-cargando').style.display = 'none';
       document.getElementById('catalogo-error').style.display = 'block';
     }
@@ -1348,6 +1359,8 @@
       statusBox.className = 'cct-status warn';
       statusBox.textContent = 'CCT no encontrada en nuestra base. Puedes capturar los datos manualmente.';
       document.getElementById('manual-fields').classList.add('visible');
+      inputCct.classList.remove('error');
+      document.getElementById('cct-error').classList.remove('visible');
     }
   });
 

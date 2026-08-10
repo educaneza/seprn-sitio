@@ -1,7 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 64">
   <rect width="64" height="64" rx="12" fill="#56212f"/>
   <text x="32" y="27" font-family="'Montserrat','Helvetica Neue',Arial,sans-serif" font-size="26" font-weight="700"
         text-anchor="middle" fill="#d6d1ca" letter-spacing="-1">NE</text>
   <text x="32" y="53" font-family="'Montserrat','Helvetica Neue',Arial,sans-serif" font-size="26" font-weight="700"
         text-anchor="middle" fill="#d6d1ca" letter-spacing="-1">ZA</text>
+  <text x="84" y="43" font-family="'Montserrat','Helvetica Neue',Arial,sans-serif" font-size="34" font-weight="600"
+        fill="#56212f" letter-spacing="-0.8">SEPRN</text>
 </svg>

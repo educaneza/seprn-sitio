@@ -12,17 +12,24 @@ FASE 2 de abajo se conservan como referencia técnica de patrones de implementac
 
 ## Estado actual — Scores de auditoría
 
-| Dimensión | Score original (may 2026) | Post Fase 1 (jun 2026) | Post rediseño (16 jun 2026) | Post páginas internas (24 jun 2026) | Post bug-fixes (24 jun 2026) | Objetivo |
-|-----------|:---:|:---:|:---:|:---:|:---:|:---:|
-| UI | 5/10 | 6/10 | **8.5/10** | **8.5/10** | **9/10** | 8/10 ✅ |
-| UX | 5/10 | 6.5/10 | **8/10** | **8.5/10** | **8.5/10** | 8/10 ✅ |
-| Branding | 3/10 | 3.5/10 | **7.5/10** | **8/10** | **8/10** | 7/10 ✅ |
-| Profesionalismo | 5/10 | 6/10 | **8/10** | **8.5/10** | **9/10** | 9/10 ✅ |
-| Claridad | 6/10 | 6/10 | **7.5/10** | **8/10** | **8/10** | 9/10 |
-| Conversión / Retención | 3/10 | 3/10 | **5/10** | **5/10** | **5/10** | 7/10 |
-| Diseño móvil | 4/10 | 6/10 | **7.5/10** | **7.5/10** | **7.5/10** | 8/10 |
-| Performance percibida | 6/10 | 7/10 | **8/10** | **8/10** | **8/10** | 8/10 ✅ |
-| Accesibilidad | 3/10 | 6/10 | **7/10** | **7.5/10** | **8/10** | 8/10 ✅ |
+| Dimensión | Score original (may 2026) | Post Fase 1 (jun 2026) | Post rediseño (16 jun 2026) | Post páginas internas (24 jun 2026) | Post bug-fixes (24 jun 2026) | Post smoke test (10 ago 2026) | Objetivo |
+|-----------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| UI | 5/10 | 6/10 | **8.5/10** | **8.5/10** | **9/10** | **9/10** | 8/10 ✅ |
+| UX | 5/10 | 6.5/10 | **8/10** | **8.5/10** | **8.5/10** | **8.5/10** | 8/10 ✅ |
+| Branding | 3/10 | 3.5/10 | **7.5/10** | **8/10** | **8/10** | **8.5/10** (tras logomark) | 7/10 ✅ |
+| Profesionalismo | 5/10 | 6/10 | **8/10** | **8.5/10** | **9/10** | **9/10** (tras fix de banner) | 9/10 ✅ |
+| Claridad | 6/10 | 6/10 | **7.5/10** | **8/10** | **8/10** | **8/10** | 9/10 |
+| Conversión / Retención | 3/10 | 3/10 | **5/10** | **5/10** | **5/10** | **5/10** | 7/10 |
+| Diseño móvil | 4/10 | 6/10 | **7.5/10** | **7.5/10** | **7.5/10** | **8/10** | 8/10 ✅ |
+| Performance percibida | 6/10 | 7/10 | **8/10** | **8/10** | **8/10** | **7.5/10** | 8/10 |
+| Accesibilidad | 3/10 | 6/10 | **7/10** | **7.5/10** | **8/10** | **8/10** | 8/10 ✅ |
+
+**Promedio 10 ago 2026: ~7.9/10.** Detalle completo del smoke test que produjo esta columna
+(qué se probó en vivo, qué se descartó como falso positivo, y por qué Performance percibida
+bajó medio punto) en `docs/BITACORA.md`. Meta de 9.5/10 en todas las dimensiones planteada por
+Jorge el 10 ago 2026: realista en UI/UX/Diseño móvil/Performance con solo código; Branding y
+Conversión/Retención necesitan un logomark real y decisiones de producto respectivamente antes
+de poder cruzar 9 — ver "Pendientes vigentes" abajo.
 
 ---
 
@@ -357,15 +364,49 @@ git status
 movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue abierto):
 
 1. **Recrear páginas eliminadas** cuando haya contenido validado con la Dra. Avelina Galindo Celix: `gestion-escolar.html`, `investigacion-educativa.html`, `programas-educativos.html`, `servicio-profesional.html`.
-2. **Logomark SEPRN (3.1)** — requiere archivo SVG de diseño gráfico.
-3. **Barra CTE desactualizada** — el `.update-banner` de `index.html` sigue diciendo "Octava
-   Sesión Ordinaria 2025-2026 ya disponible". Ese ciclo cerró con el Taller Intensivo de Cierre
-   (nunca hubo novena sesión) y ya arrancó el ciclo 2026-2027 con la Fase Intensiva (ver
-   `docs/ARCHITECTURE.md §17`) — actualizar el texto para apuntar a eso en vez de esperar una
-   "novena sesión" que no va a existir.
+2. ~~**Logomark SEPRN (3.1)**~~ — resuelto 10 ago 2026, con matices. Antes de construir nada se
+   revisó la *Guía para la Elaboración de Materiales Gráficos en Redes Sociales* del Gobierno
+   del Estado de México (`Guía de Contenidos Digitales.pdf` en la raíz del repo): el Escudo de
+   Armas es único y oficial, dentro de una "pleca de logos" fija — ninguna dependencia interna
+   inventa su propio escudo, así que las direcciones con escudo propio quedaron descartadas. En
+   cambio, el manual sí contempla un "logo de organismo interno" simple, que es justo lo que ya
+   era el favicon (`favicon.svg`, iniciales "NE"/"ZA" de Nezahualcóyotl). Se mantuvo esa idea
+   intacta y solo se corrigió que estaba en Georgia (serif) mientras el wordmark "SEPRN" del nav
+   está en Montserrat — mismatch que se notaba justo donde ambos conviven. Ahora el mismo ícono
+   (Montserrat, mismos colores guinda/arena ya alineados con la paleta oficial del manual) se
+   agregó en el nav y el footer (con colorway invertido en el footer, porque el original
+   desaparecería sobre el fondo guinda) de las 13 páginas que comparten `styles.css`
+   (`asistencia.html`, `charla-ia.html`, `formacion-docente.html` e
+   `instructivo-formacion-docente.html` quedaron fuera a propósito — tienen su propio sistema de
+   diseño o un header distinto). Nuevo archivo `logo.svg` en la raíz con el lockup horizontal
+   completo (ícono + wordmark) como asset de referencia. **Pendiente real que sí sigue abierto**:
+   el hallazgo de que las 3 tipografías oficiales del manual son Gotham/BW Modelica/Corporative
+   Sans Alt — ninguna es Montserrat, y BW Modelica no debe usarse con palabras con "ñ" ni
+   Corporative con palabras con "z" (ambas letras están en "Nezahualcóyotl") — se dejó fuera a
+   propósito, es una decisión más grande que toca tipografía de todo el sitio, no solo el logo.
+   Tampoco se confirmó si la página necesita mostrar el Escudo de Armas/logo Gobierno del Estado
+   de México reales en algún lugar (hoy el footer solo los menciona en texto) — el documento
+   revisado es de redes sociales, no el manual de identidad gráfica completo.
+3. ~~**Barra CTE desactualizada**~~ — resuelto 10 ago 2026: `.update-banner` de `index.html`
+   ahora dice "Fase Intensiva 2026-2027 ya disponible" (antes decía "Octava Sesión Ordinaria
+   2025-2026 ya disponible", el ciclo cerrado).
 4. **Fase Intensiva 2026-2027 sin video** — el acordeón en `cte.html` solo tiene los 9
    materiales + ZIP, sin `video-container`. Agregar el iframe (`data-src`, mismo patrón que el
    resto) cuando Jorge tenga el video del Opening.
+5. ~~**Mensaje de error duplicado en CCT no encontrada**~~ — resuelto 10 ago 2026: en los 6
+   formularios que comparten el patrón (`otde.html`: Mantenimiento, Asesorías, Soporte, y los 4
+   sub-formularios de Correo vía `crearCctAutocomplete()`; y `formacion-docente.html`), el
+   `change` handler que activa el fallback manual ahora también limpia `error`/`visible` del
+   campo y mensaje de CCT — ya no quedan el aviso ámbar y el error rojo mostrados a la vez.
+   Verificado en vivo reproduciendo el repro original (submit vacío → CCT inexistente).
+6. ~~**Catálogo de Formación Docente sin feedback de espera larga**~~ — resuelto 10 ago 2026:
+   `cargarCatalogo()` en `formacion-docente.html` ahora tiene un segundo aviso a los 10s
+   ("Esto está tardando más de lo usual — seguimos esperando la respuesta del servidor"),
+   además del ya existente a los 3s. El texto del loader también se resetea al reintentar
+   (antes podía quedarse en el mensaje de "tardando más de lo usual" de un intento previo).
+   Verificado simulando una respuesta lenta de Apps Script (12s) en el navegador: el mensaje
+   escala correctamente y el loader se limpia sin quedar en un estado inconsistente cuando la
+   respuesta por fin llega.
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue
