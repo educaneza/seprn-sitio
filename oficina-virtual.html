@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-7D68DB8ELW"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-7D68DB8ELW');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="description" content="Oficina Virtual OTDE: todos los servicios digitales de la Oficina de Tecnología para el Desarrollo Educativo en un solo lugar, con seguimiento de tus solicitudes.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oficina Virtual OTDE - SEPRN</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* ── Buscador de seguimiento ── */
+        .ov-buscador { background: #fff; border: 2px solid #d6d1ca; border-top: 5px solid #9F2241; border-radius: 18px; padding: 34px 36px; box-shadow: 0 16px 40px rgba(86,33,47,0.1); margin-bottom: 70px; }
+        .ov-buscador-eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #9F2241; margin-bottom: 8px; }
+        .ov-buscador h2 { font-size: 22px; font-weight: 700; color: #56212f; margin: 0 0 8px; }
+        .ov-buscador > p { font-size: 14px; color: #666; line-height: 1.6; margin: 0 0 22px; }
+        .ov-buscador-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 14px; align-items: end; }
+        .ov-campo label { display: block; font-size: 13px; font-weight: 600; color: #56212f; margin-bottom: 6px; }
+        .ov-campo input { width: 100%; padding: 12px 14px; border: 1.5px solid #d6d1ca; border-radius: 10px; font-size: 15px; font-family: inherit; box-sizing: border-box; }
+        .ov-campo input:focus { outline: none; border-color: #9F2241; }
+        .ov-buscar-btn { background: #9F2241; color: #fff; border: none; border-radius: 10px; padding: 13px 26px; font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
+        .ov-buscar-btn:hover { background: #56212f; }
+        .ov-buscar-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        @media (max-width: 720px) { .ov-buscador-form { grid-template-columns: 1fr; } }
+
+        .ov-resultado { margin-top: 22px; padding: 18px 20px; border-radius: 12px; display: none; }
+        .ov-resultado.visible { display: block; }
+        .ov-resultado.ok { background: #f5f0e8; border: 1px solid #d6d1ca; }
+        .ov-resultado.error { background: #fdecec; border: 1px solid #f3b9b9; color: #8a2020; }
+        .ov-resultado-fila { font-size: 14px; color: #333; margin-bottom: 6px; }
+        .ov-resultado-fila strong { color: #56212f; }
+        .ov-badge { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+        .ov-badge.b-pendiente, .ov-badge.b-validado { background: #e5eefb; color: #1d4e89; }
+        .ov-badge.b-atencion { background: #fdf1d6; color: #8a6413; }
+        .ov-badge.b-resuelto { background: #e2f3e6; color: #1f6b34; }
+        .ov-badge.b-rechazado { background: #fdecec; color: #8a2020; }
+
+        /* ── Grid de servicios (mismo patrón que areas.html) ── */
+        .ov-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+        .area-card { background: white; border: 2px solid #d6d1ca; border-radius: 18px; padding: 35px 30px; text-decoration: none; display: block; transition: all 0.3s; position: relative; overflow: hidden; }
+        .area-card::before { content: ''; position: absolute; top: 0; left: 0; width: 5px; height: 100%; background: #d6d1ca; transition: all 0.3s; }
+        .area-card:hover { border-color: #9F2241; transform: translateY(-6px); box-shadow: 0 12px 35px rgba(159,34,65,0.15); }
+        .area-card:hover::before { background: #9F2241; width: 6px; }
+        .area-icon { width: 56px; height: 56px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; background: rgba(159,34,65,0.08); border-radius: 14px; color: #9F2241; }
+        .area-tipo { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #9F2241; background: rgba(159,34,65,0.08); padding: 4px 12px; border-radius: 20px; display: inline-block; margin-bottom: 12px; }
+        .area-card h2 { font-size: 20px; font-weight: 700; color: #56212f; margin-bottom: 12px; line-height: 1.3; }
+        .area-card p { font-size: 14px; color: #666; line-height: 1.7; margin-bottom: 20px; }
+        .ver-mas { font-size: 14px; font-weight: 600; color: #9F2241; display: flex; align-items: center; gap: 6px; margin-top: 15px; }
+        .ov-consultar-link { font-size: 13px; font-weight: 600; color: #977e5b; display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; }
+        .ov-consultar-link:hover { color: #9F2241; }
+
+        .ov-proximamente { border-style: dashed; opacity: 0.75; cursor: default; }
+        .ov-proximamente:hover { transform: none; box-shadow: none; border-color: #d6d1ca; }
+        .ov-proximamente:hover::before { background: #d6d1ca; width: 5px; }
+    </style>
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="SEPRN">
+    <meta property="og:title" content="Oficina Virtual OTDE">
+    <meta property="og:description" content="Todos los servicios digitales de OTDE en un solo lugar, con seguimiento de tus solicitudes.">
+    <meta property="og:url" content="https://educaneza.github.io/seprn-sitio/oficina-virtual.html">
+</head>
+<body>
+<a href="#main-content" class="skip-link">Saltar al contenido principal</a>
+<header><nav><div class="logo"><svg class="logo-icon" width="34" height="34" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="12" fill="#56212f"/><text x="32" y="27" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#d6d1ca" letter-spacing="-1">NE</text><text x="32" y="53" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#d6d1ca" letter-spacing="-1">ZA</text></svg><span class="logo-text">SEPRN</span></div>
+    <button class="nav-toggle" aria-label="Abrir menú" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button><ul>
+<li><a href="index.html">Inicio</a></li><li><a href="nosotros.html">Nosotros</a></li>
+<li><a href="areas.html" class="active" aria-current="page">Áreas</a></li><li><a href="cte.html">CTE</a></li><li><a href="contacto.html">Contacto</a></li>
+</ul></nav></header>
+<section class="hero hero-sm">
+    <div class="hero-inner">
+        <span class="hero-badge">OTDE NEZA · OFICINA VIRTUAL</span>
+        <h1>Oficina Virtual OTDE</h1>
+        <p>Todos los trámites de la Oficina de Tecnología para el Desarrollo Educativo en un solo lugar — y el seguimiento de tu solicitud, cuando ya tengas un folio.</p>
+    </div>
+    <div class="hero-glow" aria-hidden="true"></div>
+</section>
+<section class="content-section" id="main-content" role="main">
+
+    <div class="ov-buscador" id="buscar-folio">
+        <div class="ov-buscador-eyebrow">Seguimiento de solicitudes</div>
+        <h2>¿Ya tienes un folio? Consúltalo aquí</h2>
+        <p>Aplica a Mantenimiento, Asesorías, Correo Institucional y Soporte Técnico. El Centro de Formación Docente no usa folio de seguimiento — su confirmación llega por correo.</p>
+        <form class="ov-buscador-form" id="ov-form" novalidate>
+            <div class="ov-campo">
+                <label for="ov-folio">Folio</label>
+                <input type="text" id="ov-folio" placeholder="OTDE-MAN-0042" autocomplete="off">
+            </div>
+            <div class="ov-campo">
+                <label for="ov-correo">Correo con el que lo registraste</label>
+                <input type="email" id="ov-correo" placeholder="tucorreo@dee.edu.mx" autocomplete="off">
+            </div>
+            <button type="submit" class="ov-buscar-btn" id="ov-btn">Consultar</button>
+        </form>
+        <div class="ov-resultado" id="ov-resultado"></div>
+    </div>
+
+    <div class="section-header">
+        <div class="section-eyebrow">SERVICIOS DIGITALES</div>
+        <h2 class="section-title">¿Qué necesitas hacer?</h2>
+    </div>
+    <div class="ov-grid">
+        <a href="formacion-docente.html" class="area-card">
+            <span class="area-icon"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg></span>
+            <span class="area-tipo">Servicio</span>
+            <h2>Centro de Formación Docente</h2>
+            <p>Webinars, seminarios, diplomados, cursos autogestivos y proyectos didácticos — catálogo dinámico y registro en línea.</p>
+            <div class="ver-mas">Ver catálogo →</div>
+        </a>
+        <div class="area-card">
+            <span class="area-icon"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span>
+            <span class="area-tipo">Trámite</span>
+            <h2>Mantenimiento</h2>
+            <p>Solicita mantenimiento a los equipos de cómputo de tu centro de trabajo, adjuntando tu oficio.</p>
+            <a href="otde.html#mantenimiento" class="ver-mas">Solicitar →</a>
+            <a href="#buscar-folio" class="ov-consultar-link">Consultar estatus →</a>
+        </div>
+        <div class="area-card">
+            <span class="area-icon"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span>
+            <span class="area-tipo">Trámite</span>
+            <h2>Asesorías</h2>
+            <p>Solicita la asesoría pedagógica sobre Banco de Materiales/Chuka tras tu visita de mantenimiento.</p>
+            <a href="otde.html#asesorias" class="ver-mas">Solicitar →</a>
+            <a href="#buscar-folio" class="ov-consultar-link">Consultar estatus →</a>
+        </div>
+        <div class="area-card">
+            <span class="area-icon"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></span>
+            <span class="area-tipo">Trámite</span>
+            <h2>Correo Institucional</h2>
+            <p>Alta de cuenta, cambio de contraseña, eliminar método de autenticación o reportar una incidencia de acceso.</p>
+            <a href="otde.html#correo" class="ver-mas">Solicitar →</a>
+            <a href="#buscar-folio" class="ov-consultar-link">Consultar estatus →</a>
+        </div>
+        <div class="area-card">
+            <span class="area-icon"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h3v9H3z"/><path d="M18 11h3v9h-3z"/><path d="M3 11a9 9 0 0 1 18 0"/><path d="M21 20a2 2 0 0 1-2 2h-1"/></svg></span>
+            <span class="area-tipo">Trámite</span>
+            <h2>Soporte Técnico Remoto</h2>
+            <p>Solicita soporte remoto vía TeamViewer para problemas de correo, Office, red o equipo de cómputo.</p>
+            <a href="otde.html#soporte" class="ver-mas">Solicitar →</a>
+            <a href="#buscar-folio" class="ov-consultar-link">Consultar estatus →</a>
+        </div>
+        <div class="area-card ov-proximamente">
+            <span class="area-icon"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></span>
+            <span class="area-tipo">Próximamente</span>
+            <h2>Más servicios en camino</h2>
+            <p>Iremos sumando aquí nuevos trámites digitales de OTDE conforme estén listos.</p>
+        </div>
+    </div>
+</section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-grid">
+            <div class="footer-col">
+                <p class="footer-brand"><svg class="logo-icon" width="30" height="30" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="12" fill="#F9F8F5"/><text x="32" y="27" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#56212f" letter-spacing="-1">NE</text><text x="32" y="53" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#56212f" letter-spacing="-1">ZA</text></svg>SEPRN</p>
+                <p class="footer-desc">Subdirección de Educación Primaria<br>en la Región de Nezahualcóyotl</p>
+                <p class="footer-meta">Av. Texcoco #116, Col. Juárez Pantitlán<br>Nezahualcóyotl, Estado de México, C.P. 57460</p>
+                <p class="footer-meta">Lunes a Viernes · 08:30 – 15:30 h</p>
+            </div>
+            <div class="footer-col">
+                <p class="footer-col-title">Sitio</p>
+                <ul class="footer-links">
+                    <li><a href="index.html">Inicio</a></li>
+                    <li><a href="nosotros.html">Nosotros</a></li>
+                    <li><a href="areas.html">Áreas</a></li>
+                    <li><a href="cte.html">CTE</a></li>
+                    <li><a href="contacto.html">Contacto</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <p class="footer-col-title">Áreas</p>
+                <ul class="footer-links">
+                    <li><a href="academica.html">Subjefatura Académica</a></li>
+                    <li><a href="personal.html">Subjefatura de Personal</a></li>
+                    <li><a href="planeacion.html">Subjefatura de Planeación</a></li>
+                    <li><a href="recursos.html">Subjefatura de Recursos</a></li>
+                    <li><a href="otde.html">OTDE</a></li>
+                    <li><a href="oeve.html">OEVE</a></li>
+                    <li><a href="juridico.html">Asuntos Jurídicos</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="social-links">
+                <a href="https://www.facebook.com/SubNeza" target="_blank" rel="noopener noreferrer" title="Facebook">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                </a>
+                <a href="https://www.youtube.com/channel/UCvDb2DPSJxFyhH3bCPd5D2Q" target="_blank" rel="noopener noreferrer" title="YouTube">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                </a>
+            </div>
+            <div class="copyright">
+                © 2026 SEPRN · Subdirección de Educación Primaria en la Región de Nezahualcóyotl<br>
+                Órgano desconcentrado de SEIEM · Gobierno del Estado de México
+            </div>
+        </div>
+    </footer>
+
+<script>
+    // Fetch + parseo JSON con timeout — mismo patrón que otde.html/formacion-docente.html
+    // (ver docs/QA-NOTES.md #1: fetch() sin timeout deja el botón congelado indefinidamente).
+    const OV_TIMEOUT_MS = 30000;
+    async function fetchJsonConTimeout(url, options) {
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), OV_TIMEOUT_MS);
+        try {
+            const r = await fetch(url, options ? Object.assign({}, options, { signal: ctrl.signal }) : { signal: ctrl.signal });
+            return await r.json();
+        } finally {
+            clearTimeout(t);
+        }
+    }
+
+    // Ruteo por prefijo de folio → backend correspondiente. Mismas URLs de
+    // deployment ya usadas en otde.html (MANTENIMIENTO_/ASESORIAS_/SOPORTE_/
+    // ALTA_CORREO_APPS_SCRIPT_URL) — los 4 subtipos de Correo comparten un
+    // único deployment (WebApp.gs enruta por el prefijo del folio).
+    const OV_TIPOS_DE_TRAMITE = {
+        'OTDE-MAN-': { nombre: 'Mantenimiento', url: 'https://script.google.com/macros/s/AKfycbxxhyMUI8VuuxC29fWgkMWULwLdB7OhNJ-XawgtdseZY5hgV9P6I9uHFfiCMbAJzZb1/exec' },
+        'OTDE-ASE-': { nombre: 'Asesorías', url: 'https://script.google.com/macros/s/AKfycbxwJFE7d9P4b2e7lVYvBx7FK9bBws53T9V6Q3yU7W-NboeecvnZCvWdkJG0nL8Pmz8q/exec' },
+        'OTDE-SOP-': { nombre: 'Soporte Técnico Remoto', url: 'https://script.google.com/macros/s/AKfycbynU6hEtN7W-Q2MsTEbRZJeGH946n3YcQptGiW6w6fMzgZ98J6mu33bEqSoK_1Oxtk/exec' },
+        'OTDE-ALT-': { nombre: 'Alta de correo institucional', url: 'https://script.google.com/macros/s/AKfycbwjy-jx1J0riVAlcAkuwAqKq9LMQVIxs4R_ikBIRPXXntO3FwMkGTPBf90W5A8FPAD7/exec' },
+        'OTDE-CAM-': { nombre: 'Cambio de contraseña', url: 'https://script.google.com/macros/s/AKfycbwjy-jx1J0riVAlcAkuwAqKq9LMQVIxs4R_ikBIRPXXntO3FwMkGTPBf90W5A8FPAD7/exec' },
+        'OTDE-2FA-': { nombre: 'Eliminar método de autenticación', url: 'https://script.google.com/macros/s/AKfycbwjy-jx1J0riVAlcAkuwAqKq9LMQVIxs4R_ikBIRPXXntO3FwMkGTPBf90W5A8FPAD7/exec' },
+        'OTDE-INC-': { nombre: 'Incidencia de acceso', url: 'https://script.google.com/macros/s/AKfycbwjy-jx1J0riVAlcAkuwAqKq9LMQVIxs4R_ikBIRPXXntO3FwMkGTPBf90W5A8FPAD7/exec' }
+    };
+
+    function ovResolverTramite(folioCrudo) {
+        const folio = String(folioCrudo || '').trim().toUpperCase();
+        const prefijo = Object.keys(OV_TIPOS_DE_TRAMITE).find(p => folio.startsWith(p));
+        if (!prefijo) return null;
+        return Object.assign({ folio: folio }, OV_TIPOS_DE_TRAMITE[prefijo]);
+    }
+
+    const OV_BADGES = {
+        'Pendiente de validar': 'b-pendiente',
+        'Validado': 'b-validado',
+        'En atención': 'b-atencion',
+        'Resuelto': 'b-resuelto',
+        'Rechazado': 'b-rechazado'
+    };
+
+    function ovRenderEstatus(estatus) {
+        const clase = OV_BADGES[estatus];
+        if (clase) return '<span class="ov-badge ' + clase + '">' + estatus + '</span>';
+        // Estatus en texto libre (ej. "Estado general" de Correo): sin badge de color,
+        // no hay vocabulario cerrado que mapear de forma confiable.
+        return estatus || 'Sin estatus registrado';
+    }
+
+    function ovMostrarResultado(html, tipo) {
+        const panel = document.getElementById('ov-resultado');
+        panel.className = 'ov-resultado visible ' + tipo;
+        panel.innerHTML = html;
+    }
+
+    document.getElementById('ov-form').addEventListener('submit', async function (ev) {
+        ev.preventDefault();
+        const folioInput = document.getElementById('ov-folio');
+        const correoInput = document.getElementById('ov-correo');
+        const btn = document.getElementById('ov-btn');
+
+        const folioCrudo = folioInput.value.trim();
+        const correo = correoInput.value.trim();
+
+        if (!folioCrudo || !correo) {
+            ovMostrarResultado('Escribe tu folio y el correo con el que lo registraste.', 'error');
+            return;
+        }
+
+        const tramite = ovResolverTramite(folioCrudo);
+        if (!tramite) {
+            ovMostrarResultado('No reconocemos el formato de ese folio. Verifica que lo copiaste completo (ej. OTDE-MAN-0042).', 'error');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Consultando…';
+        try {
+            const url = tramite.url + '?action=consulta&folio=' + encodeURIComponent(tramite.folio) + '&correo=' + encodeURIComponent(correo);
+            const data = await fetchJsonConTimeout(url);
+
+            if (data.status === 'ok') {
+                ovMostrarResultado(
+                    '<div class="ov-resultado-fila"><strong>Trámite:</strong> ' + tramite.nombre + '</div>' +
+                    '<div class="ov-resultado-fila"><strong>Folio:</strong> ' + data.folio + '</div>' +
+                    '<div class="ov-resultado-fila"><strong>Estatus:</strong> ' + ovRenderEstatus(data.estatus) + '</div>' +
+                    (data.notas ? '<div class="ov-resultado-fila"><strong>Notas:</strong> ' + data.notas + '</div>' : ''),
+                    'ok'
+                );
+            } else {
+                ovMostrarResultado('No encontramos una solicitud con ese folio y ese correo. Verifica ambos datos e intenta de nuevo.', 'error');
+            }
+        } catch (err) {
+            ovMostrarResultado(err.name === 'AbortError' ? 'El servidor tardó demasiado en responder. Intenta de nuevo en un momento.' : 'No se pudo consultar el folio. Verifica tu conexión e intenta de nuevo.', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Consultar';
+        }
+    });
+</script>
+    <script src="script.js" defer></script>
+</body>
+</html>

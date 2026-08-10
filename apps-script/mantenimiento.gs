@@ -42,6 +42,10 @@
 // manInstalarTriggerCierre() (o el menú "OTDE Mantenimiento" que crea
 // onOpen()) después de pegar esta versión — los triggers no se reinstalan
 // solos al redesplegar.
+//
+// CONSULTA DE FOLIO (Oficina Virtual OTDE): doGet(?action=consulta&folio=..
+// &correo=...) devuelve estatus/fecha/notas si el folio y el correo
+// coinciden, o {status:'no_encontrado'} en cualquier otro caso.
 // ============================================================
 
 const HOJA_MAN_SOLICITUDES = 'Solicitudes';
@@ -60,9 +64,44 @@ const COL_MAN_ESTATUS = 14;
 const COL_MAN_NOTIFICACION_CIERRE = 16;
 const ESTADOS_MAN_VALIDOS = ['Pendiente de validar', 'Validado', 'En atención', 'Resuelto', 'Rechazado'];
 
-// ── doGet: verificación de estado ──
-function doGet() {
+// ── doGet: verificación de estado, o consulta de folio (?action=consulta) ──
+function doGet(e) {
+  const accion = e && e.parameter && e.parameter.action;
+  if (accion === 'consulta') {
+    return manConsultarFolio(e.parameter.folio, e.parameter.correo);
+  }
   return manTextResponse(JSON.stringify({ status: 'ok', servicio: 'OTDE Solicitudes de Mantenimiento' }));
+}
+
+// ── Consulta de estatus por folio + correo (Oficina Virtual OTDE) ──
+// Lectura directa por getSheetByName(), sin pasar por manObtenerHojaSolicitudes()
+// a propósito: esa función escribe (auto-heal de encabezados, validación de
+// dropdown), efectos secundarios que no debe tener una consulta de solo lectura.
+// Mismo mensaje genérico si el folio no existe o si el correo no coincide, para
+// no dejar adivinar folios válidos por descarte.
+function manConsultarFolio(folioBuscado, correoBuscado) {
+  const noEncontrado = function () {
+    return manTextResponse(JSON.stringify({ status: 'no_encontrado' }));
+  };
+  if (!folioBuscado || !correoBuscado) return noEncontrado();
+
+  const folio = String(folioBuscado).trim().toUpperCase();
+  const correo = String(correoBuscado).trim().toLowerCase();
+
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_MAN_SOLICITUDES);
+  if (!hoja) return noEncontrado();
+
+  const filas = hoja.getDataRange().getValues().slice(1);
+  const fila = filas.find(r => String(r[1]).trim().toUpperCase() === folio);
+  if (!fila || String(fila[10]).trim().toLowerCase() !== correo) return noEncontrado();
+
+  return manTextResponse(JSON.stringify({
+    status: 'ok',
+    folio: fila[1],
+    fecha: fila[0] instanceof Date ? fila[0].toISOString() : String(fila[0]),
+    estatus: fila[COL_MAN_ESTATUS - 1],
+    notas: fila[14] || ''
+  }));
 }
 
 // ── doPost: recibe solicitud de mantenimiento ──

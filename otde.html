@@ -529,6 +529,20 @@
 </section>
 <section class="content-section" id="main-content" role="main">
 
+    <!-- Banner: Oficina Virtual OTDE -->
+    <div class="otde-banner" style="background:linear-gradient(135deg,#56212f 0%,#9F2241 100%);margin-bottom:20px;">
+        <div>
+            <div class="otde-banner-eyebrow">OTDE NEZA · Oficina Virtual</div>
+            <div class="otde-banner-title">Todos tus trámites y su seguimiento, en un solo lugar</div>
+            <div class="otde-banner-sub">Formación Docente, Mantenimiento, Asesorías, Correo y Soporte — más el estatus de tu solicitud con tu folio</div>
+        </div>
+        <div style="position:relative;display:flex;flex-direction:column;align-items:flex-end;gap:.65rem;flex-shrink:0;">
+            <a href="oficina-virtual.html" class="otde-banner-cta light">
+                Ir a la Oficina Virtual →
+            </a>
+        </div>
+    </div>
+
     <!-- Banner: Centro de Formación Docente -->
     <div class="otde-banner" style="background:linear-gradient(135deg,#0C1A2E 0%,#1a2e4a 100%);">
         <div>
@@ -1899,6 +1913,16 @@
         btn.setAttribute('aria-selected', 'true');
         document.querySelector('.servicios-nav').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+
+    // Deep-link desde la Oficina Virtual (oficina-virtual.html) u otras páginas:
+    // un link a otde.html#mantenimiento abre esa tab directo al cargar, en vez
+    // de dejar al usuario en Correo (la tab activa por default) y obligarlo a
+    // buscarla a mano.
+    document.addEventListener('DOMContentLoaded', function () {
+        var id = location.hash.slice(1);
+        var btn = document.querySelector('.servicio-tab[aria-controls="' + id + '"]');
+        if (btn) showServicio(id, btn);
+    });
 
     function toggleForm(formId, btn) {
         var container = document.getElementById(formId);

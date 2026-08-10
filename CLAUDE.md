@@ -116,6 +116,7 @@ ya esté expandido).
 | `planeacion.html` | Subjefatura de Planeación |
 | `recursos.html` | Subjefatura de Recursos |
 | `otde.html` | Oficina de Tecnología (OTDE) |
+| `oficina-virtual.html` | Oficina Virtual OTDE — hub de servicios digitales (Formación Docente, Mantenimiento, Asesorías, Correo, Soporte) + consulta de estatus de solicitudes por folio |
 | `oeve.html` | Oficina de Extensión y Vinculación |
 | `juridico.html` | Oficina Jurídica |
 | `asistencia.html` | Check-in de asistencia (eventos) |
@@ -153,7 +154,7 @@ ya esté expandido).
 ### `apps-script/soporte-remoto.gs`
 - Conectado a Google Sheets (hoja `Solicitudes_Soporte_2026`, autocreada si no existe; el archivo de Drive que la contiene se llama "Soporte Técnico Remoto", **no** igual que la hoja interna)
 - Folio: `OTDE-SOP-NNNN` (secuencial, autoincremental)
-- Columnas A-M: Fecha | Folio | Nombre | CCT | Sector | Zona | Escuela/Unidad | Función/Cargo | WhatsApp | Correo | Descripción | Urgencia | Tipo de ayuda
+- Columnas A-P: Fecha | Folio | Nombre | CCT | Sector | Zona | Escuela/Unidad | Función/Cargo | WhatsApp | Correo | Descripción | Urgencia | Tipo de ayuda | Estatus | Notas de revisión | Notificación de cierre enviada (las últimas 3, ago 2026 — ver "Oficina Virtual OTDE" abajo)
 - **CCT con autocomplete**: mismo patrón usado en `otde.html`/`formacion-docente.html` (`js/cct-db.js`, 506 registros) — funciones `sopSeleccionarCct`/`sopResetCct`/`sopActualizarZonas`/`sopActualizarTipoCct` (prefijo `sop` para no chocar con las de otras páginas). Si la CCT no está en la base, aparecen campos manuales de Tipo de CCT/Sector/Zona/Escuela (`#sop-manual-fields`) — ver `docs/ARCHITECTURE.md §11`
 - **Función/Cargo** es un `<select>` que se repuebla según el tipo de CCT (`otdePoblarFuncion()`, ver `docs/ARCHITECTURE.md §11`) con campo libre si se elige "Otro"
 - **Tipo de ayuda** (ago 2026, columna M): `<select>` obligatorio — Correo institucional, Office/Licencias, Impresora, Antivirus/Seguridad, Internet/Red, Equipo de cómputo (hardware), Otro — complementa, no reemplaza, la descripción libre
@@ -163,7 +164,8 @@ ya esté expandido).
 - Requiere Propiedades del script configuradas manualmente en el editor de Apps Script (Project Settings → Script Properties): `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID` — instrucciones completas para obtenerlas están al final del propio archivo `.gs`
 - Usado por el formulario "Solicitar Soporte Técnico Remoto" en la pestaña Soporte Técnico de `otde.html`; responde `Content-Type: text/plain` para evitar preflight CORS
 - URL del deployment vive en `otde.html` en la constante `SOPORTE_APPS_SCRIPT_URL`
-- **Redesplegado (7 ago 2026, versión 4)**: mismo ID de implementación de siempre, no cambió `SOPORTE_APPS_SCRIPT_URL`. La columna `Tipo de ayuda` se agregó a mano al final de la hoja real (este proyecto no tiene auto-heal de encabezados, a diferencia de `mantenimiento.gs`/`formacion-docente.gs`)
+- **Redesplegado (7 ago 2026, versión 4)**: mismo ID de implementación de siempre, no cambió `SOPORTE_APPS_SCRIPT_URL`. La columna `Tipo de ayuda` se agregó a mano al final de la hoja real (este proyecto no tenía auto-heal de encabezados, a diferencia de `mantenimiento.gs`/`formacion-docente.gs`)
+- **Estatus + cierre automático + auto-heal (ago 2026, pendiente de redeploy)**: ya tiene el mismo mecanismo que Mantenimiento/Asesorías — dropdown de 5 valores en `Estatus`, trigger instalable `sopOnEditCierre` (correr `sopInstalarTriggerCierre()` una vez tras pegar esta versión, o el menú "OTDE Soporte" nuevo que agrega `onOpen()`), y ahora sí completa solo cualquier encabezado que falte en la hoja real. A diferencia de Mantenimiento/Asesorías, Soporte no tiene `Contactos_Zona_Sector` — el cierre solo notifica al solicitante, no a Zona/Sector (decisión deliberada, no un pendiente). Ver "Oficina Virtual OTDE" abajo para el endpoint de consulta que motivó este cambio.
 - Para cambios: copiar el `.gs` completo en Apps Script y re-desplegar como aplicación web (Cualquier usuario) — **cuidado**: probar el endpoint con `curl -X POST`, o incluso desde un navegador headless con acceso real a internet (confirmado: el sandbox de pruebas SÍ tiene salida real a `script.google.com`), ejecuta `doPost` de verdad (escribe en Sheets y dispara Telegram). Para pruebas locales, interceptar la llamada de red (`page.route()` en Playwright) en vez de dejarla llegar al backend real
 
 ### `apps-script/mantenimiento.gs`
@@ -414,10 +416,76 @@ licenciamiento institucional"). Los 5 pasos de la guía rápida están basados e
 del `.bat` — si el `.bat` cambia, actualizar el manual para que siga siendo preciso.
 
 ### Banners de convocatoria
-Hoy solo Formación Docente (el de Jornada Verano se retiró 13 jul 2026): clases reutilizables
-`.otde-banner`/`.otde-banner-cta`/`.otde-banner-link` (sombra en capas, glow sutil, hover con
-elevación). Usan **Montserrat** a propósito, no Inter — es la tipografía ya establecida en esta
-página, meter una fuente distinta solo en el banner se vería ajeno.
+Dos banners hoy (Jornada Verano se retiró 13 jul 2026): Oficina Virtual (ago 2026, arriba,
+gradiente guinda `#56212f→#9F2241`, CTA clase `.light`) y Centro de Formación Docente (gradiente
+midnight, CTA clase `.solid`). Clases reutilizables `.otde-banner`/`.otde-banner-cta`/
+`.otde-banner-link` (sombra en capas, glow sutil, hover con elevación). Usan **Montserrat** a
+propósito, no Inter — es la tipografía ya establecida en esta página, meter una fuente distinta
+solo en el banner se vería ajeno.
+
+## `oficina-virtual.html` — Oficina Virtual OTDE (ago 2026, hub de servicios + seguimiento)
+Reusa `styles.css` (misma identidad institucional que `otde.html`, no un sistema propio como
+Formación Docente — es una utilidad de una sola pantalla que continúa un trámite ya empezado en
+`otde.html`, no una pieza de marketing/conversión). Nace de retomar la visión de Jorge de una
+"oficina virtual" aparte de `otde.html`, planteada y pospuesta el 7 ago 2026
+(`docs/BITACORA.md`), con el foco confirmado en seguimiento de solicitudes.
+
+- **`otde.html` no cambió de estructura** — solo ganó el banner de arriba y un manejador de
+  `location.hash` en `DOMContentLoaded` (busca `.servicio-tab[aria-controls="<hash>"]` y llama
+  `showServicio()`) para que los links del hub abran la tab correcta al cargar
+  (`otde.html#mantenimiento`, `#asesorias`, `#correo`, `#soporte`).
+- **Grid de servicios** (patrón `.area-card` de `areas.html`, adaptado): Centro de Formación
+  Docente (→ `formacion-docente.html`, sin seguimiento — no aplica) y los 4 trámites tipo-ticket
+  (Mantenimiento/Asesorías/Correo/Soporte), cada uno con un link "Solicitar →" (deep-link a
+  `otde.html`) y "Consultar estatus →" (ancla a `#buscar-folio`). Una card "Próximamente"
+  (`.ov-proximamente`, borde punteado) deja la grid lista para crecer.
+- **Buscador de seguimiento** (`#buscar-folio`, hero del hub): folio + correo → ruteo automático
+  por prefijo (`OV_TIPOS_DE_TRAMITE`, función `ovResolverTramite()`) a la URL de deployment
+  correspondiente, sin preguntarle al usuario el tipo de trámite. Reusa `fetchJsonConTimeout()`
+  duplicada inline (mismo patrón que el resto del sitio).
+- **Contrato de consulta, igual en los 4 backends**: `GET ?action=consulta&folio=XXX&correo=YYY`
+  → `{status:'ok', folio, fecha, estatus, notas}` o `{status:'no_encontrado'}` (mismo mensaje si
+  el folio no existe o el correo no coincide, para no dejar adivinar folios válidos por
+  descarte). Es un GET simple sin headers custom — no dispara preflight CORS, a diferencia de los
+  POST existentes que usan `Content-Type: text/plain` para lo mismo.
+  - `mantenimiento.gs`/`asesorias.gs`: `doGet(e)` ramificado + `manConsultarFolio()`/
+    `aseConsultarFolio()`, lectura directa por `getSheetByName()` sin pasar por
+    `manObtenerHojaSolicitudes()`/`aseObtenerHojaSolicitudes()` (esas funciones escriben).
+  - `soporte-remoto.gs`: mismo patrón (`sopConsultarFolio()`), habilitado por el `Estatus` nuevo
+    documentado arriba.
+  - `Correos-institucionales/webform-2026-2027/WebApp.gs` (**repo git distinto**, no
+    `seprn-sitio`): `manejarConsultaCorreo()` resuelve la hoja correcta por el prefijo del folio
+    (`Alta`/`Cambio de Contraseña`/`Reset 2FA`/`Incidencias`, columnas distintas entre sí) y
+    expone `Estado general` tal cual — texto libre, sin vocabulario cerrado, a propósito no
+    migrado a dropdown en esta ronda. Acepta Correo Personal o Institucional como llave
+    indistintamente.
+- **No es autenticación real** — folios secuenciales + correo institucional a veces predecible.
+  Mismo nivel de protección que el resto del sitio (sin PII más allá de un estatus), consistente
+  con la decisión previa de no construir login propio (ver Formación Docente arriba). El texto de
+  cara al usuario dice "consulta rápida", nunca "portal seguro".
+- **Badges de estatus** (`ovRenderEstatus()`): los 5 valores fijos de Mantenimiento/Asesorías/
+  Soporte se pintan con color (`OV_BADGES`); el "Estado general" de Correo, al ser texto libre,
+  se muestra plano — no se intenta mapear a un vocabulario cerrado que no existe.
+- **Redesplegado a producción (10 ago 2026)**: los 4 backends — `mantenimiento.gs` (v6),
+  `asesorias.gs` (v6), `soporte-remoto.gs` (v5), `WebApp.gs` de
+  `Correos-institucionales/webform-2026-2027/` (v4) — mismos IDs de implementación de siempre.
+  Verificado en vivo con `curl` para los 7 prefijos: todos responden `{"status":"no_encontrado"}`
+  para un folio inventado, confirmando el código nuevo en producción.
+- **Bug real cazado en el primer despliegue de `WebApp.gs`**: un `const` de nivel superior
+  (`MAPA_PREFIJO_HOJA_CONSULTA`) que leía `HOJA_ALTA`/`HOJA_CAMBIO`/`HOJA_RESET`/
+  `HOJA_INCIDENCIAS` (definidas en los otros archivos del proyecto) tronaba
+  `ReferenceError: HOJA_ALTA is not defined` — Apps Script no garantiza el orden de evaluación de
+  `const`/`let` de nivel superior entre archivos de un mismo proyecto multi-archivo. Fix: el mapa
+  se arma ahora dentro de `manejarConsultaCorreo()`, no a nivel de módulo — ver el comentario en
+  el propio `WebApp.gs`. Corregido y redesplegado (v4) antes de que ningún usuario real lo
+  encontrara.
+- **Trigger de Soporte instalado vía UI, no programáticamente**: `sopInstalarTriggerCierre()`
+  corrió sin error desde el editor pero no dejó ningún activador registrado (0 en "Activadores").
+  Se instaló en su lugar a mano vía "Agregar activador" → función `sopOnEditCierre`, fuente
+  "Desde la hoja de cálculo", evento "Al editar" — eso sí quedó registrado y funcional. Causa
+  raíz no investigada; si se vuelve a instalar este trigger (o los de Mantenimiento/Asesorías),
+  confirmar en la pestaña "Activadores" del proyecto que sí aparece, no solo que la función
+  corrió sin arrojar error.
 
 ## `formacion-docente.html` — Centro de Formación Docente (jul 2026, DESPLEGADO)
 Página autónoma (no importa `styles.css`). Vinculada desde `otde.html` mediante banner destacado. Nace de sistematizar el flujo de convocatorias CoEEE (webinars, seminarios, diplomados, cursos autogestivos, acciones formativas, proyectos didácticos) que antes se resolvía con un Google Form distinto por curso.

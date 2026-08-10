@@ -47,6 +47,10 @@
 // aseInstalarTriggerCierre() (o el menú "OTDE Asesorías" que crea onOpen())
 // después de pegar esta versión — los triggers no se reinstalan solos al
 // redesplegar.
+//
+// CONSULTA DE FOLIO (Oficina Virtual OTDE): doGet(?action=consulta&folio=..
+// &correo=...) devuelve estatus/fecha/notas si el folio y el correo
+// coinciden, o {status:'no_encontrado'} en cualquier otro caso.
 // ============================================================
 
 const HOJA_ASE_SOLICITUDES = 'Solicitudes';
@@ -64,9 +68,42 @@ const COL_ASE_ESTATUS = 16;
 const COL_ASE_NOTIFICACION_CIERRE = 19;
 const ESTADOS_ASE_VALIDOS = ['Pendiente de validar', 'Validado', 'En atención', 'Resuelto', 'Rechazado'];
 
-// ── doGet: verificación de estado ──
-function doGet() {
+// ── doGet: verificación de estado, o consulta de folio (?action=consulta) ──
+function doGet(e) {
+  const accion = e && e.parameter && e.parameter.action;
+  if (accion === 'consulta') {
+    return aseConsultarFolio(e.parameter.folio, e.parameter.correo);
+  }
   return aseTextResponse(JSON.stringify({ status: 'ok', servicio: 'OTDE Solicitudes de Asesoría' }));
+}
+
+// ── Consulta de estatus por folio + correo (Oficina Virtual OTDE) ──
+// Mismo diseño que manConsultarFolio() en mantenimiento.gs: lectura directa,
+// sin pasar por aseObtenerHojaSolicitudes() (esa función escribe), y mismo
+// mensaje genérico si el folio no existe o el correo no coincide.
+function aseConsultarFolio(folioBuscado, correoBuscado) {
+  const noEncontrado = function () {
+    return aseTextResponse(JSON.stringify({ status: 'no_encontrado' }));
+  };
+  if (!folioBuscado || !correoBuscado) return noEncontrado();
+
+  const folio = String(folioBuscado).trim().toUpperCase();
+  const correo = String(correoBuscado).trim().toLowerCase();
+
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_ASE_SOLICITUDES);
+  if (!hoja) return noEncontrado();
+
+  const filas = hoja.getDataRange().getValues().slice(1);
+  const fila = filas.find(r => String(r[1]).trim().toUpperCase() === folio);
+  if (!fila || String(fila[12]).trim().toLowerCase() !== correo) return noEncontrado();
+
+  return aseTextResponse(JSON.stringify({
+    status: 'ok',
+    folio: fila[1],
+    fecha: fila[0] instanceof Date ? fila[0].toISOString() : String(fila[0]),
+    estatus: fila[COL_ASE_ESTATUS - 1],
+    notas: fila[16] || ''
+  }));
 }
 
 // ── doPost: recibe solicitud de asesoría ──
