@@ -1,0 +1,10 @@
+# macOS
+.DS_Store
+
+# Archivos de datos fuente (nunca se han comiteado — se usan para
+# generar js/cct-db.js y similares, se quedan locales)
+*.xlsx
+
+# Documento de referencia (manual de identidad, 248MB) — excede el límite de
+# 100MB de GitHub por archivo, se queda local
+Guía de Contenidos Digitales.pdf

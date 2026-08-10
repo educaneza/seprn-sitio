@@ -54,10 +54,17 @@ nav {
 }
 
 .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     font-size: 22px;
     font-weight: 600;
     letter-spacing: -0.5px;
     color: var(--guinda);
+}
+
+.logo-icon {
+    flex: none;
 }
 
 nav ul {
@@ -452,6 +459,9 @@ footer {
 }
 
 .footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 20px;
     font-weight: 700;
     color: #fff;
