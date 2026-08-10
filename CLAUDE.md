@@ -72,7 +72,7 @@ conocida, no corregida a propósito (decisión de Jorge).
 
 | Sesión | Ciclo | Opening YT | Grabación | Materiales | ZIP |
 |---|---|---|---|---|---|
-| Fase Intensiva 2026-2027 | 2026-2027 (actual) | — | — | 8 PDFs (`pdfs/cte/cte-2026-2027/cte-fase-intensiva/`) | ✅ (`cte-fase-intensiva-completa.zip`) |
+| Fase Intensiva 2026-2027 | 2026-2027 (actual) | — | — | 9 PDFs (`pdfs/cte/cte-2026-2027/cte-fase-intensiva/`) | ✅ (`cte-fase-intensiva-completa.zip`) |
 | Taller Intensivo de Cierre (16-17 jul 2026) | 2025-2026 (archivo) | `1PXPphhZd9s` | — (evento no ocurrió) | 5 materiales (`pdfs/cte/cte-2025-2026/taller-intensivo-docentes/`) | ✅ |
 | Octava Ordinaria | 2025-2026 (archivo) | `BRneovXdqL8` | — | PPTX + PDF orientaciones | ✅ |
 | Séptima Ordinaria | 2025-2026 (archivo) | `oUA9r4zKdgo` | — | PPTX + 7 materiales | ✅ |
@@ -85,11 +85,15 @@ conocida, no corregida a propósito (decisión de Jorge).
 | Primera Ordinaria | 2025-2026 (archivo) | — | `1vFCnnWKkzg` | — | — |
 | Fase Intensiva 2025-2026 | 2025-2026 (archivo) | `djBBRNrFetE` | — | — | — |
 
-**Ojo con 3 de los 8 PDFs de Fase Intensiva 2026-2027:** llevan prefijo de otro ciclo en el
+**Ojo con 3 de los 9 PDFs de Fase Intensiva 2026-2027:** llevan prefijo de otro ciclo en el
 nombre de archivo (`2526_s1_comunidad_aprendizaje.pdf`, `2526_s2_t4_orgcompleta_insumo1.pdf`,
 `2526_s3_t4_orgcompleta_insumo2.pdf` = ciclo 2025-2026; `2425_s0_insumos_direc_proceso_mejora_continua.pdf`
 = ciclo 2024-2025) pero viven en la carpeta de 2026-2027 — Jorge los puso ahí a propósito como
-material de referencia, no es un error de organización.
+material de referencia, no es un error de organización. Un noveno archivo
+(`admin,+1534-3581-1-CE.pdf`) es en realidad un artículo académico ("Territorio, Cultura y
+Contextualización Curricular", Miguel Zabalza Beraza, revista *Interacções* No. 22, 2012) — no
+un documento oficial de SEP, pero Jorge confirmó incluirlo como lectura complementaria del tema
+(así se etiqueta en el `span` del material, distinto a "Fase Intensiva • PDF" del resto).
 
 Dentro de cada bloque de ciclo, la sesión más reciente siempre debe ser el acordeón
 activo/abierto al cargar la página, con badge NUEVO. Las sesiones anteriores se colapsan y sus
