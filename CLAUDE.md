@@ -50,24 +50,52 @@ Todas las páginas de área siguen este patrón:
 4. Cada sección usa `.section-header` + `.section-eyebrow` + `.section-title` en lugar de `.seccion-titulo`
 5. Las tarjetas de oficinas usan `class="oficina-card fade-item"` para animación al scroll
 
-## CTE — Sesiones publicadas (al 13 jul 2026)
+## CTE — Sesiones publicadas (al 10 ago 2026)
 **Ojo:** "Taller Intensivo de Cierre 2025-2026" (jul 2026) y "Taller Intensivo CTE 2025-2026" (ene 2026) son **dos eventos distintos** — no confundirlos ni fusionar su contenido.
 
-| Sesión | Opening YT | Grabación | Materiales | ZIP |
-|---|---|---|---|---|
-| Taller Intensivo de Cierre (16-17 jul 2026) | `1PXPphhZd9s` | — (evento aún no ocurre) | 5 materiales (`pdfs/cte/taller-intensivo-docentes/`) | ✅ |
-| Octava Ordinaria | `BRneovXdqL8` | — | PPTX + PDF orientaciones | ✅ |
-| Séptima Ordinaria | `oUA9r4zKdgo` | — | PPTX + 7 materiales | ✅ |
-| Sexta Ordinaria | `k3JZp4rLafA` | `yyAF0y0QPqA` | 8 materiales | ✅ |
-| Quinta Ordinaria | `J2PULvX4XwM` | `m0AFF56RSDw` | 5 materiales | ✅ |
-| Cuarta Ordinaria | — | `lEZvJhxcHSE` | — | — |
-| Taller Intensivo (ene 2026) | — | `NPq6wjpFJsY` | — | — |
-| Tercera Ordinaria | — | `L7G7fwDi25A` | — | — |
-| Segunda Ordinaria | `ysX2Lj3xx3s` | `E_8IdfhULeE` | — | — |
-| Primera Ordinaria | — | `1vFCnnWKkzg` | — | — |
-| Fase Intensiva | `djBBRNrFetE` | — | — | — |
+**Estructura por ciclo (ago 2026):** `cte.html` ya no es una lista plana única — se divide en un
+bloque "Ciclo Escolar `<actual>`" (encabezado `.section-header`, sesiones normales) y un bloque
+"Ciclo Anterior" colapsable (`.ciclo-archivo` / `.ciclo-archivo-toggle` / `toggleCicloArchivo()`,
+CSS y JS al final del `<style>`/`<script>` del archivo) que agrupa las 11 sesiones del ciclo ya
+cerrado, cerrado por default al cargar. Al cerrar un ciclo y arrancar el siguiente: mover las
+`.sesion-accordion` del ciclo saliente dentro de `.ciclo-archivo-content-inner`, quitarles
+`active`/badge NUEVO, y agregar la Fase Intensiva del ciclo entrante arriba como la nueva sesión
+abierta. `toggleSesion()` sigue funcionando igual sin cambios (opera sobre
+`querySelectorAll('.sesion-accordion')` en todo el documento, sin importar el anidado).
 
-La sesión más reciente siempre debe ser el acordeón activo/abierto al cargar la página, con badge NUEVO. Las sesiones anteriores se colapsan y sus iframes usan `data-src` (lazy loading). Al publicarse la grabación del Taller Intensivo de Cierre, agregar su iframe junto al Opening ya existente (mismo patrón que Sexta/Quinta Ordinaria).
+**Los PDFs también se reorganizaron por ciclo (ago 2026):** ya no es `pdfs/cte/<nombre-sesion>/`
+a secas — ahora es `pdfs/cte/cte-<ciclo>/<nombre-sesion>/` (ej.
+`pdfs/cte/cte-2025-2026/octava-sesion/`, `pdfs/cte/cte-2026-2027/cte-fase-intensiva/`). Nota: la
+subcarpeta de Fase Intensiva 2026-2027 sí lleva el prefijo `cte-` (`cte-fase-intensiva`) mientras
+que las del ciclo 2025-2026 no (`octava-sesion`, `sexta-sesion`...) — inconsistencia menor,
+conocida, no corregida a propósito (decisión de Jorge).
+
+| Sesión | Ciclo | Opening YT | Grabación | Materiales | ZIP |
+|---|---|---|---|---|---|
+| Fase Intensiva 2026-2027 | 2026-2027 (actual) | — | — | 8 PDFs (`pdfs/cte/cte-2026-2027/cte-fase-intensiva/`) | ✅ (`cte-fase-intensiva-completa.zip`) |
+| Taller Intensivo de Cierre (16-17 jul 2026) | 2025-2026 (archivo) | `1PXPphhZd9s` | — (evento no ocurrió) | 5 materiales (`pdfs/cte/cte-2025-2026/taller-intensivo-docentes/`) | ✅ |
+| Octava Ordinaria | 2025-2026 (archivo) | `BRneovXdqL8` | — | PPTX + PDF orientaciones | ✅ |
+| Séptima Ordinaria | 2025-2026 (archivo) | `oUA9r4zKdgo` | — | PPTX + 7 materiales | ✅ |
+| Sexta Ordinaria | 2025-2026 (archivo) | `k3JZp4rLafA` | `yyAF0y0QPqA` | 8 materiales | ✅ |
+| Quinta Ordinaria | 2025-2026 (archivo) | `J2PULvX4XwM` | `m0AFF56RSDw` | 5 materiales | ✅ |
+| Cuarta Ordinaria | 2025-2026 (archivo) | — | `lEZvJhxcHSE` | — | — |
+| Taller Intensivo (ene 2026) | 2025-2026 (archivo) | — | `NPq6wjpFJsY` | — | — |
+| Tercera Ordinaria | 2025-2026 (archivo) | — | `L7G7fwDi25A` | — | — |
+| Segunda Ordinaria | 2025-2026 (archivo) | `ysX2Lj3xx3s` | `E_8IdfhULeE` | — | — |
+| Primera Ordinaria | 2025-2026 (archivo) | — | `1vFCnnWKkzg` | — | — |
+| Fase Intensiva 2025-2026 | 2025-2026 (archivo) | `djBBRNrFetE` | — | — | — |
+
+**Ojo con 3 de los 8 PDFs de Fase Intensiva 2026-2027:** llevan prefijo de otro ciclo en el
+nombre de archivo (`2526_s1_comunidad_aprendizaje.pdf`, `2526_s2_t4_orgcompleta_insumo1.pdf`,
+`2526_s3_t4_orgcompleta_insumo2.pdf` = ciclo 2025-2026; `2425_s0_insumos_direc_proceso_mejora_continua.pdf`
+= ciclo 2024-2025) pero viven en la carpeta de 2026-2027 — Jorge los puso ahí a propósito como
+material de referencia, no es un error de organización.
+
+Dentro de cada bloque de ciclo, la sesión más reciente siempre debe ser el acordeón
+activo/abierto al cargar la página, con badge NUEVO. Las sesiones anteriores se colapsan y sus
+iframes usan `data-src` (lazy loading) — incluidas las que están dentro de `.ciclo-archivo`, que
+no se cargan hasta que esa sesión específica se abre (independiente de que el bloque de archivo
+ya esté expandido).
 
 ## Páginas del sitio
 | Archivo | Sección |
@@ -149,7 +177,7 @@ La sesión más reciente siempre debe ser el acordeón activo/abierto al cargar 
 1. No introducir npm, frameworks ni build steps — stack estático puro
 2. Cambios globales de UI → `styles.css`; cambios específicos de página → `<style>` inline en el HTML
 3. Para modificar estilos del header/footer: son inline en cada página, no hay componente compartido
-4. Imágenes en `images/`, PDFs en `pdfs/cte/<nombre-sesion>/`, instaladores/ejecutables descargables en `descargas/` (ej. `.exe`, `.bat`)
+4. Imágenes en `images/`, PDFs en `pdfs/cte/cte-<ciclo>/<nombre-sesion>/` (ej. `pdfs/cte/cte-2026-2027/cte-fase-intensiva/`), instaladores/ejecutables descargables en `descargas/` (ej. `.exe`, `.bat`)
 5. Después de push: esperar 5-10 min o Cmd+Shift+R para invalidar caché de GitHub Pages
 6. Los PDFs de sesiones CTE se nombran con mayúsculas y acentos; URL-encodear la ó como `%C3%B3` en los hrefs
 7. **Sin emojis** en HTML — usar SVG inline para íconos de contacto (persona, correo, teléfono). Ver `contacto-icon` en cualquier página de área como referencia

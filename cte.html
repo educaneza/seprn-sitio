@@ -11,7 +11,7 @@
       gtag('config', 'G-7D68DB8ELW');
     </script>
     <meta charset="UTF-8">
-    <meta name="description" content="Grabaciones y materiales de las sesiones del Consejo Técnico Escolar 2025-2026 para directivos y docentes de la Región de Nezahualcóyotl.">
+    <meta name="description" content="Grabaciones y materiales de las sesiones del Consejo Técnico Escolar para directivos y docentes de la Región de Nezahualcóyotl.">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CTE - SEPRN</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -278,7 +278,69 @@
             margin: 0;
             line-height: 1.6;
         }
+        .ciclo-archivo {
+            margin-top: 50px;
+        }
+        .ciclo-archivo-toggle {
+            width: 100%;
+            background: rgba(159,34,65,0.08);
+            padding: 20px 25px;
+            border-radius: 10px;
+            border-left: 4px solid #9F2241;
+            border-top: none;
+            border-right: none;
+            border-bottom: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            cursor: pointer;
+            font-family: inherit;
+            text-align: left;
+            transition: background 0.2s;
+            margin-bottom: 20px;
+        }
+        .ciclo-archivo-toggle:hover {
+            background: rgba(159,34,65,0.14);
+        }
+        .ciclo-archivo-toggle-text h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 5px 0;
+            color: #56212f;
+        }
+        .ciclo-archivo-toggle-text p {
+            margin: 0;
+            font-size: 13px;
+            color: #666;
+        }
+        .ciclo-archivo-toggle-icon {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            color: #9F2241;
+            transition: transform 0.3s;
+        }
+        .ciclo-archivo.active .ciclo-archivo-toggle-icon {
+            transform: rotate(180deg);
+        }
+        .ciclo-archivo-content {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.35s ease;
+        }
+        .ciclo-archivo.active .ciclo-archivo-content {
+            grid-template-rows: 1fr;
+        }
+        .ciclo-archivo-content-inner {
+            min-height: 0;
+            overflow: hidden;
+        }
         @media(max-width:768px){
+            .ciclo-archivo-toggle {
+                flex-direction: column;
+                text-align: center;
+            }
             .download-all-section {
                 flex-direction: column;
                 text-align: center;
@@ -329,7 +391,7 @@
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="SEPRN">
     <meta property="og:title" content="CTE">
-    <meta property="og:description" content="Grabaciones y materiales de las sesiones del Consejo Técnico Escolar 2025-2026 para directivos y docentes de la Región de Nezahualcóyotl.">
+    <meta property="og:description" content="Grabaciones y materiales de las sesiones del Consejo Técnico Escolar para directivos y docentes de la Región de Nezahualcóyotl.">
     <meta property="og:url" content="https://educaneza.github.io/seprn-sitio/cte.html">
 </head>
 <body>
@@ -365,11 +427,143 @@
     <!-- Content -->
     <section class="content-section" id="main-content" role="main">
 
-<!-- Taller Intensivo de Cierre 2025-2026 (ABIERTA POR DEFECTO) -->
+<!-- Ciclo Escolar 2026-2027 -->
+<div class="section-header">
+    <span class="section-eyebrow">CICLO ESCOLAR</span>
+    <h2 class="section-title">2026-2027</h2>
+</div>
+
+<!-- Fase Intensiva 2026-2027 (ABIERTA POR DEFECTO) -->
 <div class="sesion-accordion active">
     <button class="sesion-header" type="button" onclick="toggleSesion(this)" aria-expanded="true">
         <div class="sesion-header-text">
-            <h2>Taller Intensivo de Cierre 2025-2026 <span style="display: inline-block; background: #ff3b3b; color: white; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 6px; margin-left: 10px; vertical-align: middle;">NUEVO</span></h2>
+            <h2>Fase Intensiva 2026-2027 <span style="display: inline-block; background: #ff3b3b; color: white; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 6px; margin-left: 10px; vertical-align: middle;">NUEVO</span></h2>
+            <p>Materiales de la Fase Intensiva del Consejo Técnico Escolar — inicio del ciclo escolar 2026-2027</p>
+        </div>
+        <div class="sesion-toggle"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+    </button>
+
+    <div class="sesion-content">
+<div class="sesion-content-inner">
+
+        <!-- Materiales -->
+        <div class="materiales-section">
+            <h3>Materiales Individuales</h3>
+
+            <div class="materiales-grid">
+                <a href="pdfs/cte/cte-2026-2027/cte-fase-intensiva/2627_s0_orientaciones_directivos.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Orientaciones Directivos</strong>
+                        <span>Fase Intensiva • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/cte-2026-2027/cte-fase-intensiva/2627_s0_orientaciones_multigrado.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Orientaciones Multigrado</strong>
+                        <span>Fase Intensiva • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/cte-2026-2027/cte-fase-intensiva/2627_s0_documento_uso_de_dispositivos_electronicos.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Uso de Dispositivos Electrónicos</strong>
+                        <span>Fase Intensiva • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/cte-2026-2027/cte-fase-intensiva/2627_s0_documento_anexo_jornada_concientiza_maltrato_infantil_2026.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Anexo: Jornada de Concientización sobre Maltrato Infantil</strong>
+                        <span>Fase Intensiva • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/cte-2026-2027/cte-fase-intensiva/2526_s1_comunidad_aprendizaje.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Comunidad de Aprendizaje</strong>
+                        <span>Fase Intensiva • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/cte-2026-2027/cte-fase-intensiva/2526_s2_t4_orgcompleta_insumo1.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Organización Completa — Insumo 1</strong>
+                        <span>Fase Intensiva • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/cte-2026-2027/cte-fase-intensiva/2526_s3_t4_orgcompleta_insumo2.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Organización Completa — Insumo 2</strong>
+                        <span>Fase Intensiva • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/cte-2026-2027/cte-fase-intensiva/2425_s0_insumos_direc_proceso_mejora_continua.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Insumos para Dirección — Proceso de Mejora Continua</strong>
+                        <span>Fase Intensiva • PDF</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Descargar Todo -->
+        <div class="download-all-section">
+            <div class="download-all-text">
+                <h4>Descargar Paquete Completo</h4>
+                <p>Descarga todos los materiales de esta sesión en un solo archivo ZIP</p>
+            </div>
+            <a href="pdfs/cte/cte-2026-2027/cte-fase-intensiva/cte-fase-intensiva-completa.zip" class="download-all-btn" download>
+                Descargar Todo
+            </a>
+        </div>
+
+        <!-- Link SEP -->
+        <div class="link-sep">
+            <div class="link-sep-text">
+                <h4>Recursos Adicionales SEP</h4>
+                <p>Insumos y materiales complementarios oficiales</p>
+            </div>
+            <a href="https://gestion.cte.sep.gob.mx/insumos/" target="_blank" rel="noopener noreferrer">
+                Ir al Portal SEP <span>→</span>
+            </a>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- Ciclo Escolar 2025-2026 (archivo) -->
+<div class="ciclo-archivo">
+    <div class="section-header">
+        <span class="section-eyebrow">CICLO ANTERIOR</span>
+        <h2 class="section-title">2025-2026</h2>
+    </div>
+    <button class="ciclo-archivo-toggle" type="button" onclick="toggleCicloArchivo(this)" aria-expanded="false">
+        <div class="ciclo-archivo-toggle-text">
+            <h4>Ver sesiones del ciclo 2025-2026</h4>
+            <p>11 sesiones — grabaciones, materiales y presentaciones del ciclo anterior</p>
+        </div>
+        <div class="ciclo-archivo-toggle-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+    </button>
+
+    <div class="ciclo-archivo-content">
+<div class="ciclo-archivo-content-inner">
+
+<!-- Taller Intensivo de Cierre 2025-2026 -->
+<div class="sesion-accordion">
+    <button class="sesion-header" type="button" onclick="toggleSesion(this)" aria-expanded="false">
+        <div class="sesion-header-text">
+            <h2>Taller Intensivo de Cierre 2025-2026</h2>
             <p>Materiales y presentación del Taller Intensivo de Cierre del Consejo Técnico Escolar — 16 y 17 de julio de 2026</p>
         </div>
         <div class="sesion-toggle"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
@@ -385,7 +579,7 @@
                 <iframe
                     width="560"
                     height="315"
-                    src="https://www.youtube.com/embed/1PXPphhZd9s?si=6dBeDdhoA0iSGI8M"
+                    data-src="https://www.youtube.com/embed/1PXPphhZd9s?si=6dBeDdhoA0iSGI8M"
                     title="Opening Taller Intensivo de Cierre CTE"
                     frameborder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -400,7 +594,7 @@
             <h3>Materiales Individuales</h3>
 
             <div class="materiales-grid">
-                <a href="pdfs/cte/taller-intensivo-docentes/Taller-Intensivo-para-Personal-Docente-SEPRN-2025-2026.pptx" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/taller-intensivo-docentes/Taller-Intensivo-para-Personal-Docente-SEPRN-2025-2026.pptx" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="9" cy="10" r="2"/><path d="M13 8h4M13 12h4"/></svg></div>
                     <div class="material-info">
                         <strong>Presentación SEPRN</strong>
@@ -408,7 +602,7 @@
                     </div>
                 </a>
 
-                <a href="pdfs/cte/taller-intensivo-docentes/Carta_descriptiva_Taller_intensivo_16_Julio_escuelas.docx" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/taller-intensivo-docentes/Carta_descriptiva_Taller_intensivo_16_Julio_escuelas.docx" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></div>
                     <div class="material-info">
                         <strong>Carta Descriptiva</strong>
@@ -416,7 +610,7 @@
                     </div>
                 </a>
 
-                <a href="pdfs/cte/taller-intensivo-docentes/Carta_descriptiva_Taller_intensivo_17_julio_escuelas.docx" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/taller-intensivo-docentes/Carta_descriptiva_Taller_intensivo_17_julio_escuelas.docx" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></div>
                     <div class="material-info">
                         <strong>Carta Descriptiva</strong>
@@ -424,7 +618,7 @@
                     </div>
                 </a>
 
-                <a href="pdfs/cte/taller-intensivo-docentes/Actividad-1.ppt" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/taller-intensivo-docentes/Actividad-1.ppt" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="9" cy="10" r="2"/><path d="M13 8h4M13 12h4"/></svg></div>
                     <div class="material-info">
                         <strong>Actividad 1</strong>
@@ -432,7 +626,7 @@
                     </div>
                 </a>
 
-                <a href="pdfs/cte/taller-intensivo-docentes/Carpeta_para_la_reflexi%C3%B3n.docx" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/taller-intensivo-docentes/Carpeta_para_la_reflexi%C3%B3n.docx" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></div>
                     <div class="material-info">
                         <strong>Carpeta para la Reflexión</strong>
@@ -440,7 +634,7 @@
                     </div>
                 </a>
 
-                <a href="pdfs/cte/taller-intensivo-docentes/Formato_hexagonos_media_hoja.docx" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/taller-intensivo-docentes/Formato_hexagonos_media_hoja.docx" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></div>
                     <div class="material-info">
                         <strong>Formato de Hexágonos</strong>
@@ -448,7 +642,7 @@
                     </div>
                 </a>
 
-                <a href="pdfs/cte/taller-intensivo-docentes/Carpeta-para-la-reflexi%C3%B3n-2526_s81_Taller_material_1.pdf" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/taller-intensivo-docentes/Carpeta-para-la-reflexi%C3%B3n-2526_s81_Taller_material_1.pdf" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
                     <div class="material-info">
                         <strong>Carpeta para la Reflexión</strong>
@@ -456,7 +650,7 @@
                     </div>
                 </a>
 
-                <a href="pdfs/cte/taller-intensivo-docentes/Material-consulta-2526_s81_Taller_material_2.pdf" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/taller-intensivo-docentes/Material-consulta-2526_s81_Taller_material_2.pdf" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
                     <div class="material-info">
                         <strong>Material de Consulta</strong>
@@ -472,7 +666,7 @@
                 <h4>Descargar Paquete Completo</h4>
                 <p>Descarga todos los materiales de esta sesión en un solo archivo ZIP</p>
             </div>
-            <a href="pdfs/cte/taller-intensivo-docentes/Taller-Intensivo-Docentes-Completo.zip" class="download-all-btn" download>
+            <a href="pdfs/cte/cte-2025-2026/taller-intensivo-docentes/Taller-Intensivo-Docentes-Completo.zip" class="download-all-btn" download>
                 Descargar Todo
             </a>
         </div>
@@ -526,7 +720,7 @@
             <h3>Materiales Individuales</h3>
 
             <div class="materiales-grid">
-                <a href="pdfs/cte/octava-sesion/Octava-Sesi%C3%B3n-Ordinaria-CTE.pptx" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/octava-sesion/Octava-Sesi%C3%B3n-Ordinaria-CTE.pptx" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="9" cy="10" r="2"/><path d="M13 8h4M13 12h4"/></svg></div>
                     <div class="material-info">
                         <strong>Presentación SEPRN</strong>
@@ -534,7 +728,7 @@
                     </div>
                 </a>
 
-                <a href="pdfs/cte/octava-sesion/Orientaciones-Octava-Sesi%C3%B3n-Directivos-Supervisores.pdf" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/octava-sesion/Orientaciones-Octava-Sesi%C3%B3n-Directivos-Supervisores.pdf" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
                     <div class="material-info">
                         <strong>Orientaciones para Directivos y Supervisores</strong>
@@ -550,7 +744,7 @@
                 <h4>Descargar Paquete Completo</h4>
                 <p>Descarga todos los materiales de esta sesión en un solo archivo ZIP</p>
             </div>
-            <a href="pdfs/cte/octava-sesion/Octava-sesi%C3%B3n-completa.zip" class="download-all-btn" download>
+            <a href="pdfs/cte/cte-2025-2026/octava-sesion/Octava-sesi%C3%B3n-completa.zip" class="download-all-btn" download>
                 Descargar Todo
             </a>
         </div>
@@ -604,7 +798,7 @@
             <h3>Materiales Individuales</h3>
 
             <div class="materiales-grid">
-                <a href="pdfs/cte/septima-sesion/S%C3%A9ptima-Sesi%C3%B3n-Ordinaria-CTE.pptx" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/septima-sesion/S%C3%A9ptima-Sesi%C3%B3n-Ordinaria-CTE.pptx" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="9" cy="10" r="2"/><path d="M13 8h4M13 12h4"/></svg></div>
                     <div class="material-info">
                         <strong>Presentación SEPRN</strong>
@@ -612,7 +806,7 @@
                     </div>
                 </a>
 
-                <a href="pdfs/cte/septima-sesion/Cuadernos-desarrollo-matem%C3%A1ticas-fase3.pdf" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/septima-sesion/Cuadernos-desarrollo-matem%C3%A1ticas-fase3.pdf" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
                     <div class="material-info">
                         <strong>Cuadernos Desarrollo de Matemáticas — Fase 3</strong>
@@ -620,7 +814,7 @@
                     </div>
                 </a>
 
-                <a href="pdfs/cte/septima-sesion/Cuadernos-desarrollo-matem%C3%A1ticas-fase4.pdf" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/septima-sesion/Cuadernos-desarrollo-matem%C3%A1ticas-fase4.pdf" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
                     <div class="material-info">
                         <strong>Cuadernos Desarrollo de Matemáticas — Fase 4</strong>
@@ -628,7 +822,7 @@
                     </div>
                 </a>
 
-                <a href="pdfs/cte/septima-sesion/Cuadernos-desarrollo-matem%C3%A1ticas-fase5.pdf" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/septima-sesion/Cuadernos-desarrollo-matem%C3%A1ticas-fase5.pdf" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
                     <div class="material-info">
                         <strong>Cuadernos Desarrollo de Matemáticas — Fase 5</strong>
@@ -636,7 +830,7 @@
                     </div>
                 </a>
 
-                <a href="pdfs/cte/septima-sesion/Cuadernos-desarrollo-matem%C3%A1ticas-fase5-parte-II.pdf" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/septima-sesion/Cuadernos-desarrollo-matem%C3%A1ticas-fase5-parte-II.pdf" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
                     <div class="material-info">
                         <strong>Cuadernos Desarrollo de Matemáticas — Fase 5, Parte II</strong>
@@ -644,7 +838,7 @@
                     </div>
                 </a>
 
-                <a href="pdfs/cte/septima-sesion/estrategias-de-calculo-fase3%20segundo-1.pdf" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/septima-sesion/estrategias-de-calculo-fase3%20segundo-1.pdf" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
                     <div class="material-info">
                         <strong>Estrategias de Cálculo — Fase 3</strong>
@@ -652,7 +846,7 @@
                     </div>
                 </a>
 
-                <a href="pdfs/cte/septima-sesion/M%C3%A1s-de-uno-pero-menos-de-dos-Fracciones-y-decimales.pdf" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/septima-sesion/M%C3%A1s-de-uno-pero-menos-de-dos-Fracciones-y-decimales.pdf" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
                     <div class="material-info">
                         <strong>Más de Uno Pero Menos de Dos</strong>
@@ -660,7 +854,7 @@
                     </div>
                 </a>
 
-                <a href="pdfs/cte/septima-sesion/Narrativa-La-Inteligencia-Artificial-herramienta-y-aliada-en-el-quehacer-docente.pdf" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/septima-sesion/Narrativa-La-Inteligencia-Artificial-herramienta-y-aliada-en-el-quehacer-docente.pdf" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
                     <div class="material-info">
                         <strong>La IA: Herramienta y Aliada Docente</strong>
@@ -676,7 +870,7 @@
                 <h4>Descargar Paquete Completo</h4>
                 <p>Descarga todos los materiales de esta sesión en un solo archivo ZIP</p>
             </div>
-            <a href="pdfs/cte/septima-sesion/S%C3%A9ptima-sesion-completa.zip" class="download-all-btn" download>
+            <a href="pdfs/cte/cte-2025-2026/septima-sesion/S%C3%A9ptima-sesion-completa.zip" class="download-all-btn" download>
                 Descargar Todo
             </a>
         </div>
@@ -747,7 +941,7 @@
             
             <div class="materiales-grid">
                 <!-- Carta Descriptiva Tema 8 -->
-                <a href="pdfs/cte/sexta-sesion/carta-descriptiva-tema8.docx" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/sexta-sesion/carta-descriptiva-tema8.docx" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></div>
                     <div class="material-info">
                         <strong>Carta Descriptiva Tema 8</strong>
@@ -756,7 +950,7 @@
                 </a>
 
                 <!-- Carta Descriptiva Tema 12 -->
-                <a href="pdfs/cte/sexta-sesion/carta-descriptiva-tema12.docx" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/sexta-sesion/carta-descriptiva-tema12.docx" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></div>
                     <div class="material-info">
                         <strong>Carta Descriptiva Tema 12</strong>
@@ -765,7 +959,7 @@
                 </a>
 
                 <!-- Presentación Directores y Supervisores -->
-                <a href="pdfs/cte/sexta-sesion/presentacion-directores-supervisores.pptx" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/sexta-sesion/presentacion-directores-supervisores.pptx" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="9" cy="10" r="2"/><path d="M13 8h4M13 12h4"/></svg></div>
                     <div class="material-info">
                         <strong>Presentación SEPRN</strong>
@@ -774,7 +968,7 @@
                 </a>
 
                 <!-- Presentación Rezago Educativo -->
-                <a href="pdfs/cte/sexta-sesion/presentacion-rezago.pptx" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/sexta-sesion/presentacion-rezago.pptx" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="9" cy="10" r="2"/><path d="M13 8h4M13 12h4"/></svg></div>
                     <div class="material-info">
                         <strong>Presentación Rezago Educativo</strong>
@@ -783,7 +977,7 @@
                 </a>
 
                 <!-- Presentación Tema 8 -->
-                <a href="pdfs/cte/sexta-sesion/presentacion-tema8.pptx" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/sexta-sesion/presentacion-tema8.pptx" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="9" cy="10" r="2"/><path d="M13 8h4M13 12h4"/></svg></div>
                     <div class="material-info">
                         <strong>Presentación Tema 8</strong>
@@ -792,7 +986,7 @@
                 </a>
 
                 <!-- Presentación Tema 12 -->
-                <a href="pdfs/cte/sexta-sesion/presentacion-tema12.pptx" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/sexta-sesion/presentacion-tema12.pptx" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="9" cy="10" r="2"/><path d="M13 8h4M13 12h4"/></svg></div>
                     <div class="material-info">
                         <strong>Presentación Tema 12</strong>
@@ -801,7 +995,7 @@
                 </a>
 
                 <!-- Orientaciones Tema 8 -->
-                <a href="pdfs/cte/sexta-sesion/orientaciones-tema8.pdf" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/sexta-sesion/orientaciones-tema8.pdf" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 13h1a2 2 0 0 1 0 4H9v-4"/><path d="M14 13v4"/><path d="M14 15h2"/><path d="M19 13v4"/><path d="M19 15h1"/></svg></div>
                     <div class="material-info">
                         <strong>Orientaciones Tema 8</strong>
@@ -810,7 +1004,7 @@
                 </a>
 
                 <!-- Orientaciones Tema 12 -->
-                <a href="pdfs/cte/sexta-sesion/orientaciones-tema12.pdf" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/sexta-sesion/orientaciones-tema12.pdf" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 13h1a2 2 0 0 1 0 4H9v-4"/><path d="M14 13v4"/><path d="M14 15h2"/><path d="M19 13v4"/><path d="M19 15h1"/></svg></div>
                     <div class="material-info">
                         <strong>Orientaciones Tema 12</strong>
@@ -826,7 +1020,7 @@
                 <h4>Descargar Paquete Completo</h4>
                 <p>Descarga todos los materiales de esta sesión en un solo archivo ZIP</p>
             </div>
-            <a href="pdfs/cte/sexta-sesion/sexta-sesion-completa.zip" class="download-all-btn" download>
+            <a href="pdfs/cte/cte-2025-2026/sexta-sesion/sexta-sesion-completa.zip" class="download-all-btn" download>
                 Descargar Todo
             </a>
         </div>
@@ -897,7 +1091,7 @@
             
             <div class="materiales-grid">
                 <!-- Carta Descriptiva Tema 7 -->
-                <a href="pdfs/cte/quinta-sesion/carta-descriptiva-tema7.docx" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/quinta-sesion/carta-descriptiva-tema7.docx" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></div>
                     <div class="material-info">
                         <strong>Carta Descriptiva Tema 7</strong>
@@ -906,7 +1100,7 @@
                 </a>
 
                 <!-- Carta Descriptiva Tema 9 -->
-                <a href="pdfs/cte/quinta-sesion/carta-descriptiva-tema9.docx" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/quinta-sesion/carta-descriptiva-tema9.docx" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></div>
                     <div class="material-info">
                         <strong>Carta Descriptiva Tema 9</strong>
@@ -915,7 +1109,7 @@
                 </a>
 
                 <!-- Presentación Directores y Supervisores -->
-                <a href="pdfs/cte/quinta-sesion/presentacion-directores-supervisores.pptx" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/quinta-sesion/presentacion-directores-supervisores.pptx" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="9" cy="10" r="2"/><path d="M13 8h4M13 12h4"/></svg></div>
                     <div class="material-info">
                         <strong>Presentación SEPRN</strong>
@@ -924,7 +1118,7 @@
                 </a>
 
                 <!-- Presentación Tema 7 -->
-                <a href="pdfs/cte/quinta-sesion/presentacion-tema7.pptx" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/quinta-sesion/presentacion-tema7.pptx" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="9" cy="10" r="2"/><path d="M13 8h4M13 12h4"/></svg></div>
                     <div class="material-info">
                         <strong>Presentación Tema 7</strong>
@@ -933,7 +1127,7 @@
                 </a>
 
                 <!-- Presentación Tema 9 -->
-                <a href="pdfs/cte/quinta-sesion/presentacion-tema9.pptx" class="material-item" download>
+                <a href="pdfs/cte/cte-2025-2026/quinta-sesion/presentacion-tema9.pptx" class="material-item" download>
                     <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="9" cy="10" r="2"/><path d="M13 8h4M13 12h4"/></svg></div>
                     <div class="material-info">
                         <strong>Presentación Tema 9</strong>
@@ -948,7 +1142,7 @@
                 <h4>Descargar Paquete Completo</h4>
                 <p>Descarga todos los materiales de esta sesión en un solo archivo ZIP</p>
             </div>
-            <a href="pdfs/cte/quinta-sesion/quinta-sesion-completa.zip" class="download-all-btn" download>
+            <a href="pdfs/cte/cte-2025-2026/quinta-sesion/quinta-sesion-completa.zip" class="download-all-btn" download>
                 Descargar Todo
             </a>
         </div>
@@ -1182,6 +1376,10 @@
 </div>
 </div>
 
+</div>
+    </div>
+</div>
+
         <!-- Sesión de Ejemplo (COLAPSADA) -->
         <!-- Copia este bloque para agregar más sesiones -->
         <!--
@@ -1311,6 +1509,13 @@
                     iframe.removeAttribute('data-src');
                 });
             }
+        }
+
+        function toggleCicloArchivo(toggle) {
+            const grupo = toggle.parentElement;
+            const wasActive = grupo.classList.contains('active');
+            grupo.classList.toggle('active', !wasActive);
+            toggle.setAttribute('aria-expanded', String(!wasActive));
         }
     </script>
     <script src="script.js" defer></script>
