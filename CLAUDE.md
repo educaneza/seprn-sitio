@@ -415,13 +415,17 @@ atribuir la causa a SEIEM directamente (se enmarca como "actualización del esqu
 licenciamiento institucional"). Los 5 pasos de la guía rápida están basados en el flujo real
 del `.bat` — si el `.bat` cambia, actualizar el manual para que siga siendo preciso.
 
-### Banners de convocatoria
-Dos banners hoy (Jornada Verano se retiró 13 jul 2026): Oficina Virtual (ago 2026, arriba,
-gradiente guinda `#56212f→#9F2241`, CTA clase `.light`) y Centro de Formación Docente (gradiente
-midnight, CTA clase `.solid`). Clases reutilizables `.otde-banner`/`.otde-banner-cta`/
-`.otde-banner-link` (sombra en capas, glow sutil, hover con elevación). Usan **Montserrat** a
-propósito, no Inter — es la tipografía ya establecida en esta página, meter una fuente distinta
-solo en el banner se vería ajeno.
+### Banner de convocatoria
+Uno solo hoy: Oficina Virtual (ago 2026, gradiente guinda `#56212f→#9F2241`, CTA clase `.light`,
+enlaza a `oficina-virtual.html`). El banner de Centro de Formación Docente que vivía debajo se
+quitó el 10 ago 2026 — quedó redundante en cuanto Formación Docente se volvió una card más del
+hub (`oficina-virtual.html`), así que mantenerlo en `otde.html` era un segundo punto de entrada
+al mismo destino. `formacion-docente.html`/`instructivo-formacion-docente.html` no se tocaron,
+solo perdieron ese acceso duplicado. Clase reutilizable `.otde-banner`/`.otde-banner-cta`/
+`.otde-banner-link` (sombra en capas, glow sutil, hover con elevación) — sigue viva para el
+banner que queda y para cualquier banner futuro. Usa **Montserrat** a propósito, no Inter — es
+la tipografía ya establecida en esta página, meter una fuente distinta solo en el banner se
+vería ajeno.
 
 ## `oficina-virtual.html` — Oficina Virtual OTDE (ago 2026, hub de servicios + seguimiento)
 Reusa `styles.css` (misma identidad institucional que `otde.html`, no un sistema propio como

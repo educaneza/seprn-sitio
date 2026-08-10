@@ -265,6 +265,38 @@ compartido de `crearCctAutocomplete()` (usado por `cam`/`rst`/`inc`, también en
 inexistente) en `otde.html`, y confirmado por inspección que el mismo patrón, copiado, tenía el
 mismo hueco en los otros 5 lugares.
 
+## 13. `const` de nivel superior que lee variables de otro archivo del mismo proyecto Apps Script
+
+**Síntoma:** al probar en vivo el endpoint nuevo `?action=consulta` de `WebApp.gs` (router del
+webform de Correo), cualquier folio de los 4 subtipos (`OTDE-ALT-`/`OTDE-CAM-`/`OTDE-2FA-`/
+`OTDE-INC-`) devolvía una página de error de Apps Script en vez de JSON:
+`ReferenceError: HOJA_ALTA is not defined (línea 36, archivo "WebApp")`.
+
+**Causa raíz:** Apps Script concatena todos los `.gs` de un proyecto en un solo scope global,
+pero **no garantiza el orden de evaluación** de los `const`/`let` de nivel superior entre
+archivos distintos. `WebApp.gs` tenía un `const MAPA_PREFIJO_HOJA_CONSULTA = { 'OTDE-ALT-':
+HOJA_ALTA, ... }` de nivel superior que leía `HOJA_ALTA` (definida como `const` de nivel
+superior en `Alta.gs`) — si `WebApp.gs` se evalúa antes que `Alta.gs`, `HOJA_ALTA` todavía no
+existe y truena. No pasa con funciones (se hoistean completas), solo con `const`/`let` que se
+*ejecutan* al cargar el archivo.
+
+**Fix:** mover el objeto dentro de la función que lo usa (`manejarConsultaCorreo()`) en vez de
+dejarlo a nivel de módulo — para cuando `doGet()` se invoca, los `.gs` ya terminaron de
+evaluarse todos, así que dentro de una función es seguro leer variables de otro archivo.
+
+**Cómo se detectó:** no por lectura de código — el bug es invisible revisando el archivo aislado
+(la sintaxis es válida, el error solo aparece en tiempo de ejecución y depende del orden interno
+de concatenación de Apps Script, que no es config ni está documentado). Se encontró probando el
+endpoint recién desplegado con `curl` contra la URL real, no asumiendo que "desplegó sin error
+de guardado" significaba "funciona".
+
+**Dónde ya pasó:** `Correos-institucionales/webform-2026-2027/WebApp.gs` (único caso hoy — es el
+único proyecto de Apps Script del sitio con múltiples archivos `.gs`; `mantenimiento.gs`,
+`asesorias.gs` y `soporte-remoto.gs` son cada uno un solo archivo, así que no pueden tener este
+problema). Si se agrega código nuevo a `Alta.gs`/`CambioContrasena.gs`/`Reset2FA.gs`/
+`Incidencias.gs`/`OnEdit.gs` que se referencie desde `WebApp.gs` (o viceversa), evitar
+`const`/`let` de nivel superior que dependan de otro archivo — usarlos solo dentro de funciones.
+
 ## Regla general al corregir cualquiera de estos patrones
 
 Cuando se encuentra uno de estos bugs en un archivo, **revisar si el mismo

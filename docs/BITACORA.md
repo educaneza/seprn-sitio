@@ -14,6 +14,20 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-08-10 (noche, cont.) · Banner duplicado quitado + destino decidido para migrar trámites a páginas propias
+
+| | |
+|---|---|
+| **Fecha** | 2026-08-10 |
+| **Sesión** | Con la Oficina Virtual ya en producción, Jorge pidió dejar en `otde.html` solo el banner de Oficina Virtual (el de Centro de Formación Docente quedó redundante — ya es una card del hub). De paso preguntó dos cosas sobre el rumbo más grande del sitio, resueltas como decisión para una sesión futura, no como trabajo de hoy. |
+| **Banner quitado** | `otde.html` — eliminado el bloque `<div class="otde-banner">` de Centro de Formación Docente (gradiente midnight, líneas ~546-561). Queda solo el banner guinda de Oficina Virtual, que ya menciona Formación Docente en su copy. `formacion-docente.html`/`instructivo-formacion-docente.html` no se tocaron — siguen alcanzables desde la card correspondiente en `oficina-virtual.html`. |
+| **Decisión de arquitectura — destino de los 4 trámites, si algún día salen de `otde.html`** | Jorge preguntó dónde vivirían los formularios de Correo/Mantenimiento/Asesorías/Soporte si se les quita la tab de `otde.html` (hoy siguen ahí, esto NO se ejecutó esta sesión). Se investigó el `<script>` de `otde.html` (~2,300 líneas) antes de opinar: las funciones de cada trámite ya están agrupadas en bloques contiguos por prefijo (`sop*`/`man*`/`ase*`/`alt*·cam*·rst*·inc*`), con solo 4 helpers compartidos (`toggleForm`, `toTitleCase`, `fetchJsonConTimeout`, `otdePoblarFuncion`) — mover un trámite no sería una extracción enredada. Decisión: cada trámite se volvería su propia página (`mantenimiento.html`, `asesorias.html`, `correo.html`, `soporte.html`), mismo precedente que `formacion-docente.html`/`asistencia.html` — explícitamente **no** moverlos a `oficina-virtual.html` como tabs, porque eso solo trasladaría el problema de "archivo gigante" de un archivo a otro. |
+| **Decisión de arquitectura — Licencias Office sí entra a la grid de Oficina Virtual** | Confirmado que la tab "Licencias Office" de `otde.html` es 100% estática (guía + link de descarga, cero JS/backend propio) — no es un trámite con folio, así que si se agrega como card al hub sería tipo "Recurso", no "Trámite", y sin el buscador de seguimiento. Tampoco ejecutado esta sesión. |
+| **Nada más pendiente de esta sesión** | Ambas decisiones de arquitectura quedan documentadas aquí y en la memoria del proyecto para que una sesión futura que retome "sacar los trámites de otde.html" no tenga que re-discutir el destino. |
+| **Commits** | Pendiente — cambio sin comitear en `otde.html`. |
+
+---
+
 ## CHECKPOINT — 2026-08-10 (noche) · Oficina Virtual OTDE: hub de servicios + seguimiento de solicitudes
 
 | | |

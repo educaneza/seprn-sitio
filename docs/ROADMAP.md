@@ -407,6 +407,18 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
    Verificado simulando una respuesta lenta de Apps Script (12s) en el navegador: el mensaje
    escala correctamente y el loader se limpia sin quedar en un estado inconsistente cuando la
    respuesta por fin llega.
+7. **Migrar los 4 trámites de `otde.html` a páginas propias** (destino decidido 10 ago 2026, no
+   iniciado): `mantenimiento.html`, `asesorias.html`, `correo.html`, `soporte.html`, mismo
+   precedente que `formacion-docente.html`/`asistencia.html` — no como tabs dentro de
+   `oficina-virtual.html`, para no trasladar el problema de "archivo gigante" de un archivo a
+   otro. Verificado que es viable sin extracción enredada: el `<script>` de `otde.html` (~2,300
+   líneas) ya agrupa las funciones de cada trámite en bloques contiguos por prefijo (`sop*`/
+   `man*`/`ase*`/`alt*·cam*·rst*·inc*`), compartiendo solo 4 helpers (`toggleForm`,
+   `toTitleCase`, `fetchJsonConTimeout`, `otdePoblarFuncion`) que cada página nueva duplicaría.
+   De paso, Licencias Office (hoy 100% estático, sin backend ni folio) entraría a la grid de
+   `oficina-virtual.html` como card tipo "Recurso", no "Trámite" — sin el buscador de
+   seguimiento. Detalle completo de la decisión en `docs/BITACORA.md`, checkpoint 10 ago 2026
+   (noche, cont.).
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue
