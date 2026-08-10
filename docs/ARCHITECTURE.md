@@ -881,3 +881,32 @@ independientes uno debajo del otro — no se probó todavía con más de un cicl
 prefijo `cte-` (`cte-fase-intensiva`) mientras que las de 2025-2026 no (`octava-sesion`,
 `sexta-sesion`...) — inconsistencia menor y conocida, no corregida a propósito (así los nombró
 Jorge al reorganizar la carpeta a mano).
+
+## 18. Logomark: ícono NE/ZA en nav y footer (agosto 2026)
+
+`favicon.svg` (rect `rx="12"` guinda + dos líneas de texto "NE"/"ZA", iniciales de
+Nezahualcóyotl) ya existía como favicon. En agosto 2026 se decidió no diseñar un símbolo nuevo
+—una guía de identidad gráfica del Gobierno del Estado de México (ver pendiente en `CLAUDE.md`)
+reserva el Escudo de Armas oficial para una "pleca de logos" fija y no permite que cada
+dependencia interna tenga su propio escudo— así que la misma marca se promovió a ícono del
+sitio, con un único cambio: `font-family` de `Georgia,serif` a
+`'Montserrat','Helvetica Neue',Arial,sans-serif`, para dejar de ser la única pieza del sitio
+fuera de la tipografía del wordmark.
+
+**Dónde vive:** inline en cada página, no como componente compartido (misma convención que
+nav/footer, regla 3 de `CLAUDE.md`) — no un `<img src="favicon.svg">`. Dos usos:
+- `.logo` (header nav): ícono 34×34 tal cual — fondo guinda `#56212f`, texto arena `#d6d1ca`.
+- `.footer-brand` (footer): ícono 30×30 con **colorway invertido** — fondo `#F9F8F5`, texto
+  guinda `#56212f`. Necesario porque el footer del sitio ya es guinda; el colorway del favicon
+  desaparecería sobre su propio fondo.
+
+`logo.svg` (nuevo, raíz del repo) es el lockup horizontal completo (ícono + wordmark "SEPRN")
+como asset de referencia — no se usa directamente en ninguna página, es para reutilizar fuera
+del sitio (impresos, futuro og:image) sin tener que reconstruirlo desde cero.
+
+**Alcance:** las 13 páginas que comparten `styles.css` (`.logo-icon` en `styles.css`, junto a
+`.logo`/`.footer-brand`). Deliberadamente sin tocar: `asistencia.html`, `charla-ia.html`,
+`formacion-docente.html`, `instructivo-formacion-docente.html` — tienen su propio header o
+sistema de diseño aparte (ver sección 12 y CLAUDE.md). `otde.html` sí tiene el ícono aplicado en
+el repo, pero no llegó a `origin/main` en el primer push por conflicto con las pestañas de
+Mantenimiento/Asesorías/Correo que aún no están publicadas — ver `docs/BITACORA.md`.

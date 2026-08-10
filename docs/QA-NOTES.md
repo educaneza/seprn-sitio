@@ -239,6 +239,32 @@ alcanza a `type="checkbox"` — lo estira a todo el ancho del contenedor flex, e
 de confirmación de mantenimiento previo de Asesorías (`ase-confirma-mantenimiento`, agregado en
 agosto 2026); el fix general lo corrigió también ahí.
 
+## 12. Mensaje de error genérico de CCT que no se limpia al activarse el fallback manual
+
+**Síntoma:** el usuario captura una CCT que no existe en la base; aparece correctamente el
+aviso ámbar "CCT no encontrada en nuestra base. Puedes capturar los datos manualmente." y se
+revelan los campos manuales — pero si antes hubo un intento de envío fallido con el campo CCT
+vacío, el mensaje de error rojo genérico ("Ingresa una CCT válida.") se queda visible al mismo
+tiempo, encima del aviso ámbar. Dos mensajes contradictorios sobre el mismo campo a la vez.
+
+**Causa raíz:** el listener `change` del input de CCT que detecta "no encontrada" y activa el
+fallback manual nunca tocaba las clases `error`/`visible` del mensaje genérico — solo la
+validación completa del formulario (al enviar) las limpiaba. Mismo espíritu que el ítem 6 de
+esta lista: cualquier función que corrija el estado de un campo por una vía distinta a que el
+usuario lo revalide manualmente debe limpiar `error`/`visible` ahí mismo, no asumir que la
+próxima validación lo hará.
+
+**Fix:** en el bloque `if (!cctEncontrada && ...)` de cada listener `change`, agregar
+`cctInput.classList.remove('error')` y `document.getElementById('<prefijo>-cct-error')
+.classList.remove('visible')` junto con el resto del fallback.
+
+**Dónde ya pasó:** los 6 lugares que comparten el patrón de autocomplete de CCT —
+`sopInputCct`/`manInputCct`/`aseInputCct`/`altInputCct` en `otde.html`, el `estado.input`
+compartido de `crearCctAutocomplete()` (usado por `cam`/`rst`/`inc`, también en `otde.html`), y
+`inputCct` en `formacion-docente.html`. Encontrado con un smoke test real (submit vacío → CCT
+inexistente) en `otde.html`, y confirmado por inspección que el mismo patrón, copiado, tenía el
+mismo hueco en los otros 5 lugares.
+
 ## Regla general al corregir cualquiera de estos patrones
 
 Cuando se encuentra uno de estos bugs en un archivo, **revisar si el mismo

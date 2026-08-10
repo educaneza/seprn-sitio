@@ -35,6 +35,8 @@ Clases reutilizables en `styles.css`:
 - `.ns-bloque` + `.ns-off-white` / `.ns-white` / `.ns-arena` / `.ns-midnight` / `.ns-guinda` — bandas de color completo en `nosotros.html`
 - `.ns-inner.visible` — animación fade-up para contenido de cada banda (IntersectionObserver)
 - `.footer-grid` / `.footer-col` / `.footer-col-title` / `.footer-links` / `.footer-bottom` — footer multi-columna (3 cols + barra inferior con redes y copyright)
+- `.logo-icon` — ícono NE/ZA (mismo símbolo que `favicon.svg`, en Montserrat) dentro de `.logo`
+  (nav) y `.footer-brand` (footer, colorway invertido) — ver `docs/ARCHITECTURE.md §18`
 
 ### Eyebrows estándar en páginas de área
 Cuando se agrega o edita una sección en páginas de área, usar estos eyebrows:
@@ -453,11 +455,19 @@ de la sesión realmente volvió obsoletos.
 Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/Identidad) y
 `docs/BITACORA.md` para el historial de qué ya se hizo. Resumen de lo genuinamente abierto:
 - **Recrear páginas eliminadas** — `gestion-escolar.html`, `investigacion-educativa.html`, `programas-educativos.html`, `servicio-profesional.html`: requieren contenido validado con la Dra. Galindo
-- **Logomark SEPRN** — requiere archivo `logo.svg` (diseño gráfico pendiente)
-- **Barra CTE desactualizada** — `.update-banner` en `index.html` sigue apuntando a la Octava
-  Sesión Ordinaria 2025-2026; ese ciclo ya cerró (Taller Intensivo de Cierre) y arrancó
-  2026-2027 con la Fase Intensiva (§CTE arriba, `docs/ARCHITECTURE.md §17`) — actualizar el
-  texto del banner, no esperar una "novena sesión" que no va a existir
+- ~~**Logomark SEPRN**~~ — resuelto 10 ago 2026 (ver `docs/ARCHITECTURE.md §18`): se descartó un
+  escudo propio tras revisar `Guía de Contenidos Digitales.pdf` (raíz del repo, no rastreado en
+  git por tamaño — guía de redes sociales del Gobierno del Estado de México), y se evolucionó el
+  favicon existente en vez de inventar un símbolo nuevo. Dos cosas que ese mismo documento dejó
+  abiertas, deliberadamente no resueltas todavía: (1) las tipografías oficiales son
+  Gotham/BW Modelica/Corporative Sans Alt, ninguna es Montserrat (lo que usa todo el sitio hoy)
+  — BW Modelica no debe usarse con palabras con "ñ", Corporative no con palabras con "z", ambas
+  letras están en "Nezahualcóyotl"; (2) no se confirmó si el sitio necesita mostrar el Escudo de
+  Armas / logo Gobierno del Estado de México reales en algún lugar (footer, probablemente) más
+  allá del texto plano actual — el documento revisado es de redes sociales, no el manual de
+  identidad gráfica completo.
+- ~~**Barra CTE desactualizada**~~ — resuelto 10 ago 2026: `.update-banner` en `index.html` ahora
+  dice "Fase Intensiva 2026-2027 ya disponible".
 - **Fase Intensiva 2026-2027 sin video** — falta agregar el `iframe` del Opening en `cte.html` cuando Jorge lo tenga
 - **Centro de Formación Docente** — dar de alta los primeros cursos propios del ciclo 26-27 en la hoja `Cursos` (hoy el catálogo solo tiene 2 webinars; Jorge los va agregando conforme haya más oferta)
 - **Correo/Mantenimiento/Asesorías** — los 3 backends nuevos ya están desplegados y con `Contactos_Zona_Sector` poblado (6 ago 2026, ver sus secciones arriba); Telegram parcial es decisión final, no pendiente.
