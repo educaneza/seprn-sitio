@@ -111,8 +111,9 @@ seprn-sitio/
 │   ├── chuka-guia-familias.pdf
 │   ├── Manual-Autenticacion-2FA.pdf
 │   ├── MODELOS_DE_USO_DEL_AULA_DE_MEDIOS.pdf
-│   └── cte/
-│       ├── quinta-sesion/ · sexta-sesion/ · septima-sesion/ · octava-sesion/
+│   └── cte/                      # Subcarpetas por ciclo escolar (ago 2026)
+│       ├── cte-2025-2026/        # quinta-sesion/ · sexta-sesion/ · septima-sesion/ · octava-sesion/ · taller-intensivo-docentes/
+│       └── cte-2026-2027/        # cte-fase-intensiva/
 │
 └── images/                       # Imágenes estáticas
 ```
@@ -152,6 +153,14 @@ Para actualizar:
 2. Haz commit y push a `main`.
 3. GitHub Pages re-publica en ~1 minuto.
 
+**Remoto por SSH con alias dedicado (ago 2026):** `origin` apunta a
+`git@github-educaneza:educaneza/seprn-sitio.git`, no a la URL HTTPS de siempre. Es a propósito:
+esta Mac tiene varias cuentas de GitHub configuradas (otros proyectos no relacionados) y el
+credential helper de macOS reusaba la cuenta equivocada al hacer push por HTTPS. El alias
+`github-educaneza` vive en `~/.ssh/config` con su propia llave (`~/.ssh/github_educaneza`,
+`IdentitiesOnly yes` para que no se ofrezca la llave de otro proyecto) — si `git push` falla con
+403 de una cuenta que no es `educaneza`, revisar ese archivo antes que nada.
+
 ---
 
 ## Convenciones de desarrollo
@@ -186,7 +195,7 @@ Para actualizar:
 | Equipo directivo | `nosotros.html` | Bloque "Equipo de Trabajo" |
 | Tarjetas de áreas | `areas.html` | `.area-card` → `area-responsable` |
 | Nueva sesión CTE | `cte.html` | Nuevo bloque `sesion-accordion` al inicio |
-| Materiales CTE | `pdfs/cte/<sesion>/` | Subir archivo + agregar `<a>` en `cte.html` |
+| Materiales CTE | `pdfs/cte/cte-<ciclo>/<sesion>/` | Subir archivo + agregar `<a>` en `cte.html` |
 | Datos de contacto | `contacto.html` + footer de todas las páginas | Dirección, horario |
 | Instalador de Office | `descargas/` + `otde.html` (pestaña Licencias Office) | Reemplazar `.exe`/`.bat`, actualizar guía si cambia el flujo |
 | Notificaciones de Soporte Remoto | `apps-script/soporte-remoto.gs` | Propiedades del script `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` (ver instrucciones al final del archivo) |

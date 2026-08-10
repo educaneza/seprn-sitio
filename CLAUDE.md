@@ -292,6 +292,7 @@ ya esté expandido).
 6. Los PDFs de sesiones CTE se nombran con mayúsculas y acentos; URL-encodear la ó como `%C3%B3` en los hrefs
 7. **Sin emojis** en HTML — usar SVG inline para íconos de contacto (persona, correo, teléfono). Ver `contacto-icon` en cualquier página de área como referencia
 8. El portal SEP CTE usa la URL `https://gestion.cte.sep.gob.mx/insumos/` (sin `#!/` — ese sufijo era routing antiguo de AngularJS)
+9. Los materiales de `cte.html` (`.material-item strong`) siempre muestran un título humano, nunca el nombre de archivo crudo — los PDFs de SEP suelen llegar con códigos internos (`2627_s0_orientaciones_directivos.pdf`), hay que limpiarlos a texto legible (ej. "Orientaciones Directivos") antes de publicarlos
 
 ## `otde.html` — Oficina de Tecnología (OTDE)
 
@@ -453,7 +454,11 @@ Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/I
 `docs/BITACORA.md` para el historial de qué ya se hizo. Resumen de lo genuinamente abierto:
 - **Recrear páginas eliminadas** — `gestion-escolar.html`, `investigacion-educativa.html`, `programas-educativos.html`, `servicio-profesional.html`: requieren contenido validado con la Dra. Galindo
 - **Logomark SEPRN** — requiere archivo `logo.svg` (diseño gráfico pendiente)
-- **Barra CTE** — actualizar texto del `.update-banner` en `index.html` cuando se publique la 9ª sesión
+- **Barra CTE desactualizada** — `.update-banner` en `index.html` sigue apuntando a la Octava
+  Sesión Ordinaria 2025-2026; ese ciclo ya cerró (Taller Intensivo de Cierre) y arrancó
+  2026-2027 con la Fase Intensiva (§CTE arriba, `docs/ARCHITECTURE.md §17`) — actualizar el
+  texto del banner, no esperar una "novena sesión" que no va a existir
+- **Fase Intensiva 2026-2027 sin video** — falta agregar el `iframe` del Opening en `cte.html` cuando Jorge lo tenga
 - **Centro de Formación Docente** — dar de alta los primeros cursos propios del ciclo 26-27 en la hoja `Cursos` (hoy el catálogo solo tiene 2 webinars; Jorge los va agregando conforme haya más oferta)
 - **Correo/Mantenimiento/Asesorías** — los 3 backends nuevos ya están desplegados y con `Contactos_Zona_Sector` poblado (6 ago 2026, ver sus secciones arriba); Telegram parcial es decisión final, no pendiente.
 - **QA pre-producción (6 ago 2026)** — hallazgos pendientes de atender antes de confiar el flujo completo:

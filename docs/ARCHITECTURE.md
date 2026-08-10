@@ -835,3 +835,49 @@ Refactor notable de esta ronda: con 4 formularios en la misma tab usando CCT-aut
 única vez en el sitio que se hizo esto (Soporte/Mantenimiento/Asesorías mantienen su propia
 copia del patrón, es la convención normal del resto del sitio; aquí la 4ª repetición casi
 idéntica en un mismo archivo cruzó el umbral).
+
+## 17. `cte.html`: archivo de ciclo escolar dentro de la misma página (agosto 2026)
+
+Hasta el ciclo 2025-2026, `cte.html` era una sola lista plana de `.sesion-accordion` (acordeón
+único: abrir uno cierra los demás, vía `toggleSesion()`). Al cerrar ese ciclo y arrancar
+2026-2027, se decidió con Jorge **no crear una página nueva por ciclo** — el histórico se
+archiva dentro de la misma `cte.html`, agrupado y colapsado por default, para no perder
+materiales viejos sin dejar crecer la página sin límite ciclo tras ciclo.
+
+Estructura resultante, de arriba a abajo dentro de `<section class="content-section">`:
+1. `.section-header` con eyebrow "CICLO ESCOLAR" — encabezado del ciclo actual (mismo patrón
+   `.section-header`/`.section-eyebrow`/`.section-title` de las páginas de área, ver tabla de
+   clases reutilizables en `CLAUDE.md`).
+2. Las `.sesion-accordion` normales del ciclo actual (la más reciente `active` + badge NUEVO,
+   igual que siempre).
+3. `.ciclo-archivo` — contenedor nuevo, no es una sesión más: agrupa **todas** las
+   `.sesion-accordion` del ciclo ya cerrado. Header propio `.ciclo-archivo-toggle` con estilo
+   deliberadamente secundario (paleta de `.link-sep`, `rgba(159,34,65,0.08)` + borde
+   `#9F2241`, no el guinda sólido de `.sesion-header`) para leerse como "menos prioritario" que
+   las sesiones activas. Colapsado por default (`aria-expanded="false"`, sin clase `active` al
+   cargar).
+4. Dentro de `.ciclo-archivo-content-inner`: las `.sesion-accordion` del ciclo cerrado, tal
+   cual — mismo HTML, mismos `data-src` de lazy-load, sin ningún cambio de comportamiento.
+
+**Dos funciones de toggle independientes, sin interferencia entre sí:**
+- `toggleSesion()` (ya existía) sigue operando sobre `document.querySelectorAll('.sesion-accordion')`
+  — no le importa si una sesión está anidada dentro de `.ciclo-archivo` o no, el acordeón único
+  sigue funcionando exactamente igual en toda la página.
+- `toggleCicloArchivo(toggle)` (nueva) solo hace `toggle.parentElement.classList.toggle('active')`
+  sobre el contenedor `.ciclo-archivo` — no toca el estado de las sesiones que agrupa. Misma
+  animación `grid-template-rows: 0fr → 1fr` que ya usaba `.sesion-content`, aplicada a
+  `.ciclo-archivo-content`.
+
+**Al cerrar el ciclo actual y arrancar el siguiente** (repetir cada año): mover las
+`.sesion-accordion` del ciclo saliente dentro de `.ciclo-archivo-content-inner` (o crear un
+`.ciclo-archivo` nuevo si no existía), quitarles `active`/badge NUEVO/`aria-expanded="true"`, y
+agregar la Fase Intensiva del ciclo entrante arriba como la nueva sesión abierta. El acordeón
+de archivo de ciclos aún más viejos se puede anidar o dejar como bloques `.ciclo-archivo`
+independientes uno debajo del otro — no se probó todavía con más de un ciclo archivado.
+
+**Los PDFs se reorganizaron junto con el HTML**: `pdfs/cte/<sesion>/` pasó a
+`pdfs/cte/cte-<ciclo>/<sesion>/` (ej. `pdfs/cte/cte-2025-2026/octava-sesion/`,
+`pdfs/cte/cte-2026-2027/cte-fase-intensiva/`). La subcarpeta de sesión de 2026-2027 sí lleva
+prefijo `cte-` (`cte-fase-intensiva`) mientras que las de 2025-2026 no (`octava-sesion`,
+`sexta-sesion`...) — inconsistencia menor y conocida, no corregida a propósito (así los nombró
+Jorge al reorganizar la carpeta a mano).

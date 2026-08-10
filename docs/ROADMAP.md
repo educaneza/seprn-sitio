@@ -358,7 +358,14 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
 
 1. **Recrear páginas eliminadas** cuando haya contenido validado con la Dra. Avelina Galindo Celix: `gestion-escolar.html`, `investigacion-educativa.html`, `programas-educativos.html`, `servicio-profesional.html`.
 2. **Logomark SEPRN (3.1)** — requiere archivo SVG de diseño gráfico.
-3. **Barra CTE** — actualizar texto en `index.html` al agregar la novena sesión.
+3. **Barra CTE desactualizada** — el `.update-banner` de `index.html` sigue diciendo "Octava
+   Sesión Ordinaria 2025-2026 ya disponible". Ese ciclo cerró con el Taller Intensivo de Cierre
+   (nunca hubo novena sesión) y ya arrancó el ciclo 2026-2027 con la Fase Intensiva (ver
+   `docs/ARCHITECTURE.md §17`) — actualizar el texto para apuntar a eso en vez de esperar una
+   "novena sesión" que no va a existir.
+4. **Fase Intensiva 2026-2027 sin video** — el acordeón en `cte.html` solo tiene los 9
+   materiales + ZIP, sin `video-container`. Agregar el iframe (`data-src`, mismo patrón que el
+   resto) cuando Jorge tenga el video del Opening.
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue
