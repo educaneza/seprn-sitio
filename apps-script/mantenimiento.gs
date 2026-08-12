@@ -10,8 +10,11 @@
 //   2. Extensiones → Apps Script → pega este código completo
 //   3. Llena manualmente la hoja "Contactos_Zona_Sector" (se crea
 //      sola con encabezados la primera vez que corra doPost) con
-//      el correo de cada Zona/Sector — sin esto no hay a quién
-//      notificar, pero la solicitud se sigue registrando igual.
+//      el correo de cada Zona y de cada Sector — el solicitante
+//      siempre recibe confirmación (su correo ya es obligatorio),
+//      Zona y Sector se agregan en copia (CC) si hay fila para
+//      cada uno; sin contactos registrados, solo se notifica al
+//      solicitante y la solicitud se sigue registrando igual.
 //   4. Configura las Propiedades del script (ícono de engrane
 //      "Configuración del proyecto" → Propiedades del script):
 //        TELEGRAM_BOT_TOKEN = token del bot (ver soporte-remoto.gs
@@ -35,10 +38,17 @@
 //
 // COLUMNAS DE LA HOJA "Contactos_Zona_Sector" (Jorge la llena a mano):
 //   A Sector | B Zona | C Correo | D Teléfono
+// Puede haber una fila de Zona específica y otra de Sector (sin Zona, de
+// respaldo) para el mismo Sector — manBuscarContactosZonaSector() busca
+// AMBAS y las notifica en CC, no solo la primera que encuentra.
+//
+// CORREO — patrón único (apertura y cierre): un solo envío por evento con
+// to = solicitante (su correo ya es obligatorio) y cc = contacto(s) de
+// Zona/Sector si existen, en vez de avisos sueltos por destinatario.
 //
 // CIERRE AUTOMÁTICO: al marcar Estatus = "Resuelto" en la hoja "Solicitudes",
-// un trigger onEdit instalable (manOnEditCierre) notifica por correo al
-// solicitante y a la Zona/Sector. Requiere correr UNA vez
+// un trigger onEdit instalable (manOnEditCierre) notifica al solicitante
+// (con Zona/Sector en CC). Requiere correr UNA vez
 // manInstalarTriggerCierre() (o el menú "OTDE Mantenimiento" que crea
 // onOpen()) después de pegar esta versión — los triggers no se reinstalan
 // solos al redesplegar.
@@ -58,11 +68,52 @@ const ENCABEZADOS_MAN_SOLICITUDES = [
   'Escuela', 'Turno', 'WhatsApp', 'Correo', 'Equipos con falla',
   'Oficio (link Drive)', 'Estatus', 'Notas de revisión',
   'Notificación de cierre enviada', 'Tipo de equipo', 'Cantidad (Aula de medios)',
-  'Cantidad (Administrativas)', 'Marca/Modelo', 'Estado de instalación'
+  'Cantidad (Administrativas)', 'Marca/Modelo', 'Estado de instalación',
+  'Tipo de solicitante'
 ];
+// Índice (0-based) de 'Tipo de solicitante' dentro de una fila leída con getValues() —
+// agregada al final a propósito, mismo criterio que las demás columnas nuevas, para no
+// correr COL_MAN_ESTATUS/COL_MAN_NOTIFICACION_CIERRE del cierre automático.
+const COL_MAN_TIPO_SOLICITANTE_IDX = ENCABEZADOS_MAN_SOLICITUDES.length - 1;
 const COL_MAN_ESTATUS = 14;
 const COL_MAN_NOTIFICACION_CIERRE = 16;
 const ESTADOS_MAN_VALIDOS = ['Pendiente de validar', 'Validado', 'En atención', 'Resuelto', 'Rechazado'];
+
+// ── Modo de prueba: redirige TODOS los correos salientes (Zona/Sector +
+// cierre) a un solo correo, para probar el flujo completo sin avisar a
+// escuelas/zonas/sectores reales. Actívalo corriendo
+// manActivarModoPrueba('tu@correo.com') una vez desde el editor de Apps
+// Script; desactívalo con manDesactivarModoPrueba(). No requiere redeploy —
+// es una Script Property, se lee en cada envío. ──
+function manActivarModoPrueba(correo) {
+  PropertiesService.getScriptProperties().setProperty('MODO_PRUEBA_CORREO', correo);
+}
+
+function manDesactivarModoPrueba() {
+  PropertiesService.getScriptProperties().deleteProperty('MODO_PRUEBA_CORREO');
+}
+
+function manEnviarCorreo_(opciones) {
+  const correoPrueba = PropertiesService.getScriptProperties().getProperty('MODO_PRUEBA_CORREO');
+  if (correoPrueba) {
+    const destinoOriginal = [
+      opciones.to ? 'Para: ' + opciones.to : '',
+      opciones.cc ? 'CC: ' + opciones.cc : '',
+      opciones.bcc ? 'CCO: ' + opciones.bcc : ''
+    ].filter(Boolean).join(' · ');
+    opciones = Object.assign({}, opciones, {
+      to: correoPrueba,
+      cc: null,
+      bcc: null,
+      subject: '[PRUEBA] ' + opciones.subject,
+      htmlBody: '<div style="background:#fff3cd;border:1px solid #e0a800;border-radius:6px;' +
+        'padding:10px 16px;margin-bottom:16px;font-family:Arial,Helvetica,sans-serif;' +
+        'font-size:13px;color:#555;"><strong>Modo de prueba activo</strong> — destino real: ' +
+        destinoOriginal + '</div>' + (opciones.htmlBody || '')
+    });
+  }
+  MailApp.sendEmail(opciones);
+}
 
 // ── doGet: verificación de estado, o consulta de folio (?action=consulta) ──
 function doGet(e) {
@@ -137,15 +188,12 @@ function doPost(e) {
       (datos.cantidadAula || '').trim(),
       (datos.cantidadAdmin || '').trim(),
       (datos.marcaModelo || '').trim(),
-      (datos.estadoEquipo || '').trim()
+      (datos.estadoEquipo || '').trim(),
+      (datos.tipoCct || '').trim()
     ]);
 
     manNotificarTelegram(folio, datos, oficioUrl);
-
-    const contacto = manBuscarContactoZonaSector(datos.sector, datos.zona);
-    if (contacto) {
-      manNotificarZonaSector(folio, datos, contacto);
-    }
+    manNotificarSolicitudRecibida(folio, datos);
 
     return manTextResponse(JSON.stringify({ status: 'ok', folio: folio }));
 
@@ -269,15 +317,21 @@ function manObtenerCarpetaOficios() {
   return DriveApp.createFolder(CARPETA_MAN_OFICIOS);
 }
 
-// ── Buscar el contacto de la Zona/Sector en la hoja de contactos ──
-function manBuscarContactoZonaSector(sector, zona) {
+// ── Buscar los contactos de Zona y de Sector en la hoja de contactos —
+// pueden ser dos filas distintas (Zona específica + Sector de respaldo sin
+// Zona) y ambas jefaturas quieren enterarse, así que se devuelven las que
+// existan (0, 1 o 2), sin quedarse en la primera coincidencia. ──
+function manBuscarContactosZonaSector(sector, zona) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const hoja = ss.getSheetByName(HOJA_MAN_CONTACTOS);
-  if (!hoja) return null;
+  if (!hoja) return [];
 
   const datos = hoja.getDataRange().getValues();
   const sectorNorm = String(sector || '').trim().toUpperCase();
   const zonaNorm = String(zona || '').trim();
+
+  let contactoZona = null;
+  let contactoSector = null;
 
   for (let i = 1; i < datos.length; i++) {
     const filaSector = String(datos[i][0] || '').trim().toUpperCase();
@@ -285,15 +339,33 @@ function manBuscarContactoZonaSector(sector, zona) {
     const correo = String(datos[i][2] || '').trim();
     if (!correo) continue;
 
-    // Coincidencia por Zona exacta si la fila trae zona, si no por Sector.
-    const coincideZona = filaZona && zonaNorm && filaZona === zonaNorm;
-    const coincideSector = filaSector && sectorNorm && filaSector === sectorNorm;
-
-    if (coincideZona || (!filaZona && coincideSector)) {
-      return { correo: correo, telefono: String(datos[i][3] || '').trim() };
+    if (!contactoZona && filaZona && zonaNorm && filaZona === zonaNorm) {
+      contactoZona = { correo: correo, telefono: String(datos[i][3] || '').trim(), nivel: 'zona' };
+    }
+    if (!contactoSector && !filaZona && filaSector && sectorNorm && filaSector === sectorNorm) {
+      contactoSector = { correo: correo, telefono: String(datos[i][3] || '').trim(), nivel: 'sector' };
     }
   }
-  return null;
+
+  const vistos = new Set();
+  return [contactoZona, contactoSector].filter(Boolean).filter(c => {
+    const key = c.correo.toLowerCase();
+    if (vistos.has(key)) return false;
+    vistos.add(key);
+    return true;
+  });
+}
+
+// ── Filtra los contactos de Zona/Sector según quién solicita, para no
+// avisarle a alguien de su propio nivel o de un nivel inferior: escuela (o
+// tipo vacío/desconocido — solicitudes previas a esta columna, se tratan
+// como escuela) → Zona + Sector; supervisión (solicita la propia Zona) →
+// solo Sector; jefatura o subdirección (solicita el propio Sector o SEPRN)
+// → nadie, no hay a quién notificar arriba. ──
+function manFiltrarContactosPorTipo(contactos, tipoSolicitante) {
+  if (tipoSolicitante === 'supervision') return contactos.filter(c => c.nivel === 'sector');
+  if (tipoSolicitante === 'jefatura' || tipoSolicitante === 'subdireccion') return [];
+  return contactos;
 }
 
 // ── Notificar por Telegram a OTDE (no interrumpe el registro si falla) ──
@@ -330,30 +402,37 @@ function manNotificarTelegram(folio, d, oficioUrl) {
   }
 }
 
-// ── Notificar por correo a la Zona/Sector correspondiente ──
-function manNotificarZonaSector(folio, d, contacto) {
+// ── Confirma al solicitante que su solicitud quedó registrada, con Zona y
+// Sector en copia (CC) si hay contacto(s) registrados — un solo correo por
+// solicitud en vez de avisos sueltos por destinatario. ──
+function manNotificarSolicitudRecibida(folio, d) {
   try {
-    const asunto = 'Nueva solicitud de mantenimiento — ' + (d.escuela || d.cct);
+    const contactos = manFiltrarContactosPorTipo(
+      manBuscarContactosZonaSector(d.sector, d.zona), (d.tipoCct || '').trim());
+    const cc = contactos.map(c => c.correo).join(',');
+    const asunto = 'Recibimos tu solicitud de mantenimiento — Folio ' + folio;
     const html =
       '<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;">' +
       '<div style="background-color:#9F2241;padding:16px 20px;border-radius:8px 8px 0 0;">' +
-      '<p style="margin:0;color:#fff;font-size:15px;font-weight:bold;">OTDE — Nueva solicitud de mantenimiento</p>' +
+      '<p style="margin:0;color:#fff;font-size:15px;font-weight:bold;">OTDE — Solicitud de mantenimiento recibida</p>' +
       '</div>' +
       '<div style="border:1px solid #d6d1ca;border-top:none;border-radius:0 0 8px 8px;padding:18px 20px;">' +
-      '<p style="margin:0 0 10px 0;font-size:14px;color:#333;">Se registró una solicitud de mantenimiento de un centro de trabajo de tu Zona/Sector. Solo es informativo — OTDE la está atendiendo directamente.</p>' +
+      '<p style="margin:0 0 10px 0;font-size:14px;color:#333;">Se registró tu solicitud de mantenimiento. OTDE la está atendiendo directamente — te avisaremos por este medio en cuanto se resuelva.</p>' +
       '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Folio:</strong> ' + folio + '</p>' +
       '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Escuela / CCT:</strong> ' + (d.escuela || '') + ' — ' + d.cct.trim().toUpperCase() + '</p>' +
       '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Solicita:</strong> ' + d.nombre.trim() + ' (' + d.funcion.trim() + ')</p>' +
       '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Equipos con falla:</strong> ' + d.equipos.trim() + '</p>' +
       '</div></div>';
 
-    MailApp.sendEmail({
-      to: contacto.correo,
+    const opciones = {
+      to: (d.correo || '').trim(),
       subject: asunto,
       htmlBody: html,
       name: 'OTDE | Oficina de Tecnología para el Desarrollo Educativo',
       replyTo: 'otde.nezahualcoyotl@dee.edu.mx'
-    });
+    };
+    if (cc) opciones.cc = cc;
+    manEnviarCorreo_(opciones);
   } catch (err) {
     // Silencioso: la solicitud ya quedó registrada aunque falle este aviso
   }
@@ -392,30 +471,26 @@ function manOnEditCierre(e) {
   }
 }
 
-// ── Arma y despacha los 2 avisos de cierre a partir de la fila ──
+// ── Avisa que el ticket se resolvió: un solo correo (to = solicitante,
+// cc = Zona/Sector si hay contacto(s) registrados) en vez de 2 avisos
+// sueltos como antes. ──
 function manNotificarCierre(fila) {
-  const folio = fila[1];
-  const nombre = fila[2];
-  const cct = fila[4];
-  const sector = fila[5];
-  const zona = fila[6];
-  const escuela = fila[7];
-  const correo = fila[10];
-  const notas = fila[14];
-
-  if (correo) {
-    manNotificarCierreSolicitante(folio, escuela, cct, notas, correo);
-  }
-
-  const contacto = manBuscarContactoZonaSector(sector, zona);
-  if (contacto) {
-    manNotificarCierreZonaSector(folio, nombre, escuela, cct, contacto);
-  }
-}
-
-// ── Avisa al solicitante que su ticket fue resuelto ──
-function manNotificarCierreSolicitante(folio, escuela, cct, notas, correo) {
   try {
+    const folio = fila[1];
+    const nombre = fila[2];
+    const cct = fila[4];
+    const sector = fila[5];
+    const zona = fila[6];
+    const escuela = fila[7];
+    const correo = String(fila[10] || '').trim();
+    const notas = fila[14];
+    const tipoSolicitante = String(fila[COL_MAN_TIPO_SOLICITANTE_IDX] || '').trim();
+
+    if (!correo) return;
+
+    const contactos = manFiltrarContactosPorTipo(
+      manBuscarContactosZonaSector(sector, zona), tipoSolicitante);
+    const cc = contactos.map(c => c.correo).join(',');
     const asunto = 'Tu solicitud de mantenimiento fue resuelta — ' + folio;
     const html =
       '<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;">' +
@@ -426,44 +501,19 @@ function manNotificarCierreSolicitante(folio, escuela, cct, notas, correo) {
       '<p style="margin:0 0 10px 0;font-size:14px;color:#333;">Tu solicitud de mantenimiento fue marcada como resuelta por OTDE.</p>' +
       '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Folio:</strong> ' + folio + '</p>' +
       '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Escuela / CCT:</strong> ' + (escuela || '') + ' — ' + cct + '</p>' +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Solicitó:</strong> ' + nombre + '</p>' +
       (notas ? '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Notas:</strong> ' + notas + '</p>' : '') +
       '</div></div>';
 
-    MailApp.sendEmail({
+    const opciones = {
       to: correo,
       subject: asunto,
       htmlBody: html,
       name: 'OTDE | Oficina de Tecnología para el Desarrollo Educativo',
       replyTo: 'otde.nezahualcoyotl@dee.edu.mx'
-    });
-  } catch (err) {
-    // Silencioso: el Sheet ya quedó actualizado aunque falle este aviso
-  }
-}
-
-// ── Avisa a la Zona/Sector que el ticket de su centro de trabajo se cerró ──
-function manNotificarCierreZonaSector(folio, nombre, escuela, cct, contacto) {
-  try {
-    const asunto = 'Solicitud de mantenimiento resuelta — ' + (escuela || cct);
-    const html =
-      '<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;">' +
-      '<div style="background-color:#9F2241;padding:16px 20px;border-radius:8px 8px 0 0;">' +
-      '<p style="margin:0;color:#fff;font-size:15px;font-weight:bold;">OTDE — Solicitud de mantenimiento resuelta</p>' +
-      '</div>' +
-      '<div style="border:1px solid #d6d1ca;border-top:none;border-radius:0 0 8px 8px;padding:18px 20px;">' +
-      '<p style="margin:0 0 10px 0;font-size:14px;color:#333;">La solicitud de mantenimiento de un centro de trabajo de tu Zona/Sector fue atendida y marcada como resuelta. Solo es informativo.</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Folio:</strong> ' + folio + '</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Escuela / CCT:</strong> ' + (escuela || '') + ' — ' + cct + '</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Solicitó:</strong> ' + nombre + '</p>' +
-      '</div></div>';
-
-    MailApp.sendEmail({
-      to: contacto.correo,
-      subject: asunto,
-      htmlBody: html,
-      name: 'OTDE | Oficina de Tecnología para el Desarrollo Educativo',
-      replyTo: 'otde.nezahualcoyotl@dee.edu.mx'
-    });
+    };
+    if (cc) opciones.cc = cc;
+    manEnviarCorreo_(opciones);
   } catch (err) {
     // Silencioso: el Sheet ya quedó actualizado aunque falle este aviso
   }

@@ -799,6 +799,19 @@ function obtenerCorreosInscritos(idCurso) {
   return [...correos];
 }
 
+// ── Modo de prueba: redirige el BCC de los recordatorios a un solo correo,
+// para probar el flujo completo sin avisarle a docentes reales. Actívalo
+// corriendo fdActivarModoPrueba('tu@correo.com') una vez desde el editor de
+// Apps Script; desactívalo con fdDesactivarModoPrueba(). No requiere
+// redeploy — es una Script Property, se lee en cada envío. ──
+function fdActivarModoPrueba(correo) {
+  PropertiesService.getScriptProperties().setProperty('MODO_PRUEBA_CORREO', correo);
+}
+
+function fdDesactivarModoPrueba() {
+  PropertiesService.getScriptProperties().deleteProperty('MODO_PRUEBA_CORREO');
+}
+
 // ── Envío en lote (BCC) con revisión de cuota. Devuelve true si se mandó. ──
 function enviarCorreoLote(destinatarios, asunto, cuerpoHtml) {
   if (!destinatarios.length) return false;
@@ -808,12 +821,20 @@ function enviarCorreoLote(destinatarios, asunto, cuerpoHtml) {
     return false;
   }
 
+  const correoPrueba = PropertiesService.getScriptProperties().getProperty('MODO_PRUEBA_CORREO');
+  const enModoPrueba = !!correoPrueba;
+
   MailApp.sendEmail({
     to: Session.getEffectiveUser().getEmail(),
-    bcc: destinatarios.join(','),
+    bcc: enModoPrueba ? correoPrueba : destinatarios.join(','),
     replyTo: CORREO_REPLY_TO_INSTITUCIONAL,
-    subject: asunto,
-    htmlBody: cuerpoHtml,
+    subject: enModoPrueba ? '[PRUEBA] ' + asunto : asunto,
+    htmlBody: enModoPrueba
+      ? '<div style="background:#fff3cd;border:1px solid #e0a800;border-radius:6px;' +
+        'padding:10px 16px;margin-bottom:16px;font-family:Arial,Helvetica,sans-serif;' +
+        'font-size:13px;color:#555;"><strong>Modo de prueba activo</strong> — destino real (CCO): ' +
+        destinatarios.join(', ') + '</div>' + cuerpoHtml
+      : cuerpoHtml,
     name: 'OTDE NEZA · Centro de Formación Docente'
   });
   return true;

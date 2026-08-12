@@ -726,8 +726,10 @@ del ya probado `soporte-remoto.gs`:
   integró automáticamente, es una decisión deliberada para no arriesgar sistemas en producción
   ajenos a este entregable).
 - Hoja `Contactos_Zona_Sector` (Sector, Zona, Correo, Teléfono) que Jorge mantiene a mano —
-  si hay contacto registrado, se notifica también a esa Zona/Sector por correo, además del
-  aviso a OTDE por Telegram.
+  puede tener una fila de Zona específica y otra de Sector (de respaldo, sin Zona) para el
+  mismo Sector; `manBuscarContactosZonaSector()`/`aseBuscarContactosZonaSector()` (agosto 2026,
+  plural a propósito) busca ambas y las agrega en copia (CC) del correo al solicitante, no solo
+  la primera que encuentra. Además del correo, avisa a OTDE por Telegram.
 - El oficio adjunto se sube en base64 desde el cliente (`FileReader.readAsDataURL`), se
   decodifica en `doPost` con `Utilities.base64Decode` y se guarda en una carpeta de Drive
   dedicada por trámite, compartida "cualquiera con el link, solo ver".
@@ -757,9 +759,10 @@ solo al pegar una versión nueva del código.
   `Validado` · `En atención` · `Resuelto` · `Rechazado`. Sin esto el trigger no tendría un
   valor confiable contra el cual comparar.
 - Al detectar que la columna editada incluye `Estatus` y el nuevo valor es exactamente
-  `'Resuelto'`, envía dos correos reusando la infraestructura ya existente: uno al solicitante
-  (columna `Correo` de la fila) y otro a la Zona/Sector vía el mismo
-  `manBuscarContactoZonaSector`/`aseBuscarContactoZonaSector` que ya usa el aviso de alta.
+  `'Resuelto'`, envía un correo (`to` = solicitante, `cc` = Zona/Sector si hay contacto(s) —
+  mismo patrón `to`/`cc` que el aviso de alta, ver arriba). Antes (ago 2026) eran 2 correos
+  sueltos por evento (uno al solicitante, otro a un solo contacto de Zona/Sector); el rediseño
+  de correo combinado reduce el conteo de envíos mientras aumenta el alcance de información.
   `Rechazado` queda en el dropdown pero deliberadamente sin lógica todavía — mismo mecanismo,
   se puede sumar después sin rediseñar nada.
 - Una columna nueva `Notificación de cierre enviada` (auto-heal de encabezados, mismo patrón
@@ -790,6 +793,64 @@ que usa el trigger de cierre automático de arriba. El campo Correo, antes opcio
 Mantenimiento/Asesorías/Soporte, ahora es obligatorio en los tres (validado también
 server-side en los 3 `.gs`) — es el medio principal de contacto, WhatsApp queda como
 alternativo.
+
+**Correo combinado a solicitante + Zona + Sector (11 ago 2026).** Jorge probó el flujo real y
+encontró que la solicitante nunca recibía confirmación de que su solicitud llegó, y que Zona y
+Sector nunca se enteraban ambos a la vez — la búsqueda de contacto se detenía en la primera
+coincidencia (Zona exacta si existía, si no Sector). Rediseño en `mantenimiento.gs`/
+`asesorias.gs`:
+
+- `manBuscarContactosZonaSector()`/`aseBuscarContactosZonaSector()` (plural) recorre toda la
+  hoja `Contactos_Zona_Sector` y devuelve un array con la fila de Zona **y** la fila de Sector
+  si ambas existen (deduplicadas por correo), en vez de una sola.
+- Al recibir la solicitud, `manNotificarSolicitudRecibida()`/`aseNotificarSolicitudRecibida()`
+  (reemplaza a `manNotificarZonaSector()`/`aseNotificarZonaSector()`) manda un correo con
+  `to` = solicitante (siempre, ya que Correo es obligatorio) y `cc` = Zona/Sector si hay
+  contacto(s) — antes solo se avisaba a Zona/Sector, nunca al solicitante.
+- Al cerrar, `manNotificarCierre()`/`aseNotificarCierre()` se consolidó en una sola función que
+  manda un correo (`to` = solicitante, `cc` = Zona/Sector) en vez de los 2 correos sueltos que
+  mandaba antes (`manNotificarCierreSolicitante`+`manNotificarCierreZonaSector`, eliminadas).
+- Probado en vivo con modo de prueba (ver más abajo) usando Sector I/Zona 1 —confirmado que el
+  correo llega con ambos contactos (`fiz0042v@dee.edu.mx` de Zona 1 y `fjs0015d@dee.edu.mx` de
+  Sector I) en CC, tanto en apertura como en cierre.
+- Redesplegado el mismo día: `mantenimiento.gs` versión 8, `asesorias.gs` versión 7.
+
+**CC según jerarquía del solicitante (11 ago 2026, mismo día, ajuste sobre lo anterior).**
+El correo combinado de arriba trataba a todo solicitante igual (siempre `cc` = Zona + Sector).
+Jorge señaló que eso no es correcto si quien solicita **es** la Zona o el Sector: `js/cct-db.js`
+ya distingue el `tipo` de cada CCT (`escuela` | `supervision` = Zona | `jefatura` = Sector |
+`subdireccion` = SEPRN — 75 supervisiones y 13 jefaturas tienen su propio CCT, con `sector`/
+`zona` propios), dato que ya se capturaba en un campo oculto (`man-tipo-cct-val`/
+`ase-tipo-cct-val`, repuebla el `<select>` de Función) pero nunca viajaba al backend.
+
+- `otde.html`: los payloads de Mantenimiento y Asesorías ahora incluyen `tipoCct` (mismo valor
+  del campo oculto, tanto si el CCT vino del autocompletado como del fallback manual — ambos
+  caminos ya lo llenaban).
+- `mantenimiento.gs`/`asesorias.gs`: nueva columna `Tipo de solicitante` al final de
+  `ENCABEZADOS_MAN_SOLICITUDES`/`ENCABEZADOS_ASE_SOLICITUDES` (mismo criterio de "agregar al
+  final" que las demás). `manBuscarContactosZonaSector()`/`aseBuscarContactosZonaSector()` ahora
+  etiqueta cada contacto con `nivel: 'zona'|'sector'`, y una función nueva
+  `manFiltrarContactosPorTipo(contactos, tipoSolicitante)`/`aseFiltrarContactosPorTipo(...)`
+  decide el `cc` final: `escuela` (o tipo vacío/desconocido — solicitudes previas a esta
+  columna se tratan así, decisión de Jorge, es el comportamiento más seguro) → Zona + Sector;
+  `supervision` (solicita la propia Zona) → solo Sector; `jefatura`/`subdireccion` (solicita el
+  propio Sector o SEPRN) → nadie, no hay a quién notificar arriba en la jerarquía.
+- Al recibir la solicitud usa `d.tipoCct` directo del payload; al cerrar lee la columna nueva de
+  la fila (`COL_MAN_TIPO_SOLICITANTE_IDX`/`COL_ASE_TIPO_SOLICITANTE_IDX`).
+- Verificado corriendo `manFiltrarContactosPorTipo`/`aseFiltrarContactosPorTipo` directo en el
+  editor de Apps Script contra Sector I/Zona 1 (que tiene ambos contactos reales): escuela/vacío
+  devuelve los 2 correos, `supervision` solo el de Sector, `jefatura` un arreglo vacío.
+- Redesplegado el mismo día: `mantenimiento.gs` versión 9, `asesorias.gs` versión 8.
+
+**Modo de prueba (11 ago 2026).** Ambos backends ganaron `manEnviarCorreo_()`/
+`aseEnviarCorreo_()`, un wrapper alrededor de `MailApp.sendEmail()` que todos los envíos ya
+pasaban a usar. Si la Script Property `MODO_PRUEBA_CORREO` está definida (activarla con
+`manActivarModoPrueba('correo')`/`aseActivarModoPrueba('correo')` desde el editor de Apps
+Script, desactivarla con `manDesactivarModoPrueba()`/`aseDesactivarModoPrueba()`), todo correo
+saliente se redirige a ese correo con el asunto marcado `[PRUEBA]` y una nota indicando el
+destino real (`to`/`cc` originales) — para poder probar el flujo completo de un trámite sin
+avisar a escuelas/zonas/sectores reales ni gastar la cuota diaria de correo en pruebas. No
+requiere redeploy para activar/desactivar, se lee en cada envío.
 
 ## 16. Webform de Correo Institucional en paralelo al Google Form (agosto 2026)
 

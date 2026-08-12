@@ -49,6 +49,41 @@ const COL_SOP_ESTATUS = 14;
 const COL_SOP_NOTIFICACION_CIERRE = 16;
 const ESTADOS_SOP_VALIDOS = ['Pendiente de validar', 'Validado', 'En atención', 'Resuelto', 'Rechazado'];
 
+// ── Modo de prueba: redirige el correo de cierre al solicitante a un solo
+// correo, para probar el flujo completo sin avisarle a nadie real. Actívalo
+// corriendo sopActivarModoPrueba('tu@correo.com') una vez desde el editor de
+// Apps Script; desactívalo con sopDesactivarModoPrueba(). No requiere
+// redeploy — es una Script Property, se lee en cada envío. ──
+function sopActivarModoPrueba(correo) {
+  PropertiesService.getScriptProperties().setProperty('MODO_PRUEBA_CORREO', correo);
+}
+
+function sopDesactivarModoPrueba() {
+  PropertiesService.getScriptProperties().deleteProperty('MODO_PRUEBA_CORREO');
+}
+
+function sopEnviarCorreo_(opciones) {
+  const correoPrueba = PropertiesService.getScriptProperties().getProperty('MODO_PRUEBA_CORREO');
+  if (correoPrueba) {
+    const destinoOriginal = [
+      opciones.to ? 'Para: ' + opciones.to : '',
+      opciones.cc ? 'CC: ' + opciones.cc : '',
+      opciones.bcc ? 'CCO: ' + opciones.bcc : ''
+    ].filter(Boolean).join(' · ');
+    opciones = Object.assign({}, opciones, {
+      to: correoPrueba,
+      cc: null,
+      bcc: null,
+      subject: '[PRUEBA] ' + opciones.subject,
+      htmlBody: '<div style="background:#fff3cd;border:1px solid #e0a800;border-radius:6px;' +
+        'padding:10px 16px;margin-bottom:16px;font-family:Arial,Helvetica,sans-serif;' +
+        'font-size:13px;color:#555;"><strong>Modo de prueba activo</strong> — destino real: ' +
+        destinoOriginal + '</div>' + (opciones.htmlBody || '')
+    });
+  }
+  MailApp.sendEmail(opciones);
+}
+
 // ── doGet: verificación de estado, o consulta de folio (?action=consulta) ──
 function doGet(e) {
   const accion = e && e.parameter && e.parameter.action;
@@ -295,7 +330,7 @@ function sopNotificarCierreSolicitante(folio, escuela, cct, notas, correo) {
       (notas ? '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Notas:</strong> ' + notas + '</p>' : '') +
       '</div></div>';
 
-    MailApp.sendEmail({
+    sopEnviarCorreo_({
       to: correo,
       subject: asunto,
       htmlBody: html,

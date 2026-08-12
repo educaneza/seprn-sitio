@@ -167,6 +167,7 @@ ya esté expandido).
 - **Redesplegado (7 ago 2026, versión 4)**: mismo ID de implementación de siempre, no cambió `SOPORTE_APPS_SCRIPT_URL`. La columna `Tipo de ayuda` se agregó a mano al final de la hoja real (este proyecto no tenía auto-heal de encabezados, a diferencia de `mantenimiento.gs`/`formacion-docente.gs`)
 - **Estatus + cierre automático + auto-heal (ago 2026, pendiente de redeploy)**: ya tiene el mismo mecanismo que Mantenimiento/Asesorías — dropdown de 5 valores en `Estatus`, trigger instalable `sopOnEditCierre` (correr `sopInstalarTriggerCierre()` una vez tras pegar esta versión, o el menú "OTDE Soporte" nuevo que agrega `onOpen()`), y ahora sí completa solo cualquier encabezado que falte en la hoja real. A diferencia de Mantenimiento/Asesorías, Soporte no tiene `Contactos_Zona_Sector` — el cierre solo notifica al solicitante, no a Zona/Sector (decisión deliberada, no un pendiente). Ver "Oficina Virtual OTDE" abajo para el endpoint de consulta que motivó este cambio.
 - Para cambios: copiar el `.gs` completo en Apps Script y re-desplegar como aplicación web (Cualquier usuario) — **cuidado**: probar el endpoint con `curl -X POST`, o incluso desde un navegador headless con acceso real a internet (confirmado: el sandbox de pruebas SÍ tiene salida real a `script.google.com`), ejecuta `doPost` de verdad (escribe en Sheets y dispara Telegram). Para pruebas locales, interceptar la llamada de red (`page.route()` en Playwright) en vez de dejarla llegar al backend real
+- **Modo de prueba (código listo, aún sin desplegar, 11 ago 2026)**: `sopEnviarCorreo_()` — mismo wrapper que `manEnviarCorreo_()`/`aseEnviarCorreo_()`, activable con `sopActivarModoPrueba('correo')`/`sopDesactivarModoPrueba()` — ya reemplaza el único `MailApp.sendEmail()` de este archivo (el de cierre al solicitante) en el repo local, pero **no se pegó ni redesplegó** en el proyecto de Apps Script real esta sesión; en producción sigue corriendo la versión sin modo de prueba
 
 ### `apps-script/mantenimiento.gs`
 - **Nuevo (ago 2026)**: conectado a un Google Sheet propio (hojas `Solicitudes` y
@@ -187,16 +188,21 @@ ya esté expandido).
   ago 2026, agregadas **al final** a propósito para no correr `COL_MAN_ESTATUS`/
   `COL_MAN_NOTIFICACION_CIERRE` del cierre automático — se auto-completan solas en la próxima
   solicitud real, mismo patrón que `obtenerHojaCursos()` de `formacion-docente.gs`)
-- **`Contactos_Zona_Sector`** la llena Jorge a mano (Sector, Zona, Correo, Teléfono) — sin
-  datos ahí, la solicitud se registra igual pero no se notifica a nadie más que a OTDE
+- **`Contactos_Zona_Sector`** la llena Jorge a mano (Sector, Zona, Correo, Teléfono) — puede
+  tener una fila de Zona específica y otra de Sector (de respaldo, sin Zona); sin datos ahí, la
+  solicitud se registra igual pero solo se notifica al solicitante
 - El oficio adjunto se sube en base64 desde el cliente (`FileReader.readAsDataURL` + recorte
   del prefijo `data:...;base64,`) y `doPost` lo decodifica con `Utilities.base64Decode` y lo
   guarda en una carpeta de Drive ("Oficios de Mantenimiento", autocreada), compartida como
   "cualquiera con el link, solo ver" para que el link quede usable desde la hoja
 - Notifica por Telegram a OTDE (mismo patrón que `soporte-remoto.gs`, **Propiedades del script
-  configuradas por separado** — son por proyecto, no se comparten aunque sea el mismo bot) y
-  por correo a la Zona/Sector correspondiente si hay contacto registrado (informativo, no
-  bloquea el registro si falla)
+  configuradas por separado** — son por proyecto, no se comparten aunque sea el mismo bot) y por
+  correo al solicitante con Zona y Sector en copia (CC) si hay contacto(s) registrados —
+  **correo combinado (11 ago 2026)**: antes solo avisaba a Zona/Sector (nunca al solicitante) y
+  se detenía en el primer contacto que encontraba (Zona o Sector, nunca ambos);
+  `manBuscarContactosZonaSector()` ahora busca ambos y `manNotificarSolicitudRecibida()` manda
+  un solo correo con `to`=solicitante, `cc`=Zona+Sector. Mismo patrón en el cierre automático
+  (ver abajo). No bloquea el registro si el envío falla
 - **CCT con autocomplete** (`js/cct-db.js`): mismo patrón que el resto del sitio
   (`manSeleccionarCct`/`manResetCct`/`manActualizarZonas`/`manActualizarTipoCct`, prefijo
   `man`), con fallback manual de Tipo de CCT/Sector/Zona/Escuela si la CCT no está en la base —
@@ -225,6 +231,14 @@ ya esté expandido).
 - **Redesplegado (7 ago 2026, versión 5)**: checklist de equipos + correo obligatorio + oficio
   solo PDF de arriba. Mismo ID de implementación de siempre, no cambió
   `MANTENIMIENTO_APPS_SCRIPT_URL`
+- **Redesplegado (11 ago 2026, versión 8)**: correo combinado a solicitante + Zona + Sector,
+  ver `docs/ARCHITECTURE.md §15`. Mismo ID de implementación de siempre. Se agregó además un
+  modo de prueba (`manActivarModoPrueba('correo')`/`manDesactivarModoPrueba()`) que redirige
+  todos los correos salientes a un solo correo para probar el flujo completo sin avisar a
+  destinatarios reales.
+- **Redesplegado (11 ago 2026, versión 9, mismo día)**: el `cc` ahora depende de quién solicita
+  — escuela (o vacío/desconocido) recibe Zona+Sector, Zona (`supervision`) solo Sector, Sector
+  (`jefatura`) a nadie. Columna nueva `Tipo de solicitante`, ver `docs/ARCHITECTURE.md §15`.
 
 ### `apps-script/asesorias.gs`
 - **Nuevo (ago 2026)**: mismo patrón que `mantenimiento.gs` (Sheet propio con hojas
@@ -253,8 +267,10 @@ ya esté expandido).
   oficio. El selector de "Tipo de Asesoría" ya está listo para crecer (hoy 1 sola opción) cuando
   se separen Banco de Materiales/Chuka o se agreguen asesorías nuevas — replanteo pedagógico
   pendiente, deliberadamente fuera de alcance por ahora
-- Notifica por Telegram a OTDE y por correo a la Zona/Sector correspondiente (mismo mecanismo
-  que `mantenimiento.gs`, Propiedades del script configuradas por separado en este proyecto)
+- Notifica por Telegram a OTDE (Propiedades del script configuradas por separado en este
+  proyecto) y por correo al solicitante con Zona y Sector en copia (CC) si hay contacto(s)
+  registrados — mismo mecanismo de correo combinado que `mantenimiento.gs` (ver esa sección y
+  `docs/ARCHITECTURE.md §15`)
 - **CCT con autocomplete** (`js/cct-db.js`): mismo patrón, prefijo `ase`
   (`aseSeleccionarCct`/`aseResetCct`/`aseActualizarZonas`/`aseActualizarTipoCct`), fallback
   manual con Tipo de CCT (ver `docs/ARCHITECTURE.md §11`). **Función/Cargo** se repuebla según
@@ -269,7 +285,12 @@ ya esté expandido).
   configurar (decisión de Jorge, 6 ago 2026 — no es un pendiente, es la elección), y
   `Contactos_Zona_Sector` ya poblada igual que en Mantenimiento (mismas 88 filas, misma fuente
   `OTDE_Base_Contactos_v2.xlsx`). **Redesplegado (7 ago 2026, versión 5)**: solo el cambio de
-  correo obligatorio arriba, mismo ID de implementación
+  correo obligatorio arriba, mismo ID de implementación. **Redesplegado (11 ago 2026, versión
+  7)**: correo combinado a solicitante + Zona + Sector y modo de prueba
+  (`aseActivarModoPrueba('correo')`/`aseDesactivarModoPrueba()`), mismo detalle que
+  Mantenimiento arriba, ver `docs/ARCHITECTURE.md §15`. **Redesplegado (11 ago 2026, versión 8,
+  mismo día)**: `cc` según tipo de solicitante (escuela/supervisión/jefatura), mismo detalle que
+  Mantenimiento arriba
 
 ### `apps-script/formacion-docente.gs`
 **Desplegado en producción desde jul 2026** (Spreadsheet real `Formacion_Docente_2026_2027`, URL real ya pegada en `APPS_SCRIPT_URL` de `formacion-docente.html`; la extinta `jornada-verano-2026.html` compartió este mismo backend hasta su eliminación el 13 jul 2026).
@@ -285,6 +306,7 @@ ya esté expandido).
 - Menú "OTDE Formación" completo: Generar ID de cursos faltantes · Generar estadísticas · Actualizar vista de Inscripciones · Migrar Jornada Verano 2026 · Instalar/Desinstalar recordatorios automáticos
 - Responde `Content-Type: text/plain` para evitar preflight CORS, mismo patrón que el resto
 - **Cuidado con `appendRow([])`**: Apps Script no acepta un arreglo vacío — usar `appendRow([''])` para filas en blanco. Ver `docs/QA-NOTES.md` para este y otros bugs reales ya corregidos (fetch sin timeout, fecha -1 día por parseo UTC, etc.)
+- **Modo de prueba (código listo, aún sin desplegar, 11 ago 2026)**: `enviarCorreoLote()` ahora revisa la Script Property `MODO_PRUEBA_CORREO` (`fdActivarModoPrueba('correo')`/`fdDesactivarModoPrueba()`) y, si está activa, redirige `bcc`/`subject`/`htmlBody` al correo de prueba en vez de a los inscritos reales — en el repo local, pero **no se pegó ni redesplegó** en el proyecto de Apps Script real esta sesión; en producción sigue mandando a los inscritos de verdad
 - Para cambios: copiar el `.gs` completo en Apps Script y re-desplegar como aplicación web (Cualquier usuario) — recordar **Administrar implementaciones → Nueva versión**, no solo "Guardar" en el editor, o el sitio sigue sirviendo la versión anterior
 
 ## Reglas de desarrollo
@@ -388,6 +410,10 @@ backend en `apps-script/mantenimiento.gs` y `docs/ARCHITECTURE.md §15`.
 - **Repaso de UX (7 ago 2026)**: "Equipos con falla" pasó de textarea libre a checklist
   estructurado, Correo pasó a obligatorio, oficio restringido a solo PDF, Función/Cargo se
   repuebla por tipo de CCT — ver `docs/ARCHITECTURE.md §11` y `§15`. Redesplegado como versión 5.
+- **Correo combinado a solicitante + Zona + Sector (11 ago 2026)**: apertura y cierre mandan un
+  solo correo (`to`=solicitante, `cc`=Zona+Sector si hay contacto(s)) en vez de avisos sueltos
+  que antes solo llegaban a Zona/Sector — ver `docs/ARCHITECTURE.md §15`. Redesplegado como
+  versión 8.
 
 ### Asesorías
 Tab nueva (no existía como trámite — antes solo había un video suelto en Recursos). Mismo
@@ -398,7 +424,9 @@ Prefijo de IDs/funciones: `ase`. **Desplegado (6 ago 2026)**: `ASESORIAS_APPS_SC
 la URL real del deployment. **Cierre automático (7 ago 2026)**: mismo mecanismo que
 Mantenimiento (`aseOnEditCierre` / `aseInstalarTriggerCierre`). **Repaso de UX (7 ago 2026)**:
 Correo obligatorio, oficio solo PDF, Función/Cargo por tipo de CCT — mismo detalle que
-Mantenimiento arriba, redesplegado como versión 5.
+Mantenimiento arriba, redesplegado como versión 5. **Correo combinado a solicitante + Zona +
+Sector (11 ago 2026)**: mismo rediseño que Mantenimiento (ver arriba) — redesplegado como
+versión 7.
 
 ### Soporte Técnico Remoto
 TeamViewer (no Quick Assist) como herramienta de control remoto. Formulario "Solicitar Soporte
