@@ -124,6 +124,7 @@ ya esté expandido).
 | `formacion-docente.html` | Centro de Formación Docente — catálogo dinámico (webinars, seminarios, diplomados, cursos autogestivos, acciones formativas, proyectos didácticos) + registro. Diseño premium propio (ver `docs/DESIGN_SYSTEM.md`) |
 | `instructivo-formacion-docente.html` | Guía imprimible del Centro de Formación Docente, mismo sistema tipográfico que la página anterior |
 | `404.html` | Página de error personalizada |
+| `protocolos.html` | Protocolos de Actuación — hub con 3 protocolos oficiales del Estado de México/SEIEM (ver sección propia abajo) |
 
 **Documentación interna adicional en `docs/`:** `ARCHITECTURE.md` (arquitectura técnica), `ROADMAP.md` (scores UX/UI + pendientes por feature), `DESIGN_SYSTEM.md` (tokens/patrones del rediseño premium de Formación Docente), `QA-NOTES.md` (bugs reales ya cazados, con causa raíz — consultar antes de escribir un `fetch()` o un `appendRow()` nuevo), `manual-formacion-docente.html` / `manual-sistema-registro.html` (manuales operativos visuales para quien administra cada Sheet).
 
@@ -313,7 +314,7 @@ ya esté expandido).
 1. No introducir npm, frameworks ni build steps — stack estático puro
 2. Cambios globales de UI → `styles.css`; cambios específicos de página → `<style>` inline en el HTML
 3. Para modificar estilos del header/footer: son inline en cada página, no hay componente compartido
-4. Imágenes en `images/`, PDFs en `pdfs/cte/cte-<ciclo>/<nombre-sesion>/` (ej. `pdfs/cte/cte-2026-2027/cte-fase-intensiva/`), instaladores/ejecutables descargables en `descargas/` (ej. `.exe`, `.bat`)
+4. Imágenes en `images/`, PDFs en `pdfs/cte/cte-<ciclo>/<nombre-sesion>/` (ej. `pdfs/cte/cte-2026-2027/cte-fase-intensiva/`) o en `pdfs/protocolos/` para los protocolos oficiales del Estado de México (planos, sin subcarpeta — ver `protocolos.html` abajo), instaladores/ejecutables descargables en `descargas/` (ej. `.exe`, `.bat`)
 5. Después de push: esperar 5-10 min o Cmd+Shift+R para invalidar caché de GitHub Pages
 6. Los PDFs de sesiones CTE se nombran con mayúsculas y acentos; URL-encodear la ó como `%C3%B3` en los hrefs
 7. **Sin emojis** en HTML — usar SVG inline para íconos de contacto (persona, correo, teléfono). Ver `contacto-icon` en cualquier página de área como referencia
@@ -454,6 +455,49 @@ solo perdieron ese acceso duplicado. Clase reutilizable `.otde-banner`/`.otde-ba
 banner que queda y para cualquier banner futuro. Usa **Montserrat** a propósito, no Inter — es
 la tipografía ya establecida en esta página, meter una fuente distinta solo en el banner se
 vería ajeno.
+
+## `protocolos.html` — Protocolos de Actuación (ago 2026)
+Hub con 3 protocolos oficiales del **Gobierno del Estado de México / SEIEM** (no producidos por
+SEPRN): Erradicación del Acoso Escolar, Mochila de Paz y Prevención, y Prevención/Detección/
+Actuación en Abuso Sexual Infantil-Acoso-Maltrato. **Ojo — no es un protocolo por oficina**: los
+3 documentos aplican transversalmente y se accede a los 3 desde cualquiera de las tres páginas
+(no hay mapeo 1:1 protocolo↔oficina). Nace del mismo patrón de aislamiento que
+`oficina-virtual.html`: **no está en el nav principal ni en el sitemap del footer**, se llega
+solo por un botón CTA (`.protocolo-banner`, estilo inline adaptado del `.otde-banner` de
+`otde.html`, texto idéntico en las 3 páginas) insertado al inicio de `content-section` en
+`juridico.html`, `academica.html` y `oeve.html` — los 3 apuntan igual a `protocolos.html`, sin
+ancla.
+
+- Una sola sección `.seccion` con las 3 tarjetas (`.protocolo-card fade-item`), cada una con un
+  `id` descriptivo del protocolo (`erradicacion-acoso-escolar`/`mochila-de-paz`/
+  `abuso-sexual-infantil`, no de oficina) por si se necesita enlazar a una directamente
+  (`scroll-margin-top` en la tarjeta compensa el header `sticky`).
+- Cada tarjeta lleva dos botones: **"Ver"** (`target="_blank" rel="noopener"`, sin `download`
+  — abre el PDF en el visor del navegador) y **"Descargar"** (mismo `href` + `download`). Es el
+  primer lugar del sitio con un link "Ver" — hasta ahora todo `href="pdfs/...pdf"` forzaba
+  descarga.
+- **Ícono temático por protocolo** (ago 2026, para hacerlas más visuales sin depender de
+  portadas de PDF inconsistentes — se evaluaron miniaturas de la primera página de cada PDF y
+  solo Mochila de Paz tenía una portada ilustrada, las otras dos son páginas de Gaceta de
+  Gobierno sin diseño): escudo con check (Erradicación de Acoso Escolar), mochila (Mochila de
+  Paz — literal), corazón (Abuso Sexual Infantil/Maltrato — deliberadamente no literal, tema
+  sensible). Badge circular 64px, mismo estilo de línea que `.area-icon` de `areas.html`.
+  `.protocolo-card` lleva además un `border-top` guinda de 4px como acento.
+- Dos de los 3 protocolos tienen página/documento oficial externo — enlace `.info-link`
+  ("Más información →") bajo los botones Ver/Descargar: Erradicación de Acoso Escolar →
+  `conebi.edomex.gob.mx/.../dic181e.pdf` (verificado por hash SHA256: es el mismo archivo que
+  el PDF local, no solo un documento relacionado); Abuso Sexual/Maltrato →
+  `seiem.edu.mx/web/protocolo_derechos` (verificado por contenido de la página, coincide con el
+  título exacto del protocolo). Mochila de Paz no tiene liga externa — Jorge solo compartió
+  las otras dos.
+- PDFs en `pdfs/protocolos/` (planos, sin subcarpeta por área — a diferencia de
+  `pdfs/cte/cte-<ciclo>/...`, aquí no aplica porque no son documentos propios de SEPRN
+  organizados por sesión/ciclo): `Protocolo-Erradicacion-Acoso.pdf`,
+  `Protocolo-Mochila-Paz.pdf`, `Protocolo-Prevencion-Deteccion-Actuacion-Abuso-Sex.pdf`.
+- **Sin contador de vistas/descargas** (decisión deliberada, ago 2026): se evaluó un backend
+  Apps Script + Google Sheet (mismo patrón que `apps-script/cursos-coeee-2026.gs`) pero se
+  dejó fuera para lanzar la página 100% estática sin configuración manual adicional; se
+  reconsidera solo si hace falta después de ver la página en uso real.
 
 ## `oficina-virtual.html` — Oficina Virtual OTDE (ago 2026, hub de servicios + seguimiento)
 Reusa `styles.css` (misma identidad institucional que `otde.html`, no un sistema propio como

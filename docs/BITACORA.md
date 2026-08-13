@@ -14,6 +14,23 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-08-13 · Página de Protocolos de Actuación (Acoso Escolar, Mochila de Paz, Abuso Sexual Infantil), enlazada desde Jurídico/Académica/OEVE
+
+| | |
+|---|---|
+| **Fecha** | 2026-08-13 |
+| **Sesión** | Jorge necesitaba publicar 3 PDFs de protocolos de actuación para que quedaran disponibles en línea y para descarga. El planteamiento inicial (uno por oficina: Jurídico/Académica/OEVE, cada una con "su" protocolo) resultó incorrecto — Jorge aclaró a medio camino que son 3 protocolos oficiales del **Gobierno del Estado de México/SEIEM** (no producidos por SEPRN) que aplican transversalmente, y que las 3 oficinas dan acceso a los mismos 3 documentos, sin mapeo 1:1. La página y los 3 banners ya construidos con el modelo equivocado se reescribieron con el modelo correcto antes de continuar. |
+| **`protocolos.html` (nuevo)** | Hub con los 3 protocolos: Erradicación del Acoso Escolar, Mochila de Paz y Prevención, y Prevención/Detección/Actuación en Abuso Sexual Infantil-Acoso-Maltrato. Sigue el esqueleto estándar de página de área (`CLAUDE.md`). No está en el nav principal ni en el sitemap del footer — mismo patrón de aislamiento que `oficina-virtual.html` (tampoco listada ahí), se llega solo por un botón CTA. Cada tarjeta tiene botón **Ver** (`target="_blank"`, sin `download` — primer link "Ver" del sitio, todo lo demás fuerza descarga) y **Descargar**. Detalle completo en `CLAUDE.md`. |
+| **PDFs** | `pdfs/protocolos/` (planos, sin subcarpeta por área — convención nueva, ~7.1 MB los 3 juntos): `Protocolo-Erradicacion-Acoso.pdf`, `Protocolo-Mochila-Paz.pdf`, `Protocolo-Prevencion-Deteccion-Actuacion-Abuso-Sex.pdf`, entregados directamente por Jorge. |
+| **Banners CTA** | `juridico.html`, `academica.html`, `oeve.html` — mismo texto idéntico en las 3 (ya que no hay mapeo protocolo↔oficina), estilo `.protocolo-banner` adaptado del `.otde-banner` de `otde.html`, todos apuntan a `protocolos.html` sin ancla. |
+| **Enlaces "Más información" verificados, no asumidos** | Jorge compartió 2 ligas oficiales externas sin decir a cuál protocolo correspondía cada una. Se verificó en vez de adivinar: el PDF de `conebi.edomex.gob.mx/.../dic181e.pdf` resultó ser, por hash SHA-256, el mismo archivo exacto que `Protocolo-Erradicacion-Acoso.pdf`; el contenido de `seiem.edu.mx/web/protocolo_derechos` (extraído por `curl`, `WebFetch` falló con ECONNRESET) coincide en título literal con el protocolo de Abuso Sexual Infantil. Ambos enlaces agregados a su tarjeta correspondiente; Mochila de Paz se quedó sin liga externa porque Jorge no compartió una. |
+| **Diseño: portadas de PDF descartadas, íconos temáticos en su lugar** | Jorge preguntó por poner la portada de cada PDF como miniatura ("los maestros son muy visuales"). Se generó una vista previa real de la página 1 de cada PDF (`pdftoppm`, herramienta ya disponible en el sistema) antes de opinar: solo Mochila de Paz tiene una portada ilustrada real; las otras dos son páginas de Gaceta de Gobierno sin diseño (una de puro texto legal, la otra la portada genérica del Periódico Oficial completo). Con eso como evidencia, se descartó la idea de miniaturas de PDF (inconsistentes entre sí) y en su lugar se le dio a cada tarjeta un ícono de línea temático propio (escudo con check / mochila / corazón — mismo lenguaje visual que `.area-icon` de `areas.html`), badge circular 64px, y un acento de borde superior guinda en las 3 tarjetas por igual. |
+| **Documentación** | `CLAUDE.md` (tabla de páginas + sección nueva `protocolos.html` con el patrón completo, regla 4 de convención de carpeta `pdfs/`). No se tocó `docs/ARCHITECTURE.md`/`docs/ROADMAP.md`/`README.md` — nada de esta sesión los volvió obsoletos (`protocolos.html` no introduce un flujo técnico/backend nuevo más allá de lo ya descrito en `CLAUDE.md`, y ningún pendiente de `ROADMAP.md` mencionaba esto; `README.md` tampoco lista `oficina-virtual.html`, mismo precedente de página solo-por-CTA). |
+| **Verificación** | Probado en vivo contra `localhost:8000` (servidor ya corría de una sesión previa): los 3 banners, el scroll a `protocolos.html`, el link "Ver" abriendo el PDF real en pestaña nueva (confirmado con `tabs_context_mcp` que la URL servida es la del PDF, no una descarga), y el layout en viewport móvil (390px). |
+| **Commits** | Pendiente. |
+
+---
+
 ## CHECKPOINT — 2026-08-11 · Correo combinado a solicitante + Zona + Sector en Mantenimiento/Asesorías, modo de prueba, y hoja de ruta del flujo completo
 
 | | |
