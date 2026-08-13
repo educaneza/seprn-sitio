@@ -3,7 +3,9 @@
 No es un checklist genérico de "revisa responsive/accesibilidad/contraste".
 Es una lista de bugs **concretos** que ya pasaron en este repo, con su causa
 raíz, para no reintroducirlos por accidente en un archivo nuevo que use el
-mismo patrón. Cada uno se descubrió y corrigió en julio 2026.
+mismo patrón. La mayoría se descubrió y corrigió en julio 2026; los ítems 8 y 9 se agregaron el
+6 de agosto de 2026 (el 8 ya corregido ese mismo día, el 9 es comportamiento a conocer, no un
+bug con fix).
 
 ## 1. `fetch()` sin timeout → botón congelado para siempre
 
@@ -104,6 +106,196 @@ tocando. Un envío en lote (BCC a todos los destinatarios en un solo
 `MailApp.getRemainingDailyQuota()` antes de enviar, ya está implementado en
 `apps-script/formacion-docente.gs` (recordatorios automáticos) — replicar
 ese patrón, no reinventar uno nuevo que mande un correo por persona.
+
+## 6. Mensaje de error de un campo que no se limpia al corregirse por selección (no por tecleo)
+
+**Síntoma:** el usuario selecciona una CCT válida del autocomplete en
+`formacion-docente.html`, el campo queda bien (status box verde con
+Sector/Zona/Escuela), pero el mensaje rojo "Ingresa una CCT válida" se
+queda visible hasta el siguiente clic en "Confirmar registro".
+
+**Causa raíz:** `validarFormulario()` sí limpia la clase `error` del input
+y `visible` del `<div>` de error, pero solo corre al enviar el formulario.
+`seleccionarCct(m)` (la función que corre al hacer clic en una sugerencia)
+nunca tocaba esas clases — a diferencia de teclear en el campo, que sí
+puede disparar una re-validación en algunos flujos.
+
+**Fix:** cualquier función que corrija un campo por una vía distinta a
+que el usuario teclee directamente (clic en sugerencia, autocompletado,
+valor puesto por JS) debe limpiar `error`/`visible` de ese campo ahí
+mismo, no asumir que la próxima validación lo hará.
+
+**Dónde ya pasó:** `seleccionarCct()` en `formacion-docente.html`.
+
+## 7. Correo HTML sin `<meta charset="utf-8">` — acentos corruptos
+
+**Síntoma:** al previsualizar un correo HTML generado por Apps Script
+fuera de `MailApp` (ej. sirviéndolo con un server local para revisar el
+diseño), los acentos aparecen como "Ã³n", "Â±", "â€"" en vez de "ón", "±", "—".
+
+**Causa raíz:** el HTML no declaraba `<meta charset="utf-8">`, así que
+cualquier cliente/visor que no reciba (o no respete) el charset por la
+cabecera MIME tiene que adivinar la codificación de los bytes — y suele
+adivinar mal con UTF-8 multibyte. `MailApp.sendEmail` normalmente sí pone
+el charset correcto en la cabecera MIME real, pero declararlo también en
+el `<meta>` del HTML es la práctica estándar para correos y evita
+depender de que cada cliente/proxy de correo respete la cabecera.
+
+**Fix:** todo HTML que se mande como `htmlBody` de un correo debe incluir
+`<head><meta charset="utf-8"></head>` como lo primero en el documento.
+
+**Dónde ya pasó:** `construirCorreoHtml()` en `apps-script/formacion-docente.gs`.
+
+## 8. Recordatorio marcado "enviado" sin haberse mandado nunca — evaluación tardía
+
+**Síntoma:** la columna `Recordatorio_inicio_enviado` en `Cursos` queda en `TRUE`, pero nunca
+llegó ningún correo a los inscritos ni copia a la cuenta que corre el script.
+
+**Causa raíz:** `enviarRecordatoriosDiarios()` evalúa una vez al día si un curso está dentro de
+su ventana de aviso. Si por cualquier motivo (activador no instalado ese día, redeploy a media
+mañana, etc.) el curso llega a evaluarse **después** de que su fecha de inicio ya pasó
+(`hoy > inicio`), el código marca la columna en `TRUE` para dejar de reevaluarlo — pero nunca
+llamó a `enviarCorreoLote()`. Es intencional (evita reintentos infinitos sobre un curso ya
+vencido), pero el efecto es que el aviso se pierde en silencio, sin ningún registro visible del
+fallo.
+
+**Confirmado en producción (6 ago 2026):** pasó de verdad con el Seminario "Convivencia digital
+entre estudiantes" (4 ago 2026, sin `Hora_inicio` capturada) — la columna quedó en `TRUE` pero
+no existe ningún correo real enviado para ese curso.
+
+**Corregido (6 ago 2026):** ambos avisos ("1 día antes" en `enviarRecordatoriosDiarios()` y "30
+minutos antes" en `enviarRecordatoriosWebinar()`) ya no se resignan la primera vez que se
+evalúan tarde. Se les quitó el piso inferior (`diasParaInicio >= 0` / `minutosFaltantes >= 0`):
+si el curso ya inició pero no ha terminado (`hoy <= Fecha_fin`), reintentan en cada corrida
+subsecuente con el mensaje ajustado a "ya inició"/"ya comenzó" en vez de "empieza en...". Solo
+se marca `TRUE` sin enviar cuando el curso ya terminó por completo (`hoy > Fecha_fin`) — ahí sí
+ya no hay nada útil que avisar.
+
+**Dónde ya pasó:** `enviarRecordatoriosDiarios()` en `apps-script/formacion-docente.gs`.
+
+## 9. Correo con `to: Session.getEffectiveUser().getEmail()` cae en Recibidos, no en Enviados
+
+**Síntoma:** un recordatorio automático se manda de verdad (el registro de ejecuciones de Apps
+Script lo confirma como "Completada", 0% de error, y la columna de la Sheet queda en `TRUE`),
+pero no aparece en la carpeta "Enviados" de ninguna cuenta de correo.
+
+**Causa raíz:** `enviarCorreoLote()` (y el mismo patrón en el resto de las automatizaciones de
+OTDE, incluido el SGCI viejo de `Correos-institucionales`) manda el correo con
+`to: Session.getEffectiveUser().getEmail()` (una copia a la misma cuenta de Google que corre el
+script) y los destinatarios reales en `bcc`. Gmail archiva esa copia-a-sí-mismo como correo
+**recibido**, no como enviado — es el comportamiento normal de Gmail para un mensaje donde el
+remitente y el destinatario visible (`to`) son la misma cuenta, no un bug de código.
+
+**No es un bug — es un comportamiento a conocer.** Si alguien reporta "no veo nada en
+Enviados", el correo probablemente sí salió: hay que revisar **Recibidos** de la cuenta de
+Google que tiene instalados los activadores del proyecto (`otde.nezahualcoyotl@gmail.com` para
+Formación Docente), nunca una cuenta de Outlook/Microsoft — el `replyTo` institucional solo
+redirige las *respuestas*, el envío real siempre sale de esa cuenta de Gmail.
+
+**Dónde ya pasó:** confirmado en `apps-script/formacion-docente.gs` (6 ago 2026); mismo patrón
+en `mantenimiento.gs`/`asesorias.gs` y en el sistema viejo de `Correos-institucionales`.
+
+## 10. Un fix "corregido" en el repo no está corregido hasta que se redespliega
+
+**Síntoma:** un checkpoint anterior de `docs/BITACORA.md` da por corregido un bug, con commit
+y todo, pero el bug sigue pasando en producción semanas después.
+
+**Causa raíz:** el flujo de este proyecto para Apps Script es copiar el `.gs` completo al
+editor en vivo y crear una nueva implementación — son 2 pasos manuales separados de "corregir
+el código en el repo", y ninguno de los dos ocurre solo. Un "Pendiente para Jorge" anotado en
+la bitácora es fácil de perder de vista si nadie vuelve a verificarlo.
+
+**Confirmado en producción (7 ago 2026):** el checkpoint del 6 ago 2026 corrigió 3 bugs de QA
+(commit `0d1eba6`) y dejó anotado "Pendiente para Jorge: redesplegar". Al verificar un día
+después, ninguno de los dos proyectos (Asesorías, Formación Docente) tenía el fix en el código
+desplegado — se había quedado solo en el repo.
+
+**Cómo verificarlo de verdad (no basta con ver la fecha de la implementación activa):** buscar
+en el editor de Apps Script en vivo (`Cmd+F`) un string específico que el fix haya
+agregado/quitado — por ejemplo `confirmaMantenimiento` (debe existir si el fix de Asesorías
+llegó) o `MINUTOS_ANTES_INICIO_MIN` (debe **no** existir si el fix de Formación Docente llegó).
+La fecha/número de la implementación activa en "Administrar las implementaciones" no es
+suficiente evidencia — puede estar desactualizada por el mismo motivo.
+
+**Dónde ya pasó:** `apps-script/asesorias.gs` y `apps-script/formacion-docente.gs` (6→7 ago
+2026).
+
+## 11. Regla de ancho compartida (`input { width:100% }`) también estira los checkboxes
+
+**Síntoma:** un `<input type="checkbox">` dentro de `.soporte-form-group` aparece pegado al
+borde izquierdo del formulario y su texto (`<span>` o el propio contenido del `<label>`) queda
+lejos, a la derecha — como si hubiera un espacio en blanco enorme entre la casilla y su
+etiqueta.
+
+**Causa raíz:** `.soporte-form-group input, .soporte-form-group select, .soporte-form-group
+textarea { width: 100%; ... }` se pensó para inputs de texto, pero el selector `input` también
+alcanza a `type="checkbox"` — lo estira a todo el ancho del contenedor flex, empujando el
+`<span>` de al lado hasta el extremo opuesto.
+
+**Fix:** `.soporte-form-group input[type="checkbox"] { width: auto; padding: 0; }`.
+
+**Dónde ya pasó:** encontrado al construir el checklist de "Equipos con falla" en Mantenimiento
+(ago 2026) — pero el mismo problema ya existía, sin que nadie lo hubiera notado, en el checkbox
+de confirmación de mantenimiento previo de Asesorías (`ase-confirma-mantenimiento`, agregado en
+agosto 2026); el fix general lo corrigió también ahí.
+
+## 12. Mensaje de error genérico de CCT que no se limpia al activarse el fallback manual
+
+**Síntoma:** el usuario captura una CCT que no existe en la base; aparece correctamente el
+aviso ámbar "CCT no encontrada en nuestra base. Puedes capturar los datos manualmente." y se
+revelan los campos manuales — pero si antes hubo un intento de envío fallido con el campo CCT
+vacío, el mensaje de error rojo genérico ("Ingresa una CCT válida.") se queda visible al mismo
+tiempo, encima del aviso ámbar. Dos mensajes contradictorios sobre el mismo campo a la vez.
+
+**Causa raíz:** el listener `change` del input de CCT que detecta "no encontrada" y activa el
+fallback manual nunca tocaba las clases `error`/`visible` del mensaje genérico — solo la
+validación completa del formulario (al enviar) las limpiaba. Mismo espíritu que el ítem 6 de
+esta lista: cualquier función que corrija el estado de un campo por una vía distinta a que el
+usuario lo revalide manualmente debe limpiar `error`/`visible` ahí mismo, no asumir que la
+próxima validación lo hará.
+
+**Fix:** en el bloque `if (!cctEncontrada && ...)` de cada listener `change`, agregar
+`cctInput.classList.remove('error')` y `document.getElementById('<prefijo>-cct-error')
+.classList.remove('visible')` junto con el resto del fallback.
+
+**Dónde ya pasó:** los 6 lugares que comparten el patrón de autocomplete de CCT —
+`sopInputCct`/`manInputCct`/`aseInputCct`/`altInputCct` en `otde.html`, el `estado.input`
+compartido de `crearCctAutocomplete()` (usado por `cam`/`rst`/`inc`, también en `otde.html`), y
+`inputCct` en `formacion-docente.html`. Encontrado con un smoke test real (submit vacío → CCT
+inexistente) en `otde.html`, y confirmado por inspección que el mismo patrón, copiado, tenía el
+mismo hueco en los otros 5 lugares.
+
+## 13. `const` de nivel superior que lee variables de otro archivo del mismo proyecto Apps Script
+
+**Síntoma:** al probar en vivo el endpoint nuevo `?action=consulta` de `WebApp.gs` (router del
+webform de Correo), cualquier folio de los 4 subtipos (`OTDE-ALT-`/`OTDE-CAM-`/`OTDE-2FA-`/
+`OTDE-INC-`) devolvía una página de error de Apps Script en vez de JSON:
+`ReferenceError: HOJA_ALTA is not defined (línea 36, archivo "WebApp")`.
+
+**Causa raíz:** Apps Script concatena todos los `.gs` de un proyecto en un solo scope global,
+pero **no garantiza el orden de evaluación** de los `const`/`let` de nivel superior entre
+archivos distintos. `WebApp.gs` tenía un `const MAPA_PREFIJO_HOJA_CONSULTA = { 'OTDE-ALT-':
+HOJA_ALTA, ... }` de nivel superior que leía `HOJA_ALTA` (definida como `const` de nivel
+superior en `Alta.gs`) — si `WebApp.gs` se evalúa antes que `Alta.gs`, `HOJA_ALTA` todavía no
+existe y truena. No pasa con funciones (se hoistean completas), solo con `const`/`let` que se
+*ejecutan* al cargar el archivo.
+
+**Fix:** mover el objeto dentro de la función que lo usa (`manejarConsultaCorreo()`) en vez de
+dejarlo a nivel de módulo — para cuando `doGet()` se invoca, los `.gs` ya terminaron de
+evaluarse todos, así que dentro de una función es seguro leer variables de otro archivo.
+
+**Cómo se detectó:** no por lectura de código — el bug es invisible revisando el archivo aislado
+(la sintaxis es válida, el error solo aparece en tiempo de ejecución y depende del orden interno
+de concatenación de Apps Script, que no es config ni está documentado). Se encontró probando el
+endpoint recién desplegado con `curl` contra la URL real, no asumiendo que "desplegó sin error
+de guardado" significaba "funciona".
+
+**Dónde ya pasó:** `Correos-institucionales/webform-2026-2027/WebApp.gs` (único caso hoy — es el
+único proyecto de Apps Script del sitio con múltiples archivos `.gs`; `mantenimiento.gs`,
+`asesorias.gs` y `soporte-remoto.gs` son cada uno un solo archivo, así que no pueden tener este
+problema). Si se agrega código nuevo a `Alta.gs`/`CambioContrasena.gs`/`Reset2FA.gs`/
+`Incidencias.gs`/`OnEdit.gs` que se referencie desde `WebApp.gs` (o viceversa), evitar
+`const`/`let` de nivel superior que dependan de otro archivo — usarlos solo dentro de funciones.
 
 ## Regla general al corregir cualquiera de estos patrones
 

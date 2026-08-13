@@ -522,3 +522,44 @@ function sugerirCCT(cctInput, limite = 8) {
   if (q.length < 3) return [];
   return CCT_DB.filter(r => r.cct.toUpperCase().startsWith(q)).slice(0, limite);
 }
+
+// Regla de dominio de correo institucional — verificada en vivo contra
+// SIGEE (consultar_cuentas.php) el 2026-08-05 con un CCT de cada `tipo`:
+//   - supervision / jefatura / subdireccion → siempre @dee.edu.mx,
+//     sin importar personal/oficina.
+//   - escuela → depende de tipoCuenta: "oficina" (una por escuela,
+//     representa al CT/directivo) → @dee.edu.mx; "personal" (cualquier
+//     docente/PAAE/ATP de esa escuela) → @aulamexiquense.mx.
+// Devuelve null si el CCT no está en la base (fallback manual, sin
+// forma de auto-derivar el dominio).
+function otdeDominioParaCCT(cct, tipoCuenta) {
+  const registro = buscarCCT(cct);
+  if (!registro) return null;
+  if (registro.tipo !== 'escuela') return 'dee.edu.mx';
+  return tipoCuenta === 'oficina' ? 'dee.edu.mx' : 'aulamexiquense.mx';
+}
+
+// Opciones de Función/Cargo según el tipo de CCT (escuela | supervision | jefatura |
+// subdireccion). Compartida por los 4 formularios de otde.html que preguntan Función
+// (Alta de correo, Mantenimiento, Asesorías, Soporte) para que la lista de roles que ve
+// el usuario corresponda a la estructura real de la CCT que capturó, en vez de una sola
+// lista fija para todos. `tipo` puede venir de CCT_DB (autocomplete) o del selector manual
+// "Tipo de CCT" cuando la CCT no se encuentra. Sin `tipo` (aún no se sabe), regresa la
+// lista combinada completa para no bloquear al usuario mientras captura.
+function otdeOpcionesFuncion(tipo) {
+  switch (tipo) {
+    case 'escuela':
+      return ['Director(a)', 'Subdirector(a)', 'Docente', 'Personal de apoyo (PAAE)', 'Otro'];
+    case 'supervision':
+      return ['Supervisor(a) Escolar', 'ATP (Asesor Técnico Pedagógico)', 'Personal de apoyo (PAAE)', 'Otro'];
+    case 'jefatura':
+      return ['Supervisor(a) General', 'ATP (Asesor Técnico Pedagógico)', 'Personal de apoyo (PAAE)', 'Otro'];
+    case 'subdireccion':
+      return ['Encargado(a) del Despacho', 'Subjefe(a)', 'Jefe(a) de Oficina', 'ATP (Asesor Técnico Pedagógico)', 'Administrativo (PAAE)', 'Otro'];
+    default:
+      return [
+        'Docente', 'Director(a)', 'Subdirector(a)', 'ATP (Asesor Técnico Pedagógico)',
+        'Supervisor(a)', 'Jefe(a) de Sector', 'Personal de apoyo (PAAE)', 'Otro'
+      ];
+  }
+}

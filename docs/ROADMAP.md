@@ -407,6 +407,39 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
    Verificado simulando una respuesta lenta de Apps Script (12s) en el navegador: el mensaje
    escala correctamente y el loader se limpia sin quedar en un estado inconsistente cuando la
    respuesta por fin llega.
+7. **Migrar los 4 trámites de `otde.html` a páginas propias** (destino decidido 10 ago 2026, no
+   iniciado): `mantenimiento.html`, `asesorias.html`, `correo.html`, `soporte.html`, mismo
+   precedente que `formacion-docente.html`/`asistencia.html` — no como tabs dentro de
+   `oficina-virtual.html`, para no trasladar el problema de "archivo gigante" de un archivo a
+   otro. Verificado que es viable sin extracción enredada: el `<script>` de `otde.html` (~2,300
+   líneas) ya agrupa las funciones de cada trámite en bloques contiguos por prefijo (`sop*`/
+   `man*`/`ase*`/`alt*·cam*·rst*·inc*`), compartiendo solo 4 helpers (`toggleForm`,
+   `toTitleCase`, `fetchJsonConTimeout`, `otdePoblarFuncion`) que cada página nueva duplicaría.
+   De paso, Licencias Office (hoy 100% estático, sin backend ni folio) entraría a la grid de
+   `oficina-virtual.html` como card tipo "Recurso", no "Trámite" — sin el buscador de
+   seguimiento. Detalle completo de la decisión en `docs/BITACORA.md`, checkpoint 10 ago 2026
+   (noche, cont.).
+8. **Coordinación de fecha de visita en Mantenimiento/Asesorías** (planteado 11 ago 2026, no
+   iniciado): hoy, tras "Validado", OTDE coordina la fecha de atención con Sector (que coordina
+   con Zona, que coordina con la escuela) totalmente fuera del sistema. El sistema viejo v8.5 ya
+   resuelve un problema parecido con su hoja "Despacho" (acuse de recibo + notificar fecha
+   programada al sector), pero corre sobre su propio Sheet, desconectado del webform nuevo —
+   replicar ese mismo propósito (columna "Fecha programada de visita" en `Solicitudes` + una
+   acción que notifique a Zona/Sector reusando `manBuscarContactosZonaSector()`/
+   `aseBuscarContactosZonaSector()`) directamente en `mantenimiento.gs`/`asesorias.gs`, sin
+   tocar v8.5 ni duplicar captura. Detalle de la decisión en `docs/BITACORA.md`, checkpoint 11
+   ago 2026.
+9. **Conexión con el sistema v8.5 ("Sistema Automatizado de Reportes de Visitas")** — sigue
+   deliberadamente fuera de alcance (reafirmado 11 ago 2026), pero quedan documentadas 3
+   opciones para cuando se retome: **(a)** statu quo, seguir separados indefinidamente — cero
+   riesgo, mantiene la doble captura manual de Jorge; **(b)** puente de datos sin tocar la
+   lógica de v8.5 — cuando una fila del webform nuevo llegue a cierto estado, escribir/
+   actualizar automáticamente la fila correspondiente en la hoja de seguimiento de v8.5 vía
+   `SpreadsheetApp.openById`, sin modificar el trigger `onFormSubmit` de v8.5 ni su generación
+   de PDF; **(c)** reemplazo eventual — reconstruir dentro del stack nuevo el reporte del
+   técnico + PDF + auto-cierre + dashboard que hoy vive en v8.5, ya evaluado antes y descartado
+   por beneficio "mayormente cosmético" frente al costo, no recomendado salvo razón nueva y
+   concreta. Detalle en `docs/BITACORA.md`, checkpoint 11 ago 2026.
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue

@@ -604,9 +604,10 @@ Implementado primero en `jornada-verano-2026.html`, reutilizado en el formulario
 - `js/cct-db.js` — 506 registros `{cct, nombre, sector, zona, tipo, municipio}`. Cargar con `<script src="js/cct-db.js"></script>` antes del script inline de la página. El campo `municipio` (agregado jul 2026 desde `Catalogo SEPRN direcciones.xlsx`) se autocompleta igual que sector/zona/escuela — **no** se deriva del sector, porque un mismo sector puede abarcar varios municipios (ver mapa SVG de `index.html`); en el fallback manual (CCT no encontrada) el municipio queda vacío, no se le pide al usuario.
 - Input de texto con `<ul id="...-suggestions">` absoluto debajo, poblado en el evento `input` (mínimo 3 caracteres, máximo 10 resultados) y navegable con flechas/Enter/Escape.
 - Al seleccionar una sugerencia: llenar inputs ocultos `sector-val` / `zona-val` / `escuela-val` y marcar una bandera `cctEncontrada = true`.
-- Si el usuario escribe una CCT que no existe (evento `change` sin `cctEncontrada`): mostrar bloque `.manual-fields` con `<select>` de Sector (con opción `SEPRN` sin zona), `<select>` de Zona (poblado dinámicamente vía `actualizarZonas()` a partir de un mapa `sector → zonas[]` derivado de `CCT_DB`), e `<input>` de Escuela/Unidad.
-- **Validación por campo, no agrupada**: Sector, Zona y Escuela deben validar y mostrar su propio mensaje de error. Agrupar todo bajo el mensaje del campo CCT es un anti-patrón ya corregido dos veces (`jornada-verano-2026.html` lo resolvió como "BUG 4/5 fix"; `otde.html` lo resolvió en jul 2026) — Zona es obligatoria solo si el sector no es `SEPRN`.
+- Si el usuario escribe una CCT que no existe (evento `change` sin `cctEncontrada`): mostrar bloque `.manual-fields` con un `<select>` de **Tipo de CCT** primero (Escuela / Zona escolar-Supervisión / Sector educativo-Jefatura / SEPRN, función `*ActualizarTipoCct()`), que decide si se muestran Sector+Zona (escuela/supervision), solo Sector (jefatura) o ninguno de los dos (subdireccion/SEPRN) — reemplaza, desde agosto 2026, al diseño anterior donde `SEPRN` era una opción más dentro del `<select>` de Sector (ese diseño viejo tenía un bug real: una CCT de tipo `jefatura` quedaba forzada a contestar también "Zona", que no le aplica). El `<select>` de Zona sigue poblándose dinámicamente vía `actualizarZonas()` a partir de un mapa `sector → zonas[]` derivado de `CCT_DB`, e `<input>` de Escuela/Unidad sin cambios.
+- **Validación por campo, no agrupada**: Tipo de CCT, Sector, Zona y Escuela deben validar y mostrar su propio mensaje de error. Agrupar todo bajo el mensaje del campo CCT es un anti-patrón ya corregido dos veces (`jornada-verano-2026.html` lo resolvió como "BUG 4/5 fix"; `otde.html` lo resolvió en jul 2026) — Sector es obligatorio salvo en SEPRN, Zona solo en escuela/zona escolar.
 - El formulario que use este patrón debe llevar `novalidate` en el `<form>` y validación 100% en JS (`onchange`/`onsubmit`), porque los atributos `required`/`type="email"` nativos interceptan el `submit` antes de que corra la validación personalizada.
+- **Función/Cargo ramificada por tipo de CCT (agosto 2026)**: `js/cct-db.js` ya traía un campo `tipo` por registro (`escuela|supervision|jefatura|subdireccion`) que antes solo alimentaba el cálculo de dominio de correo (ver §16). La función compartida `otdeOpcionesFuncion(tipo)` (en `cct-db.js`) devuelve la lista de roles válida para ese tipo — escuela: Director(a)/Subdirector(a)/Docente/Personal de apoyo (PAAE); zona: Supervisor(a) Escolar/ATP/PAAE; sector: Supervisor(a) General/ATP/PAAE; SEPRN: Encargado(a) del Despacho/Subjefe(a)/Jefe(a) de Oficina/ATP/Administrativo (PAAE); siempre con "Otro" al final — y el helper de DOM `otdePoblarFuncion(selectId, tipo)` en `otde.html` repuebla el `<select>` de Función conservando la selección previa si sigue siendo válida. Se llama tanto al encontrar la CCT por autocompletado (usa `m.tipo` de `CCT_DB`) como al elegir el Tipo de CCT manual — los 4 formularios que preguntan Función (Alta, Mantenimiento, Asesorías, Soporte) lo usan. No requirió cambios de backend: los `.gs` correspondientes solo validan que `funcion` no venga vacío.
 
 ---
 
@@ -652,15 +653,19 @@ A diferencia de `jornada-verano-2026.html` (que siempre manda a un solo portal C
 
 ### Recordatorios automáticos por correo
 
-Tres avisos calculados a partir de las propias fechas del curso, sin marcar nada a mano:
+Tres avisos calculados a partir de las propias fechas del curso, sin marcar nada a mano (reglas ajustadas con Jorge, ago 2026):
 
 | Aviso | Se dispara | Requiere |
 |---|---|---|
-| "Empieza en 2 días" | 2 días antes de `Fecha_inicio`, cualquier curso | — |
+| "Empieza en 1 día" | 1 día antes de `Fecha_inicio`, cursos de varios días **siempre** + cursos de un solo día **sin** `Hora_inicio` (fallback) | — |
 | "Vas a la mitad" | Al cruzar el punto medio `Fecha_inicio`/`Fecha_fin`, solo cursos de 30+ días | — |
-| "Faltan unas horas" | Entre 2 y 4 horas antes del inicio, solo eventos de un solo día | `Hora_inicio` capturada |
+| "Empieza en 30 minutos" | Entre 20 y 40 minutos antes del inicio exacto, cualquier curso (de uno o varios días) | `Hora_inicio` capturada |
 
-Un webinar catalogado con anticipación puede recibir el primero y el tercero — es intencional, no un bug (aviso temprano + empujón el mismo día). Cada aviso se manda como **un solo correo por curso, con BCC a todos los inscritos** (no uno por persona) y se revisa `MailApp.getRemainingDailyQuota()` antes de enviar — la cuota diaria la comparten TODOS los Apps Script de la cuenta de Google, no es exclusiva de este proyecto; si no alcanza, el aviso se salta ese día y se reintenta solo al siguiente (la bandera `Recordatorio_*_enviado` no se marca hasta que el correo sale de verdad). Requiere correr una vez el menú "OTDE Formación → Instalar recordatorios automáticos" para dar de alta los disparadores (`enviarRecordatoriosDiarios` una vez al día, `enviarRecordatoriosWebinar` cada hora).
+Un curso de varios días con `Hora_inicio` capturada recibe el primero y el tercero — son avisos independientes, uno no sustituye al otro (aviso temprano + empujón el mismo día). Un curso de un solo día con `Hora_inicio` recibe **solo** el tercero (el primero se salta para no duplicar con un aviso tan cercano). Cada aviso se manda como **un solo correo por curso, con BCC a todos los inscritos** (no uno por persona), con una plantilla HTML propia (`construirCorreoHtml()`, con la paleta institucional — ver ejemplo en `docs/DESIGN_SYSTEM.md`), y se revisa `MailApp.getRemainingDailyQuota()` antes de enviar — la cuota diaria la comparten TODOS los Apps Script de la cuenta de Google, no es exclusiva de este proyecto; si no alcanza, el aviso se salta ese día y se reintenta el siguiente (la bandera `Recordatorio_*_enviado` no se marca hasta que el correo sale de verdad; el aviso de "1 día antes" usa un rango, no una igualdad exacta, para poder reintentar al día siguiente sin perderse en silencio).
+
+El aviso de "30 minutos" necesita precisión de minutos, así que su disparador corre **cada 15 minutos** (no cada hora como antes) — requiere volver a correr el menú "OTDE Formación → Instalar recordatorios automáticos" después de desplegar una nueva versión, porque `instalarRecordatoriosAutomaticos()` borra y recrea ambos activadores en cada corrida (antes solo los creaba si faltaban, así que un cambio de intervalo no se aplicaba solo). `enviarRecordatoriosDiarios()` además llama a `verificarActivadoresInstalados()` al inicio, que manda un correo de alerta a Jorge (máximo una vez al día, vía `PropertiesService`) si alguno de los dos activadores desapareció.
+
+**Diseño del correo y protección de respuestas (ago 2026):** `construirCorreoHtml()` genera un correo con header midnight/guinda, chip de categoría, caja de detalle del curso, botón CTA a la convocatoria/acceso, y un footer con 3 íconos de redes (Facebook `facebook.com/SubNeza`, YouTube del canal institucional, Canal de WhatsApp de OTDE — mismas URLs reales que usa el footer del sitio, constante `REDES_SOCIALES`). Todo el HTML declara `<meta charset="utf-8">` explícito — sin eso los acentos se corrompen en clientes/visores que no respeten el charset de la cabecera MIME (ver `docs/QA-NOTES.md #7`). `enviarCorreoLote()` manda con `replyTo: CORREO_REPLY_TO_INSTITUCIONAL` (`otde.nezahualcoyotl@dee.edu.mx`) porque `Session.getEffectiveUser().getEmail()` — el remitente real — resuelve a esa dirección como *alias* de la cuenta de Gmail que en realidad es dueña del proyecto de Apps Script; sin `replyTo` explícito, un "Responder" del destinatario habría ido a esa cuenta de Gmail en vez de a la institucional. Mismo patrón de `replyTo` que ya usan `mantenimiento.gs`/`asesorias.gs`.
 
 ### Diagrama de flujo
 
@@ -701,3 +706,268 @@ Cinco bugs concretos detectados y corregidos en esta ronda, documentados con cau
 **Nota (13 jul 2026):** `jornada-verano-2026.html` e `instructivo-jornada-verano-2026.html` se eliminaron del sitio porque cerró el periodo de inscripciones. Esta sección queda como registro histórico de la decisión de arquitectura (por qué compartía backend con Formación Docente); ya no describe una página en producción.
 
 `jornada-verano-2026.html` dejó de usar su propio backend (`apps-script/cursos-coeee-2026.gs`, que queda desplegado pero congelado como archivo histórico) y pasó a reportar a `apps-script/formacion-docente.gs`, el mismo backend del Centro de Formación Docente. Los 5 cursos de la Jornada se dieron de alta en la hoja `Cursos` vía `asegurarCursosVerano()`/`migrarJornadaVerano()` (menú "OTDE Formación → Migrar Jornada Verano 2026", idempotente). Acoplamiento que existió mientras la página vivió: el wizard resolvía `id_curso` por **nombre exacto** contra el catálogo — editar el texto del `Nombre` de esos 5 cursos en Sheets, o poner `Activo=FALSE`, rompía el registro en silencio mientras la página siguiera publicada.
+
+## 15. Mantenimiento y Asesorías: webform que complementa el oficio, no lo sustituye (agosto 2026)
+
+Antes de estos dos entregables, ambos trámites llegaban por oficio en papel/PDF y alguien de
+OTDE lo transcribía a mano a un control en Excel/Sheets. La decisión de arquitectura clave,
+confirmada con Jorge en ambos casos: **el oficio sigue siendo el respaldo oficial** — el
+webform no lo reemplaza, lo complementa (se adjunta como PDF/foto en vez de viajar solo en
+papel) y digitaliza la captura de datos que antes se tecleaba a mano.
+
+Mismo patrón en los dos (`apps-script/mantenimiento.gs`, `apps-script/asesorias.gs`), calcado
+del ya probado `soporte-remoto.gs`:
+
+- Sheet propio (no comparten spreadsheet con nada más), hoja `Solicitudes` con folio
+  secuencial (`OTDE-MAN-####` / `OTDE-ASE-####`) y estatus inicial `Pendiente de validar` — no
+  caen directo a producción, Jorge revisa el oficio adjunto antes de promover a mano al
+  control real (`seguimiento` del sistema de Reportes de Visitas para Mantenimiento; el Excel
+  de asesorías para Asesorías — ninguno de los dos sistemas de control real se tocó ni se
+  integró automáticamente, es una decisión deliberada para no arriesgar sistemas en producción
+  ajenos a este entregable).
+- Hoja `Contactos_Zona_Sector` (Sector, Zona, Correo, Teléfono) que Jorge mantiene a mano —
+  puede tener una fila de Zona específica y otra de Sector (de respaldo, sin Zona) para el
+  mismo Sector; `manBuscarContactosZonaSector()`/`aseBuscarContactosZonaSector()` (agosto 2026,
+  plural a propósito) busca ambas y las agrega en copia (CC) del correo al solicitante, no solo
+  la primera que encuentra. Además del correo, avisa a OTDE por Telegram.
+- El oficio adjunto se sube en base64 desde el cliente (`FileReader.readAsDataURL`), se
+  decodifica en `doPost` con `Utilities.base64Decode` y se guarda en una carpeta de Drive
+  dedicada por trámite, compartida "cualquiera con el link, solo ver".
+- Mismo patrón de CCT con autocompletado + fallback manual que el resto del sitio (§11),
+  prefijos `man`/`ase` en los IDs para no chocar entre tabs.
+
+Asesorías añade una validación de negocio propia: la asesoría de Banco de Materiales/Chuka
+requiere que la escuela ya haya recibido mantenimiento con esos recursos instalados. No hay
+forma de validarlo automáticamente sin integrar con el sistema de Reportes de Visitas (fuera de
+alcance — y la mayoría de escuelas ya atendidas lo fueron antes de que existiera el webform de
+Mantenimiento, así que cruzar contra datos parciales sería peor que no cruzar nada). En su
+lugar, el formulario pide una casilla de confirmación obligatoria y dejó listo un selector de
+"Tipo de asesoría" (hoy una sola opción) para cuando se decida separar Banco de
+Materiales/Chuka o agregar asesorías nuevas — decisión pedagógica pendiente, deliberadamente
+fuera de alcance de este entregable.
+
+**Cierre automático del ticket (agosto 2026).** El hallazgo de QA "nadie le avisa al
+solicitante cuando su ticket se resolvió" se cerró con un trigger `onEdit` **instalable** (no
+un trigger simple — esos corren sin autorización y no pueden llamar `MailApp`) en cada
+proyecto: `manOnEditCierre` / `aseOnEditCierre`. Se instala una sola vez por proyecto corriendo
+`manInstalarTriggerCierre()` / `aseInstalarTriggerCierre()` desde el editor de Apps Script (o
+desde el menú `OTDE Mantenimiento` / `OTDE Asesorías` que agrega `onOpen()`) — no se reinstala
+solo al pegar una versión nueva del código.
+
+- La columna `Estatus` pasó de texto libre a un dropdown con lista fija
+  (`SpreadsheetApp.newDataValidation().requireValueInList(...)`): `Pendiente de validar` ·
+  `Validado` · `En atención` · `Resuelto` · `Rechazado`. Sin esto el trigger no tendría un
+  valor confiable contra el cual comparar.
+- Al detectar que la columna editada incluye `Estatus` y el nuevo valor es exactamente
+  `'Resuelto'`, envía un correo (`to` = solicitante, `cc` = Zona/Sector si hay contacto(s) —
+  mismo patrón `to`/`cc` que el aviso de alta, ver arriba). Antes (ago 2026) eran 2 correos
+  sueltos por evento (uno al solicitante, otro a un solo contacto de Zona/Sector); el rediseño
+  de correo combinado reduce el conteo de envíos mientras aumenta el alcance de información.
+  `Rechazado` queda en el dropdown pero deliberadamente sin lógica todavía — mismo mecanismo,
+  se puede sumar después sin rediseñar nada.
+- Una columna nueva `Notificación de cierre enviada` (auto-heal de encabezados, mismo patrón
+  que ya usaba `aseObtenerHojaSolicitudes()`) evita reenviar si Jorge cambia el Estatus fuera de
+  `Resuelto` y vuelve a `Resuelto`.
+- Todo el envío está envuelto en try/catch silencioso, mismo criterio que el resto del
+  archivo: un fallo de `MailApp` nunca debe impedir que la edición del Sheet se guarde.
+
+Explícitamente fuera de alcance de esta ronda: migrar a webform el reporte de cierre que llena
+el técnico al terminar un mantenimiento (es el mismo "Sistema Automatizado de Reportes de
+Visitas" ya maduro, con generación de PDF y envío automático — reimplementar eso desde cero no
+compensaba el beneficio, mayormente cosmético, para un flujo de uso interno) y el formulario de
+feedback de Asesorías que redirige al Kit Digital (totalmente desconectado del Sheet de
+`asesorias.gs`, es un loop pedagógico aparte que no bloqueaba el hallazgo de QA).
+
+**"Equipos con falla" estructurado + correo obligatorio (agosto 2026).** El textarea libre de
+Mantenimiento se reemplazó por un checklist (`man-equipo-aula`/`man-equipo-admin`/
+`man-equipo-red`/`man-equipo-otro`, función `manToggleCantidad()`) que refleja lo que OTDE
+realmente atiende — computadoras de aula de medios y administrativas (cada una con su propio
+desplegable de cantidad aproximada, para estimar tiempo de atención), red/internet solo si ya
+hay infraestructura instalada — y lo que no (impresoras, proyectores, instalación nueva de
+red/eléctrica se canaliza a CoEEE), con marca/modelo opcional y estado de instalación
+condicionales a marcar alguna categoría de cómputo. `ENCABEZADOS_MAN_SOLICITUDES` ganó 5
+columnas nuevas (`Tipo de equipo`, `Cantidad (Aula de medios)`, `Cantidad
+(Administrativas)`, `Marca/Modelo`, `Estado de instalación`) agregadas **al final** del arreglo
+a propósito, para no correr los índices fijos `COL_MAN_ESTATUS`/`COL_MAN_NOTIFICACION_CIERRE`
+que usa el trigger de cierre automático de arriba. El campo Correo, antes opcional en
+Mantenimiento/Asesorías/Soporte, ahora es obligatorio en los tres (validado también
+server-side en los 3 `.gs`) — es el medio principal de contacto, WhatsApp queda como
+alternativo.
+
+**Correo combinado a solicitante + Zona + Sector (11 ago 2026).** Jorge probó el flujo real y
+encontró que la solicitante nunca recibía confirmación de que su solicitud llegó, y que Zona y
+Sector nunca se enteraban ambos a la vez — la búsqueda de contacto se detenía en la primera
+coincidencia (Zona exacta si existía, si no Sector). Rediseño en `mantenimiento.gs`/
+`asesorias.gs`:
+
+- `manBuscarContactosZonaSector()`/`aseBuscarContactosZonaSector()` (plural) recorre toda la
+  hoja `Contactos_Zona_Sector` y devuelve un array con la fila de Zona **y** la fila de Sector
+  si ambas existen (deduplicadas por correo), en vez de una sola.
+- Al recibir la solicitud, `manNotificarSolicitudRecibida()`/`aseNotificarSolicitudRecibida()`
+  (reemplaza a `manNotificarZonaSector()`/`aseNotificarZonaSector()`) manda un correo con
+  `to` = solicitante (siempre, ya que Correo es obligatorio) y `cc` = Zona/Sector si hay
+  contacto(s) — antes solo se avisaba a Zona/Sector, nunca al solicitante.
+- Al cerrar, `manNotificarCierre()`/`aseNotificarCierre()` se consolidó en una sola función que
+  manda un correo (`to` = solicitante, `cc` = Zona/Sector) en vez de los 2 correos sueltos que
+  mandaba antes (`manNotificarCierreSolicitante`+`manNotificarCierreZonaSector`, eliminadas).
+- Probado en vivo con modo de prueba (ver más abajo) usando Sector I/Zona 1 —confirmado que el
+  correo llega con ambos contactos (`fiz0042v@dee.edu.mx` de Zona 1 y `fjs0015d@dee.edu.mx` de
+  Sector I) en CC, tanto en apertura como en cierre.
+- Redesplegado el mismo día: `mantenimiento.gs` versión 8, `asesorias.gs` versión 7.
+
+**CC según jerarquía del solicitante (11 ago 2026, mismo día, ajuste sobre lo anterior).**
+El correo combinado de arriba trataba a todo solicitante igual (siempre `cc` = Zona + Sector).
+Jorge señaló que eso no es correcto si quien solicita **es** la Zona o el Sector: `js/cct-db.js`
+ya distingue el `tipo` de cada CCT (`escuela` | `supervision` = Zona | `jefatura` = Sector |
+`subdireccion` = SEPRN — 75 supervisiones y 13 jefaturas tienen su propio CCT, con `sector`/
+`zona` propios), dato que ya se capturaba en un campo oculto (`man-tipo-cct-val`/
+`ase-tipo-cct-val`, repuebla el `<select>` de Función) pero nunca viajaba al backend.
+
+- `otde.html`: los payloads de Mantenimiento y Asesorías ahora incluyen `tipoCct` (mismo valor
+  del campo oculto, tanto si el CCT vino del autocompletado como del fallback manual — ambos
+  caminos ya lo llenaban).
+- `mantenimiento.gs`/`asesorias.gs`: nueva columna `Tipo de solicitante` al final de
+  `ENCABEZADOS_MAN_SOLICITUDES`/`ENCABEZADOS_ASE_SOLICITUDES` (mismo criterio de "agregar al
+  final" que las demás). `manBuscarContactosZonaSector()`/`aseBuscarContactosZonaSector()` ahora
+  etiqueta cada contacto con `nivel: 'zona'|'sector'`, y una función nueva
+  `manFiltrarContactosPorTipo(contactos, tipoSolicitante)`/`aseFiltrarContactosPorTipo(...)`
+  decide el `cc` final: `escuela` (o tipo vacío/desconocido — solicitudes previas a esta
+  columna se tratan así, decisión de Jorge, es el comportamiento más seguro) → Zona + Sector;
+  `supervision` (solicita la propia Zona) → solo Sector; `jefatura`/`subdireccion` (solicita el
+  propio Sector o SEPRN) → nadie, no hay a quién notificar arriba en la jerarquía.
+- Al recibir la solicitud usa `d.tipoCct` directo del payload; al cerrar lee la columna nueva de
+  la fila (`COL_MAN_TIPO_SOLICITANTE_IDX`/`COL_ASE_TIPO_SOLICITANTE_IDX`).
+- Verificado corriendo `manFiltrarContactosPorTipo`/`aseFiltrarContactosPorTipo` directo en el
+  editor de Apps Script contra Sector I/Zona 1 (que tiene ambos contactos reales): escuela/vacío
+  devuelve los 2 correos, `supervision` solo el de Sector, `jefatura` un arreglo vacío.
+- Redesplegado el mismo día: `mantenimiento.gs` versión 9, `asesorias.gs` versión 8.
+
+**Modo de prueba (11 ago 2026).** Ambos backends ganaron `manEnviarCorreo_()`/
+`aseEnviarCorreo_()`, un wrapper alrededor de `MailApp.sendEmail()` que todos los envíos ya
+pasaban a usar. Si la Script Property `MODO_PRUEBA_CORREO` está definida (activarla con
+`manActivarModoPrueba('correo')`/`aseActivarModoPrueba('correo')` desde el editor de Apps
+Script, desactivarla con `manDesactivarModoPrueba()`/`aseDesactivarModoPrueba()`), todo correo
+saliente se redirige a ese correo con el asunto marcado `[PRUEBA]` y una nota indicando el
+destino real (`to`/`cc` originales) — para poder probar el flujo completo de un trámite sin
+avisar a escuelas/zonas/sectores reales ni gastar la cuota diaria de correo en pruebas. No
+requiere redeploy para activar/desactivar, se lee en cada envío.
+
+## 16. Webform de Correo Institucional en paralelo al Google Form (agosto 2026)
+
+`otde.html` reemplazó, en código, el `<iframe>` del Google Form que hasta ahora capturaba las
+4 solicitudes de correo institucional (Alta, Cambio de Contraseña, Reset 2FA, Incidencias).
+Decisión de arquitectura central: el backend nuevo vive en un **proyecto de Apps Script
+separado y paralelo** — `Correos-institucionales/webform-2026-2027/` (repo aparte, no
+documentado en este archivo) — pensado para una Spreadsheet nueva del ciclo 2026-2027. El
+sistema en vivo que usa Marcos hoy (`Correos-institucionales/Code.gs` +
+`OnFormSubmit.gs`/`OnEditTrigger.gs`, atado al Form actual) **no se tocó**, sigue corriendo en
+paralelo — retirarlo es decisión de Jorge, no automática. **Desplegado (6 ago 2026)**:
+Spreadsheet `Solicitudes_Correo_2026_2027`, proyecto "Webform Correo 2026-2027 - Backend"; las
+4 constantes en `otde.html` (`ALTA_CORREO_APPS_SCRIPT_URL`, `CAMBIO_APPS_SCRIPT_URL`,
+`RESET_APPS_SCRIPT_URL`, `INCIDENCIA_APPS_SCRIPT_URL`) ya no tienen el placeholder
+`PENDIENTE_DE_DESPLEGAR` — las 4 apuntan a la misma URL real, porque `WebApp.gs` enruta los 4
+tipos por `datos.tipo` en un solo despliegue.
+
+Se aprovechó el rediseño para consolidar 6 tipos de solicitud del sistema viejo (Alta dee, Alta
+aulamexiquense, Cambio Contr dee, Cambio Contr aulamexiquense, Reset 2FA, Incidencias) en 4
+(Alta, Cambio de Contraseña, Reset 2FA, Incidencias) — el dominio ya no es una rama separada
+del flujo, es un dato calculado.
+
+**Regla de dominio, verificada en vivo contra SIGEE** (el sistema real de CoEEE donde se
+aprovisionan las cuentas, no hay API — ver `otdeDominioParaCCT(cct, tipoCuenta)` en
+`js/cct-db.js`):
+- CCT con `tipo` ∈ {supervision, jefatura, subdireccion} → dominio siempre `dee.edu.mx`.
+- CCT con `tipo` = escuela → depende de si la cuenta es "personal" (`aulamexiquense.mx`) o "de
+  oficina" (`dee.edu.mx`, una por escuela, representa al CT/directivo) — y esa pregunta solo se
+  le muestra al solicitante si su Función es Director(a)/Subdirector(a); para el resto se fija
+  en "personal" sin preguntar.
+- CCT en fallback manual (no encontrado en `cct-db.js`) → no se puede derivar, se pide un
+  selector explícito y queda marcado para revisión manual.
+
+Esto significa que el docente promedio **nunca ve la pregunta** "¿tu correo es @dee.edu.mx o
+@aulamexiquense.mx?" — el formulario se la resuelve.
+
+Cambio de Contraseña, Reset 2FA e Incidencias son más simples: el dominio no se deriva, se lee
+directo del sufijo del correo institucional que la persona ya tiene (no hace falta cruzar
+contra `cct-db.js` para una cuenta que ya existe).
+
+Refactor notable de esta ronda: con 4 formularios en la misma tab usando CCT-autocompletado
+(§11), se factorizó `crearCctAutocomplete(prefijo)` en `otde.html` como función compartida —
+única vez en el sitio que se hizo esto (Soporte/Mantenimiento/Asesorías mantienen su propia
+copia del patrón, es la convención normal del resto del sitio; aquí la 4ª repetición casi
+idéntica en un mismo archivo cruzó el umbral).
+
+## 17. `cte.html`: archivo de ciclo escolar dentro de la misma página (agosto 2026)
+
+Hasta el ciclo 2025-2026, `cte.html` era una sola lista plana de `.sesion-accordion` (acordeón
+único: abrir uno cierra los demás, vía `toggleSesion()`). Al cerrar ese ciclo y arrancar
+2026-2027, se decidió con Jorge **no crear una página nueva por ciclo** — el histórico se
+archiva dentro de la misma `cte.html`, agrupado y colapsado por default, para no perder
+materiales viejos sin dejar crecer la página sin límite ciclo tras ciclo.
+
+Estructura resultante, de arriba a abajo dentro de `<section class="content-section">`:
+1. `.section-header` con eyebrow "CICLO ESCOLAR" — encabezado del ciclo actual (mismo patrón
+   `.section-header`/`.section-eyebrow`/`.section-title` de las páginas de área, ver tabla de
+   clases reutilizables en `CLAUDE.md`).
+2. Las `.sesion-accordion` normales del ciclo actual (la más reciente `active` + badge NUEVO,
+   igual que siempre).
+3. `.ciclo-archivo` — contenedor nuevo, no es una sesión más: agrupa **todas** las
+   `.sesion-accordion` del ciclo ya cerrado. Header propio `.ciclo-archivo-toggle` con estilo
+   deliberadamente secundario (paleta de `.link-sep`, `rgba(159,34,65,0.08)` + borde
+   `#9F2241`, no el guinda sólido de `.sesion-header`) para leerse como "menos prioritario" que
+   las sesiones activas. Colapsado por default (`aria-expanded="false"`, sin clase `active` al
+   cargar).
+4. Dentro de `.ciclo-archivo-content-inner`: las `.sesion-accordion` del ciclo cerrado, tal
+   cual — mismo HTML, mismos `data-src` de lazy-load, sin ningún cambio de comportamiento.
+
+**Dos funciones de toggle independientes, sin interferencia entre sí:**
+- `toggleSesion()` (ya existía) sigue operando sobre `document.querySelectorAll('.sesion-accordion')`
+  — no le importa si una sesión está anidada dentro de `.ciclo-archivo` o no, el acordeón único
+  sigue funcionando exactamente igual en toda la página.
+- `toggleCicloArchivo(toggle)` (nueva) solo hace `toggle.parentElement.classList.toggle('active')`
+  sobre el contenedor `.ciclo-archivo` — no toca el estado de las sesiones que agrupa. Misma
+  animación `grid-template-rows: 0fr → 1fr` que ya usaba `.sesion-content`, aplicada a
+  `.ciclo-archivo-content`.
+
+**Al cerrar el ciclo actual y arrancar el siguiente** (repetir cada año): mover las
+`.sesion-accordion` del ciclo saliente dentro de `.ciclo-archivo-content-inner` (o crear un
+`.ciclo-archivo` nuevo si no existía), quitarles `active`/badge NUEVO/`aria-expanded="true"`, y
+agregar la Fase Intensiva del ciclo entrante arriba como la nueva sesión abierta. El acordeón
+de archivo de ciclos aún más viejos se puede anidar o dejar como bloques `.ciclo-archivo`
+independientes uno debajo del otro — no se probó todavía con más de un ciclo archivado.
+
+**Los PDFs se reorganizaron junto con el HTML**: `pdfs/cte/<sesion>/` pasó a
+`pdfs/cte/cte-<ciclo>/<sesion>/` (ej. `pdfs/cte/cte-2025-2026/octava-sesion/`,
+`pdfs/cte/cte-2026-2027/cte-fase-intensiva/`). La subcarpeta de sesión de 2026-2027 sí lleva
+prefijo `cte-` (`cte-fase-intensiva`) mientras que las de 2025-2026 no (`octava-sesion`,
+`sexta-sesion`...) — inconsistencia menor y conocida, no corregida a propósito (así los nombró
+Jorge al reorganizar la carpeta a mano).
+
+## 18. Logomark: ícono NE/ZA en nav y footer (agosto 2026)
+
+`favicon.svg` (rect `rx="12"` guinda + dos líneas de texto "NE"/"ZA", iniciales de
+Nezahualcóyotl) ya existía como favicon. En agosto 2026 se decidió no diseñar un símbolo nuevo
+—una guía de identidad gráfica del Gobierno del Estado de México (ver pendiente en `CLAUDE.md`)
+reserva el Escudo de Armas oficial para una "pleca de logos" fija y no permite que cada
+dependencia interna tenga su propio escudo— así que la misma marca se promovió a ícono del
+sitio, con un único cambio: `font-family` de `Georgia,serif` a
+`'Montserrat','Helvetica Neue',Arial,sans-serif`, para dejar de ser la única pieza del sitio
+fuera de la tipografía del wordmark.
+
+**Dónde vive:** inline en cada página, no como componente compartido (misma convención que
+nav/footer, regla 3 de `CLAUDE.md`) — no un `<img src="favicon.svg">`. Dos usos:
+- `.logo` (header nav): ícono 34×34 tal cual — fondo guinda `#56212f`, texto arena `#d6d1ca`.
+- `.footer-brand` (footer): ícono 30×30 con **colorway invertido** — fondo `#F9F8F5`, texto
+  guinda `#56212f`. Necesario porque el footer del sitio ya es guinda; el colorway del favicon
+  desaparecería sobre su propio fondo.
+
+`logo.svg` (nuevo, raíz del repo) es el lockup horizontal completo (ícono + wordmark "SEPRN")
+como asset de referencia — no se usa directamente en ninguna página, es para reutilizar fuera
+del sitio (impresos, futuro og:image) sin tener que reconstruirlo desde cero.
+
+**Alcance:** las 13 páginas que comparten `styles.css` (`.logo-icon` en `styles.css`, junto a
+`.logo`/`.footer-brand`). Deliberadamente sin tocar: `asistencia.html`, `charla-ia.html`,
+`formacion-docente.html`, `instructivo-formacion-docente.html` — tienen su propio header o
+sistema de diseño aparte (ver sección 12 y CLAUDE.md). `otde.html` sí tiene el ícono aplicado en
+el repo, pero no llegó a `origin/main` en el primer push por conflicto con las pestañas de
+Mantenimiento/Asesorías/Correo que aún no están publicadas — ver `docs/BITACORA.md`.
