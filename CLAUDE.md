@@ -498,6 +498,15 @@ ancla.
   Apps Script + Google Sheet (mismo patrón que `apps-script/cursos-coeee-2026.gs`) pero se
   dejó fuera para lanzar la página 100% estática sin configuración manual adicional; se
   reconsidera solo si hace falta después de ver la página en uso real.
+- **Sección "Código QR"** (ago 2026): `images/qr-protocolos.png` — generado localmente con
+  `qrcode`+Pillow (Python), no un servicio externo. Nivel de corrección de errores alto
+  (`ERROR_CORRECT_H`) para poder superponer el logomark NE/ZA al centro sin perder legibilidad
+  (verificado que decodifica correctamente con `cv2.QRCodeDetector` antes de publicarlo).
+  Módulos redondeados en guinda, tarjeta con el mismo lenguaje visual que `.protocolo-card`,
+  título/subtítulo/URL de respaldo ya incluidos dentro de la imagen. Enlaza a
+  `https://educaneza.github.io/seprn-sitio/protocolos.html`. Botón "Descargar código QR" con
+  `download` — pensado para compartirse por WhatsApp (recomendable enviarlo como documento, no
+  como foto, para que WhatsApp no lo recomprima y arriesgue la lectura del QR).
 
 ## `oficina-virtual.html` — Oficina Virtual OTDE (ago 2026, hub de servicios + seguimiento)
 Reusa `styles.css` (misma identidad institucional que `otde.html`, no un sistema propio como
