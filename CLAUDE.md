@@ -524,7 +524,10 @@ Formación Docente — es una utilidad de una sola pantalla que continúa un tr�
   (Mantenimiento/Asesorías/Correo/Soporte), cada uno con un link "Solicitar →" (deep-link a
   `otde.html`) y "Consultar estatus →" (ancla a `#buscar-folio`). Una card "Próximamente"
   (`.ov-proximamente`, borde punteado) deja la grid lista para crecer.
-- **Buscador de seguimiento** (`#buscar-folio`, hero del hub): folio + correo → ruteo automático
+- **Buscador de seguimiento** (`#buscar-folio`, debajo de la grid de tarjetas desde el 16 ago
+  2026 — antes era el hero del hub, se reordenó para priorizar la acción principal de elegir un
+  trámite sobre el caso secundario de consultar un folio ya existente): folio + correo → ruteo
+  automático
   por prefijo (`OV_TIPOS_DE_TRAMITE`, función `ovResolverTramite()`) a la URL de deployment
   correspondiente, sin preguntarle al usuario el tipo de trámite. Reusa `fetchJsonConTimeout()`
   duplicada inline (mismo patrón que el resto del sitio).

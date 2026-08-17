@@ -21,7 +21,7 @@
     <link rel="stylesheet" href="styles.css">
     <style>
         /* ── Buscador de seguimiento ── */
-        .ov-buscador { background: #fff; border: 2px solid #d6d1ca; border-top: 5px solid #9F2241; border-radius: 18px; padding: 34px 36px; box-shadow: 0 16px 40px rgba(86,33,47,0.1); margin-bottom: 70px; }
+        .ov-buscador { background: #fff; border: 2px solid #d6d1ca; border-top: 5px solid #9F2241; border-radius: 18px; padding: 34px 36px; box-shadow: 0 16px 40px rgba(86,33,47,0.1); margin-top: 60px; }
         .ov-buscador-eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #9F2241; margin-bottom: 8px; }
         .ov-buscador h2 { font-size: 22px; font-weight: 700; color: #56212f; margin: 0 0 8px; }
         .ov-buscador > p { font-size: 14px; color: #666; line-height: 1.6; margin: 0 0 22px; }
@@ -91,24 +91,6 @@
 </section>
 <section class="content-section" id="main-content" role="main">
 
-    <div class="ov-buscador" id="buscar-folio">
-        <div class="ov-buscador-eyebrow">Seguimiento de solicitudes</div>
-        <h2>¿Ya tienes un folio? Consúltalo aquí</h2>
-        <p>Aplica a Mantenimiento, Asesorías, Correo Institucional y Soporte Técnico. El Centro de Formación Docente no usa folio de seguimiento — su confirmación llega por correo.</p>
-        <form class="ov-buscador-form" id="ov-form" novalidate>
-            <div class="ov-campo">
-                <label for="ov-folio">Folio</label>
-                <input type="text" id="ov-folio" placeholder="OTDE-MAN-0042" autocomplete="off">
-            </div>
-            <div class="ov-campo">
-                <label for="ov-correo">Correo con el que lo registraste</label>
-                <input type="email" id="ov-correo" placeholder="tucorreo@dee.edu.mx" autocomplete="off">
-            </div>
-            <button type="submit" class="ov-buscar-btn" id="ov-btn">Consultar</button>
-        </form>
-        <div class="ov-resultado" id="ov-resultado"></div>
-    </div>
-
     <div class="section-header">
         <div class="section-eyebrow">SERVICIOS DIGITALES</div>
         <h2 class="section-title">¿Qué necesitas hacer?</h2>
@@ -159,6 +141,24 @@
             <h2>Más servicios en camino</h2>
             <p>Iremos sumando aquí nuevos trámites digitales de OTDE conforme estén listos.</p>
         </div>
+    </div>
+
+    <div class="ov-buscador" id="buscar-folio">
+        <div class="ov-buscador-eyebrow">Seguimiento de solicitudes</div>
+        <h2>¿Ya tienes un folio? Consúltalo aquí</h2>
+        <p>Aplica a Mantenimiento, Asesorías, Correo Institucional y Soporte Técnico. El Centro de Formación Docente no usa folio de seguimiento — su confirmación llega por correo.</p>
+        <form class="ov-buscador-form" id="ov-form" novalidate>
+            <div class="ov-campo">
+                <label for="ov-folio">Folio</label>
+                <input type="text" id="ov-folio" placeholder="OTDE-MAN-0042" autocomplete="off">
+            </div>
+            <div class="ov-campo">
+                <label for="ov-correo">Correo con el que lo registraste</label>
+                <input type="email" id="ov-correo" placeholder="tucorreo@dee.edu.mx" autocomplete="off">
+            </div>
+            <button type="submit" class="ov-buscar-btn" id="ov-btn">Consultar</button>
+        </form>
+        <div class="ov-resultado" id="ov-resultado"></div>
     </div>
 </section>
 

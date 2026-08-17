@@ -14,6 +14,20 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-08-16 · Buscador de folio reordenado en Oficina Virtual, de cara a la presentación del 17 ago a supervisores y jefes de sector
+
+| | |
+|---|---|
+| **Fecha** | 2026-08-16 |
+| **Sesión** | Jorge presenta la Oficina Virtual (aún no en producción) el 17 ago 2026 a supervisores y jefes de sector — primer avance interno, no lanzamiento. Pidió mover el buscador de seguimiento de folio para que aparezca después de las tarjetas de servicios, no antes: prioriza la acción principal (elegir un trámite) sobre el caso secundario (consultar un folio que ya existe), más lógico para quien ve la página por primera vez. |
+| **`oficina-virtual.html`** | Se reordenó `#buscar-folio` (bloque `.ov-buscador`) para que quede después de `.ov-grid` (las 6 tarjetas de servicio) en vez de antes, dentro de `#main-content`. Corte-y-pega puro — mismos ids, mismo JS, sin cambios de contenido. Se verificó antes de mover que ningún JS del sitio (`script.js` ni el `<script>` inline de la página) selecciona por posición/`nth-child` — todo es por `id`, así que el reorden es seguro. El único ajuste real fue de espaciado: `margin-bottom: 70px` → `margin-top: 60px` en `.ov-buscador`, para separarlo del grid que ahora lo precede (el `margin: 80px auto` de `.content-section` ya daba de sobra el espacio hacia el footer). |
+| **Documentación** | `CLAUDE.md` — la línea que describía el buscador como "hero del hub" ya no era cierta; se actualizó para reflejar que ahora vive debajo de la grid, con la fecha y el motivo del cambio. No se tocó `docs/ARCHITECTURE.md`/`docs/ROADMAP.md`/`README.md` — es un reorden de UI dentro de una página ya documentada, sin flujo técnico nuevo ni pendiente resuelto. |
+| **Guion de presentación (fuera de este repo)** | A petición de Jorge, se redactó un guion de presentación imprimible (discurso breve sobre la importancia de la Oficina Virtual, simplificación administrativa e impacto en calidad educativa) publicado como Claude Artifact — no es un archivo de este repo, se menciona aquí solo como contexto de por qué se hizo la sesión. |
+| **Verificación** | Confirmado contra `localhost:8000` (servidor local ya corría de la sesión anterior): `curl` al HTML servido muestra el orden `section-header` → `ov-grid` → `ov-buscador#buscar-folio`, y los 4 links "Consultar estatus →" de las tarjetas siguen apuntando a `#buscar-folio` sin cambios. |
+| **Commits** | Pendiente. |
+
+---
+
 ## CHECKPOINT — 2026-08-13 · Página de Protocolos de Actuación (Acoso Escolar, Mochila de Paz, Abuso Sexual Infantil), enlazada desde Jurídico/Académica/OEVE
 
 | | |
