@@ -62,6 +62,23 @@ function sopDesactivarModoPrueba() {
   PropertiesService.getScriptProperties().deleteProperty('MODO_PRUEBA_CORREO');
 }
 
+// ── Escapa HTML/Markdown de campos capturados por el solicitante antes de
+// insertarlos en el cuerpo de un correo o mensaje de Telegram — el endpoint
+// es público, así que sin esto cualquiera podría inyectar <a>/<img> en un
+// correo con membrete institucional real, o un link falso en Telegram. ──
+function sopEscapeHtml_(valor) {
+  return String(valor == null ? '' : valor)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function sopEscapeMarkdown_(valor) {
+  return String(valor == null ? '' : valor).replace(/([_*[\]`])/g, '\\$1');
+}
+
 function sopEnviarCorreo_(opciones) {
   const correoPrueba = PropertiesService.getScriptProperties().getProperty('MODO_PRUEBA_CORREO');
   if (correoPrueba) {
@@ -249,14 +266,14 @@ function notificarTelegram(folio, d) {
       marca + ' *Nueva solicitud de Soporte Remoto*\n' +
       'Folio: ' + folio + '\n' +
       'Urgencia: ' + d.urgencia + '\n' +
-      'Nombre: ' + d.nombre.trim() + '\n' +
-      'CCT: ' + d.cct.trim().toUpperCase() + (d.escuela ? ' — ' + d.escuela.trim() : '') + '\n' +
-      (d.sector ? 'Sector ' + d.sector + (d.zona ? ' · Zona ' + d.zona : '') + '\n' : '') +
-      'Función: ' + d.funcion.trim() + '\n' +
-      'Tipo de ayuda: ' + (d.tipoAyuda || '').trim() + '\n' +
+      'Nombre: ' + sopEscapeMarkdown_(d.nombre.trim()) + '\n' +
+      'CCT: ' + sopEscapeMarkdown_(d.cct.trim().toUpperCase()) + (d.escuela ? ' — ' + sopEscapeMarkdown_(d.escuela.trim()) : '') + '\n' +
+      (d.sector ? 'Sector ' + sopEscapeMarkdown_(d.sector) + (d.zona ? ' · Zona ' + sopEscapeMarkdown_(d.zona) : '') + '\n' : '') +
+      'Función: ' + sopEscapeMarkdown_(d.funcion.trim()) + '\n' +
+      'Tipo de ayuda: ' + sopEscapeMarkdown_((d.tipoAyuda || '').trim()) + '\n' +
       'WhatsApp: ' + d.whatsapp.trim() + ' — [Abrir chat](' + whatsappLink + ')\n' +
       (d.correo && d.correo.trim() ? 'Correo: ' + d.correo.trim() + '\n' : '') +
-      'Descripción: ' + d.descripcion.trim();
+      'Descripción: ' + sopEscapeMarkdown_(d.descripcion.trim());
 
     UrlFetchApp.fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
       method: 'post',
@@ -326,8 +343,8 @@ function sopNotificarCierreSolicitante(folio, escuela, cct, notas, correo) {
       '<div style="border:1px solid #d6d1ca;border-top:none;border-radius:0 0 8px 8px;padding:18px 20px;">' +
       '<p style="margin:0 0 10px 0;font-size:14px;color:#333;">Tu solicitud de soporte técnico remoto fue marcada como resuelta por OTDE.</p>' +
       '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Folio:</strong> ' + folio + '</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Escuela / CCT:</strong> ' + (escuela || '') + ' — ' + cct + '</p>' +
-      (notas ? '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Notas:</strong> ' + notas + '</p>' : '') +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Escuela / CCT:</strong> ' + sopEscapeHtml_(escuela || '') + ' — ' + sopEscapeHtml_(cct) + '</p>' +
+      (notas ? '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Notas:</strong> ' + sopEscapeHtml_(notas) + '</p>' : '') +
       '</div></div>';
 
     sopEnviarCorreo_({
