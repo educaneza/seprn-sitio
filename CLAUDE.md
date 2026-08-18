@@ -363,12 +363,24 @@ arquitectura completo en `docs/ARCHITECTURE.md §16`. Resumen operativo:
   antes de este despliegue, así que técnicamente el webform ya está en producción — pero el
   sistema viejo de Marcos sigue vivo en paralelo; retirarlo es una decisión de Jorge, no
   automática por haber desplegado esto.
-- **Telegram deliberadamente parcial** (decisión de Jorge, 6 ago 2026): solo los tipos
-  "urgentes" (alguien no puede entrar a su cuenta ahora mismo) avisan por Telegram —
-  `Reset2FA.gs`/`Incidencias.gs` sin condición, `CambioContrasena.gs` solo si
-  `dominio === 'dee.edu.mx'` (`@aulamexiquense.mx` no avisa), `Alta.gs` no llama a Telegram en
-  absoluto (alta de cuenta no bloquea a nadie). Detalle completo en
+- **Telegram acotado a solo Incidencias (ajustado 18 ago 2026)**: antes avisaba también en
+  `Reset2FA.gs` (sin condición) y `CambioContrasena.gs` (solo si `dominio === 'dee.edu.mx'`);
+  Jorge pidió reducirlo — el equipo ya revisa las solicitudes a diario, así que una alerta por
+  cada Cambio de Contraseña/Reset 2FA rutinario era ruido, no señal. Hoy **solo
+  `Incidencias.gs`** ("no puedo acceder a mi cuenta institucional") dispara Telegram, sin
+  condición de dominio — es el único caso realmente urgente. `Alta.gs` nunca lo tuvo (alta de
+  cuenta no bloquea a nadie). **Script Properties configuradas por primera vez el 18 ago
+  2026** (mismo bot/chat que `soporte-remoto.gs`) — antes de esa fecha `TELEGRAM_BOT_TOKEN`/
+  `TELEGRAM_CHAT_ID` nunca se habían puesto en este proyecto, así que Telegram llevaba desde el
+  6 ago 2026 fallando en silencio (`if (!token || !chatId) return;`), no solo "parcial". No se
+  agregó correo de respaldo a Marcos (`CONFIG.correoResponsable` en `Config.gs` sigue sin
+  usarse) — decisión explícita, mismo motivo de evitar ruido. Detalle completo en
   `Correos-institucionales/CLAUDE.md`.
+- **`GenerarResumenSIGEE.gs` y `ResumenSemanal.gs` portados (18 ago 2026)**: el sistema viejo
+  del Google Form los tenía y no eran portables directo (6 hojas con nombres/encabezados
+  distintos a las 4 de aquí) — reescritos contra la hoja "Alta" consolidada y los estados reales
+  del webform nuevo (`Solicitud recibida` → `Cuenta entregada`/`Reset notificado`/`Incidencia
+  resuelta`). Trigger `resumenSemanal` (lunes 9am) instalado y confirmado en "Activadores".
 - **Dominio auto-derivado, no preguntado** (solo en Alta — Cambio/Reset/Incidencias leen el
   dominio del correo institucional que la persona ya tiene): usa
   `otdeDominioParaCCT(cct, tipoCuenta)` en `js/cct-db.js`, regla verificada en vivo contra
