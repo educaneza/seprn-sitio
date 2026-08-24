@@ -14,6 +14,21 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-08-24 (cont. 3) · Revisión de flujo de Mantenimiento y decisión de retirar v8.5 en fases
+
+| | |
+|---|---|
+| **Fecha** | 2026-08-24 |
+| **Sesión** | Jorge pidió revisar el ciclo de vida completo de una solicitud de Mantenimiento (solicitante → OTDE coordina fecha de visita → visita → reporte técnico con PDF → cierre) y un plan para pulir/completar lo que falta. Sesión de auditoría + planeación — no se tocó código, solo documentación de la decisión y un plan de implementación guardado fuera del repo. |
+| **Auditoría en vivo (código real, no memoria)** | Confirmó lo ya documentado en `ARCHITECTURE.md §15/§19.1`/`ROADMAP.md` ítems 8-9: la mitad del flujo (intake → folio → oficio → correo combinado → estatus → cierre por correo al marcar "Resuelto") está construida y en producción; la coordinación de fecha de visita (ítem 8) sigue sin construir; el reporte técnico + PDF + auto-cierre vive completo en el sistema aparte v8.5, sin ninguna integración automática con el webform nuevo. Se confirmó también que el patrón de fallback manual de CCT (autocomplete + Tipo de CCT/Sector/Zona/Escuela a mano si el CCT no está en el catálogo, sin bloquear el envío) es correcto para Mantenimiento tal cual está — Jorge no lo quiere más estricto. |
+| **Decisión de arquitectura — se revierte el descarte de reemplazar v8.5 (ítem 9 de `ROADMAP.md`)** | La evaluación del 11 ago 2026 había descartado reconstruir v8.5 por "beneficio mayormente cosmético". Preguntado explícitamente qué cambió, Jorge confirmó que no es una necesidad puntual nueva de v8.5 — quiere unificar todo en un solo stack mantenible, porque v8.5 no tiene repo ni control de versiones. Se documenta como reversión deliberada, no drift silencioso. `docs/ROADMAP.md` ítem 9 reescrito con la ruta en 4 fases (detalle en ese archivo); ítem 8 (coordinación de fecha de visita) queda enmarcado como su Fase 1. |
+| **Plan de implementación de la Fase 1, guardado y pausado** | Escrito en `~/.claude/plans/vamos-a-revisar-el-wiggly-eclipse.md` (fuera de este repo, no versionado en git) — Jorge pidió pausar antes de ejecutar ("por ahora no puedo continuar"), confirmando que es lo primero a retomar la próxima sesión. Diseño en breve: dos columnas nuevas al final de `Solicitudes` en `mantenimiento.gs`/`asesorias.gs` ("Fecha programada de visita" + su columna de control de notificación, mismo patrón de auto-heal ya usado), un segundo trigger `onEdit` instalable (`manOnEditProgramacion`/`aseOnEditProgramacion`, independiente del de cierre existente) que avisa a solicitante+Zona/Sector al capturar la fecha, y exponer el campo nuevo en `?action=consulta`/`?action=pendientes`. Sin cambios al formulario de `otde.html` — es trabajo del lado del Sheet/backend. |
+| **Documentación** | `docs/ROADMAP.md` (ítems 8-9 reescritos, +30/-20 líneas) y este checkpoint. No se tocó `docs/ARCHITECTURE.md` — el diagrama de `§19.1` se actualiza cuando la Fase 1 se construya de verdad, no antes (evitar documentar un flujo que el código todavía no tiene). No se tocó `CLAUDE.md` — ninguna convención de desarrollo cambió. |
+| **Verificación** | N/A — sesión de solo lectura/planeación, sin código que probar. El plan queda por verificarse en la sesión que lo ejecute (ver su propia sección de verificación). |
+| **Commits** | Pendiente — solo `docs/ROADMAP.md` modificado en este repo, a la espera del mensaje de cierre de esta sesión. |
+
+---
+
 ## CHECKPOINT — 2026-08-24 (cont.) · Panel único de solicitudes pendientes, dropdown protector en Correo, y auto-ID en Formación Docente
 
 | | |

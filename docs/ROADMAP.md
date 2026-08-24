@@ -419,27 +419,37 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
    `oficina-virtual.html` como card tipo "Recurso", no "Trámite" — sin el buscador de
    seguimiento. Detalle completo de la decisión en `docs/BITACORA.md`, checkpoint 10 ago 2026
    (noche, cont.).
-8. **Coordinación de fecha de visita en Mantenimiento/Asesorías** (planteado 11 ago 2026, no
-   iniciado): hoy, tras "Validado", OTDE coordina la fecha de atención con Sector (que coordina
-   con Zona, que coordina con la escuela) totalmente fuera del sistema. El sistema viejo v8.5 ya
-   resuelve un problema parecido con su hoja "Despacho" (acuse de recibo + notificar fecha
-   programada al sector), pero corre sobre su propio Sheet, desconectado del webform nuevo —
-   replicar ese mismo propósito (columna "Fecha programada de visita" en `Solicitudes` + una
-   acción que notifique a Zona/Sector reusando `manBuscarContactosZonaSector()`/
+8. **Coordinación de fecha de visita en Mantenimiento/Asesorías** (planteado 11 ago 2026,
+   diseño confirmado y ampliado 24 ago 2026, **plan escrito, no iniciado**): hoy, tras
+   "Validado", OTDE coordina la fecha de atención con Sector (que coordina con Zona, que
+   coordina con la escuela) totalmente fuera del sistema. El sistema viejo v8.5 ya resuelve un
+   problema parecido con su hoja "Despacho" (acuse de recibo + notificar fecha programada al
+   sector), pero corre sobre su propio Sheet, desconectado del webform nuevo — replicar ese
+   mismo propósito (columna "Fecha programada de visita" en `Solicitudes` + una acción que
+   notifique a Zona/Sector reusando `manBuscarContactosZonaSector()`/
    `aseBuscarContactosZonaSector()`) directamente en `mantenimiento.gs`/`asesorias.gs`, sin
-   tocar v8.5 ni duplicar captura. Detalle de la decisión en `docs/BITACORA.md`, checkpoint 11
-   ago 2026.
-9. **Conexión con el sistema v8.5 ("Sistema Automatizado de Reportes de Visitas")** — sigue
-   deliberadamente fuera de alcance (reafirmado 11 ago 2026), pero quedan documentadas 3
-   opciones para cuando se retome: **(a)** statu quo, seguir separados indefinidamente — cero
-   riesgo, mantiene la doble captura manual de Jorge; **(b)** puente de datos sin tocar la
-   lógica de v8.5 — cuando una fila del webform nuevo llegue a cierto estado, escribir/
-   actualizar automáticamente la fila correspondiente en la hoja de seguimiento de v8.5 vía
-   `SpreadsheetApp.openById`, sin modificar el trigger `onFormSubmit` de v8.5 ni su generación
-   de PDF; **(c)** reemplazo eventual — reconstruir dentro del stack nuevo el reporte del
-   técnico + PDF + auto-cierre + dashboard que hoy vive en v8.5, ya evaluado antes y descartado
-   por beneficio "mayormente cosmético" frente al costo, no recomendado salvo razón nueva y
-   concreta. Detalle en `docs/BITACORA.md`, checkpoint 11 ago 2026.
+   tocar v8.5 ni duplicar captura. Es además la **Fase 1** de la ruta hacia retirar v8.5 (ver
+   ítem 9 abajo). Detalle de la decisión en `docs/BITACORA.md`, checkpoint 11 ago 2026; plan de
+   implementación completo en el checkpoint del 24 ago 2026 (sesión de revisión de flujo).
+9. **Conexión con el sistema v8.5 ("Sistema Automatizado de Reportes de Visitas")** — **decisión
+   revertida el 24 ago 2026**: la evaluación anterior (11 ago 2026) había descartado el
+   reemplazo por "beneficio mayormente cosmético" frente al costo. Jorge confirmó que quiere
+   retirar v8.5 y unificar todo en un solo stack mantenible (v8.5 no tiene repo ni control de
+   versiones) — no es una necesidad puntual nueva de v8.5, es preferencia de arquitectura.
+   Camino elegido: **reemplazo eventual, en fases**, ninguna construida todavía:
+   - **Fase 1**: coordinación de fecha de visita — ver ítem 8 arriba.
+   - **Fase 2**: reconstruir dentro de `mantenimiento.gs` el reporte técnico de la visita + PDF
+     + cierre automático (nueva hoja "Reportes de visita" ligada a `Solicitudes` por folio),
+     extendiendo el correo de cierre a escuela+zona+sector — mejora real sobre v8.5, que según
+     la documentación de este proyecto solo avisa a director+técnico al cerrar (**pendiente de
+     verificar en vivo contra el sistema real antes de asumirlo**, nunca confirmado en
+     navegador).
+   - **Fase 3**: réplica de la organización nocturna de fotos y el reporte mensual (formato
+     Planeación, cruce contra el catálogo de direcciones) — menor prioridad, mayor complejidad.
+   - **Fase 4**: decidir el destino del histórico de v8.5 (380 aulas, reportes ya generados —
+     probablemente archivo de solo lectura, no migración) y el corte real.
+   Detalle completo del diseño de la Fase 1 en `docs/BITACORA.md`, checkpoint 24 ago 2026
+   (sesión de revisión de flujo).
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue
