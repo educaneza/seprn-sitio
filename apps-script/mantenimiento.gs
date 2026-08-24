@@ -56,6 +56,10 @@
 // CONSULTA DE FOLIO (Oficina Virtual OTDE): doGet(?action=consulta&folio=..
 // &correo=...) devuelve estatus/fecha/notas si el folio y el correo
 // coinciden, o {status:'no_encontrado'} en cualquier otro caso.
+//
+// PANEL OTDE (panel-otde.gs, Sheet aparte): doGet(?action=pendientes&
+// token=...) devuelve todas las solicitudes abiertas. Configura el token
+// una vez con manConfigurarTokenPanel('un-secreto-largo') antes de usarlo.
 // ============================================================
 
 const HOJA_MAN_SOLICITUDES = 'Solicitudes';
@@ -93,6 +97,33 @@ function manDesactivarModoPrueba() {
   PropertiesService.getScriptProperties().deleteProperty('MODO_PRUEBA_CORREO');
 }
 
+// ── Token del Panel OTDE: a diferencia de ?action=consulta (que exige ya
+// conocer un folio + correo específicos), ?action=pendientes regresa TODAS
+// las solicitudes abiertas con nombre/escuela/contacto — sin este token
+// cualquiera que viera la URL en el código fuente del sitio podría listar
+// esos datos. Configúralo una vez con manConfigurarTokenPanel('un-secreto-
+// largo') desde el editor — el mismo valor debe pegarse en panel-otde.gs. ──
+function manConfigurarTokenPanel(token) {
+  PropertiesService.getScriptProperties().setProperty('PANEL_TOKEN', token);
+}
+
+// ── Escapa HTML/Markdown de campos capturados por el solicitante antes de
+// insertarlos en el cuerpo de un correo o mensaje de Telegram — el endpoint
+// es público, así que sin esto cualquiera podría inyectar <a>/<img> en un
+// correo con membrete institucional real, o un link falso en Telegram. ──
+function manEscapeHtml_(valor) {
+  return String(valor == null ? '' : valor)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function manEscapeMarkdown_(valor) {
+  return String(valor == null ? '' : valor).replace(/([_*[\]`])/g, '\\$1');
+}
+
 function manEnviarCorreo_(opciones) {
   const correoPrueba = PropertiesService.getScriptProperties().getProperty('MODO_PRUEBA_CORREO');
   if (correoPrueba) {
@@ -121,7 +152,46 @@ function doGet(e) {
   if (accion === 'consulta') {
     return manConsultarFolio(e.parameter.folio, e.parameter.correo);
   }
+  if (accion === 'pendientes') {
+    return manListarPendientes(e.parameter.token);
+  }
   return manTextResponse(JSON.stringify({ status: 'ok', servicio: 'OTDE Solicitudes de Mantenimiento' }));
+}
+
+// ── Lista de solicitudes abiertas para el Panel OTDE (?action=pendientes) ──
+// "Abierta" = Estatus distinto de Resuelto/Rechazado (o vacío, que
+// manConsultarFolio ya trata como recién creada). Requiere el mismo token
+// configurado con manConfigurarTokenPanel() — ver esa función arriba.
+function manListarPendientes(tokenRecibido) {
+  const tokenEsperado = PropertiesService.getScriptProperties().getProperty('PANEL_TOKEN');
+  if (!tokenEsperado || tokenRecibido !== tokenEsperado) {
+    return manTextResponse(JSON.stringify({ status: 'no_autorizado' }));
+  }
+
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_MAN_SOLICITUDES);
+  if (!hoja) return manTextResponse(JSON.stringify({ status: 'ok', tramite: 'Mantenimiento', items: [] }));
+
+  const filas = hoja.getDataRange().getValues().slice(1);
+  const items = filas
+    .filter(function (r) { return r[1]; }) // folio no vacío
+    .filter(function (r) {
+      const estatus = String(r[COL_MAN_ESTATUS - 1] || '').trim();
+      return estatus !== 'Resuelto' && estatus !== 'Rechazado';
+    })
+    .map(function (r) {
+      return {
+        folio: r[1],
+        fecha: r[0] instanceof Date ? r[0].toISOString() : String(r[0]),
+        nombre: r[2],
+        escuela: r[7],
+        sector: r[5],
+        zona: r[6],
+        estatus: String(r[COL_MAN_ESTATUS - 1] || 'Pendiente de validar').trim(),
+        notas: r[14] || ''
+      };
+    });
+
+  return manTextResponse(JSON.stringify({ status: 'ok', tramite: 'Mantenimiento', items: items }));
 }
 
 // ── Consulta de estatus por folio + correo (Oficina Virtual OTDE) ──
@@ -379,13 +449,13 @@ function manNotificarTelegram(folio, d, oficioUrl) {
     const mensaje =
       '🛠 *Nueva solicitud de Mantenimiento*\n' +
       'Folio: ' + folio + '\n' +
-      'Nombre: ' + d.nombre.trim() + ' (' + d.funcion.trim() + ')\n' +
-      'CCT: ' + d.cct.trim().toUpperCase() + (d.escuela ? ' — ' + d.escuela.trim() : '') + '\n' +
-      (d.sector ? 'Sector ' + d.sector + (d.zona ? ' · Zona ' + d.zona : '') + '\n' : '') +
-      'Turno: ' + d.turno.trim() + '\n' +
+      'Nombre: ' + manEscapeMarkdown_(d.nombre.trim()) + ' (' + manEscapeMarkdown_(d.funcion.trim()) + ')\n' +
+      'CCT: ' + manEscapeMarkdown_(d.cct.trim().toUpperCase()) + (d.escuela ? ' — ' + manEscapeMarkdown_(d.escuela.trim()) : '') + '\n' +
+      (d.sector ? 'Sector ' + manEscapeMarkdown_(d.sector) + (d.zona ? ' · Zona ' + manEscapeMarkdown_(d.zona) : '') + '\n' : '') +
+      'Turno: ' + manEscapeMarkdown_(d.turno.trim()) + '\n' +
       'WhatsApp: ' + d.whatsapp.trim() + '\n' +
-      (d.tipoEquipo ? 'Tipo de equipo: ' + d.tipoEquipo + '\n' : '') +
-      'Equipos con falla: ' + d.equipos.trim() + '\n' +
+      (d.tipoEquipo ? 'Tipo de equipo: ' + manEscapeMarkdown_(d.tipoEquipo) + '\n' : '') +
+      'Equipos con falla: ' + manEscapeMarkdown_(d.equipos.trim()) + '\n' +
       'Oficio: ' + oficioUrl;
 
     UrlFetchApp.fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
@@ -419,9 +489,9 @@ function manNotificarSolicitudRecibida(folio, d) {
       '<div style="border:1px solid #d6d1ca;border-top:none;border-radius:0 0 8px 8px;padding:18px 20px;">' +
       '<p style="margin:0 0 10px 0;font-size:14px;color:#333;">Se registró tu solicitud de mantenimiento. OTDE la está atendiendo directamente — te avisaremos por este medio en cuanto se resuelva.</p>' +
       '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Folio:</strong> ' + folio + '</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Escuela / CCT:</strong> ' + (d.escuela || '') + ' — ' + d.cct.trim().toUpperCase() + '</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Solicita:</strong> ' + d.nombre.trim() + ' (' + d.funcion.trim() + ')</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Equipos con falla:</strong> ' + d.equipos.trim() + '</p>' +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Escuela / CCT:</strong> ' + manEscapeHtml_(d.escuela || '') + ' — ' + manEscapeHtml_(d.cct.trim().toUpperCase()) + '</p>' +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Solicita:</strong> ' + manEscapeHtml_(d.nombre.trim()) + ' (' + manEscapeHtml_(d.funcion.trim()) + ')</p>' +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Equipos con falla:</strong> ' + manEscapeHtml_(d.equipos.trim()) + '</p>' +
       '</div></div>';
 
     const opciones = {
@@ -500,9 +570,9 @@ function manNotificarCierre(fila) {
       '<div style="border:1px solid #d6d1ca;border-top:none;border-radius:0 0 8px 8px;padding:18px 20px;">' +
       '<p style="margin:0 0 10px 0;font-size:14px;color:#333;">Tu solicitud de mantenimiento fue marcada como resuelta por OTDE.</p>' +
       '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Folio:</strong> ' + folio + '</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Escuela / CCT:</strong> ' + (escuela || '') + ' — ' + cct + '</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Solicitó:</strong> ' + nombre + '</p>' +
-      (notas ? '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Notas:</strong> ' + notas + '</p>' : '') +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Escuela / CCT:</strong> ' + manEscapeHtml_(escuela || '') + ' — ' + manEscapeHtml_(cct) + '</p>' +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Solicitó:</strong> ' + manEscapeHtml_(nombre) + '</p>' +
+      (notas ? '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Notas:</strong> ' + manEscapeHtml_(notas) + '</p>' : '') +
       '</div></div>';
 
     const opciones = {

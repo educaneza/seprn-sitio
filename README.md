@@ -48,7 +48,7 @@ rediseño, [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md); para bugs reales ya
 | Notificaciones | Bot de Telegram (API `sendMessage`) — solicitudes de Soporte Remoto |
 | Scanner QR | html5-qrcode v2.3.8 vía CDN (solo `asistencia.html`) |
 
-No hay framework, bundler, ni dependencias npm. El sitio es completamente estático. Los backends externos son 6 Google Apps Script (uno por Spreadsheet/flujo): `conferencia-ia.gs`, `cursos-coeee-2026.gs` (congelado desde jul 2026, ver abajo), `soporte-remoto.gs`, `formacion-docente.gs`, `mantenimiento.gs` y `asesorias.gs` (ago 2026). La cuota diaria de `MailApp`/`GmailApp` la comparten los 6, no es por proyecto. Aparte, el webform nuevo de Correo Institucional (Alta/Cambio/Reset/Incidencias) vive en un proyecto de Apps Script separado, `Correos-institucionales/webform-2026-2027/` — no en este repo — en paralelo al Google Form que sigue en producción; ver `docs/ARCHITECTURE.md §16`.
+No hay framework, bundler, ni dependencias npm. El sitio es completamente estático. Los backends externos son 6 Google Apps Script (uno por Spreadsheet/flujo): `conferencia-ia.gs`, `cursos-coeee-2026.gs` (congelado desde jul 2026, ver abajo), `soporte-remoto.gs`, `formacion-docente.gs`, `mantenimiento.gs` y `asesorias.gs` (ago 2026). La cuota diaria de `MailApp`/`GmailApp` la comparten los 6, no es por proyecto. Aparte, el webform nuevo de Correo Institucional (Alta/Cambio/Reset/Incidencias) vive en un proyecto de Apps Script separado, `Correos-institucionales/webform-2026-2027/` — no en este repo — en paralelo al Google Form que sigue en producción; ver `docs/ARCHITECTURE.md §16`. Un séptimo Apps Script, `panel-otde.gs` (ago 2026), no es backend de ningún flujo — vive en un Sheet propio y solo lee, vía `UrlFetchApp`, el `?action=pendientes` de los 4 backends con folio (los 3 de aquí + el de Correo) para mostrar en una sola hoja lo que falta atender; ver `docs/ARCHITECTURE.md §20`.
 
 ---
 
@@ -89,7 +89,8 @@ seprn-sitio/
 │   ├── soporte-remoto.gs         # Backend Soporte Técnico Remoto (Sheets + notificación Telegram)
 │   ├── formacion-docente.gs      # Backend Centro de Formación Docente + Jornada Verano (Docentes/Cursos/Inscripciones, folios OTDE-CAP-NNNN, recordatorios automáticos)
 │   ├── mantenimiento.gs          # Backend Mantenimiento (ago 2026) — webform complementa el oficio, no lo sustituye
-│   └── asesorias.gs              # Backend Asesorías (ago 2026) — mismo patrón que mantenimiento.gs
+│   ├── asesorias.gs              # Backend Asesorías (ago 2026) — mismo patrón que mantenimiento.gs
+│   └── panel-otde.gs             # Panel único de solicitudes pendientes (ago 2026) — Sheet aparte, agrega los 4 backends con folio
 │
 ├── descargas/                    # Instaladores/ejecutables descargables
 │   ├── Instalador_Office_2019_OTDE.exe

@@ -450,12 +450,24 @@ function onOpen() {
     .addSeparator()
     .addItem('Instalar recordatorios automáticos', 'instalarRecordatoriosAutomaticos')
     .addItem('Desinstalar recordatorios automáticos', 'desinstalarRecordatoriosAutomaticos')
+    .addSeparator()
+    .addItem('Instalar auto-generación de ID de curso', 'instalarTriggerAutoId')
+    .addItem('Desinstalar auto-generación de ID de curso', 'desinstalarTriggerAutoId')
     .addToUi();
 }
 
 // Autocompleta ID_Curso en filas nuevas de la hoja Cursos que
-// tengan Categoria pero no ID_Curso todavía.
+// tengan Categoria pero no ID_Curso todavía. Envoltura del menú: corre la
+// lógica compartida y avisa cuántos generó.
 function generarIdsCursosFaltantes() {
+  const generados = generarIdsCursosFaltantes_();
+  SpreadsheetApp.getUi().alert(generados + ' ID(s) de curso generado(s).');
+}
+
+// ── Lógica compartida (sin UI) entre el menú de arriba y onEditCursos() de
+// abajo — separada para que el disparador automático no muestre un alert
+// en cada edición. ──
+function generarIdsCursosFaltantes_() {
   const hoja  = obtenerHojaCursos();
   const datos = hoja.getDataRange().getValues();
   let generados = 0;
@@ -478,7 +490,48 @@ function generarIdsCursosFaltantes() {
     generados++;
   }
 
-  SpreadsheetApp.getUi().alert(generados + ' ID(s) de curso generado(s).');
+  return generados;
+}
+
+// ── Auto-generar ID_Curso al escribir la Categoria (agosto 2026) ──
+// Hoy, si Jorge da de alta un curso a mano en "Cursos" y olvida correr
+// "Generar ID de cursos faltantes" del menú antes de marcarlo Activo, el
+// curso sale en el catálogo sin ID_Curso y cualquier inscripción a él
+// queda con esa columna vacía en "Inscripciones" — silencioso hasta que
+// alguien lo nota. Instalable, mismo patrón que manOnEditCierre() en
+// mantenimiento.gs: no usa e.value (se pierde en pegados/arrastres de
+// varias celdas), revisa si la columna Categoria cae dentro del rango
+// editado sin importar su tamaño, y reutiliza generarIdsCursosFaltantes_()
+// tal cual — ambos caminos quedan sincronizados por construcción.
+function onEditCursos(e) {
+  if (!e || !e.range) return;
+  if (e.range.getSheet().getName() !== HOJA_CURSOS) return;
+
+  const colCategoria = 2; // 'Categoria' — ver ENCABEZADOS_CURSOS
+  const colInicio = e.range.getColumn();
+  const colFin = colInicio + e.range.getNumColumns() - 1;
+  if (colCategoria < colInicio || colCategoria > colFin) return;
+
+  generarIdsCursosFaltantes_();
+}
+
+function instalarTriggerAutoId() {
+  desinstalarTriggerAutoId();
+  ScriptApp.newTrigger('onEditCursos')
+    .forSpreadsheet(SpreadsheetApp.getActiveSpreadsheet())
+    .onEdit()
+    .create();
+  try { SpreadsheetApp.getUi().alert('Auto-generación de ID de curso instalada.'); } catch (err) {}
+}
+
+function desinstalarTriggerAutoId() {
+  const quitados = ScriptApp.getProjectTriggers().filter(function (t) {
+    return t.getHandlerFunction() === 'onEditCursos';
+  });
+  quitados.forEach(function (t) { ScriptApp.deleteTrigger(t); });
+  if (quitados.length) {
+    try { SpreadsheetApp.getUi().alert('Auto-generación de ID de curso desinstalada.'); } catch (err) {}
+  }
 }
 
 // Genera una hoja resumen con conteos por curso, sector, municipio y estado.

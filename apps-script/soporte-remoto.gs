@@ -36,6 +36,11 @@
 // folio=...&correo=...) devuelve estatus/fecha/notas si el folio y
 // el correo coinciden, o {status:'no_encontrado'} en cualquier otro
 // caso.
+//
+// PANEL OTDE (panel-otde.gs, Sheet aparte): doGet(?action=pendientes&
+// token=...) devuelve todas las solicitudes abiertas. Configura el
+// token una vez con sopConfigurarTokenPanel('un-secreto-largo') antes
+// de usarlo.
 // ============================================================
 
 const HOJA_SOPORTE = 'Solicitudes_Soporte_2026';
@@ -60,6 +65,33 @@ function sopActivarModoPrueba(correo) {
 
 function sopDesactivarModoPrueba() {
   PropertiesService.getScriptProperties().deleteProperty('MODO_PRUEBA_CORREO');
+}
+
+// ── Token del Panel OTDE: a diferencia de ?action=consulta (que exige ya
+// conocer un folio + correo específicos), ?action=pendientes regresa TODAS
+// las solicitudes abiertas con nombre/escuela/contacto — sin este token
+// cualquiera que viera la URL en el código fuente del sitio podría listar
+// esos datos. Configúralo una vez con sopConfigurarTokenPanel('un-secreto-
+// largo') desde el editor — el mismo valor debe pegarse en panel-otde.gs. ──
+function sopConfigurarTokenPanel(token) {
+  PropertiesService.getScriptProperties().setProperty('PANEL_TOKEN', token);
+}
+
+// ── Escapa HTML/Markdown de campos capturados por el solicitante antes de
+// insertarlos en el cuerpo de un correo o mensaje de Telegram — el endpoint
+// es público, así que sin esto cualquiera podría inyectar <a>/<img> en un
+// correo con membrete institucional real, o un link falso en Telegram. ──
+function sopEscapeHtml_(valor) {
+  return String(valor == null ? '' : valor)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function sopEscapeMarkdown_(valor) {
+  return String(valor == null ? '' : valor).replace(/([_*[\]`])/g, '\\$1');
 }
 
 function sopEnviarCorreo_(opciones) {
@@ -90,7 +122,46 @@ function doGet(e) {
   if (accion === 'consulta') {
     return sopConsultarFolio(e.parameter.folio, e.parameter.correo);
   }
+  if (accion === 'pendientes') {
+    return sopListarPendientes(e.parameter.token);
+  }
   return textResponse(JSON.stringify({ status: 'ok', servicio: 'OTDE Soporte Técnico Remoto' }));
+}
+
+// ── Lista de solicitudes abiertas para el Panel OTDE (?action=pendientes) ──
+// "Abierta" = Estatus distinto de Resuelto/Rechazado (o vacío, que
+// sopConsultarFolio ya trata como Pendiente de validar). Requiere el mismo
+// token configurado con sopConfigurarTokenPanel() — ver esa función arriba.
+function sopListarPendientes(tokenRecibido) {
+  const tokenEsperado = PropertiesService.getScriptProperties().getProperty('PANEL_TOKEN');
+  if (!tokenEsperado || tokenRecibido !== tokenEsperado) {
+    return textResponse(JSON.stringify({ status: 'no_autorizado' }));
+  }
+
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_SOPORTE);
+  if (!hoja) return textResponse(JSON.stringify({ status: 'ok', tramite: 'Soporte Técnico Remoto', items: [] }));
+
+  const filas = hoja.getDataRange().getValues().slice(1);
+  const items = filas
+    .filter(function (r) { return r[1]; }) // folio no vacío
+    .filter(function (r) {
+      const estatus = String(r[COL_SOP_ESTATUS - 1] || '').trim();
+      return estatus !== 'Resuelto' && estatus !== 'Rechazado';
+    })
+    .map(function (r) {
+      return {
+        folio: r[1],
+        fecha: r[0] instanceof Date ? r[0].toISOString() : String(r[0]),
+        nombre: r[2],
+        escuela: r[6],
+        sector: r[4],
+        zona: r[5],
+        estatus: String(r[COL_SOP_ESTATUS - 1] || 'Pendiente de validar').trim(),
+        notas: r[14] || ''
+      };
+    });
+
+  return textResponse(JSON.stringify({ status: 'ok', tramite: 'Soporte Técnico Remoto', items: items }));
 }
 
 // ── Consulta de estatus por folio + correo (Oficina Virtual OTDE) ──
@@ -249,14 +320,14 @@ function notificarTelegram(folio, d) {
       marca + ' *Nueva solicitud de Soporte Remoto*\n' +
       'Folio: ' + folio + '\n' +
       'Urgencia: ' + d.urgencia + '\n' +
-      'Nombre: ' + d.nombre.trim() + '\n' +
-      'CCT: ' + d.cct.trim().toUpperCase() + (d.escuela ? ' — ' + d.escuela.trim() : '') + '\n' +
-      (d.sector ? 'Sector ' + d.sector + (d.zona ? ' · Zona ' + d.zona : '') + '\n' : '') +
-      'Función: ' + d.funcion.trim() + '\n' +
-      'Tipo de ayuda: ' + (d.tipoAyuda || '').trim() + '\n' +
+      'Nombre: ' + sopEscapeMarkdown_(d.nombre.trim()) + '\n' +
+      'CCT: ' + sopEscapeMarkdown_(d.cct.trim().toUpperCase()) + (d.escuela ? ' — ' + sopEscapeMarkdown_(d.escuela.trim()) : '') + '\n' +
+      (d.sector ? 'Sector ' + sopEscapeMarkdown_(d.sector) + (d.zona ? ' · Zona ' + sopEscapeMarkdown_(d.zona) : '') + '\n' : '') +
+      'Función: ' + sopEscapeMarkdown_(d.funcion.trim()) + '\n' +
+      'Tipo de ayuda: ' + sopEscapeMarkdown_((d.tipoAyuda || '').trim()) + '\n' +
       'WhatsApp: ' + d.whatsapp.trim() + ' — [Abrir chat](' + whatsappLink + ')\n' +
       (d.correo && d.correo.trim() ? 'Correo: ' + d.correo.trim() + '\n' : '') +
-      'Descripción: ' + d.descripcion.trim();
+      'Descripción: ' + sopEscapeMarkdown_(d.descripcion.trim());
 
     UrlFetchApp.fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
       method: 'post',
@@ -326,8 +397,8 @@ function sopNotificarCierreSolicitante(folio, escuela, cct, notas, correo) {
       '<div style="border:1px solid #d6d1ca;border-top:none;border-radius:0 0 8px 8px;padding:18px 20px;">' +
       '<p style="margin:0 0 10px 0;font-size:14px;color:#333;">Tu solicitud de soporte técnico remoto fue marcada como resuelta por OTDE.</p>' +
       '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Folio:</strong> ' + folio + '</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Escuela / CCT:</strong> ' + (escuela || '') + ' — ' + cct + '</p>' +
-      (notas ? '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Notas:</strong> ' + notas + '</p>' : '') +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Escuela / CCT:</strong> ' + sopEscapeHtml_(escuela || '') + ' — ' + sopEscapeHtml_(cct) + '</p>' +
+      (notas ? '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Notas:</strong> ' + sopEscapeHtml_(notas) + '</p>' : '') +
       '</div></div>';
 
     sopEnviarCorreo_({

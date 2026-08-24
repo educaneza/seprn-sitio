@@ -61,6 +61,10 @@
 // CONSULTA DE FOLIO (Oficina Virtual OTDE): doGet(?action=consulta&folio=..
 // &correo=...) devuelve estatus/fecha/notas si el folio y el correo
 // coinciden, o {status:'no_encontrado'} en cualquier otro caso.
+//
+// PANEL OTDE (panel-otde.gs, Sheet aparte): doGet(?action=pendientes&
+// token=...) devuelve todas las solicitudes abiertas. Configura el token
+// una vez con aseConfigurarTokenPanel('un-secreto-largo') antes de usarlo.
 // ============================================================
 
 const HOJA_ASE_SOLICITUDES = 'Solicitudes';
@@ -97,6 +101,33 @@ function aseDesactivarModoPrueba() {
   PropertiesService.getScriptProperties().deleteProperty('MODO_PRUEBA_CORREO');
 }
 
+// ── Token del Panel OTDE: a diferencia de ?action=consulta (que exige ya
+// conocer un folio + correo específicos), ?action=pendientes regresa TODAS
+// las solicitudes abiertas con nombre/escuela/contacto — sin este token
+// cualquiera que viera la URL en el código fuente del sitio podría listar
+// esos datos. Configúralo una vez con aseConfigurarTokenPanel('un-secreto-
+// largo') desde el editor — el mismo valor debe pegarse en panel-otde.gs. ──
+function aseConfigurarTokenPanel(token) {
+  PropertiesService.getScriptProperties().setProperty('PANEL_TOKEN', token);
+}
+
+// ── Escapa HTML/Markdown de campos capturados por el solicitante antes de
+// insertarlos en el cuerpo de un correo o mensaje de Telegram — el endpoint
+// es público, así que sin esto cualquiera podría inyectar <a>/<img> en un
+// correo con membrete institucional real, o un link falso en Telegram. ──
+function aseEscapeHtml_(valor) {
+  return String(valor == null ? '' : valor)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function aseEscapeMarkdown_(valor) {
+  return String(valor == null ? '' : valor).replace(/([_*[\]`])/g, '\\$1');
+}
+
 function aseEnviarCorreo_(opciones) {
   const correoPrueba = PropertiesService.getScriptProperties().getProperty('MODO_PRUEBA_CORREO');
   if (correoPrueba) {
@@ -125,7 +156,45 @@ function doGet(e) {
   if (accion === 'consulta') {
     return aseConsultarFolio(e.parameter.folio, e.parameter.correo);
   }
+  if (accion === 'pendientes') {
+    return aseListarPendientes(e.parameter.token);
+  }
   return aseTextResponse(JSON.stringify({ status: 'ok', servicio: 'OTDE Solicitudes de Asesoría' }));
+}
+
+// ── Lista de solicitudes abiertas para el Panel OTDE (?action=pendientes) ──
+// "Abierta" = Estatus distinto de Resuelto/Rechazado (o vacío). Requiere el
+// mismo token configurado con aseConfigurarTokenPanel() — ver esa función arriba.
+function aseListarPendientes(tokenRecibido) {
+  const tokenEsperado = PropertiesService.getScriptProperties().getProperty('PANEL_TOKEN');
+  if (!tokenEsperado || tokenRecibido !== tokenEsperado) {
+    return aseTextResponse(JSON.stringify({ status: 'no_autorizado' }));
+  }
+
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_ASE_SOLICITUDES);
+  if (!hoja) return aseTextResponse(JSON.stringify({ status: 'ok', tramite: 'Asesorías', items: [] }));
+
+  const filas = hoja.getDataRange().getValues().slice(1);
+  const items = filas
+    .filter(function (r) { return r[1]; }) // folio no vacío
+    .filter(function (r) {
+      const estatus = String(r[COL_ASE_ESTATUS - 1] || '').trim();
+      return estatus !== 'Resuelto' && estatus !== 'Rechazado';
+    })
+    .map(function (r) {
+      return {
+        folio: r[1],
+        fecha: r[0] instanceof Date ? r[0].toISOString() : String(r[0]),
+        nombre: r[3],
+        escuela: r[8],
+        sector: r[6],
+        zona: r[7],
+        estatus: String(r[COL_ASE_ESTATUS - 1] || 'Pendiente de validar').trim(),
+        notas: r[16] || ''
+      };
+    });
+
+  return aseTextResponse(JSON.stringify({ status: 'ok', tramite: 'Asesorías', items: items }));
 }
 
 // ── Consulta de estatus por folio + correo (Oficina Virtual OTDE) ──
@@ -385,14 +454,14 @@ function aseNotificarTelegram(folio, d, oficioUrl) {
     const mensaje =
       '🎓 *Nueva solicitud de Asesoría*\n' +
       'Folio: ' + folio + '\n' +
-      'Tipo: ' + d.tipoAsesoria.trim() + '\n' +
-      'Nombre: ' + d.nombre.trim() + ' (' + d.funcion.trim() + ')\n' +
-      'CCT: ' + d.cct.trim().toUpperCase() + (d.escuela ? ' — ' + d.escuela.trim() : '') + '\n' +
-      (d.sector ? 'Sector ' + d.sector + (d.zona ? ' · Zona ' + d.zona : '') + '\n' : '') +
-      'Turno: ' + d.turno.trim() + '\n' +
+      'Tipo: ' + aseEscapeMarkdown_(d.tipoAsesoria.trim()) + '\n' +
+      'Nombre: ' + aseEscapeMarkdown_(d.nombre.trim()) + ' (' + aseEscapeMarkdown_(d.funcion.trim()) + ')\n' +
+      'CCT: ' + aseEscapeMarkdown_(d.cct.trim().toUpperCase()) + (d.escuela ? ' — ' + aseEscapeMarkdown_(d.escuela.trim()) : '') + '\n' +
+      (d.sector ? 'Sector ' + aseEscapeMarkdown_(d.sector) + (d.zona ? ' · Zona ' + aseEscapeMarkdown_(d.zona) : '') + '\n' : '') +
+      'Turno: ' + aseEscapeMarkdown_(d.turno.trim()) + '\n' +
       'Número de docentes: ' + d.numDocentes + '\n' +
       'WhatsApp: ' + d.whatsapp.trim() + '\n' +
-      (d.observaciones ? 'Observaciones: ' + d.observaciones.trim() + '\n' : '') +
+      (d.observaciones ? 'Observaciones: ' + aseEscapeMarkdown_(d.observaciones.trim()) + '\n' : '') +
       'Oficio: ' + oficioUrl;
 
     UrlFetchApp.fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
@@ -426,9 +495,9 @@ function aseNotificarSolicitudRecibida(folio, d) {
       '<div style="border:1px solid #d6d1ca;border-top:none;border-radius:0 0 8px 8px;padding:18px 20px;">' +
       '<p style="margin:0 0 10px 0;font-size:14px;color:#333;">Se registró tu solicitud de asesoría. OTDE la está atendiendo directamente — te avisaremos por este medio en cuanto se resuelva.</p>' +
       '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Folio:</strong> ' + folio + '</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Tipo:</strong> ' + d.tipoAsesoria.trim() + '</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Escuela / CCT:</strong> ' + (d.escuela || '') + ' — ' + d.cct.trim().toUpperCase() + '</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Solicita:</strong> ' + d.nombre.trim() + ' (' + d.funcion.trim() + ')</p>' +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Tipo:</strong> ' + aseEscapeHtml_(d.tipoAsesoria.trim()) + '</p>' +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Escuela / CCT:</strong> ' + aseEscapeHtml_(d.escuela || '') + ' — ' + aseEscapeHtml_(d.cct.trim().toUpperCase()) + '</p>' +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Solicita:</strong> ' + aseEscapeHtml_(d.nombre.trim()) + ' (' + aseEscapeHtml_(d.funcion.trim()) + ')</p>' +
       '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Número de docentes:</strong> ' + d.numDocentes + '</p>' +
       '</div></div>';
 
@@ -509,10 +578,10 @@ function aseNotificarCierre(fila) {
       '<div style="border:1px solid #d6d1ca;border-top:none;border-radius:0 0 8px 8px;padding:18px 20px;">' +
       '<p style="margin:0 0 10px 0;font-size:14px;color:#333;">Tu solicitud de asesoría fue marcada como resuelta por OTDE.</p>' +
       '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Folio:</strong> ' + folio + '</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Tipo:</strong> ' + tipo + '</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Escuela / CCT:</strong> ' + (escuela || '') + ' — ' + cct + '</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Solicitó:</strong> ' + nombre + '</p>' +
-      (notas ? '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Notas:</strong> ' + notas + '</p>' : '') +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Tipo:</strong> ' + aseEscapeHtml_(tipo) + '</p>' +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Escuela / CCT:</strong> ' + aseEscapeHtml_(escuela || '') + ' — ' + aseEscapeHtml_(cct) + '</p>' +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Solicitó:</strong> ' + aseEscapeHtml_(nombre) + '</p>' +
+      (notas ? '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Notas:</strong> ' + aseEscapeHtml_(notas) + '</p>' : '') +
       '</div></div>';
 
     const opciones = {

@@ -971,3 +971,228 @@ del sitio (impresos, futuro og:image) sin tener que reconstruirlo desde cero.
 sistema de diseño aparte (ver sección 12 y CLAUDE.md). `otde.html` sí tiene el ícono aplicado en
 el repo, pero no llegó a `origin/main` en el primer push por conflicto con las pestañas de
 Mantenimiento/Asesorías/Correo que aún no están publicadas — ver `docs/BITACORA.md`.
+
+## 19. Diagramas de flujo por trámite (Oficina Virtual OTDE) — agosto 2026
+
+Jorge pidió un esquema visual del ciclo de vida de una solicitud (desde que se pide hasta que se
+cierra) porque la información de los 5 trámites vive repartida entre §11/§12/§15/§16 de este
+archivo, `CLAUDE.md` y varios checkpoints de `docs/BITACORA.md` — reconstruir el flujo completo
+requería leer todo eso. Estos diagramas son el complemento visual de esa prosa ya existente, no
+la reemplazan; para el detalle narrativo de cada decisión, seguir los enlaces "Ver también" de
+cada sub-apartado. Hay también una versión interactiva de estos mismos esquemas publicada como
+Artifact para consulta rápida sin entrar al repo (ver `docs/BITACORA.md` para el link si sigue
+vigente — los Artifacts no se versionan en git).
+
+Convención en los 5 diagramas: nodos con borde sólido ocurren **dentro** del sitio/backend
+propio; nodos con borde punteado ocurren **fuera** del sitio (promoción manual a otro sistema,
+coordinación fuera de banda) — es la representación visual del hallazgo más importante de esta
+sección: el webform casi siempre solo captura la solicitud inicial, el resto del ciclo real pasa
+en otro lado sin integración automática.
+
+### 19.1 Mantenimiento (`OTDE-MAN-NNNN`)
+
+```mermaid
+flowchart TD
+    subgraph Solicitante
+        A[Llena formulario en otde.html<br/>adjunta oficio PDF firmado]
+    end
+    subgraph Backend["mantenimiento.gs"]
+        B[doPost: genera folio,<br/>sube oficio a Drive,<br/>fila en Sheet]
+        C[Estatus = Pendiente de validar]
+        D{{Telegram a OTDE<br/>— apagado a propósito}}
+        E[Correo to=solicitante<br/>cc=Zona/Sector según jerarquía]
+    end
+    subgraph OTDE["OTDE / Jorge (manual)"]
+        F[Revisa oficio adjunto]
+        G[Cambia Estatus a mano:<br/>Validado → En atención → Resuelto]
+    end
+    subgraph Externo["Fuera del sitio"]
+        H[/Promoción manual a<br/>Reportes de Visitas v8.5/]
+        I[/Agenda visita, atención,<br/>reporte técnico con PDF/]
+    end
+    J[Trigger onEdit: al llegar a<br/>Resuelto, correo de cierre<br/>to=solicitante cc=Zona/Sector]
+    K[Usuario consulta folio<br/>en oficina-virtual.html]
+
+    A --> B --> C --> D
+    C --> E
+    C --> F --> H -.-> I
+    F --> G --> J
+    C -.-> K
+    G -.-> K
+
+    classDef externo stroke-dasharray: 5 5
+    class H,I externo
+```
+
+`Rechazado` está disponible en el dropdown de Estatus pero **no dispara ninguna notificación** —
+a diferencia de `Resuelto`, es una rama sin lógica implementada (deliberado, no un bug). Ver
+también: §11 (patrón CCT), §15 (correo combinado, CC por jerarquía, modo de prueba).
+
+### 19.2 Asesorías (`OTDE-ASE-NNNN`)
+
+Mismo esqueleto que 19.1 (mismo backend compartido, mismo mecanismo de cierre y correo
+combinado). Dos diferencias:
+
+```mermaid
+flowchart TD
+    A[Llena formulario en otde.html<br/>adjunta oficio + casilla de<br/>confirmación de mantenimiento previo]
+    B[asesorias.gs: doPost,<br/>folio OTDE-ASE-NNNN,<br/>Estatus = Pendiente de validar]
+    F[Jorge revisa oficio]
+    G[Cambia Estatus a mano]
+    H[/Promoción manual a<br/>Excel aparte: SGA-OTDE Track 1<br/>hoy pausado/]
+    J[Trigger onEdit cierre:<br/>correo a solicitante + Zona/Sector]
+
+    A --> B --> F --> H
+    F --> G --> J
+
+    classDef externo stroke-dasharray: 5 5
+    class H externo
+```
+
+La casilla de confirmación (Banco de Materiales/Chuka ya instalado) no se valida automáticamente
+contra ningún sistema — es solo un registro de que el solicitante confirmó, revisado por Jorge
+junto con el oficio. Ver también: §15.
+
+### 19.3 Soporte Técnico Remoto (`OTDE-SOP-NNNN`)
+
+```mermaid
+flowchart TD
+    A[Llena formulario en otde.html<br/>sin oficio adjunto]
+    B[soporte-remoto.gs: doPost,<br/>folio OTDE-SOP-NNNN,<br/>Estatus = Pendiente de validar]
+    C{{Telegram a OTDE<br/>— sí activo, incluye link wa.me}}
+    D[Jorge atiende vía TeamViewer]
+    E[Cambia Estatus a mano:<br/>Validado → En atención → Resuelto]
+    F[Trigger onEdit cierre:<br/>correo SOLO al solicitante<br/>— sin Zona/Sector, deliberado]
+    G[Usuario consulta folio<br/>en oficina-virtual.html]
+
+    A --> B --> C
+    B --> D --> E --> F
+    B -.-> G
+    E -.-> G
+```
+
+Confirmado con Jorge: a diferencia de Mantenimiento/Asesorías, **no hay promoción a ningún
+sistema externo** — la atención remota vía TeamViewer y el cierre del ticket ocurren completos
+dentro del webform/Sheet. Tampoco tiene `Contactos_Zona_Sector` (decisión deliberada, no un
+hueco). Ver también: `CLAUDE.md` → `apps-script/soporte-remoto.gs` (este trámite no tenía
+sub-sección propia en este archivo hasta ahora).
+
+### 19.4 Correo Institucional (`OTDE-ALT-`/`OTDE-CAM-`/`OTDE-2FA-`/`OTDE-INC-`)
+
+```mermaid
+flowchart TD
+    A[Solicitante elige sub-tipo en otde.html:<br/>Alta / Cambio contraseña /<br/>Eliminar 2FA / Incidencia]
+    B["WebApp.gs (repo aparte:<br/>Correos-institucionales/webform-2026-2027)<br/>enruta por datos.tipo"]
+    C[Fila en hoja del sub-tipo,<br/>Estado general = texto libre]
+    D{{Telegram a OTDE<br/>— SOLO sub-tipo Incidencias}}
+    E[Marcos llena a mano<br/>columna NP SIGEE]
+    F[/Aprovisionamiento real<br/>ocurre en SIGEE<br/>— sistema externo, sin API/]
+    G[Marcos/Jorge actualizan<br/>Estado general a mano]
+    H[Usuario consulta folio<br/>en oficina-virtual.html<br/>— muestra texto plano, sin badge]
+
+    A --> B --> C
+    C --> D
+    C --> E --> F
+    F -.-> G
+    C -.-> H
+    G -.-> H
+
+    classDef externo stroke-dasharray: 5 5
+    class F externo
+```
+
+Sin `stateDiagram` a propósito: a diferencia de Mantenimiento/Asesorías/Soporte, `Estado
+general` es texto libre sin vocabulario cerrado — `ovRenderEstatus()` en `oficina-virtual.html`
+no le aplica badge de color por esta misma razón. Ver también: §16.
+
+### 19.5 Centro de Formación Docente (`OTDE-CAP-NNNN`)
+
+```mermaid
+flowchart TD
+    A[Docente navega catálogo<br/>en formacion-docente.html<br/>doGet: Activo=TRUE + ventana de fechas]
+    B{Curso requiere<br/>registro previo?}
+    C[/Registro en plataforma externa/]
+    D[Formulario único de datos,<br/>envío secuencial por curso]
+    E["formacion-docente.gs: doPost<br/>upsert Docentes (por RFC)<br/>+ folio en Inscripciones"]
+    F[Confirmación por correo<br/>— SIN folio consultable<br/>no aplica Oficina Virtual]
+    G[Recordatorios automáticos:<br/>1 día antes / mitad de curso /<br/>30 min antes]
+
+    A --> B
+    B -->|sí| C -.-> D
+    B -->|no| D
+    D --> E --> F
+    E --> G -.-> A
+
+    classDef externo stroke-dasharray: 5 5
+    class C externo
+```
+
+Nota explícita: este trámite **no es comparable 1:1** con los otros 4 — es un registro/
+inscripción a oferta, no un ticket con ciclo de vida de estados, y no tiene folio consultable en
+`oficina-virtual.html`. El catálogo de cursos (`Cursos`) lo administra Jorge a mano, no hay
+"fuera del sitio" en el mismo sentido que los otros 4 trámites. Ver también: §12 (diagrama ASCII
+existente, enfocado en arquitectura de datos/triggers — este §19.5 es el diagrama de flujo de
+usuario, ambos se complementan sin duplicarse).
+
+## 20. Panel único de solicitudes pendientes, y mejoras puntuales de automatización (agosto 2026)
+
+Nace de la misma sesión que §19: entender el flujo completo (arriba) llevó a repasarlo trámite
+por trámite buscando dónde reducir la dispersión operativa real de Jorge — tener que entrar a 4
+Google Sheets distintos para saber qué falta atender, y pasos manuales que dependían de que
+alguien se acordara de correrlos.
+
+**Panel OTDE (`apps-script/panel-otde.gs`, nuevo).** Un Apps Script aparte, pegado en un Google
+Sheet nuevo y propio (no en ninguno de los Sheets de los trámites), que junta en una sola hoja
+("Pendientes") las solicitudes abiertas de los 4 trámites con folio:
+
+- Llama por `UrlFetchApp` a `?action=pendientes&token=...` en las 3 URLs ya conocidas de
+  `mantenimiento.gs`/`asesorias.gs`/`soporte-remoto.gs`, y a la misma URL de siempre del webform
+  de Correo (`Correos-institucionales/webform-2026-2027/WebApp.gs`, repo aparte).
+- **`?action=pendientes` es un endpoint nuevo en los 4 backends**, hermano de `?action=consulta`
+  (§19 arriba) pero con una diferencia de exposición importante: `consulta` regresa una sola
+  solicitud si ya sabes su folio + correo; `pendientes` regresa nombre/escuela/correo de **todas**
+  las solicitudes abiertas de ese trámite — por eso exige un token (`PANEL_TOKEN`, Script Property
+  por proyecto, mismo secreto configurado en los 4 backends y en el Panel) que `?action=consulta`
+  nunca necesitó. Sin el token correcto, responde `{status:'no_autorizado'}`.
+- Criterio de "abierta" por trámite: Mantenimiento/Asesorías/Soporte — Estatus distinto de
+  `Resuelto`/`Rechazado` (mismo vocabulario cerrado de §19.1-19.3); Correo — `Estado general`
+  todavía en `'Solicitud recibida'`, el mismo criterio exacto que ya usaba `resumenSemanal()` en
+  `ResumenSemanal.gs` antes de que existiera este Panel.
+- La hoja se ordena por días de espera (más antiguo arriba) y colorea el estatus con los mismos
+  hex que `oficina-virtual.html` (`b-pendiente`/`b-atencion`/etc., ver §"Oficina Virtual OTDE" en
+  `CLAUDE.md`). La columna "Días" se marca en rojo/negrita cuando una solicitud lleva
+  `PANEL_UMBRAL_DIAS_ALERTA` (3 por default, ajustable en el propio archivo) o más sin moverse, y
+  el aviso de arriba de la hoja resume cuántas están en ese caso.
+- Menú "Panel OTDE": actualizar a mano, o instalar un trigger `timeBased` que refresca cada 30
+  minutos (mismo patrón instalable/desinstalable que los triggers de cierre de §19).
+- **Configurar el token requiere un paso intermedio, no obvio**: el botón ▶️ Ejecutar del editor
+  de Apps Script llama a la función seleccionada sin argumentos, así que
+  `manConfigurarTokenPanel('secreto')`/equivalentes no se pueden correr así directo — hay que
+  envolverlos en una función temporal sin parámetros. Detalle completo y el error real que esto
+  causó en `docs/QA-NOTES.md #14`.
+
+**Dropdown protector en "Estado general" de Correo (`Correos-institucionales/webform-2026-2027/`,
+`Alta.gs`/`CambioContrasena.gs`/`Reset2FA.gs`/`Incidencias.gs`).** No cambia ninguna lógica — esa
+columna, aunque técnicamente texto libre (§19.4), en la práctica solo toma 2 valores por tipo
+(`'Solicitud recibida'` y su estado final propio: `'Cuenta entregada'`/`'Reset notificado'`/
+`'Incidencia resuelta'`), escritos siempre por `altaRevisarEdicion()`/`cambioRevisarEdicion()`/
+`resetRevisarEdicion()`/`incidenciaRevisarEdicion()`, nunca a mano. El dropdown
+(`requireValueInList`, mismo patrón que `aseAplicarValidacionEstatus()` en `asesorias.gs`) solo
+protege contra un typo si alguien edita la celda directo. Se reaplica en cada `doPost` (mismo
+criterio que `aseObtenerHojaSolicitudes()`), así que cubre también las 4 hojas ya desplegadas la
+próxima vez que llegue una solicitud de cada tipo, sin migración manual.
+
+**Auto-generación de ID de curso en Formación Docente (`apps-script/formacion-docente.gs`).**
+"Generar ID de cursos faltantes" era una acción de menú manual — si Jorge daba de alta un curso
+sin correrla antes de marcarlo `Activo`, el curso salía en el catálogo sin `ID_Curso`, y cualquier
+inscripción a él quedaba con esa columna vacía en `Inscripciones`, silencioso hasta que alguien lo
+notaba. `onEditCursos()` (instalable vía el menú "OTDE Formación", mismo patrón que
+`manOnEditCierre()` en §19.1: no usa `e.value`, revisa si la columna `Categoria` cae dentro del
+rango editado sin importar su tamaño) ahora corre la misma lógica sola en cuanto se escribe la
+`Categoria` de una fila nueva — refactorizada a `generarIdsCursosFaltantes_()` para que el menú
+manual y el disparador automático compartan un solo cálculo, sin duplicar la lógica.
+
+**Fuera de alcance de esta ronda**: la promoción manual de Mantenimiento/Asesorías a sus sistemas
+externos (Reportes de Visitas v8.5 / Excel "SGA-OTDE Track 1", ver §19.1-19.2) sigue siendo
+manual — es la pieza de dispersión más grande que queda, marcada para una sesión futura que
+revise primero el sistema v8.5 con cuidado antes de proponer cualquier integración directa.
