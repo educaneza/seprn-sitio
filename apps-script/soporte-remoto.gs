@@ -36,6 +36,11 @@
 // folio=...&correo=...) devuelve estatus/fecha/notas si el folio y
 // el correo coinciden, o {status:'no_encontrado'} en cualquier otro
 // caso.
+//
+// PANEL OTDE (panel-otde.gs, Sheet aparte): doGet(?action=pendientes&
+// token=...) devuelve todas las solicitudes abiertas. Configura el
+// token una vez con sopConfigurarTokenPanel('un-secreto-largo') antes
+// de usarlo.
 // ============================================================
 
 const HOJA_SOPORTE = 'Solicitudes_Soporte_2026';
@@ -60,6 +65,16 @@ function sopActivarModoPrueba(correo) {
 
 function sopDesactivarModoPrueba() {
   PropertiesService.getScriptProperties().deleteProperty('MODO_PRUEBA_CORREO');
+}
+
+// ── Token del Panel OTDE: a diferencia de ?action=consulta (que exige ya
+// conocer un folio + correo específicos), ?action=pendientes regresa TODAS
+// las solicitudes abiertas con nombre/escuela/contacto — sin este token
+// cualquiera que viera la URL en el código fuente del sitio podría listar
+// esos datos. Configúralo una vez con sopConfigurarTokenPanel('un-secreto-
+// largo') desde el editor — el mismo valor debe pegarse en panel-otde.gs. ──
+function sopConfigurarTokenPanel(token) {
+  PropertiesService.getScriptProperties().setProperty('PANEL_TOKEN', token);
 }
 
 // ── Escapa HTML/Markdown de campos capturados por el solicitante antes de
@@ -107,7 +122,46 @@ function doGet(e) {
   if (accion === 'consulta') {
     return sopConsultarFolio(e.parameter.folio, e.parameter.correo);
   }
+  if (accion === 'pendientes') {
+    return sopListarPendientes(e.parameter.token);
+  }
   return textResponse(JSON.stringify({ status: 'ok', servicio: 'OTDE Soporte Técnico Remoto' }));
+}
+
+// ── Lista de solicitudes abiertas para el Panel OTDE (?action=pendientes) ──
+// "Abierta" = Estatus distinto de Resuelto/Rechazado (o vacío, que
+// sopConsultarFolio ya trata como Pendiente de validar). Requiere el mismo
+// token configurado con sopConfigurarTokenPanel() — ver esa función arriba.
+function sopListarPendientes(tokenRecibido) {
+  const tokenEsperado = PropertiesService.getScriptProperties().getProperty('PANEL_TOKEN');
+  if (!tokenEsperado || tokenRecibido !== tokenEsperado) {
+    return textResponse(JSON.stringify({ status: 'no_autorizado' }));
+  }
+
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_SOPORTE);
+  if (!hoja) return textResponse(JSON.stringify({ status: 'ok', tramite: 'Soporte Técnico Remoto', items: [] }));
+
+  const filas = hoja.getDataRange().getValues().slice(1);
+  const items = filas
+    .filter(function (r) { return r[1]; }) // folio no vacío
+    .filter(function (r) {
+      const estatus = String(r[COL_SOP_ESTATUS - 1] || '').trim();
+      return estatus !== 'Resuelto' && estatus !== 'Rechazado';
+    })
+    .map(function (r) {
+      return {
+        folio: r[1],
+        fecha: r[0] instanceof Date ? r[0].toISOString() : String(r[0]),
+        nombre: r[2],
+        escuela: r[6],
+        sector: r[4],
+        zona: r[5],
+        estatus: String(r[COL_SOP_ESTATUS - 1] || 'Pendiente de validar').trim(),
+        notas: r[14] || ''
+      };
+    });
+
+  return textResponse(JSON.stringify({ status: 'ok', tramite: 'Soporte Técnico Remoto', items: items }));
 }
 
 // ── Consulta de estatus por folio + correo (Oficina Virtual OTDE) ──

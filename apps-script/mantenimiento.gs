@@ -56,6 +56,10 @@
 // CONSULTA DE FOLIO (Oficina Virtual OTDE): doGet(?action=consulta&folio=..
 // &correo=...) devuelve estatus/fecha/notas si el folio y el correo
 // coinciden, o {status:'no_encontrado'} en cualquier otro caso.
+//
+// PANEL OTDE (panel-otde.gs, Sheet aparte): doGet(?action=pendientes&
+// token=...) devuelve todas las solicitudes abiertas. Configura el token
+// una vez con manConfigurarTokenPanel('un-secreto-largo') antes de usarlo.
 // ============================================================
 
 const HOJA_MAN_SOLICITUDES = 'Solicitudes';
@@ -91,6 +95,16 @@ function manActivarModoPrueba(correo) {
 
 function manDesactivarModoPrueba() {
   PropertiesService.getScriptProperties().deleteProperty('MODO_PRUEBA_CORREO');
+}
+
+// ── Token del Panel OTDE: a diferencia de ?action=consulta (que exige ya
+// conocer un folio + correo específicos), ?action=pendientes regresa TODAS
+// las solicitudes abiertas con nombre/escuela/contacto — sin este token
+// cualquiera que viera la URL en el código fuente del sitio podría listar
+// esos datos. Configúralo una vez con manConfigurarTokenPanel('un-secreto-
+// largo') desde el editor — el mismo valor debe pegarse en panel-otde.gs. ──
+function manConfigurarTokenPanel(token) {
+  PropertiesService.getScriptProperties().setProperty('PANEL_TOKEN', token);
 }
 
 // ── Escapa HTML/Markdown de campos capturados por el solicitante antes de
@@ -138,7 +152,46 @@ function doGet(e) {
   if (accion === 'consulta') {
     return manConsultarFolio(e.parameter.folio, e.parameter.correo);
   }
+  if (accion === 'pendientes') {
+    return manListarPendientes(e.parameter.token);
+  }
   return manTextResponse(JSON.stringify({ status: 'ok', servicio: 'OTDE Solicitudes de Mantenimiento' }));
+}
+
+// ── Lista de solicitudes abiertas para el Panel OTDE (?action=pendientes) ──
+// "Abierta" = Estatus distinto de Resuelto/Rechazado (o vacío, que
+// manConsultarFolio ya trata como recién creada). Requiere el mismo token
+// configurado con manConfigurarTokenPanel() — ver esa función arriba.
+function manListarPendientes(tokenRecibido) {
+  const tokenEsperado = PropertiesService.getScriptProperties().getProperty('PANEL_TOKEN');
+  if (!tokenEsperado || tokenRecibido !== tokenEsperado) {
+    return manTextResponse(JSON.stringify({ status: 'no_autorizado' }));
+  }
+
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_MAN_SOLICITUDES);
+  if (!hoja) return manTextResponse(JSON.stringify({ status: 'ok', tramite: 'Mantenimiento', items: [] }));
+
+  const filas = hoja.getDataRange().getValues().slice(1);
+  const items = filas
+    .filter(function (r) { return r[1]; }) // folio no vacío
+    .filter(function (r) {
+      const estatus = String(r[COL_MAN_ESTATUS - 1] || '').trim();
+      return estatus !== 'Resuelto' && estatus !== 'Rechazado';
+    })
+    .map(function (r) {
+      return {
+        folio: r[1],
+        fecha: r[0] instanceof Date ? r[0].toISOString() : String(r[0]),
+        nombre: r[2],
+        escuela: r[7],
+        sector: r[5],
+        zona: r[6],
+        estatus: String(r[COL_MAN_ESTATUS - 1] || 'Pendiente de validar').trim(),
+        notas: r[14] || ''
+      };
+    });
+
+  return manTextResponse(JSON.stringify({ status: 'ok', tramite: 'Mantenimiento', items: items }));
 }
 
 // ── Consulta de estatus por folio + correo (Oficina Virtual OTDE) ──

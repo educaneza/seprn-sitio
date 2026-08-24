@@ -61,6 +61,10 @@
 // CONSULTA DE FOLIO (Oficina Virtual OTDE): doGet(?action=consulta&folio=..
 // &correo=...) devuelve estatus/fecha/notas si el folio y el correo
 // coinciden, o {status:'no_encontrado'} en cualquier otro caso.
+//
+// PANEL OTDE (panel-otde.gs, Sheet aparte): doGet(?action=pendientes&
+// token=...) devuelve todas las solicitudes abiertas. Configura el token
+// una vez con aseConfigurarTokenPanel('un-secreto-largo') antes de usarlo.
 // ============================================================
 
 const HOJA_ASE_SOLICITUDES = 'Solicitudes';
@@ -95,6 +99,16 @@ function aseActivarModoPrueba(correo) {
 
 function aseDesactivarModoPrueba() {
   PropertiesService.getScriptProperties().deleteProperty('MODO_PRUEBA_CORREO');
+}
+
+// ── Token del Panel OTDE: a diferencia de ?action=consulta (que exige ya
+// conocer un folio + correo específicos), ?action=pendientes regresa TODAS
+// las solicitudes abiertas con nombre/escuela/contacto — sin este token
+// cualquiera que viera la URL en el código fuente del sitio podría listar
+// esos datos. Configúralo una vez con aseConfigurarTokenPanel('un-secreto-
+// largo') desde el editor — el mismo valor debe pegarse en panel-otde.gs. ──
+function aseConfigurarTokenPanel(token) {
+  PropertiesService.getScriptProperties().setProperty('PANEL_TOKEN', token);
 }
 
 // ── Escapa HTML/Markdown de campos capturados por el solicitante antes de
@@ -142,7 +156,45 @@ function doGet(e) {
   if (accion === 'consulta') {
     return aseConsultarFolio(e.parameter.folio, e.parameter.correo);
   }
+  if (accion === 'pendientes') {
+    return aseListarPendientes(e.parameter.token);
+  }
   return aseTextResponse(JSON.stringify({ status: 'ok', servicio: 'OTDE Solicitudes de Asesoría' }));
+}
+
+// ── Lista de solicitudes abiertas para el Panel OTDE (?action=pendientes) ──
+// "Abierta" = Estatus distinto de Resuelto/Rechazado (o vacío). Requiere el
+// mismo token configurado con aseConfigurarTokenPanel() — ver esa función arriba.
+function aseListarPendientes(tokenRecibido) {
+  const tokenEsperado = PropertiesService.getScriptProperties().getProperty('PANEL_TOKEN');
+  if (!tokenEsperado || tokenRecibido !== tokenEsperado) {
+    return aseTextResponse(JSON.stringify({ status: 'no_autorizado' }));
+  }
+
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_ASE_SOLICITUDES);
+  if (!hoja) return aseTextResponse(JSON.stringify({ status: 'ok', tramite: 'Asesorías', items: [] }));
+
+  const filas = hoja.getDataRange().getValues().slice(1);
+  const items = filas
+    .filter(function (r) { return r[1]; }) // folio no vacío
+    .filter(function (r) {
+      const estatus = String(r[COL_ASE_ESTATUS - 1] || '').trim();
+      return estatus !== 'Resuelto' && estatus !== 'Rechazado';
+    })
+    .map(function (r) {
+      return {
+        folio: r[1],
+        fecha: r[0] instanceof Date ? r[0].toISOString() : String(r[0]),
+        nombre: r[3],
+        escuela: r[8],
+        sector: r[6],
+        zona: r[7],
+        estatus: String(r[COL_ASE_ESTATUS - 1] || 'Pendiente de validar').trim(),
+        notas: r[16] || ''
+      };
+    });
+
+  return aseTextResponse(JSON.stringify({ status: 'ok', tramite: 'Asesorías', items: items }));
 }
 
 // ── Consulta de estatus por folio + correo (Oficina Virtual OTDE) ──
