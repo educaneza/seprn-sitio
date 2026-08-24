@@ -297,6 +297,41 @@ problema). Si se agrega código nuevo a `Alta.gs`/`CambioContrasena.gs`/`Reset2F
 `Incidencias.gs`/`OnEdit.gs` que se referencie desde `WebApp.gs` (o viceversa), evitar
 `const`/`let` de nivel superior que dependan de otro archivo — usarlos solo dentro de funciones.
 
+## 14. El botón ▶️ Ejecutar del editor de Apps Script llama a la función seleccionada **sin
+argumentos** — no hay forma de escribirle un parámetro ahí
+
+**Síntoma:** al configurar el token del Panel OTDE (ago 2026, ver `panel-otde.gs` y
+`docs/ARCHITECTURE.md §20`), Jorge seleccionó `manConfigurarTokenPanel` en el selector de
+funciones del editor y le dio ▶️ Ejecutar — truena `Exception: Invalid argument: value` en la
+línea del `setProperty(...)`. El mismo intento en los otros 3 backends (`aseConfigurarTokenPanel`/
+`sopConfigurarTokenPanel`/`configurarTokenPanel`) dejó los 4 sin token real configurado
+(`PropertiesService` nunca guardó el secreto), así que el Panel fallaba después con
+`no_autorizado` en los 4 a la vez — un síntoma que parecía "el secreto no coincide" pero la causa
+real era que nunca se había guardado ninguno.
+
+**Causa raíz:** el botón ▶️ Ejecutar (o "Ejecutar función" del menú) siempre llama a la función
+tal cual está seleccionada, sin parámetros — es equivalente a invocarla como `miFuncion()`, nunca
+`miFuncion('valor')`. Cualquier función de este proyecto que reciba un argumento
+(`manActivarModoPrueba(correo)`, `manConfigurarTokenPanel(token)`, y sus equivalentes `ase`/`sop`/
+sin prefijo) no se puede correr así — llega `undefined`.
+
+**Fix / cómo correr una función con argumento desde el editor:** envolverla en una función
+temporal sin parámetros que sí traiga el valor escrito adentro, y seleccionar/ejecutar *esa*:
+```js
+function _fijarTokenPanel() {
+  manConfigurarTokenPanel('el-secreto-real-aqui');
+}
+```
+Es el mismo patrón ya documentado en los comentarios de cabecera de `manActivarModoPrueba()` y
+similares ("Actívalo corriendo `manActivarModoPrueba('tu@correo.com')` una vez desde el editor")
+— esa instrucción siempre implicó este paso intermedio, pero nunca se había escrito explícito
+hasta que causó un error real.
+
+**Dónde puede volver a pasar:** cualquier función `activarModoPrueba(correo)`/
+`configurarTokenPanel(token)`/similar en los 5 backends de trámite (`mantenimiento.gs`,
+`asesorias.gs`, `soporte-remoto.gs`, `formacion-docente.gs`, `Correos-institucionales/
+webform-2026-2027/`) — todas requieren este envoltorio temporal para correrse desde el editor.
+
 ## Regla general al corregir cualquiera de estos patrones
 
 Cuando se encuentra uno de estos bugs en un archivo, **revisar si el mismo

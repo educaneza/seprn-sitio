@@ -169,6 +169,7 @@ ya esté expandido).
 - **Estatus + cierre automático + auto-heal (ago 2026, pendiente de redeploy)**: ya tiene el mismo mecanismo que Mantenimiento/Asesorías — dropdown de 5 valores en `Estatus`, trigger instalable `sopOnEditCierre` (correr `sopInstalarTriggerCierre()` una vez tras pegar esta versión, o el menú "OTDE Soporte" nuevo que agrega `onOpen()`), y ahora sí completa solo cualquier encabezado que falte en la hoja real. A diferencia de Mantenimiento/Asesorías, Soporte no tiene `Contactos_Zona_Sector` — el cierre solo notifica al solicitante, no a Zona/Sector (decisión deliberada, no un pendiente). Ver "Oficina Virtual OTDE" abajo para el endpoint de consulta que motivó este cambio.
 - Para cambios: copiar el `.gs` completo en Apps Script y re-desplegar como aplicación web (Cualquier usuario) — **cuidado**: probar el endpoint con `curl -X POST`, o incluso desde un navegador headless con acceso real a internet (confirmado: el sandbox de pruebas SÍ tiene salida real a `script.google.com`), ejecuta `doPost` de verdad (escribe en Sheets y dispara Telegram). Para pruebas locales, interceptar la llamada de red (`page.route()` en Playwright) en vez de dejarla llegar al backend real
 - **Modo de prueba (código listo, aún sin desplegar, 11 ago 2026)**: `sopEnviarCorreo_()` — mismo wrapper que `manEnviarCorreo_()`/`aseEnviarCorreo_()`, activable con `sopActivarModoPrueba('correo')`/`sopDesactivarModoPrueba()` — ya reemplaza el único `MailApp.sendEmail()` de este archivo (el de cierre al solicitante) en el repo local, pero **no se pegó ni redesplegó** en el proyecto de Apps Script real esta sesión; en producción sigue corriendo la versión sin modo de prueba
+- **`?action=pendientes&token=...` (ago 2026)**: nuevo endpoint para el Panel OTDE (`apps-script/panel-otde.gs`, ver sección propia abajo) — regresa las solicitudes abiertas (Estatus ≠ Resuelto/Rechazado). Requiere `PANEL_TOKEN` en Propiedades del script, configurado con `sopConfigurarTokenPanel('secreto')` (correrla envuelta en una función temporal, no seleccionándola directo en ▶️ Ejecutar — ver `docs/QA-NOTES.md #14`). Detalle completo en `docs/ARCHITECTURE.md §20`
 
 ### `apps-script/mantenimiento.gs`
 - **Nuevo (ago 2026)**: conectado a un Google Sheet propio (hojas `Solicitudes` y
@@ -240,6 +241,9 @@ ya esté expandido).
 - **Redesplegado (11 ago 2026, versión 9, mismo día)**: el `cc` ahora depende de quién solicita
   — escuela (o vacío/desconocido) recibe Zona+Sector, Zona (`supervision`) solo Sector, Sector
   (`jefatura`) a nadie. Columna nueva `Tipo de solicitante`, ver `docs/ARCHITECTURE.md §15`.
+- **`?action=pendientes&token=...` (ago 2026)**: mismo endpoint que `soporte-remoto.gs` arriba,
+  para el Panel OTDE. Token configurado con `manConfigurarTokenPanel('secreto')` (mismo cuidado
+  del ▶️ Ejecutar sin argumentos, `docs/QA-NOTES.md #14`). Ver `docs/ARCHITECTURE.md §20`.
 
 ### `apps-script/asesorias.gs`
 - **Nuevo (ago 2026)**: mismo patrón que `mantenimiento.gs` (Sheet propio con hojas
@@ -292,6 +296,9 @@ ya esté expandido).
   Mantenimiento arriba, ver `docs/ARCHITECTURE.md §15`. **Redesplegado (11 ago 2026, versión 8,
   mismo día)**: `cc` según tipo de solicitante (escuela/supervisión/jefatura), mismo detalle que
   Mantenimiento arriba
+- **`?action=pendientes&token=...` (ago 2026)**: mismo endpoint que `mantenimiento.gs`, para el
+  Panel OTDE. Token configurado con `aseConfigurarTokenPanel('secreto')`. Ver
+  `docs/ARCHITECTURE.md §20`.
 
 ### `apps-script/formacion-docente.gs`
 **Desplegado en producción desde jul 2026** (Spreadsheet real `Formacion_Docente_2026_2027`, URL real ya pegada en `APPS_SCRIPT_URL` de `formacion-docente.html`; la extinta `jornada-verano-2026.html` compartió este mismo backend hasta su eliminación el 13 jul 2026).
@@ -304,11 +311,19 @@ ya esté expandido).
 - **Recordatorios automáticos por correo** (jul 2026, tiempos y diseño ajustados ago 2026, lógica de reintento corregida ago 2026): "empieza en 1 día" (cursos de varios días, + fallback en cursos de un solo día sin `Hora_inicio`), "vas a la mitad" (solo cursos de 30+ días), "empieza en 30 minutos" (cualquier curso con `Hora_inicio` capturada, a partir de 40 min antes). Un solo correo por curso con BCC a todos los inscritos (no uno por persona), plantilla HTML propia con paleta institucional + íconos de redes (`construirCorreoHtml()`) y `replyTo` a la cuenta institucional (`otde.nezahualcoyotl@dee.edu.mx`, no al Gmail real que envía), y revisión de `MailApp.getRemainingDailyQuota()` antes de enviar — la cuota diaria la comparten TODOS los Apps Script de la cuenta de Google, no es exclusiva de este proyecto. El disparador de "30 minutos" corre cada 15 min (antes cada hora); requiere volver a correr el menú "OTDE Formación → Instalar recordatorios automáticos" después de cada redeploy, porque `instalarRecordatoriosAutomaticos()` borra y recrea ambos activadores en cada corrida. `enviarRecordatoriosDiarios()` avisa a Jorge por correo (máx. 1x/día) si algún activador desaparece. Los avisos "1 día antes" y "30 minutos antes" ya no se resignan en silencio si se evalúan tarde (curso ya iniciado): reintentan con el mensaje ajustado a "ya inició"/"ya comenzó" en cada corrida subsecuente mientras el curso no haya terminado — ver `docs/QA-NOTES.md #8`. Detalle completo en `docs/DESIGN_SYSTEM.md` y `docs/ARCHITECTURE.md §12`
 - **Los recordatorios automáticos SÍ llegan a Recibidos, no a Enviados** (confirmado 6 ago 2026): `enviarCorreoLote()` manda `to: Session.getEffectiveUser().getEmail()` (copia a la misma cuenta que corre el script) con los inscritos en `bcc`. Gmail archiva esa copia-a-sí-mismo como correo recibido, no como enviado — mismo patrón en **todas** las automatizaciones de OTDE, incluido el SGCI viejo de `Correos-institucionales`. Si Jorge reporta "no veo nada en Enviados", el correo probablemente sí salió — hay que revisar Recibidos de la cuenta de Google que tiene instalados los activadores (`otde.nezahualcoyotl@gmail.com`), no Enviados ni ninguna cuenta de Outlook/Microsoft.
 - ~~**Bug confirmado en producción (6 ago 2026)**: `enviarRecordatoriosDiarios()`/`enviarRecordatoriosWebinar()` marcaban la columna de recordatorio en `TRUE` sin haber mandado nunca el correo si la evaluación llegaba tarde~~ — corregido (6 ago 2026): ambos ahora reintentan en cada corrida subsecuente con mensaje ajustado a "ya inició"/"ya comenzó" mientras el curso no haya terminado; solo se resignan cuando `hoy > Fecha_fin`. Pasó de verdad con el Seminario "Convivencia digital entre estudiantes" (4 ago 2026, sin `Hora_inicio`) — ver `docs/QA-NOTES.md #8`. **Pendiente para Jorge**: re-desplegar `formacion-docente.gs` (Administrar implementaciones → Nueva versión) para que el fix llegue a producción.
-- Menú "OTDE Formación" completo: Generar ID de cursos faltantes · Generar estadísticas · Actualizar vista de Inscripciones · Migrar Jornada Verano 2026 · Instalar/Desinstalar recordatorios automáticos
+- Menú "OTDE Formación" completo: Generar ID de cursos faltantes · Generar estadísticas · Actualizar vista de Inscripciones · Migrar Jornada Verano 2026 · Instalar/Desinstalar recordatorios automáticos · Instalar/Desinstalar auto-generación de ID de curso
+- **Auto-generación de ID de curso (ago 2026)**: `onEditCursos()`, instalable desde el menú de arriba — antes había que acordarse de correr "Generar ID de cursos faltantes" a mano después de dar de alta un curso; ahora se genera solo en cuanto se escribe la `Categoria` de una fila nueva. Misma lógica que el botón del menú (`generarIdsCursosFaltantes_()`, compartida por ambos caminos). Detalle en `docs/ARCHITECTURE.md §20`
 - Responde `Content-Type: text/plain` para evitar preflight CORS, mismo patrón que el resto
 - **Cuidado con `appendRow([])`**: Apps Script no acepta un arreglo vacío — usar `appendRow([''])` para filas en blanco. Ver `docs/QA-NOTES.md` para este y otros bugs reales ya corregidos (fetch sin timeout, fecha -1 día por parseo UTC, etc.)
 - **Modo de prueba (código listo, aún sin desplegar, 11 ago 2026)**: `enviarCorreoLote()` ahora revisa la Script Property `MODO_PRUEBA_CORREO` (`fdActivarModoPrueba('correo')`/`fdDesactivarModoPrueba()`) y, si está activa, redirige `bcc`/`subject`/`htmlBody` al correo de prueba en vez de a los inscritos reales — en el repo local, pero **no se pegó ni redesplegó** en el proyecto de Apps Script real esta sesión; en producción sigue mandando a los inscritos de verdad
 - Para cambios: copiar el `.gs` completo en Apps Script y re-desplegar como aplicación web (Cualquier usuario) — recordar **Administrar implementaciones → Nueva versión**, no solo "Guardar" en el editor, o el sitio sigue sirviendo la versión anterior
+
+### `apps-script/panel-otde.gs` (nuevo, ago 2026)
+- **No es un backend de trámite** — es un Apps Script aparte, pegado en un Google Sheet nuevo y propio ("Panel OTDE"), que junta en una sola hoja las solicitudes abiertas de Mantenimiento/Asesorías/Soporte/Correo, para no tener que entrar a los 4 Sheets por separado
+- Llama por `UrlFetchApp` al `?action=pendientes&token=...` de cada uno de los 4 backends (los 3 de este repo + `Correos-institucionales/webform-2026-2027/WebApp.gs`, ver esa sección abajo). Token en Propiedades del script (`PANEL_TOKEN`), mismo secreto que los 4 backends
+- Columna "Días" marcada en rojo/negrita a partir de `PANEL_UMBRAL_DIAS_ALERTA` (3 por default) sin moverse; aviso resumen arriba de la hoja
+- Menú "Panel OTDE": Actualizar ahora · Instalar/Desinstalar actualización automática (cada 30 min)
+- Detalle completo de la arquitectura en `docs/ARCHITECTURE.md §20`
 
 ## Reglas de desarrollo
 1. No introducir npm, frameworks ni build steps — stack estático puro
