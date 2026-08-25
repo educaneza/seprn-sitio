@@ -852,6 +852,46 @@ destino real (`to`/`cc` originales) — para poder probar el flujo completo de u
 avisar a escuelas/zonas/sectores reales ni gastar la cuota diaria de correo en pruebas. No
 requiere redeploy para activar/desactivar, se lee en cada envío.
 
+**Coordinación de fecha de visita — Fase 1 hacia retirar v8.5 (código construido 25 ago
+2026, pendiente de desplegar).** El flujo real de Mantenimiento tiene un cuello de botella
+100% manual entre "Validado" y la visita técnica: OTDE coordina la fecha con Sector, Sector con
+Zona, Zona con la escuela, todo fuera de cualquier sistema — Jorge lo nombró explícitamente al
+revisar el flujo completo (checkpoint 24 ago 2026). Es también la primera fase de la decisión
+(revertida ese mismo día, ver `docs/ROADMAP.md` ítem 9) de retirar eventualmente el sistema
+separado v8.5 ("Sistema Automatizado de Reportes de Visitas", sin repo local) y reconstruir su
+funcionalidad dentro de este stack, en fases.
+
+- Dos columnas nuevas **al final** de `ENCABEZADOS_MAN_SOLICITUDES`/`ENCABEZADOS_ASE_SOLICITUDES`
+  (mismo criterio de siempre, para no correr `COL_MAN_ESTATUS`/`COL_MAN_NOTIFICACION_CIERRE` ni
+  los demás índices fijos): `Fecha programada de visita` y `Notificación de fecha programada
+  enviada`. El auto-heal de encabezados existente las completa solas en la hoja real la próxima
+  vez que llegue una solicitud.
+- Segundo trigger `onEdit` instalable, **independiente** del de cierre —
+  `manOnEditProgramacion`/`aseOnEditProgramacion` — que detecta una edición en la columna nueva
+  de fecha, evita doble aviso con su propia columna de control (mismo mecanismo que
+  `COL_MAN_NOTIFICACION_CIERRE`), y llama a `manNotificarFechaProgramada()`/
+  `aseNotificarFechaProgramada()`. Se instala aparte del trigger de cierre
+  (`manInstalarTriggerProgramacion()`/`aseInstalarTriggerProgramacion()`, agregado al menú `OTDE
+  Mantenimiento`/`OTDE Asesorías`) — no se tocó el trigger de cierre existente, que sigue
+  funcionando en producción sin cambios.
+- `manNotificarFechaProgramada()`/`aseNotificarFechaProgramada()` reutiliza el mismo patrón de
+  correo combinado (`to` = solicitante, `cc` = Zona/Sector vía
+  `manBuscarContactosZonaSector()`/`manFiltrarContactosPorTipo()` tal cual existen) que
+  `manNotificarSolicitudRecibida()`/`manNotificarCierre()` — así, el cuello de botella (Sector
+  coordina con Zona, Zona con la escuela, todo fuera de banda) se resuelve en: Jorge escribe la
+  fecha en una celda del Sheet que ya usa a diario, y el propio sistema avisa a los tres.
+- `fechaProgramada` expuesto en `?action=consulta`/`?action=pendientes` de ambos backends
+  (mismo contrato de la Oficina Virtual OTDE, ver §20), sin necesidad de tocar
+  `oficina-virtual.html`/`panel-otde.gs` para que puedan mostrarlo cuando se decida.
+- **No se tocó `otde.html`** en esta fase — el cambio vive del lado de Jorge (columnas del Sheet
+  + notificación), no de la captura del solicitante.
+- **Pendiente de desplegar**: pegar cada `.gs` completo en su proyecto de Apps Script real
+  (mismos IDs de implementación, no cambian las URLs en `otde.html`) vía "Administrar
+  implementaciones → Nueva versión", y correr una vez "Instalar trigger de programación de
+  visita" del menú nuevo en cada Sheet — confirmar en la pestaña "Activadores" que el trigger
+  quedó registrado, no solo que la función corrió sin error (mismo problema real ya documentado
+  con el trigger de cierre de Soporte, §20).
+
 ## 16. Webform de Correo Institucional en paralelo al Google Form (agosto 2026)
 
 `otde.html` reemplazó, en código, el `<iframe>` del Google Form que hasta ahora capturaba las
@@ -1008,21 +1048,29 @@ flowchart TD
     end
     subgraph Externo["Fuera del sitio"]
         H[/Promoción manual a<br/>Reportes de Visitas v8.5/]
-        I[/Agenda visita, atención,<br/>reporte técnico con PDF/]
+        I[/Visita técnica, atención,<br/>reporte técnico con PDF/]
     end
     J[Trigger onEdit: al llegar a<br/>Resuelto, correo de cierre<br/>to=solicitante cc=Zona/Sector]
     K[Usuario consulta folio<br/>en oficina-virtual.html]
+    L["Jorge captura Fecha programada<br/>de visita en el Sheet"]
+    M[Trigger onEdit: correo de<br/>fecha programada<br/>to=solicitante cc=Zona/Sector]
 
     A --> B --> C --> D
     C --> E
     C --> F --> H -.-> I
     F --> G --> J
+    F --> L --> M -.-> I
     C -.-> K
     G -.-> K
 
     classDef externo stroke-dasharray: 5 5
     class H,I externo
 ```
+
+**Nota de la Fase 1 (25 ago 2026):** el tramo "coordina fecha con Sector/Zona/escuela" que antes
+ocurría 100% fuera del sitio ahora empieza dentro (nodos `L`/`M`, sólidos) — solo la visita
+técnica en sí y su reporte con PDF siguen en v8.5 (nodo `I`, punteado). Ver §15 arriba para el
+detalle de código.
 
 `Rechazado` está disponible en el dropdown de Estatus pero **no dispara ninguna notificación** —
 a diferencia de `Resuelto`, es una rama sin lógica implementada (deliberado, no un bug). Ver
