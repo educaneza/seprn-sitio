@@ -1059,6 +1059,61 @@ clase se interpretan igual que en un navegador normal, sin sorpresas. Correo con
 PDF nuevo adjunto. Fila de prueba y PDF limpiados después. Ya no queda ningún riesgo sin
 verificar en el rediseño del PDF.
 
+**Aviso al técnico asignado — cierra un cuello de botella real (25 ago 2026, sesión siguiente,
+pendiente de desplegar).** Jorge pidió un corte de caja del flujo completo de Mantenimiento tras
+cerrar la Fase 2: ¿un solo stack? ¿todo lo automatizable ya automatizado? El hallazgo: al
+programar la fecha de visita (Fase 1), el sistema avisa a solicitante+Zona/Sector, pero **nunca
+al técnico** que realmente va a hacer la visita — Jorge lo seguía coordinando por fuera del
+sistema (WhatsApp/verbal), el mismo tipo de cuello de botella que Fase 1 resolvió para
+Zona/Sector, sin resolver para quien de verdad atiende.
+
+- Columna nueva **`Técnico asignado`** al final de `ENCABEZADOS_MAN_SOLICITUDES` (mismo criterio
+  de siempre — no correr columnas existentes), con dropdown validado contra
+  `Object.keys(MAN_TECNICOS)` (`manAplicarValidacionTecnico()`, mismo patrón que
+  `manAplicarValidacionEstatus()`) — así el nombre capturado siempre resuelve a un correo real.
+  Columna de control `Notificación a técnico enviada` junto a ella, mismo mecanismo anti-reenvío
+  que el resto.
+- `manOnEditProgramacion()` ahora escucha **dos** columnas en vez de una (`Fecha programada de
+  visita` y `Técnico asignado`) y separa dos avisos independientes que pueden llenarse en
+  cualquier orden: el aviso a solicitante+Zona/Sector sigue disparando con solo la fecha (sin
+  cambios); el aviso nuevo al técnico (`manNotificarTecnicoAsignado()`) solo dispara cuando
+  **ambas** columnas ya tienen valor — evita avisarle a medias antes de que Jorge sepa quién va.
+  Si el nombre capturado no coincide con `MAN_TECNICOS` (dato corrupto o capturado a mano fuera
+  del dropdown), no truena y no manda correo, pero sí marca la fila como notificada para no
+  reintentar en cada edición subsecuente — mismo criterio defensivo que el resto del archivo.
+- El correo al técnico incluye folio, escuela/CCT, sector/zona, fecha de visita, los equipos con
+  falla ya reportados en la solicitud original, el contacto de quien solicitó (nombre + WhatsApp
+  si existe), y un link directo a `reporte-visita.html` mencionando el folio — cierra el círculo
+  completo: el técnico ya sabe qué visitar, cuándo, y qué llenar al terminar, sin que Jorge tenga
+  que decírselo aparte.
+- No requiere instalar ningún trigger nuevo — reutiliza `manOnEditProgramacion`, ya instalado
+  desde Fase 1.
+- **Verificado con una simulación local de la hoja** (arnés de Node, sin tocar Apps Script real):
+  4 casos — solo fecha (avisa solicitante, no técnico), técnico asignado después (avisa técnico,
+  sin repetir el de fecha), re-edición con todo ya notificado (no reenvía nada), y técnico que no
+  coincide con `MAN_TECNICOS` (no truena, no manda correo, sí marca notificado). Los 4 pasaron.
+- **Verificado en vivo contra producción real (25 ago 2026, mismo día, tras el redespliegue)**:
+  con modo de prueba activo, fila de prueba con folio `OTDE-MAN-TEST3` — se capturó la fecha
+  programada primero (disparó el aviso a solicitante, columna de control en "Sí") y el técnico
+  asignado después, eligiéndolo del dropdown ya validado (disparó el aviso al técnico, columna de
+  control en "Sí"). Los dos correos reales llegaron con el aviso de modo de prueba mostrando el
+  destino real correcto (`alejandro.morales@dee.edu.mx` para el segundo) y el contenido completo
+  — folio, fecha, escuela/CCT, sector/zona, equipos con falla reportados, contacto de la escuela
+  y el link a `reporte-visita.html`. Fila de prueba limpiada después.
+- **Incidente encontrado y corregido en el camino**: al preparar esta prueba se descubrió que una
+  limpieza de fila de prueba de una sesión anterior (verificación del rediseño del PDF) había
+  borrado por accidente la **fila de encabezados** de "Solicitudes" en vez de la fila de datos —
+  el clic de "Eliminar fila" cayó una fila arriba de la esperada, sin verificación posterior que
+  lo detectara. Efecto: encabezados ausentes, la validación de `Estatus` desplazada una fila
+  (aplicada a N1:N991 en vez de N2:N1000), formato y fila congelada perdidos. Corregido
+  manualmente: encabezados retecleados exactos (usando el cuadro de nombres para navegar, no
+  coordenadas de píxel), formato guinda/blanco/negritas y fila congelada reaplicados, y las
+  validaciones de `Estatus` y `Técnico asignado` reconstruidas vía Datos → Validación de datos.
+  **Lección**: tras cualquier "Eliminar fila" por automatización de navegador, verificar con una
+  captura de pantalla inmediata que la fila correcta desapareció — no asumirlo y seguir adelante.
+
+## 16. Webform de Correo Institucional en paralelo al Google Form (agosto 2026)
+
 `otde.html` reemplazó, en código, el `<iframe>` del Google Form que hasta ahora capturaba las
 4 solicitudes de correo institucional (Alta, Cambio de Contraseña, Reset 2FA, Incidencias).
 Decisión de arquitectura central: el backend nuevo vive en un **proyecto de Apps Script
