@@ -69,6 +69,25 @@
 // PANEL OTDE (panel-otde.gs, Sheet aparte): doGet(?action=pendientes&
 // token=...) devuelve todas las solicitudes abiertas. Configura el token
 // una vez con manConfigurarTokenPanel('un-secreto-largo') antes de usarlo.
+//
+// REPORTE DE VISITA (Fase 2 hacia retirar v8.5, primer corte): hoja aparte
+// "Reportes de visita" (autocreada, ver COLUMNAS abajo) donde el técnico o
+// Jorge capturan los datos de la visita a mano — todavía no hay formulario
+// propio. El menú "OTDE Mantenimiento" → "Generar y enviar reporte de
+// visita" pide el folio, arma un PDF (tabla HTML, sin plantilla de Docs), lo
+// guarda en la carpeta de Drive "Reportes de Visita" y notifica por correo
+// a la escuela + el técnico responsable + OTDE (Zona/Sector NO se incluyen
+// aquí — se enteran en el correo de cierre ya existente).
+//
+// COLUMNAS DE LA HOJA "Reportes de visita":
+//   A Folio | B Responsable de visita | C Fecha de atención
+//   D Inicio de la visita | E Fin de la visita | F Aula en uso al llegar
+//   G Mobiliario | H Equipos atendidos | I Equipos funcionales
+//   J Equipos no funcionales | K Conectividad | L Actividades preventivas
+//   M Actividades correctivas | N Instalación realizada
+//   O Equipos administrativos | P Estado del aula | Q Seguimiento requerido
+//   R Observaciones | S PDF del reporte (link Drive)
+//   T Notificación de reporte enviada
 // ============================================================
 
 const HOJA_MAN_SOLICITUDES = 'Solicitudes';
@@ -96,6 +115,43 @@ const COL_MAN_NOTIFICACION_CIERRE = 16;
 const COL_MAN_FECHA_PROGRAMADA = 23;
 const COL_MAN_NOTIFICACION_PROGRAMADA = 24;
 const ESTADOS_MAN_VALIDOS = ['Pendiente de validar', 'Validado', 'En atención', 'Resuelto', 'Rechazado'];
+
+// ── Fase 2 hacia retirar v8.5: reporte técnico de la visita, en una hoja
+// aparte ligada a Solicitudes por folio (no una columna más de Solicitudes,
+// a diferencia de la Fase 1 — aquí son ~15 campos que llena el técnico, no
+// uno solo). Por ahora se llenan a mano en esta hoja (sin formulario propio
+// todavía); "Generar y enviar reporte de visita" del menú arma el PDF y
+// notifica. Ver docs/ARCHITECTURE.md §15. ──
+const HOJA_MAN_REPORTES = 'Reportes de visita';
+const CARPETA_MAN_REPORTES = 'Reportes de Visita';
+const ENCABEZADOS_MAN_REPORTES = [
+  'Folio', 'Responsable de visita', 'Fecha de atención', 'Inicio de la visita',
+  'Fin de la visita', 'Aula en uso al llegar', 'Mobiliario', 'Equipos atendidos',
+  'Equipos funcionales', 'Equipos no funcionales', 'Conectividad',
+  'Actividades preventivas', 'Actividades correctivas', 'Instalación realizada',
+  'Equipos administrativos', 'Estado del aula', 'Seguimiento requerido',
+  'Observaciones', 'PDF del reporte (link Drive)', 'Notificación de reporte enviada'
+];
+const COL_MAN_REP_FOLIO = 1;
+const COL_MAN_REP_RESPONSABLE = 2;
+const COL_MAN_REP_FECHA_ATENCION = 3;
+const COL_MAN_REP_ESTADO_AULA = 16;
+const COL_MAN_REP_PDF_URL = 19;
+const COL_MAN_REP_NOTIFICACION = 20;
+// Nombre → correo, para el "cc" del correo del reporte y el selector de la
+// hoja. Mismo criterio de "no inventar" que el resto del sitio — confirmado
+// por Jorge, no copiado de v8.5 (ese proyecto no expuso los correos reales
+// al revisarlo en vivo).
+const MAN_TECNICOS = {
+  'Alejandro Morales García': 'alejandro.morales@dee.edu.mx',
+  'Marcos Colín Mora': 'marcos.colin@dee.edu.mx'
+};
+const MAN_ESTADOS_AULA = [
+  '🟢 Operativa — todos los equipos encienden y funcionan correctamente. Lista para uso regular, asesorías y aula modelo.',
+  '🟡 Operativa con observaciones — funciona pero con detalles menores que no impiden su uso.',
+  '🟠 Operativa parcialmente — menos del 70% de equipos funcionales o intervención incompleta. Uso limitado, se requiere segunda visita.',
+  '🔴 No operativa — la mayoría de los equipos no funciona o el aula no está en condiciones de uso.'
+];
 
 // ── Modo de prueba: redirige TODOS los correos salientes (Zona/Sector +
 // cierre) a un solo correo, para probar el flujo completo sin avisar a
@@ -321,6 +377,7 @@ function manObtenerHojaSolicitudes() {
 
   manAplicarValidacionEstatus(hoja);
   manAsegurarHojaContactos(ss);
+  manAsegurarHojaReportes(ss);
 
   return hoja;
 }
@@ -347,6 +404,43 @@ function manAsegurarHojaContactos(ss) {
     hoja.setFrozenRows(1);
     hoja.setColumnWidth(3, 240);
   }
+}
+
+// ── Crear (o completar encabezados de) la hoja de reportes de visita —
+// mismo patrón de auto-heal que manObtenerHojaSolicitudes(), para que una
+// hoja creada antes de agregar un campo nuevo se complete sola. El técnico
+// (o Jorge) llena las filas a mano por ahora; no hay formulario propio
+// todavía (Fase 2, primer corte). ──
+function manAsegurarHojaReportes(ss) {
+  let hoja = ss.getSheetByName(HOJA_MAN_REPORTES);
+  if (!hoja) {
+    hoja = ss.insertSheet(HOJA_MAN_REPORTES);
+    hoja.appendRow(ENCABEZADOS_MAN_REPORTES);
+    const header = hoja.getRange(1, 1, 1, ENCABEZADOS_MAN_REPORTES.length);
+    header.setFontWeight('bold')
+          .setBackground('#56212f')
+          .setFontColor('#F9F8F5');
+    hoja.setFrozenRows(1);
+    hoja.setColumnWidth(6, 200);  // Aula en uso al llegar
+    hoja.setColumnWidth(8, 200);  // Equipos atendidos
+    hoja.setColumnWidth(16, 320); // Estado del aula
+    hoja.setColumnWidth(18, 240); // Observaciones
+  } else {
+    const colsActuales = hoja.getLastColumn();
+    if (colsActuales < ENCABEZADOS_MAN_REPORTES.length) {
+      const faltantes = ENCABEZADOS_MAN_REPORTES.slice(colsActuales);
+      hoja.getRange(1, colsActuales + 1, 1, faltantes.length)
+        .setValues([faltantes])
+        .setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
+    }
+  }
+
+  hoja.getRange(2, COL_MAN_REP_RESPONSABLE, 1000, 1).setDataValidation(
+    SpreadsheetApp.newDataValidation().requireValueInList(Object.keys(MAN_TECNICOS), true).setAllowInvalid(false).build()
+  );
+  hoja.getRange(2, COL_MAN_REP_ESTADO_AULA, 1000, 1).setDataValidation(
+    SpreadsheetApp.newDataValidation().requireValueInList(MAN_ESTADOS_AULA, true).setAllowInvalid(false).build()
+  );
 }
 
 // ── Generar folio único ──
@@ -691,6 +785,211 @@ function manNotificarFechaProgramada(fila) {
   }
 }
 
+// ============================================================
+// FASE 2 (primer corte): REPORTE TÉCNICO DE LA VISITA
+// Acción manual de menú, no un trigger automático — a diferencia de la
+// programación de fecha (un solo campo), aquí el técnico llena ~15 campos
+// en varios momentos, así que un onEdit de una sola columna dispararía el
+// correo a medio llenar. Jorge/el técnico terminan la fila en "Reportes de
+// visita" y corren "Generar y enviar reporte de visita" desde el menú,
+// dando el folio.
+// ============================================================
+
+// ── Busca la fila de Solicitudes con ese folio, regresa los datos que el
+// reporte necesita (escuela/CCT/sector/zona/correo) o null si no existe. ──
+function manBuscarSolicitudPorFolio_(folio) {
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_MAN_SOLICITUDES);
+  if (!hoja) return null;
+  const filas = hoja.getDataRange().getValues().slice(1);
+  const fila = filas.find(r => String(r[1]).trim().toUpperCase() === folio);
+  if (!fila) return null;
+  return {
+    folio: fila[1],
+    nombre: fila[2],
+    cct: fila[4],
+    sector: fila[5],
+    zona: fila[6],
+    escuela: fila[7],
+    correo: String(fila[10] || '').trim()
+  };
+}
+
+// ── Busca la fila de "Reportes de visita" con ese folio. Regresa
+// {rowIndex, datos} (rowIndex en base 1, tal cual lo usa getRange) o null. ──
+function manBuscarFilaReportePorFolio_(hoja, folio) {
+  const valores = hoja.getDataRange().getValues();
+  for (let i = 1; i < valores.length; i++) {
+    if (String(valores[i][COL_MAN_REP_FOLIO - 1]).trim().toUpperCase() === folio) {
+      return { rowIndex: i + 1, datos: valores[i] };
+    }
+  }
+  return null;
+}
+
+// ── Campos mínimos para generar el reporte — no se exige llenar las ~15
+// columnas completas (equipos sin atender, observaciones libres, etc. son
+// legítimamente opcionales), solo lo indispensable para que el PDF y el
+// correo tengan sentido. ──
+function manValidarDatosReporte_(datos) {
+  const faltantes = [];
+  if (!String(datos[COL_MAN_REP_RESPONSABLE - 1] || '').trim()) faltantes.push('Responsable de visita');
+  if (!datos[COL_MAN_REP_FECHA_ATENCION - 1]) faltantes.push('Fecha de atención');
+  if (!String(datos[COL_MAN_REP_ESTADO_AULA - 1] || '').trim()) faltantes.push('Estado del aula');
+  return faltantes;
+}
+
+// ── Obtener o crear la carpeta de Drive para los reportes de visita ──
+function manObtenerCarpetaReportes_() {
+  const carpetas = DriveApp.getFoldersByName(CARPETA_MAN_REPORTES);
+  if (carpetas.hasNext()) return carpetas.next();
+  return DriveApp.createFolder(CARPETA_MAN_REPORTES);
+}
+
+// ── Arma el PDF del reporte como una tabla HTML (mismo criterio de color
+// institucional que el resto del sitio) y lo convierte a PDF — sin
+// plantilla de Docs/Slides, para no depender de un archivo aparte que
+// mantener sincronizado. ──
+function manGenerarPDFReporte_(solicitud, datos) {
+  const fmt = (v) => v instanceof Date
+    ? Utilities.formatDate(v, 'America/Mexico_City', 'dd/MM/yyyy HH:mm')
+    : manEscapeHtml_(v || '—');
+
+  const filas = [
+    ['Folio', solicitud.folio],
+    ['Escuela / CCT', (solicitud.escuela || '') + ' — ' + solicitud.cct],
+    ['Sector / Zona', 'Sector ' + (solicitud.sector || '—') + ' · Zona ' + (solicitud.zona || '—')],
+    ['Responsable de visita', datos[COL_MAN_REP_RESPONSABLE - 1]],
+    ['Fecha de atención', fmt(datos[2])],
+    ['Inicio de la visita', fmt(datos[3])],
+    ['Fin de la visita', fmt(datos[4])],
+    ['Aula en uso al llegar', datos[5]],
+    ['Mobiliario', datos[6]],
+    ['Equipos atendidos', datos[7]],
+    ['Equipos funcionales', datos[8]],
+    ['Equipos no funcionales', datos[9]],
+    ['Conectividad', datos[10]],
+    ['Actividades preventivas', datos[11]],
+    ['Actividades correctivas', datos[12]],
+    ['Instalación realizada', datos[13]],
+    ['Equipos administrativos', datos[14]],
+    ['Estado del aula', datos[COL_MAN_REP_ESTADO_AULA - 1]],
+    ['Seguimiento requerido', datos[16]],
+    ['Observaciones', datos[17]]
+  ];
+
+  const filasHtml = filas.map(([etiqueta, valor]) =>
+    '<tr><td style="padding:6px 10px;border-bottom:1px solid #d6d1ca;font-weight:bold;' +
+    'color:#56212f;width:220px;">' + manEscapeHtml_(etiqueta) + '</td>' +
+    '<td style="padding:6px 10px;border-bottom:1px solid #d6d1ca;">' +
+    manEscapeHtml_(valor || '—') + '</td></tr>'
+  ).join('');
+
+  const html =
+    '<!DOCTYPE html><html><body style="font-family:Arial,Helvetica,sans-serif;color:#333;">' +
+    '<div style="background:#9F2241;padding:16px 20px;border-radius:8px 8px 0 0;">' +
+    '<div style="color:#fff;font-size:16px;font-weight:bold;">Reporte de Visita Técnica · OTDE</div>' +
+    '<div style="color:#F9F8F5;font-size:12px;">Oficina de Tecnología para el Desarrollo Educativo · SEPRN</div>' +
+    '</div>' +
+    '<table style="width:100%;border-collapse:collapse;font-size:12px;">' + filasHtml + '</table>' +
+    '</body></html>';
+
+  const blobHtml = Utilities.newBlob(html, 'text/html', 'reporte.html');
+  return blobHtml.getAs('application/pdf').setName(solicitud.folio + ' — Reporte de visita.pdf');
+}
+
+// ── Guarda el PDF en Drive (carpeta "Reportes de Visita", autocreada), lo
+// comparte como "cualquiera con el link, solo ver" y regresa la URL. ──
+function manGuardarPDFReporte_(pdfBlob) {
+  const carpeta = manObtenerCarpetaReportes_();
+  const archivo = carpeta.createFile(pdfBlob);
+  archivo.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  return archivo.getUrl();
+}
+
+// ── Notifica que el reporte de visita quedó listo: escuela + técnico + OTDE
+// (decisión de Jorge, 25 ago 2026 — Zona/Sector NO se incluyen aquí para no
+// saturarlos; se enteran en el correo de cierre que ya existe cuando Jorge
+// marca Estatus = Resuelto). PDF adjunto, mismo wrapper manEnviarCorreo_
+// (respeta el modo de prueba). ──
+function manEnviarReporteVisita_(solicitud, datos, pdfBlob) {
+  const responsable = String(datos[COL_MAN_REP_RESPONSABLE - 1] || '').trim();
+  const correoTecnico = MAN_TECNICOS[responsable];
+  const asunto = 'Reporte de visita técnica — ' + (solicitud.escuela || solicitud.cct) + ' · ' + solicitud.folio;
+  const html =
+    '<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;">' +
+    '<div style="background-color:#9F2241;padding:16px 20px;border-radius:8px 8px 0 0;">' +
+    '<p style="margin:0;color:#fff;font-size:15px;font-weight:bold;">OTDE — Reporte de visita técnica</p>' +
+    '</div>' +
+    '<div style="border:1px solid #d6d1ca;border-top:none;border-radius:0 0 8px 8px;padding:18px 20px;">' +
+    '<p style="margin:0 0 10px 0;font-size:14px;color:#333;">Adjuntamos el reporte de la visita técnica realizada.</p>' +
+    '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Folio:</strong> ' + solicitud.folio + '</p>' +
+    '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Escuela / CCT:</strong> ' + manEscapeHtml_(solicitud.escuela || '') + ' — ' + manEscapeHtml_(solicitud.cct) + '</p>' +
+    '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Estado del aula:</strong> ' + manEscapeHtml_(String(datos[COL_MAN_REP_ESTADO_AULA - 1] || '')) + '</p>' +
+    '</div></div>';
+
+  const opciones = {
+    to: solicitud.correo,
+    cc: [correoTecnico, 'otde.nezahualcoyotl@dee.edu.mx'].filter(Boolean).join(','),
+    subject: asunto,
+    htmlBody: html,
+    name: 'OTDE | Oficina de Tecnología para el Desarrollo Educativo',
+    replyTo: 'otde.nezahualcoyotl@dee.edu.mx',
+    attachments: [pdfBlob]
+  };
+  manEnviarCorreo_(opciones);
+}
+
+// ── Acción de menú: arma el PDF y notifica el reporte de visita de un
+// folio dado. Valida que la solicitud y la fila del reporte existan, que
+// los campos mínimos estén llenos, y confirma antes de reenviar si ya se
+// había notificado. ──
+function manGenerarYEnviarReporteVisita() {
+  const ui = SpreadsheetApp.getUi();
+  const resp = ui.prompt('Generar reporte de visita', 'Folio de la solicitud (ej. OTDE-MAN-0007):', ui.ButtonSet.OK_CANCEL);
+  if (resp.getSelectedButton() !== ui.Button.OK) return;
+  const folio = resp.getResponseText().trim().toUpperCase();
+  if (!folio) return;
+
+  const solicitud = manBuscarSolicitudPorFolio_(folio);
+  if (!solicitud) { ui.alert('No se encontró una solicitud con folio "' + folio + '" en Solicitudes.'); return; }
+
+  const hojaReportes = manObtenerHojaReportes_();
+  const filaReporte = manBuscarFilaReportePorFolio_(hojaReportes, folio);
+  if (!filaReporte) {
+    ui.alert('No hay ninguna fila en "Reportes de visita" con folio "' + folio + '". Agrégala primero con los datos de la visita.');
+    return;
+  }
+
+  const faltantes = manValidarDatosReporte_(filaReporte.datos);
+  if (faltantes.length) {
+    ui.alert('Faltan campos obligatorios en esa fila: ' + faltantes.join(', ') + '.');
+    return;
+  }
+
+  const yaNotificado = String(filaReporte.datos[COL_MAN_REP_NOTIFICACION - 1] || '').trim();
+  if (yaNotificado === 'Sí') {
+    const confirmar = ui.alert('Ya se había notificado este reporte antes.', '¿Reenviarlo de todas formas?', ui.ButtonSet.YES_NO);
+    if (confirmar !== ui.Button.YES) return;
+  }
+
+  const pdfBlob = manGenerarPDFReporte_(solicitud, filaReporte.datos);
+  const urlPDF = manGuardarPDFReporte_(pdfBlob);
+  manEnviarReporteVisita_(solicitud, filaReporte.datos, pdfBlob);
+
+  hojaReportes.getRange(filaReporte.rowIndex, COL_MAN_REP_PDF_URL).setValue(urlPDF);
+  hojaReportes.getRange(filaReporte.rowIndex, COL_MAN_REP_NOTIFICACION).setValue('Sí');
+  ui.alert('Reporte enviado a la escuela, el técnico y OTDE.');
+}
+
+// ── La hoja de reportes es "ligera": a diferencia de Solicitudes, no
+// escribe nada al leerla desde el menú — solo la busca. Si no existe
+// todavía (nunca corrió manObtenerHojaSolicitudes()/doPost), la crea aquí. ──
+function manObtenerHojaReportes_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  manAsegurarHojaReportes(ss);
+  return ss.getSheetByName(HOJA_MAN_REPORTES);
+}
+
 // ── Instala el trigger de cierre automático (seguro correrlo de nuevo:
 // borra cualquier instalación previa antes de crear una nueva) ──
 function manInstalarTriggerCierre() {
@@ -750,6 +1049,7 @@ function onOpen() {
     .addItem('Desinstalar trigger de cierre automático', 'manDesinstalarTriggerCierre')
     .addItem('Instalar trigger de programación de visita', 'manInstalarTriggerProgramacion')
     .addItem('Desinstalar trigger de programación de visita', 'manDesinstalarTriggerProgramacion')
+    .addItem('Generar y enviar reporte de visita', 'manGenerarYEnviarReporteVisita')
     .addToUi();
 }
 
