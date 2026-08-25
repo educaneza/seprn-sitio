@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reporte de visita técnica | SEPRN · OTDE</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --guinda:     #56212f;
+      --guinda-ac:  #9F2241;
+      --arena:      #d6d1ca;
+      --caramelo:   #977e5b;
+      --midnight:   #0C1A2E;
+      --off-white:  #F9F8F5;
+      --text:       #1a1a2e;
+      --muted:      #6b7280;
+      --border:     #d1d5db;
+    }
+
+    body {
+      background: var(--midnight);
+      color: var(--off-white);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+    }
+
+    .hdr {
+      background: var(--midnight);
+      border-bottom: 2px solid var(--guinda-ac);
+      padding: .85rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .hdr .brand { font-size: 1rem; font-weight: 700; letter-spacing: .05em; }
+    .hdr .brand span { color: var(--guinda-ac); }
+    .hdr .tag {
+      margin-left: auto;
+      font-size: .72rem;
+      color: var(--guinda-ac);
+      border: 1px solid var(--guinda-ac);
+      padding: .2rem .6rem;
+      border-radius: 999px;
+      letter-spacing: .06em;
+      text-align: right;
+    }
+
+    main {
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 3rem;
+    }
+
+    .intro { margin-bottom: 1.25rem; }
+    .intro h1 { font-size: 1.3rem; color: var(--off-white); margin-bottom: .35rem; }
+    .intro p { font-size: .85rem; color: var(--arena); }
+
+    .card {
+      background: var(--off-white);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 1.5rem;
+      box-shadow: 0 6px 32px rgba(0,0,0,.4);
+    }
+
+    fieldset {
+      border: none;
+      margin-bottom: 1.5rem;
+    }
+    fieldset:last-of-type { margin-bottom: 0; }
+    legend {
+      font-size: .78rem;
+      font-weight: 700;
+      color: var(--guinda);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      margin-bottom: .75rem;
+      padding-bottom: .4rem;
+      border-bottom: 1px solid var(--arena);
+      width: 100%;
+    }
+
+    .campo { margin-bottom: 1rem; }
+    .campo:last-child { margin-bottom: 0; }
+    .campo label {
+      display: block;
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: .35rem;
+    }
+    .campo label .opcional { font-weight: 400; color: var(--muted); text-transform: none; }
+    .campo label .req { color: var(--guinda-ac); }
+
+    .fila-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .75rem;
+    }
+
+    input[type="text"], input[type="date"], input[type="time"],
+    select, textarea {
+      width: 100%;
+      padding: .7rem .85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: .95rem;
+      color: var(--text);
+      background: #fff;
+      font-family: inherit;
+      transition: border-color .15s;
+      -webkit-appearance: none;
+    }
+    textarea { resize: vertical; min-height: 3.2rem; }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--guinda-ac);
+      box-shadow: 0 0 0 3px rgba(159,34,65,.15);
+    }
+    input.campo-error, select.campo-error, textarea.campo-error {
+      border-color: #dc2626;
+    }
+    .error-msg {
+      font-size: .78rem;
+      color: #dc2626;
+      margin-top: .3rem;
+      display: none;
+    }
+    .error-msg.visible { display: block; }
+
+    #folio {
+      font-family: 'Courier New', monospace;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .btn {
+      width: 100%;
+      padding: .85rem;
+      background: var(--guinda-ac);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .15s;
+      margin-top: .5rem;
+    }
+    .btn:hover:not(:disabled) { background: var(--guinda); }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+    .spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2.5px solid rgba(255,255,255,.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      vertical-align: middle;
+      margin-right: .4rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .envio-error {
+      background: #fee2e2;
+      border: 1.5px solid #fca5a5;
+      color: #7f1d1d;
+      border-radius: 8px;
+      padding: .8rem 1rem;
+      font-size: .85rem;
+      margin-top: 1rem;
+      display: none;
+    }
+    .envio-error.visible { display: block; }
+
+    .screen.hidden { display: none; }
+
+    .ok-card {
+      background: var(--off-white);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 2rem;
+      text-align: center;
+      box-shadow: 0 6px 32px rgba(0,0,0,.4);
+    }
+    .ok-card .icono { font-size: 2.5rem; margin-bottom: .75rem; }
+    .ok-card h2 { color: var(--guinda); font-size: 1.15rem; margin-bottom: .5rem; }
+    .ok-card p { font-size: .9rem; color: var(--muted); margin-bottom: .3rem; }
+    .ok-card .folio-final {
+      font-family: 'Courier New', monospace;
+      font-weight: 700;
+      color: var(--guinda-ac);
+      font-size: 1.1rem;
+      margin: .75rem 0 1.25rem;
+    }
+  </style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="brand">SEPRN <span>·</span> OTDE</div>
+  <span class="tag">REPORTE DE VISITA TÉCNICA</span>
+</header>
+
+<main>
+  <div class="screen" id="screen-form">
+    <div class="intro">
+      <h1>Reporte de visita técnica</h1>
+      <p>Llena este formulario al terminar la visita. Al enviarlo, la escuela, el técnico y OTDE reciben el reporte en PDF por correo automáticamente.</p>
+    </div>
+
+    <form class="card" id="form-reporte" novalidate>
+      <fieldset>
+        <legend>Identificación</legend>
+        <div class="campo">
+          <label for="folio">Folio de la solicitud <span class="req">*</span></label>
+          <input type="text" id="folio" placeholder="OTDE-MAN-0007" autocomplete="off" autocorrect="off" spellcheck="false">
+          <div class="error-msg" id="err-folio">Escribe el folio de la solicitud (ej. OTDE-MAN-0007).</div>
+        </div>
+        <div class="campo">
+          <label for="responsable">Responsable de la visita <span class="req">*</span></label>
+          <select id="responsable">
+            <option value="">Selecciona…</option>
+            <option value="Alejandro Morales García">Alejandro Morales García</option>
+            <option value="Marcos Colín Mora">Marcos Colín Mora</option>
+          </select>
+          <div class="error-msg" id="err-responsable">Selecciona quién realizó la visita.</div>
+        </div>
+        <div class="campo">
+          <label for="fecha-atencion">Fecha de atención <span class="req">*</span></label>
+          <input type="date" id="fecha-atencion">
+          <div class="error-msg" id="err-fecha-atencion">Indica la fecha en que se atendió la visita.</div>
+        </div>
+        <div class="fila-2">
+          <div class="campo">
+            <label for="inicio-visita">Inicio <span class="opcional">(opcional)</span></label>
+            <input type="time" id="inicio-visita">
+          </div>
+          <div class="campo">
+            <label for="fin-visita">Fin <span class="opcional">(opcional)</span></label>
+            <input type="time" id="fin-visita">
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Aula al llegar</legend>
+        <div class="campo">
+          <label for="aula-en-uso">Aula en uso al llegar <span class="opcional">(opcional)</span></label>
+          <textarea id="aula-en-uso" rows="2"></textarea>
+        </div>
+        <div class="campo">
+          <label for="mobiliario">Mobiliario <span class="opcional">(opcional)</span></label>
+          <textarea id="mobiliario" rows="2"></textarea>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Equipos</legend>
+        <div class="campo">
+          <label for="equipos-atendidos">Equipos atendidos <span class="opcional">(opcional)</span></label>
+          <textarea id="equipos-atendidos" rows="2"></textarea>
+        </div>
+        <div class="campo">
+          <label for="equipos-funcionales">Equipos funcionales <span class="opcional">(opcional)</span></label>
+          <textarea id="equipos-funcionales" rows="2"></textarea>
+        </div>
+        <div class="campo">
+          <label for="equipos-no-funcionales">Equipos no funcionales <span class="opcional">(opcional)</span></label>
+          <textarea id="equipos-no-funcionales" rows="2"></textarea>
+        </div>
+        <div class="campo">
+          <label for="equipos-admin">Equipos administrativos <span class="opcional">(opcional)</span></label>
+          <textarea id="equipos-admin" rows="2"></textarea>
+        </div>
+        <div class="campo">
+          <label for="conectividad">Conectividad <span class="opcional">(opcional)</span></label>
+          <textarea id="conectividad" rows="2"></textarea>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Actividades realizadas</legend>
+        <div class="campo">
+          <label for="actividades-preventivas">Actividades preventivas <span class="opcional">(opcional)</span></label>
+          <textarea id="actividades-preventivas" rows="2"></textarea>
+        </div>
+        <div class="campo">
+          <label for="actividades-correctivas">Actividades correctivas <span class="opcional">(opcional)</span></label>
+          <textarea id="actividades-correctivas" rows="2"></textarea>
+        </div>
+        <div class="campo">
+          <label for="instalacion-realizada">Instalación realizada <span class="opcional">(opcional)</span></label>
+          <textarea id="instalacion-realizada" rows="2"></textarea>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Resultado</legend>
+        <div class="campo">
+          <label for="estado-aula">Estado del aula al terminar <span class="req">*</span></label>
+          <select id="estado-aula">
+            <option value="">Selecciona…</option>
+            <option value="🟢 Operativa — todos los equipos encienden y funcionan correctamente. Lista para uso regular, asesorías y aula modelo.">🟢 Operativa</option>
+            <option value="🟡 Operativa con observaciones — funciona pero con detalles menores que no impiden su uso.">🟡 Operativa con observaciones</option>
+            <option value="🟠 Operativa parcialmente — menos del 70% de equipos funcionales o intervención incompleta. Uso limitado, se requiere segunda visita.">🟠 Operativa parcialmente</option>
+            <option value="🔴 No operativa — la mayoría de los equipos no funciona o el aula no está en condiciones de uso.">🔴 No operativa</option>
+          </select>
+          <div class="error-msg" id="err-estado-aula">Selecciona el estado del aula al terminar la visita.</div>
+        </div>
+        <div class="campo">
+          <label for="seguimiento">Seguimiento requerido <span class="opcional">(opcional)</span></label>
+          <textarea id="seguimiento" rows="2"></textarea>
+        </div>
+        <div class="campo">
+          <label for="observaciones">Observaciones <span class="opcional">(opcional)</span></label>
+          <textarea id="observaciones" rows="2"></textarea>
+        </div>
+      </fieldset>
+
+      <button type="submit" class="btn" id="btn-enviar">Enviar reporte</button>
+      <div class="envio-error" id="envio-error"></div>
+    </form>
+  </div>
+
+  <div class="screen hidden" id="screen-ok">
+    <div class="ok-card">
+      <div class="icono">✅</div>
+      <h2>Reporte enviado</h2>
+      <p>La escuela, el técnico y OTDE ya recibieron el reporte en PDF por correo.</p>
+      <div class="folio-final" id="ok-folio"></div>
+      <button class="btn" id="btn-otro">Capturar otro reporte</button>
+    </div>
+  </div>
+</main>
+
+<script>
+// Misma URL de despliegue que MANTENIMIENTO_APPS_SCRIPT_URL en otde.html —
+// un solo proyecto de Apps Script, sin despliegue aparte para este formulario.
+const MANTENIMIENTO_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxxhyMUI8VuuxC29fWgkMWULwLdB7OhNJ-XawgtdseZY5hgV9P6I9uHFfiCMbAJzZb1/exec';
+
+const REPORTE_TIMEOUT_MS = 30000;
+async function fetchJsonConTimeout(url, opciones) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), REPORTE_TIMEOUT_MS);
+  try {
+    const r = await fetch(url, Object.assign({}, opciones, { signal: ctrl.signal }));
+    return await r.json();
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+function limpiarError(id) {
+  const campo = document.getElementById(id);
+  const err = document.getElementById('err-' + id);
+  campo.classList.remove('campo-error');
+  if (err) err.classList.remove('visible');
+}
+
+['folio', 'responsable', 'fecha-atencion', 'estado-aula'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => limpiarError(id));
+  document.getElementById(id).addEventListener('change', () => limpiarError(id));
+});
+
+function marcarError(id) {
+  document.getElementById(id).classList.add('campo-error');
+  const err = document.getElementById('err-' + id);
+  if (err) err.classList.add('visible');
+}
+
+function validarFormulario() {
+  let valido = true;
+
+  const folio = document.getElementById('folio').value.trim();
+  if (!folio) { marcarError('folio'); valido = false; }
+
+  const responsable = document.getElementById('responsable').value;
+  if (!responsable) { marcarError('responsable'); valido = false; }
+
+  const fechaAtencion = document.getElementById('fecha-atencion').value;
+  if (!fechaAtencion) { marcarError('fecha-atencion'); valido = false; }
+
+  const estadoAula = document.getElementById('estado-aula').value;
+  if (!estadoAula) { marcarError('estado-aula'); valido = false; }
+
+  return valido;
+}
+
+document.getElementById('form-reporte').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const errorBox = document.getElementById('envio-error');
+  errorBox.classList.remove('visible');
+  errorBox.textContent = '';
+
+  if (!validarFormulario()) return;
+
+  const payload = {
+    accion: 'reporteVisita',
+    folio: document.getElementById('folio').value.trim().toUpperCase(),
+    responsable: document.getElementById('responsable').value,
+    fechaAtencion: document.getElementById('fecha-atencion').value,
+    inicioVisita: document.getElementById('inicio-visita').value,
+    finVisita: document.getElementById('fin-visita').value,
+    aulaEnUso: document.getElementById('aula-en-uso').value.trim(),
+    mobiliario: document.getElementById('mobiliario').value.trim(),
+    equiposAtendidos: document.getElementById('equipos-atendidos').value.trim(),
+    equiposFuncionales: document.getElementById('equipos-funcionales').value.trim(),
+    equiposNoFuncionales: document.getElementById('equipos-no-funcionales').value.trim(),
+    equiposAdministrativos: document.getElementById('equipos-admin').value.trim(),
+    conectividad: document.getElementById('conectividad').value.trim(),
+    actividadesPreventivas: document.getElementById('actividades-preventivas').value.trim(),
+    actividadesCorrectivas: document.getElementById('actividades-correctivas').value.trim(),
+    instalacionRealizada: document.getElementById('instalacion-realizada').value.trim(),
+    estadoAula: document.getElementById('estado-aula').value,
+    seguimientoRequerido: document.getElementById('seguimiento').value.trim(),
+    observaciones: document.getElementById('observaciones').value.trim()
+  };
+
+  const btn = document.getElementById('btn-enviar');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Enviando…';
+
+  try {
+    const d = await fetchJsonConTimeout(MANTENIMIENTO_APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
+
+    if (d.status === 'ok') {
+      document.getElementById('ok-folio').textContent = 'Folio: ' + d.folio;
+      document.getElementById('screen-form').classList.add('hidden');
+      document.getElementById('screen-ok').classList.remove('hidden');
+    } else {
+      errorBox.textContent = d.mensaje || 'No se pudo enviar el reporte. Intenta de nuevo.';
+      errorBox.classList.add('visible');
+    }
+  } catch (err) {
+    errorBox.textContent = err.name === 'AbortError'
+      ? 'El servidor tardó demasiado en responder. Verifica tu conexión e intenta de nuevo.'
+      : 'Error de conexión. Verifica tu internet e intenta de nuevo.';
+    errorBox.classList.add('visible');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Enviar reporte';
+});
+
+document.getElementById('btn-otro').addEventListener('click', () => {
+  document.getElementById('form-reporte').reset();
+  document.getElementById('screen-ok').classList.add('hidden');
+  document.getElementById('screen-form').classList.remove('hidden');
+  window.scrollTo(0, 0);
+});
+</script>
+
+</body>
+</html>
