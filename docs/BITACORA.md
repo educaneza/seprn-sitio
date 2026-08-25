@@ -14,6 +14,32 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-08-25 (cont. 7) · Aviso al técnico verificado en vivo — y un incidente de datos encontrado y corregido en el camino
+
+| | |
+|---|---|
+| **Fecha** | 2026-08-25 |
+| **Sesión** | Jorge pegó y redesplegó el `.gs` del aviso al técnico y pidió probarlo. Confirmó que el modo de prueba seguía activo. |
+| **Incidente encontrado y corregido** | Al abrir la hoja "Solicitudes" real para preparar la prueba, la fila 1 tenía datos de la fila de prueba `OTDE-MAN-TEST2` (de la verificación del rediseño del PDF, checkpoint anterior) en vez de los encabezados — la fila 1 (encabezados) se había borrado por accidente en vez de la fila 2 (datos) al limpiar esa prueba, sin verificación posterior que lo detectara. Efecto en cascada: encabezados ausentes, validación de `Estatus` desplazada a N1:N991 (en vez de N2:N1000), formato guinda/blanco/negritas y fila congelada perdidos. Un primer intento de recuperar la fila 1 copiándola desde el Historial de versiones de Google Sheets falló (error "supera el número máximo de 50000 caracteres" — el copiado desde el panel de versión no funcionó como se esperaba). Se corrigió retecleando los 26 encabezados exactos a mano (navegando con el cuadro de nombres, no coordenadas de píxel, tras identificar esa como la causa raíz del incidente original), reaplicando formato (guinda `#56212f`, texto blanco `#F9F8F5`, negritas) y fila congelada, y reconstruyendo las validaciones de `Estatus` (5 valores) y `Técnico asignado` (2 técnicos) vía Datos → Validación de datos. Verificado visualmente que ambas hojas quedaron idénticas al estado original. |
+| **Verificación del aviso al técnico contra producción real** | Fila de prueba nueva (folio `OTDE-MAN-TEST3`, escuela marcada "AVISO TECNICO"). Se capturó la fecha programada en la columna W: disparó el aviso a solicitante (columna X en "Sí"). Se asignó el técnico en la columna Y (eligiendo del dropdown ya reconstruido): disparó el aviso al técnico (columna Z en "Sí"), sin repetir el de fecha. Los dos correos reales llegaron a la bandeja de prueba: el de fecha programada, y "[PRUEBA] Visita asignada — ..." con el aviso de modo de prueba mostrando el destino real correcto (`alejandro.morales@dee.edu.mx`) y el cuerpo completo (folio, fecha, escuela/CCT, sector/zona, equipos con falla reportados, contacto de la escuela con WhatsApp, y el link a `reporte-visita.html`). Fila de prueba limpiada después (verificado que la fila 1 de encabezados quedó intacta esta vez). |
+| **Documentación** | `docs/ARCHITECTURE.md §15` (verificación en vivo + detalle del incidente), `docs/ROADMAP.md` ítem 9 (aviso al técnico marcado como resuelto), `CLAUDE.md` (nota actualizada), este checkpoint. |
+| **Commits** | Pendiente — a la espera del mensaje de cierre de esta sesión. |
+
+---
+
+## CHECKPOINT — 2026-08-25 (cont. 6) · Corte de caja del flujo de Mantenimiento + aviso al técnico asignado — cierra el cuello de botella detectado
+
+| | |
+|---|---|
+| **Fecha** | 2026-08-25 |
+| **Sesión** | Con Fase 2 ya publicada, Jorge pidió un corte de caja honesto: ¿un solo stack? ¿todo lo automatizable ya automatizado? ¿cuellos de botella urgentes? ¿listo para producción? Auditoría del código y `docs/ROADMAP.md`/`CLAUDE.md` actuales (no de memoria) encontró: (1) v8.5 sigue vivo en paralelo para 2 funciones no migradas (fotos nocturnas, reporte mensual — Fase 3/4, no iniciadas); (2) hueco real: al programar la fecha de visita, el sistema avisa a solicitante+Zona/Sector pero **nunca al técnico**, que se sigue coordinando por fuera. Jorge pidió atacar el aviso al técnico y dejar anotado lo de fotos/reporte mensual como pendiente. |
+| **`apps-script/mantenimiento.gs`** | Columna nueva `Técnico asignado` (dropdown validado contra `MAN_TECNICOS`, `manAplicarValidacionTecnico()`) + columna de control `Notificación a técnico enviada`, ambas al final de `ENCABEZADOS_MAN_SOLICITUDES` (mismo criterio de siempre). `manOnEditProgramacion()` ahora escucha ambas columnas (fecha programada + técnico asignado) y separa dos avisos independientes que pueden llenarse en cualquier orden: el de solicitante+Zona/Sector sigue igual; el nuevo (`manNotificarTecnicoAsignado()`) solo dispara cuando **ambas** ya tienen valor — folio, escuela, fecha, equipos con falla reportados, contacto del solicitante y link directo a `reporte-visita.html`. Si el nombre capturado no coincide con `MAN_TECNICOS`, no truena ni manda correo, pero sí marca notificado (no reintenta en cada edición). No requiere instalar ningún trigger nuevo, reutiliza el ya instalado desde Fase 1. |
+| **Documentación** | `CLAUDE.md` (nota bajo `mantenimiento.gs`, y Fase 3/4 de v8.5 hechas visibles explícitamente en "Pendientes vigentes" — antes solo estaban enterradas dentro del ítem 9 de `docs/ROADMAP.md`), `docs/ARCHITECTURE.md §15` (subsección nueva), `docs/ROADMAP.md` ítem 9 (bullet nuevo entre Fase 2 y Fase 3). **Se corrigió además un error propio de esta sesión**: una edición anterior (el "Rediseño del PDF...") había borrado por accidente el encabezado `## 16.` de `docs/ARCHITECTURE.md` al reemplazar el bloque anterior — detectado al revisar la numeración de secciones antes de insertar la subsección nueva, corregido en el mismo archivo. |
+| **Verificación** | Simulación local de la hoja "Solicitudes" (arnés de Node, mock de `getRange`/`getValue`/`setValue`, sin tocar Apps Script real): 4 casos — solo fecha (avisa solicitante, no técnico), técnico asignado después (avisa técnico, sin repetir el de fecha), re-edición con todo ya notificado (no reenvía nada), técnico que no coincide con `MAN_TECNICOS` (no truena, no manda correo, sí marca notificado). Los 4 pasaron — el primer intento tenía un bug en los índices del propio arnés de prueba (no del código), corregido antes de confirmar. También se generó y revisó el HTML del correo real. **Pendiente**: Jorge redesplegar y probar contra producción real, igual que las piezas anteriores. |
+| **Commits** | Pendiente — a la espera del mensaje de cierre de esta sesión. |
+
+---
+
 ## CHECKPOINT — 2026-08-25 (cont. 5) · Rediseño del PDF confirmado contra Apps Script real: "Página 1 de 1", pleca nítida, sin sorpresas
 
 | | |

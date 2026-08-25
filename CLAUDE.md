@@ -255,6 +255,15 @@ ya esté expandido).
   (misma sesión, pleca de logos oficiales + firmas, ver `docs/ARCHITECTURE.md §15`) — confirmado
   contra el PDF real de Apps Script, cabe en una sola página ("Página 1 de 1"), idéntico a la
   previsualización.
+- **Aviso al técnico asignado (25 ago 2026, sesión siguiente, desplegado y verificado en
+  vivo)**: cerraba un cuello de botella real — al programar la fecha de visita, el sistema
+  avisaba a solicitante+Zona/Sector pero nunca al técnico, que se seguía coordinando por fuera.
+  Columna nueva `Técnico asignado` (dropdown validado contra `MAN_TECNICOS`) en `Solicitudes`;
+  `manOnEditProgramacion()` ahora también escucha esa columna y dispara
+  `manNotificarTecnicoAsignado()` en cuanto **ambas** (fecha + técnico) tienen valor, sin
+  importar cuál se llenó al último — folio, escuela, fecha, equipos con falla y link directo a
+  `reporte-visita.html`. Probado contra producción real: ambos avisos dispararon correctamente,
+  sin fugas. Ver `docs/ARCHITECTURE.md §15`.
 
 ### `apps-script/asesorias.gs`
 - **Nuevo (ago 2026)**: mismo patrón que `mantenimiento.gs` (Sheet propio con hojas
@@ -648,6 +657,13 @@ de la sesión realmente volvió obsoletos.
 ## Pendientes vigentes
 Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/Identidad) y
 `docs/BITACORA.md` para el historial de qué ya se hizo. Resumen de lo genuinamente abierto:
+- **Retiro de v8.5 — Fase 3 y Fase 4, no iniciadas** (ver `docs/ROADMAP.md` ítem 9): el trigger
+  nocturno de organización de fotos y el reporte mensual (formato Planeación, cruce contra el
+  catálogo de direcciones) siguen viviendo solo en el sistema viejo v8.5 — no se replicaron
+  todavía en `mantenimiento.gs`. Tampoco se decidió el destino del histórico de v8.5 (380 aulas,
+  reportes ya generados) ni el corte real. Mientras tanto, v8.5 sigue vivo en paralelo solo para
+  estas dos funciones — el resto del ciclo por-solicitud (intake, fecha programada, reporte
+  técnico con PDF, cierre) ya no lo necesita.
 - **Recrear páginas eliminadas** — `gestion-escolar.html`, `investigacion-educativa.html`, `programas-educativos.html`, `servicio-profesional.html`: requieren contenido validado con la Dra. Galindo
 - ~~**Logomark SEPRN**~~ — resuelto 10 ago 2026 (ver `docs/ARCHITECTURE.md §18`): se descartó un
   escudo propio tras revisar `Guía de Contenidos Digitales.pdf` (raíz del repo, no rastreado en

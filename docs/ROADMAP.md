@@ -460,10 +460,20 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
      piezas juntas contra producción con modo de prueba activo: PDF legible, correo con
      destinatarios correctos, sin fugas — detalle en `docs/ARCHITECTURE.md §15`. Fuera de esta
      fase, a construir después: el trigger nocturno de fotos y el reporte mensual (ver Fase 3).
-   - **Fase 3**: réplica de la organización nocturna de fotos y el reporte mensual (formato
-     Planeación, cruce contra el catálogo de direcciones) — menor prioridad, mayor complejidad.
-   - **Fase 4**: decidir el destino del histórico de v8.5 (380 aulas, reportes ya generados —
-     probablemente archivo de solo lectura, no migración) y el corte real.
+   - ~~**Aviso al técnico asignado**~~ (construido y **verificado en vivo 25 ago 2026**, sesión
+     siguiente) — cierra un hueco de la Fase 1: al programar la fecha de visita, el sistema
+     avisaba a solicitante+Zona/Sector pero nunca al técnico, que se seguía coordinando por fuera
+     del sistema. Columna nueva "Técnico asignado" en `Solicitudes`; `manOnEditProgramacion()`
+     avisa al técnico (folio, escuela, fecha, equipos con falla, link a `reporte-visita.html`) en
+     cuanto fecha + técnico ya tienen valor, sin importar el orden. Jorge redesplegó y se probó
+     contra producción real con modo de prueba activo: ambos avisos (solicitante y técnico)
+     dispararon correctamente. Detalle en `docs/ARCHITECTURE.md §15`.
+   - **Fase 3 — no iniciada**: réplica de la organización nocturna de fotos y el reporte mensual
+     (formato Planeación, cruce contra el catálogo de direcciones) — menor prioridad, mayor
+     complejidad. Mientras no se construya, v8.5 sigue vivo en paralelo solo para estas dos
+     funciones (el resto del ciclo por-solicitud ya no lo necesita).
+   - **Fase 4 — no iniciada**: decidir el destino del histórico de v8.5 (380 aulas, reportes ya
+     generados — probablemente archivo de solo lectura, no migración) y el corte real.
    Detalle completo del diseño de la Fase 1 y de la verificación en vivo de v8.5 que precedió la
    Fase 2 en `docs/BITACORA.md`, checkpoints 24 ago 2026 y 25 ago 2026.
 
