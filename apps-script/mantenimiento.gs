@@ -36,7 +36,8 @@
 //   P Notificación de cierre enviada | Q Tipo de equipo | R Cantidad (Aula de medios)
 //   S Cantidad (Administrativas) | T Marca/Modelo | U Estado de instalación
 //   V Tipo de solicitante | W Fecha programada de visita
-//   X Notificación de fecha programada enviada
+//   X Notificación de fecha programada enviada | Y Técnico asignado
+//   Z Notificación a técnico enviada
 //
 // COLUMNAS DE LA HOJA "Contactos_Zona_Sector" (Jorge la llena a mano):
 //   A Sector | B Zona | C Correo | D Teléfono
@@ -55,11 +56,16 @@
 // onOpen()) después de pegar esta versión — los triggers no se reinstalan
 // solos al redesplegar.
 //
-// PROGRAMACIÓN DE VISITA: al escribir una fecha en la columna "Fecha
-// programada de visita" de la hoja "Solicitudes", un segundo trigger onEdit
-// instalable, independiente del de cierre (manOnEditProgramacion), notifica
-// al solicitante (con Zona/Sector en CC) que ya hay fecha. Requiere correr
-// UNA vez manInstalarTriggerProgramacion() (o el menú "OTDE Mantenimiento")
+// PROGRAMACIÓN DE VISITA: al escribir una fecha en "Fecha programada de
+// visita" o un nombre en "Técnico asignado" (columnas de la hoja
+// "Solicitudes"), un segundo trigger onEdit instalable, independiente del de
+// cierre (manOnEditProgramacion), dispara dos avisos que pueden llenarse en
+// cualquier orden: (1) con solo la fecha, notifica al solicitante (con
+// Zona/Sector en CC) que ya hay fecha; (2) en cuanto AMBAS (fecha + técnico)
+// tienen valor, avisa también al técnico asignado (folio, escuela, fecha,
+// equipos con falla y link a reporte-visita.html) — antes nadie en el
+// sistema le avisaba, Jorge coordinaba con él por fuera. Requiere correr UNA
+// vez manInstalarTriggerProgramacion() (o el menú "OTDE Mantenimiento")
 // después de pegar esta versión.
 //
 // CONSULTA DE FOLIO (Oficina Virtual OTDE): doGet(?action=consulta&folio=..
@@ -110,7 +116,8 @@ const ENCABEZADOS_MAN_SOLICITUDES = [
   'Notificación de cierre enviada', 'Tipo de equipo', 'Cantidad (Aula de medios)',
   'Cantidad (Administrativas)', 'Marca/Modelo', 'Estado de instalación',
   'Tipo de solicitante', 'Fecha programada de visita',
-  'Notificación de fecha programada enviada'
+  'Notificación de fecha programada enviada', 'Técnico asignado',
+  'Notificación a técnico enviada'
 ];
 // Índice (0-based) de 'Tipo de solicitante' dentro de una fila leída con getValues() —
 // ya no es la última columna (se agregaron 2 más después, misma lógica de no correr
@@ -122,6 +129,12 @@ const COL_MAN_NOTIFICACION_CIERRE = 16;
 // mismo criterio, para no correr ninguna columna existente.
 const COL_MAN_FECHA_PROGRAMADA = 23;
 const COL_MAN_NOTIFICACION_PROGRAMADA = 24;
+// Técnico asignado a la visita y su columna de control — agregadas al final
+// igual que las anteriores. El aviso al técnico (ver manOnEditProgramacion)
+// solo se dispara cuando AMBAS (fecha programada y técnico asignado) ya
+// tienen valor, sin importar cuál se llenó al último.
+const COL_MAN_TECNICO_ASIGNADO = 25;
+const COL_MAN_NOTIFICACION_TECNICO = 26;
 const ESTADOS_MAN_VALIDOS = ['Pendiente de validar', 'Validado', 'En atención', 'Resuelto', 'Rechazado'];
 
 // ── Fase 2 hacia retirar v8.5: reporte técnico de la visita, en una hoja
@@ -389,10 +402,22 @@ function manObtenerHojaSolicitudes() {
   }
 
   manAplicarValidacionEstatus(hoja);
+  manAplicarValidacionTecnico(hoja);
   manAsegurarHojaContactos(ss);
   manAsegurarHojaReportes(ss);
 
   return hoja;
+}
+
+// ── Dropdown de técnicos válidos en "Técnico asignado" (idempotente) —
+// mismos nombres que MAN_TECNICOS, para que manNotificarTecnicoAsignado()
+// siempre encuentre el correo real a partir del texto capturado. ──
+function manAplicarValidacionTecnico(hoja) {
+  const regla = SpreadsheetApp.newDataValidation()
+    .requireValueInList(Object.keys(MAN_TECNICOS), true)
+    .setAllowInvalid(false)
+    .build();
+  hoja.getRange(2, COL_MAN_TECNICO_ASIGNADO, 1000, 1).setDataValidation(regla);
 }
 
 // ── Dropdown de valores válidos en la columna Estatus (idempotente) ──
@@ -715,9 +740,13 @@ function manNotificarCierre(fila) {
 }
 
 // ── onEdit instalable: dispara al capturar/editar "Fecha programada de
-// visita" — segundo trigger onEdit independiente del de cierre, mismo
-// esqueleto que manOnEditCierre. No se llama "onEdit" por la misma razón:
-// solo debe correr vía manInstalarTriggerProgramacion(). ──
+// visita" o "Técnico asignado" — segundo trigger onEdit independiente del de
+// cierre, mismo esqueleto que manOnEditCierre. Cubre dos avisos
+// independientes que pueden llenarse en cualquier orden: (1) fecha
+// programada → solicitante+Zona/Sector (como antes), (2) fecha + técnico
+// juntos → el técnico asignado, sin importar cuál de los dos campos se llenó
+// al último. No se llama "onEdit" por la misma razón: solo debe correr vía
+// manInstalarTriggerProgramacion(). ──
 function manOnEditProgramacion(e) {
   try {
     if (!e || !e.range) return;
@@ -726,21 +755,33 @@ function manOnEditProgramacion(e) {
 
     const colInicio = e.range.getColumn();
     const colFin = e.range.getLastColumn();
-    if (COL_MAN_FECHA_PROGRAMADA < colInicio || COL_MAN_FECHA_PROGRAMADA > colFin) return;
+    const tocaFecha = COL_MAN_FECHA_PROGRAMADA >= colInicio && COL_MAN_FECHA_PROGRAMADA <= colFin;
+    const tocaTecnico = COL_MAN_TECNICO_ASIGNADO >= colInicio && COL_MAN_TECNICO_ASIGNADO <= colFin;
+    if (!tocaFecha && !tocaTecnico) return;
 
     const filaInicio = Math.max(e.range.getRow(), 2);
     const filaFin = e.range.getRow() + e.range.getNumRows() - 1;
 
     for (let fila = filaInicio; fila <= filaFin; fila++) {
-      const fechaProgramada = hoja.getRange(fila, COL_MAN_FECHA_PROGRAMADA).getValue();
-      if (!fechaProgramada) continue;
-
-      const yaNotificado = String(hoja.getRange(fila, COL_MAN_NOTIFICACION_PROGRAMADA).getValue()).trim();
-      if (yaNotificado === 'Sí') continue;
-
       const datosFila = hoja.getRange(fila, 1, 1, ENCABEZADOS_MAN_SOLICITUDES.length).getValues()[0];
-      manNotificarFechaProgramada(datosFila);
-      hoja.getRange(fila, COL_MAN_NOTIFICACION_PROGRAMADA).setValue('Sí');
+      const fechaProgramada = datosFila[COL_MAN_FECHA_PROGRAMADA - 1];
+      const tecnicoAsignado = String(datosFila[COL_MAN_TECNICO_ASIGNADO - 1] || '').trim();
+
+      if (fechaProgramada) {
+        const yaNotificadoFecha = String(datosFila[COL_MAN_NOTIFICACION_PROGRAMADA - 1] || '').trim();
+        if (yaNotificadoFecha !== 'Sí') {
+          manNotificarFechaProgramada(datosFila);
+          hoja.getRange(fila, COL_MAN_NOTIFICACION_PROGRAMADA).setValue('Sí');
+        }
+      }
+
+      if (fechaProgramada && tecnicoAsignado) {
+        const yaNotificadoTecnico = String(datosFila[COL_MAN_NOTIFICACION_TECNICO - 1] || '').trim();
+        if (yaNotificadoTecnico !== 'Sí') {
+          manNotificarTecnicoAsignado(datosFila);
+          hoja.getRange(fila, COL_MAN_NOTIFICACION_TECNICO).setValue('Sí');
+        }
+      }
     }
   } catch (err) {
     // Silencioso: un fallo aquí no debe romper la edición del Sheet
@@ -793,6 +834,62 @@ function manNotificarFechaProgramada(fila) {
     };
     if (cc) opciones.cc = cc;
     manEnviarCorreo_(opciones);
+  } catch (err) {
+    // Silencioso: el Sheet ya quedó actualizado aunque falle este aviso
+  }
+}
+
+// ── Avisa al técnico asignado que tiene una visita programada — hasta ahora
+// nadie en el sistema le avisaba, Jorge coordinaba con él por fuera (mismo
+// cuello de botella que Fase 1 resolvió para Zona/Sector, sin resolver para
+// el técnico). Incluye folio, escuela, fecha, equipos con falla reportados y
+// el contacto de quien solicitó, más el link directo a reporte-visita.html
+// para cerrar el círculo. Se dispara solo cuando YA hay fecha programada Y
+// técnico asignado — ver manOnEditProgramacion. ──
+function manNotificarTecnicoAsignado(fila) {
+  try {
+    const folio = fila[1];
+    const nombre = fila[2];
+    const whatsapp = fila[9];
+    const cct = fila[4];
+    const sector = fila[5];
+    const zona = fila[6];
+    const escuela = fila[7];
+    const equipos = fila[11];
+    const tecnico = String(fila[COL_MAN_TECNICO_ASIGNADO - 1] || '').trim();
+    const correoTecnico = MAN_TECNICOS[tecnico];
+    if (!correoTecnico) return; // el texto capturado no coincide con MAN_TECNICOS
+
+    const fechaProgramadaRaw = fila[COL_MAN_FECHA_PROGRAMADA - 1];
+    const fechaProgramada = fechaProgramadaRaw instanceof Date
+      ? Utilities.formatDate(fechaProgramadaRaw, 'America/Mexico_City', 'dd/MM/yyyy')
+      : String(fechaProgramadaRaw || '');
+
+    const asunto = 'Visita asignada — ' + (escuela || cct) + ' · ' + folio;
+    const html =
+      '<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;">' +
+      '<div style="background-color:#9F2241;padding:16px 20px;border-radius:8px 8px 0 0;">' +
+      '<p style="margin:0;color:#fff;font-size:15px;font-weight:bold;">OTDE — Visita técnica asignada</p>' +
+      '</div>' +
+      '<div style="border:1px solid #d6d1ca;border-top:none;border-radius:0 0 8px 8px;padding:18px 20px;">' +
+      '<p style="margin:0 0 10px 0;font-size:14px;color:#333;">Se te asignó una visita de mantenimiento.</p>' +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Folio:</strong> ' + folio + '</p>' +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Fecha de visita:</strong> ' + manEscapeHtml_(fechaProgramada) + '</p>' +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Escuela / CCT:</strong> ' + manEscapeHtml_(escuela || '') + ' — ' + manEscapeHtml_(cct) + '</p>' +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Sector / Zona:</strong> Sector ' + manEscapeHtml_(sector) + ' · Zona ' + manEscapeHtml_(zona) + '</p>' +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Equipos con falla reportados:</strong> ' + manEscapeHtml_(equipos || '—') + '</p>' +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Contacto en la escuela:</strong> ' + manEscapeHtml_(nombre) + (whatsapp ? ' · WhatsApp ' + manEscapeHtml_(whatsapp) : '') + '</p>' +
+      '<p style="margin:12px 0 0 0;font-size:12px;color:#6b6b6b;">Al terminar la visita, llena el reporte con este folio en ' +
+      '<a href="https://educaneza.github.io/seprn-sitio/reporte-visita.html">reporte-visita.html</a>.</p>' +
+      '</div></div>';
+
+    manEnviarCorreo_({
+      to: correoTecnico,
+      subject: asunto,
+      htmlBody: html,
+      name: 'OTDE | Oficina de Tecnología para el Desarrollo Educativo',
+      replyTo: 'otde.nezahualcoyotl@dee.edu.mx'
+    });
   } catch (err) {
     // Silencioso: el Sheet ya quedó actualizado aunque falle este aviso
   }
