@@ -39,7 +39,8 @@
 //   G Sector | H Zona | I Escuela | J Turno | K Número de Docentes
 //   L WhatsApp | M Correo | N Observaciones | O Oficio (link Drive)
 //   P Estatus | Q Notas de revisión | R Confirmó Mantenimiento Previo
-//   S Notificación de cierre enviada
+//   S Notificación de cierre enviada | T Tipo de solicitante
+//   U Fecha programada de visita | V Notificación de fecha programada enviada
 //
 // COLUMNAS DE LA HOJA "Contactos_Zona_Sector" (Jorge la llena a mano):
 //   A Sector | B Zona | C Correo | D Teléfono
@@ -57,6 +58,13 @@
 // aseInstalarTriggerCierre() (o el menú "OTDE Asesorías" que crea onOpen())
 // después de pegar esta versión — los triggers no se reinstalan solos al
 // redesplegar.
+//
+// PROGRAMACIÓN DE VISITA: al escribir una fecha en la columna "Fecha
+// programada de visita" de la hoja "Solicitudes", un segundo trigger onEdit
+// instalable, independiente del de cierre (aseOnEditProgramacion), notifica
+// al solicitante (con Zona/Sector en CC) que ya hay fecha. Requiere correr
+// UNA vez aseInstalarTriggerProgramacion() (o el menú "OTDE Asesorías")
+// después de pegar esta versión.
 //
 // CONSULTA DE FOLIO (Oficina Virtual OTDE): doGet(?action=consulta&folio=..
 // &correo=...) devuelve estatus/fecha/notas si el folio y el correo
@@ -77,14 +85,19 @@ const ENCABEZADOS_ASE_SOLICITUDES = [
   'Escuela', 'Turno', 'Número de Docentes', 'WhatsApp', 'Correo',
   'Observaciones', 'Oficio (link Drive)', 'Estatus', 'Notas de revisión',
   'Confirmó Mantenimiento Previo', 'Notificación de cierre enviada',
-  'Tipo de solicitante'
+  'Tipo de solicitante', 'Fecha programada de visita',
+  'Notificación de fecha programada enviada'
 ];
 // Índice (0-based) de 'Tipo de solicitante' dentro de una fila leída con getValues() —
-// agregada al final a propósito, mismo criterio que las demás columnas nuevas, para no
-// correr COL_ASE_ESTATUS/COL_ASE_NOTIFICACION_CIERRE del cierre automático.
-const COL_ASE_TIPO_SOLICITANTE_IDX = ENCABEZADOS_ASE_SOLICITUDES.length - 1;
+// ya no es la última columna (se agregaron 2 más después, misma lógica de no correr
+// columnas existentes), así que queda fijo en vez de derivarse de .length - 1.
+const COL_ASE_TIPO_SOLICITANTE_IDX = 19;
 const COL_ASE_ESTATUS = 16;
 const COL_ASE_NOTIFICACION_CIERRE = 19;
+// Fecha programada de visita y su columna de control — agregadas al final,
+// mismo criterio, para no correr ninguna columna existente.
+const COL_ASE_FECHA_PROGRAMADA = 21;
+const COL_ASE_NOTIFICACION_PROGRAMADA = 22;
 const ESTADOS_ASE_VALIDOS = ['Pendiente de validar', 'Validado', 'En atención', 'Resuelto', 'Rechazado'];
 
 // ── Modo de prueba: redirige TODOS los correos salientes (Zona/Sector +
@@ -190,7 +203,9 @@ function aseListarPendientes(tokenRecibido) {
         sector: r[6],
         zona: r[7],
         estatus: String(r[COL_ASE_ESTATUS - 1] || 'Pendiente de validar').trim(),
-        notas: r[16] || ''
+        notas: r[16] || '',
+        fechaProgramada: r[COL_ASE_FECHA_PROGRAMADA - 1] instanceof Date
+          ? r[COL_ASE_FECHA_PROGRAMADA - 1].toISOString() : (r[COL_ASE_FECHA_PROGRAMADA - 1] || '')
       };
     });
 
@@ -222,7 +237,9 @@ function aseConsultarFolio(folioBuscado, correoBuscado) {
     folio: fila[1],
     fecha: fila[0] instanceof Date ? fila[0].toISOString() : String(fila[0]),
     estatus: fila[COL_ASE_ESTATUS - 1],
-    notas: fila[16] || ''
+    notas: fila[16] || '',
+    fechaProgramada: fila[COL_ASE_FECHA_PROGRAMADA - 1] instanceof Date
+      ? fila[COL_ASE_FECHA_PROGRAMADA - 1].toISOString() : (fila[COL_ASE_FECHA_PROGRAMADA - 1] || '')
   }));
 }
 
@@ -598,6 +615,92 @@ function aseNotificarCierre(fila) {
   }
 }
 
+// ── onEdit instalable: dispara al capturar/editar "Fecha programada de
+// visita" — segundo trigger onEdit independiente del de cierre, mismo
+// esqueleto que aseOnEditCierre. No se llama "onEdit" por la misma razón:
+// solo debe correr vía aseInstalarTriggerProgramacion(). ──
+function aseOnEditProgramacion(e) {
+  try {
+    if (!e || !e.range) return;
+    const hoja = e.range.getSheet();
+    if (hoja.getName() !== HOJA_ASE_SOLICITUDES) return;
+
+    const colInicio = e.range.getColumn();
+    const colFin = e.range.getLastColumn();
+    if (COL_ASE_FECHA_PROGRAMADA < colInicio || COL_ASE_FECHA_PROGRAMADA > colFin) return;
+
+    const filaInicio = Math.max(e.range.getRow(), 2);
+    const filaFin = e.range.getRow() + e.range.getNumRows() - 1;
+
+    for (let fila = filaInicio; fila <= filaFin; fila++) {
+      const fechaProgramada = hoja.getRange(fila, COL_ASE_FECHA_PROGRAMADA).getValue();
+      if (!fechaProgramada) continue;
+
+      const yaNotificado = String(hoja.getRange(fila, COL_ASE_NOTIFICACION_PROGRAMADA).getValue()).trim();
+      if (yaNotificado === 'Sí') continue;
+
+      const datosFila = hoja.getRange(fila, 1, 1, ENCABEZADOS_ASE_SOLICITUDES.length).getValues()[0];
+      aseNotificarFechaProgramada(datosFila);
+      hoja.getRange(fila, COL_ASE_NOTIFICACION_PROGRAMADA).setValue('Sí');
+    }
+  } catch (err) {
+    // Silencioso: un fallo aquí no debe romper la edición del Sheet
+  }
+}
+
+// ── Avisa que ya hay fecha de visita programada: un solo correo (to =
+// solicitante, cc = Zona/Sector si hay contacto(s) registrados), mismo
+// patrón que aseNotificarCierre. ──
+function aseNotificarFechaProgramada(fila) {
+  try {
+    const folio = fila[1];
+    const tipo = fila[2];
+    const nombre = fila[3];
+    const cct = fila[5];
+    const sector = fila[6];
+    const zona = fila[7];
+    const escuela = fila[8];
+    const correo = String(fila[12] || '').trim();
+    const tipoSolicitante = String(fila[COL_ASE_TIPO_SOLICITANTE_IDX] || '').trim();
+    const fechaProgramadaRaw = fila[COL_ASE_FECHA_PROGRAMADA - 1];
+    const fechaProgramada = fechaProgramadaRaw instanceof Date
+      ? Utilities.formatDate(fechaProgramadaRaw, 'America/Mexico_City', 'dd/MM/yyyy')
+      : String(fechaProgramadaRaw || '');
+
+    if (!correo) return;
+
+    const contactos = aseFiltrarContactosPorTipo(
+      aseBuscarContactosZonaSector(sector, zona), tipoSolicitante);
+    const cc = contactos.map(c => c.correo).join(',');
+    const asunto = 'Tu solicitud de asesoría ya tiene fecha de visita — ' + folio;
+    const html =
+      '<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;">' +
+      '<div style="background-color:#9F2241;padding:16px 20px;border-radius:8px 8px 0 0;">' +
+      '<p style="margin:0;color:#fff;font-size:15px;font-weight:bold;">OTDE — Fecha de visita programada</p>' +
+      '</div>' +
+      '<div style="border:1px solid #d6d1ca;border-top:none;border-radius:0 0 8px 8px;padding:18px 20px;">' +
+      '<p style="margin:0 0 10px 0;font-size:14px;color:#333;">Ya se programó la fecha de la visita técnica para tu solicitud de asesoría.</p>' +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Folio:</strong> ' + folio + '</p>' +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Tipo:</strong> ' + aseEscapeHtml_(tipo) + '</p>' +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Fecha de visita:</strong> ' + aseEscapeHtml_(fechaProgramada) + '</p>' +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Escuela / CCT:</strong> ' + aseEscapeHtml_(escuela || '') + ' — ' + aseEscapeHtml_(cct) + '</p>' +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Solicitó:</strong> ' + aseEscapeHtml_(nombre) + '</p>' +
+      '</div></div>';
+
+    const opciones = {
+      to: correo,
+      subject: asunto,
+      htmlBody: html,
+      name: 'OTDE | Oficina de Tecnología para el Desarrollo Educativo',
+      replyTo: 'otde.nezahualcoyotl@dee.edu.mx'
+    };
+    if (cc) opciones.cc = cc;
+    aseEnviarCorreo_(opciones);
+  } catch (err) {
+    // Silencioso: el Sheet ya quedó actualizado aunque falle este aviso
+  }
+}
+
 // ── Instala el trigger de cierre automático (seguro correrlo de nuevo:
 // borra cualquier instalación previa antes de crear una nueva) ──
 function aseInstalarTriggerCierre() {
@@ -623,12 +726,40 @@ function aseDesinstalarTriggerCierre() {
   try { SpreadsheetApp.getUi().alert(quitados + ' trigger(s) de cierre eliminado(s).'); } catch (err) {}
 }
 
+// ── Instala el trigger de notificación de fecha programada (seguro
+// correrlo de nuevo: borra cualquier instalación previa antes de crear una
+// nueva) ──
+function aseInstalarTriggerProgramacion() {
+  ScriptApp.getProjectTriggers().forEach(t => {
+    if (t.getHandlerFunction() === 'aseOnEditProgramacion') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('aseOnEditProgramacion')
+    .forSpreadsheet(SpreadsheetApp.getActiveSpreadsheet())
+    .onEdit()
+    .create();
+  try { SpreadsheetApp.getUi().alert('Trigger de programación de visita instalado.'); } catch (err) {}
+}
+
+// ── Quita el trigger de notificación de fecha programada ──
+function aseDesinstalarTriggerProgramacion() {
+  let quitados = 0;
+  ScriptApp.getProjectTriggers().forEach(t => {
+    if (t.getHandlerFunction() === 'aseOnEditProgramacion') {
+      ScriptApp.deleteTrigger(t);
+      quitados++;
+    }
+  });
+  try { SpreadsheetApp.getUi().alert(quitados + ' trigger(s) de programación eliminado(s).'); } catch (err) {}
+}
+
 // ── Menú del Sheet ──
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('OTDE Asesorías')
     .addItem('Instalar trigger de cierre automático', 'aseInstalarTriggerCierre')
     .addItem('Desinstalar trigger de cierre automático', 'aseDesinstalarTriggerCierre')
+    .addItem('Instalar trigger de programación de visita', 'aseInstalarTriggerProgramacion')
+    .addItem('Desinstalar trigger de programación de visita', 'aseDesinstalarTriggerProgramacion')
     .addToUi();
 }
 
