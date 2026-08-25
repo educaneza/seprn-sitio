@@ -935,14 +935,129 @@ en vez de una plantilla de Docs/Slides — mismo enfoque replicado aquí. Solo a
   reciben este correo** — ya reciben apertura, fecha programada (Fase 1) y cierre; sumar un
   cuarto aviso por el reporte técnico se consideró demasiado. Se enteran de que la visita
   concluyó en el correo de cierre que ya existe (`manOnEditCierre`), sin tocar ese mecanismo.
-- **Pendiente de probar/desplegar**: nada de esto corrió en el Apps Script real todavía —
-  `node --check` solo confirma sintaxis válida, no que el PDF se genere legible ni que el correo
-  combinado llegue bien. Antes de confiar en el flujo: pegar y redesplegar, correr
-  `manObtenerHojaSolicitudes()` una vez para crear la hoja, llenar una fila de prueba con un
-  folio real, probar con `manActivarModoPrueba(...)` activo, y confirmar visualmente el PDF
-  adjunto antes de desactivar el modo de prueba.
+- **Verificado en vivo (25 ago 2026)**: Jorge pegó y redesplegó el `.gs` real; con
+  `manActivarModoPrueba('otde.nezahualcoyotl@gmail.com')` activo (vía la función temporal de
+  siempre, `docs/QA-NOTES.md #14`) se creó una fila de prueba con folio `OTDE-MAN-TEST1` y se
+  corrió el flujo completo contra el endpoint real. Confirmado: el PDF se genera legible (tabla
+  HTML con el guinda institucional, todos los campos y fechas correctos, sin el bug de UTC), se
+  sube a Drive y queda enlazado en la hoja, y el correo llega con el aviso de modo de prueba
+  mostrando el destino real correcto (`to`=correo de la solicitud, `cc`=técnico real vía
+  `MAN_TECNICOS` + OTDE institucional) — sin que ningún destinatario real recibiera nada. Fila de
+  prueba, PDF de prueba en Drive y correo de prueba limpiados después. Era el riesgo técnico
+  principal sin verificar desde el primer corte — ya no lo es.
 
-## 16. Webform de Correo Institucional en paralelo al Google Form (agosto 2026)
+**Formulario de captura del técnico — resto de la Fase 2 (construido 25 ago 2026, pendiente de
+probar/desplegar junto con el primer corte de arriba).** Cierra el pendiente explícito del
+primer corte ("sin formulario de captura propio todavía") reemplazando el llenado a mano de la
+hoja "Reportes de visita" por una página pública que llena el técnico en campo. Confirmado con
+Jorge antes de construirlo: lo llena el técnico (no Jorge), un solo envío ya dispara PDF +
+correo (no queda como paso de menú aparte — a diferencia del primer corte, aquí se llena de una
+sola sentada, así que no aplica el riesgo de "correo con datos a medio llenar" que sí motivó que
+la acción de arriba fuera manual), y el folio se captura a mano (no hay lookup de solicitudes
+pendientes).
+
+- Página nueva `reporte-visita.html`, independiente de `otde.html` — la audiencia es el técnico
+  de campo, no un solicitante con CCT que autocompletar, así que no encaja en el patrón de tabs
+  de `otde.html`. Sin entrada en el nav ni el footer (mismo precedente que `asistencia.html`):
+  se llega por link directo que Jorge comparte con Alejandro/Marcos. Estilo autocontenido (no
+  importa `styles.css`), mismo criterio que `asistencia.html`, con la paleta institucional
+  guinda en vez del teal específico de ese evento.
+- Los 18 campos que llena el técnico van en el mismo orden que `ENCABEZADOS_MAN_REPORTES` — el
+  esquema de columnas no se reabrió, solo se le dio una interfaz. Mismos 3 mínimos obligatorios
+  que ya exigía `manValidarDatosReporte_()` server-side (Responsable, Fecha de atención, Estado
+  del aula); el resto queda opcional igual que en la hoja.
+- `doPost` gana una rama nueva al inicio: si `datos.accion === 'reporteVisita'`, delega a
+  `manDoPostReporteVisita_(datos)` en vez de tratarlo como una solicitud nueva de intake — mismo
+  criterio de branching por `accion` que ya usa `doGet`.
+- `manDoPostReporteVisita_()` reusa sin cambios `manBuscarSolicitudPorFolio_()`,
+  `manValidarDatosReporte_()`, `manGenerarPDFReporte_()`, `manGuardarPDFReporte_()` y
+  `manEnviarReporteVisita_()` — la única función nueva de peso es esta, el resto del primer corte
+  ya estaba listo para reutilizarse. Hace **upsert por folio**: si `manBuscarFilaReportePorFolio_()`
+  ya encuentra una fila con ese folio, la sobreescribe (`setValues`) en vez de duplicar — cubre
+  tanto una corrección real como un doble tap accidental del técnico en campo.
+- **Fechas/horas**: el formulario manda `fechaAtencion` (`YYYY-MM-DD`) e `inicioVisita`/
+  `finVisita` (`HH:mm`) como texto; `manFechaHoraLocal_()` construye el `Date` con componentes
+  explícitos (`new Date(y, m-1, d, h, min)`) en vez de parsear el string directo — mismo bug ya
+  documentado en `docs/QA-NOTES.md #3` (`new Date('YYYY-MM-DD')` se interpreta en UTC y el huso
+  de México lo corre un día).
+- Reusa la misma `MANTENIMIENTO_APPS_SCRIPT_URL` ya desplegada en `otde.html` — un solo proyecto
+  de Apps Script, sin implementación nueva que crear.
+- El respaldo manual de menú (`manGenerarYEnviarReporteVisita()`) se dejó sin cambios — sigue
+  vivo para reenviar o para cuando el técnico no pueda usar el formulario.
+- **Verificado end-to-end en vivo (25 ago 2026, sesión siguiente)**: contra el `.gs` real ya
+  redesplegado por Jorge, con `manActivarModoPrueba(...)` activo. Se probó primero el camino de
+  error (folio `OTDE-MAN-9999`, inexistente) directo contra el endpoint real: respondió el
+  mensaje esperado sin escribir nada. Luego, con una fila de prueba real en `Solicitudes`
+  (folio `OTDE-MAN-TEST1`, escuela claramente marcada como prueba), se envió el formulario
+  completo desde `reporte-visita.html` contra la URL real: la hoja "Reportes de visita" se llenó
+  correcta (upsert, fechas/horas sin el bug de UTC), el PDF se generó legible y el correo llegó
+  con el aviso de modo de prueba mostrando el destino real correcto — ver el detalle exacto en la
+  entrada de arriba ("Verificado en vivo"). Fila de prueba, PDF y correo de prueba limpiados
+  después. Ya no queda pendiente de verificación técnica en ninguna de las dos piezas de Fase 2.
+
+**Rediseño del PDF con identidad institucional real (25 ago 2026, sesión siguiente).** Jorge
+compartió un reporte real ya generado por el sistema viejo v8.5 (formato oficial, con pleca de
+logos, lema anual del Gobierno del Estado de México, secciones con acento guinda y firmas) y
+pidió igualar/mejorar ese nivel de diseño en `manGenerarPDFReporte_()` — no una copia fiel, con
+margen para ajustar, pero conservando encabezados, pie de página y firmas como elementos
+institucionales. La tabla plana de dos columnas del primer corte se reemplazó por:
+
+- **Pleca de logos** (`images/Pleca 4x.png` del propio sitio — Gobierno del Estado de México,
+  Estado de México, EDUCACIÓN/SECTEI, SEIEM — el mismo asset que ya usa el reporte oficial de
+  v8.5) embebida como **base64 directo en el HTML** (`MAN_LOGO_PLECA_B64`, constante nueva,
+  imagen redimensionada a 1600px de ancho con `sips` antes de codificarla) — a propósito, no una
+  URL externa: evita que la conversión HTML→PDF de Apps Script dependa de alcanzar
+  `educaneza.github.io` en el momento de generar el PDF, mismo criterio que ya usa el sitio para
+  no depender de servicios externos cuando se puede evitar (ver los QR generados localmente en
+  `protocolos.html`). Si el logo oficial cambia, regenerar el base64 a partir del PNG actualizado
+  y reemplazar la constante.
+- Debajo, una barra guinda con el nombre de la oficina y una barra oscura con el lema anual
+  vigente (`MAN_LEMA_ANUAL`, constante aparte — **actualizar cada año calendario**) — mismo
+  patrón visual que ya usa `images/Firma_institucional_OTDE.png` (barra guinda con el nombre de
+  la oficina debajo de la misma pleca), reutilizado aquí en vez de inventar un layout nuevo.
+- Meta línea con folio/fecha/registro (borde guinda a la izquierda), y las mismas ~20 filas del
+  primer corte pero agrupadas en secciones con encabezado guinda (Datos de la escuela, Visita
+  técnica, Equipos atendidos, Actividades realizadas, Resultado de la intervención,
+  Observaciones) en vez de una lista plana — mismo criterio de agrupación que el reporte de
+  referencia de v8.5, adaptado a nuestro propio esquema de columnas (no se copiaron sus preguntas
+  exactas).
+- **Duración de la jornada** (nuevo, `manCalcularDuracion_()`) calculada a partir de
+  inicio/fin de la visita — mejora sobre el primer corte, que solo mostraba las fechas/horas
+  crudas sin derivar nada. **Hora en formato 12h con a.m./p.m.** (`manFormatearHora12_()`, ej.
+  "7:58 a.m."), igual que el reporte de referencia, en vez del `dd/MM/yyyy HH:mm` del primer
+  corte.
+- **Firmas al pie** (3 columnas): Responsable de visita (dato real capturado), Jefe de la OTDE ·
+  SEPRN (Mtro. Jorge Alberto Bonilla Torres, hardcoded — mismo firmante institucional que usa
+  v8.5), y una tercera columna con `solicitud.nombre` etiquetada **"Recibió en la escuela"** en
+  vez de "Director(a) de la escuela" — decisión deliberada: el sistema no captura el rol de quien
+  solicitó (podría ser director, docente u otro personal), así que asumir "Director(a)" habría
+  sido inventar un dato que no se tiene (mismo criterio de "no inventar" ya establecido en
+  `MAN_TECNICOS` y otros correos del sitio).
+- **Pie de página** con la dirección/teléfono/correo institucional — el teléfono se tomó del que
+  ya usa el resto del sitio (`55 3300 2400 ext. 9065`, confirmado en `otde.html` y las demás
+  páginas de área), **no** el que traía el PDF de referencia de v8.5 (`55 5583 6400 ext. 9065`,
+  aparentemente desactualizado) — mismo criterio de no propagar un dato que ya se sabe
+  incorrecto en el resto del sitio.
+- `<meta charset="UTF-8">` agregado explícitamente en el `<head>` del HTML — el primer corte no
+  lo tenía; no causó problemas ahí (probado sin acentos rotos), pero con más texto libre y el
+  emoji del semáforo en el nuevo diseño es más seguro declararlo que confiar en que Apps Script
+  adivine la codificación correcta.
+
+**Verificación en navegador (previa al redespliegue)**: se extrajeron las funciones nuevas a un
+arnés de Node con `Utilities`/`Utilities.newBlob` simulados para generar el mismo HTML que
+produciría el `.gs` real con datos de prueba, y se abrió esa salida en Chrome forzando el ancho
+de página carta (816px @ 96dpi) para revisar el diseño y medir que el contenido completo (926px)
+cabe con margen dentro de una sola página (1056px).
+
+**Verificado en vivo contra el PDF real de producción (25 ago 2026, mismo día, tras el
+redespliegue)**: con modo de prueba activo, folio de prueba `OTDE-MAN-TEST2` — el PDF generado
+por la conversión real de Apps Script (`Utilities.newBlob(html,'text/html').getAs(
+'application/pdf')`) coincide exactamente con la previsualización: pleca de logos nítida, barras
+guinda/lema, secciones, firmas de 3 columnas y pie de página, todo en **"Página 1 de 1"**
+(confirmado en el visor de Google Drive) — la imagen en base64 y el `<style>` con selectores por
+clase se interpretan igual que en un navegador normal, sin sorpresas. Correo confirmado con el
+PDF nuevo adjunto. Fila de prueba y PDF limpiados después. Ya no queda ningún riesgo sin
+verificar en el rediseño del PDF.
 
 `otde.html` reemplazó, en código, el `<iframe>` del Google Form que hasta ahora capturaba las
 4 solicitudes de correo institucional (Alta, Cambio de Contraseña, Reset 2FA, Incidencias).

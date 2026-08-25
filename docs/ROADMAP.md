@@ -445,18 +445,21 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
    Camino elegido: **reemplazo eventual, en fases**:
    - ~~**Fase 1**~~ (resuelta y desplegada 25 ago 2026): coordinación de fecha de visita — ver
      ítem 8 arriba.
-   - **Fase 2 — primer corte construido 25 ago 2026, pendiente de probar/desplegar**:
-     reporte técnico de la visita + PDF (nueva hoja "Reportes de visita" en `mantenimiento.gs`,
-     ligada a `Solicitudes` por folio), notificado por correo a **escuela + técnico + OTDE**
-     desde una acción de menú ("Generar y enviar reporte de visita"). Verificado en vivo contra
-     el v8.5 real (Sheet + Apps Script) antes de construirlo: confirmó que v8.5 solo notifica a
-     director+técnico (nunca Zona/Sector) — extenderlo a Zona/Sector aquí habría sumado un 4º
-     correo por solicitud sobre los ya existentes (apertura, fecha programada, cierre), así que
-     Jorge decidió dejarlos fuera de este correo: se enteran en el correo de cierre que ya
-     existe (`manOnEditCierre`) cuando se marca Estatus = Resuelto. Fuera de este primer corte,
-     a construir después: el formulario de captura del técnico (reemplazo del Form de 24
-     preguntas de v8.5 — v8.5 no tiene un evento sin dueño; falta el diseño), el trigger
-     nocturno de fotos y el reporte mensual (ver Fase 3).
+   - ~~**Fase 2**~~ (construida y **verificada en vivo 25 ago 2026**, 2 piezas): reporte técnico
+     de la visita + PDF (nueva hoja "Reportes de visita" en `mantenimiento.gs`, ligada a
+     `Solicitudes` por folio), notificado por correo a **escuela + técnico + OTDE**. Verificado
+     en vivo contra el v8.5 real (Sheet + Apps Script) antes de construirlo: confirmó que v8.5
+     solo notifica a director+técnico (nunca Zona/Sector) — extenderlo a Zona/Sector aquí habría
+     sumado un 4º correo por solicitud sobre los ya existentes (apertura, fecha programada,
+     cierre), así que Jorge decidió dejarlos fuera de este correo: se enteran en el correo de
+     cierre que ya existe (`manOnEditCierre`) cuando se marca Estatus = Resuelto. Primer corte:
+     acción de menú manual ("Generar y enviar reporte de visita") sobre una fila llenada a mano.
+     Segunda pieza (mismo día): `reporte-visita.html`, el formulario de captura del técnico
+     (reemplazo del Form de 24 preguntas de v8.5) — el técnico llena el reporte en campo y un
+     solo envío ya dispara PDF + correo, sin paso de menú aparte. Jorge redesplegó y probó ambas
+     piezas juntas contra producción con modo de prueba activo: PDF legible, correo con
+     destinatarios correctos, sin fugas — detalle en `docs/ARCHITECTURE.md §15`. Fuera de esta
+     fase, a construir después: el trigger nocturno de fotos y el reporte mensual (ver Fase 3).
    - **Fase 3**: réplica de la organización nocturna de fotos y el reporte mensual (formato
      Planeación, cruce contra el catálogo de direcciones) — menor prioridad, mayor complejidad.
    - **Fase 4**: decidir el destino del histórico de v8.5 (380 aulas, reportes ya generados —
