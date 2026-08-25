@@ -897,6 +897,51 @@ funcionalidad dentro de este stack, en fases.
   (envueltas en una función temporal sin parámetros — mismo `docs/QA-NOTES.md #14` de siempre
   con ▶️ Ejecutar) y confirmado en ambos endpoints reales vía `curl`.
 
+**Reporte técnico de la visita — Fase 2 hacia retirar v8.5, primer corte (construido 25 ago
+2026, pendiente de probar/desplegar).** Verificado en vivo contra el v8.5 real (Sheet
+"seguimiento" + editor de Apps Script) antes de diseñar esta fase — confirmó que v8.5 solo
+notifica por correo a director+técnico al terminar el reporte (nunca a Zona/Sector), que su
+"Estado del aula" es un semáforo con emoji + oración completa, y que arma su PDF como tabla HTML
+en vez de una plantilla de Docs/Slides — mismo enfoque replicado aquí. Solo aplica a
+`mantenimiento.gs` (Asesorías no tiene visita técnica en este sentido).
+
+- Hoja nueva **"Reportes de visita"** (autocreada por `manAsegurarHojaReportes()`, llamada desde
+  `manObtenerHojaSolicitudes()`, mismo patrón de auto-heal que las demás hojas): 20 columnas —
+  Folio, Responsable de visita (dropdown de 2 técnicos, `MAN_TECNICOS`), Fecha/Inicio/Fin de
+  visita, ~15 campos técnicos (mobiliario, equipos atendidos/funcionales/no funcionales,
+  conectividad, actividades preventivas/correctivas, instalación realizada, equipos
+  administrativos, Estado del aula con dropdown de 4 valores tipo semáforo
+  `MAN_ESTADOS_AULA`, seguimiento requerido, observaciones), más el link del PDF y su columna de
+  control de notificación. **Sin formulario de captura propio todavía** — el técnico o Jorge
+  llenan la fila a mano; es el alcance deliberado de este primer corte.
+- Acción de menú **"Generar y enviar reporte de visita"** (`manGenerarYEnviarReporteVisita`, en
+  `onOpen()`), no un trigger `onEdit` automático como en la Fase 1 — a diferencia de la fecha
+  programada (un solo campo), aquí el técnico llena ~15 campos en varios momentos, así que un
+  trigger de una sola columna dispararía el correo con datos a medio llenar. Pide el folio,
+  valida que la solicitud (`manBuscarSolicitudPorFolio_()`) y la fila del reporte
+  (`manBuscarFilaReportePorFolio_()`) existan y tengan los campos mínimos (responsable, fecha de
+  atención, estado del aula — `manValidarDatosReporte_()`), y confirma antes de reenviar si la
+  fila ya estaba marcada como notificada.
+- `manGenerarPDFReporte_()` arma el PDF como tabla HTML (mismo guinda `#9F2241` institucional) y
+  lo convierte con `Utilities.newBlob(html,'text/html','reporte.html').getAs('application/pdf')`
+  — técnica conocida de Apps Script pero **nunca antes usada en este proyecto**, es el riesgo
+  técnico principal sin verificar de este corte. `manGuardarPDFReporte_()` lo sube a una carpeta
+  de Drive nueva ("Reportes de Visita", autocreada, mismo sharing "cualquiera con el link, solo
+  ver" que "Oficios de Mantenimiento") y guarda la URL en la hoja.
+- `manEnviarReporteVisita_()` notifica **solo a escuela + técnico + OTDE** (`to` = correo de la
+  escuela desde `Solicitudes`, `cc` = correo del técnico vía `MAN_TECNICOS` + la cuenta
+  institucional de OTDE), con el PDF adjunto, reusando `manEnviarCorreo_()` (respeta el modo de
+  prueba existente sin cambios). **Decisión explícita de Jorge (25 ago 2026): Zona/Sector no
+  reciben este correo** — ya reciben apertura, fecha programada (Fase 1) y cierre; sumar un
+  cuarto aviso por el reporte técnico se consideró demasiado. Se enteran de que la visita
+  concluyó en el correo de cierre que ya existe (`manOnEditCierre`), sin tocar ese mecanismo.
+- **Pendiente de probar/desplegar**: nada de esto corrió en el Apps Script real todavía —
+  `node --check` solo confirma sintaxis válida, no que el PDF se genere legible ni que el correo
+  combinado llegue bien. Antes de confiar en el flujo: pegar y redesplegar, correr
+  `manObtenerHojaSolicitudes()` una vez para crear la hoja, llenar una fila de prueba con un
+  folio real, probar con `manActivarModoPrueba(...)` activo, y confirmar visualmente el PDF
+  adjunto antes de desactivar el modo de prueba.
+
 ## 16. Webform de Correo Institucional en paralelo al Google Form (agosto 2026)
 
 `otde.html` reemplazó, en código, el `<iframe>` del Google Form que hasta ahora capturaba las

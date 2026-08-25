@@ -445,18 +445,24 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
    Camino elegido: **reemplazo eventual, en fases**:
    - ~~**Fase 1**~~ (resuelta y desplegada 25 ago 2026): coordinación de fecha de visita — ver
      ítem 8 arriba.
-   - **Fase 2**: reconstruir dentro de `mantenimiento.gs` el reporte técnico de la visita + PDF
-     + cierre automático (nueva hoja "Reportes de visita" ligada a `Solicitudes` por folio),
-     extendiendo el correo de cierre a escuela+zona+sector — mejora real sobre v8.5, que según
-     la documentación de este proyecto solo avisa a director+técnico al cerrar (**pendiente de
-     verificar en vivo contra el sistema real antes de asumirlo**, nunca confirmado en
-     navegador).
+   - **Fase 2 — primer corte construido 25 ago 2026, pendiente de probar/desplegar**:
+     reporte técnico de la visita + PDF (nueva hoja "Reportes de visita" en `mantenimiento.gs`,
+     ligada a `Solicitudes` por folio), notificado por correo a **escuela + técnico + OTDE**
+     desde una acción de menú ("Generar y enviar reporte de visita"). Verificado en vivo contra
+     el v8.5 real (Sheet + Apps Script) antes de construirlo: confirmó que v8.5 solo notifica a
+     director+técnico (nunca Zona/Sector) — extenderlo a Zona/Sector aquí habría sumado un 4º
+     correo por solicitud sobre los ya existentes (apertura, fecha programada, cierre), así que
+     Jorge decidió dejarlos fuera de este correo: se enteran en el correo de cierre que ya
+     existe (`manOnEditCierre`) cuando se marca Estatus = Resuelto. Fuera de este primer corte,
+     a construir después: el formulario de captura del técnico (reemplazo del Form de 24
+     preguntas de v8.5 — v8.5 no tiene un evento sin dueño; falta el diseño), el trigger
+     nocturno de fotos y el reporte mensual (ver Fase 3).
    - **Fase 3**: réplica de la organización nocturna de fotos y el reporte mensual (formato
      Planeación, cruce contra el catálogo de direcciones) — menor prioridad, mayor complejidad.
    - **Fase 4**: decidir el destino del histórico de v8.5 (380 aulas, reportes ya generados —
      probablemente archivo de solo lectura, no migración) y el corte real.
-   Detalle completo del diseño de la Fase 1 en `docs/BITACORA.md`, checkpoint 24 ago 2026
-   (sesión de revisión de flujo).
+   Detalle completo del diseño de la Fase 1 y de la verificación en vivo de v8.5 que precedió la
+   Fase 2 en `docs/BITACORA.md`, checkpoints 24 ago 2026 y 25 ago 2026.
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue
