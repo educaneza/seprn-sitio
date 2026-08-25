@@ -419,32 +419,32 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
    `oficina-virtual.html` como card tipo "Recurso", no "Trámite" — sin el buscador de
    seguimiento. Detalle completo de la decisión en `docs/BITACORA.md`, checkpoint 10 ago 2026
    (noche, cont.).
-8. **Coordinación de fecha de visita en Mantenimiento/Asesorías** (planteado 11 ago 2026,
-   diseño confirmado y ampliado 24 ago 2026, **código construido 25 ago 2026, pendiente de
-   desplegar**): hoy, tras "Validado", OTDE coordina la fecha de atención con Sector (que
-   coordina con Zona, que coordina con la escuela) totalmente fuera del sistema. El sistema
-   viejo v8.5 ya resuelve un problema parecido con su hoja "Despacho" (acuse de recibo +
-   notificar fecha programada al sector), pero corre sobre su propio Sheet, desconectado del
-   webform nuevo — se replicó ese mismo propósito directamente en `mantenimiento.gs`/
-   `asesorias.gs`, sin tocar v8.5 ni duplicar captura: columnas nuevas "Fecha programada de
-   visita"/"Notificación de fecha programada enviada" al final de cada hoja `Solicitudes`
-   (auto-heal existente las completa solas), trigger `onEdit` instalable nuevo
-   (`manOnEditProgramacion`/`aseOnEditProgramacion`, independiente del de cierre) que notifica
-   al solicitante+Zona/Sector al capturar la fecha, y el campo `fechaProgramada` expuesto en
-   `?action=consulta`/`?action=pendientes`. **Falta el paso manual de despliegue**: pegar cada
-   `.gs` en su editor de Apps Script real (Administrar implementaciones → Nueva versión) y correr
-   una vez "Instalar trigger de programación de visita" del menú "OTDE Mantenimiento"/"OTDE
-   Asesorías" en cada Sheet — mismo ritual que los triggers de cierre existentes. Es además la
-   **Fase 1** de la ruta hacia retirar v8.5 (ver ítem 9 abajo). Detalle de la decisión en
-   `docs/BITACORA.md`, checkpoints 11 ago 2026, 24 ago 2026 (plan) y 25 ago 2026 (construcción).
+8. ~~**Coordinación de fecha de visita en Mantenimiento/Asesorías**~~ (planteado 11 ago 2026,
+   diseño confirmado y ampliado 24 ago 2026) — **resuelto y desplegado 25 ago 2026**: hasta
+   ahora, tras "Validado", OTDE coordinaba la fecha de atención con Sector (que coordinaba con
+   Zona, que coordinaba con la escuela) totalmente fuera del sistema. El sistema viejo v8.5 ya
+   resolvía un problema parecido con su hoja "Despacho" (acuse de recibo + notificar fecha
+   programada al sector), pero corre sobre su propio Sheet, desconectado del webform nuevo — se
+   replicó ese mismo propósito directamente en `mantenimiento.gs`/`asesorias.gs`, sin tocar
+   v8.5 ni duplicar captura: columnas nuevas "Fecha programada de visita"/"Notificación de fecha
+   programada enviada" al final de cada hoja `Solicitudes` (auto-heal existente las completa
+   solas), trigger `onEdit` instalable nuevo (`manOnEditProgramacion`/`aseOnEditProgramacion`,
+   independiente del de cierre) que notifica al solicitante+Zona/Sector al capturar la fecha, y
+   el campo `fechaProgramada` expuesto en `?action=consulta`/`?action=pendientes`. Desplegado por
+   Jorge en ambos proyectos de Apps Script real y verificado en vivo: columnas visibles en el
+   Sheet, trigger registrado en "Activadores", correo de prueba disparado una sola vez al
+   capturar la fecha (no al editar otras columnas), y ambos endpoints confirmados por `curl`
+   contra producción. Es además la **Fase 1** de la ruta hacia retirar v8.5 (ver ítem 9 abajo).
+   Detalle de la decisión y el despliegue en `docs/BITACORA.md`, checkpoints 11 ago 2026, 24 ago
+   2026 (plan) y 25 ago 2026 (construcción y despliegue).
 9. **Conexión con el sistema v8.5 ("Sistema Automatizado de Reportes de Visitas")** — **decisión
    revertida el 24 ago 2026**: la evaluación anterior (11 ago 2026) había descartado el
    reemplazo por "beneficio mayormente cosmético" frente al costo. Jorge confirmó que quiere
    retirar v8.5 y unificar todo en un solo stack mantenible (v8.5 no tiene repo ni control de
    versiones) — no es una necesidad puntual nueva de v8.5, es preferencia de arquitectura.
    Camino elegido: **reemplazo eventual, en fases**:
-   - **Fase 1** (código construido 25 ago 2026, pendiente de desplegar): coordinación de fecha
-     de visita — ver ítem 8 arriba.
+   - ~~**Fase 1**~~ (resuelta y desplegada 25 ago 2026): coordinación de fecha de visita — ver
+     ítem 8 arriba.
    - **Fase 2**: reconstruir dentro de `mantenimiento.gs` el reporte técnico de la visita + PDF
      + cierre automático (nueva hoja "Reportes de visita" ligada a `Solicitudes` por folio),
      extendiendo el correo de cierre a escuela+zona+sector — mejora real sobre v8.5, que según

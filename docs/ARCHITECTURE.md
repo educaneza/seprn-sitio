@@ -852,8 +852,8 @@ destino real (`to`/`cc` originales) — para poder probar el flujo completo de u
 avisar a escuelas/zonas/sectores reales ni gastar la cuota diaria de correo en pruebas. No
 requiere redeploy para activar/desactivar, se lee en cada envío.
 
-**Coordinación de fecha de visita — Fase 1 hacia retirar v8.5 (código construido 25 ago
-2026, pendiente de desplegar).** El flujo real de Mantenimiento tiene un cuello de botella
+**Coordinación de fecha de visita — Fase 1 hacia retirar v8.5 (construida y desplegada 25 ago
+2026).** El flujo real de Mantenimiento tenía un cuello de botella
 100% manual entre "Validado" y la visita técnica: OTDE coordina la fecha con Sector, Sector con
 Zona, Zona con la escuela, todo fuera de cualquier sistema — Jorge lo nombró explícitamente al
 revisar el flujo completo (checkpoint 24 ago 2026). Es también la primera fase de la decisión
@@ -885,12 +885,17 @@ funcionalidad dentro de este stack, en fases.
   `oficina-virtual.html`/`panel-otde.gs` para que puedan mostrarlo cuando se decida.
 - **No se tocó `otde.html`** en esta fase — el cambio vive del lado de Jorge (columnas del Sheet
   + notificación), no de la captura del solicitante.
-- **Pendiente de desplegar**: pegar cada `.gs` completo en su proyecto de Apps Script real
-  (mismos IDs de implementación, no cambian las URLs en `otde.html`) vía "Administrar
-  implementaciones → Nueva versión", y correr una vez "Instalar trigger de programación de
-  visita" del menú nuevo en cada Sheet — confirmar en la pestaña "Activadores" que el trigger
-  quedó registrado, no solo que la función corrió sin error (mismo problema real ya documentado
-  con el trigger de cierre de Soporte, §20).
+- **Desplegado y verificado (25 ago 2026)**: pegado en ambos proyectos de Apps Script real
+  (mismos IDs de implementación, las URLs en `otde.html` no cambiaron) vía "Administrar
+  implementaciones → Nueva versión", con "Instalar trigger de programación de visita" corrido
+  desde el menú nuevo en cada Sheet — confirmado en la pestaña "Activadores" que ambos triggers
+  quedaron registrados, no solo que la función corrió sin error (mismo problema real ya
+  documentado con el trigger de cierre de Soporte, §20). Las columnas nuevas no aparecían solas
+  en el Sheet hasta correr manualmente `manObtenerHojaSolicitudes()`/
+  `aseObtenerHojaSolicitudes()` desde el editor — el auto-heal de encabezados solo corría antes
+  dentro de un `doPost` real. Probado con `manActivarModoPrueba()`/`aseActivarModoPrueba()`
+  (envueltas en una función temporal sin parámetros — mismo `docs/QA-NOTES.md #14` de siempre
+  con ▶️ Ejecutar) y confirmado en ambos endpoints reales vía `curl`.
 
 ## 16. Webform de Correo Institucional en paralelo al Google Form (agosto 2026)
 
