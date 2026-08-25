@@ -120,6 +120,7 @@ ya esté expandido).
 | `oeve.html` | Oficina de Extensión y Vinculación |
 | `juridico.html` | Oficina Jurídica |
 | `asistencia.html` | Check-in de asistencia (eventos) |
+| `reporte-visita.html` | Formulario de captura del técnico tras una visita de Mantenimiento — reemplaza el llenado a mano de "Reportes de visita" en el Sheet, ver `apps-script/mantenimiento.gs` abajo. Sin entrada en nav/footer, se comparte por link directo |
 | `charla-ia.html` | Página del evento IA jun 2026 (sin formulario) |
 | `formacion-docente.html` | Centro de Formación Docente — catálogo dinámico (webinars, seminarios, diplomados, cursos autogestivos, acciones formativas, proyectos didácticos) + registro. Diseño premium propio (ver `docs/DESIGN_SYSTEM.md`) |
 | `instructivo-formacion-docente.html` | Guía imprimible del Centro de Formación Docente, mismo sistema tipográfico que la página anterior |
@@ -244,6 +245,16 @@ ya esté expandido).
 - **`?action=pendientes&token=...` (ago 2026)**: mismo endpoint que `soporte-remoto.gs` arriba,
   para el Panel OTDE. Token configurado con `manConfigurarTokenPanel('secreto')` (mismo cuidado
   del ▶️ Ejecutar sin argumentos, `docs/QA-NOTES.md #14`). Ver `docs/ARCHITECTURE.md §20`.
+- **Reporte de visita técnica — Fase 2 hacia retirar v8.5 (25 ago 2026, construida, desplegada y
+  verificada en vivo)**: hoja "Reportes de visita" ligada a `Solicitudes` por folio, PDF + correo
+  a escuela+técnico+OTDE. Dos caminos para llenarla: acción de menú manual ("Generar y enviar
+  reporte de visita", respaldo) o `doPost` con `{accion:'reporteVisita', ...}` desde el
+  formulario nuevo `reporte-visita.html` (el técnico lo llena en campo, un solo envío ya arma el
+  PDF y notifica). Probado de punta a punta contra producción con modo de prueba activo: correo a
+  los destinatarios correctos, sin fugas. **El PDF se rediseñó con identidad institucional real**
+  (misma sesión, pleca de logos oficiales + firmas, ver `docs/ARCHITECTURE.md §15`) — confirmado
+  contra el PDF real de Apps Script, cabe en una sola página ("Página 1 de 1"), idéntico a la
+  previsualización.
 
 ### `apps-script/asesorias.gs`
 - **Nuevo (ago 2026)**: mismo patrón que `mantenimiento.gs` (Sheet propio con hojas

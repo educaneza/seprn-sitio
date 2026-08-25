@@ -852,7 +852,212 @@ destino real (`to`/`cc` originales) — para poder probar el flujo completo de u
 avisar a escuelas/zonas/sectores reales ni gastar la cuota diaria de correo en pruebas. No
 requiere redeploy para activar/desactivar, se lee en cada envío.
 
-## 16. Webform de Correo Institucional en paralelo al Google Form (agosto 2026)
+**Coordinación de fecha de visita — Fase 1 hacia retirar v8.5 (construida y desplegada 25 ago
+2026).** El flujo real de Mantenimiento tenía un cuello de botella
+100% manual entre "Validado" y la visita técnica: OTDE coordina la fecha con Sector, Sector con
+Zona, Zona con la escuela, todo fuera de cualquier sistema — Jorge lo nombró explícitamente al
+revisar el flujo completo (checkpoint 24 ago 2026). Es también la primera fase de la decisión
+(revertida ese mismo día, ver `docs/ROADMAP.md` ítem 9) de retirar eventualmente el sistema
+separado v8.5 ("Sistema Automatizado de Reportes de Visitas", sin repo local) y reconstruir su
+funcionalidad dentro de este stack, en fases.
+
+- Dos columnas nuevas **al final** de `ENCABEZADOS_MAN_SOLICITUDES`/`ENCABEZADOS_ASE_SOLICITUDES`
+  (mismo criterio de siempre, para no correr `COL_MAN_ESTATUS`/`COL_MAN_NOTIFICACION_CIERRE` ni
+  los demás índices fijos): `Fecha programada de visita` y `Notificación de fecha programada
+  enviada`. El auto-heal de encabezados existente las completa solas en la hoja real la próxima
+  vez que llegue una solicitud.
+- Segundo trigger `onEdit` instalable, **independiente** del de cierre —
+  `manOnEditProgramacion`/`aseOnEditProgramacion` — que detecta una edición en la columna nueva
+  de fecha, evita doble aviso con su propia columna de control (mismo mecanismo que
+  `COL_MAN_NOTIFICACION_CIERRE`), y llama a `manNotificarFechaProgramada()`/
+  `aseNotificarFechaProgramada()`. Se instala aparte del trigger de cierre
+  (`manInstalarTriggerProgramacion()`/`aseInstalarTriggerProgramacion()`, agregado al menú `OTDE
+  Mantenimiento`/`OTDE Asesorías`) — no se tocó el trigger de cierre existente, que sigue
+  funcionando en producción sin cambios.
+- `manNotificarFechaProgramada()`/`aseNotificarFechaProgramada()` reutiliza el mismo patrón de
+  correo combinado (`to` = solicitante, `cc` = Zona/Sector vía
+  `manBuscarContactosZonaSector()`/`manFiltrarContactosPorTipo()` tal cual existen) que
+  `manNotificarSolicitudRecibida()`/`manNotificarCierre()` — así, el cuello de botella (Sector
+  coordina con Zona, Zona con la escuela, todo fuera de banda) se resuelve en: Jorge escribe la
+  fecha en una celda del Sheet que ya usa a diario, y el propio sistema avisa a los tres.
+- `fechaProgramada` expuesto en `?action=consulta`/`?action=pendientes` de ambos backends
+  (mismo contrato de la Oficina Virtual OTDE, ver §20), sin necesidad de tocar
+  `oficina-virtual.html`/`panel-otde.gs` para que puedan mostrarlo cuando se decida.
+- **No se tocó `otde.html`** en esta fase — el cambio vive del lado de Jorge (columnas del Sheet
+  + notificación), no de la captura del solicitante.
+- **Desplegado y verificado (25 ago 2026)**: pegado en ambos proyectos de Apps Script real
+  (mismos IDs de implementación, las URLs en `otde.html` no cambiaron) vía "Administrar
+  implementaciones → Nueva versión", con "Instalar trigger de programación de visita" corrido
+  desde el menú nuevo en cada Sheet — confirmado en la pestaña "Activadores" que ambos triggers
+  quedaron registrados, no solo que la función corrió sin error (mismo problema real ya
+  documentado con el trigger de cierre de Soporte, §20). Las columnas nuevas no aparecían solas
+  en el Sheet hasta correr manualmente `manObtenerHojaSolicitudes()`/
+  `aseObtenerHojaSolicitudes()` desde el editor — el auto-heal de encabezados solo corría antes
+  dentro de un `doPost` real. Probado con `manActivarModoPrueba()`/`aseActivarModoPrueba()`
+  (envueltas en una función temporal sin parámetros — mismo `docs/QA-NOTES.md #14` de siempre
+  con ▶️ Ejecutar) y confirmado en ambos endpoints reales vía `curl`.
+
+**Reporte técnico de la visita — Fase 2 hacia retirar v8.5, primer corte (construido 25 ago
+2026, pendiente de probar/desplegar).** Verificado en vivo contra el v8.5 real (Sheet
+"seguimiento" + editor de Apps Script) antes de diseñar esta fase — confirmó que v8.5 solo
+notifica por correo a director+técnico al terminar el reporte (nunca a Zona/Sector), que su
+"Estado del aula" es un semáforo con emoji + oración completa, y que arma su PDF como tabla HTML
+en vez de una plantilla de Docs/Slides — mismo enfoque replicado aquí. Solo aplica a
+`mantenimiento.gs` (Asesorías no tiene visita técnica en este sentido).
+
+- Hoja nueva **"Reportes de visita"** (autocreada por `manAsegurarHojaReportes()`, llamada desde
+  `manObtenerHojaSolicitudes()`, mismo patrón de auto-heal que las demás hojas): 20 columnas —
+  Folio, Responsable de visita (dropdown de 2 técnicos, `MAN_TECNICOS`), Fecha/Inicio/Fin de
+  visita, ~15 campos técnicos (mobiliario, equipos atendidos/funcionales/no funcionales,
+  conectividad, actividades preventivas/correctivas, instalación realizada, equipos
+  administrativos, Estado del aula con dropdown de 4 valores tipo semáforo
+  `MAN_ESTADOS_AULA`, seguimiento requerido, observaciones), más el link del PDF y su columna de
+  control de notificación. **Sin formulario de captura propio todavía** — el técnico o Jorge
+  llenan la fila a mano; es el alcance deliberado de este primer corte.
+- Acción de menú **"Generar y enviar reporte de visita"** (`manGenerarYEnviarReporteVisita`, en
+  `onOpen()`), no un trigger `onEdit` automático como en la Fase 1 — a diferencia de la fecha
+  programada (un solo campo), aquí el técnico llena ~15 campos en varios momentos, así que un
+  trigger de una sola columna dispararía el correo con datos a medio llenar. Pide el folio,
+  valida que la solicitud (`manBuscarSolicitudPorFolio_()`) y la fila del reporte
+  (`manBuscarFilaReportePorFolio_()`) existan y tengan los campos mínimos (responsable, fecha de
+  atención, estado del aula — `manValidarDatosReporte_()`), y confirma antes de reenviar si la
+  fila ya estaba marcada como notificada.
+- `manGenerarPDFReporte_()` arma el PDF como tabla HTML (mismo guinda `#9F2241` institucional) y
+  lo convierte con `Utilities.newBlob(html,'text/html','reporte.html').getAs('application/pdf')`
+  — técnica conocida de Apps Script pero **nunca antes usada en este proyecto**, es el riesgo
+  técnico principal sin verificar de este corte. `manGuardarPDFReporte_()` lo sube a una carpeta
+  de Drive nueva ("Reportes de Visita", autocreada, mismo sharing "cualquiera con el link, solo
+  ver" que "Oficios de Mantenimiento") y guarda la URL en la hoja.
+- `manEnviarReporteVisita_()` notifica **solo a escuela + técnico + OTDE** (`to` = correo de la
+  escuela desde `Solicitudes`, `cc` = correo del técnico vía `MAN_TECNICOS` + la cuenta
+  institucional de OTDE), con el PDF adjunto, reusando `manEnviarCorreo_()` (respeta el modo de
+  prueba existente sin cambios). **Decisión explícita de Jorge (25 ago 2026): Zona/Sector no
+  reciben este correo** — ya reciben apertura, fecha programada (Fase 1) y cierre; sumar un
+  cuarto aviso por el reporte técnico se consideró demasiado. Se enteran de que la visita
+  concluyó en el correo de cierre que ya existe (`manOnEditCierre`), sin tocar ese mecanismo.
+- **Verificado en vivo (25 ago 2026)**: Jorge pegó y redesplegó el `.gs` real; con
+  `manActivarModoPrueba('otde.nezahualcoyotl@gmail.com')` activo (vía la función temporal de
+  siempre, `docs/QA-NOTES.md #14`) se creó una fila de prueba con folio `OTDE-MAN-TEST1` y se
+  corrió el flujo completo contra el endpoint real. Confirmado: el PDF se genera legible (tabla
+  HTML con el guinda institucional, todos los campos y fechas correctos, sin el bug de UTC), se
+  sube a Drive y queda enlazado en la hoja, y el correo llega con el aviso de modo de prueba
+  mostrando el destino real correcto (`to`=correo de la solicitud, `cc`=técnico real vía
+  `MAN_TECNICOS` + OTDE institucional) — sin que ningún destinatario real recibiera nada. Fila de
+  prueba, PDF de prueba en Drive y correo de prueba limpiados después. Era el riesgo técnico
+  principal sin verificar desde el primer corte — ya no lo es.
+
+**Formulario de captura del técnico — resto de la Fase 2 (construido 25 ago 2026, pendiente de
+probar/desplegar junto con el primer corte de arriba).** Cierra el pendiente explícito del
+primer corte ("sin formulario de captura propio todavía") reemplazando el llenado a mano de la
+hoja "Reportes de visita" por una página pública que llena el técnico en campo. Confirmado con
+Jorge antes de construirlo: lo llena el técnico (no Jorge), un solo envío ya dispara PDF +
+correo (no queda como paso de menú aparte — a diferencia del primer corte, aquí se llena de una
+sola sentada, así que no aplica el riesgo de "correo con datos a medio llenar" que sí motivó que
+la acción de arriba fuera manual), y el folio se captura a mano (no hay lookup de solicitudes
+pendientes).
+
+- Página nueva `reporte-visita.html`, independiente de `otde.html` — la audiencia es el técnico
+  de campo, no un solicitante con CCT que autocompletar, así que no encaja en el patrón de tabs
+  de `otde.html`. Sin entrada en el nav ni el footer (mismo precedente que `asistencia.html`):
+  se llega por link directo que Jorge comparte con Alejandro/Marcos. Estilo autocontenido (no
+  importa `styles.css`), mismo criterio que `asistencia.html`, con la paleta institucional
+  guinda en vez del teal específico de ese evento.
+- Los 18 campos que llena el técnico van en el mismo orden que `ENCABEZADOS_MAN_REPORTES` — el
+  esquema de columnas no se reabrió, solo se le dio una interfaz. Mismos 3 mínimos obligatorios
+  que ya exigía `manValidarDatosReporte_()` server-side (Responsable, Fecha de atención, Estado
+  del aula); el resto queda opcional igual que en la hoja.
+- `doPost` gana una rama nueva al inicio: si `datos.accion === 'reporteVisita'`, delega a
+  `manDoPostReporteVisita_(datos)` en vez de tratarlo como una solicitud nueva de intake — mismo
+  criterio de branching por `accion` que ya usa `doGet`.
+- `manDoPostReporteVisita_()` reusa sin cambios `manBuscarSolicitudPorFolio_()`,
+  `manValidarDatosReporte_()`, `manGenerarPDFReporte_()`, `manGuardarPDFReporte_()` y
+  `manEnviarReporteVisita_()` — la única función nueva de peso es esta, el resto del primer corte
+  ya estaba listo para reutilizarse. Hace **upsert por folio**: si `manBuscarFilaReportePorFolio_()`
+  ya encuentra una fila con ese folio, la sobreescribe (`setValues`) en vez de duplicar — cubre
+  tanto una corrección real como un doble tap accidental del técnico en campo.
+- **Fechas/horas**: el formulario manda `fechaAtencion` (`YYYY-MM-DD`) e `inicioVisita`/
+  `finVisita` (`HH:mm`) como texto; `manFechaHoraLocal_()` construye el `Date` con componentes
+  explícitos (`new Date(y, m-1, d, h, min)`) en vez de parsear el string directo — mismo bug ya
+  documentado en `docs/QA-NOTES.md #3` (`new Date('YYYY-MM-DD')` se interpreta en UTC y el huso
+  de México lo corre un día).
+- Reusa la misma `MANTENIMIENTO_APPS_SCRIPT_URL` ya desplegada en `otde.html` — un solo proyecto
+  de Apps Script, sin implementación nueva que crear.
+- El respaldo manual de menú (`manGenerarYEnviarReporteVisita()`) se dejó sin cambios — sigue
+  vivo para reenviar o para cuando el técnico no pueda usar el formulario.
+- **Verificado end-to-end en vivo (25 ago 2026, sesión siguiente)**: contra el `.gs` real ya
+  redesplegado por Jorge, con `manActivarModoPrueba(...)` activo. Se probó primero el camino de
+  error (folio `OTDE-MAN-9999`, inexistente) directo contra el endpoint real: respondió el
+  mensaje esperado sin escribir nada. Luego, con una fila de prueba real en `Solicitudes`
+  (folio `OTDE-MAN-TEST1`, escuela claramente marcada como prueba), se envió el formulario
+  completo desde `reporte-visita.html` contra la URL real: la hoja "Reportes de visita" se llenó
+  correcta (upsert, fechas/horas sin el bug de UTC), el PDF se generó legible y el correo llegó
+  con el aviso de modo de prueba mostrando el destino real correcto — ver el detalle exacto en la
+  entrada de arriba ("Verificado en vivo"). Fila de prueba, PDF y correo de prueba limpiados
+  después. Ya no queda pendiente de verificación técnica en ninguna de las dos piezas de Fase 2.
+
+**Rediseño del PDF con identidad institucional real (25 ago 2026, sesión siguiente).** Jorge
+compartió un reporte real ya generado por el sistema viejo v8.5 (formato oficial, con pleca de
+logos, lema anual del Gobierno del Estado de México, secciones con acento guinda y firmas) y
+pidió igualar/mejorar ese nivel de diseño en `manGenerarPDFReporte_()` — no una copia fiel, con
+margen para ajustar, pero conservando encabezados, pie de página y firmas como elementos
+institucionales. La tabla plana de dos columnas del primer corte se reemplazó por:
+
+- **Pleca de logos** (`images/Pleca 4x.png` del propio sitio — Gobierno del Estado de México,
+  Estado de México, EDUCACIÓN/SECTEI, SEIEM — el mismo asset que ya usa el reporte oficial de
+  v8.5) embebida como **base64 directo en el HTML** (`MAN_LOGO_PLECA_B64`, constante nueva,
+  imagen redimensionada a 1600px de ancho con `sips` antes de codificarla) — a propósito, no una
+  URL externa: evita que la conversión HTML→PDF de Apps Script dependa de alcanzar
+  `educaneza.github.io` en el momento de generar el PDF, mismo criterio que ya usa el sitio para
+  no depender de servicios externos cuando se puede evitar (ver los QR generados localmente en
+  `protocolos.html`). Si el logo oficial cambia, regenerar el base64 a partir del PNG actualizado
+  y reemplazar la constante.
+- Debajo, una barra guinda con el nombre de la oficina y una barra oscura con el lema anual
+  vigente (`MAN_LEMA_ANUAL`, constante aparte — **actualizar cada año calendario**) — mismo
+  patrón visual que ya usa `images/Firma_institucional_OTDE.png` (barra guinda con el nombre de
+  la oficina debajo de la misma pleca), reutilizado aquí en vez de inventar un layout nuevo.
+- Meta línea con folio/fecha/registro (borde guinda a la izquierda), y las mismas ~20 filas del
+  primer corte pero agrupadas en secciones con encabezado guinda (Datos de la escuela, Visita
+  técnica, Equipos atendidos, Actividades realizadas, Resultado de la intervención,
+  Observaciones) en vez de una lista plana — mismo criterio de agrupación que el reporte de
+  referencia de v8.5, adaptado a nuestro propio esquema de columnas (no se copiaron sus preguntas
+  exactas).
+- **Duración de la jornada** (nuevo, `manCalcularDuracion_()`) calculada a partir de
+  inicio/fin de la visita — mejora sobre el primer corte, que solo mostraba las fechas/horas
+  crudas sin derivar nada. **Hora en formato 12h con a.m./p.m.** (`manFormatearHora12_()`, ej.
+  "7:58 a.m."), igual que el reporte de referencia, en vez del `dd/MM/yyyy HH:mm` del primer
+  corte.
+- **Firmas al pie** (3 columnas): Responsable de visita (dato real capturado), Jefe de la OTDE ·
+  SEPRN (Mtro. Jorge Alberto Bonilla Torres, hardcoded — mismo firmante institucional que usa
+  v8.5), y una tercera columna con `solicitud.nombre` etiquetada **"Recibió en la escuela"** en
+  vez de "Director(a) de la escuela" — decisión deliberada: el sistema no captura el rol de quien
+  solicitó (podría ser director, docente u otro personal), así que asumir "Director(a)" habría
+  sido inventar un dato que no se tiene (mismo criterio de "no inventar" ya establecido en
+  `MAN_TECNICOS` y otros correos del sitio).
+- **Pie de página** con la dirección/teléfono/correo institucional — el teléfono se tomó del que
+  ya usa el resto del sitio (`55 3300 2400 ext. 9065`, confirmado en `otde.html` y las demás
+  páginas de área), **no** el que traía el PDF de referencia de v8.5 (`55 5583 6400 ext. 9065`,
+  aparentemente desactualizado) — mismo criterio de no propagar un dato que ya se sabe
+  incorrecto en el resto del sitio.
+- `<meta charset="UTF-8">` agregado explícitamente en el `<head>` del HTML — el primer corte no
+  lo tenía; no causó problemas ahí (probado sin acentos rotos), pero con más texto libre y el
+  emoji del semáforo en el nuevo diseño es más seguro declararlo que confiar en que Apps Script
+  adivine la codificación correcta.
+
+**Verificación en navegador (previa al redespliegue)**: se extrajeron las funciones nuevas a un
+arnés de Node con `Utilities`/`Utilities.newBlob` simulados para generar el mismo HTML que
+produciría el `.gs` real con datos de prueba, y se abrió esa salida en Chrome forzando el ancho
+de página carta (816px @ 96dpi) para revisar el diseño y medir que el contenido completo (926px)
+cabe con margen dentro de una sola página (1056px).
+
+**Verificado en vivo contra el PDF real de producción (25 ago 2026, mismo día, tras el
+redespliegue)**: con modo de prueba activo, folio de prueba `OTDE-MAN-TEST2` — el PDF generado
+por la conversión real de Apps Script (`Utilities.newBlob(html,'text/html').getAs(
+'application/pdf')`) coincide exactamente con la previsualización: pleca de logos nítida, barras
+guinda/lema, secciones, firmas de 3 columnas y pie de página, todo en **"Página 1 de 1"**
+(confirmado en el visor de Google Drive) — la imagen en base64 y el `<style>` con selectores por
+clase se interpretan igual que en un navegador normal, sin sorpresas. Correo confirmado con el
+PDF nuevo adjunto. Fila de prueba y PDF limpiados después. Ya no queda ningún riesgo sin
+verificar en el rediseño del PDF.
 
 `otde.html` reemplazó, en código, el `<iframe>` del Google Form que hasta ahora capturaba las
 4 solicitudes de correo institucional (Alta, Cambio de Contraseña, Reset 2FA, Incidencias).
@@ -1008,21 +1213,29 @@ flowchart TD
     end
     subgraph Externo["Fuera del sitio"]
         H[/Promoción manual a<br/>Reportes de Visitas v8.5/]
-        I[/Agenda visita, atención,<br/>reporte técnico con PDF/]
+        I[/Visita técnica, atención,<br/>reporte técnico con PDF/]
     end
     J[Trigger onEdit: al llegar a<br/>Resuelto, correo de cierre<br/>to=solicitante cc=Zona/Sector]
     K[Usuario consulta folio<br/>en oficina-virtual.html]
+    L["Jorge captura Fecha programada<br/>de visita en el Sheet"]
+    M[Trigger onEdit: correo de<br/>fecha programada<br/>to=solicitante cc=Zona/Sector]
 
     A --> B --> C --> D
     C --> E
     C --> F --> H -.-> I
     F --> G --> J
+    F --> L --> M -.-> I
     C -.-> K
     G -.-> K
 
     classDef externo stroke-dasharray: 5 5
     class H,I externo
 ```
+
+**Nota de la Fase 1 (25 ago 2026):** el tramo "coordina fecha con Sector/Zona/escuela" que antes
+ocurría 100% fuera del sitio ahora empieza dentro (nodos `L`/`M`, sólidos) — solo la visita
+técnica en sí y su reporte con PDF siguen en v8.5 (nodo `I`, punteado). Ver §15 arriba para el
+detalle de código.
 
 `Rechazado` está disponible en el dropdown de Estatus pero **no dispara ninguna notificación** —
 a diferencia de `Resuelto`, es una rama sin lógica implementada (deliberado, no un bug). Ver
