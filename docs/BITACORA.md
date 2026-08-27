@@ -14,6 +14,24 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-08-27 (cont.) · Mantenimiento, Soporte y Correo migrados — docs/ROADMAP.md ítem 7 resuelto por completo
+
+| | |
+|---|---|
+| **Fecha** | 2026-08-27 |
+| **Sesión** | Continuación directa del cierre anterior (Asesorías migrada como piloto). Jorge pidió seguir con Mantenimiento, luego Soporte, luego Correo — una instrucción por vez ("sigue con Mantenimiento" / "sigue con soporte" / "sigue con Correo"), repitiendo en cada caso el mismo patrón ya piloteado con Asesorías. |
+| **Mantenimiento (`mantenimiento.html`, 821 líneas)** | Sin dependencias cruzadas nuevas (ya resueltas por Asesorías), pero sí una segunda familia de CSS compartido no detectada en la primera pasada: `.highlight-box`/`.benefit-list`/`.featured-box`/`.download-button` (usadas también por Correo/Soporte/Licencias Office/Chuka/Recursos) — movida a `styles.css`. Se corrigió de paso un comentario obsoleto en `otde.html` que seguía mencionando funciones de Mantenimiento/Asesorías ya migradas. |
+| **Soporte (`soporte.html`, 681 líneas)** | Sin sorpresas — helpers y las 2 familias de CSS ya resueltas. Único detalle real: la referencia cruzada con Licencias Office (recomendación mutua cuando el problema es de instalación) usaba `showServicio()`/`onclick`, que solo funciona dentro de la misma página — se convirtió a links reales en ambas direcciones (`soporte.html` → `otde.html#office`, aprovechando el deep-link por hash ya existente; `otde.html` → `soporte.html` directo). |
+| **Correo (`correo.html`, 1,482 líneas)** | La migración más grande (4 sub-formularios anidados: Alta/Cambio de Contraseña/Eliminar Método de Autenticación/Incidencias, ~1,360 líneas de HTML+JS) pero mecánicamente la más simple de las 4 — todo lo compartido ya estaba resuelto, extracción verbatim sin dependencias nuevas. Al ser la última tab con formulario que salía de `otde.html`, se aprovechó para eliminar 2 piezas de código muerto verificadas con grep antes de borrar: `toggleForm()` (sin ninguna llamada en todo el sitio) y los `<script src="js/cct-db.js">`/`<script src="js/tramites-shared.js">` de `otde.html` (ninguna tab restante los usa). |
+| **`otde.html` al cierre de las 4 migraciones** | 598 líneas (desde 4,186 originales). Quedan 3 tabs, todas informativas, sin un solo formulario: Licencias Office (activa por default, antes lo era Correo), Chuka, Recursos. |
+| **Documentación reestructurada** | `CLAUDE.md` separa ahora "`otde.html`" (contenido informativo) de una sección nueva "Páginas propias de trámite" que agrupa las 4 con su patrón compartido — durante la edición se produjo un lío de secciones duplicadas (Licencias Office/Banner de convocatoria/Correo quedaron mal anidados y con contenido cruzado a media edición); detectado y corregido antes de terminar, verificado con grep que no quedó ningún encabezado duplicado ni contenido mal etiquetado. `docs/ARCHITECTURE.md §21` documenta las 4 migraciones completas. `docs/ROADMAP.md` ítem 7 tachado por completo. `README.md` actualizado. |
+| **Verificación** | `node --check` sobre todos los `<script>` inline nuevos/modificados en cada ronda. Servidor estático local + Chrome, cada ronda: autocomplete de CCT, switchers/sub-switchers, cálculo de dominio en Correo, checklist de equipos en Mantenimiento, referencia cruzada Soporte↔Office, y navegación completa desde `oficina-virtual.html` a cada página nueva — sin errores de consola. |
+| **Publicación a producción — `otde.html` excluido a propósito, mismo patrón que Asesorías** | Dos rondas de publicación vía rama `publish-*` desde `origin/main`: `66ba480` (Mantenimiento + Soporte) y `dd5b14d` (Correo). `otde.html` de producción sigue en su versión antigua (nunca tuvo estas tabs). Con esto, los 4 trámites (Correo, Mantenimiento, Asesorías, Soporte) funcionan de punta a punta en la Oficina Virtual real por primera vez — antes ninguno funcionaba, todos apuntaban a tabs de `otde.html` que nunca existieron en producción. |
+| **Commits** | `1298293`/`65b67ca` (Mantenimiento+Soporte, código+docs, local `main`), `00319b2`/`2a275ef` (Correo, código+docs, local `main`), `66ba480` y `dd5b14d` (publicados a `origin/main` vía `publish-mantenimiento-soporte` y `publish-correo`). `main` local y `origin/main` siguen divergidos a propósito — se resuelve con un rebase cuando `otde.html` esté listo para publicarse. |
+| **Pendiente real que queda** | No de esta migración: Licencias Office (hoy 100% estático, sin backend ni folio) podría entrar a la grid de `oficina-virtual.html` como card tipo "Recurso" — anotado, no hecho, para no ampliar el alcance. |
+
+---
+
 ## CHECKPOINT — 2026-08-27 · Migración de Asesorías a página propia (piloto) — publicada en producción, otde.html excluido a propósito
 
 | | |
