@@ -407,29 +407,31 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
    Verificado simulando una respuesta lenta de Apps Script (12s) en el navegador: el mensaje
    escala correctamente y el loader se limpia sin quedar en un estado inconsistente cuando la
    respuesta por fin llega.
-7. **Migrar los 4 trámites de `otde.html` a páginas propias** (destino decidido 10 ago 2026;
-   3 de 4 migradas 27 ago 2026) — ~~`mantenimiento.html`~~, ~~`asesorias.html`~~,
-   ~~`soporte.html`~~, `correo.html`, mismo precedente que
+7. ~~**Migrar los 4 trámites de `otde.html` a páginas propias**~~ (destino decidido 10 ago 2026)
+   — **resuelto el 27 ago 2026, las 4 en una sola sesión**: ~~`mantenimiento.html`~~,
+   ~~`asesorias.html`~~, ~~`soporte.html`~~, ~~`correo.html`~~, mismo precedente que
    `formacion-docente.html`/`asistencia.html` — no como tabs dentro de `oficina-virtual.html`,
-   para no trasladar el problema de "archivo gigante" de un archivo a otro. **Asesorías,
-   Mantenimiento y Soporte migradas y desplegadas el 27 ago 2026** (Asesorías primero, como
-   piloto de bajo riesgo sin los 4 sub-formularios de Correo ni el checklist de Mantenimiento;
-   Mantenimiento y Soporte justo después, repitiendo el patrón ya piloteado, cada una sin
-   sorpresas nuevas) — header/nav/footer institucional completo (no minimalista como Formación
-   Docente/Asistencia), helpers realmente compartidos extraídos a `js/tramites-shared.js`
-   (`toTitleCase`, `fetchJsonConTimeout`, `otdePoblarFuncion`, y los renombrados
-   `leerArchivoBase64`/`TAMANO_MAX_ARCHIVO_BYTES` — se encontró que Asesorías ya dependía de
-   código de Mantenimiento sin documentar, ver `docs/ARCHITECTURE.md §21`), CSS de
+   para no trasladar el problema de "archivo gigante" de un archivo a otro. Orden de migración:
+   Asesorías primero (piloto de bajo riesgo, sin los 4 sub-formularios de Correo ni el checklist
+   de Mantenimiento), luego Mantenimiento, Soporte y Correo al final (el más grande y complejo,
+   con 4 sub-formularios anidados) — cada una repitiendo el patrón ya piloteado, sin sorpresas
+   nuevas desde la segunda en adelante. `otde.html` pasó de 4,186 a 598 líneas, quedó con 3 tabs
+   informativas (Licencias Office, Chuka, Recursos), sin ningún formulario, y dejó de cargar
+   `js/cct-db.js`/`js/tramites-shared.js` (ya no los usa). Helpers realmente compartidos
+   extraídos a `js/tramites-shared.js` (`toTitleCase`, `fetchJsonConTimeout`,
+   `otdePoblarFuncion`, y los renombrados `leerArchivoBase64`/`TAMANO_MAX_ARCHIVO_BYTES` — se
+   encontró que Asesorías ya dependía de código de Mantenimiento sin documentar), CSS de
    formularios/contenido institucional movido a `styles.css` en 2 rondas (formularios con
    Asesorías; `.highlight-box`/`.benefit-list`/`.featured-box`/`.download-button` con
-   Mantenimiento, compartidas por Correo/Licencias Office/Chuka/Recursos), y la referencia
-   cruzada Soporte↔Licencias Office (antes same-page vía `showServicio()`) convertida a links
-   reales entre las 2 páginas/tab. **Pendiente**: Correo (el más grande y complejo, con 4
-   sub-formularios anidados, dejado al final a propósito). De paso, cuando se migre Correo:
-   Licencias Office (hoy 100% estático, sin backend ni folio) entraría a la grid de
-   `oficina-virtual.html` como card tipo "Recurso", no "Trámite" — sin el buscador de
-   seguimiento. Detalle completo de la decisión original en `docs/BITACORA.md`, checkpoint 10
-   ago 2026 (noche, cont.); detalle de las 3 migraciones en `docs/ARCHITECTURE.md §21`.
+   Mantenimiento), la referencia cruzada Soporte↔Licencias Office (antes same-page vía
+   `showServicio()`) convertida a links reales, y código muerto eliminado al migrar Correo
+   (`toggleForm()`, sin ninguna llamada en todo el sitio). Detalle completo de la decisión
+   original en `docs/BITACORA.md`, checkpoint 10 ago 2026 (noche, cont.); detalle de las 4
+   migraciones en `docs/ARCHITECTURE.md §21`.
+   **Pendiente real que queda** (no de esta migración, un "de paso" que se anotó pero no se hizo
+   para no ampliar el alcance): Licencias Office (hoy 100% estático, sin backend ni folio)
+   podría entrar a la grid de `oficina-virtual.html` como card tipo "Recurso", no "Trámite" —
+   sin el buscador de seguimiento.
 8. ~~**Coordinación de fecha de visita en Mantenimiento/Asesorías**~~ (planteado 11 ago 2026,
    diseño confirmado y ampliado 24 ago 2026) — **resuelto y desplegado 25 ago 2026**: hasta
    ahora, tras "Validado", OTDE coordinaba la fecha de atención con Sector (que coordinaba con

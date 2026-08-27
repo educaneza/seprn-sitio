@@ -1470,11 +1470,12 @@ revise primero el sistema v8.5 con cuidado antes de proponer cualquier integraci
 `docs/ROADMAP.md` ítem 7 (decidido 10 ago 2026) definió que los 4 trámites con formulario propio
 de `otde.html` (Correo, Mantenimiento, Asesorías, Soporte) debían salir a páginas independientes,
 mismo precedente que `formacion-docente.html`/`asistencia.html`, para no seguir creciendo un
-archivo que ya llegaba a 4,186 líneas. El 27 ago 2026 se migraron, en la misma sesión, 3 de las
-4: **Asesorías** (piloto de bajo riesgo, sin los 4 sub-formularios anidados de Correo ni el
-checklist de equipos de Mantenimiento, para establecer el patrón), **Mantenimiento** y
-**Soporte** — cada una repitiendo el mismo patrón ya piloteado. Queda **Correo** (el más grande
-y complejo, con 4 sub-formularios anidados) para una sesión futura.
+archivo que ya llegaba a 4,186 líneas. El 27 ago 2026 se migraron las 4, en la misma sesión, en
+orden de complejidad creciente: **Asesorías** (piloto de bajo riesgo, sin los 4 sub-formularios
+anidados de Correo ni el checklist de equipos de Mantenimiento, para establecer el patrón),
+**Mantenimiento**, **Soporte** y, al final, **Correo** (el más grande y complejo, con 4
+sub-formularios anidados) — cada una repitiendo el mismo patrón ya piloteado. `otde.html` pasó
+de 4,186 a 598 líneas.
 
 **Decisión de diseño — header/nav/footer institucional, no minimalista**: a diferencia de
 `formacion-docente.html`/`asistencia.html` (standalone, sin nav ni footer del sitio, con su
@@ -1544,19 +1545,43 @@ que aprovecha el manejador de `location.hash` que `otde.html` ya tenía para dee
 `oficina-virtual.html`) y `otde.html` (tab Office) → `soporte.html` directo, sin `onclick` ni
 hash.
 
-**`otde.html` después de las 3 migraciones**: quedan 4 tabs (Correo, Licencias Office, Chuka,
-Recursos — Mantenimiento, Asesorías y Soporte salieron), comentarios
-`<!-- SERVICIO N: ... -->` renumerados del 1 al 4. `otde.html` no necesitó ganar ningún link
-nuevo hacia las páginas nuevas — se llega igual que a Formación Docente, solo vía
-`oficina-virtual.html` (con la única excepción del link Office↔Soporte descrito arriba, que ya
+**Correo (cuarta y última migración, misma sesión).** El más grande con diferencia (HTML+JS
+≈1,360 líneas, 4 sub-formularios anidados: Alta/Cambio de Contraseña/Eliminar Método de
+Autenticación/Incidencias), pero mecánicamente fue la migración más simple de las 4 — todo lo
+compartido ya estaba resuelto por las 3 anteriores (helpers en `js/tramites-shared.js`, las 2
+familias de CSS en `styles.css`, el selector de sugerencias generalizado), así que fue extraer
+el bloque completo verbatim sin encontrar dependencias cruzadas nuevas. `crearCctAutocomplete()`
+(§16), la única función factorizada del sitio para CCT autocomplete (porque los 4 sub-
+formularios de Correo comparten un mismo archivo), se quedó intacta — sigue teniendo sentido
+ahora que los 4 sub-formularios siguen en el mismo archivo nuevo, `correo.html`.
+
+Dos limpiezas de código muerto que solo tenían sentido hacerlas al migrar Correo, la última tab
+con formulario que quedaba en `otde.html`:
+- **`toggleForm(formId, btn)`** (helper genérico, definía un texto de botón hardcodeado para un
+  flujo de Correo que ya no existía) estaba definido pero **nunca se llamaba desde ningún
+  archivo del sitio** — verificado con grep antes de borrarlo. Se eliminó de `otde.html`, no se
+  migró a `correo.html` (cada sub-formulario de Correo ya tiene su propio `toggleXxxForm()`
+  real).
+- **`<script src="js/cct-db.js">`/`<script src="js/tramites-shared.js">`** en `otde.html`: sin
+  ningún formulario restante (Licencias Office/Chuka/Recursos son 100% informativos), ninguna
+  de las dos librerías se usa ya ahí — verificado con grep (`CCT_DB`, `toTitleCase`,
+  `fetchJsonConTimeout`, `otdePoblarFuncion`, etc., cero ocurrencias). Se quitaron los 2
+  `<script>`.
+
+**`otde.html` después de las 4 migraciones**: quedan 3 tabs, todas informativas, ninguna con
+formulario (Licencias Office, Chuka, Recursos — Correo, Mantenimiento, Asesorías y Soporte
+salieron), comentarios `<!-- SERVICIO N: ... -->` renumerados del 1 al 3. Licencias Office pasó
+a ser la tab activa por default (antes lo era Correo, que ya no existe ahí). `otde.html` no
+necesitó ganar ningún link nuevo hacia las páginas nuevas — se llega igual que a Formación
+Docente, solo vía `oficina-virtual.html` (con la única excepción del link Office↔Soporte, que ya
 existía como referencia cruzada antes de la migración).
 
-**`oficina-virtual.html`**: los 3 links que apuntaban a estos trámites (`otde.html#asesorias`,
-`otde.html#mantenimiento`, `otde.html#soporte`) se actualizaron a
-`asesorias.html`/`mantenimiento.html`/`soporte.html`. Los links de "Consultar estatus →" no
-cambiaron — siguen siendo `#buscar-folio` contra las mismas URLs de Apps Script, sin tocar
-ningún backend.
+**`oficina-virtual.html`**: los 4 links que apuntaban a estos trámites (`otde.html#asesorias`,
+`otde.html#mantenimiento`, `otde.html#soporte`, `otde.html#correo`) se actualizaron a
+`asesorias.html`/`mantenimiento.html`/`soporte.html`/`correo.html`. Los links de "Consultar
+estatus →" no cambiaron — siguen siendo `#buscar-folio` contra las mismas URLs de Apps Script,
+sin tocar ningún backend.
 
-**Pendiente**: repetir este mismo patrón para Correo (el más grande y complejo, con 4
-sub-formularios anidados, dejado al final a propósito), en una sesión futura. Ver
-`docs/ROADMAP.md` ítem 7.
+**`docs/ROADMAP.md` ítem 7 queda resuelto por completo** — las 4 páginas de trámite existen y
+`otde.html` terminó con solo contenido informativo. Ningún pendiente nuevo de este ítem para
+sesiones futuras.
