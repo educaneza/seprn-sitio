@@ -67,7 +67,8 @@ seprn-sitio/
 ├── personal.html                 # Área: Administración de Personal
 ├── academica.html                # Área: Académica
 ├── recursos.html                 # Área: Recursos Materiales y Financieros
-├── otde.html                     # Área: OTDE — Correo, Licencias Office, Chuka, Recursos
+├── otde.html                     # Área: OTDE — solo Licencias Office, Chuka, Recursos (informativo, sin formularios desde ago 2026)
+├── correo.html                   # Trámite: Correo Institucional (Alta/Cambio/Reset/Incidencias) — página propia desde ago 2026 (salió de otde.html), se llega vía oficina-virtual.html
 ├── asesorias.html                # Trámite: Asesorías en TICCAD — página propia desde ago 2026 (salió de otde.html), se llega vía oficina-virtual.html
 ├── mantenimiento.html            # Trámite: Mantenimiento Preventivo y Correctivo — página propia desde ago 2026 (salió de otde.html), se llega vía oficina-virtual.html
 ├── soporte.html                  # Trámite: Soporte Técnico Remoto — página propia desde ago 2026 (salió de otde.html), se llega vía oficina-virtual.html
@@ -84,8 +85,8 @@ seprn-sitio/
 ├── 404.html                      # Página de error personalizada
 │
 ├── js/
-│   ├── cct-db.js                 # Base de datos CCT (506 registros, incluye municipio), usada por otde.html y formacion-docente.html
-│   └── tramites-shared.js        # Helpers compartidos entre otde.html y las páginas propias de trámite (ago 2026)
+│   ├── cct-db.js                 # Base de datos CCT (506 registros, incluye municipio), usada por formacion-docente.html y las 4 páginas propias de trámite
+│   └── tramites-shared.js        # Helpers compartidos entre las 4 páginas propias de trámite (correo/mantenimiento/asesorias/soporte.html) (ago 2026)
 │
 ├── apps-script/
 │   ├── conferencia-ia.gs         # Backend Conferencia IA 2026 (Sheets + correo QR)

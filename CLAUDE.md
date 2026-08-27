@@ -37,13 +37,17 @@ Clases reutilizables en `styles.css`:
 - `.footer-grid` / `.footer-col` / `.footer-col-title` / `.footer-links` / `.footer-bottom` — footer multi-columna (3 cols + barra inferior con redes y copyright)
 - `.logo-icon` — ícono NE/ZA (mismo símbolo que `favicon.svg`, en Montserrat) dentro de `.logo`
   (nav) y `.footer-brand` (footer, colorway invertido) — ver `docs/ARCHITECTURE.md §18`
-- `.servicio-header` / `.content-block` / `.form-button` / `.form-container` /
-  `.soporte-form-group` (y sus hijos `.soporte-field-hint`/`.soporte-field-error`) /
-  `.sop-cct-wrapper` / `.sop-cct-status` / `.sop-manual-fields` / `.soporte-submit-msg` —
-  sistema de formularios de trámite (extraído a `styles.css` el 27 ago 2026 al migrar Asesorías
-  a página propia; usado por `otde.html` y por cada página propia de trámite como
-  `asesorias.html`). Nombres heredados de Soporte (`soporte-*`/`sop-*`), no renombrados al
-  generalizarse — ver `otde.html` arriba y `docs/ARCHITECTURE.md`
+- `.servicio-header` / `.content-block` / `.highlight-box` / `.benefit-list` / `.featured-box` /
+  `.download-button` — contenido institucional compartido (extraído a `styles.css` el 27 ago
+  2026 al migrar Asesorías/Mantenimiento); usado por `otde.html` (Licencias Office, Chuka,
+  Recursos, sin ningún formulario ya) y por las 4 páginas propias de trámite
+- `.form-button` / `.form-container` / `.soporte-form-group` (y sus hijos
+  `.soporte-field-hint`/`.soporte-field-error`) / `.sop-cct-wrapper` / `.sop-cct-status` /
+  `.sop-manual-fields` / `.soporte-submit-msg` — sistema de formularios de trámite (extraído a
+  `styles.css` el 27 ago 2026 al migrar Asesorías a página propia); ya no lo usa `otde.html`
+  (sin formularios desde que Correo migró) — solo las 4 páginas propias de trámite
+  (`correo.html`, `mantenimiento.html`, `asesorias.html`, `soporte.html`). Nombres heredados de
+  Soporte (`soporte-*`/`sop-*`), no renombrados al generalizarse — ver `docs/ARCHITECTURE.md §21`
 
 ### Eyebrows estándar en páginas de área
 Cuando se agrega o edita una sección en páginas de área, usar estos eyebrows:
@@ -122,10 +126,11 @@ ya esté expandido).
 | `personal.html` | Subjefatura de Personal |
 | `planeacion.html` | Subjefatura de Planeación |
 | `recursos.html` | Subjefatura de Recursos |
-| `otde.html` | Oficina de Tecnología (OTDE) |
+| `otde.html` | Oficina de Tecnología (OTDE) — hoy solo Licencias Office, Chuka y Recursos (los 4 trámites con formulario propio ya migraron a páginas propias, ver abajo) |
 | `asesorias.html` | Solicitud de Asesorías en TICCAD (Banco de Materiales/Chuka) — página propia, migrada desde la tab "Asesorías" de `otde.html` el 27 ago 2026 (ver `docs/ARCHITECTURE.md` y `apps-script/asesorias.gs` abajo). Header/nav/footer institucional completo (reusa `styles.css`), sin entrada en nav/footer del sitio — se llega vía `oficina-virtual.html` |
 | `mantenimiento.html` | Solicitud de Mantenimiento Preventivo y Correctivo — página propia, migrada desde la tab "Mantenimiento" de `otde.html` el 27 ago 2026, mismo patrón que `asesorias.html` (ver `docs/ARCHITECTURE.md` y `apps-script/mantenimiento.gs` abajo) |
 | `soporte.html` | Solicitud de Soporte Técnico Remoto (vía TeamViewer) — página propia, migrada desde la tab "Soporte Técnico" de `otde.html` el 27 ago 2026, mismo patrón que `asesorias.html`/`mantenimiento.html` (ver `docs/ARCHITECTURE.md` y `apps-script/soporte-remoto.gs` abajo) |
+| `correo.html` | Correo Institucional — Alta de cuenta / Cambio de contraseña / Eliminar método de autenticación / Incidencias — página propia, migrada desde la tab "Correo Institucional" de `otde.html` el 27 ago 2026, última de las 4 migraciones (ver `docs/ARCHITECTURE.md` y `Correos-institucionales/webform-2026-2027/` abajo) |
 | `oficina-virtual.html` | Oficina Virtual OTDE — hub de servicios digitales (Formación Docente, Mantenimiento, Asesorías, Correo, Soporte) + consulta de estatus de solicitudes por folio |
 | `oeve.html` | Oficina de Extensión y Vinculación |
 | `juridico.html` | Oficina Jurídica |
@@ -368,38 +373,62 @@ ya esté expandido).
 
 ## `otde.html` — Oficina de Tecnología (OTDE)
 
-**4 tabs** (eran 7 hasta el 27 ago 2026 — Asesorías, Mantenimiento y Soporte salieron a páginas
-propias, `asesorias.html`/`mantenimiento.html`/`soporte.html`, ver abajo), en este orden (los
-comentarios `<!-- SERVICIO N: ... -->` en el HTML deben coincidir con esta numeración — si se
-agrega, quita o reordena una tab, actualizarlos ahí también): **1** Correo Institucional ·
-**2** Licencias Office · **3** Chuka · **4** Recursos.
+**3 tabs, ninguna con formulario** (eran 7 hasta el 27 ago 2026 — los 4 trámites con formulario
+propio, Correo/Mantenimiento/Asesorías/Soporte, migraron todos a páginas propias ese día, ver
+`docs/ARCHITECTURE.md §21`): **1** Licencias Office (activa por default — antes lo era Correo)
+· **2** Chuka · **3** Recursos. Comentarios `<!-- SERVICIO N: ... -->` en el HTML deben
+coincidir con esta numeración. `otde.html` ya no carga `js/cct-db.js` ni
+`js/tramites-shared.js` (se quitaron el 27 ago 2026 al migrar Correo — ninguna tab restante los
+usa) ni tiene código muerto: `toggleForm()`, un helper genérico que ya no llamaba nadie desde
+antes de esta ronda de migraciones, se eliminó en la misma sesión.
 
-Patrón compartido por las tabs/páginas con formulario propio (Correo, dentro de `otde.html`;
-Mantenimiento/Asesorías/Soporte, ya en sus propias páginas): validación 100% en JS con
-`novalidate` en el `<form>` (los `type="email"`/`required` nativos interceptan el `submit`
-antes de correr el JS si no se desactiva la validación del navegador), `fetchJsonConTimeout()`
-para evitar el freeze de `fetch()` sin timeout documentado en `docs/QA-NOTES.md #1`, CCT con
-autocomplete + fallback manual de Sector/Zona/Escuela (`js/cct-db.js`, detalle del patrón en
-`docs/ARCHITECTURE.md §11`; cada campo del fallback valida y muestra su propio error — no
-agrupar todo bajo el mensaje del CCT, anti-patrón ya corregido dos veces), y Nombre/Escuela
-manual homologados a Title Case. `toTitleCase()`, `fetchJsonConTimeout()`, `otdePoblarFuncion()`,
-`leerArchivoBase64()` y `TAMANO_MAX_ARCHIVO_BYTES` viven en `js/tramites-shared.js` (extraído de
-`otde.html` el 27 ago 2026 al migrar Asesorías — antes vivían inline y `otdePoblarFuncion`
-específicamente solo en `otde.html`, aunque ya las necesitaban las 4 tabs/páginas de trámite),
-cargado con `<script src="js/tramites-shared.js"></script>` en `otde.html` y en cada página
-propia de trámite, justo después de `js/cct-db.js`. El CSS de estos formularios
-(`.servicio-header`, `.content-block`, `.form-button`, `.form-container`,
-`.soporte-form-group` y sus hijos, `.sop-cct-wrapper`, `.sop-cct-status`, `.sop-manual-fields`,
-`.soporte-submit-msg`) vive en `styles.css` por el mismo motivo — antes solo en el `<style>`
-inline de `otde.html`. Los nombres de clase (`soporte-*`/`sop-*`) son heredados de cuando solo
-existía Soporte y no se renombraron al generalizarse — sí se corrigió el selector de sugerencias
-CCT, que antes era `#sop-cct-suggestions` (solo aplicaba a Soporte) y ahora es
-`ul[id$="-cct-suggestions"]` (aplica a cualquier tab/página con ese patrón de ID). El CSS de
-contenido institucional compartido (`.highlight-box`, `.benefit-list`, `.featured-box`,
-`.download-button`) se movió a `styles.css` de la misma forma al migrar Mantenimiento (27 ago
-2026) — lo seguían usando Correo/Soporte/Licencias Office/Chuka/Recursos.
+### Licencias Office
+Instalador `descargas/Instalador_Office_2019_OTDE.exe` (self-extracting, incluye
+`Instalador_Office_OTDE.bat` + Office Deployment Tool) que valida por CCT. El texto evita
+atribuir la causa a SEIEM directamente (se enmarca como "actualización del esquema de
+licenciamiento institucional"). Los 5 pasos de la guía rápida están basados en el flujo real
+del `.bat` — si el `.bat` cambia, actualizar el manual para que siga siendo preciso.
 
-### Correo Institucional
+### Banner de convocatoria
+Uno solo hoy: Oficina Virtual (ago 2026, gradiente guinda `#56212f→#9F2241`, CTA clase `.light`,
+enlaza a `oficina-virtual.html`). El banner de Centro de Formación Docente que vivía debajo se
+quitó el 10 ago 2026 — quedó redundante en cuanto Formación Docente se volvió una card más del
+hub (`oficina-virtual.html`), así que mantenerlo en `otde.html` era un segundo punto de entrada
+al mismo destino. `formacion-docente.html`/`instructivo-formacion-docente.html` no se tocaron,
+solo perdieron ese acceso duplicado. Clase reutilizable `.otde-banner`/`.otde-banner-cta`/
+`.otde-banner-link` (sombra en capas, glow sutil, hover con elevación) — sigue viva para el
+banner que queda y para cualquier banner futuro. Usa **Montserrat** a propósito, no Inter — es
+la tipografía ya establecida en esta página, meter una fuente distinta solo en el banner se
+vería ajeno.
+
+## Páginas propias de trámite (`correo.html`, `mantenimiento.html`, `asesorias.html`, `soporte.html`)
+
+Las 4 nacieron como tabs de `otde.html` y migraron a páginas propias el 27 ago 2026 (Correo al
+final, por ser la más grande — 4 sub-formularios anidados), mismo precedente que
+`formacion-docente.html`/`asistencia.html` pero con header/nav/footer institucional completo
+(reusa `styles.css`, no un sistema visual propio) — detalle completo de la decisión y el proceso
+en `docs/ARCHITECTURE.md §21`.
+
+Patrón compartido por las 4: validación 100% en JS con `novalidate` en el `<form>` (los
+`type="email"`/`required` nativos interceptan el `submit` antes de correr el JS si no se
+desactiva la validación del navegador), `fetchJsonConTimeout()` para evitar el freeze de
+`fetch()` sin timeout documentado en `docs/QA-NOTES.md #1`, CCT con autocomplete + fallback
+manual de Sector/Zona/Escuela (`js/cct-db.js`, detalle del patrón en `docs/ARCHITECTURE.md
+§11`; cada campo del fallback valida y muestra su propio error — no agrupar todo bajo el
+mensaje del CCT, anti-patrón ya corregido dos veces), y Nombre/Escuela manual homologados a
+Title Case. `toTitleCase()`, `fetchJsonConTimeout()`, `otdePoblarFuncion()`,
+`leerArchivoBase64()` y `TAMANO_MAX_ARCHIVO_BYTES` viven en `js/tramites-shared.js`, cargado con
+`<script src="js/tramites-shared.js"></script>` en cada una de las 4 páginas, justo después de
+`js/cct-db.js`. El CSS de estos formularios (`.servicio-header`, `.content-block`,
+`.form-button`, `.form-container`, `.soporte-form-group` y sus hijos, `.sop-cct-wrapper`,
+`.sop-cct-status`, `.sop-manual-fields`, `.soporte-submit-msg`) y el de contenido institucional
+compartido (`.highlight-box`, `.benefit-list`, `.featured-box`, `.download-button`) viven en
+`styles.css`. Los nombres de clase (`soporte-*`/`sop-*`) son heredados de cuando solo existía
+Soporte y no se renombraron al generalizarse — sí se corrigió el selector de sugerencias CCT,
+que antes era `#sop-cct-suggestions` (solo aplicaba a Soporte) y ahora es
+`ul[id$="-cct-suggestions"]` (aplica a las 4 páginas).
+
+### Correo Institucional (página propia desde el 27 ago 2026, ver `correo.html`)
 Reemplaza en código, tipo por tipo, al `<iframe>` del Google Form viejo — ver el modelo de
 arquitectura completo en `docs/ARCHITECTURE.md §16`. Resumen operativo:
 
@@ -456,16 +485,23 @@ arquitectura completo en `docs/ARCHITECTURE.md §16`. Resumen operativo:
   Jorge el 5 ago 2026 contra el Sheet viejo. **Función se repuebla según el tipo de CCT** (ago
   2026, `otdePoblarFuncion()`, ver `docs/ARCHITECTURE.md §11`) y el fallback manual de CCT
   (cuando no se encuentra) pide "Tipo de CCT" explícito en vez de meter SEPRN como una opción
-  más de Sector — mismo patrón en los 4 sub-formularios de esta tab (Alta/Cambio/Reset/
+  más de Sector — mismo patrón en los 4 sub-formularios de esta página (Alta/Cambio/Reset/
   Incidencias), aunque solo Alta usa el tipo para ramificar Función (los otros 3 no preguntan
   Función).
 - **Teléfono unificado a "Teléfono (WhatsApp)" + correo con aviso de spam (ago 2026)**: mismo
-  wording y aviso de contacto que el resto del sitio, en los 4 sub-formularios de esta tab.
+  wording y aviso de contacto que el resto del sitio, en los 4 sub-formularios de esta página.
 - **`crearCctAutocomplete(prefijo)`**: con 4 formularios usando CCT autocomplete en esta misma
-  tab (Alta/Cambio/Reset/Incidencias), se factorizó en una función compartida — única
-  excepción en el sitio a "cada tab mantiene su propia copia del patrón" (Soporte/
+  página (Alta/Cambio/Reset/Incidencias), se factorizó en una función compartida — única
+  excepción en el sitio a "cada página mantiene su propia copia del patrón" (Soporte/
   Mantenimiento/Asesorías sí la mantienen; aquí la 4ª repetición casi idéntica en el mismo
   archivo cruzó el umbral).
+- **Migración a página propia (27 ago 2026)**: el backend no cambió — última de las 4
+  migraciones de `docs/ROADMAP.md` ítem 7 (ahora resuelto por completo). `otde.html` termina la
+  ronda en 598 líneas, desde las 4,186 originales de antes de empezar. Dejó de cargar
+  `js/cct-db.js`/`js/tramites-shared.js` (ninguna tab restante los usa) y perdió `toggleForm()`,
+  un helper genérico que ya no llamaba nadie desde antes de esta migración (código muerto, no
+  una regresión de esta ronda). Licencias Office pasó a ser la tab activa por default (antes lo
+  era Correo).
 
 ### Mantenimiento (página propia desde el 27 ago 2026, ver `mantenimiento.html`)
 Ya no es solo texto ("solicita por oficio y vía estructura") — formulario "Solicitar
@@ -499,7 +535,7 @@ backend en `apps-script/mantenimiento.gs` y `docs/ARCHITECTURE.md §15`.
 ### Asesorías (página propia desde el 27 ago 2026, ver `asesorias.html`)
 Nació como tab de `otde.html` (no existía como trámite — antes solo había un video suelto en
 Recursos) y migró a página propia el 27 ago 2026, primera de las 4 migraciones planeadas en
-`docs/ROADMAP.md` ítem 7 (solo Correo sigue pendiente de migrar). Mismo
+`docs/ROADMAP.md` ítem 7 (las 4 migraciones ya completas, Correo fue la última). Mismo
 patrón que Mantenimiento (oficio obligatorio + captura digital), más selector de "Tipo de
 asesoría" y casilla de confirmación de mantenimiento previo (Banco de Materiales/Chuka ya
 instalados) — detalle de por qué en `apps-script/asesorias.gs` y `docs/ARCHITECTURE.md §15`.
@@ -525,32 +561,13 @@ Técnico Remoto" (nombre, CCT, función, WhatsApp, correo, tipo de ayuda, urgenc
 `apps-script/soporte-remoto.gs`. **Repaso de UX (7 ago 2026)**: Correo pasó de opcional a
 obligatorio, nuevo campo "Tipo de ayuda" (select obligatorio), Función/Cargo por tipo de CCT —
 redesplegado como versión 4. **Migración a página propia (27 ago 2026)**: el backend no cambió
-— tercera de las 4 migraciones de `docs/ROADMAP.md` ítem 7 (solo Correo, el más complejo, queda
-pendiente). Sin dependencias cruzadas nuevas ni CSS nuevo por mover — ambos ya estaban
-resueltos por las migraciones de Asesorías y Mantenimiento. La referencia cruzada con Licencias
-Office (cada uno enlaza al otro si el problema es de instalación/licencias) dejó de usar
-`showServicio()` con `onclick` (solo funcionaba dentro de `otde.html`) — ahora son links reales:
-`soporte.html` → `otde.html#office` (Office sigue siendo tab, aprovecha el deep-link por hash ya
-existente en `otde.html`), y `otde.html` (tab Office) → `soporte.html` directo.
-
-### Licencias Office
-Instalador `descargas/Instalador_Office_2019_OTDE.exe` (self-extracting, incluye
-`Instalador_Office_OTDE.bat` + Office Deployment Tool) que valida por CCT. El texto evita
-atribuir la causa a SEIEM directamente (se enmarca como "actualización del esquema de
-licenciamiento institucional"). Los 5 pasos de la guía rápida están basados en el flujo real
-del `.bat` — si el `.bat` cambia, actualizar el manual para que siga siendo preciso.
-
-### Banner de convocatoria
-Uno solo hoy: Oficina Virtual (ago 2026, gradiente guinda `#56212f→#9F2241`, CTA clase `.light`,
-enlaza a `oficina-virtual.html`). El banner de Centro de Formación Docente que vivía debajo se
-quitó el 10 ago 2026 — quedó redundante en cuanto Formación Docente se volvió una card más del
-hub (`oficina-virtual.html`), así que mantenerlo en `otde.html` era un segundo punto de entrada
-al mismo destino. `formacion-docente.html`/`instructivo-formacion-docente.html` no se tocaron,
-solo perdieron ese acceso duplicado. Clase reutilizable `.otde-banner`/`.otde-banner-cta`/
-`.otde-banner-link` (sombra en capas, glow sutil, hover con elevación) — sigue viva para el
-banner que queda y para cualquier banner futuro. Usa **Montserrat** a propósito, no Inter — es
-la tipografía ya establecida en esta página, meter una fuente distinta solo en el banner se
-vería ajeno.
+— tercera de las 4 migraciones de `docs/ROADMAP.md` ítem 7 (Correo, la última, se migró justo
+después en la misma sesión). Sin dependencias cruzadas nuevas ni CSS nuevo por mover — ambos ya
+estaban resueltos por las migraciones de Asesorías y Mantenimiento. La referencia cruzada con
+Licencias Office (cada uno enlaza al otro si el problema es de instalación/licencias) dejó de
+usar `showServicio()` con `onclick` (solo funcionaba dentro de `otde.html`) — ahora son links
+reales: `soporte.html` → `otde.html#office` (Office sigue siendo tab, aprovecha el deep-link
+por hash ya existente en `otde.html`), y `otde.html` (tab Office) → `soporte.html` directo.
 
 ## `protocolos.html` — Protocolos de Actuación (ago 2026)
 Hub con 3 protocolos oficiales del **Gobierno del Estado de México / SEIEM** (no producidos por
@@ -613,11 +630,12 @@ Formación Docente — es una utilidad de una sola pantalla que continúa un tr�
 
 - **`otde.html` no cambió de estructura** — solo ganó el banner de arriba y un manejador de
   `location.hash` en `DOMContentLoaded` (busca `.servicio-tab[aria-controls="<hash>"]` y llama
-  `showServicio()`) para que los links del hub abran la tab correcta al cargar. Al 27 ago 2026
-  solo lo usa `#correo` — Mantenimiento/Asesorías/Soporte ya migraron a páginas propias y el hub
-  enlaza directo a ellas (`mantenimiento.html`, `asesorias.html`, `soporte.html`); el manejador
-  se deja tal cual porque sigue siendo necesario para Correo y es genérico (no referencia IDs
-  específicos), no por descuido.
+  `showServicio()`) para que los links abran la tab correcta al cargar. Con los 4 trámites ya
+  migrados a páginas propias (27 ago 2026), `oficina-virtual.html` ya no lo usa — enlaza directo
+  a `correo.html`/`mantenimiento.html`/`asesorias.html`/`soporte.html`. El manejador se deja
+  tal cual porque sigue siendo necesario para el link cruzado `soporte.html` → `otde.html#office`
+  (ver `docs/ARCHITECTURE.md §21`) y es genérico (no referencia IDs específicos), no por
+  descuido.
 - **Grid de servicios** (patrón `.area-card` de `areas.html`, adaptado): Centro de Formación
   Docente (→ `formacion-docente.html`, sin seguimiento — no aplica) y los 4 trámites tipo-ticket
   (Mantenimiento/Asesorías/Correo/Soporte), cada uno con un link "Solicitar →" (deep-link a
