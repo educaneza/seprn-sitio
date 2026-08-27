@@ -124,6 +124,8 @@ ya esté expandido).
 | `recursos.html` | Subjefatura de Recursos |
 | `otde.html` | Oficina de Tecnología (OTDE) |
 | `asesorias.html` | Solicitud de Asesorías en TICCAD (Banco de Materiales/Chuka) — página propia, migrada desde la tab "Asesorías" de `otde.html` el 27 ago 2026 (ver `docs/ARCHITECTURE.md` y `apps-script/asesorias.gs` abajo). Header/nav/footer institucional completo (reusa `styles.css`), sin entrada en nav/footer del sitio — se llega vía `oficina-virtual.html` |
+| `mantenimiento.html` | Solicitud de Mantenimiento Preventivo y Correctivo — página propia, migrada desde la tab "Mantenimiento" de `otde.html` el 27 ago 2026, mismo patrón que `asesorias.html` (ver `docs/ARCHITECTURE.md` y `apps-script/mantenimiento.gs` abajo) |
+| `soporte.html` | Solicitud de Soporte Técnico Remoto (vía TeamViewer) — página propia, migrada desde la tab "Soporte Técnico" de `otde.html` el 27 ago 2026, mismo patrón que `asesorias.html`/`mantenimiento.html` (ver `docs/ARCHITECTURE.md` y `apps-script/soporte-remoto.gs` abajo) |
 | `oficina-virtual.html` | Oficina Virtual OTDE — hub de servicios digitales (Formación Docente, Mantenimiento, Asesorías, Correo, Soporte) + consulta de estatus de solicitudes por folio |
 | `oeve.html` | Oficina de Extensión y Vinculación |
 | `juridico.html` | Oficina Jurídica |
@@ -366,14 +368,14 @@ ya esté expandido).
 
 ## `otde.html` — Oficina de Tecnología (OTDE)
 
-**6 tabs** (eran 7 hasta el 27 ago 2026 — Asesorías salió a página propia,
-`asesorias.html`, ver abajo), en este orden (los comentarios `<!-- SERVICIO N: ... -->` en el
-HTML deben coincidir con esta numeración — si se agrega, quita o reordena una tab, actualizarlos
-ahí también): **1** Correo Institucional · **2** Mantenimiento · **3** Soporte Técnico ·
-**4** Licencias Office · **5** Chuka · **6** Recursos.
+**4 tabs** (eran 7 hasta el 27 ago 2026 — Asesorías, Mantenimiento y Soporte salieron a páginas
+propias, `asesorias.html`/`mantenimiento.html`/`soporte.html`, ver abajo), en este orden (los
+comentarios `<!-- SERVICIO N: ... -->` en el HTML deben coincidir con esta numeración — si se
+agrega, quita o reordena una tab, actualizarlos ahí también): **1** Correo Institucional ·
+**2** Licencias Office · **3** Chuka · **4** Recursos.
 
-Patrón compartido por las tabs/páginas con formulario propio (Correo/Mantenimiento/Soporte,
-dentro de `otde.html`; Asesorías, ya en su propia página): validación 100% en JS con
+Patrón compartido por las tabs/páginas con formulario propio (Correo, dentro de `otde.html`;
+Mantenimiento/Asesorías/Soporte, ya en sus propias páginas): validación 100% en JS con
 `novalidate` en el `<form>` (los `type="email"`/`required` nativos interceptan el `submit`
 antes de correr el JS si no se desactiva la validación del navegador), `fetchJsonConTimeout()`
 para evitar el freeze de `fetch()` sin timeout documentado en `docs/QA-NOTES.md #1`, CCT con
@@ -392,7 +394,10 @@ propia de trámite, justo después de `js/cct-db.js`. El CSS de estos formulario
 inline de `otde.html`. Los nombres de clase (`soporte-*`/`sop-*`) son heredados de cuando solo
 existía Soporte y no se renombraron al generalizarse — sí se corrigió el selector de sugerencias
 CCT, que antes era `#sop-cct-suggestions` (solo aplicaba a Soporte) y ahora es
-`ul[id$="-cct-suggestions"]` (aplica a cualquier tab/página con ese patrón de ID).
+`ul[id$="-cct-suggestions"]` (aplica a cualquier tab/página con ese patrón de ID). El CSS de
+contenido institucional compartido (`.highlight-box`, `.benefit-list`, `.featured-box`,
+`.download-button`) se movió a `styles.css` de la misma forma al migrar Mantenimiento (27 ago
+2026) — lo seguían usando Correo/Soporte/Licencias Office/Chuka/Recursos.
 
 ### Correo Institucional
 Reemplaza en código, tipo por tipo, al `<iframe>` del Google Form viejo — ver el modelo de
@@ -462,7 +467,7 @@ arquitectura completo en `docs/ARCHITECTURE.md §16`. Resumen operativo:
   Mantenimiento/Asesorías sí la mantienen; aquí la 4ª repetición casi idéntica en el mismo
   archivo cruzó el umbral).
 
-### Mantenimiento
+### Mantenimiento (página propia desde el 27 ago 2026, ver `mantenimiento.html`)
 Ya no es solo texto ("solicita por oficio y vía estructura") — formulario "Solicitar
 Mantenimiento" (`#btn-mantenimiento` + `toggleMantenimientoForm`) que digitaliza la captura sin
 quitarle el oficio: pide adjuntarlo ya firmado en vez de sustituirlo. Detalle completo del
@@ -470,7 +475,8 @@ backend en `apps-script/mantenimiento.gs` y `docs/ARCHITECTURE.md §15`.
 
 - **Adjuntar oficio**: `input type="file"`, límite de 5MB validado en
   `validarMantenimientoForm()` antes de leer el archivo; la lectura a base64
-  (`manLeerArchivoBase64()`, `FileReader.readAsDataURL`) solo ocurre ya validado, dentro de
+  (`leerArchivoBase64()` — antes `manLeerArchivoBase64()`, ver `js/tramites-shared.js` arriba —
+  `FileReader.readAsDataURL`) solo ocurre ya validado, dentro de
   `enviarSolicitudMantenimiento()`.
 - **Desplegado (6 ago 2026)**: `MANTENIMIENTO_APPS_SCRIPT_URL` con la URL real del
   deployment — ver detalle en `apps-script/mantenimiento.gs` arriba.
@@ -484,11 +490,16 @@ backend en `apps-script/mantenimiento.gs` y `docs/ARCHITECTURE.md §15`.
   solo correo (`to`=solicitante, `cc`=Zona+Sector si hay contacto(s)) en vez de avisos sueltos
   que antes solo llegaban a Zona/Sector — ver `docs/ARCHITECTURE.md §15`. Redesplegado como
   versión 8.
+- **Migración a página propia (27 ago 2026)**: el backend no cambió — solo el frontend salió de
+  `otde.html` a `mantenimiento.html`, segunda de las 4 migraciones de `docs/ROADMAP.md` ítem 7
+  (mismo patrón ya piloteado con Asesorías). De paso se movió a `styles.css` el CSS de
+  contenido institucional compartido (`.highlight-box`, `.benefit-list`, `.featured-box`,
+  `.download-button`) que Correo/Soporte/Licencias Office/Chuka/Recursos ya reusaban.
 
 ### Asesorías (página propia desde el 27 ago 2026, ver `asesorias.html`)
 Nació como tab de `otde.html` (no existía como trámite — antes solo había un video suelto en
 Recursos) y migró a página propia el 27 ago 2026, primera de las 4 migraciones planeadas en
-`docs/ROADMAP.md` ítem 7 (Mantenimiento/Soporte/Correo siguen pendientes de migrar). Mismo
+`docs/ROADMAP.md` ítem 7 (solo Correo sigue pendiente de migrar). Mismo
 patrón que Mantenimiento (oficio obligatorio + captura digital), más selector de "Tipo de
 asesoría" y casilla de confirmación de mantenimiento previo (Banco de Materiales/Chuka ya
 instalados) — detalle de por qué en `apps-script/asesorias.gs` y `docs/ARCHITECTURE.md §15`.
@@ -508,13 +519,19 @@ institucional completo (reusa `styles.css`, sin nav/footer propio del sitio, se 
 `fetchJsonConTimeout()`/`otdePoblarFuncion()` a `js/tramites-shared.js` (ver arriba), en vez de
 solo duplicarlos en la página nueva.
 
-### Soporte Técnico Remoto
+### Soporte Técnico Remoto (página propia desde el 27 ago 2026, ver `soporte.html`)
 TeamViewer (no Quick Assist) como herramienta de control remoto. Formulario "Solicitar Soporte
 Técnico Remoto" (nombre, CCT, función, WhatsApp, correo, tipo de ayuda, urgencia, descripción) →
-`apps-script/soporte-remoto.gs`. Referencia cruzada con Licencias Office: cada tab enlaza a la
-otra vía `showServicio()` con `onclick` si el problema es de instalación/licencias. **Repaso de
-UX (7 ago 2026)**: Correo pasó de opcional a obligatorio, nuevo campo "Tipo de ayuda"
-(select obligatorio), Función/Cargo por tipo de CCT — redesplegado como versión 4.
+`apps-script/soporte-remoto.gs`. **Repaso de UX (7 ago 2026)**: Correo pasó de opcional a
+obligatorio, nuevo campo "Tipo de ayuda" (select obligatorio), Función/Cargo por tipo de CCT —
+redesplegado como versión 4. **Migración a página propia (27 ago 2026)**: el backend no cambió
+— tercera de las 4 migraciones de `docs/ROADMAP.md` ítem 7 (solo Correo, el más complejo, queda
+pendiente). Sin dependencias cruzadas nuevas ni CSS nuevo por mover — ambos ya estaban
+resueltos por las migraciones de Asesorías y Mantenimiento. La referencia cruzada con Licencias
+Office (cada uno enlaza al otro si el problema es de instalación/licencias) dejó de usar
+`showServicio()` con `onclick` (solo funcionaba dentro de `otde.html`) — ahora son links reales:
+`soporte.html` → `otde.html#office` (Office sigue siendo tab, aprovecha el deep-link por hash ya
+existente en `otde.html`), y `otde.html` (tab Office) → `soporte.html` directo.
 
 ### Licencias Office
 Instalador `descargas/Instalador_Office_2019_OTDE.exe` (self-extracting, incluye
@@ -596,8 +613,11 @@ Formación Docente — es una utilidad de una sola pantalla que continúa un tr�
 
 - **`otde.html` no cambió de estructura** — solo ganó el banner de arriba y un manejador de
   `location.hash` en `DOMContentLoaded` (busca `.servicio-tab[aria-controls="<hash>"]` y llama
-  `showServicio()`) para que los links del hub abran la tab correcta al cargar
-  (`otde.html#mantenimiento`, `#asesorias`, `#correo`, `#soporte`).
+  `showServicio()`) para que los links del hub abran la tab correcta al cargar. Al 27 ago 2026
+  solo lo usa `#correo` — Mantenimiento/Asesorías/Soporte ya migraron a páginas propias y el hub
+  enlaza directo a ellas (`mantenimiento.html`, `asesorias.html`, `soporte.html`); el manejador
+  se deja tal cual porque sigue siendo necesario para Correo y es genérico (no referencia IDs
+  específicos), no por descuido.
 - **Grid de servicios** (patrón `.area-card` de `areas.html`, adaptado): Centro de Formación
   Docente (→ `formacion-docente.html`, sin seguimiento — no aplica) y los 4 trámites tipo-ticket
   (Mantenimiento/Asesorías/Correo/Soporte), cada uno con un link "Solicitar →" (deep-link a

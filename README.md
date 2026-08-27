@@ -67,8 +67,10 @@ seprn-sitio/
 ├── personal.html                 # Área: Administración de Personal
 ├── academica.html                # Área: Académica
 ├── recursos.html                 # Área: Recursos Materiales y Financieros
-├── otde.html                     # Área: OTDE — Correo, Mantenimiento, Soporte Remoto, Licencias Office, Chuka, Recursos
+├── otde.html                     # Área: OTDE — Correo, Licencias Office, Chuka, Recursos
 ├── asesorias.html                # Trámite: Asesorías en TICCAD — página propia desde ago 2026 (salió de otde.html), se llega vía oficina-virtual.html
+├── mantenimiento.html            # Trámite: Mantenimiento Preventivo y Correctivo — página propia desde ago 2026 (salió de otde.html), se llega vía oficina-virtual.html
+├── soporte.html                  # Trámite: Soporte Técnico Remoto — página propia desde ago 2026 (salió de otde.html), se llega vía oficina-virtual.html
 ├── oeve.html                     # Área: OEVE (Extensión y Vinculación Educativa)
 ├── juridico.html                 # Área: Asuntos Jurídicos
 │
