@@ -489,6 +489,17 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
      generados — probablemente archivo de solo lectura, no migración) y el corte real.
    Detalle completo del diseño de la Fase 1 y de la verificación en vivo de v8.5 que precedió la
    Fase 2 en `docs/BITACORA.md`, checkpoints 24 ago 2026 y 25 ago 2026.
+10. **Tamaño del artifact de GitHub Pages (335 MB) — riesgo de timeout en el deploy** (detectado
+    27 ago 2026, tras un deploy fallido real — ver `docs/BITACORA.md`, checkpoint "Incidente:
+    deploy de Correo falló por timeout"): el run #119 de `pages build and deployment` falló con
+    "Timeout reached, aborting!" subiendo el artifact; el run inmediato anterior, mismo tamaño,
+    había tardado solo 14s — fue lentitud puntual de infraestructura, no un límite duro, y se
+    resolvió reintentando sin tocar código. El repo trackea 354 MB en total, con varios
+    zips/pptx de sesiones CTE entre 12 y 69 MB en `pdfs/cte/` (`sexta-sesion-completa.zip` 69
+    MB, `presentacion-tema12.pptx` 53 MB, entre los más grandes). Jorge decidió no atacarlo esta
+    sesión. Si se repite, opciones a evaluar (no decididas): mover el material histórico de CTE
+    fuera del repo (enlace externo, Drive) en vez de servirlo desde GitHub Pages, o Git LFS para
+    los binarios grandes.
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue
