@@ -136,48 +136,6 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .servicio-header {
-            background: var(--guinda);
-            padding: 40px;
-            border-radius: 18px;
-            color: white;
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        .servicio-header h2 {
-            margin-top: 0;
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 15px;
-            color: white;
-        }
-        .servicio-header p {
-            font-size: 17px;
-            opacity: 0.95;
-            max-width: 700px;
-            margin: 0 auto;
-            line-height: 1.7;
-            color: white;
-        }
-        .content-block {
-            background: white;
-            border: 2px solid #d6d1ca;
-            border-radius: 14px;
-            padding: 35px;
-            margin-bottom: 30px;
-        }
-        .content-block h3 {
-            font-size: 22px;
-            font-weight: 700;
-            color: #56212f;
-            margin: 0 0 20px 0;
-        }
-        .content-block p {
-            font-size: 15px;
-            line-height: 1.8;
-            color: #333;
-            margin-bottom: 15px;
-        }
         .highlight-box {
             background: rgba(159,34,65,0.05);
             border-left: 4px solid #9F2241;
@@ -224,147 +182,6 @@
             background: #9F2241;
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(159,34,65,0.3);
-        }
-        .form-button {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            width: 100%;
-            max-width: 500px;
-            margin: 30px auto;
-            padding: 18px 30px;
-            background: var(--guinda);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(159,34,65,0.3);
-        }
-        .form-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(159,34,65,0.4);
-        }
-        .form-container {
-            overflow: hidden;
-            transition: all 0.4s;
-            max-height: 0;
-        }
-        .form-container.active {
-            max-height: 3200px;
-        }
-        .soporte-form-group { margin-bottom: 18px; }
-        .soporte-form-group label {
-            display: block;
-            font-size: 14px;
-            font-weight: 600;
-            color: #56212f;
-            margin-bottom: 6px;
-        }
-        .soporte-form-group label .req { color: #9F2241; margin-left: 2px; }
-        .soporte-form-group input,
-        .soporte-form-group select,
-        .soporte-form-group textarea {
-            width: 100%;
-            padding: 12px 14px;
-            border: 1.5px solid #d6d1ca;
-            border-radius: 8px;
-            font-size: 15px;
-            font-family: inherit;
-            color: #333;
-            background: white;
-            transition: border-color 0.2s;
-        }
-        .soporte-form-group textarea { resize: vertical; min-height: 90px; }
-        .soporte-form-group input[type="checkbox"] { width: auto; padding: 0; }
-        .soporte-form-group input:focus,
-        .soporte-form-group select:focus,
-        .soporte-form-group textarea:focus {
-            outline: none;
-            border-color: #9F2241;
-            box-shadow: 0 0 0 3px rgba(159,34,65,0.12);
-        }
-        .soporte-form-group input.error,
-        .soporte-form-group select.error,
-        .soporte-form-group textarea.error {
-            border-color: #dc2626;
-        }
-        .soporte-field-hint { font-size: 13px; color: #6b7280; margin-top: 6px; }
-        .soporte-field-error { font-size: 13px; color: #dc2626; margin-top: 6px; display: none; }
-        .soporte-field-error.visible { display: block; }
-
-        /* ── CCT autocomplete (Soporte) ── */
-        .sop-cct-wrapper { position: relative; }
-        #sop-cct-suggestions {
-            position: absolute;
-            top: 100%; left: 0; right: 0;
-            background: #fff;
-            border: 1.5px solid #9F2241;
-            border-top: none;
-            border-radius: 0 0 8px 8px;
-            z-index: 100;
-            max-height: 200px;
-            overflow-y: auto;
-            display: none;
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
-        #sop-cct-suggestions li {
-            padding: 8px 14px;
-            font-size: 14px;
-            cursor: pointer;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        #sop-cct-suggestions li:last-child { border-bottom: none; }
-        #sop-cct-suggestions li:hover, #sop-cct-suggestions li.active { background: #fdf2f5; }
-        #sop-cct-suggestions .sg-code { font-family: monospace; font-weight: 600; color: #9F2241; }
-        #sop-cct-suggestions .sg-name { color: #6b7280; font-size: 13px; display: block; }
-        .sop-cct-status {
-            font-size: 13px;
-            padding: 6px 12px;
-            border-radius: 6px;
-            margin-top: 6px;
-            display: none;
-        }
-        .sop-cct-status.found { background: #d1fae5; color: #065f46; display: block; }
-        .sop-cct-status.warn  { background: #fffbeb; color: #92400e; display: block; }
-        .sop-manual-fields {
-            background: #fffbeb;
-            border: 1px solid #fcd34d;
-            border-radius: 8px;
-            padding: 16px;
-            margin-top: 10px;
-            display: none;
-        }
-        .sop-manual-fields.visible { display: block; }
-        .sop-manual-fields .manual-aviso {
-            font-size: 13px;
-            color: #92400e;
-            font-weight: 500;
-            margin-bottom: 12px;
-        }
-        .soporte-submit-msg {
-            margin-top: 16px;
-            padding: 14px 18px;
-            border-radius: 8px;
-            font-size: 14px;
-            display: none;
-        }
-        .soporte-submit-msg.ok {
-            display: block;
-            background: #f0f7f0;
-            border-left: 4px solid #2e7d32;
-            color: #2e7d32;
-        }
-        .soporte-submit-msg.error {
-            display: block;
-            background: #fdf0f0;
-            border-left: 4px solid #9F2241;
-            color: #9F2241;
         }
         .video-wrapper {
             position: relative;
@@ -574,7 +391,6 @@
     <div class="servicios-nav" role="tablist" aria-label="Servicios OTDE">
         <button class="servicio-tab active" role="tab" aria-selected="true"  aria-controls="correo"        onclick="showServicio('correo', this)">Correo Institucional</button>
         <button class="servicio-tab"        role="tab" aria-selected="false" aria-controls="mantenimiento" onclick="showServicio('mantenimiento', this)">Mantenimiento</button>
-        <button class="servicio-tab"        role="tab" aria-selected="false" aria-controls="asesorias"     onclick="showServicio('asesorias', this)">Asesorías</button>
         <button class="servicio-tab"        role="tab" aria-selected="false" aria-controls="soporte"       onclick="showServicio('soporte', this)">Soporte Técnico</button>
         <button class="servicio-tab"        role="tab" aria-selected="false" aria-controls="office"        onclick="showServicio('office', this)">Licencias Office</button>
         <button class="servicio-tab"        role="tab" aria-selected="false" aria-controls="chuka"         onclick="showServicio('chuka', this)">Chuka</button>
@@ -1283,174 +1099,7 @@
         </div>
     </div>
 
-    <!-- SERVICIO 3: Asesorías -->
-    <div id="asesorias" class="servicio-content" role="tabpanel" aria-label="Asesorías">
-        <div class="servicio-header">
-            <h2>Asesorías en TICCAD</h2>
-            <p>Capacitación grupal para que los docentes conozcan, exploren e integren en su práctica los recursos digitales ya instalados en su Aula de Medios (Banco de Materiales, Chuka) tras una visita de mantenimiento.</p>
-        </div>
-
-        <div class="content-block">
-            <h3>¿Cómo funciona?</h3>
-            <p>Al finalizar una visita de mantenimiento, el técnico de la OTDE ofrece al director o directora la posibilidad de agendar esta asesoría. Si aceptas, elabora tu oficio de solicitud y adjúntalo aquí — sigue siendo el respaldo oficial. Con tus datos y el oficio, revisamos agenda y te contactamos para programar la visita.</p>
-        </div>
-
-        <div class="content-block">
-            <h3>¡Solicita tu Asesoría!</h3>
-
-            <button class="form-button" id="btn-asesoria" aria-expanded="false" onclick="toggleAsesoriaForm(this)">
-                <span id="btn-asesoria-text">Solicitar Asesoría</span>
-                <span id="btn-asesoria-arrow">▼</span>
-            </button>
-
-            <div id="form-asesoria" class="form-container">
-                <form id="asesoria-form" onsubmit="return enviarSolicitudAsesoria(event)" novalidate>
-                    <div class="soporte-form-group">
-                        <label for="ase-tipo">Tipo de asesoría<span class="req">*</span></label>
-                        <select id="ase-tipo" required>
-                            <option value="">— Selecciona una opción —</option>
-                            <option value="Banco de Materiales y Chuka">Banco de Materiales y Chuka (sesión de 2 a 2.5 horas)</option>
-                        </select>
-                        <div class="soporte-field-error" id="ase-tipo-error">Selecciona el tipo de asesoría.</div>
-                    </div>
-                    <div class="soporte-form-group" id="ase-confirma-mantenimiento-group">
-                        <label style="display:flex;align-items:flex-start;gap:8px;font-weight:normal;">
-                            <input type="checkbox" id="ase-confirma-mantenimiento" style="margin-top:3px;" required>
-                            <span>Confirmo que mi Aula de Medios ya recibió una visita de mantenimiento con instalación de Banco de Materiales y Chuka<span class="req">*</span> — esta asesoría requiere que esos recursos ya estén instalados en los equipos.</span>
-                        </label>
-                        <div class="soporte-field-error" id="ase-confirma-mantenimiento-error">Debes confirmar esto antes de continuar; si aún no tienes mantenimiento, solicítalo primero en la pestaña Mantenimiento.</div>
-                    </div>
-                    <div class="soporte-form-group">
-                        <label for="ase-nombre">Nombre completo<span class="req">*</span></label>
-                        <input type="text" id="ase-nombre" required>
-                        <div class="soporte-field-error" id="ase-nombre-error">Ingresa tu nombre completo.</div>
-                    </div>
-                    <div class="soporte-form-group">
-                        <label for="ase-cct">Clave de Centro de Trabajo (CCT)<span class="req">*</span></label>
-                        <div class="sop-cct-wrapper">
-                            <input type="text" id="ase-cct" placeholder="15DPR0000A" maxlength="10" autocomplete="off" style="text-transform:uppercase;font-family:monospace;" required>
-                            <ul id="ase-cct-suggestions"></ul>
-                        </div>
-                        <div class="sop-cct-status" id="ase-cct-status"></div>
-                        <div class="soporte-field-error" id="ase-cct-error">Ingresa una CCT válida.</div>
-                    </div>
-
-                    <div class="sop-manual-fields" id="ase-manual-fields">
-                        <p class="manual-aviso">No encontramos esa CCT. Captura los datos manualmente:</p>
-                        <div class="soporte-form-group">
-                            <label for="ase-tipo-cct-manual">Tipo de CCT<span class="req">*</span></label>
-                            <select id="ase-tipo-cct-manual" onchange="aseActualizarTipoCct()">
-                                <option value="">— Selecciona una opción —</option>
-                                <option value="escuela">Escuela</option>
-                                <option value="supervision">Zona escolar (Supervisión)</option>
-                                <option value="jefatura">Sector educativo (Jefatura)</option>
-                                <option value="subdireccion">SEPRN</option>
-                            </select>
-                            <div class="soporte-field-error" id="ase-tipo-cct-manual-error">Selecciona el tipo de CCT.</div>
-                        </div>
-                        <div class="soporte-form-group" id="ase-sector-group" style="display:none;">
-                            <label for="ase-sector-manual">Sector<span class="req">*</span></label>
-                            <select id="ase-sector-manual" onchange="aseActualizarZonas()">
-                                <option value="">— Selecciona sector —</option>
-                                <option value="I">Sector I</option>
-                                <option value="II">Sector II</option>
-                                <option value="III">Sector III</option>
-                                <option value="IV">Sector IV</option>
-                                <option value="V">Sector V</option>
-                                <option value="VI">Sector VI</option>
-                                <option value="VII">Sector VII</option>
-                                <option value="VIII">Sector VIII</option>
-                                <option value="IX">Sector IX</option>
-                                <option value="X">Sector X</option>
-                                <option value="XI">Sector XI</option>
-                                <option value="XII">Sector XII</option>
-                                <option value="XIII">Sector XIII</option>
-                            </select>
-                            <div class="soporte-field-error" id="ase-sector-manual-error">Selecciona un sector.</div>
-                        </div>
-                        <div class="soporte-form-group" id="ase-zona-group" style="display:none;">
-                            <label for="ase-zona-manual">Zona escolar<span class="req">*</span></label>
-                            <select id="ase-zona-manual">
-                                <option value="">— Selecciona zona —</option>
-                            </select>
-                            <div class="soporte-field-error" id="ase-zona-manual-error">Selecciona una zona.</div>
-                        </div>
-                        <div class="soporte-form-group">
-                            <label for="ase-escuela-manual">Nombre de la escuela o unidad<span class="req">*</span></label>
-                            <input type="text" id="ase-escuela-manual" placeholder="Nombre oficial">
-                            <div class="soporte-field-error" id="ase-escuela-manual-error">Ingresa el nombre de la escuela o unidad.</div>
-                        </div>
-                    </div>
-
-                    <input type="hidden" id="ase-sector-val">
-                    <input type="hidden" id="ase-zona-val">
-                    <input type="hidden" id="ase-escuela-val">
-                    <input type="hidden" id="ase-tipo-cct-val">
-
-                    <div class="soporte-form-group">
-                        <label for="ase-turno">Turno<span class="req">*</span></label>
-                        <select id="ase-turno" required>
-                            <option value="">— Selecciona una opción —</option>
-                            <option>Matutino</option>
-                            <option>Vespertino</option>
-                            <option>Tiempo Completo</option>
-                            <option>Discontinuo</option>
-                        </select>
-                        <div class="soporte-field-error" id="ase-turno-error">Selecciona el turno.</div>
-                    </div>
-
-                    <div class="soporte-form-group">
-                        <label for="ase-funcion">Función/Cargo<span class="req">*</span></label>
-                        <select id="ase-funcion" required onchange="aseToggleOtraFuncion()">
-                            <option value="">— Selecciona una opción —</option>
-                        </select>
-                        <div class="soporte-field-error" id="ase-funcion-error">Selecciona tu función o cargo.</div>
-                        <div id="ase-otra-funcion-group" style="display:none;margin-top:10px;">
-                            <input type="text" id="ase-otra-funcion" placeholder="Especifica tu función" maxlength="80">
-                            <div class="soporte-field-error" id="ase-otra-funcion-error">Especifica tu función.</div>
-                        </div>
-                    </div>
-
-                    <div class="soporte-form-group">
-                        <label for="ase-num-docentes">Número de docentes que participarían<span class="req">*</span></label>
-                        <input type="number" id="ase-num-docentes" min="1" max="200" inputmode="numeric" required>
-                        <div class="soporte-field-error" id="ase-num-docentes-error">Indica cuántos docentes participarían.</div>
-                    </div>
-
-                    <div class="soporte-form-group">
-                        <label for="ase-whatsapp">Teléfono (WhatsApp)<span class="req">*</span></label>
-                        <input type="tel" id="ase-whatsapp" placeholder="5512345678" maxlength="10" inputmode="numeric" required>
-                        <div class="soporte-field-hint">10 dígitos, sin espacios ni guiones. Al dejar este número autorizas que OTDE te contacte por WhatsApp para dar seguimiento a tu solicitud.</div>
-                        <div class="soporte-field-error" id="ase-whatsapp-error">Ingresa un número de WhatsApp válido (10 dígitos).</div>
-                    </div>
-                    <div class="soporte-form-group">
-                        <label for="ase-correo">Correo electrónico<span class="req">*</span></label>
-                        <input type="email" id="ase-correo" placeholder="tucorreo@dee.edu.mx" required>
-                        <div class="soporte-field-hint">De preferencia tu correo institucional. Si no tienes uno activo, usa otro que revises seguido — recuerda revisar spam / correo no deseado.</div>
-                        <div class="soporte-field-error" id="ase-correo-error">Ingresa un correo válido.</div>
-                    </div>
-                    <div class="soporte-form-group">
-                        <label for="ase-observaciones">Observaciones</label>
-                        <textarea id="ase-observaciones" placeholder="Opcional: horario preferido, temas de interés, etc."></textarea>
-                    </div>
-                    <div class="soporte-form-group">
-                        <label for="ase-oficio">Oficio de solicitud (solo PDF)<span class="req">*</span></label>
-                        <input type="file" id="ase-oficio" accept="application/pdf" required>
-                        <div class="soporte-field-hint">Máximo 5MB, formato PDF. Debe estar firmado por quien autoriza la solicitud. Aun así, debes entregar el oficio original en físico en las oficinas de OTDE — este adjunto es un complemento digital, no lo sustituye.</div>
-                        <div class="soporte-field-error" id="ase-oficio-error">Adjunta el oficio firmado en formato PDF.</div>
-                    </div>
-
-                    <button type="submit" class="form-button" id="btn-asesoria-submit">
-                        <span>Enviar Solicitud</span>
-                    </button>
-
-                    <div id="asesoria-msg" class="soporte-submit-msg"></div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- SERVICIO 4: Soporte Técnico -->
+    <!-- SERVICIO 3: Soporte Técnico -->
     <div id="soporte" class="servicio-content" role="tabpanel" aria-label="Soporte Técnico">
         <div class="servicio-header">
             <h2>Soporte Técnico Remoto</h2>
@@ -1634,7 +1283,7 @@
         </div>
     </div>
 
-    <!-- SERVICIO 5: Licencias Office -->
+    <!-- SERVICIO 4: Licencias Office -->
     <div id="office" class="servicio-content" role="tabpanel" aria-label="Licencias Office">
         <div class="servicio-header">
             <h2>Instalador de Office con Validación por CCT</h2>
@@ -1706,7 +1355,7 @@
         </div>
     </div>
 
-    <!-- SERVICIO 6: Chuka -->
+    <!-- SERVICIO 5: Chuka -->
     <div id="chuka" class="servicio-content" role="tabpanel" aria-label="Chuka">
         <div class="servicio-header">
             <h2>Chuka — Rompe el Silencio</h2>
@@ -1768,7 +1417,7 @@
         </div>
     </div>
 
-    <!-- SERVICIO 7: Recursos -->
+    <!-- SERVICIO 6: Recursos -->
     <div id="recursos" class="servicio-content" role="tabpanel" aria-label="Recursos Educativos Digitales">
         <div class="servicio-header">
             <h2>Recursos Educativos Digitales</h2>
@@ -1884,6 +1533,7 @@
     </footer>
 
 <script src="js/cct-db.js"></script>
+<script src="js/tramites-shared.js"></script>
 <script>
     function showServicio(servicioId, btn) {
         document.querySelectorAll('.servicio-content').forEach(function(c) { c.classList.remove('active'); });
@@ -1930,56 +1580,12 @@
     // ── Soporte Técnico Remoto: solicitud ──
     const SOPORTE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbynU6hEtN7W-Q2MsTEbRZJeGH946n3YcQptGiW6w6fMzgZ98J6mu33bEqSoK_1Oxtk/exec';
 
-    // ── Normalizar mayúsculas/minúsculas de Nombre y Escuela manual ──
-    // Los docentes escriben en cualquier combinación (todo mayúsculas, todo
-    // minúsculas, mezclado); esto lo homologa a "Cada Palabra Así" para que
-    // la hoja de datos se vea consistente sin importar cómo lo tecleen.
-    function toTitleCase(str) {
-        return str.trim().replace(/\s+/g, ' ').toLowerCase()
-            .split(' ')
-            .map(function(w) { return w ? w.charAt(0).toUpperCase() + w.slice(1) : w; })
-            .join(' ');
-    }
+    // toTitleCase, fetchJsonConTimeout y otdePoblarFuncion viven en
+    // js/tramites-shared.js (compartidas con las páginas propias de trámite).
     ['sop-nombre', 'sop-escuela-manual'].forEach(function(id) {
         var el = document.getElementById(id);
         el.addEventListener('blur', function() { if (el.value.trim()) el.value = toTitleCase(el.value); });
     });
-
-    // Fetch + parseo JSON con timeout: si Apps Script no responde en TIMEOUT_MS
-    // (ni en encabezados ni en el cuerpo de la respuesta), aborta en vez de
-    // dejar el botón congelado indefinidamente. El .json() va DENTRO del try
-    // — fetch() se resuelve al llegar los encabezados, pero el cuerpo puede
-    // tardar (o colgarse) por separado; si el timeout se cancelara al
-    // resolver fetch(), esa segunda espera quedaría sin protección.
-    const SOPORTE_TIMEOUT_MS = 30000;
-    async function fetchJsonConTimeout(url, options) {
-        const ctrl = new AbortController();
-        const t = setTimeout(() => ctrl.abort(), SOPORTE_TIMEOUT_MS);
-        try {
-            const r = await fetch(url, options ? Object.assign({}, options, { signal: ctrl.signal }) : { signal: ctrl.signal });
-            return await r.json();
-        } finally {
-            clearTimeout(t);
-        }
-    }
-
-    // Repuebla un <select> de Función/Cargo según el tipo de CCT (escuela | supervision |
-    // jefatura | subdireccion — ver otdeOpcionesFuncion en js/cct-db.js), compartida por los
-    // 4 formularios que preguntan Función (Alta de correo, Mantenimiento, Asesorías, Soporte).
-    // Conserva la selección previa si sigue siendo válida en la nueva lista.
-    function otdePoblarFuncion(selectId, tipo) {
-        var select = document.getElementById(selectId);
-        if (!select) return;
-        var valorPrevio = select.value;
-        var opciones = otdeOpcionesFuncion(tipo);
-        select.innerHTML = '<option value="">— Selecciona una opción —</option>';
-        opciones.forEach(function(op) {
-            var o = document.createElement('option');
-            o.textContent = op;
-            select.appendChild(o);
-        });
-        select.value = opciones.indexOf(valorPrevio) !== -1 ? valorPrevio : '';
-    }
 
     function toggleSoporteForm(btn) {
         var container = document.getElementById('form-soporte');
@@ -2361,7 +1967,7 @@
 
     // ── Mantenimiento: solicitud ──
     const MANTENIMIENTO_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxxhyMUI8VuuxC29fWgkMWULwLdB7OhNJ-XawgtdseZY5hgV9P6I9uHFfiCMbAJzZb1/exec';
-    const MAN_TAMANO_MAX_BYTES = 5 * 1024 * 1024;
+    // TAMANO_MAX_ARCHIVO_BYTES vive en js/tramites-shared.js
 
     function toggleMantenimientoForm(btn) {
         var container = document.getElementById('form-mantenimiento');
@@ -2553,19 +2159,7 @@
         if (algunoMarcado) document.getElementById('man-equipo-tipo-error').classList.remove('visible');
     }
 
-    // Lee el archivo del oficio como base64 (sin el prefijo "data:...;base64,")
-    function manLeerArchivoBase64(file) {
-        return new Promise(function(resolve, reject) {
-            var reader = new FileReader();
-            reader.onload = function() {
-                var resultado = reader.result;
-                var base64 = resultado.substring(resultado.indexOf(',') + 1);
-                resolve(base64);
-            };
-            reader.onerror = function() { reject(reader.error); };
-            reader.readAsDataURL(file);
-        });
-    }
+    // leerArchivoBase64() vive en js/tramites-shared.js
 
     function validarMantenimientoForm() {
         var ok = true;
@@ -2747,7 +2341,7 @@
             oficioErr.classList.add('visible');
             oficioErr.textContent = 'Solo se aceptan archivos en formato PDF.';
             ok = false;
-        } else if (oficioFile.size > MAN_TAMANO_MAX_BYTES) {
+        } else if (oficioFile.size > TAMANO_MAX_ARCHIVO_BYTES) {
             oficioInput.classList.add('error');
             oficioErr.classList.add('visible');
             oficioErr.textContent = 'El archivo pesa más de 5MB. Comprímelo e intenta de nuevo.';
@@ -2781,7 +2375,7 @@
         btnSubmit.style.opacity = '0.6';
 
         try {
-            var oficioBase64 = await manLeerArchivoBase64(oficioFile);
+            var oficioBase64 = await leerArchivoBase64(oficioFile);
 
             var tipoEquipo = [];
             if (document.getElementById('man-equipo-aula').checked) tipoEquipo.push('Aula de medios');
@@ -2830,440 +2424,6 @@
                 document.querySelectorAll('#mantenimiento-form .error').forEach(function(el) { el.classList.remove('error'); });
                 document.querySelectorAll('#mantenimiento-form .soporte-field-error.visible').forEach(function(el) { el.classList.remove('visible'); });
                 manResetCct();
-            } else {
-                msg.classList.add('error');
-                msg.textContent = 'No se pudo registrar la solicitud: ' + data.mensaje;
-            }
-        } catch (err) {
-            msg.classList.add('error');
-            msg.textContent = err.name === 'AbortError'
-                ? 'El servidor tardó demasiado en responder. Tu solicitud pudo haberse guardado igual; si no recibes contacto de la OTDE, intenta de nuevo.'
-                : 'No se pudo enviar la solicitud. Verifica tu conexión e intenta de nuevo.';
-        } finally {
-            btnSubmit.disabled = false;
-            btnSubmit.style.opacity = '1';
-        }
-
-        return false;
-    }
-
-    // ── Asesorías: solicitud ──
-    const ASESORIAS_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxwJFE7d9P4b2e7lVYvBx7FK9bBws53T9V6Q3yU7W-NboeecvnZCvWdkJG0nL8Pmz8q/exec';
-
-    function toggleAsesoriaForm(btn) {
-        var container = document.getElementById('form-asesoria');
-        var text = document.getElementById('btn-asesoria-text');
-        var arrow = document.getElementById('btn-asesoria-arrow');
-        if (container.classList.contains('active')) {
-            container.classList.remove('active');
-            text.textContent = 'Solicitar Asesoría';
-            arrow.textContent = '▼';
-            btn.setAttribute('aria-expanded', 'false');
-        } else {
-            container.classList.add('active');
-            text.textContent = 'Ocultar Formulario';
-            arrow.textContent = '▲';
-            btn.setAttribute('aria-expanded', 'true');
-            setTimeout(function() {
-                container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }, 400);
-        }
-    }
-
-    document.getElementById('ase-nombre').addEventListener('blur', function() {
-        if (this.value.trim()) this.value = toTitleCase(this.value);
-    });
-    document.getElementById('ase-escuela-manual').addEventListener('blur', function() {
-        if (this.value.trim()) this.value = toTitleCase(this.value);
-    });
-    document.getElementById('ase-confirma-mantenimiento').addEventListener('change', function() {
-        if (this.checked) document.getElementById('ase-confirma-mantenimiento-error').classList.remove('visible');
-    });
-
-    function aseToggleOtraFuncion() {
-        var val = document.getElementById('ase-funcion').value;
-        var grp = document.getElementById('ase-otra-funcion-group');
-        grp.style.display = val === 'Otro' ? 'block' : 'none';
-        if (val !== 'Otro') {
-            var inp = document.getElementById('ase-otra-funcion');
-            inp.value = '';
-            inp.classList.remove('error');
-            document.getElementById('ase-otra-funcion-error').classList.remove('visible');
-        }
-    }
-
-    // ── CCT autocomplete (Asesorías) — mismo patrón que Soporte/Mantenimiento ──
-    var aseCctEncontrada = false;
-    var aseSectorZonas = {};
-    if (typeof CCT_DB !== 'undefined') {
-        CCT_DB.forEach(function(e) {
-            if (!e.zona || e.tipo !== 'escuela') return;
-            if (!aseSectorZonas[e.sector]) aseSectorZonas[e.sector] = [];
-            if (aseSectorZonas[e.sector].indexOf(e.zona) === -1) aseSectorZonas[e.sector].push(e.zona);
-        });
-        Object.keys(aseSectorZonas).forEach(function(s) {
-            aseSectorZonas[s].sort(function(a, b) { return a - b; });
-        });
-    }
-
-    var aseInputCct, aseSuggestions, aseStatusBox, aseActiveSugg = -1;
-
-    function aseInitCctAutocomplete() {
-        aseInputCct = document.getElementById('ase-cct');
-        aseSuggestions = document.getElementById('ase-cct-suggestions');
-        aseStatusBox = document.getElementById('ase-cct-status');
-        if (!aseInputCct || typeof CCT_DB === 'undefined') return;
-
-        aseInputCct.addEventListener('input', function() {
-            var q = aseInputCct.value.trim().toUpperCase();
-            aseResetCct();
-            if (q.length < 3) { aseSuggestions.style.display = 'none'; return; }
-
-            var matches = CCT_DB.filter(function(e) {
-                return e.cct.includes(q) || e.nombre.toUpperCase().includes(q);
-            }).slice(0, 10);
-
-            if (!matches.length) { aseSuggestions.style.display = 'none'; return; }
-
-            aseSuggestions.innerHTML = '';
-            matches.forEach(function(m) {
-                var li = document.createElement('li');
-                li.innerHTML = '<span class="sg-code">' + m.cct + '</span> <span class="sg-name">' + m.nombre + ' — Sector ' + m.sector + (m.zona ? ', Zona ' + m.zona : '') + '</span>';
-                li.addEventListener('mousedown', function() { aseSeleccionarCct(m); });
-                aseSuggestions.appendChild(li);
-            });
-            aseSuggestions.style.display = 'block';
-            aseActiveSugg = -1;
-        });
-
-        aseInputCct.addEventListener('keydown', function(e) {
-            var items = aseSuggestions.querySelectorAll('li');
-            if (!items.length) return;
-            if (e.key === 'ArrowDown') { aseActiveSugg = Math.min(aseActiveSugg + 1, items.length - 1); aseHighlightSugg(items); e.preventDefault(); }
-            if (e.key === 'ArrowUp')   { aseActiveSugg = Math.max(aseActiveSugg - 1, 0);                aseHighlightSugg(items); e.preventDefault(); }
-            if (e.key === 'Enter' && aseActiveSugg >= 0) {
-                var q = aseInputCct.value.trim().toUpperCase();
-                var m = CCT_DB.filter(function(e) { return e.cct.includes(q) || e.nombre.toUpperCase().includes(q); })[aseActiveSugg];
-                if (m) { aseSeleccionarCct(m); e.preventDefault(); }
-            }
-            if (e.key === 'Escape') { aseSuggestions.style.display = 'none'; }
-        });
-
-        aseInputCct.addEventListener('blur', function() {
-            setTimeout(function() { aseSuggestions.style.display = 'none'; }, 150);
-        });
-
-        aseInputCct.addEventListener('change', function() {
-            if (!aseCctEncontrada && aseInputCct.value.trim().length >= 8) {
-                aseStatusBox.className = 'sop-cct-status warn';
-                aseStatusBox.textContent = 'CCT no encontrada en nuestra base. Puedes capturar los datos manualmente.';
-                document.getElementById('ase-manual-fields').classList.add('visible');
-                aseInputCct.classList.remove('error');
-                document.getElementById('ase-cct-error').classList.remove('visible');
-            }
-        });
-    }
-
-    function aseHighlightSugg(items) {
-        items.forEach(function(li, i) { li.classList.toggle('active', i === aseActiveSugg); });
-    }
-
-    function aseSeleccionarCct(m) {
-        aseInputCct.value = m.cct;
-        aseSuggestions.style.display = 'none';
-        document.getElementById('ase-sector-val').value  = m.sector;
-        document.getElementById('ase-zona-val').value    = m.zona || '';
-        document.getElementById('ase-escuela-val').value = m.nombre || '';
-        document.getElementById('ase-tipo-cct-val').value = m.tipo || '';
-        aseStatusBox.className = 'sop-cct-status found';
-        aseStatusBox.textContent = 'Sector ' + m.sector + (m.zona ? ' · Zona ' + m.zona : '') + ' · ' + m.nombre;
-        document.getElementById('ase-manual-fields').classList.remove('visible');
-        aseCctEncontrada = true;
-        otdePoblarFuncion('ase-funcion', m.tipo);
-    }
-
-    function aseResetCct() {
-        document.getElementById('ase-sector-val').value  = '';
-        document.getElementById('ase-zona-val').value    = '';
-        document.getElementById('ase-escuela-val').value = '';
-        document.getElementById('ase-tipo-cct-val').value = '';
-        aseStatusBox.className = 'sop-cct-status';
-        aseCctEncontrada = false;
-        otdePoblarFuncion('ase-funcion', null);
-    }
-
-    function aseActualizarTipoCct() {
-        var tipo = document.getElementById('ase-tipo-cct-manual').value;
-        var sectorGroup = document.getElementById('ase-sector-group');
-        sectorGroup.style.display = (tipo === 'escuela' || tipo === 'supervision' || tipo === 'jefatura') ? 'block' : 'none';
-        if (tipo !== 'escuela' && tipo !== 'supervision') {
-            document.getElementById('ase-zona-group').style.display = 'none';
-        } else {
-            aseActualizarZonas();
-        }
-        document.getElementById('ase-tipo-cct-val').value = tipo;
-        otdePoblarFuncion('ase-funcion', tipo);
-    }
-
-    function aseActualizarZonas() {
-        var tipo = document.getElementById('ase-tipo-cct-manual').value;
-        var sector = document.getElementById('ase-sector-manual').value;
-        var zonaGroup  = document.getElementById('ase-zona-group');
-        var zonaSelect = document.getElementById('ase-zona-manual');
-        zonaSelect.innerHTML = '<option value="">— Selecciona zona —</option>';
-
-        if (!sector || (tipo !== 'escuela' && tipo !== 'supervision')) {
-            zonaGroup.style.display = 'none';
-            return;
-        }
-        var zonas = aseSectorZonas[sector] || [];
-        zonas.forEach(function(z) {
-            var o = document.createElement('option');
-            o.value = z; o.textContent = 'Zona ' + z;
-            zonaSelect.appendChild(o);
-        });
-        zonaGroup.style.display = 'block';
-    }
-
-    aseInitCctAutocomplete();
-    otdePoblarFuncion('ase-funcion', null);
-
-    function validarAsesoriaForm() {
-        var ok = true;
-        var campos = [
-            { id: 'ase-tipo',     err: 'ase-tipo-error',     test: function(v) { return v !== ''; } },
-            { id: 'ase-nombre',   err: 'ase-nombre-error',   test: function(v) { return v.trim().length >= 3; } },
-            { id: 'ase-whatsapp', err: 'ase-whatsapp-error', test: function(v) { return /^\d{10}$/.test(v.trim()); } },
-            { id: 'ase-turno',    err: 'ase-turno-error',    test: function(v) { return v !== ''; } }
-        ];
-
-        campos.forEach(function(c) {
-            var input = document.getElementById(c.id);
-            var errEl = document.getElementById(c.err);
-            if (!c.test(input.value)) {
-                input.classList.add('error');
-                errEl.classList.add('visible');
-                ok = false;
-            } else {
-                input.classList.remove('error');
-                errEl.classList.remove('visible');
-            }
-        });
-
-        var confirmaInput = document.getElementById('ase-confirma-mantenimiento');
-        var confirmaErr = document.getElementById('ase-confirma-mantenimiento-error');
-        if (!confirmaInput.checked) {
-            confirmaErr.classList.add('visible');
-            ok = false;
-        } else {
-            confirmaErr.classList.remove('visible');
-        }
-
-        var numDocInput = document.getElementById('ase-num-docentes');
-        var numDocErr = document.getElementById('ase-num-docentes-error');
-        var numDocVal = parseInt(numDocInput.value, 10);
-        if (!numDocInput.value.trim() || isNaN(numDocVal) || numDocVal < 1) {
-            numDocInput.classList.add('error');
-            numDocErr.classList.add('visible');
-            ok = false;
-        } else {
-            numDocInput.classList.remove('error');
-            numDocErr.classList.remove('visible');
-        }
-
-        var funcionInput = document.getElementById('ase-funcion');
-        var funcionErr = document.getElementById('ase-funcion-error');
-        if (funcionInput.value === '') {
-            funcionInput.classList.add('error');
-            funcionErr.classList.add('visible');
-            ok = false;
-        } else {
-            funcionInput.classList.remove('error');
-            funcionErr.classList.remove('visible');
-        }
-        if (funcionInput.value === 'Otro') {
-            var otraInp = document.getElementById('ase-otra-funcion');
-            var otraErr = document.getElementById('ase-otra-funcion-error');
-            if (!otraInp.value.trim()) {
-                otraInp.classList.add('error');
-                otraErr.classList.add('visible');
-                ok = false;
-            } else {
-                otraInp.classList.remove('error');
-                otraErr.classList.remove('visible');
-            }
-        }
-
-        var cctInput = document.getElementById('ase-cct');
-        var cctErr = document.getElementById('ase-cct-error');
-        var manualVisible = document.getElementById('ase-manual-fields').classList.contains('visible');
-        var cctTextOk = cctInput.value.trim().length >= 3;
-
-        if (aseCctEncontrada || (manualVisible && cctTextOk)) {
-            cctInput.classList.remove('error');
-            cctErr.classList.remove('visible');
-        } else {
-            cctInput.classList.add('error');
-            cctErr.classList.add('visible');
-            ok = false;
-        }
-
-        if (manualVisible) {
-            var tipoCctInput = document.getElementById('ase-tipo-cct-manual');
-            var tipoCctErr = document.getElementById('ase-tipo-cct-manual-error');
-            var tipoCct = tipoCctInput.value;
-            if (!tipoCct) {
-                tipoCctInput.classList.add('error');
-                tipoCctErr.classList.add('visible');
-                ok = false;
-            } else {
-                tipoCctInput.classList.remove('error');
-                tipoCctErr.classList.remove('visible');
-            }
-
-            var sectorInput = document.getElementById('ase-sector-manual');
-            var zonaInput = document.getElementById('ase-zona-manual');
-            var escuelaInput = document.getElementById('ase-escuela-manual');
-            var sectorErr = document.getElementById('ase-sector-manual-error');
-            var zonaErr = document.getElementById('ase-zona-manual-error');
-            var escuelaErr = document.getElementById('ase-escuela-manual-error');
-            var sector = sectorInput.value;
-            var zona = zonaInput.value;
-            var escuela = escuelaInput.value.trim();
-            var sectorReq = tipoCct === 'escuela' || tipoCct === 'supervision' || tipoCct === 'jefatura';
-            var zonaReq = tipoCct === 'escuela' || tipoCct === 'supervision';
-
-            if (sectorReq && !sector) {
-                sectorInput.classList.add('error');
-                sectorErr.classList.add('visible');
-                ok = false;
-            } else {
-                sectorInput.classList.remove('error');
-                sectorErr.classList.remove('visible');
-            }
-
-            if (zonaReq && !zona) {
-                zonaInput.classList.add('error');
-                zonaErr.classList.add('visible');
-                ok = false;
-            } else {
-                zonaInput.classList.remove('error');
-                zonaErr.classList.remove('visible');
-            }
-
-            if (!escuela) {
-                escuelaInput.classList.add('error');
-                escuelaErr.classList.add('visible');
-                ok = false;
-            } else {
-                escuelaInput.classList.remove('error');
-                escuelaErr.classList.remove('visible');
-            }
-        } else if (!aseCctEncontrada && cctTextOk) {
-            document.getElementById('ase-manual-fields').classList.add('visible');
-            document.getElementById('ase-cct-status').className = 'sop-cct-status warn';
-            document.getElementById('ase-cct-status').textContent = 'Selecciona tu escuela de la lista o captura los datos manualmente.';
-            ok = false;
-        }
-
-        var correoInput = document.getElementById('ase-correo');
-        var correoErr = document.getElementById('ase-correo-error');
-        var correoVal = correoInput.value.trim();
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoVal)) {
-            correoInput.classList.add('error');
-            correoErr.classList.add('visible');
-            ok = false;
-        } else {
-            correoInput.classList.remove('error');
-            correoErr.classList.remove('visible');
-        }
-
-        var oficioInput = document.getElementById('ase-oficio');
-        var oficioErr = document.getElementById('ase-oficio-error');
-        var oficioFile = oficioInput.files[0];
-        if (!oficioFile) {
-            oficioInput.classList.add('error');
-            oficioErr.classList.add('visible');
-            oficioErr.textContent = 'Adjunta el oficio firmado en formato PDF.';
-            ok = false;
-        } else if (oficioFile.type !== 'application/pdf') {
-            oficioInput.classList.add('error');
-            oficioErr.classList.add('visible');
-            oficioErr.textContent = 'Solo se aceptan archivos en formato PDF.';
-            ok = false;
-        } else if (oficioFile.size > MAN_TAMANO_MAX_BYTES) {
-            oficioInput.classList.add('error');
-            oficioErr.classList.add('visible');
-            oficioErr.textContent = 'El archivo pesa más de 5MB. Comprímelo e intenta de nuevo.';
-            ok = false;
-        } else {
-            oficioInput.classList.remove('error');
-            oficioErr.classList.remove('visible');
-        }
-
-        return ok;
-    }
-
-    async function enviarSolicitudAsesoria(evt) {
-        evt.preventDefault();
-        var msg = document.getElementById('asesoria-msg');
-        var btnSubmit = document.getElementById('btn-asesoria-submit');
-        msg.className = 'soporte-submit-msg';
-        msg.textContent = '';
-
-        if (!validarAsesoriaForm()) {
-            return false;
-        }
-
-        var manualVisible = document.getElementById('ase-manual-fields').classList.contains('visible');
-        var funcionVal = document.getElementById('ase-funcion').value === 'Otro'
-            ? document.getElementById('ase-otra-funcion').value.trim()
-            : document.getElementById('ase-funcion').value;
-        var oficioFile = document.getElementById('ase-oficio').files[0];
-
-        btnSubmit.disabled = true;
-        btnSubmit.style.opacity = '0.6';
-
-        try {
-            var oficioBase64 = await manLeerArchivoBase64(oficioFile);
-
-            var datos = {
-                tipoAsesoria: document.getElementById('ase-tipo').value,
-                nombre: toTitleCase(document.getElementById('ase-nombre').value.trim()),
-                cct: document.getElementById('ase-cct').value,
-                sector: manualVisible ? document.getElementById('ase-sector-manual').value : document.getElementById('ase-sector-val').value,
-                zona: manualVisible ? document.getElementById('ase-zona-manual').value : document.getElementById('ase-zona-val').value,
-                escuela: manualVisible ? toTitleCase(document.getElementById('ase-escuela-manual').value.trim()) : document.getElementById('ase-escuela-val').value,
-                tipoCct: document.getElementById('ase-tipo-cct-val').value,
-                turno: document.getElementById('ase-turno').value,
-                funcion: funcionVal,
-                numDocentes: document.getElementById('ase-num-docentes').value,
-                whatsapp: document.getElementById('ase-whatsapp').value,
-                correo: document.getElementById('ase-correo').value,
-                observaciones: document.getElementById('ase-observaciones').value,
-                confirmaMantenimiento: document.getElementById('ase-confirma-mantenimiento').checked,
-                oficioBase64: oficioBase64,
-                oficioNombre: oficioFile.name,
-                oficioTipo: oficioFile.type
-            };
-
-            const data = await fetchJsonConTimeout(ASESORIAS_APPS_SCRIPT_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain' },
-                body: JSON.stringify(datos)
-            });
-
-            if (data.status === 'ok') {
-                msg.classList.add('ok');
-                msg.textContent = 'Solicitud registrada (folio ' + data.folio + '). Un integrante de la OTDE te contactará en breve.';
-                document.getElementById('asesoria-form').reset();
-                document.getElementById('ase-manual-fields').classList.remove('visible');
-                document.getElementById('ase-sector-group').style.display = 'none';
-                document.getElementById('ase-zona-group').style.display = 'none';
-                document.getElementById('ase-otra-funcion-group').style.display = 'none';
-                document.querySelectorAll('#asesoria-form .error').forEach(function(el) { el.classList.remove('error'); });
-                document.querySelectorAll('#asesoria-form .soporte-field-error.visible').forEach(function(el) { el.classList.remove('visible'); });
-                aseResetCct();
             } else {
                 msg.classList.add('error');
                 msg.textContent = 'No se pudo registrar la solicitud: ' + data.mensaje;

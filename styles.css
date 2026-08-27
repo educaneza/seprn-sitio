@@ -1217,3 +1217,194 @@ footer {
     .ns-bloque { padding: 44px 20px; }
     .valores-grid { grid-template-columns: 1fr; }
 }
+
+/* ── FORMULARIOS DE TRÁMITE (compartido: otde.html + páginas propias de trámite) ── */
+/* Extraído de otde.html el 27 ago 2026 al migrar Asesorías a asesorias.html — antes
+   vivía solo ahí, aunque Mantenimiento/Soporte/Correo ya lo reusaban tal cual. El
+   selector de sugerencias CCT se generalizó de #sop-cct-suggestions (solo Soporte) a
+   ul[id$="-cct-suggestions"] (todas las tabs/páginas) — antes las demás mostraban la
+   lista de sugerencias sin estilo (bug preexistente, no introducido por esta migración).
+   Ver docs/ARCHITECTURE.md. */
+.servicio-header {
+    background: var(--guinda);
+    padding: 40px;
+    border-radius: 18px;
+    color: white;
+    text-align: center;
+    margin-bottom: 40px;
+}
+.servicio-header h2 {
+    margin-top: 0;
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 15px;
+    color: white;
+}
+.servicio-header p {
+    font-size: 17px;
+    opacity: 0.95;
+    max-width: 700px;
+    margin: 0 auto;
+    line-height: 1.7;
+    color: white;
+}
+.content-block {
+    background: white;
+    border: 2px solid #d6d1ca;
+    border-radius: 14px;
+    padding: 35px;
+    margin-bottom: 30px;
+}
+.content-block h3 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #56212f;
+    margin: 0 0 20px 0;
+}
+.content-block p {
+    font-size: 15px;
+    line-height: 1.8;
+    color: #333;
+    margin-bottom: 15px;
+}
+.form-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    max-width: 500px;
+    margin: 30px auto;
+    padding: 18px 30px;
+    background: var(--guinda);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(159,34,65,0.3);
+}
+.form-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(159,34,65,0.4);
+}
+.form-container {
+    overflow: hidden;
+    transition: all 0.4s;
+    max-height: 0;
+}
+.form-container.active {
+    max-height: 3200px;
+}
+.soporte-form-group { margin-bottom: 18px; }
+.soporte-form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #56212f;
+    margin-bottom: 6px;
+}
+.soporte-form-group label .req { color: #9F2241; margin-left: 2px; }
+.soporte-form-group input,
+.soporte-form-group select,
+.soporte-form-group textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid #d6d1ca;
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: inherit;
+    color: #333;
+    background: white;
+    transition: border-color 0.2s;
+}
+.soporte-form-group textarea { resize: vertical; min-height: 90px; }
+.soporte-form-group input[type="checkbox"] { width: auto; padding: 0; }
+.soporte-form-group input:focus,
+.soporte-form-group select:focus,
+.soporte-form-group textarea:focus {
+    outline: none;
+    border-color: #9F2241;
+    box-shadow: 0 0 0 3px rgba(159,34,65,0.12);
+}
+.soporte-form-group input.error,
+.soporte-form-group select.error,
+.soporte-form-group textarea.error {
+    border-color: #dc2626;
+}
+.soporte-field-hint { font-size: 13px; color: #6b7280; margin-top: 6px; }
+.soporte-field-error { font-size: 13px; color: #dc2626; margin-top: 6px; display: none; }
+.soporte-field-error.visible { display: block; }
+
+/* ── CCT autocomplete (Soporte) ── */
+.sop-cct-wrapper { position: relative; }
+ul[id$="-cct-suggestions"] {
+    position: absolute;
+    top: 100%; left: 0; right: 0;
+    background: #fff;
+    border: 1.5px solid #9F2241;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    z-index: 100;
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+ul[id$="-cct-suggestions"] li {
+    padding: 8px 14px;
+    font-size: 14px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+}
+ul[id$="-cct-suggestions"] li:last-child { border-bottom: none; }
+ul[id$="-cct-suggestions"] li:hover, ul[id$="-cct-suggestions"] li.active { background: #fdf2f5; }
+ul[id$="-cct-suggestions"] .sg-code { font-family: monospace; font-weight: 600; color: #9F2241; }
+ul[id$="-cct-suggestions"] .sg-name { color: #6b7280; font-size: 13px; display: block; }
+.sop-cct-status {
+    font-size: 13px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    margin-top: 6px;
+    display: none;
+}
+.sop-cct-status.found { background: #d1fae5; color: #065f46; display: block; }
+.sop-cct-status.warn  { background: #fffbeb; color: #92400e; display: block; }
+.sop-manual-fields {
+    background: #fffbeb;
+    border: 1px solid #fcd34d;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 10px;
+    display: none;
+}
+.sop-manual-fields.visible { display: block; }
+.sop-manual-fields .manual-aviso {
+    font-size: 13px;
+    color: #92400e;
+    font-weight: 500;
+    margin-bottom: 12px;
+}
+.soporte-submit-msg {
+    margin-top: 16px;
+    padding: 14px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    display: none;
+}
+.soporte-submit-msg.ok {
+    display: block;
+    background: #f0f7f0;
+    border-left: 4px solid #2e7d32;
+    color: #2e7d32;
+}
+.soporte-submit-msg.error {
+    display: block;
+    background: #fdf0f0;
+    border-left: 4px solid #9F2241;
+    color: #9F2241;
+}
