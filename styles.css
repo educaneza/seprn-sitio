@@ -1408,3 +1408,82 @@ ul[id$="-cct-suggestions"] .sg-name { color: #6b7280; font-size: 13px; display: 
     border-left: 4px solid #9F2241;
     color: #9F2241;
 }
+
+/* ── CONTENIDO INSTITUCIONAL DE TRÁMITE: cajas destacadas, listas, botones de descarga ── */
+/* Extraído de otde.html el 27 ago 2026 al migrar Mantenimiento a página propia — antes
+   vivía solo ahí, aunque Correo/Soporte/Licencias Office/Chuka/Recursos ya lo reusaban
+   tal cual. Compartido por otde.html y por cada página propia de trámite. Ver
+   docs/ARCHITECTURE.md §21. */
+.highlight-box {
+    background: rgba(159,34,65,0.05);
+    border-left: 4px solid #9F2241;
+    padding: 20px 25px;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+.highlight-box p {
+    margin: 8px 0;
+}
+.benefit-list {
+    list-style: none;
+    padding: 0;
+}
+.benefit-list li {
+    padding: 10px 0 10px 30px;
+    position: relative;
+    font-size: 15px;
+    line-height: 1.7;
+}
+.benefit-list li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: #9F2241;
+    font-weight: bold;
+    font-size: 18px;
+}
+.download-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 28px;
+    background: #56212f;
+    color: white;
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 600;
+    margin: 15px 10px 15px 0;
+    transition: all 0.3s;
+}
+.download-button:hover {
+    background: #9F2241;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(159,34,65,0.3);
+}
+.featured-box {
+    background: var(--guinda);
+    padding: 40px;
+    border-radius: 14px;
+    color: white;
+    text-align: center;
+    margin: 30px 0;
+}
+.featured-box h4 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: white;
+}
+.featured-box p {
+    font-size: 16px;
+    margin-bottom: 25px;
+    color: rgba(255,255,255,0.95);
+}
+.featured-box .download-button {
+    background: white;
+    color: #56212f;
+}
+.featured-box .download-button:hover {
+    background: #f0f0f0;
+}

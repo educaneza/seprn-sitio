@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-7D68DB8ELW"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-7D68DB8ELW');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="description" content="Solicita mantenimiento preventivo o correctivo a los equipos de cómputo de tu Aula de Medios o de uso administrativo con la OTDE.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mantenimiento Preventivo y Correctivo - OTDE - SEPRN</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a href="#main-content" class="skip-link">Saltar al contenido principal</a>
+<header>
+    <nav>
+        <div class="logo"><svg class="logo-icon" width="34" height="34" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="12" fill="#56212f"/><text x="32" y="27" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#d6d1ca" letter-spacing="-1">NE</text><text x="32" y="53" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#d6d1ca" letter-spacing="-1">ZA</text></svg><span class="logo-text">SEPRN</span></div>
+        <button class="nav-toggle" aria-label="Abrir menú" aria-expanded="false">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <ul>
+            <li><a href="index.html">Inicio</a></li>
+            <li><a href="nosotros.html">Nosotros</a></li>
+            <li><a href="areas.html" class="active" aria-current="page">Áreas</a></li>
+            <li><a href="cte.html">CTE</a></li>
+            <li><a href="contacto.html">Contacto</a></li>
+        </ul>
+    </nav>
+</header>
+
+<section class="hero hero-sm">
+    <div class="hero-inner">
+        <span class="hero-badge">OTDE · SEPRN</span>
+        <h1>Mantenimiento Preventivo y Correctivo</h1>
+        <p>Rehabilitación y reactivación de Aula de Medios</p>
+    </div>
+    <div class="hero-glow"></div>
+</section>
+<section class="content-section" id="main-content" role="main">
+
+    <div class="servicio-header">
+        <h2>Mantenimiento Preventivo y Correctivo</h2>
+        <p>Rehabilitación y reactivación de Aula de Medios. Realizar mantenimiento preventivo y correctivo a los equipos de cómputo de la Subdirección de Educación Primaria y Centros de Trabajo de la estructura.</p>
+    </div>
+
+    <div class="content-block">
+        <h3>Objetivo</h3>
+        <p>Contar con equipos de cómputo en las mejores condiciones posibles, teniendo las últimas actualizaciones y versiones de software para un correcto funcionamiento.</p>
+    </div>
+
+    <div class="content-block">
+        <h3>Mantenimiento al Hardware</h3>
+        <ul class="benefit-list">
+            <li>Limpieza Interior y Exterior</li>
+            <li>Sustitución de piezas defectuosas</li>
+            <li>Aumento de Memoria RAM</li>
+            <li>Cambio de Pasta Térmica</li>
+        </ul>
+    </div>
+
+    <div class="content-block">
+        <h3>Mantenimiento al Software</h3>
+        <ul class="benefit-list">
+            <li>Formateo de HDD</li>
+            <li>Instalación/Actualización de Windows</li>
+            <li>Instalación de Office 365</li>
+            <li>Respaldo de Archivos</li>
+            <li>Limpieza de Sistema Operativo</li>
+        </ul>
+    </div>
+
+    <div class="featured-box">
+        <h4>Instalación de Banco de Materiales</h4>
+        <p>Instalación de más de mil materiales didácticos digitales a los que se puede acceder sin necesidad de conexión de red.</p>
+    </div>
+
+    <div class="content-block">
+        <h3>¡Solicita Mantenimiento!</h3>
+        <p>Solicita el mantenimiento a los equipos de cómputo de uso escolar (aula de medios) o de uso administrativo (Dirección, Zona Escolar o Sector Educativo), y a la red/internet si ya existe infraestructura instalada. No damos servicio a impresoras (solo apoyo de conexión en red si hay condiciones) ni a proyectores; instalaciones nuevas de red o eléctricas se canalizan a CoEEE. El oficio de solicitud sigue siendo el respaldo oficial — adjúntalo aquí ya firmado en PDF (debes entregar también el original en físico en OTDE); con esto agilizamos el registro y te contactamos en breve.</p>
+
+        <button class="form-button" id="btn-mantenimiento" aria-expanded="false" onclick="toggleMantenimientoForm(this)">
+            <span id="btn-mantenimiento-text">Solicitar Mantenimiento</span>
+            <span id="btn-mantenimiento-arrow">▼</span>
+        </button>
+
+        <div id="form-mantenimiento" class="form-container">
+            <form id="mantenimiento-form" onsubmit="return enviarSolicitudMantenimiento(event)" novalidate>
+                <div class="soporte-form-group">
+                    <label for="man-nombre">Nombre completo<span class="req">*</span></label>
+                    <input type="text" id="man-nombre" required>
+                    <div class="soporte-field-error" id="man-nombre-error">Ingresa tu nombre completo.</div>
+                </div>
+                <div class="soporte-form-group">
+                    <label for="man-cct">Clave de Centro de Trabajo (CCT)<span class="req">*</span></label>
+                    <div class="sop-cct-wrapper">
+                        <input type="text" id="man-cct" placeholder="15DPR0000A" maxlength="10" autocomplete="off" style="text-transform:uppercase;font-family:monospace;" required>
+                        <ul id="man-cct-suggestions"></ul>
+                    </div>
+                    <div class="sop-cct-status" id="man-cct-status"></div>
+                    <div class="soporte-field-error" id="man-cct-error">Ingresa una CCT válida.</div>
+                </div>
+
+                <div class="sop-manual-fields" id="man-manual-fields">
+                    <p class="manual-aviso">No encontramos esa CCT. Captura los datos manualmente:</p>
+                    <div class="soporte-form-group">
+                        <label for="man-tipo-cct-manual">Tipo de CCT<span class="req">*</span></label>
+                        <select id="man-tipo-cct-manual" onchange="manActualizarTipoCct()">
+                            <option value="">— Selecciona una opción —</option>
+                            <option value="escuela">Escuela</option>
+                            <option value="supervision">Zona escolar (Supervisión)</option>
+                            <option value="jefatura">Sector educativo (Jefatura)</option>
+                            <option value="subdireccion">SEPRN</option>
+                        </select>
+                        <div class="soporte-field-error" id="man-tipo-cct-manual-error">Selecciona el tipo de CCT.</div>
+                    </div>
+                    <div class="soporte-form-group" id="man-sector-group" style="display:none;">
+                        <label for="man-sector-manual">Sector<span class="req">*</span></label>
+                        <select id="man-sector-manual" onchange="manActualizarZonas()">
+                            <option value="">— Selecciona sector —</option>
+                            <option value="I">Sector I</option>
+                            <option value="II">Sector II</option>
+                            <option value="III">Sector III</option>
+                            <option value="IV">Sector IV</option>
+                            <option value="V">Sector V</option>
+                            <option value="VI">Sector VI</option>
+                            <option value="VII">Sector VII</option>
+                            <option value="VIII">Sector VIII</option>
+                            <option value="IX">Sector IX</option>
+                            <option value="X">Sector X</option>
+                            <option value="XI">Sector XI</option>
+                            <option value="XII">Sector XII</option>
+                            <option value="XIII">Sector XIII</option>
+                        </select>
+                        <div class="soporte-field-error" id="man-sector-manual-error">Selecciona un sector.</div>
+                    </div>
+                    <div class="soporte-form-group" id="man-zona-group" style="display:none;">
+                        <label for="man-zona-manual">Zona escolar<span class="req">*</span></label>
+                        <select id="man-zona-manual">
+                            <option value="">— Selecciona zona —</option>
+                        </select>
+                        <div class="soporte-field-error" id="man-zona-manual-error">Selecciona una zona.</div>
+                    </div>
+                    <div class="soporte-form-group">
+                        <label for="man-escuela-manual">Nombre de la escuela o unidad<span class="req">*</span></label>
+                        <input type="text" id="man-escuela-manual" placeholder="Nombre oficial">
+                        <div class="soporte-field-error" id="man-escuela-manual-error">Ingresa el nombre de la escuela o unidad.</div>
+                    </div>
+                </div>
+
+                <input type="hidden" id="man-sector-val">
+                <input type="hidden" id="man-zona-val">
+                <input type="hidden" id="man-escuela-val">
+                <input type="hidden" id="man-tipo-cct-val">
+
+                <div class="soporte-form-group">
+                    <label for="man-turno">Turno<span class="req">*</span></label>
+                    <select id="man-turno" required>
+                        <option value="">— Selecciona una opción —</option>
+                        <option>Matutino</option>
+                        <option>Vespertino</option>
+                        <option>Tiempo Completo</option>
+                        <option>Discontinuo</option>
+                        <option>No aplica (oficina)</option>
+                    </select>
+                    <div class="soporte-field-error" id="man-turno-error">Selecciona el turno.</div>
+                </div>
+
+                <div class="soporte-form-group">
+                    <label for="man-funcion">Función/Cargo<span class="req">*</span></label>
+                    <select id="man-funcion" required onchange="manToggleOtraFuncion()">
+                        <option value="">— Selecciona una opción —</option>
+                    </select>
+                    <div class="soporte-field-error" id="man-funcion-error">Selecciona tu función o cargo.</div>
+                    <div id="man-otra-funcion-group" style="display:none;margin-top:10px;">
+                        <input type="text" id="man-otra-funcion" placeholder="Especifica tu función" maxlength="80">
+                        <div class="soporte-field-error" id="man-otra-funcion-error">Especifica tu función.</div>
+                    </div>
+                </div>
+
+                <div class="soporte-form-group">
+                    <label for="man-whatsapp">Teléfono (WhatsApp)<span class="req">*</span></label>
+                    <input type="tel" id="man-whatsapp" placeholder="5512345678" maxlength="10" inputmode="numeric" required>
+                    <div class="soporte-field-hint">10 dígitos, sin espacios ni guiones. Al dejar este número autorizas que OTDE te contacte por WhatsApp para dar seguimiento a tu solicitud.</div>
+                    <div class="soporte-field-error" id="man-whatsapp-error">Ingresa un número de WhatsApp válido (10 dígitos).</div>
+                </div>
+                <div class="soporte-form-group">
+                    <label for="man-correo">Correo electrónico<span class="req">*</span></label>
+                    <input type="email" id="man-correo" placeholder="tucorreo@dee.edu.mx" required>
+                    <div class="soporte-field-hint">De preferencia tu correo institucional. Si no tienes uno activo, usa otro que revises seguido — recuerda revisar spam / correo no deseado.</div>
+                    <div class="soporte-field-error" id="man-correo-error">Ingresa un correo válido.</div>
+                </div>
+
+                <div class="soporte-form-group">
+                    <label>Equipos con falla<span class="req">*</span></label>
+                    <div class="highlight-box" style="margin:0 0 12px 0;">
+                        <p style="margin:0;font-size:14px;"><strong>OTDE da mantenimiento a:</strong> computadoras de aula de medios y de uso administrativo, y apoya con red/internet solo si ya hay infraestructura instalada.<br><strong>No damos servicio a:</strong> impresoras (solo ayudamos a conectarlas en red si hay condiciones) ni proyectores. Si necesitas instalación nueva de red o eléctrica, ese trámite se canaliza a CoEEE.</p>
+                    </div>
+                    <label style="display:flex;align-items:flex-start;gap:8px;font-weight:normal;margin-bottom:8px;">
+                        <input type="checkbox" id="man-equipo-aula" onchange="manToggleCantidad('aula')" style="margin-top:3px;">
+                        <span>Computadora(s) de aula de medios</span>
+                    </label>
+                    <div class="soporte-form-group" id="man-cantidad-aula-group" style="display:none;margin:0 0 12px 26px;">
+                        <label for="man-cantidad-aula">Cantidad aproximada<span class="req">*</span></label>
+                        <select id="man-cantidad-aula">
+                            <option value="">— Selecciona —</option>
+                            <option value="1">1</option>
+                            <option value="2-3">2-3</option>
+                            <option value="4-5">4-5</option>
+                            <option value="6-10">6-10</option>
+                            <option value="Más de 10">Más de 10</option>
+                        </select>
+                        <div class="soporte-field-error" id="man-cantidad-aula-error">Selecciona la cantidad aproximada.</div>
+                    </div>
+                    <label style="display:flex;align-items:flex-start;gap:8px;font-weight:normal;margin-bottom:8px;">
+                        <input type="checkbox" id="man-equipo-admin" onchange="manToggleCantidad('admin')" style="margin-top:3px;">
+                        <span>Computadora(s) de uso administrativo</span>
+                    </label>
+                    <div class="soporte-form-group" id="man-cantidad-admin-group" style="display:none;margin:0 0 12px 26px;">
+                        <label for="man-cantidad-admin">Cantidad aproximada<span class="req">*</span></label>
+                        <select id="man-cantidad-admin">
+                            <option value="">— Selecciona —</option>
+                            <option value="1">1</option>
+                            <option value="2-3">2-3</option>
+                            <option value="4-5">4-5</option>
+                            <option value="6-10">6-10</option>
+                            <option value="Más de 10">Más de 10</option>
+                        </select>
+                        <div class="soporte-field-error" id="man-cantidad-admin-error">Selecciona la cantidad aproximada.</div>
+                    </div>
+                    <label style="display:flex;align-items:flex-start;gap:8px;font-weight:normal;margin-bottom:8px;">
+                        <input type="checkbox" id="man-equipo-red" onchange="manToggleCantidad('red')" style="margin-top:3px;">
+                        <span>Red/Internet (ya hay infraestructura instalada)</span>
+                    </label>
+                    <label style="display:flex;align-items:flex-start;gap:8px;font-weight:normal;margin-bottom:8px;">
+                        <input type="checkbox" id="man-equipo-otro" onchange="manToggleCantidad('otro')" style="margin-top:3px;">
+                        <span>Otro</span>
+                    </label>
+                    <div class="soporte-field-error" id="man-equipo-tipo-error">Selecciona al menos un tipo de equipo.</div>
+
+                    <div class="soporte-form-group" id="man-marca-modelo-group" style="display:none;">
+                        <label for="man-marca-modelo">Marca y modelo (opcional, si lo sabes)</label>
+                        <input type="text" id="man-marca-modelo" placeholder="Ej. HP ProDesk, Dell OptiPlex...">
+                    </div>
+                    <div class="soporte-form-group" id="man-estado-equipo-group" style="display:none;">
+                        <label for="man-estado-equipo">Estado actual<span class="req">*</span></label>
+                        <select id="man-estado-equipo">
+                            <option value="">— Selecciona una opción —</option>
+                            <option>Instaladas y en uso (con falla)</option>
+                            <option>Guardadas / sin instalar</option>
+                            <option>Abandonadas / posible baja</option>
+                        </select>
+                        <div class="soporte-field-error" id="man-estado-equipo-error">Selecciona el estado actual de los equipos.</div>
+                    </div>
+
+                    <label for="man-equipos" style="margin-top:12px;display:block;">Describe la falla<span class="req">*</span></label>
+                    <textarea id="man-equipos" placeholder="Ej. No encienden; 2 con Windows dañado; pantalla azul al iniciar."></textarea>
+                    <div class="soporte-field-error" id="man-equipos-error">Describe brevemente la falla.</div>
+                </div>
+                <div class="soporte-form-group">
+                    <label for="man-oficio">Oficio de solicitud (solo PDF)<span class="req">*</span></label>
+                    <input type="file" id="man-oficio" accept="application/pdf" required>
+                    <div class="soporte-field-hint">Máximo 5MB, formato PDF. Debe estar firmado por quien autoriza la solicitud. Aun así, debes entregar el oficio original en físico en las oficinas de OTDE — este adjunto es un complemento digital, no lo sustituye.</div>
+                    <div class="soporte-field-error" id="man-oficio-error">Adjunta el oficio firmado en formato PDF.</div>
+                </div>
+
+                <button type="submit" class="form-button" id="btn-mantenimiento-submit">
+                    <span>Enviar Solicitud</span>
+                </button>
+
+                <div id="mantenimiento-msg" class="soporte-submit-msg"></div>
+            </form>
+        </div>
+    </div>
+
+</section>
+
+<footer>
+        <div class="footer-grid">
+            <div class="footer-col">
+                <p class="footer-brand"><svg class="logo-icon" width="30" height="30" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="12" fill="#F9F8F5"/><text x="32" y="27" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#56212f" letter-spacing="-1">NE</text><text x="32" y="53" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#56212f" letter-spacing="-1">ZA</text></svg>SEPRN</p>
+                <p class="footer-desc">Subdirección de Educación Primaria<br>en la Región de Nezahualcóyotl</p>
+                <p class="footer-meta">Av. Texcoco #116, Col. Juárez Pantitlán<br>Nezahualcóyotl, Estado de México, C.P. 57460</p>
+                <p class="footer-meta">Lunes a Viernes · 08:30 – 15:30 h</p>
+            </div>
+            <div class="footer-col">
+                <p class="footer-col-title">Sitio</p>
+                <ul class="footer-links">
+                    <li><a href="index.html">Inicio</a></li>
+                    <li><a href="nosotros.html">Nosotros</a></li>
+                    <li><a href="areas.html">Áreas</a></li>
+                    <li><a href="cte.html">CTE</a></li>
+                    <li><a href="contacto.html">Contacto</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <p class="footer-col-title">Áreas</p>
+                <ul class="footer-links">
+                    <li><a href="academica.html">Subjefatura Académica</a></li>
+                    <li><a href="personal.html">Subjefatura de Personal</a></li>
+                    <li><a href="planeacion.html">Subjefatura de Planeación</a></li>
+                    <li><a href="recursos.html">Subjefatura de Recursos</a></li>
+                    <li><a href="otde.html">OTDE</a></li>
+                    <li><a href="oeve.html">OEVE</a></li>
+                    <li><a href="juridico.html">Asuntos Jurídicos</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="social-links">
+                <a href="https://www.facebook.com/SubNeza" target="_blank" rel="noopener noreferrer" title="Facebook">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                </a>
+                <a href="https://www.youtube.com/channel/UCvDb2DPSJxFyhH3bCPd5D2Q" target="_blank" rel="noopener noreferrer" title="YouTube">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                </a>
+            </div>
+            <div class="copyright">
+                © 2026 SEPRN · Subdirección de Educación Primaria en la Región de Nezahualcóyotl<br>
+                Órgano desconcentrado de SEIEM · Gobierno del Estado de México
+            </div>
+        </div>
+    </footer>
+
+<script src="js/cct-db.js"></script>
+<script src="js/tramites-shared.js"></script>
+<script>
+    // ── Mantenimiento: solicitud ──
+    // Página propia, migrada desde la tab "Mantenimiento" de otde.html el 27 ago 2026
+    // (ver docs/ROADMAP.md ítem 7). toTitleCase, fetchJsonConTimeout, otdePoblarFuncion,
+    // leerArchivoBase64 y TAMANO_MAX_ARCHIVO_BYTES vienen de js/tramites-shared.js.
+    const MANTENIMIENTO_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxxhyMUI8VuuxC29fWgkMWULwLdB7OhNJ-XawgtdseZY5hgV9P6I9uHFfiCMbAJzZb1/exec';
+
+    function toggleMantenimientoForm(btn) {
+        var container = document.getElementById('form-mantenimiento');
+        var text = document.getElementById('btn-mantenimiento-text');
+        var arrow = document.getElementById('btn-mantenimiento-arrow');
+        if (container.classList.contains('active')) {
+            container.classList.remove('active');
+            text.textContent = 'Solicitar Mantenimiento';
+            arrow.textContent = '▼';
+            btn.setAttribute('aria-expanded', 'false');
+        } else {
+            container.classList.add('active');
+            text.textContent = 'Ocultar Formulario';
+            arrow.textContent = '▲';
+            btn.setAttribute('aria-expanded', 'true');
+            setTimeout(function() {
+                container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 400);
+        }
+    }
+
+    document.getElementById('man-nombre').addEventListener('blur', function() {
+        if (this.value.trim()) this.value = toTitleCase(this.value);
+    });
+    document.getElementById('man-escuela-manual').addEventListener('blur', function() {
+        if (this.value.trim()) this.value = toTitleCase(this.value);
+    });
+
+    function manToggleOtraFuncion() {
+        var val = document.getElementById('man-funcion').value;
+        var grp = document.getElementById('man-otra-funcion-group');
+        grp.style.display = val === 'Otro' ? 'block' : 'none';
+        if (val !== 'Otro') {
+            var inp = document.getElementById('man-otra-funcion');
+            inp.value = '';
+            inp.classList.remove('error');
+            document.getElementById('man-otra-funcion-error').classList.remove('visible');
+        }
+    }
+
+    // ── CCT autocomplete (Mantenimiento) — mismo patrón que Soporte ──
+    var manCctEncontrada = false;
+    var manSectorZonas = {};
+    if (typeof CCT_DB !== 'undefined') {
+        CCT_DB.forEach(function(e) {
+            if (!e.zona || e.tipo !== 'escuela') return;
+            if (!manSectorZonas[e.sector]) manSectorZonas[e.sector] = [];
+            if (manSectorZonas[e.sector].indexOf(e.zona) === -1) manSectorZonas[e.sector].push(e.zona);
+        });
+        Object.keys(manSectorZonas).forEach(function(s) {
+            manSectorZonas[s].sort(function(a, b) { return a - b; });
+        });
+    }
+
+    var manInputCct, manSuggestions, manStatusBox, manActiveSugg = -1;
+
+    function manInitCctAutocomplete() {
+        manInputCct = document.getElementById('man-cct');
+        manSuggestions = document.getElementById('man-cct-suggestions');
+        manStatusBox = document.getElementById('man-cct-status');
+        if (!manInputCct || typeof CCT_DB === 'undefined') return;
+
+        manInputCct.addEventListener('input', function() {
+            var q = manInputCct.value.trim().toUpperCase();
+            manResetCct();
+            if (q.length < 3) { manSuggestions.style.display = 'none'; return; }
+
+            var matches = CCT_DB.filter(function(e) {
+                return e.cct.includes(q) || e.nombre.toUpperCase().includes(q);
+            }).slice(0, 10);
+
+            if (!matches.length) { manSuggestions.style.display = 'none'; return; }
+
+            manSuggestions.innerHTML = '';
+            matches.forEach(function(m) {
+                var li = document.createElement('li');
+                li.innerHTML = '<span class="sg-code">' + m.cct + '</span> <span class="sg-name">' + m.nombre + ' — Sector ' + m.sector + (m.zona ? ', Zona ' + m.zona : '') + '</span>';
+                li.addEventListener('mousedown', function() { manSeleccionarCct(m); });
+                manSuggestions.appendChild(li);
+            });
+            manSuggestions.style.display = 'block';
+            manActiveSugg = -1;
+        });
+
+        manInputCct.addEventListener('keydown', function(e) {
+            var items = manSuggestions.querySelectorAll('li');
+            if (!items.length) return;
+            if (e.key === 'ArrowDown') { manActiveSugg = Math.min(manActiveSugg + 1, items.length - 1); manHighlightSugg(items); e.preventDefault(); }
+            if (e.key === 'ArrowUp')   { manActiveSugg = Math.max(manActiveSugg - 1, 0);                manHighlightSugg(items); e.preventDefault(); }
+            if (e.key === 'Enter' && manActiveSugg >= 0) {
+                var q = manInputCct.value.trim().toUpperCase();
+                var m = CCT_DB.filter(function(e) { return e.cct.includes(q) || e.nombre.toUpperCase().includes(q); })[manActiveSugg];
+                if (m) { manSeleccionarCct(m); e.preventDefault(); }
+            }
+            if (e.key === 'Escape') { manSuggestions.style.display = 'none'; }
+        });
+
+        manInputCct.addEventListener('blur', function() {
+            setTimeout(function() { manSuggestions.style.display = 'none'; }, 150);
+        });
+
+        manInputCct.addEventListener('change', function() {
+            if (!manCctEncontrada && manInputCct.value.trim().length >= 8) {
+                manStatusBox.className = 'sop-cct-status warn';
+                manStatusBox.textContent = 'CCT no encontrada en nuestra base. Puedes capturar los datos manualmente.';
+                document.getElementById('man-manual-fields').classList.add('visible');
+                manInputCct.classList.remove('error');
+                document.getElementById('man-cct-error').classList.remove('visible');
+            }
+        });
+    }
+
+    function manHighlightSugg(items) {
+        items.forEach(function(li, i) { li.classList.toggle('active', i === manActiveSugg); });
+    }
+
+    function manSeleccionarCct(m) {
+        manInputCct.value = m.cct;
+        manSuggestions.style.display = 'none';
+        document.getElementById('man-sector-val').value  = m.sector;
+        document.getElementById('man-zona-val').value    = m.zona || '';
+        document.getElementById('man-escuela-val').value = m.nombre || '';
+        document.getElementById('man-tipo-cct-val').value = m.tipo || '';
+        manStatusBox.className = 'sop-cct-status found';
+        manStatusBox.textContent = 'Sector ' + m.sector + (m.zona ? ' · Zona ' + m.zona : '') + ' · ' + m.nombre;
+        document.getElementById('man-manual-fields').classList.remove('visible');
+        manCctEncontrada = true;
+        otdePoblarFuncion('man-funcion', m.tipo);
+    }
+
+    function manResetCct() {
+        document.getElementById('man-sector-val').value  = '';
+        document.getElementById('man-zona-val').value    = '';
+        document.getElementById('man-escuela-val').value = '';
+        document.getElementById('man-tipo-cct-val').value = '';
+        manStatusBox.className = 'sop-cct-status';
+        manCctEncontrada = false;
+        otdePoblarFuncion('man-funcion', null);
+    }
+
+    function manActualizarTipoCct() {
+        var tipo = document.getElementById('man-tipo-cct-manual').value;
+        var sectorGroup = document.getElementById('man-sector-group');
+        sectorGroup.style.display = (tipo === 'escuela' || tipo === 'supervision' || tipo === 'jefatura') ? 'block' : 'none';
+        if (tipo !== 'escuela' && tipo !== 'supervision') {
+            document.getElementById('man-zona-group').style.display = 'none';
+        } else {
+            manActualizarZonas();
+        }
+        document.getElementById('man-tipo-cct-val').value = tipo;
+        otdePoblarFuncion('man-funcion', tipo);
+    }
+
+    function manActualizarZonas() {
+        var tipo = document.getElementById('man-tipo-cct-manual').value;
+        var sector = document.getElementById('man-sector-manual').value;
+        var zonaGroup  = document.getElementById('man-zona-group');
+        var zonaSelect = document.getElementById('man-zona-manual');
+        zonaSelect.innerHTML = '<option value="">— Selecciona zona —</option>';
+
+        if (!sector || (tipo !== 'escuela' && tipo !== 'supervision')) {
+            zonaGroup.style.display = 'none';
+            return;
+        }
+        var zonas = manSectorZonas[sector] || [];
+        zonas.forEach(function(z) {
+            var o = document.createElement('option');
+            o.value = z; o.textContent = 'Zona ' + z;
+            zonaSelect.appendChild(o);
+        });
+        zonaGroup.style.display = 'block';
+    }
+
+    manInitCctAutocomplete();
+    otdePoblarFuncion('man-funcion', null);
+
+    // Muestra/oculta el desplegable de cantidad según qué checkbox de tipo de equipo
+    // se marcó, y el bloque de marca/modelo + estado si hay al menos una computadora marcada.
+    function manToggleCantidad(cual) {
+        if (cual === 'aula' || cual === 'admin') {
+            var marcada = document.getElementById('man-equipo-' + cual).checked;
+            document.getElementById('man-cantidad-' + cual + '-group').style.display = marcada ? 'block' : 'none';
+            if (!marcada) document.getElementById('man-cantidad-' + cual).value = '';
+        }
+        var hayComputadora = document.getElementById('man-equipo-aula').checked || document.getElementById('man-equipo-admin').checked;
+        document.getElementById('man-marca-modelo-group').style.display = hayComputadora ? 'block' : 'none';
+        document.getElementById('man-estado-equipo-group').style.display = hayComputadora ? 'block' : 'none';
+        var algunoMarcado = hayComputadora || document.getElementById('man-equipo-red').checked || document.getElementById('man-equipo-otro').checked;
+        if (algunoMarcado) document.getElementById('man-equipo-tipo-error').classList.remove('visible');
+    }
+
+    function validarMantenimientoForm() {
+        var ok = true;
+        var campos = [
+            { id: 'man-nombre',  err: 'man-nombre-error',  test: function(v) { return v.trim().length >= 3; } },
+            { id: 'man-whatsapp', err: 'man-whatsapp-error', test: function(v) { return /^\d{10}$/.test(v.trim()); } },
+            { id: 'man-turno',   err: 'man-turno-error',   test: function(v) { return v !== ''; } },
+            { id: 'man-equipos', err: 'man-equipos-error', test: function(v) { return v.trim().length >= 5; } }
+        ];
+
+        campos.forEach(function(c) {
+            var input = document.getElementById(c.id);
+            var errEl = document.getElementById(c.err);
+            if (!c.test(input.value)) {
+                input.classList.add('error');
+                errEl.classList.add('visible');
+                ok = false;
+            } else {
+                input.classList.remove('error');
+                errEl.classList.remove('visible');
+            }
+        });
+
+        var funcionInput = document.getElementById('man-funcion');
+        var funcionErr = document.getElementById('man-funcion-error');
+        if (funcionInput.value === '') {
+            funcionInput.classList.add('error');
+            funcionErr.classList.add('visible');
+            ok = false;
+        } else {
+            funcionInput.classList.remove('error');
+            funcionErr.classList.remove('visible');
+        }
+        if (funcionInput.value === 'Otro') {
+            var otraInp = document.getElementById('man-otra-funcion');
+            var otraErr = document.getElementById('man-otra-funcion-error');
+            if (!otraInp.value.trim()) {
+                otraInp.classList.add('error');
+                otraErr.classList.add('visible');
+                ok = false;
+            } else {
+                otraInp.classList.remove('error');
+                otraErr.classList.remove('visible');
+            }
+        }
+
+        var cctInput = document.getElementById('man-cct');
+        var cctErr = document.getElementById('man-cct-error');
+        var manualVisible = document.getElementById('man-manual-fields').classList.contains('visible');
+        var cctTextOk = cctInput.value.trim().length >= 3;
+
+        if (manCctEncontrada || (manualVisible && cctTextOk)) {
+            cctInput.classList.remove('error');
+            cctErr.classList.remove('visible');
+        } else {
+            cctInput.classList.add('error');
+            cctErr.classList.add('visible');
+            ok = false;
+        }
+
+        if (manualVisible) {
+            var tipoCctInput = document.getElementById('man-tipo-cct-manual');
+            var tipoCctErr = document.getElementById('man-tipo-cct-manual-error');
+            var tipoCct = tipoCctInput.value;
+            if (!tipoCct) {
+                tipoCctInput.classList.add('error');
+                tipoCctErr.classList.add('visible');
+                ok = false;
+            } else {
+                tipoCctInput.classList.remove('error');
+                tipoCctErr.classList.remove('visible');
+            }
+
+            var sectorInput = document.getElementById('man-sector-manual');
+            var zonaInput = document.getElementById('man-zona-manual');
+            var escuelaInput = document.getElementById('man-escuela-manual');
+            var sectorErr = document.getElementById('man-sector-manual-error');
+            var zonaErr = document.getElementById('man-zona-manual-error');
+            var escuelaErr = document.getElementById('man-escuela-manual-error');
+            var sector = sectorInput.value;
+            var zona = zonaInput.value;
+            var escuela = escuelaInput.value.trim();
+            var sectorReq = tipoCct === 'escuela' || tipoCct === 'supervision' || tipoCct === 'jefatura';
+            var zonaReq = tipoCct === 'escuela' || tipoCct === 'supervision';
+
+            if (sectorReq && !sector) {
+                sectorInput.classList.add('error');
+                sectorErr.classList.add('visible');
+                ok = false;
+            } else {
+                sectorInput.classList.remove('error');
+                sectorErr.classList.remove('visible');
+            }
+
+            if (zonaReq && !zona) {
+                zonaInput.classList.add('error');
+                zonaErr.classList.add('visible');
+                ok = false;
+            } else {
+                zonaInput.classList.remove('error');
+                zonaErr.classList.remove('visible');
+            }
+
+            if (!escuela) {
+                escuelaInput.classList.add('error');
+                escuelaErr.classList.add('visible');
+                ok = false;
+            } else {
+                escuelaInput.classList.remove('error');
+                escuelaErr.classList.remove('visible');
+            }
+        } else if (!manCctEncontrada && cctTextOk) {
+            document.getElementById('man-manual-fields').classList.add('visible');
+            document.getElementById('man-cct-status').className = 'sop-cct-status warn';
+            document.getElementById('man-cct-status').textContent = 'Selecciona tu escuela de la lista o captura los datos manualmente.';
+            ok = false;
+        }
+
+        var correoInput = document.getElementById('man-correo');
+        var correoErr = document.getElementById('man-correo-error');
+        var correoVal = correoInput.value.trim();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoVal)) {
+            correoInput.classList.add('error');
+            correoErr.classList.add('visible');
+            ok = false;
+        } else {
+            correoInput.classList.remove('error');
+            correoErr.classList.remove('visible');
+        }
+
+        // Equipos con falla: al menos un tipo marcado; aula/admin marcados piden cantidad;
+        // cualquier computadora marcada pide estado actual.
+        var equipoAula = document.getElementById('man-equipo-aula').checked;
+        var equipoAdmin = document.getElementById('man-equipo-admin').checked;
+        var equipoRed = document.getElementById('man-equipo-red').checked;
+        var equipoOtro = document.getElementById('man-equipo-otro').checked;
+        var equipoTipoErr = document.getElementById('man-equipo-tipo-error');
+        if (!equipoAula && !equipoAdmin && !equipoRed && !equipoOtro) {
+            equipoTipoErr.classList.add('visible');
+            ok = false;
+        } else {
+            equipoTipoErr.classList.remove('visible');
+        }
+
+        [['aula', equipoAula], ['admin', equipoAdmin]].forEach(function(par) {
+            var cantidadInput = document.getElementById('man-cantidad-' + par[0]);
+            var cantidadErr = document.getElementById('man-cantidad-' + par[0] + '-error');
+            if (par[1] && !cantidadInput.value) {
+                cantidadInput.classList.add('error');
+                cantidadErr.classList.add('visible');
+                ok = false;
+            } else {
+                cantidadInput.classList.remove('error');
+                cantidadErr.classList.remove('visible');
+            }
+        });
+
+        var estadoInput = document.getElementById('man-estado-equipo');
+        var estadoErr = document.getElementById('man-estado-equipo-error');
+        if ((equipoAula || equipoAdmin) && !estadoInput.value) {
+            estadoInput.classList.add('error');
+            estadoErr.classList.add('visible');
+            ok = false;
+        } else {
+            estadoInput.classList.remove('error');
+            estadoErr.classList.remove('visible');
+        }
+
+        var oficioInput = document.getElementById('man-oficio');
+        var oficioErr = document.getElementById('man-oficio-error');
+        var oficioFile = oficioInput.files[0];
+        if (!oficioFile) {
+            oficioInput.classList.add('error');
+            oficioErr.classList.add('visible');
+            oficioErr.textContent = 'Adjunta el oficio firmado en formato PDF.';
+            ok = false;
+        } else if (oficioFile.type !== 'application/pdf') {
+            oficioInput.classList.add('error');
+            oficioErr.classList.add('visible');
+            oficioErr.textContent = 'Solo se aceptan archivos en formato PDF.';
+            ok = false;
+        } else if (oficioFile.size > TAMANO_MAX_ARCHIVO_BYTES) {
+            oficioInput.classList.add('error');
+            oficioErr.classList.add('visible');
+            oficioErr.textContent = 'El archivo pesa más de 5MB. Comprímelo e intenta de nuevo.';
+            ok = false;
+        } else {
+            oficioInput.classList.remove('error');
+            oficioErr.classList.remove('visible');
+        }
+
+        return ok;
+    }
+
+    async function enviarSolicitudMantenimiento(evt) {
+        evt.preventDefault();
+        var msg = document.getElementById('mantenimiento-msg');
+        var btnSubmit = document.getElementById('btn-mantenimiento-submit');
+        msg.className = 'soporte-submit-msg';
+        msg.textContent = '';
+
+        if (!validarMantenimientoForm()) {
+            return false;
+        }
+
+        var manualVisible = document.getElementById('man-manual-fields').classList.contains('visible');
+        var funcionVal = document.getElementById('man-funcion').value === 'Otro'
+            ? document.getElementById('man-otra-funcion').value.trim()
+            : document.getElementById('man-funcion').value;
+        var oficioFile = document.getElementById('man-oficio').files[0];
+
+        btnSubmit.disabled = true;
+        btnSubmit.style.opacity = '0.6';
+
+        try {
+            var oficioBase64 = await leerArchivoBase64(oficioFile);
+
+            var tipoEquipo = [];
+            if (document.getElementById('man-equipo-aula').checked) tipoEquipo.push('Aula de medios');
+            if (document.getElementById('man-equipo-admin').checked) tipoEquipo.push('Administrativa');
+            if (document.getElementById('man-equipo-red').checked) tipoEquipo.push('Red/Internet');
+            if (document.getElementById('man-equipo-otro').checked) tipoEquipo.push('Otro');
+
+            var datos = {
+                nombre: toTitleCase(document.getElementById('man-nombre').value.trim()),
+                cct: document.getElementById('man-cct').value,
+                sector: manualVisible ? document.getElementById('man-sector-manual').value : document.getElementById('man-sector-val').value,
+                zona: manualVisible ? document.getElementById('man-zona-manual').value : document.getElementById('man-zona-val').value,
+                escuela: manualVisible ? toTitleCase(document.getElementById('man-escuela-manual').value.trim()) : document.getElementById('man-escuela-val').value,
+                tipoCct: document.getElementById('man-tipo-cct-val').value,
+                turno: document.getElementById('man-turno').value,
+                funcion: funcionVal,
+                whatsapp: document.getElementById('man-whatsapp').value,
+                correo: document.getElementById('man-correo').value,
+                equipos: document.getElementById('man-equipos').value,
+                tipoEquipo: tipoEquipo.join(', '),
+                cantidadAula: document.getElementById('man-cantidad-aula').value,
+                cantidadAdmin: document.getElementById('man-cantidad-admin').value,
+                marcaModelo: document.getElementById('man-marca-modelo').value.trim(),
+                estadoEquipo: document.getElementById('man-estado-equipo').value,
+                oficioBase64: oficioBase64,
+                oficioNombre: oficioFile.name,
+                oficioTipo: oficioFile.type
+            };
+
+            const data = await fetchJsonConTimeout(MANTENIMIENTO_APPS_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify(datos)
+            });
+
+            if (data.status === 'ok') {
+                msg.classList.add('ok');
+                msg.textContent = 'Solicitud registrada (folio ' + data.folio + '). Un integrante de la OTDE te contactará en breve.';
+                document.getElementById('mantenimiento-form').reset();
+                document.getElementById('man-manual-fields').classList.remove('visible');
+                document.getElementById('man-sector-group').style.display = 'none';
+                document.getElementById('man-zona-group').style.display = 'none';
+                document.getElementById('man-otra-funcion-group').style.display = 'none';
+                manToggleCantidad('aula');
+                manToggleCantidad('admin');
+                document.querySelectorAll('#mantenimiento-form .error').forEach(function(el) { el.classList.remove('error'); });
+                document.querySelectorAll('#mantenimiento-form .soporte-field-error.visible').forEach(function(el) { el.classList.remove('visible'); });
+                manResetCct();
+            } else {
+                msg.classList.add('error');
+                msg.textContent = 'No se pudo registrar la solicitud: ' + data.mensaje;
+            }
+        } catch (err) {
+            msg.classList.add('error');
+            msg.textContent = err.name === 'AbortError'
+                ? 'El servidor tardó demasiado en responder. Tu solicitud pudo haberse guardado igual; si no recibes contacto de la OTDE, intenta de nuevo.'
+                : 'No se pudo enviar la solicitud. Verifica tu conexión e intenta de nuevo.';
+        } finally {
+            btnSubmit.disabled = false;
+            btnSubmit.style.opacity = '1';
+        }
+
+        return false;
+    }
+</script>
+    <script src="script.js" defer></script>
+</body>
+</html>
