@@ -332,6 +332,32 @@ hasta que causó un error real.
 `asesorias.gs`, `soporte-remoto.gs`, `formacion-docente.gs`, `Correos-institucionales/
 webform-2026-2027/`) — todas requieren este envoltorio temporal para correrse desde el editor.
 
+## 15. Selector CSS por ID (`#sop-cct-suggestions`) que solo estilaba un formulario de los 7 que comparten el patrón
+
+**Síntoma:** la lista de sugerencias del autocomplete de CCT se mostraba como una lista sin
+estilo, insertada en el flujo normal de la página (sin fondo, sin posición flotante, sin
+scroll ni hover) — en vez del dropdown flotante esperado.
+
+**Causa raíz:** el CSS del dropdown de sugerencias (`otde.html`, antes de ago 2026) usaba el
+selector por ID `#sop-cct-suggestions` — que por definición solo coincide con **un** elemento,
+el `<ul>` de Soporte. Mantenimiento (`#man-cct-suggestions`), Asesorías (`#ase-cct-suggestions`)
+y los 4 sub-formularios de Correo (`#alt/cam/rst/inc-cct-suggestions`) usan el mismo patrón de
+autocomplete (mismo `.sop-cct-wrapper`, mismo JS) pero con su propio ID prefijado, así que nunca
+coincidían con esa regla — bug presente desde que se copió el patrón de Soporte a las demás
+tabs, nunca detectado porque visualmente "funciona" (la lista aparece, solo fea).
+
+**Cómo se encontró:** al mover este CSS de `otde.html` a `styles.css` (27 ago 2026, migración
+de Asesorías a página propia), se revisó cada selector para no arrastrar acoplamiento oculto.
+
+**Fix:** generalizar el selector a un atributo que combina con cualquier ID que termine en ese
+sufijo, sin tocar ningún HTML: `ul[id$="-cct-suggestions"]` (ver `styles.css`). Cubre los 7
+formularios con un solo bloque de reglas.
+
+**Dónde puede volver a pasar:** cualquier CSS nuevo escrito contra un ID específico
+(`#prefijo-algo`) cuando en realidad el patrón se repite en varios formularios con distinto
+prefijo — preferir un selector de clase o de atributo (`[id$="-sufijo"]`) desde el principio si
+el mismo bloque de HTML/JS ya se copia a más de una tab/página.
+
 ## Regla general al corregir cualquiera de estos patrones
 
 Cuando se encuentra uno de estos bugs en un archivo, **revisar si el mismo
