@@ -14,6 +14,20 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-08-27 (cont. 2) · Incidente: deploy de Correo falló por timeout — diagnosticado y reintentado sin tocar otde.html
+
+| | |
+|---|---|
+| **Fecha** | 2026-08-27 |
+| **Sesión** | Jorge reenvió el correo de notificación de GitHub Actions avisando que el job `deploy` de `pages build and deployment` había fallado ("Failed in 10 minutes and 6 seconds"). Sesión de diagnóstico y reintento del deploy, sin cambios de código ni de contenido. |
+| **Diagnóstico** | Investigado directo en GitHub Actions (repo `educaneza/seprn-sitio`, vía navegador, sin `gh` CLI instalado en la máquina): run #119 (commit `dd5b14d`, la publicación de Correo del checkpoint anterior) — `build` exitoso (55s), pero `deploy` falló con "Timeout reached, aborting!" tras 10m 6s subiendo el artifact de Pages (335 MB). No fue un error de código ni de contenido — el run inmediato anterior (#118, mismo tamaño de artifact, 335 MB) había desplegado sin problema en solo 14s, así que fue lentitud puntual de infraestructura, no un límite duro. Confirmado en vivo que `correo.html` daba 404 en producción — la migración de Correo nunca había llegado a publicarse de verdad pese al push exitoso a `origin/main`. |
+| **Riesgo real descubierto, no resuelto esta sesión** | El artifact de Pages ya pesa 335 MB (el repo trackea 354 MB en total, con varios zips/pptx de sesiones CTE entre 12 y 69 MB en `pdfs/cte/`) — lo bastante grande como para que un timeout de infraestructura como este se vuelva más probable de lo que sería con un sitio ligero. Jorge decidió no atacarlo esta sesión. Anotado como ítem 10 en `docs/ROADMAP.md`. |
+| **Cuidado real al reintentar: el patrón de publicación aislada casi se rompe** | El plan inicial de reintento (`git commit --allow-empty` en `main` local + `git push origin main`) se descartó **antes de ejecutarlo** al descubrir que `main` local y `origin/main` están divergidos a propósito (ver checkpoint siguiente, "Publicación a producción") — ese push habría empujado los 46 commits locales no publicados, incluido `otde.html` (deliberadamente excluido de producción), directo a `origin/main`. En su lugar: rama temporal `retry-deploy-correo` creada desde `origin/main` (no desde `main` local), un commit vacío ahí, pusheada como `retry-deploy-correo:main` — mismo mecanismo de `publish-*` ya usado en este repo, sin arrastrar nada de `main` local. Rama temporal borrada después del push. |
+| **Verificación** | Run #120 se disparó solo tras el push, completó en 1m 10s (`deploy` sin timeout, éxito). `https://educaneza.github.io/seprn-sitio/correo.html` confirmado en vivo cargando el formulario de Correo Institucional completo (ya no 404). |
+| **Commits** | `b648171` (commit vacío, pusheado directo a `origin/main` vía la rama temporal `retry-deploy-correo`, ya borrada — no existe en `main` local). `main` local no se tocó: sigue divergido de `origin/main` (46 commits locales sin publicar vs. 12 en `origin/main`, incluido este commit de reintento). |
+
+---
+
 ## CHECKPOINT — 2026-08-27 (cont.) · Mantenimiento, Soporte y Correo migrados — docs/ROADMAP.md ítem 7 resuelto por completo
 
 | | |

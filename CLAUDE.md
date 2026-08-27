@@ -6,7 +6,13 @@ Sitio web institucional de la **Subdirección de Educación Primaria en la Regi�
 - **URL producción:** `https://educaneza.github.io/seprn-sitio/`
 - **Repo:** `educaneza/seprn-sitio` (rama `main`)
 - **Stack:** HTML5 + CSS3 + Vanilla JS. Sin npm, sin frameworks, sin build step.
-- **Deploy:** push a `main` → GitHub Pages. Caché CDN: 5-10 min.
+- **Deploy:** push a `main` → GitHub Pages. Caché CDN: 5-10 min. **Ojo (ago 2026):** `main`
+  local y `origin/main` suelen estar divergidos a propósito — `otde.html` en producción se
+  mantiene congelado mientras el resto del trabajo de OTDE no está listo para publicarse. Nunca
+  asumir `git push origin main` desde `main` local sin antes correr `git log --oneline -3
+  origin/main` y comparar — el mecanismo real es una rama `publish-*` (o un commit suelto)
+  creada desde `origin/main`, nunca desde `main` local. Detalle del patrón y ejemplos reales en
+  `docs/BITACORA.md` (buscar "publish-" o "Publicación a producción").
 
 ## Propietario
 **Mtro. Jorge Alberto Bonilla Torres** — Jefe de OTDE (Oficina de Tecnología para el Desarrollo Educativo). El contenido se valida con la Dra. Avelina Galindo Celix (Encargada del Despacho).
