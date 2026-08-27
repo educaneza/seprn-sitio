@@ -67,7 +67,8 @@ seprn-sitio/
 ├── personal.html                 # Área: Administración de Personal
 ├── academica.html                # Área: Académica
 ├── recursos.html                 # Área: Recursos Materiales y Financieros
-├── otde.html                     # Área: OTDE — Correo, Mantenimiento, Asesorías, Soporte Remoto, Licencias Office, Chuka, Recursos
+├── otde.html                     # Área: OTDE — Correo, Mantenimiento, Soporte Remoto, Licencias Office, Chuka, Recursos
+├── asesorias.html                # Trámite: Asesorías en TICCAD — página propia desde ago 2026 (salió de otde.html), se llega vía oficina-virtual.html
 ├── oeve.html                     # Área: OEVE (Extensión y Vinculación Educativa)
 ├── juridico.html                 # Área: Asuntos Jurídicos
 │
@@ -81,7 +82,8 @@ seprn-sitio/
 ├── 404.html                      # Página de error personalizada
 │
 ├── js/
-│   └── cct-db.js                 # Base de datos CCT (506 registros, incluye municipio), usada por otde.html y formacion-docente.html
+│   ├── cct-db.js                 # Base de datos CCT (506 registros, incluye municipio), usada por otde.html y formacion-docente.html
+│   └── tramites-shared.js        # Helpers compartidos entre otde.html y las páginas propias de trámite (ago 2026)
 │
 ├── apps-script/
 │   ├── conferencia-ia.gs         # Backend Conferencia IA 2026 (Sheets + correo QR)

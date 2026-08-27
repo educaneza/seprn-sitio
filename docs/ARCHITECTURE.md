@@ -1464,3 +1464,69 @@ manual y el disparador automático compartan un solo cálculo, sin duplicar la l
 externos (Reportes de Visitas v8.5 / Excel "SGA-OTDE Track 1", ver §19.1-19.2) sigue siendo
 manual — es la pieza de dispersión más grande que queda, marcada para una sesión futura que
 revise primero el sistema v8.5 con cuidado antes de proponer cualquier integración directa.
+
+## 21. Migración de trámites de tabs en `otde.html` a páginas propias (agosto 2026)
+
+`docs/ROADMAP.md` ítem 7 (decidido 10 ago 2026) definió que los 4 trámites con formulario propio
+de `otde.html` (Correo, Mantenimiento, Asesorías, Soporte) debían salir a páginas independientes,
+mismo precedente que `formacion-docente.html`/`asistencia.html`, para no seguir creciendo un
+archivo que ya llegaba a 4,186 líneas. El 27 ago 2026 se migró **Asesorías** — la primera de las
+4, como piloto de bajo riesgo (sin los 4 sub-formularios anidados de Correo ni el checklist de
+equipos de Mantenimiento) que establece el patrón para las 3 migraciones restantes.
+
+**Decisión de diseño — header/nav/footer institucional, no minimalista**: a diferencia de
+`formacion-docente.html`/`asistencia.html` (standalone, sin nav ni footer del sitio, con su
+propio sistema visual), las páginas de trámite reusan `styles.css` y el header/nav/footer
+completo de una página de área normal (mismo patrón que `otde.html`/`academica.html`). Mismo
+razonamiento que ya usó `oficina-virtual.html` al desplegarse (§19, intro): son continuación de
+un trámite ya iniciado, no una pieza de marketing/conversión aislada.
+
+**Qué se compartió vs. qué se duplicó, y por qué.** Al leer el código real de Asesorías se
+encontró una dependencia cruzada no documentada: `enviarSolicitudAsesoria()` llamaba a
+`manLeerArchivoBase64()`/`MAN_TAMANO_MAX_BYTES`, ambos definidos dentro del bloque de
+Mantenimiento en `otde.html` (no duplicados en el bloque de Asesorías, como sí ocurre con el
+patrón de CCT autocomplete — ver §11). Migrar Asesorías sin resolver esto habría dejado el
+acoplamiento invisible: funcionaría mientras Mantenimiento siguiera en `otde.html`, pero se
+rompería en cuanto una sesión futura migrara Mantenimiento sin darse cuenta de que Asesorías
+dependía de su código. Se resolvió extrayendo los helpers genéricos —
+`toTitleCase()`, `fetchJsonConTimeout()`, `otdePoblarFuncion()`, y los dos renombrados
+`leerArchivoBase64()`/`TAMANO_MAX_ARCHIVO_BYTES` (antes `manLeerArchivoBase64`/
+`MAN_TAMANO_MAX_BYTES`, con nombre de Mantenimiento aunque ya no son solo suyos) — a un archivo
+nuevo, `js/tramites-shared.js`, mismo patrón sin build-step que `js/cct-db.js`. Se carga con
+`<script src="js/tramites-shared.js"></script>` en `otde.html` (después de `js/cct-db.js`, antes
+del `<script>` inline) y en cada página propia de trámite.
+
+El patrón de CCT autocomplete (§11) **no** se tocó ni se generalizó — sigue el mismo criterio ya
+documentado ahí (cada tab/página mantiene su propia copia de `xxxSeleccionarCct`/`xxxResetCct`/
+etc., prefijada); `crearCctAutocomplete()` (§16) sigue siendo la única excepción, porque los 4
+sub-formularios de Correo comparten un mismo archivo. Al migrar Correo a su propia página en una
+sesión futura, esa factorización seguirá teniendo sentido igual (los 4 sub-formularios seguirán
+en el mismo archivo nuevo).
+
+**CSS**: el CSS de estos formularios (`.servicio-header`, `.content-block`, `.form-button`,
+`.form-container`, `.soporte-form-group` y sus hijos, `.sop-cct-wrapper`, `.sop-cct-status`,
+`.sop-manual-fields`, `.soporte-submit-msg`) vivía solo en el `<style>` inline de `otde.html`,
+aunque Mantenimiento y Soporte ya lo reusaban tal cual (nombres `soporte-*`/`sop-*` heredados de
+cuando solo existía Soporte). Se movió a `styles.css` sin renombrar las clases — ese renombre es
+un problema aparte, no se resolvió en esta migración para no ampliar el alcance. Lo que sí se
+corrigió: el selector de la lista de sugerencias CCT era `#sop-cct-suggestions`, un ID que solo
+existe en el formulario de Soporte — Mantenimiento (`#man-cct-suggestions`), Asesorías
+(`#ase-cct-suggestions`) y los 4 de Correo (`#alt/cam/rst/inc-cct-suggestions`) nunca recibían
+ese estilo (posicionamiento absoluto, fondo, scroll, hover) y mostraban la lista de sugerencias
+como una lista sin estilo insertada en el flujo normal de la página — bug preexistente, no
+introducido por esta migración, encontrado al mover el CSS. Se generalizó a
+`ul[id$="-cct-suggestions"]`, que cubre cualquier ID con ese sufijo sin tocar ningún HTML.
+
+**`otde.html` después de la migración**: quedan 6 tabs (Correo, Mantenimiento, Soporte,
+Licencias Office, Chuka, Recursos — Asesorías salió), comentarios `<!-- SERVICIO N: ... -->`
+renumerados del 1 al 6. `otde.html` no necesitó ganar ningún link nuevo hacia `asesorias.html` —
+se llega igual que a Formación Docente, solo vía `oficina-virtual.html`.
+
+**`oficina-virtual.html`**: el único link que apuntaba a este trámite (`otde.html#asesorias`,
+"Solicitar →" de la card de Asesorías) se actualizó a `asesorias.html`. El link de "Consultar
+estatus →" no cambió — sigue siendo `#buscar-folio` contra el mismo `ASESORIAS_APPS_SCRIPT_URL`,
+sin tocar el backend.
+
+**Pendiente**: repetir este mismo patrón para Mantenimiento, Soporte y Correo (en ese orden de
+complejidad creciente, dejando Correo — 4 sub-formularios anidados — al final), en sesiones
+futuras. Ver `docs/ROADMAP.md` ítem 7.

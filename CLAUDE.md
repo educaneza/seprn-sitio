@@ -37,6 +37,13 @@ Clases reutilizables en `styles.css`:
 - `.footer-grid` / `.footer-col` / `.footer-col-title` / `.footer-links` / `.footer-bottom` — footer multi-columna (3 cols + barra inferior con redes y copyright)
 - `.logo-icon` — ícono NE/ZA (mismo símbolo que `favicon.svg`, en Montserrat) dentro de `.logo`
   (nav) y `.footer-brand` (footer, colorway invertido) — ver `docs/ARCHITECTURE.md §18`
+- `.servicio-header` / `.content-block` / `.form-button` / `.form-container` /
+  `.soporte-form-group` (y sus hijos `.soporte-field-hint`/`.soporte-field-error`) /
+  `.sop-cct-wrapper` / `.sop-cct-status` / `.sop-manual-fields` / `.soporte-submit-msg` —
+  sistema de formularios de trámite (extraído a `styles.css` el 27 ago 2026 al migrar Asesorías
+  a página propia; usado por `otde.html` y por cada página propia de trámite como
+  `asesorias.html`). Nombres heredados de Soporte (`soporte-*`/`sop-*`), no renombrados al
+  generalizarse — ver `otde.html` arriba y `docs/ARCHITECTURE.md`
 
 ### Eyebrows estándar en páginas de área
 Cuando se agrega o edita una sección en páginas de área, usar estos eyebrows:
@@ -116,6 +123,7 @@ ya esté expandido).
 | `planeacion.html` | Subjefatura de Planeación |
 | `recursos.html` | Subjefatura de Recursos |
 | `otde.html` | Oficina de Tecnología (OTDE) |
+| `asesorias.html` | Solicitud de Asesorías en TICCAD (Banco de Materiales/Chuka) — página propia, migrada desde la tab "Asesorías" de `otde.html` el 27 ago 2026 (ver `docs/ARCHITECTURE.md` y `apps-script/asesorias.gs` abajo). Header/nav/footer institucional completo (reusa `styles.css`), sin entrada en nav/footer del sitio — se llega vía `oficina-virtual.html` |
 | `oficina-virtual.html` | Oficina Virtual OTDE — hub de servicios digitales (Formación Docente, Mantenimiento, Asesorías, Correo, Soporte) + consulta de estatus de solicitudes por folio |
 | `oeve.html` | Oficina de Extensión y Vinculación |
 | `juridico.html` | Oficina Jurídica |
@@ -358,19 +366,33 @@ ya esté expandido).
 
 ## `otde.html` — Oficina de Tecnología (OTDE)
 
-7 tabs, en este orden (los comentarios `<!-- SERVICIO N: ... -->` en el HTML deben coincidir
-con esta numeración — si se agrega o reordena una tab, actualizarlos ahí también):
-**1** Correo Institucional · **2** Mantenimiento · **3** Asesorías · **4** Soporte Técnico ·
-**5** Licencias Office · **6** Chuka · **7** Recursos.
+**6 tabs** (eran 7 hasta el 27 ago 2026 — Asesorías salió a página propia,
+`asesorias.html`, ver abajo), en este orden (los comentarios `<!-- SERVICIO N: ... -->` en el
+HTML deben coincidir con esta numeración — si se agrega, quita o reordena una tab, actualizarlos
+ahí también): **1** Correo Institucional · **2** Mantenimiento · **3** Soporte Técnico ·
+**4** Licencias Office · **5** Chuka · **6** Recursos.
 
-Patrón compartido por las tabs con formulario propio (Correo/Mantenimiento/Asesorías/
-Soporte): validación 100% en JS con `novalidate` en el `<form>` (los `type="email"`/
-`required` nativos interceptan el `submit` antes de correr el JS si no se desactiva la
-validación del navegador), `fetchJsonConTimeout()` para evitar el freeze de `fetch()` sin
-timeout documentado en `docs/QA-NOTES.md #1`, CCT con autocomplete + fallback manual de
-Sector/Zona/Escuela (`js/cct-db.js`, detalle del patrón en `docs/ARCHITECTURE.md §11`; cada
-campo del fallback valida y muestra su propio error — no agrupar todo bajo el mensaje del CCT,
-anti-patrón ya corregido dos veces), y Nombre/Escuela manual homologados a Title Case.
+Patrón compartido por las tabs/páginas con formulario propio (Correo/Mantenimiento/Soporte,
+dentro de `otde.html`; Asesorías, ya en su propia página): validación 100% en JS con
+`novalidate` en el `<form>` (los `type="email"`/`required` nativos interceptan el `submit`
+antes de correr el JS si no se desactiva la validación del navegador), `fetchJsonConTimeout()`
+para evitar el freeze de `fetch()` sin timeout documentado en `docs/QA-NOTES.md #1`, CCT con
+autocomplete + fallback manual de Sector/Zona/Escuela (`js/cct-db.js`, detalle del patrón en
+`docs/ARCHITECTURE.md §11`; cada campo del fallback valida y muestra su propio error — no
+agrupar todo bajo el mensaje del CCT, anti-patrón ya corregido dos veces), y Nombre/Escuela
+manual homologados a Title Case. `toTitleCase()`, `fetchJsonConTimeout()`, `otdePoblarFuncion()`,
+`leerArchivoBase64()` y `TAMANO_MAX_ARCHIVO_BYTES` viven en `js/tramites-shared.js` (extraído de
+`otde.html` el 27 ago 2026 al migrar Asesorías — antes vivían inline y `otdePoblarFuncion`
+específicamente solo en `otde.html`, aunque ya las necesitaban las 4 tabs/páginas de trámite),
+cargado con `<script src="js/tramites-shared.js"></script>` en `otde.html` y en cada página
+propia de trámite, justo después de `js/cct-db.js`. El CSS de estos formularios
+(`.servicio-header`, `.content-block`, `.form-button`, `.form-container`,
+`.soporte-form-group` y sus hijos, `.sop-cct-wrapper`, `.sop-cct-status`, `.sop-manual-fields`,
+`.soporte-submit-msg`) vive en `styles.css` por el mismo motivo — antes solo en el `<style>`
+inline de `otde.html`. Los nombres de clase (`soporte-*`/`sop-*`) son heredados de cuando solo
+existía Soporte y no se renombraron al generalizarse — sí se corrigió el selector de sugerencias
+CCT, que antes era `#sop-cct-suggestions` (solo aplicaba a Soporte) y ahora es
+`ul[id$="-cct-suggestions"]` (aplica a cualquier tab/página con ese patrón de ID).
 
 ### Correo Institucional
 Reemplaza en código, tipo por tipo, al `<iframe>` del Google Form viejo — ver el modelo de
@@ -463,8 +485,10 @@ backend en `apps-script/mantenimiento.gs` y `docs/ARCHITECTURE.md §15`.
   que antes solo llegaban a Zona/Sector — ver `docs/ARCHITECTURE.md §15`. Redesplegado como
   versión 8.
 
-### Asesorías
-Tab nueva (no existía como trámite — antes solo había un video suelto en Recursos). Mismo
+### Asesorías (página propia desde el 27 ago 2026, ver `asesorias.html`)
+Nació como tab de `otde.html` (no existía como trámite — antes solo había un video suelto en
+Recursos) y migró a página propia el 27 ago 2026, primera de las 4 migraciones planeadas en
+`docs/ROADMAP.md` ítem 7 (Mantenimiento/Soporte/Correo siguen pendientes de migrar). Mismo
 patrón que Mantenimiento (oficio obligatorio + captura digital), más selector de "Tipo de
 asesoría" y casilla de confirmación de mantenimiento previo (Banco de Materiales/Chuka ya
 instalados) — detalle de por qué en `apps-script/asesorias.gs` y `docs/ARCHITECTURE.md §15`.
@@ -474,7 +498,15 @@ Mantenimiento (`aseOnEditCierre` / `aseInstalarTriggerCierre`). **Repaso de UX (
 Correo obligatorio, oficio solo PDF, Función/Cargo por tipo de CCT — mismo detalle que
 Mantenimiento arriba, redesplegado como versión 5. **Correo combinado a solicitante + Zona +
 Sector (11 ago 2026)**: mismo rediseño que Mantenimiento (ver arriba) — redesplegado como
-versión 7.
+versión 7. **Migración a página propia (27 ago 2026)**: el backend (`apps-script/asesorias.gs`)
+no cambió — solo el frontend salió de `otde.html` a `asesorias.html`, con header/nav/footer
+institucional completo (reusa `styles.css`, sin nav/footer propio del sitio, se llega vía
+`oficina-virtual.html`). Al hacerlo se encontró que `enviarSolicitudAsesoria()` ya dependía de
+`manLeerArchivoBase64()`/`MAN_TAMANO_MAX_BYTES`, definidos dentro del bloque de Mantenimiento en
+`otde.html` — dependencia cruzada no documentada. Se resolvió moviendo esos dos (renombrados
+`leerArchivoBase64()`/`TAMANO_MAX_ARCHIVO_BYTES`) junto con `toTitleCase()`/
+`fetchJsonConTimeout()`/`otdePoblarFuncion()` a `js/tramites-shared.js` (ver arriba), en vez de
+solo duplicarlos en la página nueva.
 
 ### Soporte Técnico Remoto
 TeamViewer (no Quick Assist) como herramienta de control remoto. Formulario "Solicitar Soporte
