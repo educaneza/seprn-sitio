@@ -358,6 +358,88 @@ formularios con un solo bloque de reglas.
 prefijo — preferir un selector de clase o de atributo (`[id$="-sufijo"]`) desde el principio si
 el mismo bloque de HTML/JS ya se copia a más de una tab/página.
 
+## 16. `.form-container` sin `max-width` — campos de texto estirados a ~850px en pantallas anchas
+
+**Síntoma:** en escritorio, un campo como "RFC con homoclave" (13 caracteres) o "Clave de
+Centro de Trabajo" (10 caracteres) se veía como una caja de texto casi del ancho completo de la
+pantalla — mucho espacio en blanco dentro del propio input. Reportado por Jorge como "huecos
+vacíos y desperdiciados" en un smoketest de UI.
+
+**Causa raíz:** `.soporte-form-group input, select, textarea { width: 100% }` (correcto en sí)
+hereda el ancho de su contenedor, `.form-container` — que nunca tuvo `max-width`. El botón que
+abre el formulario (`.form-button`) sí estaba limitado a `max-width: 500px`, pero el contenedor
+que se despliega debajo no, así que los campos terminaban ocupando ~850px en una pantalla de
+1440px.
+
+**Fix:** `max-width: 640px; margin: 0 auto;` en `.form-container` (`styles.css`) — un solo
+cambio corrige las 4 páginas de trámite a la vez, sin tocar ningún HTML.
+
+**Dónde puede volver a pasar:** cualquier contenedor de formulario nuevo que reuse
+`.form-container`/`.soporte-form-group` sin verificar visualmente en una pantalla ancha (no
+solo en el viewport angosto del editor/DevTools por default).
+
+## 17. Validación de correo institucional que solo revisa el sufijo, no el correo completo
+
+**Síntoma:** el campo "Correo institucional" en Cambio de Contraseña / Eliminar Método de
+Autenticación / Incidencias (`correo.html`) aceptaba `"@dee.edu.mx"` a secas — sin nombre de
+usuario — como válido, y el formulario intentaba enviarlo al backend real.
+
+**Causa raíz:** `validarCorreoInstitucional(input)` usaba `v.endsWith('@dee.edu.mx') ||
+v.endsWith('@aulamexiquense.mx')` — revisa el final de la cadena, nunca que exista algo antes
+de la arroba.
+
+**Fix:** `/^[^\s@]+@(dee\.edu\.mx|aulamexiquense\.mx)$/.test(v)` — exige una parte local no
+vacía además del dominio correcto.
+
+**Dónde ya pasó:** solo `correo.html` tenía este patrón exacto (`.endsWith()` para validar un
+correo). Revisar si aparece de nuevo en cualquier campo que valide "correo con dominio
+específico" en vez de "correo con formato válido, cuyo dominio además es X".
+
+## 18. RFC validado solo por longitud mínima, sin formato — y sin coincidir con el propio texto de ayuda
+
+**Síntoma:** el campo RFC aceptaba cadenas como `"AAAAAAAAAA"` (10 letras repetidas, sin
+ningún formato real) como válidas.
+
+**Causa raíz:** la regla era `v.trim().length >= 10` — comparado con CURP en el mismo
+formulario, que sí exige exactamente 18 caracteres. En `formacion-docente.html` el defecto era
+más sutil: el regex `/^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/i` aceptaba también RFCs de 12 caracteres
+(prefijo de 3 letras, formato de persona moral/empresa) pese a que el texto de ayuda junto al
+campo promete literalmente "13 caracteres (personas físicas)".
+
+**Fix:** en ambos archivos, exigir exactamente 13 caracteres con el formato real de persona
+física: `/^[A-ZÑ&]{4}\d{6}[A-Z0-9]{3}$/i` (4 letras + 6 dígitos + 3 alfanuméricos), en cliente
+**y** backend (`Alta.gs` en `Correos-institucionales`, `apps-script/formacion-docente.gs`).
+
+**Dónde ya pasó:** `correo.html` (Alta de cuenta) y `formacion-docente.html` — mismo defecto
+en dos archivos independientes, ninguno copiado del otro. Si se agrega un campo RFC en algún
+otro formulario del sitio, usar el regex de 4 letras, no el de longitud mínima ni el de 3-4.
+
+## 19. Envío secuencial de varios registros: si uno falla a la mitad, los éxitos anteriores se pierden de la vista
+
+**Síntoma:** en `formacion-docente.html`, al registrar varios cursos en una sola solicitud, si
+el curso N fallaba (por ejemplo porque el catálogo cacheado en el navegador quedó
+desactualizado y ese curso ya no existe/está inactivo en la hoja real), el docente solo veía un
+mensaje de error genérico — sin ningún rastro de que los cursos 1..N-1 sí se habían registrado
+correctamente, con folio real ya generado.
+
+**Causa raíz:** `enviarFormulario()` hace un `POST` por curso dentro de un `for`, acumulando
+resultados en un arreglo local. Si un `POST` falla, el `throw` corta el `for` de inmediato y
+salta directo al `catch` — que nunca llegaba a llamar `mostrarConfirmacion(resultados)`, así
+que el arreglo con los folios ya obtenidos se descartaba en silencio junto con el resto de la
+función.
+
+**Fix:** en el `catch`, si `resultados.length > 0`, llamar a `mostrarConfirmacion(resultados,
+{pendientes, mensaje})` en vez de solo mostrar el error — la pantalla de confirmación ahora
+distingue "Registro parcial con OTDE" de éxito completo, lista los folios ya obtenidos, nombra
+los cursos que quedaron pendientes, y ofrece un botón para volver a la selección de cursos (es
+seguro reenviar la selección completa: el backend deduplica por RFC+curso, así que los ya
+registrados no se duplican).
+
+**Dónde puede volver a pasar:** cualquier flujo que envíe una **serie** de operaciones al
+backend en un `for`/`for...of` con un solo `try/catch` alrededor de todo — si una falla a la
+mitad, revisar explícitamente qué le pasa a los resultados ya acumulados antes de dar el fix
+por bueno, no asumir que "mostrar el error" es suficiente.
+
 ## Regla general al corregir cualquiera de estos patrones
 
 Cuando se encuentra uno de estos bugs en un archivo, **revisar si el mismo

@@ -301,18 +301,32 @@ ya esté expandido).
   está resuelta aparte y no se tocó
 - **Columnas de `Solicitudes`**: Fecha | Folio | Tipo de Asesoría | Nombre | Función | CCT |
   Sector | Zona | Escuela | Turno | Número de Docentes | WhatsApp | Correo | Observaciones |
-  Oficio (link Drive) | Estatus | Notas de revisión
-- **Tipo de Asesoría** y **casilla de confirmación de mantenimiento previo** (ago 2026): la
-  única asesoría que se ofrece hoy (Banco de Materiales + Chuka) requiere que la escuela ya haya
-  recibido mantenimiento con esos recursos instalados — sin eso, la asesoría no se puede dar. No
-  se valida automáticamente contra el sistema de Reportes de Visitas (viven ahí, no en este
-  proyecto, y la mayoría de escuelas ya atendidas lo fueron antes de que existiera este webform,
-  así que cruzar contra datos parciales sería peor que no cruzar nada). En vez de eso, el
-  formulario pide una casilla obligatoria de confirmación explícita — no lo garantiza, pero deja
-  rastro y evita el supuesto silencioso; Jorge revisa esto como parte de su validación del
-  oficio. El selector de "Tipo de Asesoría" ya está listo para crecer (hoy 1 sola opción) cuando
-  se separen Banco de Materiales/Chuka o se agreguen asesorías nuevas — replanteo pedagógico
-  pendiente, deliberadamente fuera de alcance por ahora
+  Oficio (link Drive) | Estatus | Notas de revisión | Confirmó Mantenimiento Previo |
+  Notificación de cierre enviada | Tipo de solicitante | Fecha programada de visita |
+  Notificación de fecha programada enviada | **Temas de Excel** (nueva, ago 2026 — ver abajo)
+- **Dos tipos de asesoría (ago 2026 — el selector creció por primera vez)**: **Banco de
+  Materiales y Chuka** (la original) exige la casilla obligatoria de confirmación de
+  mantenimiento previo descrita abajo. **Excel básico para personal administrativo** (nueva) es
+  una solicitud proactiva de ATP de zona/sector, directores, subdirectores y administrativos —
+  no requiere mantenimiento previo, así que esa casilla ahora es condicional
+  (`aseToggleTipoAsesoria()` en `asesorias.html` la oculta y no la exige salvo que el tipo sea
+  Banco de Materiales/Chuka; mismo condicional en `aseValidarCampos()` del backend). En su
+  lugar, Excel básico muestra un checklist opcional de 6 temas sugeridos (duplicados de
+  docentes/CCT, filtrar por zona/sector/subdirección, validar RFC/CURP/CCT, combinar
+  correspondencia con Word, fórmulas básicas, introducción a IA/Copilot) que se guarda en la
+  columna `Temas de Excel`, separados por `; ` — vacía para Banco de Materiales/Chuka. El oficio
+  de solicitud sigue siendo obligatorio para los dos tipos, sin excepción.
+- **Casilla de confirmación de mantenimiento previo** (solo aplica a Banco de Materiales/Chuka):
+  esa asesoría requiere que la escuela ya haya recibido mantenimiento con esos recursos
+  instalados — sin eso, la asesoría no se puede dar. No se valida automáticamente contra el
+  sistema de Reportes de Visitas (viven ahí, no en este proyecto, y la mayoría de escuelas ya
+  atendidas lo fueron antes de que existiera este webform, así que cruzar contra datos parciales
+  sería peor que no cruzar nada). En vez de eso, el formulario pide una casilla obligatoria de
+  confirmación explícita — no lo garantiza, pero deja rastro y evita el supuesto silencioso;
+  Jorge revisa esto como parte de su validación del oficio.
+- **"Número de Docentes" generalizado a "Número de personas" (ago 2026)**: mismo campo/columna,
+  solo cambió el texto visible — Excel básico va dirigido a personal administrativo, no solo
+  docentes. Aplica en Mantenimiento y Asesorías por igual.
 - Notifica por Telegram a OTDE (Propiedades del script configuradas por separado en este
   proyecto) y por correo al solicitante con Zona y Sector en copia (CC) si hay contacto(s)
   registrados — mismo mecanismo de correo combinado que `mantenimiento.gs` (ver esa sección y
@@ -434,14 +448,28 @@ Soporte y no se renombraron al generalizarse — sí se corrigió el selector de
 que antes era `#sop-cct-suggestions` (solo aplicaba a Soporte) y ahora es
 `ul[id$="-cct-suggestions"]` (aplica a las 4 páginas).
 
+**Navegación de regreso a Oficina Virtual (ago 2026)**: las 4 páginas tenían antes un callejón
+sin salida — sin link de vuelta al hub ni entre trámites. Clases nuevas en `styles.css`
+(`.tramite-back-link`, junto al `.hero-badge` de cada página; `.tramite-otros-tramites`/
+`.tramite-otros-links`, bloque discreto al final del contenido con links a los otros 3
+trámites + Oficina Virtual) — mismo patrón repetido en las 4, sin componente compartido (regla
+de arriba). **`.form-container` con `max-width: 640px` (ago 2026, hallazgo de QA)**: antes sin
+límite, los campos de texto (`input`/`select`/`textarea` al 100% del contenedor) se estiraban
+hasta ~850px en pantallas anchas — un solo cambio en `styles.css` corrigió las 4 páginas a la
+vez. Ver `docs/QA-NOTES.md #16`.
+
 ### Correo Institucional (página propia desde el 27 ago 2026, ver `correo.html`)
 Reemplaza en código, tipo por tipo, al `<iframe>` del Google Form viejo — ver el modelo de
 arquitectura completo en `docs/ARCHITECTURE.md §16`. Resumen operativo:
 
-- Switcher de 2 botones (`.correo-panel-btn`, `mostrarCorreoPanel('alta'|'otros')`): **"Alta de
-  cuenta"** y **"Cambio de contraseña / Eliminar autenticación / Otro"** (este último con su
-  propio sub-switcher de 3 botones, prefijos `cam`/`rst`/`inc`). Los 4 tipos ya están completos
-  — el `<iframe>` quedó retirado por completo del código.
+- **Switcher aplanado a 4 botones al mismo nivel (ago 2026)**: `.correo-panel-btn`,
+  `mostrarCorreoPanel('alta'|'cam'|'rst'|'inc')` — Alta de cuenta | Cambio de Contraseña |
+  Eliminar Método de Autenticación | No puedo acceder a mi cuenta. Antes era un switcher de 2
+  (Alta / "Cambio de contraseña · Eliminar autenticación · Otro") con un sub-switcher anidado
+  de 3 dentro del segundo — Jorge reportó que se veían amontonados (más notorio en móvil, poco
+  espacio para 3 botones con textos largos dentro de un panel ya angosto); se aplanó a un solo
+  nivel, con más espacio (`gap`) y grid de 2 columnas en móvil. Los 4 tipos ya están completos —
+  el `<iframe>` quedó retirado por completo del código.
 - **"2FA" renombrado a "Eliminar método de autenticación" (ago 2026)**: mismo término que usa
   SIGEE (para que Jorge/Marcos mapeen 1:1 al procesar), con una aclaración en paréntesis para
   docentes ("código de seguridad extra que a veces se traba"). El identificador interno que
@@ -479,13 +507,17 @@ arquitectura completo en `docs/ARCHITECTURE.md §16`. Resumen operativo:
   del webform nuevo (`Solicitud recibida` → `Cuenta entregada`/`Reset notificado`/`Incidencia
   resuelta`). Trigger `resumenSemanal` (lunes 9am) instalado y confirmado en "Activadores".
 - **Dominio auto-derivado, no preguntado** (solo en Alta — Cambio/Reset/Incidencias leen el
-  dominio del correo institucional que la persona ya tiene): usa
-  `otdeDominioParaCCT(cct, tipoCuenta)` en `js/cct-db.js`, regla verificada en vivo contra
+  dominio del correo institucional que la persona ya tiene): regla verificada en vivo contra
   SIGEE. El formulario nunca pregunta "¿@dee.edu.mx o @aulamexiquense.mx?" directamente — ver
   la regla completa en `docs/ARCHITECTURE.md §16`. Toda la lógica del lado del cliente vive en
-  `altActualizarDominio()`/`altCalcularDominio()`, se recalcula en cada cambio de
-  CCT/Función/Tipo de cuenta, y se muestra como confirmación (`#alt-dominio-preview`) antes de
-  enviar.
+  `altActualizarDominio()`/`altCalcularDominio()`, se recalcula en cada cambio de CCT/Función.
+  **"Tipo de cuenta" quitado del formulario (ago 2026)**: antes, Director(a)/Subdirector(a) de
+  una escuela elegía manualmente "personal" u "oficina" (de ahí dependía el dominio); Jorge
+  pidió simplificarlo — ahora Director(a)/Subdirector(a) de escuela recibe siempre la cuenta de
+  oficina `@dee.edu.mx` automáticamente, sin preguntar. `otdeDominioParaCCT()` en `js/cct-db.js`
+  quedó sin llamador y se eliminó como código muerto; el payload sigue mandando `tipoCuenta`
+  (ahora calculado, no elegido) solo para no romper el contrato con `Alta.gs`. El resultado se
+  muestra igual como confirmación (`#alt-dominio-preview`) antes de enviar.
 - **Campos de Alta**: CCT, Función, Nombre/Apellido Paterno/Apellido Materno/RFC/CURP (campos
   separados), Correo personal, Teléfono, Observaciones — encabezados reales confirmados por
   Jorge el 5 ago 2026 contra el Sheet viejo. **Función se repuebla según el tipo de CCT** (ago
