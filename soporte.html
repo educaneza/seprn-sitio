@@ -409,6 +409,10 @@
         });
 
         sopInputCct.addEventListener('change', function() {
+            if (!sopCctEncontrada) {
+                var exacto = CCT_DB.filter(function(e) { return e.cct === sopInputCct.value.trim().toUpperCase(); })[0];
+                if (exacto) { sopSeleccionarCct(exacto); return; }
+            }
             if (!sopCctEncontrada && sopInputCct.value.trim().length >= 8) {
                 sopStatusBox.className = 'sop-cct-status warn';
                 sopStatusBox.textContent = 'CCT no encontrada en nuestra base. Puedes capturar los datos manualmente.';

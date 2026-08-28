@@ -463,6 +463,10 @@
         });
 
         manInputCct.addEventListener('change', function() {
+            if (!manCctEncontrada) {
+                var exacto = CCT_DB.filter(function(e) { return e.cct === manInputCct.value.trim().toUpperCase(); })[0];
+                if (exacto) { manSeleccionarCct(exacto); return; }
+            }
             if (!manCctEncontrada && manInputCct.value.trim().length >= 8) {
                 manStatusBox.className = 'sop-cct-status warn';
                 manStatusBox.textContent = 'CCT no encontrada en nuestra base. Puedes capturar los datos manualmente.';
