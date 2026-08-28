@@ -741,10 +741,20 @@ requiere que la escuela ya haya recibido mantenimiento con esos recursos instala
 forma de validarlo automáticamente sin integrar con el sistema de Reportes de Visitas (fuera de
 alcance — y la mayoría de escuelas ya atendidas lo fueron antes de que existiera el webform de
 Mantenimiento, así que cruzar contra datos parciales sería peor que no cruzar nada). En su
-lugar, el formulario pide una casilla de confirmación obligatoria y dejó listo un selector de
-"Tipo de asesoría" (hoy una sola opción) para cuando se decida separar Banco de
-Materiales/Chuka o agregar asesorías nuevas — decisión pedagógica pendiente, deliberadamente
-fuera de alcance de este entregable.
+lugar, el formulario pide una casilla de confirmación obligatoria — pero **solo cuando el tipo
+de asesoría es Banco de Materiales/Chuka**.
+
+**El selector de "Tipo de asesoría" creció por primera vez (ago 2026)**: se agregó "Excel
+básico para personal administrativo" como segundo tipo — a diferencia de Banco de
+Materiales/Chuka (post-mantenimiento, requiere confirmación previa), es una solicitud
+proactiva de ATP de zona/sector, directores, subdirectores y administrativos, sin ese
+requisito. `aseToggleTipoAsesoria()` en `asesorias.html` muestra/oculta y activa/desactiva la
+casilla de confirmación según el tipo elegido, con el mismo condicional replicado en
+`aseValidarCampos()` del backend. Excel básico agrega en su lugar un checklist opcional de 6
+temas sugeridos (guardados en la columna `Temas de Excel`, agregada al final del Sheet, mismo
+criterio de no correr columnas existentes) y reusa el campo "Observaciones" ya existente como
+texto libre para necesidades específicas. El oficio de solicitud sigue siendo obligatorio para
+ambos tipos.
 
 **Cierre automático del ticket (agosto 2026).** El hallazgo de QA "nadie le avisa al
 solicitante cuando su ticket se resolvió" se cerró con un trigger `onEdit` **instalable** (no
@@ -1134,15 +1144,24 @@ aulamexiquense, Cambio Contr dee, Cambio Contr aulamexiquense, Reset 2FA, Incide
 del flujo, es un dato calculado.
 
 **Regla de dominio, verificada en vivo contra SIGEE** (el sistema real de CoEEE donde se
-aprovisionan las cuentas, no hay API — ver `otdeDominioParaCCT(cct, tipoCuenta)` en
-`js/cct-db.js`):
+aprovisionan las cuentas, no hay API — lógica en `altCalcularDominio()` dentro de
+`correo.html`):
 - CCT con `tipo` ∈ {supervision, jefatura, subdireccion} → dominio siempre `dee.edu.mx`.
-- CCT con `tipo` = escuela → depende de si la cuenta es "personal" (`aulamexiquense.mx`) o "de
-  oficina" (`dee.edu.mx`, una por escuela, representa al CT/directivo) — y esa pregunta solo se
-  le muestra al solicitante si su Función es Director(a)/Subdirector(a); para el resto se fija
-  en "personal" sin preguntar.
+- CCT con `tipo` = escuela y Función = Director(a)/Subdirector(a) → dominio de oficina
+  `dee.edu.mx` (una por escuela, representa al CT/directivo). Para el resto de las funciones de
+  escuela se fija en "personal" `aulamexiquense.mx`.
 - CCT en fallback manual (no encontrado en `cct-db.js`) → no se puede derivar, se pide un
   selector explícito y queda marcado para revisión manual.
+
+**"Tipo de cuenta" retirado del formulario (ago 2026)**: hasta entonces, el caso
+escuela+Director(a)/Subdirector(a) mostraba un selector "Tipo de cuenta" (personal/oficina) y
+el solicitante elegía cuál quería — `otdeDominioParaCCT(cct, tipoCuenta)` en `js/cct-db.js`
+tomaba esa elección como parámetro. Jorge pidió simplificarlo: ese caso ahora siempre resuelve
+a oficina automáticamente, sin preguntar. `otdeDominioParaCCT()` se eliminó del archivo (sin
+otro llamador, confirmado por grep antes de borrar); el payload que viaja al backend
+(`Alta.gs`, en el repo aparte `Correos-institucionales`) sigue mandando `tipoCuenta` — ya no
+elegido por el usuario, sino calculado en el cliente con la misma regla — únicamente para no
+romper la columna H del Sheet real.
 
 Esto significa que el docente promedio **nunca ve la pregunta** "¿tu correo es @dee.edu.mx o
 @aulamexiquense.mx?" — el formulario se la resuelve.
