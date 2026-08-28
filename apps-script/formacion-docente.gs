@@ -407,8 +407,11 @@ function validarCampos(d) {
       throw new Error('Campo requerido: ' + campo);
     }
   }
-  if (!/^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/i.test(d.rfc.trim())) {
+  if (!/^[A-ZÑ&]{4}\d{6}[A-Z0-9]{3}$/i.test(d.rfc.trim())) {
     throw new Error('RFC inválido: ' + d.rfc);
+  }
+  if (!/^\d{2}[A-Z]{3}\d{4}[A-Z]$/i.test(d.cct.trim())) {
+    throw new Error('CCT inválida: ' + d.cct);
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.correo.trim())) {
     throw new Error('Correo inválido: ' + d.correo);

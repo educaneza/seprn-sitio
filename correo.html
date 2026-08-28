@@ -20,8 +20,13 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="styles.css">
     <style>
+        .correo-panel-switcher { display:flex; flex-wrap:wrap; gap:14px; margin:24px 0 20px 0; }
         .correo-panel-btn { padding:10px 18px; border-radius:8px; border:2px solid #d6d1ca; background:#fff; color:#56212f; font-weight:600; font-size:14px; cursor:pointer; transition:all .2s; }
         .correo-panel-btn.active { background:#9F2241; border-color:#9F2241; color:#fff; }
+        @media (max-width: 640px) {
+            .correo-panel-switcher { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+            .correo-panel-btn { width:100%; }
+        }
     </style>
 </head>
 <body>
@@ -46,9 +51,10 @@
 
 <section class="hero hero-sm">
     <div class="hero-inner">
+        <a href="oficina-virtual.html" class="tramite-back-link">← Volver a Oficina Virtual</a>
         <span class="hero-badge">OTDE · SEPRN</span>
         <h1>Correo Institucional</h1>
-        <p>Alta de cuenta, cambio de contraseña, o reporta un problema de acceso</p>
+        <p>Alta de cuenta, cambio de contraseña, verificación en dos pasos (autenticación), o reporta un problema de acceso</p>
     </div>
     <div class="hero-glow"></div>
 </section>
@@ -70,9 +76,16 @@
                 <p>• <strong>Eliminar método de autenticación:</strong> Solicita que te quitemos el código de seguridad extra (verificación en dos pasos) de tu correo institucional cuando se traba o deja de llegar.</p>
             </div>
 
-            <div style="display:flex;gap:10px;flex-wrap:wrap;margin:24px 0 0 0;">
+            <div class="highlight-box">
+                <p><strong>Sobre tus datos:</strong></p>
+                <p>Este formulario registra tu nombre, CCT, función, teléfono y correo personal — y, solo en Alta de cuenta, tu RFC y CURP — con el único fin de gestionar tu cuenta institucional y darte seguimiento a tu solicitud. No se comparten con terceros ajenos a OTDE.</p>
+            </div>
+
+            <div class="correo-panel-switcher">
                 <button type="button" id="btn-correo-panel-alta" class="correo-panel-btn active" onclick="mostrarCorreoPanel('alta')">Alta de cuenta</button>
-                <button type="button" id="btn-correo-panel-otros" class="correo-panel-btn" onclick="mostrarCorreoPanel('otros')">Cambio de contraseña / Eliminar autenticación / Otro</button>
+                <button type="button" id="btn-correo-panel-cam" class="correo-panel-btn" onclick="mostrarCorreoPanel('cam')">Cambio de Contraseña</button>
+                <button type="button" id="btn-correo-panel-rst" class="correo-panel-btn" onclick="mostrarCorreoPanel('rst')">Eliminar Método de Autenticación</button>
+                <button type="button" id="btn-correo-panel-inc" class="correo-panel-btn" onclick="mostrarCorreoPanel('inc')">No puedo acceder a mi cuenta</button>
             </div>
 
             <!-- Panel: Alta de cuenta (webform nuevo, ciclo 2026-2027) -->
@@ -159,7 +172,7 @@
                         <input type="hidden" id="alt-tipo-cct-val">
 
                         <div class="soporte-form-group">
-                            <label for="alt-funcion">Función/Cargo<span class="req">*</span></label>
+                            <label for="alt-funcion">Función/Cargo del solicitante<span class="req">*</span></label>
                             <select id="alt-funcion" required onchange="altToggleOtraFuncion(); altActualizarDominio();">
                                 <option value="">— Selecciona una opción —</option>
                             </select>
@@ -168,15 +181,6 @@
                                 <input type="text" id="alt-otra-funcion" placeholder="Especifica tu función" maxlength="80">
                                 <div class="soporte-field-error" id="alt-otra-funcion-error">Especifica tu función.</div>
                             </div>
-                        </div>
-
-                        <div class="soporte-form-group" id="alt-tipo-cuenta-group" style="display:none;">
-                            <label for="alt-tipo-cuenta">Tipo de cuenta<span class="req">*</span></label>
-                            <select id="alt-tipo-cuenta" onchange="altActualizarDominio()">
-                                <option value="personal">Cuenta personal (para ti)</option>
-                                <option value="oficina">Cuenta de oficina (representa a la escuela)</option>
-                            </select>
-                            <div class="soporte-field-hint">Como Director(a)/Subdirector(a) puedes pedir la cuenta de oficina de tu escuela (una sola por CCT) o tu propia cuenta personal.</div>
                         </div>
 
                         <div id="alt-dominio-preview" class="highlight-box" style="display:none;">
@@ -234,16 +238,8 @@
                 </div>
             </div>
 
-            <!-- Panel: Cambio de contraseña / Eliminar método de autenticación / Incidencias (webform nuevo, ago 2026) -->
-            <div id="correo-panel-otros" style="display:none;">
-                <div style="display:flex;gap:10px;flex-wrap:wrap;margin:0 0 16px 0;">
-                    <button type="button" id="btn-otros-panel-cam" class="correo-panel-btn active" onclick="mostrarOtrosPanel('cam')">Cambio de Contraseña</button>
-                    <button type="button" id="btn-otros-panel-rst" class="correo-panel-btn" onclick="mostrarOtrosPanel('rst')">Eliminar Método de Autenticación</button>
-                    <button type="button" id="btn-otros-panel-inc" class="correo-panel-btn" onclick="mostrarOtrosPanel('inc')">No puedo acceder a mi cuenta</button>
-                </div>
-
-                <!-- Sub-panel: Cambio de Contraseña -->
-                <div id="otros-panel-cam">
+            <!-- Panel: Cambio de Contraseña (webform nuevo, ago 2026) -->
+            <div id="correo-panel-cam" style="display:none;">
                     <button class="form-button" id="btn-cam" aria-expanded="false" onclick="toggleCamForm(this)">
                         <span id="btn-cam-text">Solicitar Cambio de Contraseña</span>
                         <span id="btn-cam-arrow">▼</span>
@@ -330,7 +326,7 @@
                 </div>
 
                 <!-- Sub-panel: Eliminar método de autenticación (antes "Reset 2FA") -->
-                <div id="otros-panel-rst" style="display:none;">
+                <div id="correo-panel-rst" style="display:none;">
                     <div class="highlight-box">
                         <p>Es el código de seguridad extra (verificación en dos pasos) que a veces se traba o no llega. Aquí puedes pedir que te lo quitemos para poder volver a activarlo.</p>
                     </div>
@@ -420,7 +416,7 @@
                 </div>
 
                 <!-- Sub-panel: Incidencias -->
-                <div id="otros-panel-inc" style="display:none;">
+                <div id="correo-panel-inc" style="display:none;">
                     <div class="highlight-box">
                         <p>¿Ya tienes cuenta pero el usuario o la contraseña que te dimos no funcionan? Repórtalo aquí.</p>
                     </div>
@@ -509,6 +505,15 @@
                         </form>
                     </div>
                 </div>
+
+            <div class="tramite-otros-tramites">
+                <p>Otros trámites</p>
+                <div class="tramite-otros-links">
+                    <a href="mantenimiento.html">Mantenimiento</a>
+                    <a href="asesorias.html">Asesorías</a>
+                    <a href="soporte.html">Soporte Técnico</a>
+                    <a href="oficina-virtual.html">Oficina Virtual →</a>
+                </div>
             </div>
         </div>
 
@@ -573,20 +578,20 @@
     // Página propia, migrada desde la tab "Correo Institucional" de otde.html el
     // 27 ago 2026 (última de las 4 migraciones de docs/ROADMAP.md ítem 7).
     // toTitleCase, fetchJsonConTimeout, otdePoblarFuncion vienen de
-    // js/tramites-shared.js. otdeDominioParaCCT/otdeOpcionesFuncion vienen de
-    // js/cct-db.js.
+    // js/tramites-shared.js. otdeOpcionesFuncion viene de js/cct-db.js.
     // ── Correo — Alta de cuenta (webform nuevo, ciclo 2026-2027) ──
-    // Convive con el <iframe> del Google Form viejo (panel "otros") hasta
-    // que Jorge decida retirarlo por completo. Ver apps-script/webform-2026-2027
-    // en el proyecto Correos-institucionales para el backend.
+    // Ver apps-script/webform-2026-2027 en el proyecto Correos-institucionales
+    // para el backend.
     const ALTA_CORREO_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwjy-jx1J0riVAlcAkuwAqKq9LMQVIxs4R_ikBIRPXXntO3FwMkGTPBf90W5A8FPAD7/exec';
 
+    // Switcher de 4 botones al mismo nivel (ago 2026 — antes "Alta" vs "Otros" con
+    // un sub-switcher anidado de 3 botones para Cambio/Eliminar autenticación/
+    // Incidencias; se aplanó para no amontonar botones dentro de un panel).
     function mostrarCorreoPanel(tipo) {
-        var esAlta = tipo === 'alta';
-        document.getElementById('correo-panel-alta').style.display = esAlta ? 'block' : 'none';
-        document.getElementById('correo-panel-otros').style.display = esAlta ? 'none' : 'block';
-        document.getElementById('btn-correo-panel-alta').classList.toggle('active', esAlta);
-        document.getElementById('btn-correo-panel-otros').classList.toggle('active', !esAlta);
+        ['alta', 'cam', 'rst', 'inc'].forEach(function(t) {
+            document.getElementById('correo-panel-' + t).style.display = (t === tipo) ? 'block' : 'none';
+            document.getElementById('btn-correo-panel-' + t).classList.toggle('active', t === tipo);
+        });
     }
 
     function toggleAltaForm(btn) {
@@ -786,9 +791,11 @@
     otdePoblarFuncion('alt-funcion', null);
 
     // ── Dominio: calcula y refleja en pantalla cuál dominio le toca al
-    // solicitante, según CCT + tipo de cuenta (ver otdeDominioParaCCT en
-    // js/cct-db.js). Se llama en cada cambio relevante (CCT, Función,
-    // Tipo de cuenta) para que el docente nunca tenga que adivinarlo. ──
+    // solicitante, según CCT + Función/Cargo. Director(a)/Subdirector(a)
+    // de una escuela siempre recibe la cuenta de oficina @dee.edu.mx (ago
+    // 2026 — antes se preguntaba "Tipo de cuenta"; se quitó esa pregunta
+    // para simplificar el formulario). Se llama en cada cambio relevante
+    // (CCT, Función) para que el docente nunca tenga que adivinarlo. ──
     function altCalcularDominio() {
         var manualVisible = document.getElementById('alt-manual-fields').classList.contains('visible');
         if (manualVisible) {
@@ -800,22 +807,10 @@
 
         var funcion = document.getElementById('alt-funcion').value;
         var esDirectivo = funcion === 'Director(a)' || funcion === 'Subdirector(a)';
-        if (!esDirectivo) return 'aulamexiquense.mx';
-
-        var tipoCuenta = document.getElementById('alt-tipo-cuenta').value;
-        return typeof otdeDominioParaCCT === 'function'
-            ? otdeDominioParaCCT(document.getElementById('alt-cct').value, tipoCuenta)
-            : (tipoCuenta === 'oficina' ? 'dee.edu.mx' : 'aulamexiquense.mx');
+        return esDirectivo ? 'dee.edu.mx' : 'aulamexiquense.mx';
     }
 
     function altActualizarDominio() {
-        var manualVisible = document.getElementById('alt-manual-fields').classList.contains('visible');
-        var funcion = document.getElementById('alt-funcion').value;
-        var esDirectivo = funcion === 'Director(a)' || funcion === 'Subdirector(a)';
-        var tipoCuentaGroup = document.getElementById('alt-tipo-cuenta-group');
-
-        tipoCuentaGroup.style.display = (!manualVisible && altCctEncontrada && altCctTipo === 'escuela' && esDirectivo) ? 'block' : 'none';
-
         var dominio = altCalcularDominio();
         var preview = document.getElementById('alt-dominio-preview');
         var previewValor = document.getElementById('alt-dominio-preview-valor');
@@ -835,7 +830,7 @@
             { id: 'alt-nombre',           err: 'alt-nombre-error',           test: function(v) { return v.trim().length >= 2; } },
             { id: 'alt-apellido-paterno', err: 'alt-apellido-paterno-error', test: function(v) { return v.trim().length >= 2; } },
             { id: 'alt-apellido-materno', err: 'alt-apellido-materno-error', test: function(v) { return v.trim().length >= 2; } },
-            { id: 'alt-rfc',              err: 'alt-rfc-error',              test: function(v) { return v.trim().length >= 10; } },
+            { id: 'alt-rfc',              err: 'alt-rfc-error',              test: function(v) { return /^[A-ZÑ&]{4}\d{6}[A-Z0-9]{3}$/i.test(v.trim()); } },
             { id: 'alt-curp',             err: 'alt-curp-error',             test: function(v) { return v.trim().length === 18; } },
             { id: 'alt-telefono',         err: 'alt-telefono-error',         test: function(v) { return /^\d{10}$/.test(v.trim()); } },
             { id: 'alt-correo-personal',  err: 'alt-correo-personal-error',  test: function(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()); } }
@@ -986,8 +981,11 @@
         var funcionVal = document.getElementById('alt-funcion').value === 'Otro'
             ? document.getElementById('alt-otra-funcion').value.trim()
             : document.getElementById('alt-funcion').value;
-        var tipoCuentaVal = document.getElementById('alt-tipo-cuenta-group').style.display === 'block'
-            ? document.getElementById('alt-tipo-cuenta').value
+        // Tipo de cuenta ya no se pregunta (ago 2026) — Director(a)/Subdirector(a) de
+        // escuela siempre recibe cuenta de oficina, ver altCalcularDominio() arriba.
+        var esDirectivoVal = document.getElementById('alt-funcion').value === 'Director(a)' || document.getElementById('alt-funcion').value === 'Subdirector(a)';
+        var tipoCuentaVal = (!manualVisible && altCctTipo === 'escuela' && esDirectivoVal)
+            ? 'oficina'
             : (altCctTipo === 'escuela' || manualVisible ? 'personal' : 'N/A');
 
         var datos = {
@@ -1053,16 +1051,9 @@
     const RESET_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwjy-jx1J0riVAlcAkuwAqKq9LMQVIxs4R_ikBIRPXXntO3FwMkGTPBf90W5A8FPAD7/exec';
     const INCIDENCIA_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwjy-jx1J0riVAlcAkuwAqKq9LMQVIxs4R_ikBIRPXXntO3FwMkGTPBf90W5A8FPAD7/exec';
 
-    function mostrarOtrosPanel(tipo) {
-        ['cam', 'rst', 'inc'].forEach(function(t) {
-            document.getElementById('otros-panel-' + t).style.display = (t === tipo) ? 'block' : 'none';
-            document.getElementById('btn-otros-panel-' + t).classList.toggle('active', t === tipo);
-        });
-    }
-
     function validarCorreoInstitucional(input) {
         var v = input.value.trim().toLowerCase();
-        return v.endsWith('@dee.edu.mx') || v.endsWith('@aulamexiquense.mx');
+        return /^[^\s@]+@(dee\.edu\.mx|aulamexiquense\.mx)$/.test(v);
     }
 
     // ============================================================

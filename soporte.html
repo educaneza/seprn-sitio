@@ -42,6 +42,7 @@
 
 <section class="hero hero-sm">
     <div class="hero-inner">
+        <a href="oficina-virtual.html" class="tramite-back-link">← Volver a Oficina Virtual</a>
         <span class="hero-badge">OTDE · SEPRN</span>
         <h1>Soporte Técnico Remoto</h1>
         <p>Asistencia técnica vía TeamViewer para toda la Estructura Educativa</p>
@@ -70,6 +71,11 @@
             <li>Realizar instalaciones y actualizaciones: Instalar software, actualizaciones y controladores en los equipos de forma remota</li>
             <li>Configurar dispositivos: Configurar dispositivos como impresoras, routers o redes Wi-Fi de forma remota</li>
         </ul>
+
+        <div class="highlight-box">
+            <p><strong>Sobre tus datos:</strong></p>
+            <p>Este formulario registra tu nombre, función, CCT, teléfono y correo, con el único fin de gestionar tu solicitud de soporte y darte seguimiento. No se comparten con terceros ajenos a OTDE.</p>
+        </div>
 
         <button class="form-button" id="btn-soporte" aria-expanded="false" onclick="toggleSoporteForm(this)">
             <span id="btn-soporte-text">Solicitar Soporte Técnico Remoto</span>
@@ -146,7 +152,7 @@
                 <input type="hidden" id="sop-tipo-cct-val">
 
                 <div class="soporte-form-group">
-                    <label for="sop-funcion">Función/Cargo<span class="req">*</span></label>
+                    <label for="sop-funcion">Función/Cargo del solicitante<span class="req">*</span></label>
                     <select id="sop-funcion" required onchange="sopToggleOtraFuncion()">
                         <option value="">— Selecciona una opción —</option>
                     </select>
@@ -228,6 +234,16 @@
             <p>• Para una conexión más rápida y segura, puedes crear una cuenta TeamViewer y configurar el acceso fácil.</p>
             <p>• Puedes utilizar TeamViewer para conectarte a dispositivos móviles, así como a servidores y otros dispositivos.</p>
             <p>• TeamViewer ofrece una amplia gama de funciones y opciones adicionales. Puedes consultar la documentación oficial para obtener más información.</p>
+        </div>
+    </div>
+
+    <div class="tramite-otros-tramites">
+        <p>Otros trámites</p>
+        <div class="tramite-otros-links">
+            <a href="mantenimiento.html">Mantenimiento</a>
+            <a href="asesorias.html">Asesorías</a>
+            <a href="correo.html">Correo Institucional</a>
+            <a href="oficina-virtual.html">Oficina Virtual →</a>
         </div>
     </div>
 

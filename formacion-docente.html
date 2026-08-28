@@ -76,6 +76,7 @@
       background: var(--midnight);
       padding: 1.1rem 1.75rem;
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       gap: 1.5rem;
       position: relative;
@@ -88,10 +89,17 @@
     .site-header .brand span { color: var(--acento-2); }
     .site-header .back-link {
       color: rgba(245,241,236,.62); text-decoration: none; font-size: .84rem; font-weight: 500;
+      white-space: nowrap;
       transition: color .18s var(--ease);
     }
     .site-header .back-link:first-of-type { margin-left: auto; }
     .site-header .back-link:hover { color: #F5F1EC; }
+
+    @media (max-width: 640px) {
+      .site-header { row-gap: .6rem; }
+      .site-header .brand { width: 100%; }
+      .site-header .back-link:first-of-type { margin-left: 0; }
+    }
 
     /* ── HERO ── */
     .hero {
@@ -705,7 +713,7 @@
         <div class="form-group">
           <label for="nombre">Nombre completo <span class="req">*</span></label>
           <input type="text" id="nombre" placeholder="Como aparece en documentos oficiales" autocomplete="name" required>
-          <div class="field-error" id="nombre-error">Este campo es requerido.</div>
+          <div class="field-error" id="nombre-error">Ingresa tu nombre completo.</div>
         </div>
 
         <div class="form-group">
@@ -752,7 +760,7 @@
 
           <div class="form-group">
             <label for="sector-manual">Sector <span class="req">*</span></label>
-            <select id="sector-manual" onchange="actualizarZonas()">
+            <select id="sector-manual" onchange="actualizarZonas()" required>
               <option value="">— Selecciona sector —</option>
               <option value="I">Sector I</option>
               <option value="II">Sector II</option>
@@ -780,7 +788,12 @@
 
           <div class="form-group">
             <label for="escuela-manual">Nombre de la escuela o unidad <span class="req">*</span></label>
-            <input type="text" id="escuela-manual" placeholder="Nombre oficial">
+            <input type="text" id="escuela-manual" placeholder="Nombre oficial" required>
+          </div>
+
+          <div class="form-group">
+            <label for="municipio-manual">Municipio (opcional, si lo sabes)</label>
+            <input type="text" id="municipio-manual" placeholder="Ej. Nezahualcóyotl">
           </div>
         </div>
 
@@ -828,9 +841,10 @@
         <polyline points="20 6 9 17 4 12"/>
       </svg>
     </div>
-    <h2>¡Registro con OTDE confirmado!</h2>
-    <p class="conf-sub">Tu participación quedó registrada en el Centro de Formación Docente · OTDE NEZA, para seguimiento y estadística.</p>
+    <h2 id="confirmacion-titulo">¡Registro con OTDE confirmado!</h2>
+    <p class="conf-sub" id="confirmacion-subtitulo">Tu participación quedó registrada en el Centro de Formación Docente · OTDE NEZA, para seguimiento y estadística.</p>
 
+    <div id="pendientes-aviso"></div>
     <div id="folios-lista"></div>
 
     <p style="font-size:.85rem;color:var(--warn);background:var(--warn-bg);border-left:3px solid #d99a2b;border-radius:var(--radius-sm);padding:.85rem 1.1rem;text-align:left;margin:0 auto 1.5rem;max-width:42ch;line-height:1.5;">
@@ -1373,8 +1387,10 @@
 
     if (!sector || sector === 'SEPRN') {
       zonaGroup.style.display = 'none';
+      zonaSelect.required = false;
       return;
     }
+    zonaSelect.required = true;
     const zonas = sectorZonas[sector] || [];
     zonas.forEach(z => {
       const o = document.createElement('option');
@@ -1428,6 +1444,14 @@
       }
       mostrarConfirmacion(resultados);
     } catch (err) {
+      if (resultados.length > 0) {
+        // Uno o más cursos ya se registraron con éxito antes de que este fallara —
+        // se muestran igual sus folios en vez de perderlos, junto con cuáles cursos
+        // quedaron pendientes para que el docente sepa exactamente qué reintentar.
+        const pendientes = cursosSeleccionados.slice(resultados.length);
+        mostrarConfirmacion(resultados, { pendientes, mensaje: err.message });
+        return;
+      }
       const eg = document.getElementById('error-global');
       eg.textContent = err.name === 'AbortError'
         ? 'El servidor tardó demasiado en responder. Tu registro pudo haberse guardado igual — el sistema no duplica folios, así que puedes intentar de nuevo con confianza.'
@@ -1450,7 +1474,7 @@
       sector:   manual ? document.getElementById('sector-manual').value : document.getElementById('sector-val').value,
       zona:     manual ? document.getElementById('zona-manual').value   : document.getElementById('zona-val').value,
       escuela:  manual ? toTitleCase(document.getElementById('escuela-manual').value.trim()) : document.getElementById('escuela-val').value,
-      municipio: manual ? '' : document.getElementById('municipio-val').value,
+      municipio: manual ? toTitleCase(document.getElementById('municipio-manual').value.trim()) : document.getElementById('municipio-val').value,
       correo:   document.getElementById('correo').value.trim(),
       telefono: document.getElementById('telefono').value.trim()
       // 'id_curso' se agrega por separado en cada petición
@@ -1461,10 +1485,10 @@
     let ok = true;
 
     const campos = [
-      { id: 'nombre',   err: 'nombre-error',   test: v => v.trim().length >= 3 },
-      { id: 'rfc',      err: 'rfc-error',      test: v => /^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/i.test(v.trim()) },
+      { id: 'nombre',   err: 'nombre-error',   test: v => /^[A-Za-zÀ-ÿ\s.'-]{3,}$/.test(v.trim()) },
+      { id: 'rfc',      err: 'rfc-error',      test: v => /^[A-ZÑ&]{4}\d{6}[A-Z0-9]{3}$/i.test(v.trim()) },
       { id: 'funcion',  err: 'funcion-error',  test: v => v !== '' },
-      { id: 'cct',      err: 'cct-error',      test: v => v.trim().length >= 8 },
+      { id: 'cct',      err: 'cct-error',      test: v => /^\d{2}[A-Z]{3}\d{4}[A-Z]$/i.test(v.trim()) },
       { id: 'correo',   err: 'correo-error',   test: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()) },
       { id: 'telefono', err: 'telefono-error', test: v => /^\d{10}$/.test(v.trim()) }
     ];
@@ -1518,9 +1542,49 @@
     return ok;
   }
 
-  function mostrarConfirmacion(resultados) {
+  function mostrarConfirmacion(resultados, fallo) {
     const cont = document.getElementById('folios-lista');
     cont.innerHTML = '';
+
+    const tituloEl = document.getElementById('confirmacion-titulo');
+    const subtituloEl = document.getElementById('confirmacion-subtitulo');
+    const avisoEl = document.getElementById('pendientes-aviso');
+    avisoEl.innerHTML = '';
+
+    if (fallo && fallo.pendientes && fallo.pendientes.length) {
+      // Registro parcial: uno o más cursos sí se guardaron (sus folios se listan
+      // abajo), pero el resto no se pudo completar — se lo decimos explícito en
+      // vez de solo mostrar un error genérico y perder de vista los folios ya
+      // obtenidos (bug real cazado en QA: ago 2026).
+      const total = resultados.length + fallo.pendientes.length;
+      tituloEl.textContent = 'Registro parcial con OTDE';
+      subtituloEl.textContent = 'Se registraron ' + resultados.length + ' de ' + total + ' cursos seleccionados.';
+
+      const aviso = document.createElement('div');
+      aviso.style.cssText = 'font-size:.85rem;color:var(--danger);background:var(--danger-bg);border-left:3px solid var(--danger);border-radius:var(--radius-sm);padding:.85rem 1.1rem;text-align:left;margin:0 auto 1.5rem;max-width:42ch;line-height:1.5;';
+
+      const texto = document.createElement('p');
+      texto.style.margin = '0 0 .75rem 0';
+      const fuerte = document.createElement('strong');
+      fuerte.textContent = 'No se pudo completar el registro de: ';
+      texto.appendChild(fuerte);
+      texto.appendChild(document.createTextNode(fallo.pendientes.map(c => c.nombre).join(', ') + '. '));
+      texto.appendChild(document.createTextNode('Tus folios de abajo ya están guardados. Vuelve a intentarlo — no se duplicará lo que ya se guardó, aunque reenvíes toda tu selección original.'));
+      aviso.appendChild(texto);
+
+      const btnReintentar = document.createElement('button');
+      btnReintentar.type = 'button';
+      btnReintentar.className = 'btn-secondary';
+      btnReintentar.style.cssText = 'width:auto;padding:.6rem 1.4rem;font-size:.82rem;';
+      btnReintentar.textContent = '← Volver a elegir cursos';
+      btnReintentar.onclick = regresarPaso1;
+      aviso.appendChild(btnReintentar);
+
+      avisoEl.appendChild(aviso);
+    } else {
+      tituloEl.textContent = '¡Registro con OTDE confirmado!';
+      subtituloEl.textContent = 'Tu participación quedó registrada en el Centro de Formación Docente · OTDE NEZA, para seguimiento y estadística.';
+    }
 
     resultados.forEach(r => {
       const item = document.createElement('div');

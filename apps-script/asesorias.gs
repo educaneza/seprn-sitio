@@ -3,15 +3,23 @@
 // Complementa el oficio (que sigue siendo el respaldo oficial),
 // mismo patrón que apps-script/mantenimiento.gs.
 //
-// Contexto del trámite: tras una visita de mantenimiento (Banco
-// de Materiales, Chuka ya instalados), el técnico le ofrece al
-// director una asesoría/taller sobre su uso pedagógico. Si el
-// director acepta, elabora su oficio y lo manda a OTDE. Hoy ese
-// control se lleva en un Excel simple sin nada automatizado
-// (columnas: N.P., Número de Oficio, Sector, Zona, Escuela, CCT,
-// Turno, Fecha de recepción, Número de Docentes, Estatus, Fecha
-// de visita, Observaciones) — este script solo digitaliza la
-// captura inicial, no sustituye ese control ni el oficio.
+// Contexto del trámite — dos tipos de asesoría, mismo formulario/backend:
+//   1) Banco de Materiales y Chuka: tras una visita de mantenimiento (esos
+//      recursos ya instalados), el técnico le ofrece al director una
+//      asesoría/taller sobre su uso pedagógico. Requiere confirmar que el
+//      mantenimiento ya se dio (ver aseValidarCampos).
+//   2) Excel básico (ago 2026): solicitud proactiva de personal
+//      administrativo (ATP de zona/sector, directores, subdirectores,
+//      administrativos) para resolver tareas del día a día en Excel —
+//      no requiere mantenimiento previo. El solicitante puede marcar
+//      temas sugeridos (columna "Temas de Excel") y/o describir su
+//      necesidad en Observaciones.
+// En ambos casos, el solicitante elabora su oficio y lo manda a OTDE. Hoy
+// ese control se lleva en un Excel simple sin nada automatizado (columnas:
+// N.P., Número de Oficio, Sector, Zona, Escuela, CCT, Turno, Fecha de
+// recepción, Número de Docentes, Estatus, Fecha de visita, Observaciones)
+// — este script solo digitaliza la captura inicial, no sustituye ese
+// control ni el oficio.
 //
 // IMPLEMENTACIÓN:
 //   1. Abre o crea el Google Spreadsheet de registros
@@ -41,6 +49,10 @@
 //   P Estatus | Q Notas de revisión | R Confirmó Mantenimiento Previo
 //   S Notificación de cierre enviada | T Tipo de solicitante
 //   U Fecha programada de visita | V Notificación de fecha programada enviada
+//   W Temas de Excel (ago 2026 — solo aplica al tipo "Excel básico"; checkboxes
+//     de temas sugeridos que marcó el solicitante, separados por "; ". Vacía para
+//     Banco de Materiales y Chuka. Agregada al final, mismo criterio de las
+//     columnas anteriores, para no correr ninguna columna existente)
 //
 // COLUMNAS DE LA HOJA "Contactos_Zona_Sector" (Jorge la llena a mano):
 //   A Sector | B Zona | C Correo | D Teléfono
@@ -86,7 +98,7 @@ const ENCABEZADOS_ASE_SOLICITUDES = [
   'Observaciones', 'Oficio (link Drive)', 'Estatus', 'Notas de revisión',
   'Confirmó Mantenimiento Previo', 'Notificación de cierre enviada',
   'Tipo de solicitante', 'Fecha programada de visita',
-  'Notificación de fecha programada enviada'
+  'Notificación de fecha programada enviada', 'Temas de Excel'
 ];
 // Índice (0-based) de 'Tipo de solicitante' dentro de una fila leída con getValues() —
 // ya no es la última columna (se agregaron 2 más después, misma lógica de no correr
@@ -273,9 +285,12 @@ function doPost(e) {
       oficioUrl,
       'Pendiente de validar',
       '',
-      datos.confirmaMantenimiento ? 'Sí' : 'No',
+      datos.tipoAsesoria.trim() === 'Banco de Materiales y Chuka' ? (datos.confirmaMantenimiento ? 'Sí' : 'No') : 'N/A',
       '',
-      (datos.tipoCct || '').trim()
+      (datos.tipoCct || '').trim(),
+      '',  // Fecha programada de visita — la llena aseOnEditProgramacion()
+      '',  // Notificación de fecha programada enviada — la llena aseOnEditProgramacion()
+      (datos.temasExcel || '').trim()
     ]);
 
     aseNotificarTelegram(folio, datos, oficioUrl);
@@ -367,14 +382,14 @@ function aseValidarCampos(d) {
       throw new Error('Campo requerido: ' + campo);
     }
   }
-  if (!d.confirmaMantenimiento) {
+  if (d.tipoAsesoria.trim() === 'Banco de Materiales y Chuka' && !d.confirmaMantenimiento) {
     throw new Error('Debes confirmar que el Aula de Medios ya recibió mantenimiento con Banco de Materiales y Chuka instalados.');
   }
   if (!/^\d{10}$/.test(d.whatsapp.trim())) {
     throw new Error('WhatsApp inválido: ' + d.whatsapp);
   }
-  if (!/^\d+$/.test(String(d.numDocentes).trim()) || parseInt(d.numDocentes, 10) < 1) {
-    throw new Error('Número de docentes inválido: ' + d.numDocentes);
+  if (!/^\d+$/.test(String(d.numDocentes).trim()) || parseInt(d.numDocentes, 10) < 1 || parseInt(d.numDocentes, 10) > 200) {
+    throw new Error('Número de personas inválido: ' + d.numDocentes);
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(d.correo).trim())) {
     throw new Error('Correo inválido: ' + d.correo);
@@ -476,8 +491,9 @@ function aseNotificarTelegram(folio, d, oficioUrl) {
       'CCT: ' + aseEscapeMarkdown_(d.cct.trim().toUpperCase()) + (d.escuela ? ' — ' + aseEscapeMarkdown_(d.escuela.trim()) : '') + '\n' +
       (d.sector ? 'Sector ' + aseEscapeMarkdown_(d.sector) + (d.zona ? ' · Zona ' + aseEscapeMarkdown_(d.zona) : '') + '\n' : '') +
       'Turno: ' + aseEscapeMarkdown_(d.turno.trim()) + '\n' +
-      'Número de docentes: ' + d.numDocentes + '\n' +
+      'Número de personas: ' + d.numDocentes + '\n' +
       'WhatsApp: ' + d.whatsapp.trim() + '\n' +
+      (d.temasExcel ? 'Temas de Excel: ' + aseEscapeMarkdown_(d.temasExcel.trim()) + '\n' : '') +
       (d.observaciones ? 'Observaciones: ' + aseEscapeMarkdown_(d.observaciones.trim()) + '\n' : '') +
       'Oficio: ' + oficioUrl;
 
@@ -515,7 +531,7 @@ function aseNotificarSolicitudRecibida(folio, d) {
       '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Tipo:</strong> ' + aseEscapeHtml_(d.tipoAsesoria.trim()) + '</p>' +
       '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Escuela / CCT:</strong> ' + aseEscapeHtml_(d.escuela || '') + ' — ' + aseEscapeHtml_(d.cct.trim().toUpperCase()) + '</p>' +
       '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Solicita:</strong> ' + aseEscapeHtml_(d.nombre.trim()) + ' (' + aseEscapeHtml_(d.funcion.trim()) + ')</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Número de docentes:</strong> ' + d.numDocentes + '</p>' +
+      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Número de personas:</strong> ' + d.numDocentes + '</p>' +
       '</div></div>';
 
     const opciones = {
