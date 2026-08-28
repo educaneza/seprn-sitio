@@ -42,6 +42,7 @@
 
 <section class="hero hero-sm">
     <div class="hero-inner">
+        <a href="oficina-virtual.html" class="tramite-back-link">← Volver a Oficina Virtual</a>
         <span class="hero-badge">OTDE · SEPRN</span>
         <h1>Mantenimiento Preventivo y Correctivo</h1>
         <p>Rehabilitación y reactivación de Aula de Medios</p>
@@ -89,6 +90,11 @@
     <div class="content-block">
         <h3>¡Solicita Mantenimiento!</h3>
         <p>Solicita el mantenimiento a los equipos de cómputo de uso escolar (aula de medios) o de uso administrativo (Dirección, Zona Escolar o Sector Educativo), y a la red/internet si ya existe infraestructura instalada. No damos servicio a impresoras (solo apoyo de conexión en red si hay condiciones) ni a proyectores; instalaciones nuevas de red o eléctricas se canalizan a CoEEE. El oficio de solicitud sigue siendo el respaldo oficial — adjúntalo aquí ya firmado en PDF (debes entregar también el original en físico en OTDE); con esto agilizamos el registro y te contactamos en breve.</p>
+
+        <div class="highlight-box">
+            <p><strong>Sobre tus datos:</strong></p>
+            <p>Este formulario registra tu nombre, función, CCT, teléfono y correo, con el único fin de gestionar tu solicitud de mantenimiento y darte seguimiento. No se comparten con terceros ajenos a OTDE.</p>
+        </div>
 
         <button class="form-button" id="btn-mantenimiento" aria-expanded="false" onclick="toggleMantenimientoForm(this)">
             <span id="btn-mantenimiento-text">Solicitar Mantenimiento</span>
@@ -178,7 +184,7 @@
                 </div>
 
                 <div class="soporte-form-group">
-                    <label for="man-funcion">Función/Cargo<span class="req">*</span></label>
+                    <label for="man-funcion">Función/Cargo del solicitante<span class="req">*</span></label>
                     <select id="man-funcion" required onchange="manToggleOtraFuncion()">
                         <option value="">— Selecciona una opción —</option>
                     </select>
@@ -215,11 +221,11 @@
                         <label for="man-cantidad-aula">Cantidad aproximada<span class="req">*</span></label>
                         <select id="man-cantidad-aula">
                             <option value="">— Selecciona —</option>
-                            <option value="1">1</option>
-                            <option value="2-3">2-3</option>
-                            <option value="4-5">4-5</option>
+                            <option value="1-5">1-5</option>
                             <option value="6-10">6-10</option>
-                            <option value="Más de 10">Más de 10</option>
+                            <option value="11-15">11-15</option>
+                            <option value="16-20">16-20</option>
+                            <option value="Más de 20">Más de 20</option>
                         </select>
                         <div class="soporte-field-error" id="man-cantidad-aula-error">Selecciona la cantidad aproximada.</div>
                     </div>
@@ -281,6 +287,16 @@
 
                 <div id="mantenimiento-msg" class="soporte-submit-msg"></div>
             </form>
+        </div>
+    </div>
+
+    <div class="tramite-otros-tramites">
+        <p>Otros trámites</p>
+        <div class="tramite-otros-links">
+            <a href="asesorias.html">Asesorías</a>
+            <a href="correo.html">Correo Institucional</a>
+            <a href="soporte.html">Soporte Técnico</a>
+            <a href="oficina-virtual.html">Oficina Virtual →</a>
         </div>
     </div>
 

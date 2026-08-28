@@ -11,7 +11,7 @@
       gtag('config', 'G-7D68DB8ELW');
     </script>
     <meta charset="UTF-8">
-    <meta name="description" content="Solicita tu Asesoría en TICCAD (Banco de Materiales y Chuka) con la OTDE — capacitación grupal para tu Aula de Medios tras una visita de mantenimiento.">
+    <meta name="description" content="Solicita tu Asesoría en TICCAD con la OTDE — Banco de Materiales y Chuka para tu Aula de Medios, o Excel básico para personal administrativo.">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Asesorías en TICCAD - OTDE - SEPRN</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -42,9 +42,10 @@
 
 <section class="hero hero-sm">
     <div class="hero-inner">
+        <a href="oficina-virtual.html" class="tramite-back-link">← Volver a Oficina Virtual</a>
         <span class="hero-badge">OTDE · SEPRN</span>
         <h1>Asesorías en TICCAD</h1>
-        <p>Banco de Materiales y Chuka para tu Aula de Medios</p>
+        <p>Banco de Materiales y Chuka para tu Aula de Medios, o Excel básico para personal administrativo</p>
     </div>
     <div class="hero-glow"></div>
 </section>
@@ -52,16 +53,23 @@
 
     <div class="servicio-header">
         <h2>Asesorías en TICCAD</h2>
-        <p>Capacitación grupal para que los docentes conozcan, exploren e integren en su práctica los recursos digitales ya instalados en su Aula de Medios (Banco de Materiales, Chuka) tras una visita de mantenimiento.</p>
+        <p>Capacitación grupal en dos modalidades: para que los docentes conozcan, exploren e integren en su práctica los recursos digitales ya instalados en su Aula de Medios (Banco de Materiales, Chuka); o para que el personal administrativo de zona, sector y escuela resuelva con Excel las tareas del día a día.</p>
     </div>
 
     <div class="content-block">
         <h3>¿Cómo funciona?</h3>
-        <p>Al finalizar una visita de mantenimiento, el técnico de la OTDE ofrece al director o directora la posibilidad de agendar esta asesoría. Si aceptas, elabora tu oficio de solicitud y adjúntalo aquí — sigue siendo el respaldo oficial. Con tus datos y el oficio, revisamos agenda y te contactamos para programar la visita.</p>
+        <p><strong>Banco de Materiales y Chuka:</strong> al finalizar una visita de mantenimiento, el técnico de la OTDE ofrece al director o directora la posibilidad de agendar esta asesoría — requiere que esos recursos ya estén instalados.</p>
+        <p><strong>Excel básico:</strong> pensada para ATP de zona/sector, directores, subdirectores y personal administrativo — no requiere una visita de mantenimiento previa. Cuéntanos qué necesitas resolver (duplicados, filtrar tu base, combinar correspondencia, fórmulas, etc.) y OTDE contextualiza la sesión a tus tareas reales.</p>
+        <p>En ambos casos, elabora tu oficio de solicitud y adjúntalo aquí — sigue siendo el respaldo oficial. Con tus datos y el oficio, revisamos agenda y te contactamos para programar la sesión.</p>
     </div>
 
     <div class="content-block">
         <h3>¡Solicita tu Asesoría!</h3>
+
+        <div class="highlight-box">
+            <p><strong>Sobre tus datos:</strong></p>
+            <p>Este formulario registra tu nombre, función, CCT, teléfono y correo, con el único fin de gestionar tu solicitud de asesoría y darte seguimiento. No se comparten con terceros ajenos a OTDE.</p>
+        </div>
 
         <button class="form-button" id="btn-asesoria" aria-expanded="false" onclick="toggleAsesoriaForm(this)">
             <span id="btn-asesoria-text">Solicitar Asesoría</span>
@@ -72,18 +80,47 @@
             <form id="asesoria-form" onsubmit="return enviarSolicitudAsesoria(event)" novalidate>
                 <div class="soporte-form-group">
                     <label for="ase-tipo">Tipo de asesoría<span class="req">*</span></label>
-                    <select id="ase-tipo" required>
+                    <select id="ase-tipo" required onchange="aseToggleTipoAsesoria()">
                         <option value="">— Selecciona una opción —</option>
                         <option value="Banco de Materiales y Chuka">Banco de Materiales y Chuka (sesión de 2 a 2.5 horas)</option>
+                        <option value="Excel básico">Excel básico para personal administrativo</option>
                     </select>
                     <div class="soporte-field-error" id="ase-tipo-error">Selecciona el tipo de asesoría.</div>
                 </div>
-                <div class="soporte-form-group" id="ase-confirma-mantenimiento-group">
+                <div class="soporte-form-group" id="ase-confirma-mantenimiento-group" style="display:none;">
                     <label style="display:flex;align-items:flex-start;gap:8px;font-weight:normal;">
-                        <input type="checkbox" id="ase-confirma-mantenimiento" style="margin-top:3px;" required>
+                        <input type="checkbox" id="ase-confirma-mantenimiento" style="margin-top:3px;">
                         <span>Confirmo que mi Aula de Medios ya recibió una visita de mantenimiento con instalación de Banco de Materiales y Chuka<span class="req">*</span> — esta asesoría requiere que esos recursos ya estén instalados en los equipos.</span>
                     </label>
                     <div class="soporte-field-error" id="ase-confirma-mantenimiento-error">Debes confirmar esto antes de continuar; si aún no tienes mantenimiento, solicítalo primero desde la <a href="oficina-virtual.html">Oficina Virtual</a>.</div>
+                </div>
+                <div class="soporte-form-group" id="ase-excel-temas-group" style="display:none;">
+                    <label>¿Qué te gustaría aprender? (opcional, puedes marcar varios)</label>
+                    <label style="display:flex;align-items:flex-start;gap:8px;font-weight:normal;margin-bottom:6px;">
+                        <input type="checkbox" class="ase-excel-tema" value="Encontrar docentes o CCT duplicados" style="margin-top:3px;">
+                        <span>Encontrar docentes o CCT duplicados en una base de datos</span>
+                    </label>
+                    <label style="display:flex;align-items:flex-start;gap:8px;font-weight:normal;margin-bottom:6px;">
+                        <input type="checkbox" class="ase-excel-tema" value="Filtrar registros de mi zona, sector o subdirección" style="margin-top:3px;">
+                        <span>Filtrar de una base general los registros de mi zona, sector o subdirección</span>
+                    </label>
+                    <label style="display:flex;align-items:flex-start;gap:8px;font-weight:normal;margin-bottom:6px;">
+                        <input type="checkbox" class="ase-excel-tema" value="Validar longitud de RFC, CURP o CCT" style="margin-top:3px;">
+                        <span>Contar caracteres / validar RFC, CURP o CCT</span>
+                    </label>
+                    <label style="display:flex;align-items:flex-start;gap:8px;font-weight:normal;margin-bottom:6px;">
+                        <input type="checkbox" class="ase-excel-tema" value="Combinar correspondencia con Word" style="margin-top:3px;">
+                        <span>Combinar correspondencia con Word (oficios personalizados)</span>
+                    </label>
+                    <label style="display:flex;align-items:flex-start;gap:8px;font-weight:normal;margin-bottom:6px;">
+                        <input type="checkbox" class="ase-excel-tema" value="Fórmulas y funciones básicas" style="margin-top:3px;">
+                        <span>Fórmulas y funciones básicas (sumar, restar, contar, graficar, filtrar)</span>
+                    </label>
+                    <label style="display:flex;align-items:flex-start;gap:8px;font-weight:normal;">
+                        <input type="checkbox" class="ase-excel-tema" value="Introducción a IA/Copilot en Excel" style="margin-top:3px;">
+                        <span>Introducción a IA/Copilot en Excel</span>
+                    </label>
+                    <div class="soporte-field-hint">Marca los que te interesen — no es obligatorio. Si tu necesidad es distinta, descríbela en Observaciones.</div>
                 </div>
                 <div class="soporte-form-group">
                     <label for="ase-nombre">Nombre completo<span class="req">*</span></label>
@@ -160,12 +197,13 @@
                         <option>Vespertino</option>
                         <option>Tiempo Completo</option>
                         <option>Discontinuo</option>
+                        <option>No aplica (oficina)</option>
                     </select>
                     <div class="soporte-field-error" id="ase-turno-error">Selecciona el turno.</div>
                 </div>
 
                 <div class="soporte-form-group">
-                    <label for="ase-funcion">Función/Cargo<span class="req">*</span></label>
+                    <label for="ase-funcion">Función/Cargo del solicitante<span class="req">*</span></label>
                     <select id="ase-funcion" required onchange="aseToggleOtraFuncion()">
                         <option value="">— Selecciona una opción —</option>
                     </select>
@@ -177,9 +215,9 @@
                 </div>
 
                 <div class="soporte-form-group">
-                    <label for="ase-num-docentes">Número de docentes que participarían<span class="req">*</span></label>
+                    <label for="ase-num-docentes">Número de personas que participarían<span class="req">*</span></label>
                     <input type="number" id="ase-num-docentes" min="1" max="200" inputmode="numeric" required>
-                    <div class="soporte-field-error" id="ase-num-docentes-error">Indica cuántos docentes participarían.</div>
+                    <div class="soporte-field-error" id="ase-num-docentes-error">Indica cuántas personas participarían (entre 1 y 200).</div>
                 </div>
 
                 <div class="soporte-form-group">
@@ -197,6 +235,7 @@
                 <div class="soporte-form-group">
                     <label for="ase-observaciones">Observaciones</label>
                     <textarea id="ase-observaciones" placeholder="Opcional: horario preferido, temas de interés, etc."></textarea>
+                    <div class="soporte-field-hint" id="ase-observaciones-hint" style="display:none;">Describe tu necesidad específica (ej. qué tipo de reportes o bases manejas) si no quedó cubierta por los temas de arriba.</div>
                 </div>
                 <div class="soporte-form-group">
                     <label for="ase-oficio">Oficio de solicitud (solo PDF)<span class="req">*</span></label>
@@ -211,6 +250,16 @@
 
                 <div id="asesoria-msg" class="soporte-submit-msg"></div>
             </form>
+        </div>
+    </div>
+
+    <div class="tramite-otros-tramites">
+        <p>Otros trámites</p>
+        <div class="tramite-otros-links">
+            <a href="mantenimiento.html">Mantenimiento</a>
+            <a href="correo.html">Correo Institucional</a>
+            <a href="soporte.html">Soporte Técnico</a>
+            <a href="oficina-virtual.html">Oficina Virtual →</a>
         </div>
     </div>
 
@@ -305,6 +354,30 @@
     document.getElementById('ase-confirma-mantenimiento').addEventListener('change', function() {
         if (this.checked) document.getElementById('ase-confirma-mantenimiento-error').classList.remove('visible');
     });
+
+    // ── Cada tipo de asesoría pide cosas distintas: "Banco de Materiales y
+    // Chuka" exige confirmar mantenimiento previo (no aplica a Excel básico,
+    // que es una solicitud proactiva sin ese requisito); Excel básico muestra
+    // en cambio un checklist de temas sugeridos. ──
+    function aseToggleTipoAsesoria() {
+        var tipo = document.getElementById('ase-tipo').value;
+        var esBanco = tipo === 'Banco de Materiales y Chuka';
+        var esExcel = tipo === 'Excel básico';
+
+        var confirmaGroup = document.getElementById('ase-confirma-mantenimiento-group');
+        var confirmaInput = document.getElementById('ase-confirma-mantenimiento');
+        confirmaGroup.style.display = esBanco ? 'block' : 'none';
+        if (!esBanco) {
+            confirmaInput.checked = false;
+            document.getElementById('ase-confirma-mantenimiento-error').classList.remove('visible');
+        }
+
+        document.getElementById('ase-excel-temas-group').style.display = esExcel ? 'block' : 'none';
+        document.getElementById('ase-observaciones-hint').style.display = esExcel ? 'block' : 'none';
+        if (!esExcel) {
+            document.querySelectorAll('.ase-excel-tema:checked').forEach(function(cb) { cb.checked = false; });
+        }
+    }
 
     function aseToggleOtraFuncion() {
         var val = document.getElementById('ase-funcion').value;
@@ -453,6 +526,7 @@
 
     aseInitCctAutocomplete();
     otdePoblarFuncion('ase-funcion', null);
+    aseToggleTipoAsesoria();
 
     function validarAsesoriaForm() {
         var ok = true;
@@ -478,7 +552,7 @@
 
         var confirmaInput = document.getElementById('ase-confirma-mantenimiento');
         var confirmaErr = document.getElementById('ase-confirma-mantenimiento-error');
-        if (!confirmaInput.checked) {
+        if (document.getElementById('ase-tipo').value === 'Banco de Materiales y Chuka' && !confirmaInput.checked) {
             confirmaErr.classList.add('visible');
             ok = false;
         } else {
@@ -488,7 +562,7 @@
         var numDocInput = document.getElementById('ase-num-docentes');
         var numDocErr = document.getElementById('ase-num-docentes-error');
         var numDocVal = parseInt(numDocInput.value, 10);
-        if (!numDocInput.value.trim() || isNaN(numDocVal) || numDocVal < 1) {
+        if (!numDocInput.value.trim() || isNaN(numDocVal) || numDocVal < 1 || numDocVal > 200) {
             numDocInput.classList.add('error');
             numDocErr.classList.add('visible');
             ok = false;
@@ -646,6 +720,8 @@
             ? document.getElementById('ase-otra-funcion').value.trim()
             : document.getElementById('ase-funcion').value;
         var oficioFile = document.getElementById('ase-oficio').files[0];
+        var temasExcelVal = Array.from(document.querySelectorAll('.ase-excel-tema:checked'))
+            .map(function(cb) { return cb.value; }).join('; ');
 
         btnSubmit.disabled = true;
         btnSubmit.style.opacity = '0.6';
@@ -668,6 +744,7 @@
                 correo: document.getElementById('ase-correo').value,
                 observaciones: document.getElementById('ase-observaciones').value,
                 confirmaMantenimiento: document.getElementById('ase-confirma-mantenimiento').checked,
+                temasExcel: temasExcelVal,
                 oficioBase64: oficioBase64,
                 oficioNombre: oficioFile.name,
                 oficioTipo: oficioFile.type

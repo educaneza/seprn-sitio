@@ -1267,6 +1267,52 @@ footer {
     color: #333;
     margin-bottom: 15px;
 }
+
+/* ── Navegación de trámite: regreso a Oficina Virtual + links a otros trámites ── */
+/* Agregado ago 2026 — ninguna de las 4 páginas propias de trámite tenía forma de
+   volver al hub sin usar el botón "Atrás" del navegador. */
+.tramite-back-link {
+    display: block;
+    margin-bottom: 18px;
+    color: var(--caramelo-claro);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    animation: hero-enter 0.6s ease-out both;
+}
+.tramite-back-link:hover {
+    text-decoration: underline;
+}
+.tramite-otros-tramites {
+    margin: 40px 0 0 0;
+    padding-top: 28px;
+    border-top: 1px solid var(--arena);
+    text-align: center;
+}
+.tramite-otros-tramites p {
+    font-size: 12px;
+    color: var(--caramelo-oscuro);
+    margin: 0 0 12px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+}
+.tramite-otros-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px 20px;
+}
+.tramite-otros-links a {
+    font-size: 14px;
+    color: var(--guinda-acento);
+    text-decoration: none;
+    font-weight: 600;
+}
+.tramite-otros-links a:hover {
+    text-decoration: underline;
+}
+
 .form-button {
     display: flex;
     align-items: center;
@@ -1294,6 +1340,8 @@ footer {
     overflow: hidden;
     transition: all 0.4s;
     max-height: 0;
+    max-width: 640px;
+    margin: 0 auto;
 }
 .form-container.active {
     max-height: 3200px;
