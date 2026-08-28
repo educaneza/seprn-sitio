@@ -698,6 +698,10 @@
         });
 
         altInputCct.addEventListener('change', function() {
+            if (!altCctEncontrada) {
+                var exacto = CCT_DB.filter(function(e) { return e.cct === altInputCct.value.trim().toUpperCase(); })[0];
+                if (exacto) { altSeleccionarCct(exacto); return; }
+            }
             if (!altCctEncontrada && altInputCct.value.trim().length >= 8) {
                 altStatusBox.className = 'sop-cct-status warn';
                 altStatusBox.textContent = 'CCT no encontrada en nuestra base. Puedes capturar los datos manualmente.';
@@ -1182,6 +1186,10 @@
             });
 
             estado.input.addEventListener('change', function() {
+                if (!estado.encontrada) {
+                    var exacto = CCT_DB.filter(function(e) { return e.cct === estado.input.value.trim().toUpperCase(); })[0];
+                    if (exacto) { seleccionarCct(exacto); return; }
+                }
                 if (!estado.encontrada && estado.input.value.trim().length >= 8) {
                     estado.statusBox.className = 'sop-cct-status warn';
                     estado.statusBox.textContent = 'CCT no encontrada en nuestra base. Puedes capturar los datos manualmente.';
