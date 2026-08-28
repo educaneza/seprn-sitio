@@ -500,6 +500,20 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     sesión. Si se repite, opciones a evaluar (no decididas): mover el material histórico de CTE
     fuera del repo (enlace externo, Drive) en vez de servirlo desde GitHub Pages, o Git LFS para
     los binarios grandes.
+11. **Soporte Técnico Remoto sin correo de confirmación al enviar** (detectado 28 ago 2026,
+    integration test) — a diferencia de Mantenimiento, Asesorías y los 4 sub-formularios de
+    Correo Institucional (que confirman de inmediato al solicitante), `apps-script/soporte-remoto.gs`
+    hoy solo manda correo al *cerrar* el ticket (`sopNotificarCierreSolicitante`), nunca al
+    recibir la solicitud inicial. Jorge pidió anotarlo: Soporte también debería mandar una
+    confirmación inmediata, igual que los demás trámites.
+12. **Unificar diseño de los correos electrónicos institucionales** (anotado 28 ago 2026,
+    debate pospuesto a propósito por Jorge — "eso lo debatimos después") — hoy cada backend
+    (`mantenimiento.gs`, `asesorias.gs`, `soporte-remoto.gs`, y los 4 de
+    `Correos-institucionales/webform-2026-2027/`) arma su propio HTML de correo con variaciones
+    menores entre sí. Unificar diseño, contenido, formato, firma electrónica, redes sociales y en
+    general todo lo que debe llevar un correo institucional de OTDE — posiblemente con
+    variaciones de color/etiqueta por trámite para diferenciarlos, sin romper una base común. Sin
+    diseño decidido todavía.
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue

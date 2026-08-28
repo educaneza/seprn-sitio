@@ -218,7 +218,15 @@ La fecha/número de la implementación activa en "Administrar las implementacion
 suficiente evidencia — puede estar desactualizada por el mismo motivo.
 
 **Dónde ya pasó:** `apps-script/asesorias.gs` y `apps-script/formacion-docente.gs` (6→7 ago
-2026).
+2026). **Nueva ocurrencia (28 ago 2026):** el condicional que hace opcional la casilla de
+confirmación de mantenimiento previo para el tipo "Excel básico" (`d.tipoAsesoria.trim() ===
+'Banco de Materiales y Chuka' && !d.confirmaMantenimiento`) sí está en el repo, pero producción
+lo sigue exigiendo también para "Excel básico" — detectado esta vez no por grep en el editor,
+sino con un submit real vía `curl` contra el endpoint desplegado (integration test de todo el
+sitio) que devolvió el error de la casilla pese a mandar `tipoAsesoria: 'Excel básico'`. Confirma
+que el método del editor (`Cmd+F`) no es la única forma válida de verificar un redeploy — un
+submit real de caja negra contra el endpoint público también lo expone, sin necesitar acceso al
+editor de Apps Script.
 
 ## 11. Regla de ancho compartida (`input { width:100% }`) también estira los checkboxes
 
@@ -439,6 +447,28 @@ registrados no se duplican).
 backend en un `for`/`for...of` con un solo `try/catch` alrededor de todo — si una falla a la
 mitad, revisar explícitamente qué le pasa a los resultados ya acumulados antes de dar el fix
 por bueno, no asumir que "mostrar el error" es suficiente.
+
+## 20. Correo de confirmación de Asesorías no llegó pese a `status:ok` y folio válido — causa raíz sin diagnosticar
+
+**Síntoma:** al probar Asesorías (integration test, 28 ago 2026, folio `OTDE-ASE-0001`), el
+`POST` regresó `{"status":"ok","folio":"OTDE-ASE-0001"}` y el folio quedó consultable por
+`?action=consulta` con estatus "Pendiente de validar" — la solicitud sí se guardó en `Solicitudes`
+correctamente. El correo de confirmación al solicitante, en cambio, nunca llegó. Los otros 6
+flujos probados en la misma sesión (Soporte, Mantenimiento, y los 4 de Correo Institucional) sí
+mandaron su correo de confirmación sin problema, con el mismo correo de prueba como destinatario.
+
+**Causa raíz:** no investigada esta sesión. Hipótesis sin confirmar: podría estar relacionado con
+el mismo despliegue desincronizado del ítem #10 arriba (`asesorias.gs` local vs. lo realmente
+pegado en el editor), o ser un problema aparte específico de `aseNotificarSolicitudRecibida()` (o
+el nombre real de esa función en el código desplegado — verificar contra el editor, no asumir que
+coincide con el nombre del repo dado el ítem #10). El `try/catch` silencioso que envuelve el envío
+de correo en los 3 backends de este repo (documentado como diseño intencional — "no bloquea el
+registro si el envío falla") también significa que un error real ahí no deja ningún rastro
+visible para el solicitante ni para OTDE.
+
+**Pendiente:** diagnosticar contra el editor de Apps Script real (revisar Ejecuciones/logs del
+proyecto "Asesorias - Backend" alrededor de la hora del folio `OTDE-ASE-0001`, 2026-08-28
+~21:28 UTC) antes de asumir cuál de las dos hipótesis es la correcta.
 
 ## Regla general al corregir cualquiera de estos patrones
 

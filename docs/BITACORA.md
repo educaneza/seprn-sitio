@@ -14,6 +14,34 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-08-28 (cont. 2) · Integration test de todo el sitio: navegación completa + 7 submits reales verificados contra producción
+
+| | |
+|---|---|
+| **Fecha** | 2026-08-28 |
+| **Sesión** | A petición del usuario ("realiza un Integration test de todo el sitio"). Se dividió en 2 fases: navegación estática local, y submits reales contra los backends de producción con datos de prueba — esta segunda fase requirió autorización explícita del usuario dos veces (el clasificador de modo automático de Claude Code bloqueó dos intentos de delegarla a un subagente; se ejecutó en el hilo principal con `curl`). |
+| **Fase 1 — navegación local** (`python3 -m http.server`) | 26 páginas HTML probadas (24 en raíz + 2 manuales en `docs/`), todas 200. Un "link roto" detectado por el crawler resultó falso positivo: el `href` a `pdfs/cte/cuarta-sesion/cuarta-sesion-completa.zip` en `cte.html` vive dentro del bloque HTML comentado "Sesión de Ejemplo (COLAPSADA) — Copia este bloque para agregar más sesiones" (plantilla de referencia, nunca se renderiza) — no requirió fix. Sin errores JS propios del sitio en `index.html`/`cte.html`/`formacion-docente.html`/`oficina-virtual.html`. Nav/footer consistentes en las páginas que comparten header institucional. |
+| **Fase 2 — submits reales contra producción** | 7 flujos probados con datos marcados "PRUEBA — Integration Test 2026-08-28" y el correo personal del usuario como solicitante — CCT `15FJS0015D` (Jefatura Sector I, tipo `jefatura`) usado en Mantenimiento/Asesorías para que el propio código dejara el CC vacío (`aseFiltrarContactosPorTipo`/`manFiltrarContactosPorTipo`) y no se notificara a Zona/Sector reales. Los 7 regresaron folio válido y pasaron la verificación posterior por `?action=consulta`: `OTDE-SOP-0004` (Soporte), `OTDE-MAN-0001` (Mantenimiento), `OTDE-ASE-0001` (Asesorías), `OTDE-ALT-0001`/`OTDE-CAM-0001`/`OTDE-2FA-0004`/`OTDE-INC-0001` (los 4 sub-formularios de Correo Institucional, backend en el repo aparte `Correos-institucionales/webform-2026-2027/`). Formación Docente: catálogo de cursos vacío en producción (confirma el pendiente ya conocido de dar de alta cursos del ciclo 26-27) — `doGet` respondió sano, `doPost` no se probó por falta de un curso real al que inscribir. Fuera de alcance a propósito, sin submit real: `reporte-visita.html` (siempre notifica a escuela+técnico+OTDE reales, sin excepción en el código), `charla-ia.html`/`conferencia-ia.gs` y `asistencia.html` (evento de jun 2026 ya pasado). Quedaron 7 filas de prueba en Sheets de producción, pendientes de que Jorge las borre (folios de arriba). |
+| **Hallazgo — bug de despliegue en Asesorías** (`apps-script/asesorias.gs`) | Al probar tipo "Excel básico" (que según el código local del repo NO debería exigir la casilla de confirmación de mantenimiento previo — esa exigencia es solo para "Banco de Materiales y Chuka"), producción rechazó la solicitud citando esa misma casilla. El condicional correcto sí existe en el repo (`if (d.tipoAsesoria.trim() === 'Banco de Materiales y Chuka' && !d.confirmaMantenimiento)`), así que el comportamiento observado confirma que esa versión no está desplegada en el editor de Apps Script — mismo patrón que `docs/QA-NOTES.md #10` ("Un fix 'corregido' en el repo no está corregido hasta que se redespliega"), nueva ocurrencia agregada ahí. Pendiente para Jorge: copiar `asesorias.gs` al editor y Administrar implementaciones → Nueva versión. |
+| **Hallazgo — correo de confirmación de Asesorías nunca llegó** | De los 7 correos de confirmación esperados (uno por flujo, con `to`=correo del usuario), el usuario confirmó que los 6 restantes sí llegaron pero el de Asesorías (folio `OTDE-ASE-0001`) no — pese a que el submit regresó `status:ok` y el folio es consultable, así que el registro en Sheets se guardó bien. Causa raíz no investigada esta sesión — nuevo `docs/QA-NOTES.md #20`, pendiente de diagnosticar (podría ser el mismo despliegue desincronizado de arriba, o un problema aparte). |
+| **Pendientes nuevos anotados por el usuario, para debatir/implementar después** | (1) Soporte Técnico Remoto (`apps-script/soporte-remoto.gs`) hoy solo manda correo al *cerrar* el ticket (`sopNotificarCierreSolicitante`), nunca al recibir la solicitud — a diferencia de Mantenimiento/Asesorías/Correo Institucional, que sí confirman de inmediato. (2) Unificar diseño/contenido/formato/firma electrónica/redes sociales de todos los correos institucionales que manda OTDE (hoy cada backend arma su propio HTML con variaciones menores) — posiblemente con variaciones de color/etiqueta por trámite, sin diseño decidido todavía; el usuario pidió explícitamente posponer el debate. Ambos agregados a `docs/ROADMAP.md`, ítems 11 y 12. |
+| **Verificación** | Cada uno de los 7 submits confirmado por su propio folio + `?action=consulta` posterior con el mismo folio y correo, mostrando estatus y fecha correctos. |
+| **Commits** | Ninguno de código — sesión de solo pruebas, sin cambios en el repo salvo esta actualización de documentación. |
+
+---
+
+## CHECKPOINT — 2026-08-28 (cont.) · Fix: falso "CCT no encontrada" al escribir la clave exacta y salir con Tab
+
+| | |
+|---|---|
+| **Fecha** | 2026-08-28 |
+| **Sesión** | Continuación de la sesión anterior del mismo día. Bug reportado: el listener de `change` (blur) de las 4 páginas de trámite (`correo.html`, `mantenimiento.html`, `asesorias.html`, `soporte.html`) solo marcaba una CCT como encontrada si el usuario clickeaba la sugerencia del autocomplete o navegaba con flechas+Enter — si escribía la CCT completa y correcta y salía con Tab sin clickear, el formulario mostraba "CCT no encontrada en nuestra base" y forzaba captura manual aunque la CCT sí existiera. |
+| **Fix** | El listener de `change` de las 4 páginas ahora intenta primero una coincidencia exacta contra `CCT_DB` (`CCT_DB.filter(e => e.cct === <valor>.trim().toUpperCase())[0]`) antes de declarar "no encontrada" y forzar el fallback manual. Mismo patrón repetido en los 4 archivos (`asesorias.html`, `mantenimiento.html`, `soporte.html`, y 2 instancias dentro de `correo.html` — Alta y el helper compartido de Cambio/Reset/Incidencias), sin componente compartido nuevo — consistente con la convención ya establecida de este bloque de páginas. |
+| **Verificación** | `git show --stat 262e880`: 4 archivos, 20 líneas agregadas, 0 eliminadas. |
+| **Commits** | `262e880` (código, ya comiteado). Pendiente el de esta actualización de documentación de cierre. |
+
+---
+
 ## CHECKPOINT — 2026-08-28 · Observaciones de Jorge sobre los 4 webforms, Excel básico en Asesorías, y auditoría (smoketest + QA extremo) de esos 4 más Formación Docente
 
 | | |
