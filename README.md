@@ -82,6 +82,8 @@ seprn-sitio/
 ├── asistencia.html                # Check-in con QR/PIN para operador en puerta (evento IA)
 ├── formacion-docente.html        # Centro de Formación Docente — catálogo dinámico + registro, diseño premium propio
 ├── instructivo-formacion-docente.html  # Guía imprimible del Centro de Formación Docente
+├── ceremonias-civicas.html       # Ceremonias Cívicas (ago 2026) — reserva de visitas SEPRN-wide (no un trámite de OTDE), histórico y cobertura
+├── ficha-ceremonias-civicas.html # Ficha post-visita de Ceremonias Cívicas, localizada por folio — sin entrada en nav/footer, link directo
 ├── 404.html                      # Página de error personalizada
 │
 ├── js/
@@ -95,7 +97,8 @@ seprn-sitio/
 │   ├── formacion-docente.gs      # Backend Centro de Formación Docente + Jornada Verano (Docentes/Cursos/Inscripciones, folios OTDE-CAP-NNNN, recordatorios automáticos)
 │   ├── mantenimiento.gs          # Backend Mantenimiento (ago 2026) — webform complementa el oficio, no lo sustituye
 │   ├── asesorias.gs              # Backend Asesorías (ago 2026) — mismo patrón que mantenimiento.gs
-│   └── panel-otde.gs             # Panel único de solicitudes pendientes (ago 2026) — Sheet aparte, agrega los 4 backends con folio
+│   ├── panel-otde.gs             # Panel único de solicitudes pendientes (ago 2026) — Sheet aparte, agrega los 4 backends con folio
+│   └── visitas-jefes.gs          # Backend Ceremonias Cívicas (ago 2026) — SEPRN-wide, no un trámite de OTDE; folio SEPRN-CC-NNNN, sin correo/Telegram a propósito
 │
 ├── descargas/                    # Instaladores/ejecutables descargables
 │   ├── Instalador_Office_2019_OTDE.exe

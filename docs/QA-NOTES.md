@@ -470,6 +470,25 @@ visible para el solicitante ni para OTDE.
 proyecto "Asesorias - Backend" alrededor de la hora del folio `OTDE-ASE-0001`, 2026-08-28
 ~21:28 UTC) antes de asumir cuál de las dos hipótesis es la correcta.
 
+## 21. Servidor de pruebas local (`python3 -m http.server`) sirve HTML/JS cacheado tras editar el archivo
+
+**Síntoma:** se edita un `.html` (o su `<script>` inline) y se navega de nuevo a la misma URL en
+la misma pestaña de Chrome (incluso con un `navigate` fresco, distinto de solo recargar) — el
+comportamiento nuevo no aparece, la página sigue actuando como la versión anterior. Pasó
+probando un cambio de UI/UX en `ficha-ceremonias-civicas.html` (30 ago 2026): un fix que sí
+estaba guardado en disco no se reflejaba en el navegador tras dos navegaciones seguidas.
+
+**Causa raíz:** `python3 -m http.server` no manda cabeceras `Cache-Control`/`ETag` que le digan
+a Chrome que revalide — el navegador puede servir su copia en caché de un archivo aunque el
+archivo en disco ya haya cambiado, incluso navegando de nuevo a la misma URL sin refrescar la
+pestaña por su cuenta.
+
+**Cómo confirmarlo y evitarlo:** si un cambio de HTML/JS no se refleja pese a estar guardado,
+forzar `Cmd+Shift+R` (hard reload, ignora caché) o agregar un parámetro de query nuevo a la URL
+(`?v=2`, incrementando cada vez) antes de dar el comportamiento por confirmado o descartado. No
+asumir que el código tiene un bug solo porque el navegador no refleja el cambio — descartar
+primero el caché.
+
 ## Regla general al corregir cualquiera de estos patrones
 
 Cuando se encuentra uno de estos bugs en un archivo, **revisar si el mismo

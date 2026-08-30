@@ -1604,3 +1604,131 @@ sin tocar ningún backend.
 **`docs/ROADMAP.md` ítem 7 queda resuelto por completo** — las 4 páginas de trámite existen y
 `otde.html` terminó con solo contenido informativo. Ningún pendiente nuevo de este ítem para
 sesiones futuras.
+
+## 22. Ceremonias Cívicas — reserva, ficha, cobertura y reporte PDF (agosto 2026)
+
+Primer sistema del repo que no es un trámite de OTDE — lo usan ~20 jefes de área de toda la
+Subdirección más docentes que se sumen, para reservar y reportar sus visitas de acompañamiento
+al inicio de ciclo escolar y a las ceremonias cívicas semanales. Backend propio
+(`apps-script/visitas-jefes.gs`, Sheet real `Seguimiento_Ceremonias_Cívicas_26-27`, tab
+"Reservas") y dos páginas: `ceremonias-civicas.html` (reserva + histórico + cobertura) y
+`ficha-ceremonias-civicas.html` (reporte post-visita).
+
+**Por qué el folio sí hace trabajo real aquí, a diferencia de otros trámites.** En Correo/
+Mantenimiento/Asesorías/Soporte el folio es solo un identificador de seguimiento. Aquí además
+es la llave que permite (a) bloquear que dos personas reserven la misma escuela la misma semana
+(`visExisteReservaActiva_()`, comparando CCT + lunes de la semana calculado con
+`visLunesDeLaSemana_()`, dentro de un `LockService.getScriptLock()` para que dos reservas casi
+simultáneas no pasen ambas la verificación) y (b) que la ficha post-visita **actualice la misma
+fila** que creó la reserva en vez de crear una nueva (`visBuscarFilaPorFolio_()` + `setValues()`
+sobre la fila encontrada) — mismo patrón que `manDoPostReporteVisita_()`/
+`manBuscarFilaReportePorFolio_()` de `mantenimiento.gs`, aquí generalizado a
+`visDoPostFicha_()`/`visBuscarFilaPorFolio_()`.
+
+**Sin notificaciones, a propósito.** A diferencia de todos los demás backends de OTDE, este
+proyecto no manda correo ni Telegram a nadie — decisión explícita de Jorge para no agregar
+fricción a ~40 personas llenando un formulario rápido. El folio se muestra en pantalla al
+reservar y en el mensaje de éxito con una liga directa a la ficha
+(`ficha-ceremonias-civicas.html?folio=...`); no hay respaldo por correo si alguien lo pierde,
+más allá de solicitarlo directamente a OTDE. Por esto mismo, el formulario de reserva no pide
+correo ni teléfono — se quitaron del HTML y de `visValidarReserva_()` (antes eran campos
+requeridos/opcionales respectivamente, como en el resto del sitio; aquí no tenía caso pedirlos).
+
+**Esquema de la Sheet "Reservas" (24 columnas, `ENCABEZADOS_VIS_RESERVAS`).** A-D identifican la
+reserva (Fecha, Folio, Nombre, Cargo/Área); E-F (Correo/Teléfono) quedan siempre vacías por la
+decisión de arriba pero **no se quitaron del esquema**, mismo criterio de todo el sitio de no
+correr columnas ya existentes; G-N son la escuela/semana/tipo/estatus de la reserva; O-R se
+llenan al completar la ficha (fecha real, evidencias, observaciones de operatividad, fecha de
+envío); S-W (agregadas en la misma sesión, no en una ronda posterior) son los campos pensados
+para el Community Manager — Nombre de la actividad, Propósito, Convocados/Participantes,
+Descripción general, Cantidad de asistentes; X es el Motivo de revisita (ver cobertura, abajo).
+
+**Fotos comprimidas en el navegador antes de subir.** Hasta `VIS_MAX_FOTOS`=20 fotos por ficha
+(antes 6, ampliado a pedido de Jorge). Para que 20 fotos de celular (4-8MB cada una típicamente)
+no acerquen el envío al límite de payload de Apps Script ni se sientan pesadas de subir, cada
+foto se redimensiona a `FICHA_COMPRESION_ANCHO_MAX`=1600px de ancho y se recodifica a JPEG
+calidad `FICHA_COMPRESION_CALIDAD`=0.8 vía `<canvas>` (`comprimirImagen()` en
+`ficha-ceremonias-civicas.html`) antes de convertir a base64 y enviar — típicamente deja cada
+foto en unos cientos de KB. 1600px/calidad 0.8 es más que suficiente para publicaciones de
+Facebook (Meta vuelve a comprimir cualquier imagen que se suba y rara vez muestra más de
+~1200-2048px en el feed); si en el futuro se necesitara mayor resolución para impresos grandes
+(pósters, lonas), esos dos valores son el único lugar a subir. El backend (`VIS_TAMANO_MAX_BYTES`
+= 8MB por foto) queda como techo de seguridad, no como límite real esperado.
+
+**Cobertura desigual — resuelto con avisos, no con un candado.** El bloqueo de arriba solo
+impide duplicar escuela+semana; nada impedía que la misma escuela recibiera varias visitas en
+semanas distintas mientras otras nunca se visitaban. Jorge confirmó que una revisita legítima
+(seguimiento a compromisos acordados en una visita anterior) debe seguir siendo posible, así que
+no cabía un bloqueo duro. En su lugar: un contador de cobertura en `ceremonias-civicas.html`
+("N de \<total\> escuelas visitadas este ciclo", calculado en el cliente contra `CCT_DB`), un
+badge "Ya visitada" en las sugerencias del autocomplete de CCT, y un aviso no bloqueante
+(`visRevisarConflicto()`, con la fecha + nombre + cargo de quien visitó antes) cuando se elige
+una escuela con una visita "Realizada" en una semana distinta a la que se está reservando — con
+un campo opcional "Motivo de revisita" que viaja en el payload (`datos.motivoRevisita`) y se
+guarda en la columna X, para dejar rastro de por qué se repitió sin impedirlo.
+
+**Panel de cobertura por persona/sector, protegido con clave — oculto por ahora.** Visitas
+realizadas por persona y escuelas visitadas por sector, en barras CSS simples (sin librería
+nueva) dentro de `ceremonias-civicas.html`. Jorge planteó que, aunque el link del sitio "es solo
+para gente de confianza", puede filtrarse — y como el sitio no tiene login real (misma decisión
+ya tomada para todo el sitio, ver §19 sobre `oficina-virtual.html`), la respuesta fue acotar el
+problema en vez de resolverlo por completo: solo el panel de cobertura (que expone desempeño
+individual por docente) pide una clave — reservar y la ficha se quedan abiertos, igual que el
+resto del sitio. Mismo patrón `PANEL_TOKEN` que ya usa `panel-otde.gs`/`asesorias.gs`, aquí
+`DASHBOARD_TOKEN` (`visConfigurarTokenDashboard('clave')`, endpoint `?action=dashboard&token=...`
+→ `visObtenerDashboard_()`). **A diferencia del reporte PDF (abajo), este endpoint sí es parte
+del `doGet` del Web App — cualquier cambio a `visObtenerDashboard_()` necesita "Nueva
+implementación" al redesplegar, no basta con guardar en el editor.** El bloque HTML del panel
+quedó comentado (no borrado) en `ceremonias-civicas.html` a petición de Jorge — no lo quiere
+visible en las primeras semanas del ciclo; reactivarlo es quitar el comentario, el JS y el
+backend ya están completos.
+
+**Reporte PDF para quien da seguimiento sin usar Sheets ni correo activamente.** Distinto del
+panel de cobertura: aquí no hay manera digital razonable de darle acceso directo, así que la
+solución fue que alguien más (Jorge u otra persona) le imprima o le platique un resumen
+periódico. `visGenerarReporteSeguimiento_()`, en el menú "SEPRN Visitas" del Sheet (no en el Web
+App — no necesita redeploy, basta con pegar el código y guardar), genera un PDF con tres
+secciones: próximas visitas (tabla), realizadas en los últimos `VIS_REPORTE_DIAS_ATRAS`=14 días
+(en tarjetas legibles, con la Operatividad completa en texto corrido — no una tabla apretada,
+porque es el dato que más le importa a quien da seguimiento) y pendientes "No realizada". Misma
+técnica HTML→PDF que `manGenerarPDFReporte_()` de `mantenimiento.gs`
+(`Utilities.newBlob(html,'text/html').getAs('application/pdf')`), sin la pleca de logos
+institucional (ese base64 vive solo en el proyecto de Mantenimiento, no se duplicó para un
+documento de uso interno). Se guarda en Drive, carpeta "Reportes de Seguimiento — Ceremonias
+Cívicas".
+
+**Validación automática de "No realizada".** La ficha misma es la prueba de que la visita
+ocurrió — si no llega, se asume que no se hizo. `visMarcarNoRealizadas_()` recorre las reservas
+en estatus "Reservada" cuya fecha planeada tenga más de `VIS_DIAS_LIMITE_VALIDACION`=3 días y
+las marca "No realizada"; se instala como trigger de tiempo diario
+(`visInstalarTriggerValidacion()`, nunca llamado `onEdit` a secas, mismo criterio de triggers
+instalables del resto del sitio) desde el menú del Sheet, no automáticamente al desplegar.
+
+**Decisión de arquitectura — Fase 2 (reporte general de actividad para el CM) queda separada,
+sin construir.** Jorge notó que el folio de Ceremonias Cívicas no puede ser la llave de entrada
+de un futuro reporte general para el Community Manager (Facebook), porque ese caso de uso no
+tiene preselección: cualquier oficina de SEPRN reporta su propia actividad por su cuenta, sin
+que exista una reserva previa que el folio pudiera desbloquear — exigirlo ahí sería un obstáculo
+sin propósito. Resuelto con dos flujos independientes en vez de forzar uno a servir ambos casos:
+Ceremonias Cívicas mantiene folio obligatorio (arriba, hace trabajo real); el reporte general
+(`docs/ROADMAP.md` ítem 13, no construido) no pedirá folio de entrada — el folio se generaría al
+final solo como referencia, clonando el patrón de campos de la ficha (nombre de actividad,
+propósito, convocados, descripción, fotos comprimidas) sin el paso de reserva previa, mismo
+criterio que `asesorias.gs` clonado de `mantenimiento.gs`, con Sheet propia (no comparte la de
+Ceremonias Cívicas, mismo criterio de una-Sheet-por-trámite ya usado en OTDE). El nombre
+`ficha-informativa-visita.html` (genérico, sin "ceremonias") quedó reservado para esa página
+futura — la ficha actual se renombró a `ficha-ceremonias-civicas.html` para liberarlo.
+
+**Ajustes de UI/UX encontrados en pruebas y corregidos en la misma sesión.** El link dentro de
+la caja guinda de `ceremonias-civicas.html` (`.servicio-header p a`) no tenía color propio y
+heredaba el azul/morado por defecto del navegador — es el primer `<a>` dentro de un
+`.servicio-header` en todo el sitio, así que nunca se había estilizado; ahora usa un caramelo
+claro inline. "Datos de la actividad" y "Operatividad de la escuela" en la ficha tenían el mismo
+tratamiento visual pese a tener audiencias distintas (una va al CM, la otra es interna) — se
+agregaron badges "Para difusión"/"Uso interno" junto a cada título. El bloque "Localiza tu
+visita" se quedaba visible con el formulario completo aunque la precarga automática por
+`?folio=...` ya hubiera funcionado — ahora se colapsa a una línea compacta
+(`mostrarBuscadorFolio()`/`ficha-folio-encontrado`) en cuanto la búsqueda tiene éxito, manual o
+automática. El aviso de qué fotografiar + protección de menores de edad, que antes solo vivía en
+la ficha (después de la visita, cuando ya no sirve para planear), se agregó también al
+formulario de reserva de `ceremonias-civicas.html`, antes del botón "Reservar visita".
