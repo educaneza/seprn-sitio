@@ -18,8 +18,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap">
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png">
     <link rel="stylesheet" href="styles.css">
     <style>
+        #vis-fecha { max-width: 100%; min-width: 0; -webkit-appearance: none; appearance: none; }
         .vis-tabla-wrap { overflow-x: auto; margin-top: 16px; }
         .vis-tabla { width: 100%; border-collapse: collapse; font-size: 13px; }
         .vis-tabla th, .vis-tabla td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #d6d1ca; white-space: nowrap; }
@@ -45,6 +47,12 @@
         .vis-bar-value { width: 56px; text-align: right; flex-shrink: 0; font-weight: 600; color: #56212f; }
         .vis-dashboard-titulo { color: #56212f; font-size: 15px; margin: 22px 0 10px; }
     </style>
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="SEPRN">
+    <meta property="og:title" content="Ceremonias Cívicas">
+    <meta property="og:description" content="Reserva tu visita a una ceremonia cívica escolar o al inicio de ciclo, y consulta el histórico de visitas — SEPRN.">
+    <meta property="og:url" content="https://educaneza.github.io/seprn-sitio/ceremonias-civicas.html">
+    <meta property="og:image" content="https://educaneza.github.io/seprn-sitio/images/og-image.png">
 </head>
 <body>
 <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
@@ -99,10 +107,12 @@
                     <label for="vis-cargo">Subjefatura/Oficina<span class="req">*</span></label>
                     <select id="vis-cargo" required onchange="visToggleOtroCargo()">
                         <option value="">— Selecciona una opción —</option>
+                        <option>Encargada del Despacho</option>
                         <option>Subjefatura Académica</option>
                         <option>Subjefatura de Personal</option>
                         <option>Subjefatura de Planeación</option>
                         <option>Subjefatura de Recursos</option>
+                        <option>Secretaría Particular</option>
                         <option>OTDE</option>
                         <option>OEVE</option>
                         <option>Asuntos Jurídicos</option>

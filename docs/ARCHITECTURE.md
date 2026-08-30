@@ -580,9 +580,9 @@ Antes de hacer commit de una página nueva:
 - [ ] `<meta charset="UTF-8">`, `<meta name="viewport" ...>`, `<meta name="description" content="...">`
 - [ ] `<title>[Sección] - SEPRN</title>`
 - [ ] `<link rel="preconnect">` × 2 + `<link>` de Montserrat
-- [ ] `<link rel="icon" href="favicon.svg" type="image/svg+xml">`
+- [ ] `<link rel="icon" href="favicon.svg" type="image/svg+xml">` + `<link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png">` (el PNG es obligatorio — WhatsApp y la mayoría de crawlers de redes sociales no rasterizan favicons SVG para la vista previa del link, ver §23)
 - [ ] `<link rel="stylesheet" href="styles.css">`
-- [ ] OG tags: `og:type`, `og:site_name`, `og:title`, `og:description`, `og:url`
+- [ ] OG tags: `og:type`, `og:site_name`, `og:title`, `og:description`, `og:url`, `og:image` (usar siempre `https://educaneza.github.io/seprn-sitio/images/og-image.png` salvo que la página tenga una imagen propia más representativa)
 - [ ] Primera línea de `<body>`: `<a href="#main-content" class="skip-link">Saltar al contenido principal</a>`
 - [ ] Nav completo con los 5 ítems + `nav-toggle` + `class="active"` + `aria-current="page"` en el ítem actual
 - [ ] Sección hero: `<section class="hero hero-sm">` con `.hero-badge`, `<h1>`, `<p>`, `.hero-glow`
@@ -1732,3 +1732,60 @@ visita" se quedaba visible con el formulario completo aunque la precarga automá
 automática. El aviso de qué fotografiar + protección de menores de edad, que antes solo vivía en
 la ficha (después de la visita, cuando ya no sirve para planear), se agregó también al
 formulario de reserva de `ceremonias-civicas.html`, antes del botón "Reservar visita".
+
+**Ajustes puntuales de sesión siguiente (30 ago 2026).** El select "Subjefatura/Oficina" ganó
+dos opciones nuevas — "Encargada del Despacho" (primera opción real, antes de las Subjefaturas) y
+"Secretaría Particular" (entre Recursos y OTDE) — a pedido de Jorge, sin tocar la lógica de
+`visToggleOtroCargo()`. Además, Jorge reportó que el campo "Fecha planeada" (`#vis-fecha`) se
+desbordaba en móvil; no se logró reproducir en Chrome (probado a 371px de viewport real vía
+iframe same-origin, sin overflow) ni en headless de este equipo (fuerza un mínimo de ventana de
+500px, inútil para simular anchos de celular) — el patrón encaja con un bug conocido de Safari/
+iOS donde `<input type="date">` ignora el `width` del contenedor. Se aplicó el fix estándar
+(`max-width:100%; min-width:0; -webkit-appearance:none; appearance:none` en `#vis-fecha`) sin
+poder confirmarlo contra Safari real; si el problema persiste, siguiente paso es revisar con
+captura de pantalla real del teléfono de Jorge en vez de seguir adivinando.
+
+---
+
+## 23. Favicon PNG + `og:image` en las 26 páginas del sitio (agosto 2026)
+
+Jorge reportó que al compartir el link del sitio por WhatsApp, solo la URL de `index.html`
+mostraba un ícono en la vista previa — las demás páginas no. Causa raíz encontrada: ninguna
+página tenía `og:image` (ni siquiera las 14 que ya traían el resto del bloque `og:` — `og:type`/
+`og:site_name`/`og:title`/`og:description`/`og:url`, ver checklist en §10), y el único favicon
+existente era `favicon.svg` — WhatsApp (igual que la mayoría de crawlers de redes sociales para
+vistas previas de links) no rasteriza SVG para la miniatura, solo PNG/JPG. La vista previa de
+`index.html` que Jorge veía casi seguro era una cacheada por WhatsApp de antes de que el sitio se
+quedara solo con favicon SVG — no evidencia de que siguiera funcionando de verdad.
+
+**Fix aplicado a las 26 páginas HTML del repo (`*.html` en la raíz):**
+- `favicon-192.png` (nuevo, en la raíz junto a `favicon.svg`) — PNG 192×192 renderizado del mismo
+  logomark NE/ZA de `favicon.svg` (guinda `#56212f` de fondo, texto NE/ZA en caramelo claro),
+  referenciado con `<link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png">`
+  justo después del `<link>` del SVG existente — el SVG se conserva para los navegadores que sí
+  lo soportan, el PNG es el que necesitan los crawlers de redes sociales.
+- `images/og-image.png` (nuevo, 512×512, mismo logomark) — usado como `og:image` en las 26
+  páginas. Es una imagen genérica de marca, no un banner por página; si en el futuro se quiere un
+  `og:image` distinto por sección, sustituir solo esa línea en la página correspondiente.
+- Las 14 páginas que ya tenían bloque `og:` (`index.html`, `otde.html`, `oficina-virtual.html`,
+  `cte.html`, `nosotros.html`, `contacto.html`, `areas.html`, `academica.html`, `personal.html`,
+  `planeacion.html`, `recursos.html`, `juridico.html`, `oeve.html`, `protocolos.html`) solo
+  ganaron la línea `og:image` nueva, después de `og:url`.
+- Las 12 páginas que no tenían ningún bloque `og:` (`ceremonias-civicas.html`,
+  `ficha-ceremonias-civicas.html`, `soporte.html`, `mantenimiento.html`, `asesorias.html`,
+  `correo.html`, `formacion-docente.html`, `instructivo-formacion-docente.html`,
+  `reporte-visita.html`, `asistencia.html`, `charla-ia.html`, `404.html`) recibieron el bloque
+  completo (`og:type`/`og:site_name`/`og:title`/`og:description`/`og:url`/`og:image`), insertado
+  justo antes de `</head>` — mismo lugar donde ya vivía en las páginas que lo tenían. `og:title`
+  se derivó del `<title>` de cada página quitándole el sufijo de marca (` - SEPRN`, `| OTDE NEZA`,
+  etc.); `og:description` reusa el `<meta name="description">` existente tal cual. Cuatro páginas
+  no tenían `meta description` (`404.html`, `asistencia.html`,
+  `instructivo-formacion-docente.html`, `reporte-visita.html`) y se les redactó una descripción
+  corta nueva para el `og:description`.
+- Checklist de páginas nuevas (§10) actualizado para exigir el PNG del favicon y `og:image` de
+  aquí en adelante — omitirlos en una página nueva reintroduce el mismo bug.
+
+**No verificado con una vista previa real de WhatsApp en esta sesión** (no hay forma de probarlo
+sin publicar a producción y compartir un link real) — pendiente que Jorge confirme viendo la
+vista previa en su teléfono después del siguiente deploy. WhatsApp además cachea vistas previas
+ya generadas, así que un link ya compartido antes puede tardar en reflejar el cambio.

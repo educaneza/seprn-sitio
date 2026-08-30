@@ -489,6 +489,30 @@ forzar `Cmd+Shift+R` (hard reload, ignora caché) o agregar un parámetro de que
 asumir que el código tiene un bug solo porque el navegador no refleja el cambio — descartar
 primero el caché.
 
+## 22. Favicon SVG sin respaldo PNG + sin `og:image` — WhatsApp no mostraba ícono ni vista previa al compartir un link
+
+**Síntoma:** Jorge reportó que al compartir por WhatsApp el link de `index.html` sí aparecía un
+ícono junto a la vista previa, pero el de cualquier otra página del sitio no.
+
+**Causa raíz:** ninguna de las 26 páginas HTML del sitio tenía `og:image` (ni siquiera las 14
+que ya traían el resto del bloque `og:type`/`og:site_name`/`og:title`/`og:description`/`og:url`),
+y el único favicon declarado era `favicon.svg` — sin ningún `<link rel="icon">` en PNG/ICO de
+respaldo. WhatsApp (como la mayoría de crawlers de redes sociales que arman vistas previas de
+links) no rasteriza SVG para la miniatura, solo formatos raster. El ícono que Jorge veía en el
+link de `index.html` casi seguro era una vista previa vieja **cacheada por WhatsApp** de antes de
+que el sitio se quedara solo con favicon SVG, no evidencia de que ese link siguiera funcionando.
+
+**Fix:** `favicon-192.png` (PNG del mismo logomark NE/ZA) agregado en las 26 páginas junto al
+`<link>` del SVG existente, más `images/og-image.png` (512×512, mismo logomark) como `og:image`
+en las 26 — completando también el bloque `og:` entero en las 12 páginas que no tenían ninguno.
+Detalle completo en `docs/ARCHITECTURE.md §23`.
+
+**Dónde puede volver a pasar:** cualquier página nueva que solo copie el `<link rel="icon"
+href="favicon.svg">` sin el PNG de respaldo, o que arme su bloque `og:` sin `og:image` — el
+checklist de páginas nuevas (`docs/ARCHITECTURE.md §10`) ya se actualizó para exigir ambos, pero
+depende de seguirlo. **No verificado contra una vista previa real de WhatsApp** en esta sesión —
+solo se confirmó que los archivos cargan (200) y que las páginas siguen renderizando bien.
+
 ## Regla general al corregir cualquiera de estos patrones
 
 Cuando se encuentra uno de estos bugs en un archivo, **revisar si el mismo

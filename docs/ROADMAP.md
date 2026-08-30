@@ -531,6 +531,14 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     de diseño mía): a anchos medios (~900-1100px, laptop no maximizada) el párrafo de 5-6 líneas
     se convierte en una columna muy alta de texto centrado, empujando el botón "Reservar visita"
     hacia abajo. Pendiente de que Jorge decida si acortarlo.
+15. **Dos fixes de la sesión del 30 ago 2026 (cont.) sin verificar en dispositivo real** (ver
+    `docs/ARCHITECTURE.md §22`-`§23`): (a) el fix de "Fecha planeada" desbordada en móvil
+    (`#vis-fecha` en `ceremonias-civicas.html`) se aplicó a ciegas — no se pudo reproducir el bug
+    en Chrome ni en headless de este equipo, así que sigue pendiente que Jorge confirme en un
+    iPhone real si se corrigió; (b) el fix de favicon/`og:image` en las 26 páginas (para que
+    WhatsApp muestre ícono y vista previa al compartir cualquier link, no solo el de `index.html`)
+    tampoco se probó contra una vista previa real — pendiente confirmar después del siguiente
+    deploy, considerando que WhatsApp cachea vistas previas ya generadas.
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue
