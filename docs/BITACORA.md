@@ -14,6 +14,23 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-08-30 (cont.) · Ajustes de Ceremonias Cívicas + favicon/og:image en las 26 páginas del sitio
+
+| | |
+|---|---|
+| **Fecha** | 2026-08-30 |
+| **Sesión** | Continuación de la sesión anterior del mismo día (sistema de Ceremonias Cívicas recién construido). Tres pedidos puntuales de Jorge: agregar opciones al select de Subjefatura/Oficina, revisar un desborde en móvil del campo de fecha, y diagnosticar por qué solo el link de `index.html` mostraba ícono al compartirse por WhatsApp. |
+| **`ceremonias-civicas.html` — select "Subjefatura/Oficina"** | Se agregaron dos opciones: "Encargada del Despacho" (a petición de Jorge, reubicada después como la primera opción real del select, antes de las Subjefaturas) y "Secretaría Particular" (entre Recursos y OTDE). Sin cambios en `visToggleOtroCargo()`. |
+| **`ceremonias-civicas.html` — "Fecha planeada" desbordada en móvil** | No se logró reproducir en Chrome: probado a 371px de viewport real vía iframe same-origin (sin overflow), y en headless Chrome de este equipo (que resultó forzar un mínimo de ventana de 500px sin importar los flags usados, inútil para simular anchos de celular). El patrón encaja con un bug conocido de Safari/iOS donde `<input type="date">` ignora el `width` del contenedor. Se aplicó el fix estándar en `#vis-fecha` (`max-width:100%; min-width:0; -webkit-appearance:none; appearance:none`) sin poder confirmarlo contra Safari real — pendiente que Jorge confirme en su teléfono. |
+| **Causa raíz — favicon ausente en WhatsApp salvo en `index.html`** | Ninguna de las 26 páginas HTML del sitio tenía `og:image` (ni las 14 que ya traían el resto del bloque `og:`), y el único favicon existente era `favicon.svg` — WhatsApp (como la mayoría de crawlers de redes sociales) no rasteriza SVG para la miniatura de vista previa. El ícono que Jorge veía en el link de `index.html` casi seguro era una vista previa vieja cacheada por WhatsApp, de antes de que el sitio quedara solo con favicon SVG. |
+| **Fix — favicon PNG + `og:image` en las 26 páginas** | Nuevos `favicon-192.png` (raíz) e `images/og-image.png` (512×512), ambos renderizados del mismo logomark NE/ZA de `favicon.svg`. Las 14 páginas con bloque `og:` existente ganaron solo la línea `og:image`; las 12 sin ningún bloque `og:` (`ceremonias-civicas.html`, `ficha-ceremonias-civicas.html`, `soporte.html`, `mantenimiento.html`, `asesorias.html`, `correo.html`, `formacion-docente.html`, `instructivo-formacion-docente.html`, `reporte-visita.html`, `asistencia.html`, `charla-ia.html`, `404.html`) recibieron el bloque completo, derivando `og:title` del `<title>` existente y `og:description` del `<meta name="description">` (4 páginas sin meta description recibieron una redactada nueva). Detalle completo en `docs/ARCHITECTURE.md §23`; checklist de páginas nuevas (`docs/ARCHITECTURE.md §10`) actualizado para no repetir el bug en páginas futuras. |
+| **Fuera del código — mensaje de WhatsApp para autorización de la jefa** | A pedido de Jorge, se redactó (solo en el chat, no en un archivo del repo) un mensaje breve para que la Dra. Galindo autorice difundir `ceremonias-civicas.html`/`ficha-ceremonias-civicas.html` a los jefes de área. No requiere seguimiento en este repo. |
+| **No verificado en esta sesión** | El fix de favicon/`og:image` no se probó contra una vista previa real de WhatsApp (requiere producción + compartir un link real) — pendiente que Jorge confirme después del siguiente deploy, considerando que WhatsApp cachea vistas previas ya generadas. |
+| **Verificación** | `git diff --stat` sobre las 26 páginas: 115 líneas agregadas, 0 eliminadas. Página de prueba (`ceremonias-civicas.html`) renderizada en Chrome tras los cambios, sin errores visuales. |
+| **Commits** | Ninguno todavía — sigue pendiente junto con el resto del código sin comitear de la sesión anterior del mismo día (sistema de Ceremonias Cívicas). |
+
+---
+
 ## CHECKPOINT — 2026-08-30 · Sistema nuevo: Ceremonias Cívicas (reserva + ficha + cobertura + reporte PDF) — SEPRN-wide, no solo OTDE
 
 | | |
