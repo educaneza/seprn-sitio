@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-7D68DB8ELW"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-7D68DB8ELW');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="description" content="Reserva tu visita a una ceremonia cívica escolar o al inicio de ciclo, y consulta el histórico de visitas — SEPRN.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ceremonias Cívicas - SEPRN</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .vis-tabla-wrap { overflow-x: auto; margin-top: 16px; }
+        .vis-tabla { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .vis-tabla th, .vis-tabla td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #d6d1ca; white-space: nowrap; }
+        .vis-tabla th { background: #56212f; color: #F9F8F5; font-weight: 600; position: sticky; top: 0; }
+        .vis-badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+        .vis-badge-reservada { background: #fff3cd; color: #7a5b00; }
+        .vis-badge-realizada { background: #d4edda; color: #1e5b2f; }
+        .vis-badge-no-realizada { background: #f8d7da; color: #7a1f28; }
+        .vis-badge-cancelada { background: #e2e2e2; color: #555; }
+        .vis-filtro { margin: 16px 0 0 0; }
+        .vis-filtro input { width: 100%; max-width: 340px; padding: 10px 14px; border: 1px solid #d6d1ca; border-radius: 8px; font-family: inherit; font-size: 14px; }
+        .vis-aviso-conflicto { margin-top: 8px; padding: 10px 14px; border-radius: 8px; background: #f8d7da; color: #7a1f28; font-size: 13px; display: none; }
+        .vis-aviso-conflicto.visible { display: block; }
+        .vis-aviso-revisita { margin-top: 8px; padding: 10px 14px; border-radius: 8px; background: #fff3cd; color: #7a5b00; font-size: 13px; display: none; }
+        .vis-aviso-revisita.visible { display: block; }
+        .vis-aviso-revisita textarea { width: 100%; margin-top: 8px; font-family: inherit; font-size: 13px; padding: 8px 10px; border: 1px solid #e0c98f; border-radius: 6px; }
+        .vis-cargando { padding: 16px; color: #977e5b; font-size: 13px; }
+        .vis-cobertura { margin: 0 0 18px 0; }
+        .vis-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 13px; }
+        .vis-bar-label { width: 200px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #333; }
+        .vis-bar-track { flex: 1; background: #F0EDE7; border-radius: 6px; height: 16px; overflow: hidden; }
+        .vis-bar-fill { background: #9F2241; height: 100%; border-radius: 6px; }
+        .vis-bar-value { width: 56px; text-align: right; flex-shrink: 0; font-weight: 600; color: #56212f; }
+        .vis-dashboard-titulo { color: #56212f; font-size: 15px; margin: 22px 0 10px; }
+    </style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Saltar al contenido principal</a>
+<header>
+    <nav>
+        <div class="logo"><svg class="logo-icon" width="34" height="34" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="12" fill="#56212f"/><text x="32" y="27" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#d6d1ca" letter-spacing="-1">NE</text><text x="32" y="53" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#d6d1ca" letter-spacing="-1">ZA</text></svg><span class="logo-text">SEPRN</span></div>
+        <button class="nav-toggle" aria-label="Abrir menú" aria-expanded="false">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <ul>
+            <li><a href="index.html">Inicio</a></li>
+            <li><a href="nosotros.html">Nosotros</a></li>
+            <li><a href="areas.html">Áreas</a></li>
+            <li><a href="cte.html">CTE</a></li>
+            <li><a href="contacto.html">Contacto</a></li>
+        </ul>
+    </nav>
+</header>
+
+<section class="hero hero-sm">
+    <div class="hero-inner">
+        <span class="hero-badge">SEPRN</span>
+        <h1>Ceremonias Cívicas</h1>
+        <p>Inicio de ciclo escolar y acompañamiento semanal de ceremonias cívicas</p>
+    </div>
+    <div class="hero-glow"></div>
+</section>
+<section class="content-section" id="main-content" role="main">
+
+    <div class="servicio-header">
+        <h2>Reserva tu visita</h2>
+        <p>Como parte del acompañamiento institucional a las escuelas de la Subdirección de Educación Primaria en la Región de Nezahualcóyotl, las Subjefaturas y Oficinas realizan visitas para acompañar las ceremonias cívicas y dar seguimiento a la operatividad de cada plantel, identificando en qué se le puede apoyar. Para organizar este ejercicio de forma ordenada, te pedimos reservar aquí la escuela que visitarás, evitando así que coincida con la de otro compañero la misma semana. Al concluir la visita, te pedimos completar la <a href="ficha-ceremonias-civicas.html" style="color:#F2D9C4;text-decoration-color:rgba(242,217,196,0.5);">ficha con evidencias fotográficas</a>, documento que da constancia de que la visita se realizó.</p>
+    </div>
+
+    <div class="content-block">
+        <button class="form-button" id="btn-reservar" aria-expanded="false" onclick="toggleReservarForm(this)">
+            <span id="btn-reservar-text">Reservar visita</span>
+            <span id="btn-reservar-arrow">▼</span>
+        </button>
+
+        <div id="form-reservar" class="form-container">
+            <form id="reservar-form" onsubmit="return enviarReserva(event)" novalidate>
+                <div class="soporte-form-group">
+                    <label for="vis-nombre">Nombre completo<span class="req">*</span></label>
+                    <input type="text" id="vis-nombre" required>
+                    <div class="soporte-field-error" id="vis-nombre-error">Ingresa tu nombre completo.</div>
+                </div>
+
+                <div class="soporte-form-group">
+                    <label for="vis-cargo">Subjefatura/Oficina<span class="req">*</span></label>
+                    <select id="vis-cargo" required onchange="visToggleOtroCargo()">
+                        <option value="">— Selecciona una opción —</option>
+                        <option>Subjefatura Académica</option>
+                        <option>Subjefatura de Personal</option>
+                        <option>Subjefatura de Planeación</option>
+                        <option>Subjefatura de Recursos</option>
+                        <option>OTDE</option>
+                        <option>OEVE</option>
+                        <option>Asuntos Jurídicos</option>
+                        <option>Otro</option>
+                    </select>
+                    <div class="soporte-field-error" id="vis-cargo-error">Selecciona tu Subjefatura u Oficina.</div>
+                    <div id="vis-otro-cargo-group" style="display:none;margin-top:10px;">
+                        <input type="text" id="vis-otro-cargo" placeholder="Especifica tu Subjefatura u Oficina" maxlength="80">
+                        <div class="soporte-field-error" id="vis-otro-cargo-error">Especifica tu Subjefatura u Oficina.</div>
+                    </div>
+                </div>
+
+                <div class="soporte-form-group">
+                    <label for="vis-cct">Escuela a visitar (CCT)<span class="req">*</span></label>
+                    <div class="sop-cct-wrapper">
+                        <input type="text" id="vis-cct" placeholder="15DPR0000A" maxlength="10" autocomplete="off" style="text-transform:uppercase;font-family:monospace;" required>
+                        <ul id="vis-cct-suggestions"></ul>
+                    </div>
+                    <div class="sop-cct-status" id="vis-cct-status"></div>
+                    <div class="soporte-field-error" id="vis-cct-error">Selecciona una escuela válida.</div>
+                </div>
+
+                <div class="sop-manual-fields" id="vis-manual-fields">
+                    <p class="manual-aviso">No encontramos esa CCT. Captura los datos manualmente:</p>
+                    <div class="soporte-form-group">
+                        <label for="vis-sector-manual">Sector<span class="req">*</span></label>
+                        <select id="vis-sector-manual" onchange="visActualizarZonas()">
+                            <option value="">— Selecciona sector —</option>
+                            <option value="I">Sector I</option><option value="II">Sector II</option>
+                            <option value="III">Sector III</option><option value="IV">Sector IV</option>
+                            <option value="V">Sector V</option><option value="VI">Sector VI</option>
+                            <option value="VII">Sector VII</option><option value="VIII">Sector VIII</option>
+                            <option value="IX">Sector IX</option><option value="X">Sector X</option>
+                            <option value="XI">Sector XI</option><option value="XII">Sector XII</option>
+                            <option value="XIII">Sector XIII</option>
+                        </select>
+                        <div class="soporte-field-error" id="vis-sector-manual-error">Selecciona un sector.</div>
+                    </div>
+                    <div class="soporte-form-group" id="vis-zona-group" style="display:none;">
+                        <label for="vis-zona-manual">Zona escolar<span class="req">*</span></label>
+                        <select id="vis-zona-manual"><option value="">— Selecciona zona —</option></select>
+                        <div class="soporte-field-error" id="vis-zona-manual-error">Selecciona una zona.</div>
+                    </div>
+                    <div class="soporte-form-group">
+                        <label for="vis-escuela-manual">Nombre de la escuela<span class="req">*</span></label>
+                        <input type="text" id="vis-escuela-manual" placeholder="Nombre oficial">
+                        <div class="soporte-field-error" id="vis-escuela-manual-error">Ingresa el nombre de la escuela.</div>
+                    </div>
+                </div>
+
+                <input type="hidden" id="vis-sector-val">
+                <input type="hidden" id="vis-zona-val">
+                <input type="hidden" id="vis-escuela-val">
+
+                <div class="soporte-form-group">
+                    <label for="vis-tipo-visita">Tipo de visita<span class="req">*</span></label>
+                    <select id="vis-tipo-visita" required>
+                        <option value="">— Selecciona una opción —</option>
+                        <option>Inicio de ciclo escolar</option>
+                        <option>Ceremonia cívica semanal</option>
+                    </select>
+                    <div class="soporte-field-error" id="vis-tipo-visita-error">Selecciona el tipo de visita.</div>
+                </div>
+
+                <div class="soporte-form-group">
+                    <label for="vis-fecha">Fecha planeada<span class="req">*</span></label>
+                    <input type="date" id="vis-fecha" required onchange="visRevisarConflicto()">
+                    <div class="soporte-field-error" id="vis-fecha-error">Selecciona la fecha planeada.</div>
+                    <div class="vis-aviso-conflicto" id="vis-aviso-conflicto"></div>
+                    <div class="vis-aviso-revisita" id="vis-aviso-revisita">
+                        <p id="vis-revisita-texto" style="margin:0;"></p>
+                        <textarea id="vis-motivo-revisita" rows="2" placeholder="Motivo de la revisita (opcional) — ej. seguimiento a compromisos acordados en la visita anterior"></textarea>
+                    </div>
+                </div>
+
+                <div class="highlight-box">
+                    <p><strong>Guarda tu folio:</strong> este sistema no envía correos ni mensajes. Al reservar, anota el folio que se te muestra (o conserva esta página abierta) — lo necesitarás para llenar la ficha al terminar tu visita.</p>
+                </div>
+
+                <div class="highlight-box">
+                    <p style="margin:0 0 6px 0;"><strong>Prepara tu evidencia fotográfica:</strong> durante la visita necesitarás fotos de la fachada/entrada de la escuela, la ceremonia, autoridades y personal presente, e instalaciones relevantes.</p>
+                    <p style="margin:0;"><strong>Protección de niñas y niños:</strong> evita fotografías de rostros de menores de edad en primer plano — prefiere tomas generales, de espaldas o a distancia.</p>
+                </div>
+
+                <button type="submit" class="form-button" id="btn-reservar-submit">
+                    <span>Reservar visita</span>
+                </button>
+
+                <div id="reservar-msg" class="soporte-submit-msg"></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="content-block">
+        <h3>Disponibilidad e histórico de visitas</h3>
+        <p>Escuelas ya reservadas o visitadas este ciclo. "Reservada" bloquea esa escuela para la misma semana hasta que se llene la ficha o pase el plazo de validación.</p>
+        <div class="highlight-box vis-cobertura" id="vis-cobertura">
+            <p style="margin:0;" id="vis-cobertura-texto">Calculando cobertura…</p>
+        </div>
+        <div class="vis-filtro">
+            <input type="text" id="vis-buscar" placeholder="Buscar por escuela, CCT o sector..." oninput="visRenderTabla()">
+        </div>
+        <div class="vis-tabla-wrap">
+            <div id="vis-cargando" class="vis-cargando">Cargando…</div>
+            <table class="vis-tabla" id="vis-tabla" style="display:none;">
+                <thead>
+                    <tr>
+                        <th>Semana</th><th>Escuela</th><th>CCT</th><th>Sector</th><th>Zona</th>
+                        <th>Tipo</th><th>Estatus</th><th>Quién</th><th>Visita real</th>
+                    </tr>
+                </thead>
+                <tbody id="vis-tabla-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Panel de cobertura — oculto a propósito (Jorge, 30 ago 2026): no lo
+    quiere visible en las primeras semanas del ciclo. El backend
+    (?action=dashboard&token=...) sigue activo, solo se quitó la entrada
+    desde esta página. Descomentar este bloque para reactivarlo. -->
+    <!--
+    <div class="content-block">
+        <h3>Panel de cobertura</h3>
+        <p>Visitas realizadas por persona y por sector — acceso restringido, es información de desempeño individual.</p>
+        <div id="dashboard-bloqueado">
+            <div class="soporte-form-group" style="max-width:320px;">
+                <label for="dashboard-clave">Clave de acceso</label>
+                <input type="password" id="dashboard-clave" onkeydown="if(event.key==='Enter'){event.preventDefault();cargarDashboard();}">
+                <div class="soporte-field-error" id="dashboard-clave-error">Clave incorrecta o falta capturarla.</div>
+            </div>
+            <button class="form-button" type="button" onclick="cargarDashboard()">
+                <span>Ver panel</span>
+            </button>
+        </div>
+        <div id="dashboard-contenido" style="display:none;">
+            <h4 class="vis-dashboard-titulo">Visitas realizadas por persona</h4>
+            <div id="dashboard-por-docente"></div>
+            <h4 class="vis-dashboard-titulo">Escuelas visitadas por sector</h4>
+            <div id="dashboard-por-sector"></div>
+        </div>
+    </div>
+    -->
+
+    <div class="tramite-otros-tramites">
+        <p>Relacionado</p>
+        <div class="tramite-otros-links">
+            <a href="ficha-ceremonias-civicas.html">Llenar ficha post-visita</a>
+        </div>
+    </div>
+
+</section>
+
+<footer>
+        <div class="footer-grid">
+            <div class="footer-col">
+                <p class="footer-brand"><svg class="logo-icon" width="30" height="30" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="12" fill="#F9F8F5"/><text x="32" y="27" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#56212f" letter-spacing="-1">NE</text><text x="32" y="53" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#56212f" letter-spacing="-1">ZA</text></svg>SEPRN</p>
+                <p class="footer-desc">Subdirección de Educación Primaria<br>en la Región de Nezahualcóyotl</p>
+                <p class="footer-meta">Av. Texcoco #116, Col. Juárez Pantitlán<br>Nezahualcóyotl, Estado de México, C.P. 57460</p>
+                <p class="footer-meta">Lunes a Viernes · 08:30 – 15:30 h</p>
+            </div>
+            <div class="footer-col">
+                <p class="footer-col-title">Sitio</p>
+                <ul class="footer-links">
+                    <li><a href="index.html">Inicio</a></li>
+                    <li><a href="nosotros.html">Nosotros</a></li>
+                    <li><a href="areas.html">Áreas</a></li>
+                    <li><a href="cte.html">CTE</a></li>
+                    <li><a href="contacto.html">Contacto</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <p class="footer-col-title">Áreas</p>
+                <ul class="footer-links">
+                    <li><a href="academica.html">Subjefatura Académica</a></li>
+                    <li><a href="personal.html">Subjefatura de Personal</a></li>
+                    <li><a href="planeacion.html">Subjefatura de Planeación</a></li>
+                    <li><a href="recursos.html">Subjefatura de Recursos</a></li>
+                    <li><a href="otde.html">OTDE</a></li>
+                    <li><a href="oeve.html">OEVE</a></li>
+                    <li><a href="juridico.html">Asuntos Jurídicos</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="social-links">
+                <a href="https://www.facebook.com/SubNeza" target="_blank" rel="noopener noreferrer" title="Facebook">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                </a>
+                <a href="https://www.youtube.com/channel/UCvDb2DPSJxFyhH3bCPd5D2Q" target="_blank" rel="noopener noreferrer" title="YouTube">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                </a>
+            </div>
+            <div class="copyright">
+                © 2026 SEPRN · Subdirección de Educación Primaria en la Región de Nezahualcóyotl<br>
+                Órgano desconcentrado de SEIEM · Gobierno del Estado de México
+            </div>
+        </div>
+    </footer>
+
+<script src="js/cct-db.js"></script>
+<script src="js/tramites-shared.js"></script>
+<script>
+    // ── Visitas a Escuelas: reserva + disponibilidad/histórico ──
+    // toTitleCase y fetchJsonConTimeout vienen de js/tramites-shared.js.
+    const VISITAS_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwt8sh5UhCm9L68TP95l9PHl_rDVeyUZ6SmkhqsO-Q31hOmPcdPGAdsy8xEZygb_z8/exec';
+
+    function toggleReservarForm(btn) {
+        var container = document.getElementById('form-reservar');
+        var text = document.getElementById('btn-reservar-text');
+        var arrow = document.getElementById('btn-reservar-arrow');
+        if (container.classList.contains('active')) {
+            container.classList.remove('active');
+            text.textContent = 'Reservar visita';
+            arrow.textContent = '▼';
+            btn.setAttribute('aria-expanded', 'false');
+        } else {
+            container.classList.add('active');
+            text.textContent = 'Ocultar formulario';
+            arrow.textContent = '▲';
+            btn.setAttribute('aria-expanded', 'true');
+            setTimeout(function () { container.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 400);
+        }
+    }
+
+    document.getElementById('vis-nombre').addEventListener('blur', function () {
+        if (this.value.trim()) this.value = toTitleCase(this.value);
+    });
+    document.getElementById('vis-escuela-manual').addEventListener('blur', function () {
+        if (this.value.trim()) this.value = toTitleCase(this.value);
+    });
+
+    function visToggleOtroCargo() {
+        var val = document.getElementById('vis-cargo').value;
+        document.getElementById('vis-otro-cargo-group').style.display = val === 'Otro' ? 'block' : 'none';
+        if (val !== 'Otro') document.getElementById('vis-otro-cargo').value = '';
+    }
+
+    // ── CCT autocomplete — mismo patrón que Mantenimiento/Soporte ──
+    var visCctEncontrada = false;
+    var visSectorZonas = {};
+    if (typeof CCT_DB !== 'undefined') {
+        CCT_DB.forEach(function (e) {
+            if (!e.zona || e.tipo !== 'escuela') return;
+            if (!visSectorZonas[e.sector]) visSectorZonas[e.sector] = [];
+            if (visSectorZonas[e.sector].indexOf(e.zona) === -1) visSectorZonas[e.sector].push(e.zona);
+        });
+        Object.keys(visSectorZonas).forEach(function (s) { visSectorZonas[s].sort(function (a, b) { return a - b; }); });
+    }
+
+    var visInputCct, visSuggestions, visStatusBox, visActiveSugg = -1;
+
+    function visInitCctAutocomplete() {
+        visInputCct = document.getElementById('vis-cct');
+        visSuggestions = document.getElementById('vis-cct-suggestions');
+        visStatusBox = document.getElementById('vis-cct-status');
+        if (!visInputCct || typeof CCT_DB === 'undefined') return;
+
+        visInputCct.addEventListener('input', function () {
+            var q = visInputCct.value.trim().toUpperCase();
+            visResetCct();
+            if (q.length < 3) { visSuggestions.style.display = 'none'; return; }
+
+            var matches = CCT_DB.filter(function (e) { return e.cct.includes(q) || e.nombre.toUpperCase().includes(q); }).slice(0, 10);
+            if (!matches.length) { visSuggestions.style.display = 'none'; return; }
+
+            visSuggestions.innerHTML = '';
+            matches.forEach(function (m) {
+                var li = document.createElement('li');
+                var visitada = visReservasCache.some(function (r) { return (r.cct || '').toUpperCase() === m.cct && r.estatus === 'Realizada'; });
+                li.innerHTML = '<span class="sg-code">' + m.cct + '</span> <span class="sg-name">' + m.nombre + ' — Sector ' + m.sector + (m.zona ? ', Zona ' + m.zona : '') + '</span>' +
+                    (visitada ? ' <span class="vis-badge vis-badge-realizada" style="margin-left:6px;">Ya visitada</span>' : '');
+                li.addEventListener('mousedown', function () { visSeleccionarCct(m); });
+                visSuggestions.appendChild(li);
+            });
+            visSuggestions.style.display = 'block';
+            visActiveSugg = -1;
+        });
+
+        visInputCct.addEventListener('keydown', function (e) {
+            var items = visSuggestions.querySelectorAll('li');
+            if (!items.length) return;
+            if (e.key === 'ArrowDown') { visActiveSugg = Math.min(visActiveSugg + 1, items.length - 1); visHighlightSugg(items); e.preventDefault(); }
+            if (e.key === 'ArrowUp') { visActiveSugg = Math.max(visActiveSugg - 1, 0); visHighlightSugg(items); e.preventDefault(); }
+            if (e.key === 'Enter' && visActiveSugg >= 0) {
+                var q = visInputCct.value.trim().toUpperCase();
+                var m = CCT_DB.filter(function (e) { return e.cct.includes(q) || e.nombre.toUpperCase().includes(q); })[visActiveSugg];
+                if (m) { visSeleccionarCct(m); e.preventDefault(); }
+            }
+            if (e.key === 'Escape') { visSuggestions.style.display = 'none'; }
+        });
+
+        visInputCct.addEventListener('blur', function () { setTimeout(function () { visSuggestions.style.display = 'none'; }, 150); });
+
+        visInputCct.addEventListener('change', function () {
+            if (!visCctEncontrada) {
+                var exacto = CCT_DB.filter(function (e) { return e.cct === visInputCct.value.trim().toUpperCase(); })[0];
+                if (exacto) { visSeleccionarCct(exacto); return; }
+            }
+            if (!visCctEncontrada && visInputCct.value.trim().length >= 8) {
+                visStatusBox.className = 'sop-cct-status warn';
+                visStatusBox.textContent = 'CCT no encontrada en nuestra base. Puedes capturar los datos manualmente.';
+                document.getElementById('vis-manual-fields').classList.add('visible');
+            }
+            visRevisarConflicto();
+        });
+    }
+
+    function visHighlightSugg(items) { items.forEach(function (li, i) { li.classList.toggle('active', i === visActiveSugg); }); }
+
+    function visSeleccionarCct(m) {
+        visInputCct.value = m.cct;
+        visSuggestions.style.display = 'none';
+        document.getElementById('vis-sector-val').value = m.sector;
+        document.getElementById('vis-zona-val').value = m.zona || '';
+        document.getElementById('vis-escuela-val').value = m.nombre || '';
+        visStatusBox.className = 'sop-cct-status found';
+        visStatusBox.textContent = 'Sector ' + m.sector + (m.zona ? ' · Zona ' + m.zona : '') + ' · ' + m.nombre;
+        document.getElementById('vis-manual-fields').classList.remove('visible');
+        visCctEncontrada = true;
+        visRevisarConflicto();
+    }
+
+    function visResetCct() {
+        document.getElementById('vis-sector-val').value = '';
+        document.getElementById('vis-zona-val').value = '';
+        document.getElementById('vis-escuela-val').value = '';
+        visStatusBox.className = 'sop-cct-status';
+        visCctEncontrada = false;
+    }
+
+    function visActualizarZonas() {
+        var sector = document.getElementById('vis-sector-manual').value;
+        var zonaGroup = document.getElementById('vis-zona-group');
+        var zonaSelect = document.getElementById('vis-zona-manual');
+        zonaSelect.innerHTML = '<option value="">— Selecciona zona —</option>';
+        if (!sector) { zonaGroup.style.display = 'none'; return; }
+        (visSectorZonas[sector] || []).forEach(function (z) {
+            var o = document.createElement('option'); o.value = z; o.textContent = 'Zona ' + z;
+            zonaSelect.appendChild(o);
+        });
+        zonaGroup.style.display = 'block';
+    }
+
+    // ── Disponibilidad/histórico: se carga una vez al entrar a la página ──
+    var visReservasCache = [];
+
+    function visLunesDeLaSemana(fechaStr) {
+        var partes = fechaStr.split('-').map(Number);
+        var d = new Date(partes[0], partes[1] - 1, partes[2]);
+        var dia = d.getDay();
+        var diff = dia === 0 ? -6 : 1 - dia;
+        d.setDate(d.getDate() + diff);
+        return d.toISOString().slice(0, 10);
+    }
+
+    function visRevisarConflicto() {
+        var aviso = document.getElementById('vis-aviso-conflicto');
+        var revisitaBox = document.getElementById('vis-aviso-revisita');
+        var cct = visInputCct ? visInputCct.value.trim().toUpperCase() : '';
+        var fecha = document.getElementById('vis-fecha').value;
+        aviso.classList.remove('visible');
+        revisitaBox.classList.remove('visible');
+        if (!cct || !fecha) return;
+
+        var semana = visLunesDeLaSemana(fecha);
+        var conflicto = visReservasCache.find(function (r) {
+            return r.cct.toUpperCase() === cct && r.semana === semana && (r.estatus === 'Reservada' || r.estatus === 'Realizada');
+        });
+        if (conflicto) {
+            aviso.textContent = 'Esta escuela ya tiene una visita ' + (conflicto.estatus === 'Realizada' ? 'realizada' : 'programada') +
+                ' esta semana por ' + conflicto.nombre + ' (' + conflicto.cargo + '). Para evitar duplicidad, elige otra escuela o revisa la semana.';
+            aviso.classList.add('visible');
+            return;
+        }
+
+        // Sin conflicto esta semana: avisar (sin bloquear) si la escuela ya fue
+        // visitada en una semana distinta, para fomentar cobertura sin impedir
+        // una revisita legítima (seguimiento a compromisos acordados).
+        var visitasPrevias = visReservasCache
+            .filter(function (r) { return (r.cct || '').toUpperCase() === cct && r.estatus === 'Realizada'; })
+            .sort(function (a, b) { return (b.fechaVisitaReal || '').localeCompare(a.fechaVisitaReal || ''); });
+        if (visitasPrevias.length) {
+            var ultima = visitasPrevias[0];
+            document.getElementById('vis-revisita-texto').textContent =
+                'Esta escuela ya fue visitada el ' + ultima.fechaVisitaReal + ' por ' + ultima.nombre + ' (' + ultima.cargo + '). ' +
+                'Si regresas para dar seguimiento a compromisos acordados, indícalo abajo; si no, considera elegir otra escuela para ampliar la cobertura.';
+            revisitaBox.classList.add('visible');
+        }
+    }
+
+    async function cargarDisponibilidad() {
+        var cargando = document.getElementById('vis-cargando');
+        var tabla = document.getElementById('vis-tabla');
+        try {
+            var data = await fetchJsonConTimeout(VISITAS_APPS_SCRIPT_URL + '?action=disponibilidad', { method: 'GET' });
+            visReservasCache = (data && data.items) ? data.items : [];
+        } catch (err) {
+            visReservasCache = [];
+        }
+        cargando.style.display = 'none';
+        tabla.style.display = 'table';
+        visRenderTabla();
+        visActualizarCobertura();
+    }
+
+    // ── Contador de cobertura: cuántas escuelas distintas ya tienen al menos
+    // una visita realizada, contra el total de escuelas del catálogo. ──
+    function visActualizarCobertura() {
+        var texto = document.getElementById('vis-cobertura-texto');
+        if (typeof CCT_DB === 'undefined') { texto.textContent = ''; return; }
+        var totalEscuelas = CCT_DB.filter(function (e) { return e.tipo === 'escuela'; }).length;
+        var visitadas = {};
+        visReservasCache.forEach(function (r) {
+            if (r.estatus === 'Realizada' && r.cct) visitadas[r.cct.toUpperCase()] = true;
+        });
+        var n = Object.keys(visitadas).length;
+        texto.innerHTML = '<strong>' + n + ' de ' + totalEscuelas + '</strong> escuelas visitadas este ciclo.';
+    }
+
+    var VIS_BADGE_CLASE = {
+        'Reservada': 'vis-badge-reservada',
+        'Realizada': 'vis-badge-realizada',
+        'No realizada': 'vis-badge-no-realizada',
+        'Cancelada': 'vis-badge-cancelada'
+    };
+
+    function visRenderTabla() {
+        var filtro = document.getElementById('vis-buscar').value.trim().toUpperCase();
+        var body = document.getElementById('vis-tabla-body');
+        body.innerHTML = '';
+
+        var filas = visReservasCache.slice().sort(function (a, b) { return (b.fechaPlaneada || '').localeCompare(a.fechaPlaneada || ''); });
+        if (filtro) {
+            filas = filas.filter(function (r) {
+                return (r.escuela || '').toUpperCase().includes(filtro) ||
+                    (r.cct || '').toUpperCase().includes(filtro) ||
+                    (r.sector || '').toString().toUpperCase().includes(filtro);
+            });
+        }
+
+        if (!filas.length) {
+            body.innerHTML = '<tr><td colspan="9" style="color:#977e5b;">Sin reservas todavía.</td></tr>';
+            return;
+        }
+
+        filas.forEach(function (r) {
+            var badgeClase = VIS_BADGE_CLASE[r.estatus] || 'vis-badge-reservada';
+            var tr = document.createElement('tr');
+            tr.innerHTML =
+                '<td>' + (r.semana || '') + '</td>' +
+                '<td>' + (r.escuela || '') + '</td>' +
+                '<td>' + (r.cct || '') + '</td>' +
+                '<td>' + (r.sector || '') + '</td>' +
+                '<td>' + (r.zona || '') + '</td>' +
+                '<td>' + (r.tipoVisita || '') + '</td>' +
+                '<td><span class="vis-badge ' + badgeClase + '">' + r.estatus + '</span></td>' +
+                '<td>' + (r.nombre || '') + (r.cargo ? ' (' + r.cargo + ')' : '') + '</td>' +
+                '<td>' + (r.fechaVisitaReal || '—') + '</td>';
+            body.appendChild(tr);
+        });
+    }
+
+    function validarReservaForm() {
+        var ok = true;
+        var campos = [
+            { id: 'vis-nombre', err: 'vis-nombre-error', test: function (v) { return v.trim().length >= 3; } },
+            { id: 'vis-tipo-visita', err: 'vis-tipo-visita-error', test: function (v) { return v !== ''; } },
+            { id: 'vis-fecha', err: 'vis-fecha-error', test: function (v) { return v !== ''; } }
+        ];
+        campos.forEach(function (c) {
+            var input = document.getElementById(c.id);
+            var errEl = document.getElementById(c.err);
+            if (!c.test(input.value)) { input.classList.add('error'); errEl.classList.add('visible'); ok = false; }
+            else { input.classList.remove('error'); errEl.classList.remove('visible'); }
+        });
+
+        var cargoInput = document.getElementById('vis-cargo');
+        var cargoErr = document.getElementById('vis-cargo-error');
+        if (cargoInput.value === '') { cargoInput.classList.add('error'); cargoErr.classList.add('visible'); ok = false; }
+        else { cargoInput.classList.remove('error'); cargoErr.classList.remove('visible'); }
+        if (cargoInput.value === 'Otro') {
+            var otroInp = document.getElementById('vis-otro-cargo');
+            var otroErr = document.getElementById('vis-otro-cargo-error');
+            if (!otroInp.value.trim()) { otroInp.classList.add('error'); otroErr.classList.add('visible'); ok = false; }
+            else { otroInp.classList.remove('error'); otroErr.classList.remove('visible'); }
+        }
+
+        var cctInput = document.getElementById('vis-cct');
+        var cctErr = document.getElementById('vis-cct-error');
+        var manualVisible = document.getElementById('vis-manual-fields').classList.contains('visible');
+        var cctTextOk = cctInput.value.trim().length >= 3;
+        if (visCctEncontrada || (manualVisible && cctTextOk)) { cctInput.classList.remove('error'); cctErr.classList.remove('visible'); }
+        else { cctInput.classList.add('error'); cctErr.classList.add('visible'); ok = false; }
+
+        if (manualVisible) {
+            var sectorInput = document.getElementById('vis-sector-manual');
+            var zonaInput = document.getElementById('vis-zona-manual');
+            var escuelaInput = document.getElementById('vis-escuela-manual');
+            if (!sectorInput.value) { sectorInput.classList.add('error'); document.getElementById('vis-sector-manual-error').classList.add('visible'); ok = false; }
+            else { sectorInput.classList.remove('error'); document.getElementById('vis-sector-manual-error').classList.remove('visible'); }
+            if (!zonaInput.value) { zonaInput.classList.add('error'); document.getElementById('vis-zona-manual-error').classList.add('visible'); ok = false; }
+            else { zonaInput.classList.remove('error'); document.getElementById('vis-zona-manual-error').classList.remove('visible'); }
+            if (!escuelaInput.value.trim()) { escuelaInput.classList.add('error'); document.getElementById('vis-escuela-manual-error').classList.add('visible'); ok = false; }
+            else { escuelaInput.classList.remove('error'); document.getElementById('vis-escuela-manual-error').classList.remove('visible'); }
+        } else if (!visCctEncontrada && cctTextOk) {
+            document.getElementById('vis-manual-fields').classList.add('visible');
+            ok = false;
+        }
+
+        return ok;
+    }
+
+    async function enviarReserva(evt) {
+        evt.preventDefault();
+        var msg = document.getElementById('reservar-msg');
+        var btnSubmit = document.getElementById('btn-reservar-submit');
+        msg.className = 'soporte-submit-msg';
+        msg.textContent = '';
+
+        if (!validarReservaForm()) return false;
+
+        var manualVisible = document.getElementById('vis-manual-fields').classList.contains('visible');
+        var cargoVal = document.getElementById('vis-cargo').value === 'Otro'
+            ? document.getElementById('vis-otro-cargo').value.trim()
+            : document.getElementById('vis-cargo').value;
+
+        var datos = {
+            nombre: toTitleCase(document.getElementById('vis-nombre').value.trim()),
+            cargo: cargoVal,
+            cct: document.getElementById('vis-cct').value,
+            sector: manualVisible ? document.getElementById('vis-sector-manual').value : document.getElementById('vis-sector-val').value,
+            zona: manualVisible ? document.getElementById('vis-zona-manual').value : document.getElementById('vis-zona-val').value,
+            escuela: manualVisible ? toTitleCase(document.getElementById('vis-escuela-manual').value.trim()) : document.getElementById('vis-escuela-val').value,
+            tipoVisita: document.getElementById('vis-tipo-visita').value,
+            fechaPlaneada: document.getElementById('vis-fecha').value,
+            motivoRevisita: document.getElementById('vis-motivo-revisita').value.trim()
+        };
+
+        btnSubmit.disabled = true;
+        btnSubmit.style.opacity = '0.6';
+
+        try {
+            const data = await fetchJsonConTimeout(VISITAS_APPS_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify(datos)
+            });
+
+            if (data.status === 'ok') {
+                msg.classList.add('ok');
+                var ligaFicha = 'ficha-ceremonias-civicas.html?folio=' + encodeURIComponent(data.folio);
+                msg.innerHTML = 'Visita reservada. Tu folio es <strong>' + data.folio + '</strong> — anótalo o guarda esta página, no se envía por correo. ' +
+                    'Después de la visita, llena la <a href="' + ligaFicha + '">ficha con evidencias</a> usando este folio.';
+                document.getElementById('reservar-form').reset();
+                document.getElementById('vis-manual-fields').classList.remove('visible');
+                document.getElementById('vis-zona-group').style.display = 'none';
+                document.getElementById('vis-otro-cargo-group').style.display = 'none';
+                document.getElementById('vis-aviso-conflicto').classList.remove('visible');
+                document.getElementById('vis-aviso-revisita').classList.remove('visible');
+                document.getElementById('vis-motivo-revisita').value = '';
+                document.querySelectorAll('#reservar-form .error').forEach(function (el) { el.classList.remove('error'); });
+                document.querySelectorAll('#reservar-form .soporte-field-error.visible').forEach(function (el) { el.classList.remove('visible'); });
+                visResetCct();
+                cargarDisponibilidad();
+            } else {
+                msg.classList.add('error');
+                msg.textContent = 'No se pudo reservar: ' + data.mensaje;
+            }
+        } catch (err) {
+            msg.classList.add('error');
+            msg.textContent = err.name === 'AbortError'
+                ? 'El servidor tardó demasiado en responder. Verifica el histórico antes de reintentar, pudo haberse guardado igual.'
+                : 'No se pudo enviar la reserva. Verifica tu conexión e intenta de nuevo.';
+        } finally {
+            btnSubmit.disabled = false;
+            btnSubmit.style.opacity = '1';
+        }
+
+        return false;
+    }
+
+    // ── Panel de cobertura: gated con una clave (DASHBOARD_TOKEN en el
+    // backend) porque agrupa por persona — no es información para exponer
+    // solo por tener el link de reservar. No es autenticación real, solo
+    // evita que se vea "por accidente" — ver la nota en visitas-jefes.gs. ──
+    async function cargarDashboard() {
+        var clave = document.getElementById('dashboard-clave').value.trim();
+        var err = document.getElementById('dashboard-clave-error');
+        err.classList.remove('visible');
+        if (!clave) {
+            err.textContent = 'Ingresa la clave de acceso.';
+            err.classList.add('visible');
+            return;
+        }
+        try {
+            var data = await fetchJsonConTimeout(VISITAS_APPS_SCRIPT_URL + '?action=dashboard&token=' + encodeURIComponent(clave), { method: 'GET' });
+            if (data.status !== 'ok') {
+                err.textContent = 'Clave incorrecta.';
+                err.classList.add('visible');
+                return;
+            }
+            renderDashboard(data);
+            document.getElementById('dashboard-bloqueado').style.display = 'none';
+            document.getElementById('dashboard-contenido').style.display = 'block';
+        } catch (e) {
+            err.textContent = 'No se pudo consultar el panel. Verifica tu conexión e intenta de nuevo.';
+            err.classList.add('visible');
+        }
+    }
+
+    function visBarra(etiqueta, valor, valorTexto, pct) {
+        return '<div class="vis-bar-row">' +
+            '<div class="vis-bar-label" title="' + etiqueta + '">' + etiqueta + '</div>' +
+            '<div class="vis-bar-track"><div class="vis-bar-fill" style="width:' + pct + '%;"></div></div>' +
+            '<div class="vis-bar-value">' + valorTexto + '</div></div>';
+    }
+
+    function renderDashboard(data) {
+        var porDocente = data.porDocente || [];
+        var maxDocente = porDocente.reduce(function (m, d) { return Math.max(m, d.visitas); }, 1);
+        var htmlDocente = porDocente.map(function (d) {
+            var etiqueta = d.nombre + (d.cargo ? ' (' + d.cargo + ')' : '');
+            return visBarra(etiqueta, d.visitas, d.visitas, Math.round((d.visitas / maxDocente) * 100));
+        }).join('') || '<p class="vis-cargando">Sin visitas realizadas todavía.</p>';
+        document.getElementById('dashboard-por-docente').innerHTML = htmlDocente;
+
+        var totalPorSector = {};
+        if (typeof CCT_DB !== 'undefined') {
+            CCT_DB.forEach(function (e) {
+                if (e.tipo !== 'escuela') return;
+                totalPorSector[e.sector] = (totalPorSector[e.sector] || 0) + 1;
+            });
+        }
+        var porSector = data.porSector || [];
+        var htmlSector = porSector.map(function (s) {
+            var total = totalPorSector[s.sector] || 0;
+            var pct = total ? Math.round((s.escuelasVisitadas / total) * 100) : 0;
+            var valorTexto = s.escuelasVisitadas + (total ? ' / ' + total : '');
+            return visBarra('Sector ' + s.sector, s.escuelasVisitadas, valorTexto, pct);
+        }).join('') || '<p class="vis-cargando">Sin datos todavía.</p>';
+        document.getElementById('dashboard-por-sector').innerHTML = htmlSector;
+    }
+
+    visInitCctAutocomplete();
+    cargarDisponibilidad();
+</script>
+    <script src="script.js" defer></script>
+</body>
+</html>

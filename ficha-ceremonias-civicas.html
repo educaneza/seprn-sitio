@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-7D68DB8ELW"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-7D68DB8ELW');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="description" content="Ficha informativa de visita a escuela: datos de la actividad, operatividad y evidencias fotográficas — SEPRN.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ficha de Visita - SEPRN</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .ficha-resumen { background: #F9F8F5; border: 1px solid #d6d1ca; border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; }
+        .ficha-resumen p { margin: 0 0 4px 0; font-size: 14px; color: #333; }
+        .ficha-resumen strong { color: #56212f; }
+        .ficha-buscar-folio { max-width: 420px; }
+        .ficha-fotos-preview { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+        .ficha-fotos-preview img { width: 90px; height: 90px; object-fit: cover; border-radius: 6px; border: 1px solid #d6d1ca; }
+        .ficha-oculto { display: none; }
+    </style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Saltar al contenido principal</a>
+<header>
+    <nav>
+        <div class="logo"><svg class="logo-icon" width="34" height="34" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="12" fill="#56212f"/><text x="32" y="27" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#d6d1ca" letter-spacing="-1">NE</text><text x="32" y="53" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#d6d1ca" letter-spacing="-1">ZA</text></svg><span class="logo-text">SEPRN</span></div>
+        <button class="nav-toggle" aria-label="Abrir menú" aria-expanded="false">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <ul>
+            <li><a href="index.html">Inicio</a></li>
+            <li><a href="nosotros.html">Nosotros</a></li>
+            <li><a href="areas.html">Áreas</a></li>
+            <li><a href="cte.html">CTE</a></li>
+            <li><a href="contacto.html">Contacto</a></li>
+        </ul>
+    </nav>
+</header>
+
+<section class="hero hero-sm">
+    <div class="hero-inner">
+        <span class="hero-badge">SEPRN</span>
+        <h1>Ficha Informativa de Visita</h1>
+        <p>Documenta tu visita al concluirla: es el respaldo que da constancia de que se llevó a cabo</p>
+    </div>
+    <div class="hero-glow"></div>
+</section>
+<section class="content-section" id="main-content" role="main">
+
+    <div class="servicio-header">
+        <h2>Ficha Informativa de Visita</h2>
+        <p>Te pedimos completar esta ficha inmediatamente después de concluir tu visita, mientras los detalles están frescos. Además de dar constancia de que la visita se realizó, la información que compartas aquí sirve de base para la difusión institucional de la actividad. Si no se recibe en los días siguientes a la fecha programada, el sistema marcará la visita como no realizada.</p>
+    </div>
+
+    <div class="content-block" id="bloque-buscar-folio">
+        <h3>Localiza tu visita</h3>
+        <div id="ficha-buscar-form">
+            <p>El folio se mostró en pantalla al programar tu visita — este sistema no envía correos ni mensajes. Si no lo conservaste, solicítalo directamente a OTDE.</p>
+            <div class="soporte-form-group ficha-buscar-folio">
+                <label for="ficha-folio-input">Folio de tu visita<span class="req">*</span></label>
+                <input type="text" id="ficha-folio-input" placeholder="SEPRN-CC-0001" style="text-transform:uppercase;font-family:monospace;">
+                <div class="soporte-field-error" id="ficha-folio-input-error">Ingresa el folio de tu visita.</div>
+            </div>
+            <button class="form-button" onclick="buscarFolio()">
+                <span>Buscar</span>
+            </button>
+        </div>
+        <div id="ficha-folio-encontrado" style="display:none;font-size:14px;color:#333;">
+            Folio localizado: <strong id="ficha-folio-encontrado-valor"></strong> —
+            <a href="#" onclick="mostrarBuscadorFolio(); return false;" style="color:#9F2241;">buscar otro folio</a>
+        </div>
+        <div id="ficha-buscar-msg" class="soporte-submit-msg"></div>
+    </div>
+
+    <div class="content-block ficha-oculto" id="bloque-ficha">
+        <h3>Datos de la visita</h3>
+        <div class="ficha-resumen" id="ficha-resumen"></div>
+
+        <form id="ficha-form" onsubmit="return enviarFicha(event)" novalidate>
+            <input type="hidden" id="ficha-folio">
+
+            <div class="soporte-form-group">
+                <label for="ficha-fecha-real">Fecha real de la visita<span class="req">*</span></label>
+                <input type="date" id="ficha-fecha-real" required>
+                <div class="soporte-field-error" id="ficha-fecha-real-error">Selecciona la fecha en que ocurrió la visita.</div>
+            </div>
+
+            <h4 style="margin:24px 0 4px 0;color:#56212f;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">Datos de la actividad
+                <span style="background:#977e5b;color:#fff;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:3px 10px;border-radius:999px;">Para difusión</span>
+            </h4>
+            <p class="soporte-field-hint" style="margin-bottom:16px;">Esta información se comparte con el equipo de Comunicación Social para la difusión institucional de la actividad — entre más completa, mejor.</p>
+
+            <div class="soporte-form-group">
+                <label for="ficha-nombre-actividad">Nombre de la actividad<span class="req">*</span></label>
+                <input type="text" id="ficha-nombre-actividad" placeholder="Ej. Ceremonia Cívica Escolar — Septiembre 2026" maxlength="120">
+                <div class="soporte-field-error" id="ficha-nombre-actividad-error">Escribe el nombre de la actividad.</div>
+            </div>
+
+            <div class="soporte-form-group">
+                <label for="ficha-proposito">Propósito de la actividad<span class="req">*</span></label>
+                <select id="ficha-proposito" onchange="fichaToggleOtroProposito()">
+                    <option value="">— Selecciona una opción —</option>
+                    <option>Acompañamiento a ceremonia cívica</option>
+                    <option>Inauguración del ciclo escolar</option>
+                    <option>Seguimiento y revisión de la operatividad escolar</option>
+                    <option>Entrega de reconocimientos o apoyos</option>
+                    <option>Otro</option>
+                </select>
+                <div class="soporte-field-error" id="ficha-proposito-error">Selecciona el propósito de la actividad.</div>
+                <div id="ficha-otro-proposito-group" style="display:none;margin-top:10px;">
+                    <input type="text" id="ficha-otro-proposito" placeholder="Especifica el propósito" maxlength="120">
+                    <div class="soporte-field-error" id="ficha-otro-proposito-error">Especifica el propósito.</div>
+                </div>
+            </div>
+
+            <div class="soporte-form-group">
+                <label>Convocados/Participantes</label>
+                <div class="soporte-field-hint">Marca quién estuvo presente. Para las autoridades educativas, si asistieron, anota su nombre — ayuda a que el CM las mencione correctamente.</div>
+
+                <label style="display:flex;align-items:flex-start;gap:8px;font-weight:normal;margin-bottom:4px;"><input type="checkbox" class="ficha-convocado-autoridad" data-nombre="ficha-nombre-director" onchange="fichaToggleNombreAutoridad(this)" style="margin-top:3px;"> <span>Director(a) de la escuela</span></label>
+                <input type="text" id="ficha-nombre-director" class="ficha-nombre-autoridad" placeholder="Nombre del/de la Director(a) (opcional)" maxlength="100" style="display:none;margin:0 0 10px 26px;width:calc(100% - 26px);">
+
+                <label style="display:flex;align-items:flex-start;gap:8px;font-weight:normal;margin-bottom:4px;"><input type="checkbox" class="ficha-convocado-autoridad" data-nombre="ficha-nombre-supervisor" onchange="fichaToggleNombreAutoridad(this)" style="margin-top:3px;"> <span>Supervisor(a) de zona</span></label>
+                <input type="text" id="ficha-nombre-supervisor" class="ficha-nombre-autoridad" placeholder="Nombre del/de la Supervisor(a) (opcional)" maxlength="100" style="display:none;margin:0 0 10px 26px;width:calc(100% - 26px);">
+
+                <label style="display:flex;align-items:flex-start;gap:8px;font-weight:normal;margin-bottom:4px;"><input type="checkbox" class="ficha-convocado-autoridad" data-nombre="ficha-nombre-jefe-sector" onchange="fichaToggleNombreAutoridad(this)" style="margin-top:3px;"> <span>Jefe(a) de Sector</span></label>
+                <input type="text" id="ficha-nombre-jefe-sector" class="ficha-nombre-autoridad" placeholder="Nombre del/de la Jefe(a) de Sector (opcional)" maxlength="100" style="display:none;margin:0 0 10px 26px;width:calc(100% - 26px);">
+
+                <label style="display:flex;align-items:flex-start;gap:8px;font-weight:normal;margin-bottom:6px;"><input type="checkbox" class="ficha-convocado" value="Docentes" style="margin-top:3px;"> <span>Docentes</span></label>
+                <label style="display:flex;align-items:flex-start;gap:8px;font-weight:normal;margin-bottom:6px;"><input type="checkbox" class="ficha-convocado" value="Alumnado" style="margin-top:3px;"> <span>Alumnado</span></label>
+                <label style="display:flex;align-items:flex-start;gap:8px;font-weight:normal;margin-bottom:10px;"><input type="checkbox" class="ficha-convocado" value="Madres y padres de familia" style="margin-top:3px;"> <span>Madres y padres de familia</span></label>
+
+                <label for="ficha-convocados-otro" style="font-size:13px;color:#555;display:block;margin-bottom:4px;">Otras autoridades o invitados especiales (opcional) — un nombre y cargo por línea</label>
+                <textarea id="ficha-convocados-otro" rows="2" placeholder="Ej. Lic. Juan Pérez, Presidente Municipal&#10;Profra. María López, Coordinadora de Zona"></textarea>
+            </div>
+
+            <div class="soporte-form-group">
+                <label for="ficha-cantidad-asistentes">Cantidad aproximada de asistentes<span class="req">*</span></label>
+                <select id="ficha-cantidad-asistentes">
+                    <option value="">— Selecciona una opción —</option>
+                    <option>Menos de 20</option>
+                    <option>20 a 50</option>
+                    <option>51 a 100</option>
+                    <option>101 a 200</option>
+                    <option>201 a 300</option>
+                    <option>Más de 300</option>
+                </select>
+                <div class="soporte-field-hint">No necesitas contar exacto, da un estimado.</div>
+                <div class="soporte-field-error" id="ficha-cantidad-asistentes-error">Selecciona un estimado de asistentes.</div>
+            </div>
+
+            <div class="soporte-form-group">
+                <label for="ficha-descripcion-actividad">Descripción general de la actividad<span class="req">*</span></label>
+                <div class="soporte-field-hint">Redáctala como si fuera para redes sociales: qué pasó, en qué consistió, algún momento destacado.</div>
+                <textarea id="ficha-descripcion-actividad" rows="4" placeholder="Ej. Se llevó a cabo la ceremonia cívica correspondiente al mes de septiembre, con la participación de alumnado, docentes y madres/padres de familia. Durante el acto se rindieron honores a la bandera y se reconoció a los alumnos destacados del mes."></textarea>
+                <div class="soporte-field-error" id="ficha-descripcion-actividad-error">Describe brevemente en qué consistió la actividad.</div>
+            </div>
+
+            <h4 style="margin:24px 0 4px 0;color:#56212f;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">Operatividad de la escuela
+                <span style="background:#6b6b6b;color:#fff;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:3px 10px;border-radius:999px;">Uso interno</span>
+            </h4>
+            <p class="soporte-field-hint" style="margin-bottom:16px;">Esta parte es de uso interno de seguimiento, no se difunde.</p>
+
+            <div class="soporte-form-group">
+                <label for="ficha-observaciones">Observaciones de operatividad<span class="req">*</span></label>
+                <div class="soporte-field-hint">¿Cómo encontraste la escuela? Estado general, necesidades detectadas, en qué se le puede apoyar.</div>
+                <textarea id="ficha-observaciones" rows="4" placeholder="Ej. Aula de medios operativa. Directora reporta falta de..."></textarea>
+                <div class="soporte-field-error" id="ficha-observaciones-error">Describe brevemente la operatividad de la escuela.</div>
+            </div>
+
+            <div class="soporte-form-group">
+                <label for="ficha-fotos">Evidencias fotográficas<span class="req">*</span></label>
+                <div class="highlight-box" style="margin:0 0 12px 0;">
+                    <p style="margin:0 0 6px 0;"><strong>Sugerencias de toma:</strong> fachada/entrada de la escuela, panorámica de la ceremonia, honores a la bandera, autoridades y personal presente, instalaciones relevantes (aula de medios, patio cívico), y tu interacción con la comunidad escolar.</p>
+                    <p style="margin:0;"><strong>Protección de niñas y niños:</strong> evita fotografías de rostros de menores de edad en primer plano — prefiere tomas generales, de espaldas o a distancia.</p>
+                </div>
+                <input type="file" id="ficha-fotos" accept="image/*" multiple required>
+                <div class="soporte-field-hint">Hasta 20 fotos. Se comprimen automáticamente antes de enviarse, así que puedes subirlas directo desde tu celular sin preocuparte por el tamaño.</div>
+                <div class="soporte-field-error" id="ficha-fotos-error">Adjunta al menos una foto.</div>
+                <div class="ficha-fotos-preview" id="ficha-fotos-preview"></div>
+            </div>
+
+            <button type="submit" class="form-button" id="btn-ficha-submit">
+                <span>Enviar ficha</span>
+            </button>
+
+            <div id="ficha-msg" class="soporte-submit-msg"></div>
+        </form>
+    </div>
+
+    <div class="tramite-otros-tramites">
+        <p>Relacionado</p>
+        <div class="tramite-otros-links">
+            <a href="ceremonias-civicas.html">Reservar otra visita / ver histórico</a>
+        </div>
+    </div>
+
+</section>
+
+<footer>
+        <div class="footer-grid">
+            <div class="footer-col">
+                <p class="footer-brand"><svg class="logo-icon" width="30" height="30" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="12" fill="#F9F8F5"/><text x="32" y="27" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#56212f" letter-spacing="-1">NE</text><text x="32" y="53" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#56212f" letter-spacing="-1">ZA</text></svg>SEPRN</p>
+                <p class="footer-desc">Subdirección de Educación Primaria<br>en la Región de Nezahualcóyotl</p>
+                <p class="footer-meta">Av. Texcoco #116, Col. Juárez Pantitlán<br>Nezahualcóyotl, Estado de México, C.P. 57460</p>
+                <p class="footer-meta">Lunes a Viernes · 08:30 – 15:30 h</p>
+            </div>
+            <div class="footer-col">
+                <p class="footer-col-title">Sitio</p>
+                <ul class="footer-links">
+                    <li><a href="index.html">Inicio</a></li>
+                    <li><a href="nosotros.html">Nosotros</a></li>
+                    <li><a href="areas.html">Áreas</a></li>
+                    <li><a href="cte.html">CTE</a></li>
+                    <li><a href="contacto.html">Contacto</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <p class="footer-col-title">Áreas</p>
+                <ul class="footer-links">
+                    <li><a href="academica.html">Subjefatura Académica</a></li>
+                    <li><a href="personal.html">Subjefatura de Personal</a></li>
+                    <li><a href="planeacion.html">Subjefatura de Planeación</a></li>
+                    <li><a href="recursos.html">Subjefatura de Recursos</a></li>
+                    <li><a href="otde.html">OTDE</a></li>
+                    <li><a href="oeve.html">OEVE</a></li>
+                    <li><a href="juridico.html">Asuntos Jurídicos</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="social-links">
+                <a href="https://www.facebook.com/SubNeza" target="_blank" rel="noopener noreferrer" title="Facebook">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                </a>
+                <a href="https://www.youtube.com/channel/UCvDb2DPSJxFyhH3bCPd5D2Q" target="_blank" rel="noopener noreferrer" title="YouTube">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                </a>
+            </div>
+            <div class="copyright">
+                © 2026 SEPRN · Subdirección de Educación Primaria en la Región de Nezahualcóyotl<br>
+                Órgano desconcentrado de SEIEM · Gobierno del Estado de México
+            </div>
+        </div>
+    </footer>
+
+<script src="js/tramites-shared.js"></script>
+<script>
+    // ── Ficha de Visita: precarga por folio (?folio=... o captura manual) +
+    // envío con evidencias fotográficas. fetchJsonConTimeout/leerArchivoBase64
+    // vienen de js/tramites-shared.js.
+    const VISITAS_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwt8sh5UhCm9L68TP95l9PHl_rDVeyUZ6SmkhqsO-Q31hOmPcdPGAdsy8xEZygb_z8/exec';
+    const FICHA_MAX_FOTOS = 20;
+    const FICHA_MAX_FOTO_BYTES_ORIGINAL = 15 * 1024 * 1024; // antes de comprimir — solo para descartar archivos anómalos
+    const FICHA_COMPRESION_ANCHO_MAX = 1600;
+    const FICHA_COMPRESION_CALIDAD = 0.8;
+
+    // ── Comprime una foto en el navegador antes de subirla (redimensiona a
+    // FICHA_COMPRESION_ANCHO_MAX de ancho, JPEG calidad FICHA_COMPRESION_CALIDAD).
+    // Una foto de celular de 4-8MB suele quedar en unos cientos de KB, lo que
+    // permite subir hasta 20 fotos sin que el envío se sienta pesado ni se
+    // acerque a los límites de tamaño de Apps Script. ──
+    function comprimirImagen(file) {
+        return new Promise(function (resolve, reject) {
+            var img = new Image();
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                img.onload = function () {
+                    var ratio = Math.min(1, FICHA_COMPRESION_ANCHO_MAX / img.width);
+                    var canvas = document.createElement('canvas');
+                    canvas.width = Math.round(img.width * ratio);
+                    canvas.height = Math.round(img.height * ratio);
+                    var ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    canvas.toBlob(function (blob) {
+                        blob ? resolve(blob) : reject(new Error('No se pudo comprimir la imagen.'));
+                    }, 'image/jpeg', FICHA_COMPRESION_CALIDAD);
+                };
+                img.onerror = function () { reject(new Error('No se pudo leer la imagen.')); };
+                img.src = e.target.result;
+            };
+            reader.onerror = function () { reject(reader.error); };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    var fichaReservaActual = null;
+
+    async function buscarFolio() {
+        var input = document.getElementById('ficha-folio-input');
+        var err = document.getElementById('ficha-folio-input-error');
+        var msg = document.getElementById('ficha-buscar-msg');
+        msg.className = 'soporte-submit-msg';
+        msg.textContent = '';
+
+        var folio = input.value.trim().toUpperCase();
+        if (!folio) {
+            input.classList.add('error'); err.classList.add('visible');
+            return;
+        }
+        input.classList.remove('error'); err.classList.remove('visible');
+
+        try {
+            var data = await fetchJsonConTimeout(VISITAS_APPS_SCRIPT_URL + '?action=consulta&folio=' + encodeURIComponent(folio), { method: 'GET' });
+            if (data.status !== 'ok') {
+                msg.classList.add('error');
+                msg.textContent = 'No encontramos ninguna visita con ese folio. Verifica que esté bien escrito.';
+                document.getElementById('bloque-ficha').classList.add('ficha-oculto');
+                return;
+            }
+            mostrarFicha(data);
+        } catch (err2) {
+            msg.classList.add('error');
+            msg.textContent = 'No se pudo consultar el folio. Verifica tu conexión e intenta de nuevo.';
+        }
+    }
+
+    // ── Una vez localizada la visita, el formulario de búsqueda ya cumplió
+    // su función — se colapsa a una línea para no ocupar una pantalla
+    // entera de scroll "de más" antes del contenido real (más notorio en
+    // móvil, o al llegar ya con ?folio=... desde el link de confirmación). ──
+    function mostrarBuscadorFolio() {
+        document.getElementById('ficha-buscar-form').style.display = 'block';
+        document.getElementById('ficha-folio-encontrado').style.display = 'none';
+        document.getElementById('bloque-ficha').classList.add('ficha-oculto');
+    }
+
+    function mostrarFicha(reserva) {
+        fichaReservaActual = reserva;
+        document.getElementById('ficha-folio').value = reserva.folio;
+
+        document.getElementById('ficha-buscar-form').style.display = 'none';
+        document.getElementById('ficha-folio-encontrado-valor').textContent = reserva.folio;
+        document.getElementById('ficha-folio-encontrado').style.display = 'block';
+
+        var resumen = document.getElementById('ficha-resumen');
+        resumen.innerHTML =
+            '<p><strong>Folio:</strong> ' + reserva.folio + '</p>' +
+            '<p><strong>Visita de:</strong> ' + reserva.nombre + ' (' + reserva.cargo + ')</p>' +
+            '<p><strong>Escuela / CCT:</strong> ' + (reserva.escuela || '') + ' — ' + reserva.cct + '</p>' +
+            '<p><strong>Sector/Zona:</strong> ' + (reserva.sector || '—') + (reserva.zona ? ' / Zona ' + reserva.zona : '') + '</p>' +
+            '<p><strong>Tipo de visita:</strong> ' + reserva.tipoVisita + '</p>' +
+            '<p><strong>Fecha planeada:</strong> ' + reserva.fechaPlaneada + '</p>' +
+            '<p><strong>Estatus actual:</strong> ' + reserva.estatus + '</p>';
+
+        var fechaReal = document.getElementById('ficha-fecha-real');
+        if (!fechaReal.value) fechaReal.value = reserva.fechaPlaneada || '';
+
+        var nombreActividad = document.getElementById('ficha-nombre-actividad');
+        if (!nombreActividad.value.trim()) {
+            nombreActividad.value = reserva.tipoVisita === 'Inicio de ciclo escolar'
+                ? 'Inauguración del Ciclo Escolar 2026-2027'
+                : 'Ceremonia Cívica Escolar';
+        }
+        var proposito = document.getElementById('ficha-proposito');
+        if (!proposito.value) {
+            proposito.value = reserva.tipoVisita === 'Inicio de ciclo escolar'
+                ? 'Inauguración del ciclo escolar'
+                : 'Acompañamiento a ceremonia cívica';
+        }
+
+        document.getElementById('bloque-ficha').classList.remove('ficha-oculto');
+        document.getElementById('bloque-ficha').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function fichaToggleOtroProposito() {
+        var val = document.getElementById('ficha-proposito').value;
+        document.getElementById('ficha-otro-proposito-group').style.display = val === 'Otro' ? 'block' : 'none';
+        if (val !== 'Otro') document.getElementById('ficha-otro-proposito').value = '';
+    }
+
+    // ── Muestra el campo de nombre de una autoridad (Director/Supervisor/
+    // Jefe de Sector) solo cuando se marca que estuvo presente — el nombre
+    // queda opcional incluso marcada, por si no se conoce en el momento. ──
+    function fichaToggleNombreAutoridad(checkbox) {
+        var input = document.getElementById(checkbox.dataset.nombre);
+        input.style.display = checkbox.checked ? 'block' : 'none';
+        if (!checkbox.checked) input.value = '';
+    }
+
+    document.getElementById('ficha-fotos').addEventListener('change', function () {
+        var preview = document.getElementById('ficha-fotos-preview');
+        preview.innerHTML = '';
+        var files = Array.from(this.files || []);
+        files.slice(0, FICHA_MAX_FOTOS).forEach(function (file) {
+            var img = document.createElement('img');
+            img.src = URL.createObjectURL(file);
+            preview.appendChild(img);
+        });
+    });
+
+    function validarFichaForm() {
+        var ok = true;
+
+        var fechaInput = document.getElementById('ficha-fecha-real');
+        var fechaErr = document.getElementById('ficha-fecha-real-error');
+        if (!fechaInput.value) { fechaInput.classList.add('error'); fechaErr.classList.add('visible'); ok = false; }
+        else { fechaInput.classList.remove('error'); fechaErr.classList.remove('visible'); }
+
+        var nombreActInput = document.getElementById('ficha-nombre-actividad');
+        var nombreActErr = document.getElementById('ficha-nombre-actividad-error');
+        if (nombreActInput.value.trim().length < 3) { nombreActInput.classList.add('error'); nombreActErr.classList.add('visible'); ok = false; }
+        else { nombreActInput.classList.remove('error'); nombreActErr.classList.remove('visible'); }
+
+        var propositoInput = document.getElementById('ficha-proposito');
+        var propositoErr = document.getElementById('ficha-proposito-error');
+        if (!propositoInput.value) { propositoInput.classList.add('error'); propositoErr.classList.add('visible'); ok = false; }
+        else { propositoInput.classList.remove('error'); propositoErr.classList.remove('visible'); }
+        if (propositoInput.value === 'Otro') {
+            var otroPropInput = document.getElementById('ficha-otro-proposito');
+            var otroPropErr = document.getElementById('ficha-otro-proposito-error');
+            if (!otroPropInput.value.trim()) { otroPropInput.classList.add('error'); otroPropErr.classList.add('visible'); ok = false; }
+            else { otroPropInput.classList.remove('error'); otroPropErr.classList.remove('visible'); }
+        }
+
+        var cantidadInput = document.getElementById('ficha-cantidad-asistentes');
+        var cantidadErr = document.getElementById('ficha-cantidad-asistentes-error');
+        if (!cantidadInput.value) { cantidadInput.classList.add('error'); cantidadErr.classList.add('visible'); ok = false; }
+        else { cantidadInput.classList.remove('error'); cantidadErr.classList.remove('visible'); }
+
+        var descActInput = document.getElementById('ficha-descripcion-actividad');
+        var descActErr = document.getElementById('ficha-descripcion-actividad-error');
+        if (descActInput.value.trim().length < 10) { descActInput.classList.add('error'); descActErr.classList.add('visible'); ok = false; }
+        else { descActInput.classList.remove('error'); descActErr.classList.remove('visible'); }
+
+        var obsInput = document.getElementById('ficha-observaciones');
+        var obsErr = document.getElementById('ficha-observaciones-error');
+        if (obsInput.value.trim().length < 10) { obsInput.classList.add('error'); obsErr.classList.add('visible'); ok = false; }
+        else { obsInput.classList.remove('error'); obsErr.classList.remove('visible'); }
+
+        var fotosInput = document.getElementById('ficha-fotos');
+        var fotosErr = document.getElementById('ficha-fotos-error');
+        var files = Array.from(fotosInput.files || []);
+        if (!files.length) {
+            fotosInput.classList.add('error'); fotosErr.classList.add('visible');
+            fotosErr.textContent = 'Adjunta al menos una foto.';
+            ok = false;
+        } else if (files.length > FICHA_MAX_FOTOS) {
+            fotosInput.classList.add('error'); fotosErr.classList.add('visible');
+            fotosErr.textContent = 'Máximo ' + FICHA_MAX_FOTOS + ' fotos.';
+            ok = false;
+        } else if (files.some(function (f) { return f.size > FICHA_MAX_FOTO_BYTES_ORIGINAL; })) {
+            fotosInput.classList.add('error'); fotosErr.classList.add('visible');
+            fotosErr.textContent = 'Una de las fotos es demasiado pesada (máximo 15MB antes de comprimir).';
+            ok = false;
+        } else {
+            fotosInput.classList.remove('error'); fotosErr.classList.remove('visible');
+        }
+
+        return ok;
+    }
+
+    async function enviarFicha(evt) {
+        evt.preventDefault();
+        var msg = document.getElementById('ficha-msg');
+        var btnSubmit = document.getElementById('btn-ficha-submit');
+        msg.className = 'soporte-submit-msg';
+        msg.textContent = '';
+
+        if (!validarFichaForm()) return false;
+
+        var files = Array.from(document.getElementById('ficha-fotos').files || []);
+        btnSubmit.disabled = true;
+        btnSubmit.style.opacity = '0.6';
+
+        try {
+            var fotos = [];
+            for (var i = 0; i < files.length; i++) {
+                msg.textContent = 'Comprimiendo y subiendo fotos (' + (i + 1) + ' de ' + files.length + ')...';
+                var comprimida = await comprimirImagen(files[i]);
+                var base64 = await leerArchivoBase64(comprimida);
+                fotos.push({ base64: base64, nombre: files[i].name, tipo: 'image/jpeg' });
+            }
+            msg.textContent = 'Enviando ficha...';
+
+            var propositoVal = document.getElementById('ficha-proposito').value === 'Otro'
+                ? document.getElementById('ficha-otro-proposito').value.trim()
+                : document.getElementById('ficha-proposito').value;
+            var convocados = [];
+            document.querySelectorAll('.ficha-convocado-autoridad').forEach(function (c) {
+                if (!c.checked) return;
+                var etiqueta = c.parentElement.querySelector('span').textContent;
+                var nombre = document.getElementById(c.dataset.nombre).value.trim();
+                convocados.push(nombre ? etiqueta + ' (' + nombre + ')' : etiqueta);
+            });
+            document.querySelectorAll('.ficha-convocado:checked').forEach(function (c) { convocados.push(c.value); });
+            var convocadosOtro = document.getElementById('ficha-convocados-otro').value.trim();
+            if (convocadosOtro) convocados.push(convocadosOtro.split('\n').map(function (l) { return l.trim(); }).filter(Boolean).join('; '));
+
+            var datos = {
+                accion: 'ficha',
+                folio: document.getElementById('ficha-folio').value,
+                fechaVisitaReal: document.getElementById('ficha-fecha-real').value,
+                nombreActividad: document.getElementById('ficha-nombre-actividad').value.trim(),
+                proposito: propositoVal,
+                convocados: convocados.join(', '),
+                cantidadAsistentes: document.getElementById('ficha-cantidad-asistentes').value,
+                descripcionActividad: document.getElementById('ficha-descripcion-actividad').value.trim(),
+                observaciones: document.getElementById('ficha-observaciones').value.trim(),
+                fotos: fotos
+            };
+
+            const data = await fetchJsonConTimeout(VISITAS_APPS_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify(datos)
+            });
+
+            if (data.status === 'ok') {
+                msg.className = 'soporte-submit-msg ok';
+                msg.textContent = 'Ficha enviada. Gracias — la visita quedó marcada como realizada con ' + data.fotos + ' foto(s).';
+                document.getElementById('ficha-form').reset();
+                document.getElementById('ficha-fotos-preview').innerHTML = '';
+            } else {
+                msg.className = 'soporte-submit-msg error';
+                msg.textContent = 'No se pudo enviar la ficha: ' + data.mensaje;
+            }
+        } catch (err) {
+            msg.className = 'soporte-submit-msg error';
+            msg.textContent = err.name === 'AbortError'
+                ? 'El servidor tardó demasiado en responder. Vuelve a intentarlo en un momento.'
+                : 'No se pudo enviar la ficha. Verifica tu conexión e intenta de nuevo.';
+        } finally {
+            btnSubmit.disabled = false;
+            btnSubmit.style.opacity = '1';
+        }
+
+        return false;
+    }
+
+    // ── Precarga por liga directa (?folio=...), como la que se muestra al
+    // programar la visita en ceremonias-civicas.html. ──
+    (function () {
+        var params = new URLSearchParams(window.location.search);
+        var folio = params.get('folio');
+        if (folio) {
+            document.getElementById('ficha-folio-input').value = folio.toUpperCase();
+            buscarFolio();
+        }
+    })();
+</script>
+    <script src="script.js" defer></script>
+</body>
+</html>
