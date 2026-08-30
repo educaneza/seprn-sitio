@@ -147,6 +147,8 @@ ya esté expandido).
 | `instructivo-formacion-docente.html` | Guía imprimible del Centro de Formación Docente, mismo sistema tipográfico que la página anterior |
 | `404.html` | Página de error personalizada |
 | `protocolos.html` | Protocolos de Actuación — hub con 3 protocolos oficiales del Estado de México/SEIEM (ver sección propia abajo) |
+| `ceremonias-civicas.html` | Ceremonias Cívicas — reserva de visitas de jefes/docentes SEPRN-wide (no un trámite de OTDE), histórico, cobertura y panel por clave (ver sección propia abajo) |
+| `ficha-ceremonias-civicas.html` | Ficha post-visita de Ceremonias Cívicas, localizada por folio — sin entrada en nav/footer, se comparte por link directo (ver sección propia abajo) |
 
 **Documentación interna adicional en `docs/`:** `ARCHITECTURE.md` (arquitectura técnica), `ROADMAP.md` (scores UX/UI + pendientes por feature), `DESIGN_SYSTEM.md` (tokens/patrones del rediseño premium de Formación Docente), `QA-NOTES.md` (bugs reales ya cazados, con causa raíz — consultar antes de escribir un `fetch()` o un `appendRow()` nuevo), `manual-formacion-docente.html` / `manual-sistema-registro.html` (manuales operativos visuales para quien administra cada Sheet).
 
@@ -379,6 +381,35 @@ ya esté expandido).
 - Columna "Días" marcada en rojo/negrita a partir de `PANEL_UMBRAL_DIAS_ALERTA` (3 por default) sin moverse; aviso resumen arriba de la hoja
 - Menú "Panel OTDE": Actualizar ahora · Instalar/Desinstalar actualización automática (cada 30 min)
 - Detalle completo de la arquitectura en `docs/ARCHITECTURE.md §20`
+
+### `apps-script/visitas-jefes.gs` (nuevo, ago 2026)
+- **No es un backend de OTDE** — lo usan jefes de toda la Subdirección (~20 jefes de área +
+  docentes que se sumen) para reservar y reportar sus visitas de inicio de ciclo/ceremonias
+  cívicas. Sheet real `Seguimiento_Ceremonias_Cívicas_26-27`, tab "Reservas" (24 columnas)
+- Folio `SEPRN-CC-NNNN` (no `OTDE-`). **Sin correo ni Telegram a propósito** — decisión explícita
+  de Jorge; el folio se muestra en pantalla al reservar, sin respaldo por correo si se pierde
+- `doGet` con 3 acciones: `disponibilidad` (picker + histórico, sin correo/teléfono — endpoint
+  público), `consulta` (localizar por folio, precarga la ficha), `dashboard` (cobertura por
+  persona/sector, gated por `DASHBOARD_TOKEN` — mismo patrón `PANEL_TOKEN` de arriba, configurado
+  con `visConfigurarTokenDashboard('clave')`). `doPost` ramificado por `datos.accion` (`'ficha'`
+  actualiza la fila de la reserva por folio; si no, crea una reserva nueva)
+- Reserva bloqueada por CCT+semana vía `LockService.getScriptLock()` — evita que dos jefes
+  reserven la misma escuela la misma semana aunque envíen casi al mismo tiempo
+- Validación automática: la ficha es la prueba de que la visita ocurrió — trigger de tiempo
+  diario (`visInstalarTriggerValidacion()`, desde el menú del Sheet, no automático al desplegar)
+  marca "No realizada" lo que sigue en "Reservada" tras `VIS_DIAS_LIMITE_VALIDACION` (3) días de
+  la fecha planeada
+- Cobertura desigual (misma escuela revisitada, otras nunca) resuelta con avisos, no un candado
+  — contador de cobertura y badge "Ya visitada" en `ceremonias-civicas.html`, aviso no
+  bloqueante con motivo opcional de revisita (columna nueva en el Sheet) si se reserva una
+  escuela ya "Realizada" en otra semana
+- Reporte PDF para quien da seguimiento sin usar Sheets ni correo activamente
+  (`visGenerarReporteSeguimiento_()`, menú del Sheet, no el Web App — no requiere redeploy):
+  próximas visitas, realizadas recientes con la Operatividad completa, pendientes "No realizada"
+- Fotos de la ficha comprimidas en el navegador (canvas, 1600px/JPEG q0.8) antes de subir — hasta
+  20 por ficha, sin acercarse al límite de payload de Apps Script
+- Detalle completo de la arquitectura (esquema de columnas, por qué el folio actualiza una fila
+  en vez de crear una nueva, decisión de la Fase 2 separada) en `docs/ARCHITECTURE.md §22`
 
 ## Reglas de desarrollo
 1. No introducir npm, frameworks ni build steps — stack estático puro
@@ -741,6 +772,36 @@ Página autónoma (no importa `styles.css`). Vinculada desde `otde.html` mediant
 - **Diseño premium propio (jul 2026)**: tipografía Inter/Inter Tight (Google Fonts), tarjetas de curso con fondo pastel por categoría + ícono grande, prueba social real de inscritos (nunca inventada — se oculta si es 0), resumen de selección como panel lateral sticky en escritorio (≥960px) / barra flotante en móvil, ambos alimentados por una sola función `actualizarResumenSticky()`. Detalle completo de tokens y patrones en `docs/DESIGN_SYSTEM.md` — **consultarlo antes de rediseñar cualquier parte de esta página**, ya tiene su propio sistema
 - **Recordatorios automáticos** y **ventanas de fecha por curso** (`Visible_desde`/`Visible_hasta`): ver sección de `apps-script/formacion-docente.gs` arriba
 - Pendiente de fases futuras: validación de asistencia con código de cierre en webinars (columnas `Requiere_codigo_asistencia`/`Codigo_asistencia` ya existen), dashboards por sector/zona (decisión previa: Looker Studio conectado directo a la hoja, no un dashboard propio — revisar con Jorge antes de construir uno custom, ver `docs/ROADMAP.md`)
+
+## `ceremonias-civicas.html` + `ficha-ceremonias-civicas.html` — Ceremonias Cívicas (ago 2026)
+Primer sistema del sitio que no es un trámite de OTDE — lo usan ~20 jefes de área de toda la
+Subdirección más docentes que se sumen, para reservar y reportar sus visitas de acompañamiento
+al inicio de ciclo escolar y a las ceremonias cívicas semanales. Header/nav/footer institucional
+completo (reusa `styles.css`), mismo patrón que las páginas de trámite de OTDE, aunque no es una
+de ellas. Backend: `apps-script/visitas-jefes.gs` (ver arriba). Sin entrada en nav/footer del
+sitio, se comparte por link directo (hay un QR institucional, `images/qr-ceremonias-civicas.png`/
+`.pdf`, generado con el mismo estilo/técnica que `images/qr-protocolos.png` — ver esa sección).
+
+- **`ceremonias-civicas.html`** (renombrado de `visitas-escolares.html`): formulario de reserva
+  (CCT con autocomplete + fallback manual con cascade Sector→Zona, campo "Subjefatura/Oficina"
+  sin opción "Docente", sin correo/teléfono — el sistema no notifica a nadie, no tenía caso
+  pedirlos) + tabla de disponibilidad/histórico con buscador + contador de cobertura + panel de
+  cobertura por persona/sector protegido con clave (`DASHBOARD_TOKEN`) — **panel comentado/oculto
+  en el HTML a petición de Jorge**, no visible las primeras semanas del ciclo; el código (HTML +
+  JS + backend) queda completo, reactivarlo es quitar el comentario
+- **`ficha-ceremonias-civicas.html`** (renombrado dos veces: `ficha-visita-jefe.html` →
+  `ficha-informativa-visita.html` → nombre final; el genérico quedó reservado para una futura
+  Fase 2 de reporte general al Community Manager, ver `docs/ROADMAP.md` ítem 13): ficha
+  post-visita localizada por folio, precarga automática si llega por `?folio=...`. Campos para
+  el Community Manager (Nombre de la actividad, Propósito, Convocados/Participantes con nombre
+  de autoridades, Descripción general, Cantidad de asistentes — badge "Para difusión") separados
+  visualmente de la Operatividad de la escuela (badge "Uso interno", no se difunde). Hasta 20
+  fotos comprimidas en el navegador (canvas, 1600px/JPEG q0.8) antes de subir, con guía de qué
+  fotografiar y aviso de protección de menores de edad (repetido también en el formulario de
+  reserva, para que llegue *antes* de la visita, no solo después)
+- Detalle completo de la arquitectura (esquema de columnas, decisión de sin notificaciones, por
+  qué el folio actualiza una fila en vez de crear una nueva, la separación de la Fase 2, los 3
+  fixes de UI/UX encontrados en pruebas) en `docs/ARCHITECTURE.md §22`
 
 ## `js/cct-db.js` — Campo `municipio` agregado (jul 2026)
 Los 506 registros se enriquecieron con `municipio` (18 municipios) cruzando por CCT contra `Catalogo SEPRN direcciones.xlsx` (columna `municip`, 612 filas, 100% poblada). El sector **no** determina el municipio de forma confiable — varios sectores abarcan múltiples municipios (ver mapa SVG de `index.html`) — por eso el municipio se deriva del CCT exacto, no del sector. Cualquier página que use el autocomplete de CCT puede ahora leer `m.municipio` igual que `m.sector`/`m.zona`/`m.nombre`.

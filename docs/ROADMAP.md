@@ -515,6 +515,23 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     variaciones de color/etiqueta por trámite para diferenciarlos, sin romper una base común. Sin
     diseño decidido todavía.
 
+13. **Reporte General de Actividad para el Community Manager — Fase 2 de Ceremonias Cívicas**
+    (decisión de arquitectura tomada 30 ago 2026, construcción pospuesta a propósito hasta
+    después del 1 sep — ver `docs/ARCHITECTURE.md §22`): hoy solo existe el flujo de Ceremonias
+    Cívicas, con folio obligatorio porque hay una reserva previa que desbloquear. Este reporte
+    general es para cualquier oficina de SEPRN que quiera reportar una actividad al CM (Facebook)
+    **sin preselección** — no habría folio de entrada, se generaría al final solo como
+    referencia. Clonaría el patrón de campos de `ficha-ceremonias-civicas.html` (nombre de
+    actividad, propósito, convocados, descripción, fotos comprimidas) sin el paso de reserva,
+    Sheet y backend propios (no comparte los de Ceremonias Cívicas). Nombre de archivo ya
+    reservado: `ficha-informativa-visita.html`. Campo "Sede" pensado con buscador de CCT + texto
+    libre de respaldo (no toda actividad ocurre en una escuela).
+14. **Párrafo largo del `.servicio-header` de `ceremonias-civicas.html`** (hallazgo de UI/UX,
+    30 ago 2026, no corregido a propósito — es contenido institucional de Jorge, no una decisión
+    de diseño mía): a anchos medios (~900-1100px, laptop no maximizada) el párrafo de 5-6 líneas
+    se convierte en una columna muy alta de texto centrado, empujando el botón "Reservar visita"
+    hacia abajo. Pendiente de que Jorge decida si acortarlo.
+
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue
 abierto de esa entrega (decisión de notificación de cierre de ticket, limpieza de función
