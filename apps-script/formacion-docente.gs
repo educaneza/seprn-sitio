@@ -921,11 +921,11 @@ function construirCorreoHtml(opts) {
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eae7e1;padding:32px 16px;">' +
       '<tr><td align="center">' +
         '<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;">' +
-          '<tr><td style="background:#0C1A2E;padding:28px 32px;">' +
-            '<div style="font:bold 13px/1 Arial,Helvetica,sans-serif;letter-spacing:1px;color:#d6d1ca;text-transform:uppercase;">OTDE NEZA</div>' +
-            '<div style="font:600 20px/1.3 Arial,Helvetica,sans-serif;color:#ffffff;margin-top:6px;">Centro de Formación Docente</div>' +
+          '<tr><td style="background:#9F2241;padding:28px 32px;">' +
+            '<div style="font:bold 10px/1 Arial,Helvetica,sans-serif;letter-spacing:2px;color:#d6a87e;text-transform:uppercase;">Oficina de Tecnología para el Desarrollo Educativo | OTDE</div>' +
+            '<div style="font:600 20px/1.3 Arial,Helvetica,sans-serif;color:#ffffff;margin-top:8px;">Centro de Formación Docente</div>' +
           '</td></tr>' +
-          '<tr><td style="background:#9F2241;height:4px;line-height:4px;font-size:0;">&nbsp;</td></tr>' +
+          '<tr><td style="background:#977e5b;height:3px;line-height:3px;font-size:0;">&nbsp;</td></tr>' +
           '<tr><td style="padding:28px 32px 0 32px;">' +
             '<div style="display:inline-block;background:#f4e9ec;color:#9F2241;font:bold 11px/1 Arial,Helvetica,sans-serif;letter-spacing:1px;text-transform:uppercase;padding:6px 12px;border-radius:20px;">' + opts.chip + '</div>' +
           '</td></tr>' +
@@ -945,11 +945,23 @@ function construirCorreoHtml(opts) {
               '<td><a href="' + REDES_SOCIALES.whatsapp + '" style="display:inline-block;width:34px;height:34px;line-height:34px;text-align:center;background:#F9F8F5;border:1px solid #d6d1ca;color:#56212f;border-radius:50%;text-decoration:none;font:bold 11px/34px Arial,Helvetica,sans-serif;">WA</a></td>' +
             '</tr></table>' +
           '</td></tr>' +
-          '<tr><td style="padding:20px 32px 28px 32px;">' +
-            '<div style="border-top:1px solid #e6e2da;padding-top:18px;font:12px/1.6 Arial,Helvetica,sans-serif;color:#8a8a8a;">' +
-              'Este es un recordatorio automático de OTDE NEZA. Tu inscripción oficial (cuando aplica) se gestiona directamente en la plataforma o convocatoria correspondiente — este correo no la sustituye.<br><br>' +
-              'Oficina de Tecnología para el Desarrollo Educativo &middot; Subdirección de Educación Primaria en la Región de Nezahualcóyotl' +
+          '<tr><td style="padding:24px 32px 0 32px;">' +
+            '<div style="border-top:1px solid #e6e2da;padding-top:18px;">' +
+              '<p style="margin:0 0 2px 0;font:bold 14px/1 Arial,Helvetica,sans-serif;color:#9F2241;">Mtro. Jorge Alberto Bonilla Torres</p>' +
+              '<p style="margin:0 0 2px 0;font:12px/1.5 Arial,Helvetica,sans-serif;color:#555555;">Jefe de la Oficina de Tecnología para el Desarrollo Educativo | <strong>OTDE</strong></p>' +
+              '<p style="margin:0 0 12px 0;font:12px/1.5 Arial,Helvetica,sans-serif;color:#666666;">Subdirección de Educación Primaria en la Región de Nezahualcóyotl | SEPRN</p>' +
+              '<p style="margin:0 0 4px 0;font:12px/1.5 Arial,Helvetica,sans-serif;color:#555555;">📞 55 3300 2400 Ext. 9065</p>' +
+              '<p style="margin:0 0 4px 0;font:12px/1.5 Arial,Helvetica,sans-serif;color:#555555;">📍 Av. Texcoco 116, Col. Juárez Pantitlán, Nezahualcóyotl C.P. 57460</p>' +
+              '<p style="margin:0;font:12px/1.5 Arial,Helvetica,sans-serif;color:#555555;">✉️ <a href="mailto:' + CORREO_REPLY_TO_INSTITUCIONAL + '" style="color:#9F2241;text-decoration:none;">' + CORREO_REPLY_TO_INSTITUCIONAL + '</a></p>' +
             '</div>' +
+          '</td></tr>' +
+          '<tr><td style="padding:18px 32px 28px 32px;">' +
+            '<div style="font:12px/1.6 Arial,Helvetica,sans-serif;color:#8a8a8a;">' +
+              'Este es un recordatorio automático de OTDE NEZA. Tu inscripción oficial (cuando aplica) se gestiona directamente en la plataforma o convocatoria correspondiente — este correo no la sustituye.' +
+            '</div>' +
+          '</td></tr>' +
+          '<tr><td style="background:#9F2241;padding:9px 32px;text-align:center;">' +
+            '<p style="margin:0;font:9.5px/1 Arial,Helvetica,sans-serif;color:#d6a87e;letter-spacing:1px;">SEPRN © 2026 — Gobierno del Estado de México</p>' +
           '</td></tr>' +
         '</table>' +
       '</td></tr>' +

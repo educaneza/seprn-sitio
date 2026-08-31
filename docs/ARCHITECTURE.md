@@ -1127,11 +1127,13 @@ Zona/Sector, sin resolver para quien de verdad atiende.
 `otde.html` reemplazó, en código, el `<iframe>` del Google Form que hasta ahora capturaba las
 4 solicitudes de correo institucional (Alta, Cambio de Contraseña, Reset 2FA, Incidencias).
 Decisión de arquitectura central: el backend nuevo vive en un **proyecto de Apps Script
-separado y paralelo** — `Correos-institucionales/webform-2026-2027/` (repo aparte, no
-documentado en este archivo) — pensado para una Spreadsheet nueva del ciclo 2026-2027. El
-sistema en vivo que usa Marcos hoy (`Correos-institucionales/Code.gs` +
-`OnFormSubmit.gs`/`OnEditTrigger.gs`, atado al Form actual) **no se tocó**, sigue corriendo en
-paralelo — retirarlo es decisión de Jorge, no automática. **Desplegado (6 ago 2026)**:
+separado y paralelo** — código fuente en `apps-script/correo/` de este repo (movido aquí el 31
+ago 2026; nació en `Correos-institucionales/webform-2026-2027/`, repo aparte sin git, mientras
+ese trámite todavía no era parte del ecosistema unificado) — pensado para una Spreadsheet nueva
+del ciclo 2026-2027. El sistema en vivo que usa Marcos hoy (`Correos-institucionales/Code.gs` +
+`OnFormSubmit.gs`/`OnEditTrigger.gs`, atado al Form actual, sigue en ese repo aparte sin git)
+**no se tocó**, sigue corriendo en paralelo — retirarlo es decisión de Jorge, no automática.
+**Desplegado (6 ago 2026)**:
 Spreadsheet `Solicitudes_Correo_2026_2027`, proyecto "Webform Correo 2026-2027 - Backend"; las
 4 constantes en `otde.html` (`ALTA_CORREO_APPS_SCRIPT_URL`, `CAMBIO_APPS_SCRIPT_URL`,
 `RESET_APPS_SCRIPT_URL`, `INCIDENCIA_APPS_SCRIPT_URL`) ya no tienen el placeholder
@@ -1159,7 +1161,7 @@ el solicitante elegía cuál quería — `otdeDominioParaCCT(cct, tipoCuenta)` e
 tomaba esa elección como parámetro. Jorge pidió simplificarlo: ese caso ahora siempre resuelve
 a oficina automáticamente, sin preguntar. `otdeDominioParaCCT()` se eliminó del archivo (sin
 otro llamador, confirmado por grep antes de borrar); el payload que viaja al backend
-(`Alta.gs`, en el repo aparte `Correos-institucionales`) sigue mandando `tipoCuenta` — ya no
+(`Alta.gs`, en `apps-script/correo/` de este repo) sigue mandando `tipoCuenta` — ya no
 elegido por el usuario, sino calculado en el cliente con la misma regla — únicamente para no
 romper la columna H del Sheet real.
 
@@ -1369,7 +1371,7 @@ sub-sección propia en este archivo hasta ahora).
 ```mermaid
 flowchart TD
     A[Solicitante elige sub-tipo en otde.html:<br/>Alta / Cambio contraseña /<br/>Eliminar 2FA / Incidencia]
-    B["WebApp.gs (repo aparte:<br/>Correos-institucionales/webform-2026-2027)<br/>enruta por datos.tipo"]
+    B["WebApp.gs (apps-script/correo/)<br/>enruta por datos.tipo"]
     C[Fila en hoja del sub-tipo,<br/>Estado general = texto libre]
     D{{Telegram a OTDE<br/>— SOLO sub-tipo Incidencias}}
     E[Marcos llena a mano<br/>columna NP SIGEE]
@@ -1434,7 +1436,7 @@ Sheet nuevo y propio (no en ninguno de los Sheets de los trámites), que junta e
 
 - Llama por `UrlFetchApp` a `?action=pendientes&token=...` en las 3 URLs ya conocidas de
   `mantenimiento.gs`/`asesorias.gs`/`soporte-remoto.gs`, y a la misma URL de siempre del webform
-  de Correo (`Correos-institucionales/webform-2026-2027/WebApp.gs`, repo aparte).
+  de Correo (`apps-script/correo/WebApp.gs`).
 - **`?action=pendientes` es un endpoint nuevo en los 4 backends**, hermano de `?action=consulta`
   (§19 arriba) pero con una diferencia de exposición importante: `consulta` regresa una sola
   solicitud si ya sabes su folio + correo; `pendientes` regresa nombre/escuela/correo de **todas**
@@ -1458,7 +1460,7 @@ Sheet nuevo y propio (no en ninguno de los Sheets de los trámites), que junta e
   envolverlos en una función temporal sin parámetros. Detalle completo y el error real que esto
   causó en `docs/QA-NOTES.md #14`.
 
-**Dropdown protector en "Estado general" de Correo (`Correos-institucionales/webform-2026-2027/`,
+**Dropdown protector en "Estado general" de Correo (`apps-script/correo/`,
 `Alta.gs`/`CambioContrasena.gs`/`Reset2FA.gs`/`Incidencias.gs`).** No cambia ninguna lógica — esa
 columna, aunque técnicamente texto libre (§19.4), en la práctica solo toma 2 valores por tipo
 (`'Solicitud recibida'` y su estado final propio: `'Cuenta entregada'`/`'Reset notificado'`/

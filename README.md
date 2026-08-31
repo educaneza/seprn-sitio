@@ -48,7 +48,7 @@ rediseño, [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md); para bugs reales ya
 | Notificaciones | Bot de Telegram (API `sendMessage`) — solicitudes de Soporte Remoto |
 | Scanner QR | html5-qrcode v2.3.8 vía CDN (solo `asistencia.html`) |
 
-No hay framework, bundler, ni dependencias npm. El sitio es completamente estático. Los backends externos son 6 Google Apps Script (uno por Spreadsheet/flujo): `conferencia-ia.gs`, `cursos-coeee-2026.gs` (congelado desde jul 2026, ver abajo), `soporte-remoto.gs`, `formacion-docente.gs`, `mantenimiento.gs` y `asesorias.gs` (ago 2026). La cuota diaria de `MailApp`/`GmailApp` la comparten los 6, no es por proyecto. Aparte, el webform nuevo de Correo Institucional (Alta/Cambio/Reset/Incidencias) vive en un proyecto de Apps Script separado, `Correos-institucionales/webform-2026-2027/` — no en este repo — en paralelo al Google Form que sigue en producción; ver `docs/ARCHITECTURE.md §16`. Un séptimo Apps Script, `panel-otde.gs` (ago 2026), no es backend de ningún flujo — vive en un Sheet propio y solo lee, vía `UrlFetchApp`, el `?action=pendientes` de los 4 backends con folio (los 3 de aquí + el de Correo) para mostrar en una sola hoja lo que falta atender; ver `docs/ARCHITECTURE.md §20`.
+No hay framework, bundler, ni dependencias npm. El sitio es completamente estático. Los backends externos son 7 Google Apps Script (uno por Spreadsheet/flujo): `conferencia-ia.gs`, `cursos-coeee-2026.gs` (congelado desde jul 2026, ver abajo), `soporte-remoto.gs`, `formacion-docente.gs`, `mantenimiento.gs`, `asesorias.gs` (ago 2026) y `correo/` (webform de Correo Institucional — Alta/Cambio/Reset/Incidencias, 9 archivos en un solo proyecto de Apps Script, movido a este repo el 31 ago 2026 desde `Correos-institucionales/webform-2026-2027/`, en paralelo al Google Form viejo que sigue en producción; ver `docs/ARCHITECTURE.md §16`). La cuota diaria de `MailApp`/`GmailApp` la comparten los 7, no es por proyecto. Un octavo Apps Script, `panel-otde.gs` (ago 2026), no es backend de ningún flujo — vive en un Sheet propio y solo lee, vía `UrlFetchApp`, el `?action=pendientes` de los 4 backends con folio (los 3 sueltos + `correo/`) para mostrar en una sola hoja lo que falta atender; ver `docs/ARCHITECTURE.md §20`.
 
 ---
 
@@ -97,6 +97,7 @@ seprn-sitio/
 │   ├── formacion-docente.gs      # Backend Centro de Formación Docente + Jornada Verano (Docentes/Cursos/Inscripciones, folios OTDE-CAP-NNNN, recordatorios automáticos)
 │   ├── mantenimiento.gs          # Backend Mantenimiento (ago 2026) — webform complementa el oficio, no lo sustituye
 │   ├── asesorias.gs              # Backend Asesorías (ago 2026) — mismo patrón que mantenimiento.gs
+│   ├── correo/                   # Backend Correo Institucional (movido aquí el 31 ago 2026, antes en Correos-institucionales/webform-2026-2027/) — 9 archivos, un solo proyecto de Apps Script: Config.gs, WebApp.gs, Alta.gs, CambioContrasena.gs, Reset2FA.gs, Incidencias.gs, OnEdit.gs, GenerarResumenSIGEE.gs, ResumenSemanal.gs
 │   ├── panel-otde.gs             # Panel único de solicitudes pendientes (ago 2026) — Sheet aparte, agrega los 4 backends con folio
 │   └── visitas-jefes.gs          # Backend Ceremonias Cívicas (ago 2026) — SEPRN-wide, no un trámite de OTDE; folio SEPRN-CC-NNNN, sin correo/Telegram a propósito
 │
