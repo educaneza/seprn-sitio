@@ -277,6 +277,13 @@
     const FICHA_MAX_FOTO_BYTES_ORIGINAL = 15 * 1024 * 1024; // antes de comprimir — solo para descartar archivos anómalos
     const FICHA_COMPRESION_ANCHO_MAX = 1600;
     const FICHA_COMPRESION_CALIDAD = 0.8;
+    // El envío sube todas las fotos al servidor en una sola petición — perf test en vivo
+    // (ago 2026) midió hasta 68.7s con las 20 fotos máximas (visSubirFotos_ en
+    // apps-script/visitas-jefes.gs sube cada foto a Drive de forma secuencial). El
+    // TIMEOUT_FETCH_MS default (30s) de fetchJsonConTimeout() se quedaba corto — el
+    // servidor terminaba de guardar la ficha, pero el navegador ya había abortado y
+    // mostrado error. Este override le da margen amplio solo a este envío.
+    const FICHA_TIMEOUT_ENVIO_MS = 120000;
 
     // ── Comprime una foto en el navegador antes de subirla (redimensiona a
     // FICHA_COMPRESION_ANCHO_MAX de ancho, JPEG calidad FICHA_COMPRESION_CALIDAD).
@@ -495,6 +502,15 @@
                 fotos.push({ base64: base64, nombre: files[i].name, tipo: 'image/jpeg' });
             }
             msg.textContent = 'Enviando ficha...';
+            var avisoLento = setTimeout(function () {
+                msg.textContent = 'Enviando ficha... con varias fotos puede tardar un poco más.';
+            }, 10000);
+            // Umbral en 30s porque ahí es donde antes abortaba el fetch (TIMEOUT_FETCH_MS
+            // default) — a partir de aquí es justo cuando el jefe antes veía el error de
+            // "servidor tardó" aunque la ficha se siguiera guardando de fondo.
+            var avisoMuyLento = setTimeout(function () {
+                msg.textContent = 'Esto está tardando más de lo usual — seguimos esperando la respuesta del servidor, no cierres esta página.';
+            }, 30000);
 
             var propositoVal = document.getElementById('ficha-proposito').value === 'Otro'
                 ? document.getElementById('ficha-otro-proposito').value.trim()
@@ -523,11 +539,17 @@
                 fotos: fotos
             };
 
-            const data = await fetchJsonConTimeout(VISITAS_APPS_SCRIPT_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain' },
-                body: JSON.stringify(datos)
-            });
+            var data;
+            try {
+                data = await fetchJsonConTimeout(VISITAS_APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify(datos)
+                }, FICHA_TIMEOUT_ENVIO_MS);
+            } finally {
+                clearTimeout(avisoLento);
+                clearTimeout(avisoMuyLento);
+            }
 
             if (data.status === 'ok') {
                 msg.className = 'soporte-submit-msg ok';
