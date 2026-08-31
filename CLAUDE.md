@@ -136,7 +136,7 @@ ya esté expandido).
 | `asesorias.html` | Solicitud de Asesorías en TICCAD (Banco de Materiales/Chuka) — página propia, migrada desde la tab "Asesorías" de `otde.html` el 27 ago 2026 (ver `docs/ARCHITECTURE.md` y `apps-script/asesorias.gs` abajo). Header/nav/footer institucional completo (reusa `styles.css`), sin entrada en nav/footer del sitio — se llega vía `oficina-virtual.html` |
 | `mantenimiento.html` | Solicitud de Mantenimiento Preventivo y Correctivo — página propia, migrada desde la tab "Mantenimiento" de `otde.html` el 27 ago 2026, mismo patrón que `asesorias.html` (ver `docs/ARCHITECTURE.md` y `apps-script/mantenimiento.gs` abajo) |
 | `soporte.html` | Solicitud de Soporte Técnico Remoto (vía TeamViewer) — página propia, migrada desde la tab "Soporte Técnico" de `otde.html` el 27 ago 2026, mismo patrón que `asesorias.html`/`mantenimiento.html` (ver `docs/ARCHITECTURE.md` y `apps-script/soporte-remoto.gs` abajo) |
-| `correo.html` | Correo Institucional — Alta de cuenta / Cambio de contraseña / Eliminar método de autenticación / Incidencias — página propia, migrada desde la tab "Correo Institucional" de `otde.html` el 27 ago 2026, última de las 4 migraciones (ver `docs/ARCHITECTURE.md` y `Correos-institucionales/webform-2026-2027/` abajo) |
+| `correo.html` | Correo Institucional — Alta de cuenta / Cambio de contraseña / Eliminar método de autenticación / Incidencias — página propia, migrada desde la tab "Correo Institucional" de `otde.html` el 27 ago 2026, última de las 4 migraciones (ver `docs/ARCHITECTURE.md` y `apps-script/correo/` abajo) |
 | `oficina-virtual.html` | Oficina Virtual OTDE — hub de servicios digitales (Formación Docente, Mantenimiento, Asesorías, Correo, Soporte) + consulta de estatus de solicitudes por folio |
 | `oeve.html` | Oficina de Extensión y Vinculación |
 | `juridico.html` | Oficina Jurídica |
@@ -377,7 +377,7 @@ ya esté expandido).
 
 ### `apps-script/panel-otde.gs` (nuevo, ago 2026)
 - **No es un backend de trámite** — es un Apps Script aparte, pegado en un Google Sheet nuevo y propio ("Panel OTDE"), que junta en una sola hoja las solicitudes abiertas de Mantenimiento/Asesorías/Soporte/Correo, para no tener que entrar a los 4 Sheets por separado
-- Llama por `UrlFetchApp` al `?action=pendientes&token=...` de cada uno de los 4 backends (los 3 de este repo + `Correos-institucionales/webform-2026-2027/WebApp.gs`, ver esa sección abajo). Token en Propiedades del script (`PANEL_TOKEN`), mismo secreto que los 4 backends
+- Llama por `UrlFetchApp` al `?action=pendientes&token=...` de cada uno de los 4 backends (los 3 sueltos de `apps-script/` + `apps-script/correo/WebApp.gs`, ver esa sección abajo). Token en Propiedades del script (`PANEL_TOKEN`), mismo secreto que los 4 backends
 - Columna "Días" marcada en rojo/negrita a partir de `PANEL_UMBRAL_DIAS_ALERTA` (3 por default) sin moverse; aviso resumen arriba de la hoja
 - Menú "Panel OTDE": Actualizar ahora · Instalar/Desinstalar actualización automática (cada 30 min)
 - Detalle completo de la arquitectura en `docs/ARCHITECTURE.md §20`
@@ -506,12 +506,16 @@ arquitectura completo en `docs/ARCHITECTURE.md §16`. Resumen operativo:
   docentes ("código de seguridad extra que a veces se traba"). El identificador interno que
   viaja al backend (`tipo: 'reset2FA'`) no cambió — es contrato con `Reset2FA.gs`, no texto
   visible.
-- **No se tocó el sistema en vivo** (`Correos-institucionales`, `Code.gs`/`OnFormSubmit.gs`/
-  `OnEditTrigger.gs`/`ResumenSemanal.gs`, atado al Form viejo que sigue usando Marcos) — el
-  backend nuevo es un proyecto de Apps Script separado y en paralelo,
-  `Correos-institucionales/webform-2026-2027/` (`Config.gs`, `WebApp.gs`, `Alta.gs`,
-  `CambioContrasena.gs`, `Reset2FA.gs`, `Incidencias.gs`, `OnEdit.gs` — un solo trigger
-  `onEditWebform` que enruta por nombre de hoja). **Desplegado (6 ago 2026)**: Spreadsheet
+- **No se tocó el sistema en vivo** (repo aparte `Correos-institucionales`, `Code.gs`/
+  `OnFormSubmit.gs`/`OnEditTrigger.gs`/`ResumenSemanal.gs`, atado al Form viejo que sigue usando
+  Marcos, sin git) — el backend nuevo es un proyecto de Apps Script separado y en paralelo, cuyo
+  código fuente vive en **`apps-script/correo/`** de este repo (`Config.gs`, `WebApp.gs`,
+  `Alta.gs`, `CambioContrasena.gs`, `Reset2FA.gs`, `Incidencias.gs`, `OnEdit.gs`,
+  `GenerarResumenSIGEE.gs`, `ResumenSemanal.gs` — un solo trigger `onEditWebform` que enruta por
+  nombre de hoja). **Movido a este repo el 31 ago 2026** desde `Correos-institucionales/
+  webform-2026-2027/` (nació ahí como proyecto paralelo antes de que existiera el ecosistema
+  unificado) — el despliegue real en Apps Script no cambió, solo dónde vive la copia editable.
+  **Desplegado (6 ago 2026)**: Spreadsheet
   `Solicitudes_Correo_2026_2027`, proyecto "Webform Correo 2026-2027 - Backend", las 4
   constantes (`ALTA_CORREO_APPS_SCRIPT_URL`, `CAMBIO_APPS_SCRIPT_URL`, `RESET_APPS_SCRIPT_URL`,
   `INCIDENCIA_APPS_SCRIPT_URL`) apuntan a la misma URL real (`WebApp.gs` enruta los 4 tipos por

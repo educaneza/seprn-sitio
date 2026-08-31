@@ -18,6 +18,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap">
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png">
     <link rel="stylesheet" href="styles.css">
     <style>
         .seccion {
@@ -136,235 +137,6 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .servicio-header {
-            background: var(--guinda);
-            padding: 40px;
-            border-radius: 18px;
-            color: white;
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        .servicio-header h2 {
-            margin-top: 0;
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 15px;
-            color: white;
-        }
-        .servicio-header p {
-            font-size: 17px;
-            opacity: 0.95;
-            max-width: 700px;
-            margin: 0 auto;
-            line-height: 1.7;
-            color: white;
-        }
-        .content-block {
-            background: white;
-            border: 2px solid #d6d1ca;
-            border-radius: 14px;
-            padding: 35px;
-            margin-bottom: 30px;
-        }
-        .content-block h3 {
-            font-size: 22px;
-            font-weight: 700;
-            color: #56212f;
-            margin: 0 0 20px 0;
-        }
-        .content-block p {
-            font-size: 15px;
-            line-height: 1.8;
-            color: #333;
-            margin-bottom: 15px;
-        }
-        .highlight-box {
-            background: rgba(159,34,65,0.05);
-            border-left: 4px solid #9F2241;
-            padding: 20px 25px;
-            border-radius: 8px;
-            margin: 20px 0;
-        }
-        .highlight-box p {
-            margin: 8px 0;
-        }
-        .benefit-list {
-            list-style: none;
-            padding: 0;
-        }
-        .benefit-list li {
-            padding: 10px 0 10px 30px;
-            position: relative;
-            font-size: 15px;
-            line-height: 1.7;
-        }
-        .benefit-list li::before {
-            content: '✓';
-            position: absolute;
-            left: 0;
-            color: #9F2241;
-            font-weight: bold;
-            font-size: 18px;
-        }
-        .download-button {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            padding: 14px 28px;
-            background: #56212f;
-            color: white;
-            border-radius: 10px;
-            text-decoration: none;
-            font-size: 15px;
-            font-weight: 600;
-            margin: 15px 10px 15px 0;
-            transition: all 0.3s;
-        }
-        .download-button:hover {
-            background: #9F2241;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(159,34,65,0.3);
-        }
-        .form-button {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            width: 100%;
-            max-width: 500px;
-            margin: 30px auto;
-            padding: 18px 30px;
-            background: var(--guinda);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(159,34,65,0.3);
-        }
-        .form-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(159,34,65,0.4);
-        }
-        .form-container {
-            overflow: hidden;
-            transition: all 0.4s;
-            max-height: 0;
-        }
-        .form-container.active {
-            max-height: 3200px;
-        }
-        .soporte-form-group { margin-bottom: 18px; }
-        .soporte-form-group label {
-            display: block;
-            font-size: 14px;
-            font-weight: 600;
-            color: #56212f;
-            margin-bottom: 6px;
-        }
-        .soporte-form-group label .req { color: #9F2241; margin-left: 2px; }
-        .soporte-form-group input,
-        .soporte-form-group select,
-        .soporte-form-group textarea {
-            width: 100%;
-            padding: 12px 14px;
-            border: 1.5px solid #d6d1ca;
-            border-radius: 8px;
-            font-size: 15px;
-            font-family: inherit;
-            color: #333;
-            background: white;
-            transition: border-color 0.2s;
-        }
-        .soporte-form-group textarea { resize: vertical; min-height: 90px; }
-        .soporte-form-group input:focus,
-        .soporte-form-group select:focus,
-        .soporte-form-group textarea:focus {
-            outline: none;
-            border-color: #9F2241;
-            box-shadow: 0 0 0 3px rgba(159,34,65,0.12);
-        }
-        .soporte-form-group input.error,
-        .soporte-form-group select.error,
-        .soporte-form-group textarea.error {
-            border-color: #dc2626;
-        }
-        .soporte-field-hint { font-size: 13px; color: #6b7280; margin-top: 6px; }
-        .soporte-field-error { font-size: 13px; color: #dc2626; margin-top: 6px; display: none; }
-        .soporte-field-error.visible { display: block; }
-
-        /* ── CCT autocomplete (Soporte) ── */
-        .sop-cct-wrapper { position: relative; }
-        #sop-cct-suggestions {
-            position: absolute;
-            top: 100%; left: 0; right: 0;
-            background: #fff;
-            border: 1.5px solid #9F2241;
-            border-top: none;
-            border-radius: 0 0 8px 8px;
-            z-index: 100;
-            max-height: 200px;
-            overflow-y: auto;
-            display: none;
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
-        #sop-cct-suggestions li {
-            padding: 8px 14px;
-            font-size: 14px;
-            cursor: pointer;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        #sop-cct-suggestions li:last-child { border-bottom: none; }
-        #sop-cct-suggestions li:hover, #sop-cct-suggestions li.active { background: #fdf2f5; }
-        #sop-cct-suggestions .sg-code { font-family: monospace; font-weight: 600; color: #9F2241; }
-        #sop-cct-suggestions .sg-name { color: #6b7280; font-size: 13px; display: block; }
-        .sop-cct-status {
-            font-size: 13px;
-            padding: 6px 12px;
-            border-radius: 6px;
-            margin-top: 6px;
-            display: none;
-        }
-        .sop-cct-status.found { background: #d1fae5; color: #065f46; display: block; }
-        .sop-cct-status.warn  { background: #fffbeb; color: #92400e; display: block; }
-        .sop-manual-fields {
-            background: #fffbeb;
-            border: 1px solid #fcd34d;
-            border-radius: 8px;
-            padding: 16px;
-            margin-top: 10px;
-            display: none;
-        }
-        .sop-manual-fields.visible { display: block; }
-        .sop-manual-fields .manual-aviso {
-            font-size: 13px;
-            color: #92400e;
-            font-weight: 500;
-            margin-bottom: 12px;
-        }
-        .soporte-submit-msg {
-            margin-top: 16px;
-            padding: 14px 18px;
-            border-radius: 8px;
-            font-size: 14px;
-            display: none;
-        }
-        .soporte-submit-msg.ok {
-            display: block;
-            background: #f0f7f0;
-            border-left: 4px solid #2e7d32;
-            color: #2e7d32;
-        }
-        .soporte-submit-msg.error {
-            display: block;
-            background: #fdf0f0;
-            border-left: 4px solid #9F2241;
-            color: #9F2241;
-        }
         .video-wrapper {
             position: relative;
             padding-bottom: 56.25%;
@@ -414,32 +186,6 @@
             font-size: 14px;
             color: #666;
             margin-bottom: 20px;
-        }
-        .featured-box {
-            background: var(--guinda);
-            padding: 40px;
-            border-radius: 14px;
-            color: white;
-            text-align: center;
-            margin: 30px 0;
-        }
-        .featured-box h4 {
-            font-size: 22px;
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: white;
-        }
-        .featured-box p {
-            font-size: 16px;
-            margin-bottom: 25px;
-            color: rgba(255,255,255,0.95);
-        }
-        .featured-box .download-button {
-            background: white;
-            color: #56212f;
-        }
-        .featured-box .download-button:hover {
-            background: #f0f0f0;
         }
         @media(max-width:768px){
             .servicios-nav { flex-direction: column; }
@@ -497,12 +243,13 @@
     <meta property="og:title" content="OTDE - Oficina de Tecnología para el Desarrollo Educativo">
     <meta property="og:description" content="Oficina de Tecnología para el Desarrollo Educativo (OTDE) — soporte técnico, gestión de cuentas institucionales y tecnología educativa en la SEPRN.">
     <meta property="og:url" content="https://educaneza.github.io/seprn-sitio/otde.html">
+    <meta property="og:image" content="https://educaneza.github.io/seprn-sitio/images/og-image.png">
 </head>
 <body>
 <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
 <header>
     <nav>
-        <div class="logo">SEPRN</div>
+        <div class="logo"><svg class="logo-icon" width="34" height="34" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="12" fill="#56212f"/><text x="32" y="27" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#d6d1ca" letter-spacing="-1">NE</text><text x="32" y="53" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#d6d1ca" letter-spacing="-1">ZA</text></svg><span class="logo-text">SEPRN</span></div>
         <button class="nav-toggle" aria-label="Abrir menú" aria-expanded="false">
             <span></span>
             <span></span>
@@ -528,19 +275,16 @@
 </section>
 <section class="content-section" id="main-content" role="main">
 
-    <!-- Banner: Centro de Formación Docente -->
-    <div class="otde-banner" style="background:linear-gradient(135deg,#0C1A2E 0%,#1a2e4a 100%);">
+    <!-- Banner: Oficina Virtual OTDE -->
+    <div class="otde-banner" style="background:linear-gradient(135deg,#56212f 0%,#9F2241 100%);margin-bottom:20px;">
         <div>
-            <div class="otde-banner-eyebrow">OTDE NEZA · Nuevo</div>
-            <div class="otde-banner-title">Centro de Formación Docente</div>
-            <div class="otde-banner-sub">Webinars, seminarios, diplomados, cursos autogestivos y proyectos didácticos</div>
+            <div class="otde-banner-eyebrow">OTDE NEZA · Oficina Virtual</div>
+            <div class="otde-banner-title">Todos tus trámites y su seguimiento, en un solo lugar</div>
+            <div class="otde-banner-sub">Formación Docente, Mantenimiento, Asesorías, Correo y Soporte — más el estatus de tu solicitud con tu folio</div>
         </div>
         <div style="position:relative;display:flex;flex-direction:column;align-items:flex-end;gap:.65rem;flex-shrink:0;">
-            <a href="formacion-docente.html" class="otde-banner-cta solid">
-                Ver catálogo de cursos →
-            </a>
-            <a href="instructivo-formacion-docente.html" class="otde-banner-link">
-                ¿Cómo funciona? Ver guía paso a paso
+            <a href="oficina-virtual.html" class="otde-banner-cta light">
+                Ir a la Oficina Virtual →
             </a>
         </div>
     </div>
@@ -574,273 +318,13 @@
 
     <!-- Navegación de Servicios -->
     <div class="servicios-nav" role="tablist" aria-label="Servicios OTDE">
-        <button class="servicio-tab active" role="tab" aria-selected="true"  aria-controls="correo"        onclick="showServicio('correo', this)">Correo Institucional</button>
-        <button class="servicio-tab"        role="tab" aria-selected="false" aria-controls="mantenimiento" onclick="showServicio('mantenimiento', this)">Mantenimiento</button>
-        <button class="servicio-tab"        role="tab" aria-selected="false" aria-controls="soporte"       onclick="showServicio('soporte', this)">Soporte Técnico</button>
-        <button class="servicio-tab"        role="tab" aria-selected="false" aria-controls="office"        onclick="showServicio('office', this)">Licencias Office</button>
+        <button class="servicio-tab active" role="tab" aria-selected="true"  aria-controls="office"        onclick="showServicio('office', this)">Licencias Office</button>
         <button class="servicio-tab"        role="tab" aria-selected="false" aria-controls="chuka"         onclick="showServicio('chuka', this)">Chuka</button>
         <button class="servicio-tab"        role="tab" aria-selected="false" aria-controls="recursos"      onclick="showServicio('recursos', this)">Recursos</button>
     </div>
 
-    <!-- SERVICIO 1: Correo Institucional -->
-    <div id="correo" class="servicio-content active" role="tabpanel" aria-label="Correo Institucional">
-        <div class="servicio-header">
-            <h2>Cuentas de Correo Institucional</h2>
-            <p>Gestionar ante las instancias correspondientes las cuentas institucionales de Microsoft para entregarlas a toda la estructura educativa y fomentar su utilización como medio de comunicación oficial y como una herramienta más de trabajo pedagógico y administrativo.</p>
-        </div>
-
-        <div class="content-block">
-            <h3>Acerca del Servicio</h3>
-            <p>Proporcionar al 100% de administrativos, docentes y directivos escolares sus cuentas de correo institucional y brindarles una herramienta para desarrollar su trabajo pedagógico y administrativo.</p>
-
-            <div class="highlight-box">
-                <p><strong>Servicios Disponibles:</strong></p>
-                <p>• <strong>Alta de cuenta:</strong> Solicita tu cuenta de correo electrónico institucional con dominio @dee.edu.mx o @aulamexiquense.mx</p>
-                <p>• <strong>Cambio de contraseña:</strong> Solicita el cambio de contraseña de correo electrónico institucional con dominio @dee.edu.mx o @aulamexiquense.mx</p>
-                <p>• <strong>Reset de autenticación de 2 pasos:</strong> Solicita el reseteo de la autenticación de 2 pasos de tu correo institucional.</p>
-            </div>
-
-            <button class="form-button" aria-expanded="false" onclick="toggleForm('form-correo', this)">
-                <span id="form-correo-text">Solicitar Cuenta, Cambio de Contraseña o Reset de Autenticación</span>
-                <span id="form-correo-arrow">▼</span>
-            </button>
-            
-            <div id="form-correo" class="form-container">
-                <iframe
-                    title="Formulario: Solicitud de cuenta o cambio de contraseña institucional"
-                    src="https://docs.google.com/forms/d/e/1FAIpQLSfn9gi_nfTupbdk-BN7aK0B--8a2FdOxq9HIXOxZsVugoiD9A/viewform?embedded=true"
-                    width="100%"
-                    height="800"
-                    frameborder="0"
-                    marginheight="0"
-                    marginwidth="0"
-                    style="border-radius: 12px; border: 2px solid #d6d1ca; margin-top: 20px;">
-                    Cargando…
-                </iframe>
-            </div>
-            
-            <p style="margin-top: 20px; font-size: 14px; color: #977e5b; text-align: center;">
-                ¿Prefieres abrir el formulario en una pestaña nueva? 
-                <a href="https://forms.gle/upNsKgzf2D4kdcfn8" target="_blank" rel="noopener noreferrer" style="color: #9F2241; font-weight: 600;">
-                    Haz clic aquí →
-                </a>
-            </p>
-        </div>
-    </div>
-
-    <!-- SERVICIO 2: Mantenimiento -->
-    <div id="mantenimiento" class="servicio-content" role="tabpanel" aria-label="Mantenimiento">
-        <div class="servicio-header">
-            <h2>Mantenimiento Preventivo y Correctivo</h2>
-            <p>Rehabilitación y reactivación de Aula de Medios. Realizar mantenimiento preventivo y correctivo a los equipos de cómputo de la Subdirección de Educación Primaria y Centros de Trabajo de la estructura.</p>
-        </div>
-
-        <div class="content-block">
-            <h3>Objetivo</h3>
-            <p>Contar con equipos de cómputo en las mejores condiciones posibles, teniendo las últimas actualizaciones y versiones de software para un correcto funcionamiento.</p>
-        </div>
-
-        <div class="content-block">
-            <h3>Mantenimiento al Hardware</h3>
-            <ul class="benefit-list">
-                <li>Limpieza Interior y Exterior</li>
-                <li>Sustitución de piezas defectuosas</li>
-                <li>Aumento de Memoria RAM</li>
-                <li>Cambio de Pasta Térmica</li>
-            </ul>
-        </div>
-
-        <div class="content-block">
-            <h3>Mantenimiento al Software</h3>
-            <ul class="benefit-list">
-                <li>Formateo de HDD</li>
-                <li>Instalación/Actualización de Windows</li>
-                <li>Instalación de Office 365</li>
-                <li>Respaldo de Archivos</li>
-                <li>Limpieza de Sistema Operativo</li>
-            </ul>
-        </div>
-
-        <div class="featured-box">
-            <h4>Instalación de Banco de Materiales</h4>
-            <p>Instalación de más de mil materiales didácticos digitales a los que se puede acceder sin necesidad de conexión de red.</p>
-        </div>
-
-        <div class="content-block">
-            <h3>¡Solicita Mantenimiento!</h3>
-            <p>Solicita el mantenimiento a los equipos de cómputo de uso escolar (aula de medios) o de uso administrativo (Dirección, Zona Escolar o Sector Educativo), por medio de oficio y vía estructura, nosotros nos pondremos en contacto contigo.</p>
-        </div>
-    </div>
-
-    <!-- SERVICIO 3: Soporte Técnico -->
-    <div id="soporte" class="servicio-content" role="tabpanel" aria-label="Soporte Técnico">
-        <div class="servicio-header">
-            <h2>Soporte Técnico Remoto</h2>
-            <p>Brindar asistencia técnica rápida y eficaz a todas las figuras de la Estructura Educativa, independientemente de su ubicación, mediante la herramienta TeamViewer.</p>
-        </div>
-
-        <div class="highlight-box">
-            <p>¿Tu consulta es sobre la instalación o activación de Office? Consulta primero la pestaña <a href="#office" onclick="showServicio('office', document.querySelector('[aria-controls=office]')); return false;" style="color: #9F2241; font-weight: 600;">Licencias Office</a>, ahí encontrarás el instalador y una guía paso a paso. Si el problema persiste, aquí te damos soporte remoto.</p>
-        </div>
-
-        <div class="content-block">
-            <h3>¡Solicita Soporte Técnico Remoto!</h3>
-            <p>Te compartimos algunos ejemplos de situaciones en las que te podemos ayudar de manera remota:</p>
-
-            <ul class="benefit-list">
-                <li>Solucionar problemas de software: Diagnosticar y solucionar problemas de software, como errores de aplicaciones, fallos del sistema operativo o problemas de configuración</li>
-                <li>Instalación y activación de Office institucional: Acompañamiento remoto cuando el instalador validado por CCT no puede completarse por cuenta propia</li>
-                <li>Eliminar malware y virus: Eliminar malware y virus de los equipos de los usuarios de forma remota</li>
-                <li>Realizar instalaciones y actualizaciones: Instalar software, actualizaciones y controladores en los equipos de forma remota</li>
-                <li>Configurar dispositivos: Configurar dispositivos como impresoras, routers o redes Wi-Fi de forma remota</li>
-            </ul>
-
-            <button class="form-button" id="btn-soporte" aria-expanded="false" onclick="toggleSoporteForm(this)">
-                <span id="btn-soporte-text">Solicitar Soporte Técnico Remoto</span>
-                <span id="btn-soporte-arrow">▼</span>
-            </button>
-
-            <div id="form-soporte" class="form-container">
-                <form id="soporte-form" onsubmit="return enviarSolicitudSoporte(event)" novalidate>
-                    <div class="soporte-form-group">
-                        <label for="sop-nombre">Nombre completo<span class="req">*</span></label>
-                        <input type="text" id="sop-nombre" required>
-                        <div class="soporte-field-error" id="sop-nombre-error">Ingresa tu nombre completo.</div>
-                    </div>
-                    <div class="soporte-form-group">
-                        <label for="sop-cct">Clave de Centro de Trabajo (CCT)<span class="req">*</span></label>
-                        <div class="sop-cct-wrapper">
-                            <input type="text" id="sop-cct" placeholder="15DPR0000A" maxlength="10" autocomplete="off" style="text-transform:uppercase;font-family:monospace;" required>
-                            <ul id="sop-cct-suggestions"></ul>
-                        </div>
-                        <div class="sop-cct-status" id="sop-cct-status"></div>
-                        <div class="soporte-field-error" id="sop-cct-error">Ingresa una CCT válida.</div>
-                    </div>
-
-                    <div class="sop-manual-fields" id="sop-manual-fields">
-                        <p class="manual-aviso">No encontramos esa CCT. Captura los datos manualmente:</p>
-                        <div class="soporte-form-group">
-                            <label for="sop-sector-manual">Sector<span class="req">*</span></label>
-                            <select id="sop-sector-manual" onchange="sopActualizarZonas()">
-                                <option value="">— Selecciona sector —</option>
-                                <option value="I">Sector I</option>
-                                <option value="II">Sector II</option>
-                                <option value="III">Sector III</option>
-                                <option value="IV">Sector IV</option>
-                                <option value="V">Sector V</option>
-                                <option value="VI">Sector VI</option>
-                                <option value="VII">Sector VII</option>
-                                <option value="VIII">Sector VIII</option>
-                                <option value="IX">Sector IX</option>
-                                <option value="X">Sector X</option>
-                                <option value="XI">Sector XI</option>
-                                <option value="XII">Sector XII</option>
-                                <option value="XIII">Sector XIII</option>
-                                <option value="SEPRN">SEPRN (Subdirección / Jefatura)</option>
-                            </select>
-                            <div class="soporte-field-error" id="sop-sector-manual-error">Selecciona un sector.</div>
-                        </div>
-                        <div class="soporte-form-group" id="sop-zona-group" style="display:none;">
-                            <label for="sop-zona-manual">Zona escolar<span class="req">*</span></label>
-                            <select id="sop-zona-manual">
-                                <option value="">— Selecciona zona —</option>
-                            </select>
-                            <div class="soporte-field-error" id="sop-zona-manual-error">Selecciona una zona.</div>
-                        </div>
-                        <div class="soporte-form-group">
-                            <label for="sop-escuela-manual">Nombre de la escuela o unidad<span class="req">*</span></label>
-                            <input type="text" id="sop-escuela-manual" placeholder="Nombre oficial">
-                            <div class="soporte-field-error" id="sop-escuela-manual-error">Ingresa el nombre de la escuela o unidad.</div>
-                        </div>
-                    </div>
-
-                    <input type="hidden" id="sop-sector-val">
-                    <input type="hidden" id="sop-zona-val">
-                    <input type="hidden" id="sop-escuela-val">
-
-                    <div class="soporte-form-group">
-                        <label for="sop-funcion">Función/Cargo<span class="req">*</span></label>
-                        <select id="sop-funcion" required onchange="sopToggleOtraFuncion()">
-                            <option value="">— Selecciona una opción —</option>
-                            <option>Docente</option>
-                            <option>Director(a)</option>
-                            <option>Subdirector(a)</option>
-                            <option>ATP (Asesor Técnico Pedagógico)</option>
-                            <option>Supervisor(a)</option>
-                            <option>Jefe(a) de Sector</option>
-                            <option>Personal de apoyo (PAAE)</option>
-                            <option>Otro</option>
-                        </select>
-                        <div class="soporte-field-error" id="sop-funcion-error">Selecciona tu función o cargo.</div>
-                        <div id="sop-otra-funcion-group" style="display:none;margin-top:10px;">
-                            <input type="text" id="sop-otra-funcion" placeholder="Especifica tu función" maxlength="80">
-                            <div class="soporte-field-error" id="sop-otra-funcion-error">Especifica tu función.</div>
-                        </div>
-                    </div>
-                    <div class="soporte-form-group">
-                        <label for="sop-whatsapp">WhatsApp<span class="req">*</span></label>
-                        <input type="tel" id="sop-whatsapp" placeholder="5512345678" maxlength="10" inputmode="numeric" required>
-                        <div class="soporte-field-hint">10 dígitos, sin espacios ni guiones. Te contactaremos por este medio.</div>
-                        <div class="soporte-field-error" id="sop-whatsapp-error">Ingresa un número de WhatsApp válido (10 dígitos).</div>
-                    </div>
-                    <div class="soporte-form-group">
-                        <label for="sop-correo">Correo electrónico</label>
-                        <input type="email" id="sop-correo" placeholder="tucorreo@dee.edu.mx">
-                        <div class="soporte-field-hint">Opcional, para darte seguimiento por escrito.</div>
-                        <div class="soporte-field-error" id="sop-correo-error">Ingresa un correo válido.</div>
-                    </div>
-                    <div class="soporte-form-group">
-                        <label for="sop-urgencia">Urgencia<span class="req">*</span></label>
-                        <select id="sop-urgencia" required>
-                            <option value="">Selecciona una opción</option>
-                            <option value="Alta">Alta — no puedo trabajar</option>
-                            <option value="Media">Media — puedo esperar unas horas</option>
-                            <option value="Baja">Baja — puede esperar 1-2 días</option>
-                        </select>
-                        <div class="soporte-field-error" id="sop-urgencia-error">Selecciona un nivel de urgencia.</div>
-                    </div>
-                    <div class="soporte-form-group">
-                        <label for="sop-descripcion">Describe el problema<span class="req">*</span></label>
-                        <textarea id="sop-descripcion" required></textarea>
-                        <div class="soporte-field-error" id="sop-descripcion-error">Describe brevemente el problema.</div>
-                    </div>
-
-                    <button type="submit" class="form-button" id="btn-soporte-submit">
-                        <span>Enviar Solicitud</span>
-                    </button>
-
-                    <div id="soporte-msg" class="soporte-submit-msg"></div>
-                </form>
-            </div>
-        </div>
-
-        <div class="content-block">
-            <h3>Guía rápida para utilizar TeamViewer</h3>
-            
-            <p><strong>1. Descargar e instalar TeamViewer:</strong></p>
-            <ul class="benefit-list">
-                <li>Descarga TeamViewer desde el sitio web oficial: <a href="https://www.teamviewer.com/latam/" target="_blank" rel="noopener noreferrer" style="color: #9F2241; font-weight: 600;">https://www.teamviewer.com/latam/</a></li>
-                <li>Instala TeamViewer</li>
-            </ul>
-
-            <p><strong>2. Conectarse a un dispositivo remoto:</strong></p>
-            <ul class="benefit-list">
-                <li>Abre TeamViewer</li>
-                <li>En el dispositivo que necesita asistencia, anota la ID de TeamViewer y la contraseña que se muestran en la ventana principal</li>
-                <li>Comparte los datos anteriores con el personal de la OTDE que te auxiliará</li>
-            </ul>
-
-            <div class="highlight-box">
-                <p><strong>Consejos adicionales:</strong></p>
-                <p>• Para una conexión más rápida y segura, puedes crear una cuenta TeamViewer y configurar el acceso fácil.</p>
-                <p>• Puedes utilizar TeamViewer para conectarte a dispositivos móviles, así como a servidores y otros dispositivos.</p>
-                <p>• TeamViewer ofrece una amplia gama de funciones y opciones adicionales. Puedes consultar la documentación oficial para obtener más información.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- SERVICIO: Licencias Office -->
-    <div id="office" class="servicio-content" role="tabpanel" aria-label="Licencias Office">
+    <!-- SERVICIO 1: Licencias Office -->
+    <div id="office" class="servicio-content active" role="tabpanel" aria-label="Licencias Office">
         <div class="servicio-header">
             <h2>Instalador de Office con Validación por CCT</h2>
             <p>Herramienta para reinstalar y activar Microsoft Office en los equipos de la estructura educativa de la Subdirección de Educación Primaria Región Nezahualcóyotl.</p>
@@ -899,7 +383,7 @@
                 <p>El instalador registra únicamente la CCT, nombre de la escuela, usuario del equipo, marca/número de serie y resultado de la instalación, con fines de control estadístico institucional, gestión de licenciamiento educativo y soporte técnico.</p>
             </div>
 
-            <p style="margin-top: 20px;">¿Dudas o problemas durante la instalación? Solicita <a href="#soporte" onclick="showServicio('soporte', document.querySelector('[aria-controls=soporte]')); return false;" style="color: #9F2241; font-weight: 600;">Soporte Técnico Remoto</a>.</p>
+            <p style="margin-top: 20px;">¿Dudas o problemas durante la instalación? Solicita <a href="soporte.html" style="color: #9F2241; font-weight: 600;">Soporte Técnico Remoto</a>.</p>
         </div>
 
         <div class="featured-box">
@@ -911,7 +395,7 @@
         </div>
     </div>
 
-    <!-- SERVICIO 4: Chuka -->
+    <!-- SERVICIO 2: Chuka -->
     <div id="chuka" class="servicio-content" role="tabpanel" aria-label="Chuka">
         <div class="servicio-header">
             <h2>Chuka — Rompe el Silencio</h2>
@@ -973,7 +457,7 @@
         </div>
     </div>
 
-    <!-- SERVICIO 5: Recursos -->
+    <!-- SERVICIO 3: Recursos -->
     <div id="recursos" class="servicio-content" role="tabpanel" aria-label="Recursos Educativos Digitales">
         <div class="servicio-header">
             <h2>Recursos Educativos Digitales</h2>
@@ -1040,7 +524,7 @@
 <footer>
         <div class="footer-grid">
             <div class="footer-col">
-                <p class="footer-brand">SEPRN</p>
+                <p class="footer-brand"><svg class="logo-icon" width="30" height="30" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="12" fill="#F9F8F5"/><text x="32" y="27" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#56212f" letter-spacing="-1">NE</text><text x="32" y="53" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#56212f" letter-spacing="-1">ZA</text></svg>SEPRN</p>
                 <p class="footer-desc">Subdirección de Educación Primaria<br>en la Región de Nezahualcóyotl</p>
                 <p class="footer-meta">Av. Texcoco #116, Col. Juárez Pantitlán<br>Nezahualcóyotl, Estado de México, C.P. 57460</p>
                 <p class="footer-meta">Lunes a Viernes · 08:30 – 15:30 h</p>
@@ -1088,7 +572,6 @@
         </div>
     </footer>
 
-<script src="js/cct-db.js"></script>
 <script>
     function showServicio(servicioId, btn) {
         document.querySelectorAll('.servicio-content').forEach(function(c) { c.classList.remove('active'); });
@@ -1102,401 +585,15 @@
         document.querySelector('.servicios-nav').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    function toggleForm(formId, btn) {
-        var container = document.getElementById(formId);
-        var text = document.getElementById(formId + '-text');
-        var arrow = document.getElementById(formId + '-arrow');
-        if (container.classList.contains('active')) {
-            container.classList.remove('active');
-            text.textContent = 'Solicitar Cuenta, Cambio de Contraseña o Reset de Autenticación';
-            arrow.textContent = '▼';
-            btn.setAttribute('aria-expanded', 'false');
-        } else {
-            container.classList.add('active');
-            text.textContent = 'Ocultar Formulario';
-            arrow.textContent = '▲';
-            btn.setAttribute('aria-expanded', 'true');
-            setTimeout(function() {
-                container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }, 400);
-        }
-    }
-
-    // ── Soporte Técnico Remoto: solicitud ──
-    const SOPORTE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbynU6hEtN7W-Q2MsTEbRZJeGH946n3YcQptGiW6w6fMzgZ98J6mu33bEqSoK_1Oxtk/exec';
-
-    // ── Normalizar mayúsculas/minúsculas de Nombre y Escuela manual ──
-    // Los docentes escriben en cualquier combinación (todo mayúsculas, todo
-    // minúsculas, mezclado); esto lo homologa a "Cada Palabra Así" para que
-    // la hoja de datos se vea consistente sin importar cómo lo tecleen.
-    function toTitleCase(str) {
-        return str.trim().replace(/\s+/g, ' ').toLowerCase()
-            .split(' ')
-            .map(function(w) { return w ? w.charAt(0).toUpperCase() + w.slice(1) : w; })
-            .join(' ');
-    }
-    ['sop-nombre', 'sop-escuela-manual'].forEach(function(id) {
-        var el = document.getElementById(id);
-        el.addEventListener('blur', function() { if (el.value.trim()) el.value = toTitleCase(el.value); });
+    // Deep-link desde la Oficina Virtual (oficina-virtual.html) u otras páginas:
+    // un link a otde.html#mantenimiento abre esa tab directo al cargar, en vez
+    // de dejar al usuario en Correo (la tab activa por default) y obligarlo a
+    // buscarla a mano.
+    document.addEventListener('DOMContentLoaded', function () {
+        var id = location.hash.slice(1);
+        var btn = document.querySelector('.servicio-tab[aria-controls="' + id + '"]');
+        if (btn) showServicio(id, btn);
     });
-
-    // Fetch + parseo JSON con timeout: si Apps Script no responde en TIMEOUT_MS
-    // (ni en encabezados ni en el cuerpo de la respuesta), aborta en vez de
-    // dejar el botón congelado indefinidamente. El .json() va DENTRO del try
-    // — fetch() se resuelve al llegar los encabezados, pero el cuerpo puede
-    // tardar (o colgarse) por separado; si el timeout se cancelara al
-    // resolver fetch(), esa segunda espera quedaría sin protección.
-    const SOPORTE_TIMEOUT_MS = 30000;
-    async function fetchJsonConTimeout(url, options) {
-        const ctrl = new AbortController();
-        const t = setTimeout(() => ctrl.abort(), SOPORTE_TIMEOUT_MS);
-        try {
-            const r = await fetch(url, options ? Object.assign({}, options, { signal: ctrl.signal }) : { signal: ctrl.signal });
-            return await r.json();
-        } finally {
-            clearTimeout(t);
-        }
-    }
-
-    function toggleSoporteForm(btn) {
-        var container = document.getElementById('form-soporte');
-        var text = document.getElementById('btn-soporte-text');
-        var arrow = document.getElementById('btn-soporte-arrow');
-        if (container.classList.contains('active')) {
-            container.classList.remove('active');
-            text.textContent = 'Solicitar Soporte Técnico Remoto';
-            arrow.textContent = '▼';
-            btn.setAttribute('aria-expanded', 'false');
-        } else {
-            container.classList.add('active');
-            text.textContent = 'Ocultar Formulario';
-            arrow.textContent = '▲';
-            btn.setAttribute('aria-expanded', 'true');
-            setTimeout(function() {
-                container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }, 400);
-        }
-    }
-
-    // ── Función "Otro" ──
-    function sopToggleOtraFuncion() {
-        var val = document.getElementById('sop-funcion').value;
-        var grp = document.getElementById('sop-otra-funcion-group');
-        grp.style.display = val === 'Otro' ? 'block' : 'none';
-        if (val !== 'Otro') {
-            var inp = document.getElementById('sop-otra-funcion');
-            inp.value = '';
-            inp.classList.remove('error');
-            document.getElementById('sop-otra-funcion-error').classList.remove('visible');
-        }
-    }
-
-    // ── CCT autocomplete (Soporte) ──
-    var sopCctEncontrada = false;
-    var sopSectorZonas = {};
-    if (typeof CCT_DB !== 'undefined') {
-        CCT_DB.forEach(function(e) {
-            if (!e.zona || e.tipo !== 'escuela') return;
-            if (!sopSectorZonas[e.sector]) sopSectorZonas[e.sector] = [];
-            if (sopSectorZonas[e.sector].indexOf(e.zona) === -1) sopSectorZonas[e.sector].push(e.zona);
-        });
-        Object.keys(sopSectorZonas).forEach(function(s) {
-            sopSectorZonas[s].sort(function(a, b) { return a - b; });
-        });
-    }
-
-    var sopInputCct, sopSuggestions, sopStatusBox, sopActiveSugg = -1;
-
-    function sopInitCctAutocomplete() {
-        sopInputCct = document.getElementById('sop-cct');
-        sopSuggestions = document.getElementById('sop-cct-suggestions');
-        sopStatusBox = document.getElementById('sop-cct-status');
-        if (!sopInputCct || typeof CCT_DB === 'undefined') return;
-
-        sopInputCct.addEventListener('input', function() {
-            var q = sopInputCct.value.trim().toUpperCase();
-            sopResetCct();
-            if (q.length < 3) { sopSuggestions.style.display = 'none'; return; }
-
-            var matches = CCT_DB.filter(function(e) {
-                return e.cct.includes(q) || e.nombre.toUpperCase().includes(q);
-            }).slice(0, 10);
-
-            if (!matches.length) { sopSuggestions.style.display = 'none'; return; }
-
-            sopSuggestions.innerHTML = '';
-            matches.forEach(function(m) {
-                var li = document.createElement('li');
-                li.innerHTML = '<span class="sg-code">' + m.cct + '</span> <span class="sg-name">' + m.nombre + ' — Sector ' + m.sector + (m.zona ? ', Zona ' + m.zona : '') + '</span>';
-                li.addEventListener('mousedown', function() { sopSeleccionarCct(m); });
-                sopSuggestions.appendChild(li);
-            });
-            sopSuggestions.style.display = 'block';
-            sopActiveSugg = -1;
-        });
-
-        sopInputCct.addEventListener('keydown', function(e) {
-            var items = sopSuggestions.querySelectorAll('li');
-            if (!items.length) return;
-            if (e.key === 'ArrowDown') { sopActiveSugg = Math.min(sopActiveSugg + 1, items.length - 1); sopHighlightSugg(items); e.preventDefault(); }
-            if (e.key === 'ArrowUp')   { sopActiveSugg = Math.max(sopActiveSugg - 1, 0);                sopHighlightSugg(items); e.preventDefault(); }
-            if (e.key === 'Enter' && sopActiveSugg >= 0) {
-                var q = sopInputCct.value.trim().toUpperCase();
-                var m = CCT_DB.filter(function(e) { return e.cct.includes(q) || e.nombre.toUpperCase().includes(q); })[sopActiveSugg];
-                if (m) { sopSeleccionarCct(m); e.preventDefault(); }
-            }
-            if (e.key === 'Escape') { sopSuggestions.style.display = 'none'; }
-        });
-
-        sopInputCct.addEventListener('blur', function() {
-            setTimeout(function() { sopSuggestions.style.display = 'none'; }, 150);
-        });
-
-        sopInputCct.addEventListener('change', function() {
-            if (!sopCctEncontrada && sopInputCct.value.trim().length >= 8) {
-                sopStatusBox.className = 'sop-cct-status warn';
-                sopStatusBox.textContent = 'CCT no encontrada en nuestra base. Puedes capturar los datos manualmente.';
-                document.getElementById('sop-manual-fields').classList.add('visible');
-            }
-        });
-    }
-
-    function sopHighlightSugg(items) {
-        items.forEach(function(li, i) { li.classList.toggle('active', i === sopActiveSugg); });
-    }
-
-    function sopSeleccionarCct(m) {
-        sopInputCct.value = m.cct;
-        sopSuggestions.style.display = 'none';
-        document.getElementById('sop-sector-val').value  = m.sector;
-        document.getElementById('sop-zona-val').value    = m.zona || '';
-        document.getElementById('sop-escuela-val').value = m.nombre || '';
-        sopStatusBox.className = 'sop-cct-status found';
-        sopStatusBox.textContent = 'Sector ' + m.sector + (m.zona ? ' · Zona ' + m.zona : '') + ' · ' + m.nombre;
-        document.getElementById('sop-manual-fields').classList.remove('visible');
-        sopCctEncontrada = true;
-    }
-
-    function sopResetCct() {
-        document.getElementById('sop-sector-val').value  = '';
-        document.getElementById('sop-zona-val').value    = '';
-        document.getElementById('sop-escuela-val').value = '';
-        sopStatusBox.className = 'sop-cct-status';
-        sopCctEncontrada = false;
-    }
-
-    function sopActualizarZonas() {
-        var sector = document.getElementById('sop-sector-manual').value;
-        var zonaGroup  = document.getElementById('sop-zona-group');
-        var zonaSelect = document.getElementById('sop-zona-manual');
-        zonaSelect.innerHTML = '<option value="">— Selecciona zona —</option>';
-
-        if (!sector || sector === 'SEPRN') {
-            zonaGroup.style.display = 'none';
-            return;
-        }
-        var zonas = sopSectorZonas[sector] || [];
-        zonas.forEach(function(z) {
-            var o = document.createElement('option');
-            o.value = z; o.textContent = 'Zona ' + z;
-            zonaSelect.appendChild(o);
-        });
-        zonaGroup.style.display = 'block';
-    }
-
-    sopInitCctAutocomplete();
-
-    function validarSoporteForm() {
-        var ok = true;
-        var campos = [
-            { id: 'sop-nombre',      err: 'sop-nombre-error',      test: function(v) { return v.trim().length >= 3; } },
-            { id: 'sop-whatsapp',    err: 'sop-whatsapp-error',    test: function(v) { return /^\d{10}$/.test(v.trim()); } },
-            { id: 'sop-urgencia',    err: 'sop-urgencia-error',    test: function(v) { return v !== ''; } },
-            { id: 'sop-descripcion', err: 'sop-descripcion-error', test: function(v) { return v.trim().length >= 5; } }
-        ];
-
-        campos.forEach(function(c) {
-            var input = document.getElementById(c.id);
-            var errEl = document.getElementById(c.err);
-            if (!c.test(input.value)) {
-                input.classList.add('error');
-                errEl.classList.add('visible');
-                ok = false;
-            } else {
-                input.classList.remove('error');
-                errEl.classList.remove('visible');
-            }
-        });
-
-        // Función: select requerido; si es "Otro" el campo libre también es requerido
-        var funcionInput = document.getElementById('sop-funcion');
-        var funcionErr = document.getElementById('sop-funcion-error');
-        if (funcionInput.value === '') {
-            funcionInput.classList.add('error');
-            funcionErr.classList.add('visible');
-            ok = false;
-        } else {
-            funcionInput.classList.remove('error');
-            funcionErr.classList.remove('visible');
-        }
-        if (funcionInput.value === 'Otro') {
-            var otraInp = document.getElementById('sop-otra-funcion');
-            var otraErr = document.getElementById('sop-otra-funcion-error');
-            if (!otraInp.value.trim()) {
-                otraInp.classList.add('error');
-                otraErr.classList.add('visible');
-                ok = false;
-            } else {
-                otraInp.classList.remove('error');
-                otraErr.classList.remove('visible');
-            }
-        }
-
-        // CCT: válida por autocomplete, o datos manuales completos.
-        // Cada campo del fallback manual valida y muestra su propio error
-        // (antes todo se agrupaba en el mensaje del CCT, incluso cuando lo
-        // que faltaba era, por ejemplo, la Zona).
-        var cctInput = document.getElementById('sop-cct');
-        var cctErr = document.getElementById('sop-cct-error');
-        var manualVisible = document.getElementById('sop-manual-fields').classList.contains('visible');
-        var cctTextOk = cctInput.value.trim().length >= 3;
-
-        if (sopCctEncontrada || (manualVisible && cctTextOk)) {
-            cctInput.classList.remove('error');
-            cctErr.classList.remove('visible');
-        } else {
-            cctInput.classList.add('error');
-            cctErr.classList.add('visible');
-            ok = false;
-        }
-
-        if (manualVisible) {
-            var sectorInput = document.getElementById('sop-sector-manual');
-            var zonaInput = document.getElementById('sop-zona-manual');
-            var escuelaInput = document.getElementById('sop-escuela-manual');
-            var sectorErr = document.getElementById('sop-sector-manual-error');
-            var zonaErr = document.getElementById('sop-zona-manual-error');
-            var escuelaErr = document.getElementById('sop-escuela-manual-error');
-            var sector = sectorInput.value;
-            var zona = zonaInput.value;
-            var escuela = escuelaInput.value.trim();
-            var zonaReq = sector && sector !== 'SEPRN';
-
-            if (!sector) {
-                sectorInput.classList.add('error');
-                sectorErr.classList.add('visible');
-                ok = false;
-            } else {
-                sectorInput.classList.remove('error');
-                sectorErr.classList.remove('visible');
-            }
-
-            if (zonaReq && !zona) {
-                zonaInput.classList.add('error');
-                zonaErr.classList.add('visible');
-                ok = false;
-            } else {
-                zonaInput.classList.remove('error');
-                zonaErr.classList.remove('visible');
-            }
-
-            if (!escuela) {
-                escuelaInput.classList.add('error');
-                escuelaErr.classList.add('visible');
-                ok = false;
-            } else {
-                escuelaInput.classList.remove('error');
-                escuelaErr.classList.remove('visible');
-            }
-        } else if (!sopCctEncontrada && cctTextOk) {
-            // CCT escrita pero no confirmada del dropdown → forzar apertura de manual (igual que jornada-verano)
-            document.getElementById('sop-manual-fields').classList.add('visible');
-            document.getElementById('sop-cct-status').className = 'sop-cct-status warn';
-            document.getElementById('sop-cct-status').textContent = 'Selecciona tu escuela de la lista o captura los datos manualmente.';
-            ok = false;
-        }
-
-        // Correo es opcional, pero si se captura debe ser válido
-        var correoInput = document.getElementById('sop-correo');
-        var correoErr = document.getElementById('sop-correo-error');
-        var correoVal = correoInput.value.trim();
-        if (correoVal !== '' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoVal)) {
-            correoInput.classList.add('error');
-            correoErr.classList.add('visible');
-            ok = false;
-        } else {
-            correoInput.classList.remove('error');
-            correoErr.classList.remove('visible');
-        }
-
-        return ok;
-    }
-
-    async function enviarSolicitudSoporte(evt) {
-        evt.preventDefault();
-        var msg = document.getElementById('soporte-msg');
-        var btnSubmit = document.getElementById('btn-soporte-submit');
-        msg.className = 'soporte-submit-msg';
-        msg.textContent = '';
-
-        if (!validarSoporteForm()) {
-            return false;
-        }
-
-        var manualVisible = document.getElementById('sop-manual-fields').classList.contains('visible');
-        var funcionVal = document.getElementById('sop-funcion').value === 'Otro'
-            ? document.getElementById('sop-otra-funcion').value.trim()
-            : document.getElementById('sop-funcion').value;
-
-        var datos = {
-            nombre: toTitleCase(document.getElementById('sop-nombre').value.trim()),
-            cct: document.getElementById('sop-cct').value,
-            sector: manualVisible ? document.getElementById('sop-sector-manual').value : document.getElementById('sop-sector-val').value,
-            zona: manualVisible ? document.getElementById('sop-zona-manual').value : document.getElementById('sop-zona-val').value,
-            escuela: manualVisible ? toTitleCase(document.getElementById('sop-escuela-manual').value.trim()) : document.getElementById('sop-escuela-val').value,
-            funcion: funcionVal,
-            whatsapp: document.getElementById('sop-whatsapp').value,
-            correo: document.getElementById('sop-correo').value,
-            urgencia: document.getElementById('sop-urgencia').value,
-            descripcion: document.getElementById('sop-descripcion').value
-        };
-
-        btnSubmit.disabled = true;
-        btnSubmit.style.opacity = '0.6';
-
-        try {
-            const data = await fetchJsonConTimeout(SOPORTE_APPS_SCRIPT_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain' },
-                body: JSON.stringify(datos)
-            });
-
-            if (data.status === 'ok') {
-                msg.classList.add('ok');
-                msg.textContent = 'Solicitud registrada (folio ' + data.folio + '). Un integrante de la OTDE te contactará en breve.';
-                document.getElementById('soporte-form').reset();
-                document.getElementById('sop-manual-fields').classList.remove('visible');
-                document.getElementById('sop-zona-group').style.display = 'none';
-                document.getElementById('sop-otra-funcion-group').style.display = 'none';
-                document.querySelectorAll('#soporte-form .error').forEach(function(el) { el.classList.remove('error'); });
-                document.querySelectorAll('#soporte-form .soporte-field-error.visible').forEach(function(el) { el.classList.remove('visible'); });
-                sopResetCct();
-            } else {
-                msg.classList.add('error');
-                msg.textContent = 'No se pudo registrar la solicitud: ' + data.mensaje;
-            }
-        } catch (err) {
-            msg.classList.add('error');
-            msg.textContent = err.name === 'AbortError'
-                ? 'El servidor tardó demasiado en responder. Tu solicitud pudo haberse guardado igual; si no recibes contacto de la OTDE, intenta de nuevo.'
-                : 'No se pudo enviar la solicitud. Verifica tu conexión e intenta de nuevo.';
-        } finally {
-            btnSubmit.disabled = false;
-            btnSubmit.style.opacity = '1';
-        }
-
-        return false;
-    }
 </script>
     <script src="script.js" defer></script>
 </body>

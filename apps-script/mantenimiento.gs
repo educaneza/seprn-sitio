@@ -622,6 +622,86 @@ function manNotificarTelegram(folio, d, oficioUrl) {
   }
 }
 
+// ── Plantilla institucional compartida por los correos de este archivo —
+// mismo lenguaje visual (header, caja de resumen, firma, redes sociales)
+// que ya usa en producción Correos-institucionales (Code.gs/OnFormSubmit.gs,
+// repo aparte), adoptado aquí letra por letra para que todo lo que manda
+// OTDE se sienta parte del mismo sistema. Cada .gs mantiene su propia copia
+// — no hay import entre proyectos de Apps Script, mismo patrón que el resto
+// de helpers compartidos del sitio. ──
+const MAN_CORREO_CSS =
+  'body{margin:0;padding:0;background-color:#f4f1ee;font-family:Arial,Helvetica,sans-serif;}' +
+  '.wrapper{width:100%;background-color:#f4f1ee;padding:20px 0;}' +
+  '.card{max-width:560px;width:100%;margin:0 auto;background-color:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.10);}' +
+  '.header{background-color:#9F2241;padding:24px 24px 20px 24px;}' +
+  '.header-sub{font-size:10px;color:#d6a87e;letter-spacing:2px;text-transform:uppercase;font-weight:bold;margin:0 0 6px 0;}' +
+  '.header-title{font-size:17px;color:#ffffff;font-weight:bold;margin:0;}' +
+  '.header-line{margin-top:14px;height:3px;background-color:#977e5b;border-radius:2px;width:50px;}' +
+  '.body{padding:26px 24px 18px 24px;}' +
+  '.btn{display:inline-block;background-color:#9F2241;color:#ffffff;text-decoration:none;font-size:14px;font-weight:bold;text-align:center;padding:12px 22px;border-radius:6px;margin:8px 0 6px 0;}' +
+  '.aviso{background-color:#fff8f0;border:1px solid #e8ddd4;border-radius:4px;padding:12px 14px;margin-top:8px;}' +
+  '.footer-firma{padding:0 24px 26px 24px;border-top:1px solid #e0d8d0;margin-top:16px;padding-top:18px;}' +
+  '.pie{background-color:#9F2241;padding:10px 24px;text-align:center;}' +
+  '.pie p{margin:0;font-size:10px;color:#d6a87e;letter-spacing:1px;}' +
+  '@media only screen and (max-width:480px){' +
+  '.header{padding:20px 18px 16px 18px;}.header-title{font-size:15px;}' +
+  '.body{padding:22px 18px 16px 18px;}.footer-firma{padding:0 18px 22px 18px;}}';
+
+// ── Firma institucional + redes sociales, idéntica a la que ya usa
+// Correos-institucionales (mismos datos reales, mismos links). ──
+function manCorreoFirma_() {
+  return '<div class="footer-firma">' +
+    '<p style="margin:0 0 2px 0;font-size:14px;font-weight:bold;color:#9F2241;">Mtro. Jorge Alberto Bonilla Torres</p>' +
+    '<p style="margin:0 0 2px 0;font-size:12px;color:#555555;">Jefe de la Oficina de Tecnología para el Desarrollo Educativo | <strong>OTDE</strong></p>' +
+    '<p style="margin:0 0 14px 0;font-size:12px;color:#666666;">Subdirección de Educación Primaria en la Región de Nezahualcóyotl | SEPRN</p>' +
+    '<p style="margin:0 0 4px 0;font-size:12px;color:#555555;">📞 55 3300 2400 Ext. 9065</p>' +
+    '<p style="margin:0 0 4px 0;font-size:12px;color:#555555;">📍 Av. Texcoco 116, Col. Juárez Pantitlán, Nezahualcóyotl C.P. 57460</p>' +
+    '<p style="margin:0 0 14px 0;font-size:12px;color:#555555;">✉️ <a href="mailto:otde.nezahualcoyotl@dee.edu.mx" style="color:#9F2241;text-decoration:none;">otde.nezahualcoyotl@dee.edu.mx</a></p>' +
+    '<p style="margin:0;font-size:12px;line-height:2.1;">' +
+    '<a href="https://educaneza.github.io/seprn-sitio/index.html" style="color:#977e5b;text-decoration:none;font-weight:bold;">🌐 Sitio Web</a>&nbsp;&nbsp;|&nbsp;&nbsp;' +
+    '<a href="https://www.facebook.com/SubNeza" style="color:#977e5b;text-decoration:none;font-weight:bold;">📘 Facebook</a>&nbsp;&nbsp;|&nbsp;&nbsp;' +
+    '<a href="https://www.youtube.com/@subneza" style="color:#977e5b;text-decoration:none;font-weight:bold;">▶️ YouTube</a>&nbsp;&nbsp;|&nbsp;&nbsp;' +
+    '<a href="https://whatsapp.com/channel/0029VbBDCG572WTz3WCjRS11" style="color:#977e5b;text-decoration:none;font-weight:bold;">💬 WhatsApp</a>' +
+    '</p></div>';
+}
+
+// ── Compone el HTML completo de un correo de Mantenimiento. opts:
+// {titulo, introHtml, filas:[{icono,etiqueta,valor}], colorCaja,
+// ctaHref, ctaTexto, avisoTexto}. filas/caja usan <table> (no <div>) para
+// que sobreviva en Outlook de escritorio. ──
+function manCorreoHtml_(opts) {
+  const filasHtml = (opts.filas || []).map(f =>
+    '<p style="margin:0 0 8px 0;font-size:13.5px;color:#333333;line-height:1.6;">' +
+    f.icono + ' <strong>' + f.etiqueta + ':</strong> ' + f.valor + '</p>'
+  ).join('');
+
+  const caja = '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f9f6f3;border-left:4px solid ' +
+    (opts.colorCaja || '#9F2241') + ';border-radius:4px;margin-bottom:14px;">' +
+    '<tr><td style="padding:15px 17px;">' + filasHtml + '</td></tr></table>';
+
+  const cta = opts.ctaHref
+    ? '<a href="' + opts.ctaHref + '" class="btn">' + (opts.ctaTexto || 'Consultar estatus de tu solicitud') + ' &rarr;</a>'
+    : '';
+
+  const aviso = '<div class="aviso"><p style="margin:0;font-size:12px;color:#7a6a5a;line-height:1.6;">⚠️ ' +
+    (opts.avisoTexto || 'Este correo no se monitorea — para dudas o seguimiento escríbenos a <a href="mailto:otde.nezahualcoyotl@dee.edu.mx" style="color:#9F2241;">otde.nezahualcoyotl@dee.edu.mx</a>.') +
+    '</p></div>';
+
+  return '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1"><style>' + MAN_CORREO_CSS + '</style></head>' +
+    '<body><div class="wrapper"><div class="card">' +
+    '<div class="header">' +
+    '<p class="header-sub">Oficina de Tecnología para el Desarrollo Educativo | OTDE</p>' +
+    '<p class="header-title">' + opts.titulo + '</p>' +
+    '<div class="header-line"></div></div>' +
+    '<div class="body">' + (opts.introHtml || '') + caja + cta + aviso + '</div>' +
+    manCorreoFirma_() +
+    '<div class="pie"><p>SEPRN © 2026 — Gobierno del Estado de México</p></div>' +
+    '</div></div></body></html>';
+}
+
+const MAN_CTA_SEGUIMIENTO = 'https://educaneza.github.io/seprn-sitio/oficina-virtual.html#buscar-folio';
+
 // ── Confirma al solicitante que su solicitud quedó registrada, con Zona y
 // Sector en copia (CC) si hay contacto(s) registrados — un solo correo por
 // solicitud en vez de avisos sueltos por destinatario. ──
@@ -630,19 +710,21 @@ function manNotificarSolicitudRecibida(folio, d) {
     const contactos = manFiltrarContactosPorTipo(
       manBuscarContactosZonaSector(d.sector, d.zona), (d.tipoCct || '').trim());
     const cc = contactos.map(c => c.correo).join(',');
-    const asunto = 'Recibimos tu solicitud de mantenimiento — Folio ' + folio;
-    const html =
-      '<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;">' +
-      '<div style="background-color:#9F2241;padding:16px 20px;border-radius:8px 8px 0 0;">' +
-      '<p style="margin:0;color:#fff;font-size:15px;font-weight:bold;">OTDE — Solicitud de mantenimiento recibida</p>' +
-      '</div>' +
-      '<div style="border:1px solid #d6d1ca;border-top:none;border-radius:0 0 8px 8px;padding:18px 20px;">' +
-      '<p style="margin:0 0 10px 0;font-size:14px;color:#333;">Se registró tu solicitud de mantenimiento. OTDE la está atendiendo directamente — te avisaremos por este medio en cuanto se resuelva.</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Folio:</strong> ' + folio + '</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Escuela / CCT:</strong> ' + manEscapeHtml_(d.escuela || '') + ' — ' + manEscapeHtml_(d.cct.trim().toUpperCase()) + '</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Solicita:</strong> ' + manEscapeHtml_(d.nombre.trim()) + ' (' + manEscapeHtml_(d.funcion.trim()) + ')</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Equipos con falla:</strong> ' + manEscapeHtml_(d.equipos.trim()) + '</p>' +
-      '</div></div>';
+    const asunto = 'Solicitud de mantenimiento recibida — Folio ' + folio;
+    const html = manCorreoHtml_({
+      titulo: 'Solicitud de mantenimiento recibida',
+      introHtml:
+        '<p style="margin:0 0 16px 0;font-size:15px;color:#333333;line-height:1.7;">Hola, <strong>' + manEscapeHtml_(d.nombre.trim()) + '</strong>,</p>' +
+        '<p style="margin:0 0 16px 0;font-size:15px;color:#333333;line-height:1.7;">Se registró tu solicitud de mantenimiento. OTDE la está atendiendo directamente — te avisaremos por este medio en cuanto se resuelva.</p>',
+      filas: [
+        { icono: '🎫', etiqueta: 'Folio', valor: folio },
+        { icono: '🏫', etiqueta: 'Escuela / CCT', valor: manEscapeHtml_(d.escuela || '') + ' — ' + manEscapeHtml_(d.cct.trim().toUpperCase()) },
+        { icono: '👤', etiqueta: 'Solicita', valor: manEscapeHtml_(d.nombre.trim()) + ' (' + manEscapeHtml_(d.funcion.trim()) + ')' },
+        { icono: '🛠️', etiqueta: 'Equipos con falla', valor: manEscapeHtml_(d.equipos.trim()) }
+      ],
+      ctaHref: MAN_CTA_SEGUIMIENTO,
+      ctaTexto: 'Consultar estatus de tu solicitud'
+    });
 
     const opciones = {
       to: (d.correo || '').trim(),
@@ -712,18 +794,20 @@ function manNotificarCierre(fila) {
       manBuscarContactosZonaSector(sector, zona), tipoSolicitante);
     const cc = contactos.map(c => c.correo).join(',');
     const asunto = 'Tu solicitud de mantenimiento fue resuelta — ' + folio;
-    const html =
-      '<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;">' +
-      '<div style="background-color:#56212f;padding:16px 20px;border-radius:8px 8px 0 0;">' +
-      '<p style="margin:0;color:#fff;font-size:15px;font-weight:bold;">OTDE — Solicitud de mantenimiento resuelta</p>' +
-      '</div>' +
-      '<div style="border:1px solid #d6d1ca;border-top:none;border-radius:0 0 8px 8px;padding:18px 20px;">' +
-      '<p style="margin:0 0 10px 0;font-size:14px;color:#333;">Tu solicitud de mantenimiento fue marcada como resuelta por OTDE.</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Folio:</strong> ' + folio + '</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Escuela / CCT:</strong> ' + manEscapeHtml_(escuela || '') + ' — ' + manEscapeHtml_(cct) + '</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Solicitó:</strong> ' + manEscapeHtml_(nombre) + '</p>' +
-      (notas ? '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Notas:</strong> ' + manEscapeHtml_(notas) + '</p>' : '') +
-      '</div></div>';
+    const filas = [
+      { icono: '🎫', etiqueta: 'Folio', valor: folio },
+      { icono: '🏫', etiqueta: 'Escuela / CCT', valor: manEscapeHtml_(escuela || '') + ' — ' + manEscapeHtml_(cct) },
+      { icono: '👤', etiqueta: 'Solicitó', valor: manEscapeHtml_(nombre) }
+    ];
+    if (notas) filas.push({ icono: '📝', etiqueta: 'Notas', valor: manEscapeHtml_(notas) });
+
+    const html = manCorreoHtml_({
+      titulo: 'Solicitud de mantenimiento resuelta',
+      introHtml: '<p style="margin:0 0 16px 0;font-size:15px;color:#333333;line-height:1.7;">Tu solicitud de mantenimiento fue marcada como resuelta por OTDE.</p>',
+      filas: filas,
+      ctaHref: MAN_CTA_SEGUIMIENTO,
+      ctaTexto: 'Ver el detalle de tu solicitud'
+    });
 
     const opciones = {
       to: correo,
@@ -812,18 +896,18 @@ function manNotificarFechaProgramada(fila) {
       manBuscarContactosZonaSector(sector, zona), tipoSolicitante);
     const cc = contactos.map(c => c.correo).join(',');
     const asunto = 'Tu solicitud de mantenimiento ya tiene fecha de visita — ' + folio;
-    const html =
-      '<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;">' +
-      '<div style="background-color:#9F2241;padding:16px 20px;border-radius:8px 8px 0 0;">' +
-      '<p style="margin:0;color:#fff;font-size:15px;font-weight:bold;">OTDE — Fecha de visita programada</p>' +
-      '</div>' +
-      '<div style="border:1px solid #d6d1ca;border-top:none;border-radius:0 0 8px 8px;padding:18px 20px;">' +
-      '<p style="margin:0 0 10px 0;font-size:14px;color:#333;">Ya se programó la fecha de la visita técnica para tu solicitud de mantenimiento.</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Folio:</strong> ' + folio + '</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Fecha de visita:</strong> ' + manEscapeHtml_(fechaProgramada) + '</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Escuela / CCT:</strong> ' + manEscapeHtml_(escuela || '') + ' — ' + manEscapeHtml_(cct) + '</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Solicitó:</strong> ' + manEscapeHtml_(nombre) + '</p>' +
-      '</div></div>';
+    const html = manCorreoHtml_({
+      titulo: 'Fecha de visita programada',
+      introHtml: '<p style="margin:0 0 16px 0;font-size:15px;color:#333333;line-height:1.7;">Ya se programó la fecha de la visita técnica para tu solicitud de mantenimiento.</p>',
+      filas: [
+        { icono: '🎫', etiqueta: 'Folio', valor: folio },
+        { icono: '📅', etiqueta: 'Fecha de visita', valor: manEscapeHtml_(fechaProgramada) },
+        { icono: '🏫', etiqueta: 'Escuela / CCT', valor: manEscapeHtml_(escuela || '') + ' — ' + manEscapeHtml_(cct) },
+        { icono: '👤', etiqueta: 'Solicitó', valor: manEscapeHtml_(nombre) }
+      ],
+      ctaHref: MAN_CTA_SEGUIMIENTO,
+      ctaTexto: 'Consultar estatus de tu solicitud'
+    });
 
     const opciones = {
       to: correo,
@@ -866,22 +950,22 @@ function manNotificarTecnicoAsignado(fila) {
       : String(fechaProgramadaRaw || '');
 
     const asunto = 'Visita asignada — ' + (escuela || cct) + ' · ' + folio;
-    const html =
-      '<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;">' +
-      '<div style="background-color:#9F2241;padding:16px 20px;border-radius:8px 8px 0 0;">' +
-      '<p style="margin:0;color:#fff;font-size:15px;font-weight:bold;">OTDE — Visita técnica asignada</p>' +
-      '</div>' +
-      '<div style="border:1px solid #d6d1ca;border-top:none;border-radius:0 0 8px 8px;padding:18px 20px;">' +
-      '<p style="margin:0 0 10px 0;font-size:14px;color:#333;">Se te asignó una visita de mantenimiento.</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Folio:</strong> ' + folio + '</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Fecha de visita:</strong> ' + manEscapeHtml_(fechaProgramada) + '</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Escuela / CCT:</strong> ' + manEscapeHtml_(escuela || '') + ' — ' + manEscapeHtml_(cct) + '</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Sector / Zona:</strong> Sector ' + manEscapeHtml_(sector) + ' · Zona ' + manEscapeHtml_(zona) + '</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Equipos con falla reportados:</strong> ' + manEscapeHtml_(equipos || '—') + '</p>' +
-      '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Contacto en la escuela:</strong> ' + manEscapeHtml_(nombre) + (whatsapp ? ' · WhatsApp ' + manEscapeHtml_(whatsapp) : '') + '</p>' +
-      '<p style="margin:12px 0 0 0;font-size:12px;color:#6b6b6b;">Al terminar la visita, llena el reporte con este folio en ' +
-      '<a href="https://educaneza.github.io/seprn-sitio/reporte-visita.html">reporte-visita.html</a>.</p>' +
-      '</div></div>';
+    const html = manCorreoHtml_({
+      titulo: 'Visita técnica asignada',
+      introHtml: '<p style="margin:0 0 16px 0;font-size:15px;color:#333333;line-height:1.7;">Se te asignó una visita de mantenimiento.</p>',
+      filas: [
+        { icono: '🎫', etiqueta: 'Folio', valor: folio },
+        { icono: '📅', etiqueta: 'Fecha de visita', valor: manEscapeHtml_(fechaProgramada) },
+        { icono: '🏫', etiqueta: 'Escuela / CCT', valor: manEscapeHtml_(escuela || '') + ' — ' + manEscapeHtml_(cct) },
+        { icono: '🏢', etiqueta: 'Sector / Zona', valor: 'Sector ' + manEscapeHtml_(sector) + ' · Zona ' + manEscapeHtml_(zona) },
+        { icono: '🛠️', etiqueta: 'Equipos con falla reportados', valor: manEscapeHtml_(equipos || '—') },
+        { icono: '👤', etiqueta: 'Contacto en la escuela', valor: manEscapeHtml_(nombre) + (whatsapp ? ' · WhatsApp ' + manEscapeHtml_(whatsapp) : '') }
+      ],
+      colorCaja: '#977e5b',
+      ctaHref: 'https://educaneza.github.io/seprn-sitio/reporte-visita.html',
+      ctaTexto: 'Llenar reporte de visita',
+      avisoTexto: 'Este aviso es solo para personal técnico de OTDE.'
+    });
 
     manEnviarCorreo_({
       to: correoTecnico,
@@ -1108,17 +1192,17 @@ function manEnviarReporteVisita_(solicitud, datos, pdfBlob) {
   const responsable = String(datos[COL_MAN_REP_RESPONSABLE - 1] || '').trim();
   const correoTecnico = MAN_TECNICOS[responsable];
   const asunto = 'Reporte de visita técnica — ' + (solicitud.escuela || solicitud.cct) + ' · ' + solicitud.folio;
-  const html =
-    '<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;">' +
-    '<div style="background-color:#9F2241;padding:16px 20px;border-radius:8px 8px 0 0;">' +
-    '<p style="margin:0;color:#fff;font-size:15px;font-weight:bold;">OTDE — Reporte de visita técnica</p>' +
-    '</div>' +
-    '<div style="border:1px solid #d6d1ca;border-top:none;border-radius:0 0 8px 8px;padding:18px 20px;">' +
-    '<p style="margin:0 0 10px 0;font-size:14px;color:#333;">Adjuntamos el reporte de la visita técnica realizada.</p>' +
-    '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Folio:</strong> ' + solicitud.folio + '</p>' +
-    '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Escuela / CCT:</strong> ' + manEscapeHtml_(solicitud.escuela || '') + ' — ' + manEscapeHtml_(solicitud.cct) + '</p>' +
-    '<p style="margin:0 0 4px 0;font-size:13px;color:#333;"><strong>Estado del aula:</strong> ' + manEscapeHtml_(String(datos[COL_MAN_REP_ESTADO_AULA - 1] || '')) + '</p>' +
-    '</div></div>';
+  const html = manCorreoHtml_({
+    titulo: 'Reporte de visita técnica',
+    introHtml: '<p style="margin:0 0 16px 0;font-size:15px;color:#333333;line-height:1.7;">Adjuntamos el reporte de la visita técnica realizada.</p>',
+    filas: [
+      { icono: '🎫', etiqueta: 'Folio', valor: solicitud.folio },
+      { icono: '🏫', etiqueta: 'Escuela / CCT', valor: manEscapeHtml_(solicitud.escuela || '') + ' — ' + manEscapeHtml_(solicitud.cct) },
+      { icono: '📋', etiqueta: 'Estado del aula', valor: manEscapeHtml_(String(datos[COL_MAN_REP_ESTADO_AULA - 1] || '')) }
+    ],
+    ctaHref: MAN_CTA_SEGUIMIENTO,
+    ctaTexto: 'Ver el detalle de tu solicitud'
+  });
 
   const opciones = {
     to: solicitud.correo,
