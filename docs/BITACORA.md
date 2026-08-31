@@ -14,6 +14,22 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-08-31 (cont.) · Performance fix en la ficha de Ceremonias Cívicas + reconciliación de `main`/`origin`
+
+| | |
+|---|---|
+| **Fecha** | 2026-08-31 |
+| **Sesión** | Jorge reportó que le avisaban problemas al cargar/enviar la ficha de Ceremonias Cívicas, con un mensaje de que el servidor tardó en responder — pidió un performance test. Se diagnosticó, corrigió, verificó en vivo y publicó en la misma sesión; después Jorge pidió resolver la divergencia de git entre `main` local y `origin/main` que arrastraba el repo desde hacía meses. |
+| **Performance test en vivo (diagnóstico, sin tocar código todavía)** | Con autorización explícita de Jorge, se creó una reserva de prueba real y se envió la ficha vía `curl` contra el endpoint desplegado, midiendo tiempos con distinto número de fotos: 20.2s (5 fotos), 30.5s (10, ya por encima del timeout de 30s del cliente) y 68.7s (20, el máximo). Causa raíz confirmada: `visSubirFotos_()` en `apps-script/visitas-jefes.gs` hacía `createFile()` + `setSharing()` por cada foto, en serie, sin ninguna concurrencia posible en Apps Script — y el timeout fijo de `fetchJsonConTimeout()` (30s) no distinguía este envío pesado del resto de llamadas del sitio. Jorge confirmó por separado que en algunos casos reales la ficha sí se había guardado (Sheet + Drive) pese al mensaje de error visto por el usuario — el aviso era falso, no un fallo real. |
+| **Fix aplicado y verificado en vivo** | Dos cambios: (1) `visObtenerCarpetaFotos_()` comparte la carpeta de Drive completa una sola vez por envío en vez de compartir cada foto por separado (`archivo.setSharing()` eliminado del loop de `visSubirFotos_()`) — bajó a 35.4s con 20 fotos y 21.5s con 10, mismo test repetido tras el redeploy de Jorge; verificado con `curl` sin sesión que el link de una foto real sigue abriendo. (2) `fetchJsonConTimeout()` (`js/tramites-shared.js`) ganó un tercer parámetro opcional `timeoutMs` (retrocompatible, ~12 llamadas del sitio sin tocar); el envío de la ficha usa `FICHA_TIMEOUT_ENVIO_MS`=120000 con avisos progresivos en pantalla. Detalle completo en `docs/ARCHITECTURE.md §22` y `docs/QA-NOTES.md #23`. |
+| **Publicación a producción** | Rama `publish-fix-fotos-ceremonias` creada desde `origin/main`, cherry-pick del commit local, `git diff origin/main -- otde.html` confirmado vacío antes de pushear — mismo mecanismo de siempre. |
+| **Limpieza de datos de prueba** | Jorge eliminó a mano las filas y fotos de prueba creadas durante el diagnóstico y la verificación (Sheet "Reservas" y carpeta "Fotos de Visitas Jefes" en Drive). |
+| **Reconciliación de `main` local y `origin/main`** | A petición de Jorge, se investigó la divergencia (57 vs. 22 commits) que el repo arrastraba desde hacía meses por el freeze de `otde.html`. `git diff --stat origin/main main` mostró contenido idéntico salvo 3 `.DS_Store` — el freeze ya había terminado (commit `c8f1252`, sesión anterior, publicó `otde.html` por completo). Se hizo `git merge origin/main` (no un `reset --hard`, para no perder ninguno de los 57 commits locales) con una rama de respaldo local creada antes por seguridad, y se empujó — ambas ramas quedaron sincronizadas. `CLAUDE.md` actualizado para reflejar que el `git push origin main` directo vuelve a ser seguro (con la salvedad de siempre: verificar antes de asumir, si vuelve a acumularse trabajo no listo). |
+| **Verificación** | `curl -w` contra el endpoint real (antes y después del fix, mismos números de foto para comparar directo); `curl` sin sesión confirmando el link de Drive de una foto real; `git diff --stat` de los 3 archivos tocados (51 líneas agregadas, 10 eliminadas); `git diff origin/main main` vacío (salvo `.DS_Store`) antes y después de la reconciliación. |
+| **Commits** | `16a7f60` (fix, local `main`), `7a0127d` (mismo fix, publicado a `origin/main` vía `publish-fix-fotos-ceremonias`), `3a8d218` (merge de reconciliación, en ambas ramas). Pendiente el de esta actualización de documentación de cierre. |
+
+---
+
 ## CHECKPOINT — 2026-08-31 · Correo de trámites rediseñado, `apps-script/correo/` integrado al repo, UAT de Oficina Virtual
 
 | | |

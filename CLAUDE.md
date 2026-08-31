@@ -6,13 +6,19 @@ Sitio web institucional de la **Subdirección de Educación Primaria en la Regi�
 - **URL producción:** `https://educaneza.github.io/seprn-sitio/`
 - **Repo:** `educaneza/seprn-sitio` (rama `main`)
 - **Stack:** HTML5 + CSS3 + Vanilla JS. Sin npm, sin frameworks, sin build step.
-- **Deploy:** push a `main` → GitHub Pages. Caché CDN: 5-10 min. **Ojo (ago 2026):** `main`
-  local y `origin/main` suelen estar divergidos a propósito — `otde.html` en producción se
-  mantiene congelado mientras el resto del trabajo de OTDE no está listo para publicarse. Nunca
-  asumir `git push origin main` desde `main` local sin antes correr `git log --oneline -3
-  origin/main` y comparar — el mecanismo real es una rama `publish-*` (o un commit suelto)
-  creada desde `origin/main`, nunca desde `main` local. Detalle del patrón y ejemplos reales en
-  `docs/BITACORA.md` (buscar "publish-" o "Publicación a producción").
+- **Deploy:** push a `main` → GitHub Pages. Caché CDN: 5-10 min. **Reconciliado (31 ago
+  2026):** de jun a ago 2026, `main` local y `origin/main` estuvieron divergidos a propósito
+  (`otde.html` en producción se mantenía congelado mientras el resto del trabajo de OTDE no
+  estaba listo para publicarse) — cada publicación real usaba una rama `publish-*` creada desde
+  `origin/main`, nunca un `git push origin main` directo desde `main` local. Ese freeze terminó
+  cuando `otde.html` se publicó por completo (commit `c8f1252`); el 31 ago 2026 se confirmó con
+  `git diff --stat origin/main main` que ambas ramas ya tenían contenido idéntico y se
+  reconciliaron con un merge (`3a8d218`) — un `git push origin main` directo vuelve a ser
+  seguro. Si en el futuro se vuelve a acumular trabajo local no listo para producción, el mismo
+  patrón `publish-*` sigue siendo el mecanismo correcto: nunca asumir `git push origin main` sin
+  antes correr `git log --oneline -3 origin/main` y comparar contra `main` local. Detalle del
+  patrón y ejemplos reales en `docs/BITACORA.md` (buscar "publish-" o "Publicación a
+  producción").
 
 ## Propietario
 **Mtro. Jorge Alberto Bonilla Torres** — Jefe de OTDE (Oficina de Tecnología para el Desarrollo Educativo). El contenido se valida con la Dra. Avelina Galindo Celix (Encargada del Despacho).
@@ -408,6 +414,16 @@ ya esté expandido).
   próximas visitas, realizadas recientes con la Operatividad completa, pendientes "No realizada"
 - Fotos de la ficha comprimidas en el navegador (canvas, 1600px/JPEG q0.8) antes de subir — hasta
   20 por ficha, sin acercarse al límite de payload de Apps Script
+- **Fix de rendimiento en el envío de la ficha (31 ago 2026)**: jefes reportaban "el servidor
+  tardó en responder" al enviar fichas con varias fotos — confirmado con un performance test en
+  vivo (hasta 68.7s con 20 fotos, por encima del timeout fijo de 30s del cliente, con el
+  servidor terminando de guardar de todos modos). `visSubirFotos_()` ya no llama
+  `archivo.setSharing()` por foto — la carpeta de Drive se comparte "cualquiera con el link, ver"
+  una sola vez en `visObtenerCarpetaFotos_()` y los archivos nuevos heredan ese permiso (bajó a
+  35.4s con 20 fotos, verificado en vivo). `ficha-ceremonias-civicas.html` usa un timeout propio
+  de 120s (`FICHA_TIMEOUT_ENVIO_MS`) solo para este envío, vía el tercer parámetro opcional
+  `timeoutMs` de `fetchJsonConTimeout()` (`js/tramites-shared.js`) — el resto del sitio sigue en
+  30s. Ver `docs/QA-NOTES.md #23`.
 - Detalle completo de la arquitectura (esquema de columnas, por qué el folio actualiza una fila
   en vez de crear una nueva, decisión de la Fase 2 separada) en `docs/ARCHITECTURE.md §22`
 

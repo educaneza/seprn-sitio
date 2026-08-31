@@ -1747,6 +1747,35 @@ iOS donde `<input type="date">` ignora el `width` del contenedor. Se aplicó el 
 poder confirmarlo contra Safari real; si el problema persiste, siguiente paso es revisar con
 captura de pantalla real del teléfono de Jorge en vez de seguir adivinando.
 
+**Fix de rendimiento en el envío de la ficha — timeout y subida de fotos (31 ago 2026).**
+Jefes reportaban "el servidor tardó en responder" al enviar la ficha con varias fotos. Un
+performance test en vivo contra el endpoint real (`curl`, con reservas y fichas de prueba
+claramente marcadas y borradas después) confirmó la causa: el envío tardaba 20.2s con 5 fotos,
+30.5s con 10 (ya por encima del timeout) y 68.7s con las 20 máximas — y en ese último caso el
+servidor sí terminaba de guardar la ficha completa (Sheet + fotos en Drive), solo que el
+navegador ya había abortado el `fetch()` y mostrado el error, dando a los jefes la falsa
+impresión de que su información se perdió. Causa raíz: `visSubirFotos_()` hacía dos llamadas a
+Drive por foto (`carpeta.createFile()` + `archivo.setSharing()`), en serie, sin ninguna
+concurrencia posible en Apps Script. Dos cambios, verificados en vivo con el mismo test:
+
+- **`visObtenerCarpetaFotos_()` comparte la carpeta completa** ("cualquiera con el link, ver")
+  una sola vez por envío, en vez de compartir cada foto por separado — los archivos nuevos
+  heredan ese permiso de la carpeta (comportamiento estándar de Drive). Repetir la llamada en
+  cada invocación no falla aunque ya esté puesta. `visSubirFotos_()` ya no llama
+  `archivo.setSharing()` por foto. Con esto, 20 fotos bajaron a 35.4s (de 68.7s) y 10 fotos a
+  21.5s (de 30.5s) en la misma prueba. Verificado con `curl` sin sesión que el link de una foto
+  real abre y descarga la imagen correcta.
+- **`FICHA_TIMEOUT_ENVIO_MS`=120000** en `ficha-ceremonias-civicas.html`, solo para este envío
+  (el resto del sitio sigue en el default de 30s) — vía un tercer parámetro opcional `timeoutMs`
+  agregado a `fetchJsonConTimeout()` en `js/tramites-shared.js`, retrocompatible con las demás
+  ~12 llamadas del sitio que no lo pasan. Con avisos progresivos en pantalla ("puede tardar un
+  poco más" a los 10s, "esto está tardando más de lo usual, no cierres esta página" a los 30s —
+  mismo patrón que `formacion-docente.html`), para que el envío largo no se sienta congelado.
+
+Publicado directo a `origin/main` vía rama `publish-fix-fotos-ceremonias` (mismo mecanismo de
+publicación aislada de siempre) — commit `7a0127d`. Ver `docs/QA-NOTES.md #23` para el detalle
+en formato de bug cazado.
+
 ---
 
 ## 23. Favicon PNG + `og:image` en las 26 páginas del sitio (agosto 2026)

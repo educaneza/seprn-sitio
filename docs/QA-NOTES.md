@@ -513,6 +513,42 @@ checklist de páginas nuevas (`docs/ARCHITECTURE.md §10`) ya se actualizó para
 depende de seguirlo. **No verificado contra una vista previa real de WhatsApp** en esta sesión —
 solo se confirmó que los archivos cargan (200) y que las páginas siguen renderizando bien.
 
+## 23. Timeout fijo de 30s se cumplía antes de que el servidor terminara — envío de fotos "fallaba" con la información ya guardada
+
+**Síntoma:** jefes reportaban "el servidor tardó en responder" al enviar la ficha de Ceremonias
+Cívicas con varias fotos. Al revisar la Sheet y Drive, algunas de esas fichas **sí se habían
+guardado completas** pese al mensaje de error — el usuario no podía confiar en lo que veía en
+pantalla.
+
+**Causa raíz:** dos factores combinados. (1) `visSubirFotos_()` en `apps-script/visitas-jefes.gs`
+hacía dos llamadas a Drive por foto (`carpeta.createFile()` + `archivo.setSharing()`), en serie
+— Apps Script no tiene concurrencia real, así que con hasta 20 fotos el envío completo podía
+tardar hasta 68.7s (medido en vivo con un performance test contra el endpoint real). (2)
+`fetchJsonConTimeout()` (`js/tramites-shared.js`) usaba el mismo `TIMEOUT_FETCH_MS`=30000 fijo
+para *todas* las llamadas del sitio, sin distinguir que este envío en particular podía tardar
+mucho más que una consulta normal. El navegador abortaba el `fetch()` a los 30s y mostraba error,
+pero el servidor seguía procesando de fondo y terminaba de guardar los datos igual — el aviso de
+error era falso en esos casos, no un fallo real.
+
+**Fix:**
+1. `visObtenerCarpetaFotos_()` comparte la carpeta de Drive completa ("cualquiera con el link,
+   ver") una sola vez por envío en vez de compartir cada foto por separado —
+   `visSubirFotos_()` ya no llama `archivo.setSharing()` por foto (los archivos heredan el
+   permiso de la carpeta). Bajó el tiempo con 20 fotos de 68.7s a 35.4s, y con 10 fotos de 30.5s
+   a 21.5s, verificado con la misma prueba y confirmando con `curl` sin sesión que el link de
+   una foto real sigue abriendo.
+2. `fetchJsonConTimeout()` ganó un tercer parámetro opcional `timeoutMs` (retrocompatible — las
+   demás ~12 llamadas del sitio no lo pasan y siguen en 30s). El envío de la ficha
+   (`ficha-ceremonias-civicas.html`) usa `FICHA_TIMEOUT_ENVIO_MS`=120000, con avisos progresivos
+   en pantalla para que la espera larga no se sienta congelada.
+
+**Dónde puede volver a pasar:** cualquier flujo nuevo que suba varios archivos a Drive en una
+sola petición de Apps Script hereda el mismo riesgo (tiempo lineal por archivo, sin
+concurrencia) — revisar si comparte fotos/PDFs por archivo individual cuando podría compartirse
+la carpeta contenedora una sola vez, y si el timeout fijo de 30s de `fetchJsonConTimeout()` le
+queda corto, pasar un `timeoutMs` mayor en vez de tocar el default global. Detalle completo en
+`docs/ARCHITECTURE.md §22`.
+
 ## Regla general al corregir cualquiera de estos patrones
 
 Cuando se encuentra uno de estos bugs en un archivo, **revisar si el mismo
