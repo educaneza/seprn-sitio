@@ -40,10 +40,13 @@ function toTitleCase(str) {
 // al llegar los encabezados, pero el cuerpo puede tardar (o colgarse) por separado; si
 // el timeout se cancelara al resolver fetch(), esa segunda espera quedaría sin
 // protección. Ver docs/QA-NOTES.md #1.
+// Tercer parámetro opcional `timeoutMs`: para llamadas con costo variable conocido
+// (ej. subir varias fotos) que necesitan más margen que el default — ver
+// FICHA_TIMEOUT_ENVIO_MS en ficha-ceremonias-civicas.html.
 const TIMEOUT_FETCH_MS = 30000;
-async function fetchJsonConTimeout(url, options) {
+async function fetchJsonConTimeout(url, options, timeoutMs) {
     const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), TIMEOUT_FETCH_MS);
+    const t = setTimeout(() => ctrl.abort(), timeoutMs || TIMEOUT_FETCH_MS);
     try {
         const r = await fetch(url, options ? Object.assign({}, options, { signal: ctrl.signal }) : { signal: ctrl.signal });
         return await r.json();

@@ -505,7 +505,17 @@ function visSubirFotos_(cct, escuela, fechaISO, fotos) {
     const nombreLimpio = prefijo + ' — ' + (idx + 1) + '.' + visExtensionPorMime_(mimeType);
     const blob = Utilities.newBlob(bytes, mimeType, nombreLimpio);
     const archivo = carpeta.createFile(blob);
-    archivo.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    // Sin archivo.setSharing() por foto a propósito (perf test en vivo, ago 2026): cada
+    // llamada a Drive cuesta ~1.5-2s adicionales, y con hasta 20 fotos eso duplicaba el
+    // tiempo total. La carpeta ya se comparte "cualquiera con el link, ver" una sola vez
+    // en visObtenerCarpetaFotos_() — los archivos nuevos deberían heredar ese acceso de
+    // la carpeta sin repetirlo por archivo. IMPORTANTE: esto se apoya en el comportamiento
+    // estándar de Drive (los archivos dentro de una carpeta compartida "con el link"
+    // heredan esa visibilidad), pero no se pudo probar en vivo contra el backend real
+    // (el redeploy es manual, vía el editor de Apps Script) — tras pegar y redesplegar
+    // este archivo, verificar UNA vez: enviar una ficha con una foto, abrir el link de
+    // Evidencias resultante en una ventana privada/incógnito (sin sesión) y confirmar que
+    // carga la imagen. Si no carga, revertir a poner setSharing() de vuelta aquí.
     return archivo.getUrl();
   });
 }
@@ -516,10 +526,16 @@ function visExtensionPorMime_(mime) {
   return 'jpg';
 }
 
+// ── La carpeta se comparte "cualquiera con el link, ver" a nivel carpeta (ago 2026,
+// perf test) — antes cada foto se compartía individualmente con archivo.setSharing(),
+// el doble de llamadas a Drive que crear el archivo solo. setSharing() en la carpeta es
+// una sola llamada por envío (no por foto), y es seguro llamarla de nuevo aunque ya
+// esté puesta — Drive no falla si el valor no cambió. ──
 function visObtenerCarpetaFotos_() {
   const carpetas = DriveApp.getFoldersByName(CARPETA_VIS_FOTOS);
-  if (carpetas.hasNext()) return carpetas.next();
-  return DriveApp.createFolder(CARPETA_VIS_FOTOS);
+  const carpeta = carpetas.hasNext() ? carpetas.next() : DriveApp.createFolder(CARPETA_VIS_FOTOS);
+  carpeta.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  return carpeta;
 }
 
 // ── Marca "No realizada" cualquier reserva cuya fecha planeada tenga más
