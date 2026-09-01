@@ -447,7 +447,7 @@ Editar `nosotros.html` (bloque "Equipo de Trabajo") y `areas.html` (campo `area-
 | GmailApp (Apps Script) | Correo de confirmación | Envía HTML con QR; remitente: "Oficina de Tecnología · Neza" (usado por `conferencia-ia.gs`) |
 | api.qrserver.com | Generación de QR en correo | URL dinámica con folio codificado; solo en correos de confirmación |
 | html5-qrcode v2.3.8 | Escáner QR en `asistencia.html` | CDN `unpkg.com`; modo cámara trasera `environment` |
-| Bot de Telegram (API `sendMessage`) | Notificación push de solicitudes de Soporte Remoto | Token y chat_id en Propiedades del script de `soporte-remoto.gs` (nunca hardcodeados); incluye link `wa.me` al WhatsApp del solicitante |
+| Bot de Telegram (API `sendMessage`) | Notificación push de solicitudes, un solo bot compartido por los 4 backends de trámite — el `TELEGRAM_CHAT_ID` de cada proyecto (Script Property, nunca hardcodeado) apunta al chat_id personal de quien la atiende: Alejandro (Mantenimiento/Soporte), Marcos (Cambio de Contraseña/Reset 2FA/Incidencias de Correo), Nancy (Asesorías) — sep 2026. `soporte-remoto.gs` incluye además un link `wa.me` al WhatsApp del solicitante |
 
 ---
 
@@ -729,7 +729,8 @@ del ya probado `soporte-remoto.gs`:
   puede tener una fila de Zona específica y otra de Sector (de respaldo, sin Zona) para el
   mismo Sector; `manBuscarContactosZonaSector()`/`aseBuscarContactosZonaSector()` (agosto 2026,
   plural a propósito) busca ambas y las agrega en copia (CC) del correo al solicitante, no solo
-  la primera que encuentra. Además del correo, avisa a OTDE por Telegram.
+  la primera que encuentra. Además del correo, avisa por Telegram y por correo a quien atiende
+  el trámite (Alejandro en Mantenimiento, Nancy en Asesorías — sep 2026, ver §19).
 - El oficio adjunto se sube en base64 desde el cliente (`FileReader.readAsDataURL`), se
   decodifica en `doPost` con `Utilities.base64Decode` y se guarda en una carpeta de Drive
   dedicada por trámite, compartida "cualquiera con el link, solo ver".
@@ -1280,7 +1281,7 @@ flowchart TD
     subgraph Backend["mantenimiento.gs"]
         B[doPost: genera folio,<br/>sube oficio a Drive,<br/>fila en Sheet]
         C[Estatus = Pendiente de validar]
-        D{{Telegram a OTDE<br/>— apagado a propósito}}
+        D{{Telegram + correo<br/>a Alejandro}}
         E[Correo to=solicitante<br/>cc=Zona/Sector según jerarquía]
     end
     subgraph OTDE["OTDE / Jorge (manual)"]
@@ -1348,7 +1349,7 @@ junto con el oficio. Ver también: §15.
 flowchart TD
     A[Llena formulario en otde.html<br/>sin oficio adjunto]
     B[soporte-remoto.gs: doPost,<br/>folio OTDE-SOP-NNNN,<br/>Estatus = Pendiente de validar]
-    C{{Telegram a OTDE<br/>— sí activo, incluye link wa.me}}
+    C{{Telegram + correo a Alejandro<br/>— Telegram incluye link wa.me}}
     D[Jorge atiende vía TeamViewer]
     E[Cambia Estatus a mano:<br/>Validado → En atención → Resuelto]
     F[Trigger onEdit cierre:<br/>correo SOLO al solicitante<br/>— sin Zona/Sector, deliberado]
@@ -1373,7 +1374,7 @@ flowchart TD
     A[Solicitante elige sub-tipo en otde.html:<br/>Alta / Cambio contraseña /<br/>Eliminar 2FA / Incidencia]
     B["WebApp.gs (apps-script/correo/)<br/>enruta por datos.tipo"]
     C[Fila en hoja del sub-tipo,<br/>Estado general = texto libre]
-    D{{Telegram a OTDE<br/>— SOLO sub-tipo Incidencias}}
+    D{{Telegram + correo a Marcos<br/>— Cambio contraseña/Reset 2FA/Incidencias<br/>NO Alta}}
     E[Marcos llena a mano<br/>columna NP SIGEE]
     F[/Aprovisionamiento real<br/>ocurre en SIGEE<br/>— sistema externo, sin API/]
     G[Marcos/Jorge actualizan<br/>Estado general a mano]

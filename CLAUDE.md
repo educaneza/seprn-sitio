@@ -193,6 +193,10 @@ ya esté expandido).
 - El `<form>` usa `novalidate` + validación 100% en JS (`validarSoporteForm()`) — necesario porque los `type="email"`/`required` nativos interceptan el `submit` antes de correr el JS si no se desactiva la validación del navegador
 - Al recibir `doPost`, además de guardar en Sheets envía una notificación push vía **bot de Telegram** (`notificarTelegram`); si Telegram falla, el registro en Sheets no se pierde (try/catch silencioso)
 - Requiere Propiedades del script configuradas manualmente en el editor de Apps Script (Project Settings → Script Properties): `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID` — instrucciones completas para obtenerlas están al final del propio archivo `.gs`
+- **`TELEGRAM_CHAT_ID` apunta al chat_id personal de Alejandro (sep 2026)**, ya no al chat
+  compartido de OTDE — Alejandro atiende Soporte y Mantenimiento, decisión de Jorge. Se agregó
+  además `sopNotificarEquipoPorCorreo()` (correo a `SOP_CORREO_EQUIPO`), llamada junto al
+  Telegram existente en `doPost`
 - Usado por el formulario "Solicitar Soporte Técnico Remoto" en la pestaña Soporte Técnico de `otde.html`; responde `Content-Type: text/plain` para evitar preflight CORS
 - URL del deployment vive en `otde.html` en la constante `SOPORTE_APPS_SCRIPT_URL`
 - **Redesplegado (7 ago 2026, versión 4)**: mismo ID de implementación de siempre, no cambió `SOPORTE_APPS_SCRIPT_URL`. La columna `Tipo de ayuda` se agregó a mano al final de la hoja real (este proyecto no tenía auto-heal de encabezados, a diferencia de `mantenimiento.gs`/`formacion-docente.gs`)
@@ -253,10 +257,15 @@ ya esté expandido).
   `mimeType` que reciba
 - **Desplegado (6 ago 2026)**: Spreadsheet `Solicitudes_Mantenimiento_2026`, proyecto Apps
   Script "Mantenimiento - Backend (mantenimiento.gs)", URL real ya pegada en `otde.html` en
-  `MANTENIMIENTO_APPS_SCRIPT_URL`. **Telegram deliberadamente sin configurar** (decisión de
-  Jorge, 6 ago 2026): el código llama a `manNotificarTelegram()` sin condición, pero sin
-  `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID` en Propiedades del script es un no-op silencioso — no
-  "arreglar" esto configurando esas propiedades sin confirmar con Jorge primero.
+  `MANTENIMIENTO_APPS_SCRIPT_URL`. ~~**Telegram deliberadamente sin configurar** (decisión de
+  Jorge, 6 ago 2026)~~ — nota desactualizada: el 18 ago 2026 se configuró de todos modos (mismo
+  bot/chat compartido que `soporte-remoto.gs`, ver `docs/BITACORA.md`), aunque esta sección no
+  se había actualizado entonces. En sep 2026, `TELEGRAM_CHAT_ID` de este proyecto pasó al
+  chat_id personal de Alejandro (Telegram DM) y se agregó `manNotificarEquipoPorCorreo()` (correo
+  a `MAN_CORREO_EQUIPO`) junto al Telegram existente — Alejandro atiende Mantenimiento y Soporte,
+  decisión de Jorge. Bug real encontrado y corregido en esta misma sesión al probarlo: la URL del
+  oficio iba sin escapar dentro del mensaje de Telegram (`parse_mode: 'Markdown'`), y un `_` sin
+  parear en el link de Drive tumbaba el envío completo en silencio — ver `docs/QA-NOTES.md #24`.
   `Contactos_Zona_Sector` ya está poblada (6 ago 2026, 88 filas: 75 por Zona + 13 de respaldo
   por Sector) a partir de `OTDE_Base_Contactos_v2.xlsx` (hojas `Supervisiones`/`Sectores` —
   correo real de cada jefatura, sin teléfono porque el xlsx no lo trae)
@@ -349,8 +358,14 @@ ya esté expandido).
 - Usado por el formulario "Solicitar Asesoría" en la nueva pestaña Asesorías de `otde.html`
 - **Desplegado (6 ago 2026)**: Spreadsheet `Solicitudes_Asesorias_2026`, proyecto Apps Script
   "Asesorias - Backend (asesorias.gs)", URL real ya pegada en `otde.html` en
-  `ASESORIAS_APPS_SCRIPT_URL`. Mismo caso que Mantenimiento: Telegram deliberadamente sin
-  configurar (decisión de Jorge, 6 ago 2026 — no es un pendiente, es la elección), y
+  `ASESORIAS_APPS_SCRIPT_URL`. ~~Mismo caso que Mantenimiento: Telegram deliberadamente sin
+  configurar (decisión de Jorge, 6 ago 2026)~~ — misma nota desactualizada que en Mantenimiento
+  arriba: se configuró el 18 ago 2026 con el bot/chat compartido. En sep 2026, `TELEGRAM_CHAT_ID`
+  de este proyecto pasó al chat_id personal de Nancy Yarian (Telegram DM) y se agregó
+  `aseNotificarEquipoPorCorreo()` (correo a `ASE_CORREO_EQUIPO`) junto al Telegram existente —
+  Nancy atiende Asesorías, decisión de Jorge. Mismo bug de URL de oficio sin escapar en Markdown
+  encontrado y corregido aquí (fue la causa real de que a Nancy no le llegara el primer intento
+  de smoke test) — ver `docs/QA-NOTES.md #24`.
   `Contactos_Zona_Sector` ya poblada igual que en Mantenimiento (mismas 88 filas, misma fuente
   `OTDE_Base_Contactos_v2.xlsx`). **Redesplegado (7 ago 2026, versión 5)**: solo el cambio de
   correo obligatorio arriba, mismo ID de implementación. **Redesplegado (11 ago 2026, versión
@@ -539,19 +554,19 @@ arquitectura completo en `docs/ARCHITECTURE.md §16`. Resumen operativo:
   antes de este despliegue, así que técnicamente el webform ya está en producción — pero el
   sistema viejo de Marcos sigue vivo en paralelo; retirarlo es una decisión de Jorge, no
   automática por haber desplegado esto.
-- **Telegram acotado a solo Incidencias (ajustado 18 ago 2026)**: antes avisaba también en
-  `Reset2FA.gs` (sin condición) y `CambioContrasena.gs` (solo si `dominio === 'dee.edu.mx'`);
-  Jorge pidió reducirlo — el equipo ya revisa las solicitudes a diario, así que una alerta por
-  cada Cambio de Contraseña/Reset 2FA rutinario era ruido, no señal. Hoy **solo
-  `Incidencias.gs`** ("no puedo acceder a mi cuenta institucional") dispara Telegram, sin
-  condición de dominio — es el único caso realmente urgente. `Alta.gs` nunca lo tuvo (alta de
-  cuenta no bloquea a nadie). **Script Properties configuradas por primera vez el 18 ago
-  2026** (mismo bot/chat que `soporte-remoto.gs`) — antes de esa fecha `TELEGRAM_BOT_TOKEN`/
-  `TELEGRAM_CHAT_ID` nunca se habían puesto en este proyecto, así que Telegram llevaba desde el
-  6 ago 2026 fallando en silencio (`if (!token || !chatId) return;`), no solo "parcial". No se
-  agregó correo de respaldo a Marcos (`CONFIG.correoResponsable` en `Config.gs` sigue sin
-  usarse) — decisión explícita, mismo motivo de evitar ruido. Detalle completo en
-  `Correos-institucionales/CLAUDE.md`.
+- **Notificaciones a Marcos por Telegram + correo, reactivadas y ampliadas (sep 2026)**: el 18
+  ago 2026 Jorge había acotado Telegram a solo `Incidencias.gs` y decidido no agregar correo de
+  respaldo, para evitar ruido en el chat compartido de OTDE ante trámites rutinarios. En sep
+  2026 pidió configurar notificaciones **personales** (Telegram a un chat_id propio de Marcos,
+  ya no el compartido, + correo a `CONFIG.correoResponsable`) — un DM dirigido no es el mismo
+  "ruido" que motivó la decisión de agosto, así que la revirtió a propósito. Alcance:
+  `cambioNotificarEquipo()` (`CambioContrasena.gs`), `resetNotificarEquipo()` (`Reset2FA.gs`) e
+  `incidenciaNotificarEquipoPorCorreo()` (`Incidencias.gs`, el Telegram de este ya existía)
+  avisan los 3 a Marcos. `Alta.gs` sigue sin nada, sin cambios — alta de cuenta no bloquea a
+  nadie, mismo motivo de siempre. **Script Properties**: `TELEGRAM_CHAT_ID` de este proyecto
+  pasó del chat_id compartido de OTDE al chat_id personal de Marcos (mismo bot, mismo token).
+  Ver `docs/QA-NOTES.md #24` por un bug real encontrado al probar este cambio en Mantenimiento/
+  Asesorías (no afecta a este proyecto — Correo no manda URLs de oficio por Telegram).
 - **`GenerarResumenSIGEE.gs` y `ResumenSemanal.gs` portados (18 ago 2026)**: el sistema viejo
   del Google Form los tenía y no eran portables directo (6 hojas con nombres/encabezados
   distintos a las 4 de aquí) — reescritos contra la hoja "Alta" consolidada y los estados reales
@@ -869,7 +884,7 @@ Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/I
   dice "Fase Intensiva 2026-2027 ya disponible".
 - **Fase Intensiva 2026-2027 sin video** — falta agregar el `iframe` del Opening en `cte.html` cuando Jorge lo tenga
 - **Centro de Formación Docente** — dar de alta los primeros cursos propios del ciclo 26-27 en la hoja `Cursos` (hoy el catálogo solo tiene 2 webinars; Jorge los va agregando conforme haya más oferta)
-- **Correo/Mantenimiento/Asesorías** — los 3 backends nuevos ya están desplegados y con `Contactos_Zona_Sector` poblado (6 ago 2026, ver sus secciones arriba); Telegram parcial es decisión final, no pendiente.
+- **Correo/Mantenimiento/Asesorías** — los 3 backends nuevos ya están desplegados y con `Contactos_Zona_Sector` poblado (6 ago 2026, ver sus secciones arriba). Notificaciones de equipo (Telegram + correo) por trámite reorganizadas en sep 2026: ver sus secciones arriba y las de Soporte/Correo Institucional.
 - **QA pre-producción (6 ago 2026)** — hallazgos pendientes de atender antes de confiar el flujo completo:
   - ~~**Asesorías**: el checkbox de confirmación de asesoría previa no viaja en el payload al backend~~ — corregido: `otde.html` ahora manda `confirmaMantenimiento` en el payload, `asesorias.gs` lo valida server-side y lo guarda en la columna nueva `Confirmó Mantenimiento Previo` (col. R, autocompletada en la hoja ya desplegada vía el mismo patrón de auto-heal de encabezados que `formacion-docente.gs`).
   - ~~**Asesorías**: el mensaje de error del checkbox no se limpia al marcarlo~~ — corregido: listener `change` en `ase-confirma-mantenimiento` limpia el error apenas se marca.

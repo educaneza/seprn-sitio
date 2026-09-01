@@ -549,6 +549,38 @@ la carpeta contenedora una sola vez, y si el timeout fijo de 30s de `fetchJsonCo
 queda corto, pasar un `timeoutMs` mayor en vez de tocar el default global. Detalle completo en
 `docs/ARCHITECTURE.md §22`.
 
+## 24. URL de Drive sin escapar en mensaje de Telegram con `parse_mode: 'Markdown'` — envío tumbado en silencio si el link trae un `_` sin parear
+
+**Síntoma:** al configurar notificaciones de Telegram por persona (Marcos/Alejandro/Nancy, sep
+2026), un smoke test contra Mantenimiento y Asesorías confirmó `{"status":"ok","folio":"..."}`
+y el correo de equipo llegó bien, pero el Telegram **no llegó** — ni al primer intento ni a un
+segundo intento con datos distintos. Una llamada directa a la API de Telegram
+(`sendMessage?chat_id=...&text=prueba`, sin pasar por Apps Script) con el mismo token/chat_id
+funcionó de inmediato, descartando un problema de configuración (Script Properties correctas).
+
+**Causa raíz:** `aseNotificarTelegram()` (`asesorias.gs`) y `manNotificarTelegram()`
+(`mantenimiento.gs`) arman el mensaje con `'Oficio: ' + oficioUrl` — a diferencia de todos los
+demás campos del mensaje, la URL de Drive del oficio **no** pasa por `aseEscapeMarkdown_()`/
+`manEscapeMarkdown_()`. Los ID de archivo de Drive suelen traer `_`, y con un conteo impar
+Telegram interpreta eso como una itálica sin cerrar y responde `400 Bad Request` ("can't parse
+entities"). Como la llamada usa `muteHttpExceptions: true` y el código nunca revisa
+`response.getResponseCode()`, ese error queda completamente invisible — ni un log, ni una
+excepción. El folio se guarda bien porque el `appendRow()` ocurre antes; solo el aviso a Telegram
+se pierde. El mismo patrón llevaba tiempo en `manNotificarTelegram()` sin que nadie lo notara —
+a Alejandro le funcionaba por pura suerte con las URLs que le habían tocado.
+
+**Fix:** envolver también `oficioUrl` con `aseEscapeMarkdown_()`/`manEscapeMarkdown_()` antes de
+concatenarlo al mensaje — el link se sigue mostrando y Telegram lo sigue detectando y
+convirtiendo en clicable automáticamente (el auto-link de URLs de Telegram opera sobre el texto
+ya resuelto, no sobre el markdown crudo), solo deja de romper el parseo. Verificado en vivo tras
+redesplegar: Telegram llegó a Alejandro y a Nancy en la siguiente prueba.
+
+**Dónde puede volver a pasar:** cualquier mensaje de Telegram con `parse_mode: 'Markdown'` que
+concatene un valor no controlado (URL, nombre de archivo, texto libre) sin pasarlo por el
+escapador correspondiente — y, en general, cualquier llamada a `UrlFetchApp.fetch()` con
+`muteHttpExceptions: true` que nunca revise el código de respuesta: ese patrón traga cualquier
+error de la API remota en silencio, no solo este.
+
 ## Regla general al corregir cualquiera de estos patrones
 
 Cuando se encuentra uno de estos bugs en un archivo, **revisar si el mismo
