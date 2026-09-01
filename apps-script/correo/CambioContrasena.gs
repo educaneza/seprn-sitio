@@ -45,8 +45,34 @@ function manejarCambioContrasena(datos) {
   ]);
 
   cambioEnviarConfirmacion(folio, datos);
+  cambioNotificarEquipo(folio, datos, dominio);
 
   return textResponse(JSON.stringify({ status: 'ok', folio: folio }));
+}
+
+// ── Notificar a Marcos por Telegram y correo (silencioso si falla) — un DM
+// personal, no el chat compartido de OTDE que motivó acotar Telegram a solo
+// Incidencias el 18 ago 2026 (ver docs/BITACORA.md); decisión de Jorge
+// (sep 2026) para reactivarlo en este canal específico. ──
+function cambioNotificarEquipo(folio, d, dominio) {
+  const resumenMarkdown =
+    'Folio: ' + folio + '\n' +
+    'Nombre: ' + escapeMarkdown_(d.nombre.trim()) + '\n' +
+    'Correo institucional: ' + d.correoInstitucional.trim() + ' (' + dominio + ')\n' +
+    'CCT: ' + escapeMarkdown_(d.cct.trim().toUpperCase()) + (d.escuela ? ' — ' + escapeMarkdown_(d.escuela.trim()) : '');
+
+  notificarTelegram('🔑 *Nueva solicitud — Cambio de Contraseña*\n' + resumenMarkdown);
+
+  enviarCorreoConModoPrueba_({
+    to: CONFIG.correoResponsable,
+    subject: 'Nueva solicitud — Cambio de Contraseña (Folio ' + folio + ')',
+    htmlBody:
+      '<p style="margin:0 0 8px 0;font-size:14px;">Folio: <strong>' + folio + '</strong></p>' +
+      '<p style="margin:0 0 8px 0;font-size:14px;">Nombre: ' + escapeHtml_(d.nombre.trim()) + '</p>' +
+      '<p style="margin:0 0 8px 0;font-size:14px;">Correo institucional: ' + escapeHtml_(d.correoInstitucional.trim()) + ' (' + dominio + ')</p>' +
+      '<p style="margin:0;font-size:14px;">CCT: ' + escapeHtml_(d.cct.trim().toUpperCase()) + (d.escuela ? ' — ' + escapeHtml_(d.escuela.trim()) : '') + '</p>',
+    name: CONFIG.remitente
+  });
 }
 
 function cambioObtenerHoja() {

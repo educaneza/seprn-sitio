@@ -53,6 +53,9 @@ const ENCABEZADOS_SOPORTE = [
 const COL_SOP_ESTATUS = 14;
 const COL_SOP_NOTIFICACION_CIERRE = 16;
 const ESTADOS_SOP_VALIDOS = ['Pendiente de validar', 'Validado', 'En atención', 'Resuelto', 'Rechazado'];
+// Notificación de "nueva solicitud" por correo, además del Telegram de abajo
+// (sep 2026) — Alejandro atiende Soporte y Mantenimiento, decisión de Jorge.
+const SOP_CORREO_EQUIPO = 'alejandro.morales@dee.edu.mx';
 
 // ── Modo de prueba: redirige el correo de cierre al solicitante a un solo
 // correo, para probar el flujo completo sin avisarle a nadie real. Actívalo
@@ -224,6 +227,7 @@ function doPost(e) {
     ]);
 
     notificarTelegram(folio, datos);
+    sopNotificarEquipoPorCorreo(folio, datos);
     sopNotificarSolicitudRecibida(folio, datos);
 
     return textResponse(JSON.stringify({ status: 'ok', folio: folio }));
@@ -338,6 +342,27 @@ function notificarTelegram(folio, d) {
         parse_mode: 'Markdown'
       },
       muteHttpExceptions: true
+    });
+  } catch (err) {
+    // Silencioso: la solicitud ya quedó registrada en Sheets aunque falle la notificación
+  }
+}
+
+// ── Correo a Alejandro, además del Telegram de arriba (sep 2026) ──
+function sopNotificarEquipoPorCorreo(folio, d) {
+  try {
+    sopEnviarCorreo_({
+      to: SOP_CORREO_EQUIPO,
+      subject: 'Nueva solicitud de Soporte Remoto (Folio ' + folio + ')',
+      htmlBody:
+        '<p style="margin:0 0 8px 0;font-size:14px;">Folio: <strong>' + folio + '</strong></p>' +
+        '<p style="margin:0 0 8px 0;font-size:14px;">Urgencia: ' + sopEscapeHtml_(d.urgencia) + '</p>' +
+        '<p style="margin:0 0 8px 0;font-size:14px;">Nombre: ' + sopEscapeHtml_(d.nombre.trim()) + ' (' + sopEscapeHtml_(d.funcion.trim()) + ')</p>' +
+        '<p style="margin:0 0 8px 0;font-size:14px;">CCT: ' + sopEscapeHtml_(d.cct.trim().toUpperCase()) + (d.escuela ? ' — ' + sopEscapeHtml_(d.escuela.trim()) : '') + '</p>' +
+        '<p style="margin:0 0 8px 0;font-size:14px;">Tipo de ayuda: ' + sopEscapeHtml_((d.tipoAyuda || '').trim()) + '</p>' +
+        '<p style="margin:0;font-size:14px;">Descripción: ' + sopEscapeHtml_(d.descripcion.trim()) + '</p>',
+      name: 'OTDE | Oficina de Tecnología para el Desarrollo Educativo',
+      replyTo: 'otde.nezahualcoyotl@dee.edu.mx'
     });
   } catch (err) {
     // Silencioso: la solicitud ya quedó registrada en Sheets aunque falle la notificación

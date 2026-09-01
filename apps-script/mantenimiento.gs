@@ -167,6 +167,11 @@ const MAN_TECNICOS = {
   'Alejandro Morales García': 'alejandro.morales@dee.edu.mx',
   'Marcos Colín Mora': 'marcos.colin@dee.edu.mx'
 };
+// Notificación de "nueva solicitud" (sep 2026) — a diferencia de
+// MAN_TECNICOS (técnico asignado a una visita ya programada), esto avisa a
+// Alejandro por Telegram y correo de entrada, por cada solicitud nueva, sin
+// importar quién termine asignado. Decisión de Jorge.
+const MAN_CORREO_EQUIPO = 'alejandro.morales@dee.edu.mx';
 const MAN_ESTADOS_AULA = [
   '🟢 Operativa — todos los equipos encienden y funcionan correctamente. Lista para uso regular, asesorías y aula modelo.',
   '🟡 Operativa con observaciones — funciona pero con detalles menores que no impiden su uso.',
@@ -363,6 +368,7 @@ function doPost(e) {
     ]);
 
     manNotificarTelegram(folio, datos, oficioUrl);
+    manNotificarEquipoPorCorreo(folio, datos, oficioUrl);
     manNotificarSolicitudRecibida(folio, datos);
 
     return manTextResponse(JSON.stringify({ status: 'ok', folio: folio }));
@@ -606,7 +612,7 @@ function manNotificarTelegram(folio, d, oficioUrl) {
       'WhatsApp: ' + d.whatsapp.trim() + '\n' +
       (d.tipoEquipo ? 'Tipo de equipo: ' + manEscapeMarkdown_(d.tipoEquipo) + '\n' : '') +
       'Equipos con falla: ' + manEscapeMarkdown_(d.equipos.trim()) + '\n' +
-      'Oficio: ' + oficioUrl;
+      'Oficio: ' + manEscapeMarkdown_(oficioUrl);
 
     UrlFetchApp.fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
       method: 'post',
@@ -616,6 +622,26 @@ function manNotificarTelegram(folio, d, oficioUrl) {
         parse_mode: 'Markdown'
       },
       muteHttpExceptions: true
+    });
+  } catch (err) {
+    // Silencioso: la solicitud ya quedó registrada en Sheets aunque falle la notificación
+  }
+}
+
+// ── Correo a Alejandro, además del Telegram de arriba (sep 2026) ──
+function manNotificarEquipoPorCorreo(folio, d, oficioUrl) {
+  try {
+    manEnviarCorreo_({
+      to: MAN_CORREO_EQUIPO,
+      subject: 'Nueva solicitud de Mantenimiento (Folio ' + folio + ')',
+      htmlBody:
+        '<p style="margin:0 0 8px 0;font-size:14px;">Folio: <strong>' + folio + '</strong></p>' +
+        '<p style="margin:0 0 8px 0;font-size:14px;">Nombre: ' + manEscapeHtml_(d.nombre.trim()) + ' (' + manEscapeHtml_(d.funcion.trim()) + ')</p>' +
+        '<p style="margin:0 0 8px 0;font-size:14px;">CCT: ' + manEscapeHtml_(d.cct.trim().toUpperCase()) + (d.escuela ? ' — ' + manEscapeHtml_(d.escuela.trim()) : '') + '</p>' +
+        '<p style="margin:0 0 8px 0;font-size:14px;">Equipos con falla: ' + manEscapeHtml_(d.equipos.trim()) + '</p>' +
+        '<p style="margin:0;font-size:14px;">Oficio: <a href="' + oficioUrl + '">' + oficioUrl + '</a></p>',
+      name: 'OTDE | Oficina de Tecnología para el Desarrollo Educativo',
+      replyTo: 'otde.nezahualcoyotl@dee.edu.mx'
     });
   } catch (err) {
     // Silencioso: la solicitud ya quedó registrada en Sheets aunque falle la notificación

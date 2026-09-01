@@ -91,6 +91,9 @@ const HOJA_ASE_SOLICITUDES = 'Solicitudes';
 const HOJA_ASE_CONTACTOS = 'Contactos_Zona_Sector';
 const CARPETA_ASE_OFICIOS = 'Oficios de Asesorías';
 const ASE_TAMANO_MAX_BYTES = 8 * 1024 * 1024; // 8MB, margen sobre el límite de 5MB validado en el cliente
+// Notificación de "nueva solicitud" por correo, además del Telegram de abajo
+// (sep 2026) — Nancy Yarian atiende Asesorías, decisión de Jorge.
+const ASE_CORREO_EQUIPO = 'nancy.garcia@dee.edu.mx';
 
 const ENCABEZADOS_ASE_SOLICITUDES = [
   'Fecha', 'Folio', 'Tipo de Asesoría', 'Nombre', 'Función', 'CCT', 'Sector', 'Zona',
@@ -294,6 +297,7 @@ function doPost(e) {
     ]);
 
     aseNotificarTelegram(folio, datos, oficioUrl);
+    aseNotificarEquipoPorCorreo(folio, datos, oficioUrl);
     aseNotificarSolicitudRecibida(folio, datos);
 
     return aseTextResponse(JSON.stringify({ status: 'ok', folio: folio }));
@@ -495,7 +499,7 @@ function aseNotificarTelegram(folio, d, oficioUrl) {
       'WhatsApp: ' + d.whatsapp.trim() + '\n' +
       (d.temasExcel ? 'Temas de Excel: ' + aseEscapeMarkdown_(d.temasExcel.trim()) + '\n' : '') +
       (d.observaciones ? 'Observaciones: ' + aseEscapeMarkdown_(d.observaciones.trim()) + '\n' : '') +
-      'Oficio: ' + oficioUrl;
+      'Oficio: ' + aseEscapeMarkdown_(oficioUrl);
 
     UrlFetchApp.fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
       method: 'post',
@@ -505,6 +509,27 @@ function aseNotificarTelegram(folio, d, oficioUrl) {
         parse_mode: 'Markdown'
       },
       muteHttpExceptions: true
+    });
+  } catch (err) {
+    // Silencioso: la solicitud ya quedó registrada en Sheets aunque falle la notificación
+  }
+}
+
+// ── Correo a Nancy, además del Telegram de arriba (sep 2026) ──
+function aseNotificarEquipoPorCorreo(folio, d, oficioUrl) {
+  try {
+    aseEnviarCorreo_({
+      to: ASE_CORREO_EQUIPO,
+      subject: 'Nueva solicitud de Asesoría (Folio ' + folio + ')',
+      htmlBody:
+        '<p style="margin:0 0 8px 0;font-size:14px;">Folio: <strong>' + folio + '</strong></p>' +
+        '<p style="margin:0 0 8px 0;font-size:14px;">Tipo: ' + aseEscapeHtml_(d.tipoAsesoria.trim()) + '</p>' +
+        '<p style="margin:0 0 8px 0;font-size:14px;">Nombre: ' + aseEscapeHtml_(d.nombre.trim()) + ' (' + aseEscapeHtml_(d.funcion.trim()) + ')</p>' +
+        '<p style="margin:0 0 8px 0;font-size:14px;">CCT: ' + aseEscapeHtml_(d.cct.trim().toUpperCase()) + (d.escuela ? ' — ' + aseEscapeHtml_(d.escuela.trim()) : '') + '</p>' +
+        '<p style="margin:0 0 8px 0;font-size:14px;">Número de personas: ' + d.numDocentes + '</p>' +
+        '<p style="margin:0;font-size:14px;">Oficio: <a href="' + oficioUrl + '">' + oficioUrl + '</a></p>',
+      name: 'OTDE | Oficina de Tecnología para el Desarrollo Educativo',
+      replyTo: 'otde.nezahualcoyotl@dee.edu.mx'
     });
   } catch (err) {
     // Silencioso: la solicitud ya quedó registrada en Sheets aunque falle la notificación

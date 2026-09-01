@@ -38,8 +38,34 @@ function manejarReset2FA(datos) {
   ]);
 
   resetEnviarConfirmacion(folio, datos);
+  resetNotificarEquipo(folio, datos);
 
   return textResponse(JSON.stringify({ status: 'ok', folio: folio }));
+}
+
+// ── Notificar a Marcos por Telegram y correo (silencioso si falla) — mismo
+// criterio que cambioNotificarEquipo() en CambioContrasena.gs: DM personal,
+// no el chat compartido que motivó acotar Telegram a solo Incidencias el
+// 18 ago 2026 (ver docs/BITACORA.md). ──
+function resetNotificarEquipo(folio, d) {
+  const resumenMarkdown =
+    'Folio: ' + folio + '\n' +
+    'Nombre: ' + escapeMarkdown_(d.nombre.trim()) + '\n' +
+    'Correo institucional: ' + d.correoInstitucional.trim() + '\n' +
+    'CCT: ' + escapeMarkdown_(d.cct.trim().toUpperCase()) + (d.escuela ? ' — ' + escapeMarkdown_(d.escuela.trim()) : '');
+
+  notificarTelegram('🔐 *Nueva solicitud — Eliminar método de autenticación (2FA)*\n' + resumenMarkdown);
+
+  enviarCorreoConModoPrueba_({
+    to: CONFIG.correoResponsable,
+    subject: 'Nueva solicitud — Eliminar método de autenticación (Folio ' + folio + ')',
+    htmlBody:
+      '<p style="margin:0 0 8px 0;font-size:14px;">Folio: <strong>' + folio + '</strong></p>' +
+      '<p style="margin:0 0 8px 0;font-size:14px;">Nombre: ' + escapeHtml_(d.nombre.trim()) + '</p>' +
+      '<p style="margin:0 0 8px 0;font-size:14px;">Correo institucional: ' + escapeHtml_(d.correoInstitucional.trim()) + '</p>' +
+      '<p style="margin:0;font-size:14px;">CCT: ' + escapeHtml_(d.cct.trim().toUpperCase()) + (d.escuela ? ' — ' + escapeHtml_(d.escuela.trim()) : '') + '</p>',
+    name: CONFIG.remitente
+  });
 }
 
 function resetObtenerHoja() {

@@ -51,7 +51,26 @@ function manejarIncidencia(datos) {
     'Problema: ' + escapeMarkdown_(datos.queProblema.trim())
   );
 
+  incidenciaNotificarEquipoPorCorreo(folio, datos);
+
   return textResponse(JSON.stringify({ status: 'ok', folio: folio }));
+}
+
+// ── Correo a Marcos, además del Telegram de arriba — sep 2026, mismo canal
+// personal que cambioNotificarEquipo()/resetNotificarEquipo() en los otros
+// 2 archivos de Correo. ──
+function incidenciaNotificarEquipoPorCorreo(folio, d) {
+  enviarCorreoConModoPrueba_({
+    to: CONFIG.correoResponsable,
+    subject: 'Nueva incidencia — no puede acceder a su cuenta (Folio ' + folio + ')',
+    htmlBody:
+      '<p style="margin:0 0 8px 0;font-size:14px;">Folio: <strong>' + folio + '</strong></p>' +
+      '<p style="margin:0 0 8px 0;font-size:14px;">Nombre: ' + escapeHtml_(d.nombre.trim()) + '</p>' +
+      '<p style="margin:0 0 8px 0;font-size:14px;">Correo institucional: ' + escapeHtml_(d.correoInstitucional.trim()) + '</p>' +
+      '<p style="margin:0 0 8px 0;font-size:14px;">CCT: ' + escapeHtml_(d.cct.trim().toUpperCase()) + (d.escuela ? ' — ' + escapeHtml_(d.escuela.trim()) : '') + '</p>' +
+      '<p style="margin:0;font-size:14px;">Problema: ' + escapeHtml_(d.queProblema.trim()) + '</p>',
+    name: CONFIG.remitente
+  });
 }
 
 function incidenciaObtenerHoja() {
