@@ -76,6 +76,16 @@
 // token=...) devuelve todas las solicitudes abiertas. Configura el token
 // una vez con manConfigurarTokenPanel('un-secreto-largo') antes de usarlo.
 //
+// PLANCHADO DE LA HOJA (dropdowns + semáforo + aviso en columnas
+// automáticas, sep 2026): corre UNA vez manConfigurarValidacionYSemaforo()
+// (o el menú "OTDE Mantenimiento" → "Aplicar validación y semáforo") para
+// agregar dropdown a Turno/Estado de instalación/Tipo de solicitante, color
+// por Estatus (Solicitudes) y por Estado del aula (Reportes de visita), y un
+// aviso de "columna automática" en Fecha/Folio/Oficio/las 3 columnas de
+// Notificación. Es idempotente y no toca la validación de Estatus/Técnico
+// asignado que ya existe. Ver docs/manual-bases-tramites.html para la
+// explicación visual de qué significa cada color.
+//
 // REPORTE DE VISITA (Fase 2 hacia retirar v8.5): hoja aparte "Reportes de
 // visita" (autocreada, ver COLUMNAS abajo) ligada a "Solicitudes" por folio.
 // Dos caminos para llenarla y notificar:
@@ -433,6 +443,94 @@ function manAplicarValidacionEstatus(hoja) {
     .setAllowInvalid(false)
     .build();
   hoja.getRange(2, COL_MAN_ESTATUS, 1000, 1).setDataValidation(regla);
+}
+
+// ── "Planchado" de la hoja: dropdowns adicionales + semáforo por color +
+// aviso en columnas 100% automáticas. Corre UNA vez desde el editor (o el
+// menú "OTDE Mantenimiento" → "Aplicar validación y semáforo") — es
+// idempotente, se puede repetir sin riesgo. No toca la validación de
+// Estatus/Técnico asignado ni ningún trigger onEdit. ──
+const MAN_TURNOS_VALIDOS = ['Matutino', 'Vespertino', 'Tiempo Completo', 'Discontinuo', 'No aplica (oficina)'];
+const MAN_ESTADOS_INSTALACION_VALIDOS = ['Instaladas y en uso (con falla)', 'Guardadas / sin instalar', 'Abandonadas / posible baja'];
+const MAN_TIPOS_SOLICITANTE_VALIDOS = ['escuela', 'supervision', 'jefatura', 'subdireccion'];
+const COL_MAN_TURNO = 9;
+const COL_MAN_ESTADO_INSTALACION = 21;
+
+function manConfigurarValidacionYSemaforo() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const solicitudes = ss.getSheetByName(HOJA_MAN_SOLICITUDES);
+  if (solicitudes) {
+    manAplicarValidacionListaSuave_(solicitudes, COL_MAN_TURNO, MAN_TURNOS_VALIDOS);
+    manAplicarValidacionListaSuave_(solicitudes, COL_MAN_ESTADO_INSTALACION, MAN_ESTADOS_INSTALACION_VALIDOS);
+    manAplicarValidacionListaSuave_(solicitudes, COL_MAN_TIPO_SOLICITANTE_IDX + 1, MAN_TIPOS_SOLICITANTE_VALIDOS);
+    manAplicarSemaforoPorValor_(solicitudes, COL_MAN_ESTATUS, ESTADOS_MAN_VALIDOS, MAN_COLORES_ESTATUS);
+    [1, 2, 13, COL_MAN_NOTIFICACION_CIERRE, COL_MAN_NOTIFICACION_PROGRAMADA, COL_MAN_NOTIFICACION_TECNICO]
+      .forEach(function (col) { manProtegerColumnaAutomatica_(solicitudes, col); });
+  }
+  const reportes = ss.getSheetByName(HOJA_MAN_REPORTES);
+  if (reportes) {
+    manAplicarSemaforoPorValor_(reportes, COL_MAN_REP_ESTADO_AULA, MAN_ESTADOS_AULA, MAN_COLORES_ESTADO_AULA);
+    [COL_MAN_REP_PDF_URL, COL_MAN_REP_NOTIFICACION]
+      .forEach(function (col) { manProtegerColumnaAutomatica_(reportes, col); });
+  }
+  try { SpreadsheetApp.getUi().alert('Validación y semáforo aplicados en Solicitudes y Reportes de visita.'); } catch (err) {}
+}
+
+// Dropdown "suave": marca con triángulo de aviso un valor fuera de lista en
+// vez de bloquear el guardado — a diferencia de Estatus/Técnico asignado,
+// estas columnas no alimentan ningún trigger, así que no vale la pena
+// arriesgar que alguien no pueda anotar una excepción real.
+function manAplicarValidacionListaSuave_(hoja, columna, valores) {
+  const regla = SpreadsheetApp.newDataValidation().requireValueInList(valores, true).setAllowInvalid(true).build();
+  hoja.getRange(2, columna, 1000, 1).setDataValidation(regla);
+}
+
+const MAN_COLORES_ESTATUS = {
+  'Pendiente de validar': '#e5e7eb',
+  'Validado': '#dbeafe',
+  'En atención': '#fef3c7',
+  'Resuelto': '#d1fae5',
+  'Rechazado': '#fee2e2'
+};
+const MAN_COLORES_ESTADO_AULA = {
+  '🟢 Operativa — todos los equipos encienden y funcionan correctamente. Lista para uso regular, asesorías y aula modelo.': '#d1fae5',
+  '🟡 Operativa con observaciones — funciona pero con detalles menores que no impiden su uso.': '#fef3c7',
+  '🟠 Operativa parcialmente — menos del 70% de equipos funcionales o intervención incompleta. Uso limitado, se requiere segunda visita.': '#fed7aa',
+  '🔴 No operativa — la mayoría de los equipos no funciona o el aula no está en condiciones de uso.': '#fee2e2'
+};
+
+// Colorea el fondo de una celda según su valor exacto — quita cualquier
+// regla previa de ESTA columna antes de reescribirla, para poder correr la
+// función varias veces sin acumular reglas duplicadas.
+function manAplicarSemaforoPorValor_(hoja, columna, valores, colores) {
+  const rango = hoja.getRange(2, columna, 1000, 1);
+  const reglasSinEstaColumna = hoja.getConditionalFormatRules().filter(function (r) {
+    return r.getRanges().every(function (rg) { return rg.getColumn() !== columna; });
+  });
+  const reglasNuevas = valores
+    .filter(function (valor) { return colores[valor]; })
+    .map(function (valor) {
+      return SpreadsheetApp.newConditionalFormatRule()
+        .whenTextEqualTo(valor)
+        .setBackground(colores[valor])
+        .setRanges([rango])
+        .build();
+    });
+  hoja.setConditionalFormatRules(reglasSinEstaColumna.concat(reglasNuevas));
+}
+
+// Protección "solo aviso": no bloquea a nadie (todos los editores del Sheet
+// pueden seguir guardando), solo muestra una advertencia antes de
+// sobreescribir una celda que el sistema llena solo.
+function manProtegerColumnaAutomatica_(hoja, columna) {
+  const yaProtegida = hoja.getProtections(SpreadsheetApp.ProtectionType.RANGE).some(function (p) {
+    const r = p.getRange();
+    return r.getColumn() === columna && r.getRow() === 2;
+  });
+  if (yaProtegida) return;
+  hoja.getRange(2, columna, 1000, 1).protect()
+    .setWarningOnly(true)
+    .setDescription('Columna automática — se llena sola, evita editarla a mano.');
 }
 
 // ── Crear la hoja de contactos vacía si no existe (Jorge la llena a mano) ──
@@ -1435,6 +1533,7 @@ function onOpen() {
     .addItem('Instalar trigger de programación de visita', 'manInstalarTriggerProgramacion')
     .addItem('Desinstalar trigger de programación de visita', 'manDesinstalarTriggerProgramacion')
     .addItem('Generar y enviar reporte de visita', 'manGenerarYEnviarReporteVisita')
+    .addItem('Aplicar validación y semáforo', 'manConfigurarValidacionYSemaforo')
     .addToUi();
 }
 
