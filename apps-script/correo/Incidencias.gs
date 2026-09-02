@@ -94,8 +94,27 @@ function incidenciaObtenerHoja() {
   }
 
   incidenciaAplicarValidacionEstado(hoja);
+  incidenciaAplicarSemaforoYProteccion_(hoja);
 
   return hoja;
+}
+
+// ── "Planchado" (sep 2026): dropdown suave en ¿Cuenta lista?, semáforo de
+// color en Estado general, protección de solo aviso en Fecha/Folio/Usuario
+// enviado/Fecha de entrega/Estado general. Usuario asignado/Contraseña
+// asignada (las que Marcos llena a mano para disparar el correo) se dejan
+// libres a propósito. Utilidades compartidas en Config.gs. ──
+const COL_INCIDENCIA_CUENTA_LISTA = 14;
+const COL_INCIDENCIA_USUARIO_ENVIADO = 15;
+const COL_INCIDENCIA_FECHA_ENTREGA = 16;
+const COL_INCIDENCIA_ESTADO = 17;
+const INCIDENCIA_COLORES_ESTADO = { 'Solicitud recibida': '#e5e7eb', 'Incidencia resuelta': '#d1fae5' };
+
+function incidenciaAplicarSemaforoYProteccion_(hoja) {
+  aplicarValidacionListaSuave_(hoja, COL_INCIDENCIA_CUENTA_LISTA, ['Sí', 'No']);
+  aplicarSemaforoPorValor_(hoja, COL_INCIDENCIA_ESTADO, INCIDENCIA_COLORES_ESTADO);
+  [1, 2, COL_INCIDENCIA_USUARIO_ENVIADO, COL_INCIDENCIA_FECHA_ENTREGA, COL_INCIDENCIA_ESTADO]
+    .forEach(function (col) { protegerColumnaAutomatica_(hoja, col); });
 }
 
 // ── Dropdown en "Estado general" (protector, mismo criterio que

@@ -143,6 +143,73 @@ function escapeMarkdown_(valor) {
   return String(valor == null ? '' : valor).replace(/([_*[\]`])/g, '\\$1');
 }
 
+// ── "Planchado" de las 4 hojas (Alta/Cambio/Reset/Incidencias): dropdowns
+// suaves + semáforo por color en "Estado general" + protección de solo
+// aviso en columnas automáticas. Utilidades compartidas aquí (a diferencia
+// de mantenimiento.gs/asesorias.gs en seprn-sitio, que son proyectos
+// separados y duplican cada helper) — cada Xxx.gs las usa desde su propia
+// función `xxxAplicarSemaforoYProteccion_()`. Ver configurarValidacionYSemaforo()
+// más abajo para correrlas las 4 de una vez. ──
+function aplicarValidacionListaSuave_(hoja, columna, valores) {
+  const regla = SpreadsheetApp.newDataValidation().requireValueInList(valores, true).setAllowInvalid(true).build();
+  hoja.getRange(2, columna, 1000, 1).setDataValidation(regla);
+}
+
+// Colorea el fondo de una celda según su valor exacto — quita cualquier
+// regla previa de ESTA columna antes de reescribirla, para poder correr la
+// función varias veces sin acumular reglas duplicadas.
+function aplicarSemaforoPorValor_(hoja, columna, colores) {
+  const rango = hoja.getRange(2, columna, 1000, 1);
+  const reglasSinEstaColumna = hoja.getConditionalFormatRules().filter(function (r) {
+    return r.getRanges().every(function (rg) { return rg.getColumn() !== columna; });
+  });
+  const reglasNuevas = Object.keys(colores).map(function (valor) {
+    return SpreadsheetApp.newConditionalFormatRule()
+      .whenTextEqualTo(valor)
+      .setBackground(colores[valor])
+      .setRanges([rango])
+      .build();
+  });
+  hoja.setConditionalFormatRules(reglasSinEstaColumna.concat(reglasNuevas));
+}
+
+// Protección "solo aviso": no bloquea a nadie (todos los editores del Sheet
+// pueden seguir guardando), solo muestra una advertencia antes de
+// sobreescribir una celda que el sistema llena solo.
+function protegerColumnaAutomatica_(hoja, columna) {
+  const yaProtegida = hoja.getProtections(SpreadsheetApp.ProtectionType.RANGE).some(function (p) {
+    const r = p.getRange();
+    return r.getColumn() === columna && r.getRow() === 2;
+  });
+  if (yaProtegida) return;
+  hoja.getRange(2, columna, 1000, 1).protect()
+    .setWarningOnly(true)
+    .setDescription('Columna automática — se llena sola, evita editarla a mano.');
+}
+
+// ── Corre las 4 funciones de planchado (una por hoja) de una sola vez.
+// Idempotente — se puede repetir sin riesgo. No toca los dropdowns de
+// "Estado general" que ya existían (altaAplicarValidacionEstado() y
+// equivalentes en los otros 3 archivos) ni ningún trigger onEdit; cada
+// obtenerHoja() (altaObtenerHoja(), etc.) ya llama a su función de planchado
+// también, así que una hoja recién creada queda al día sola en su primer
+// doPost — esta función es solo para ponerse al día de inmediato sin
+// esperar una solicitud nueva. ──
+function configurarValidacionYSemaforo() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const alta = ss.getSheetByName(HOJA_ALTA);
+  if (alta) altaAplicarSemaforoYProteccion_(alta);
+  const cambio = ss.getSheetByName(HOJA_CAMBIO);
+  if (cambio) cambioAplicarSemaforoYProteccion_(cambio);
+  const reset = ss.getSheetByName(HOJA_RESET);
+  if (reset) resetAplicarSemaforoYProteccion_(reset);
+  const incidencias = ss.getSheetByName(HOJA_INCIDENCIAS);
+  if (incidencias) incidenciaAplicarSemaforoYProteccion_(incidencias);
+  try {
+    SpreadsheetApp.getUi().alert('Validación y semáforo aplicados en Alta/Cambio de Contraseña/Reset 2FA/Incidencias.');
+  } catch (err) {}
+}
+
 // ── Notificar por Telegram a OTDE (silencioso si falla o no está configurado) ──
 function notificarTelegram(mensaje) {
   try {

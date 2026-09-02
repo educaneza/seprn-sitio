@@ -94,8 +94,29 @@ function cambioObtenerHoja() {
   }
 
   cambioAplicarValidacionEstado(hoja);
+  cambioAplicarSemaforoYProteccion_(hoja);
 
   return hoja;
+}
+
+// ── "Planchado" (sep 2026): dropdown suave en ¿Cuenta lista?, semáforo de
+// color en Estado general, protección de solo aviso en Fecha/Folio/
+// Dominio/Usuario enviado/Fecha de entrega/Estado general. Contraseña
+// asignada (la que Marcos llena a mano para disparar el correo) se deja
+// libre a propósito. Utilidades compartidas en Config.gs, mismo patrón que
+// altaAplicarSemaforoYProteccion_() en Alta.gs. ──
+const COL_CAMBIO_DOMINIO = 8;
+const COL_CAMBIO_CUENTA_LISTA = 14;
+const COL_CAMBIO_USUARIO_ENVIADO = 15;
+const COL_CAMBIO_FECHA_ENTREGA = 16;
+const COL_CAMBIO_ESTADO = 17;
+const CAMBIO_COLORES_ESTADO = { 'Solicitud recibida': '#e5e7eb', 'Cuenta entregada': '#d1fae5' };
+
+function cambioAplicarSemaforoYProteccion_(hoja) {
+  aplicarValidacionListaSuave_(hoja, COL_CAMBIO_CUENTA_LISTA, ['Sí', 'No']);
+  aplicarSemaforoPorValor_(hoja, COL_CAMBIO_ESTADO, CAMBIO_COLORES_ESTADO);
+  [1, 2, COL_CAMBIO_DOMINIO, COL_CAMBIO_USUARIO_ENVIADO, COL_CAMBIO_FECHA_ENTREGA, COL_CAMBIO_ESTADO]
+    .forEach(function (col) { protegerColumnaAutomatica_(hoja, col); });
 }
 
 // ── Dropdown en "Estado general" (protector, mismo criterio que

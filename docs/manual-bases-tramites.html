@@ -252,7 +252,7 @@
       <li><a href="#s1">Mantenimiento</a> &mdash; <code>Solicitudes_Mantenimiento_2026</code></li>
       <li><a href="#s2">Asesorías</a> &mdash; <code>Solicitudes_Asesorias_2026</code></li>
       <li><a href="#s3">Soporte Técnico</a> <span class="estado-pendiente">(pendiente &mdash; mismo tratamiento en sesión siguiente)</span></li>
-      <li><a href="#s4">Correo Institucional</a> <span class="estado-pendiente">(pendiente &mdash; mismo tratamiento en sesión siguiente)</span></li>
+      <li><a href="#s4">Correo Institucional</a> &mdash; <code>Solicitudes_Correo_2026_2027</code></li>
       <li><a href="#s5">Formación Docente</a> <span class="estado-pendiente">(pendiente &mdash; mismo tratamiento en sesión siguiente)</span></li>
     </ol>
   </nav>
@@ -391,10 +391,62 @@
       <div class="section-num">4</div>
       <div>
         <h2>Correo Institucional</h2>
-        <span class="archivo">Solicitudes_Correo_2026_2027 &middot; Alta / Cambio / Reset / Incidencias</span>
+        <span class="archivo">Solicitudes_Correo_2026_2027 &middot; Alta / Cambio de Contraseña / Reset 2FA / Incidencias</span>
       </div>
     </div>
-    <div class="placeholder"><strong>Pendiente.</strong> Ojo: <code>Estado general</code> es texto libre a propósito (decisión ya tomada de no cerrarlo a un catálogo) &mdash; no convertirlo en dropdown al hacer esta sección. <code>NP SIGEE</code> la llena Marcos a mano y es el paso crítico de trazabilidad.</div>
+
+    <p>Las 4 hojas <strong>ya tienen semáforo y dropdowns aplicados</strong> (septiembre 2026). <strong>Estado general</strong> ya traía su lista desplegable de fábrica en las 4 &mdash; esta sesión solo le agregó el color; no había que crearla.</p>
+
+    <p>Patrón común a las 4: <strong>Fecha</strong>/<strong>Folio</strong> 🔴 se llenan solos; los datos del solicitante (CCT, Sector, Zona, Escuela, Nombre, Correo Personal, Teléfono, Observaciones) 🟢 se corrigen si hay un error; <strong>Usuario enviado</strong>/<strong>Fecha de entrega</strong>/<strong>Estado general</strong> 🔴 los llena solo el sistema en cuanto Marcos hace su parte.</p>
+
+    <h3>Alta</h3>
+    <table>
+      <thead><tr><th class="col-color">&nbsp;</th><th>Columna</th><th>Qué hacer</th></tr></thead>
+      <tbody>
+        <tr class="fila-roja"><td class="col-color">🔴</td><td class="col-nombre">Dominio / Tipo de Cuenta (calculado)</td><td>Dominio lo calcula el webform, no tocar. Tipo de Cuenta 🟢 ya tiene lista desplegable (oficina/personal/N/A) por si hay que corregirlo.</td></tr>
+        <tr class="fila-verde"><td class="col-color">🟢</td><td class="col-nombre">NP SIGEE</td><td><strong>Crítico.</strong> Marcos la llena a mano con el folio que le da SIGEE al crear la cuenta &mdash; es el único hilo que conecta esta hoja con SIGEE.</td></tr>
+        <tr class="fila-amarilla"><td class="col-color">🟡</td><td class="col-nombre">Usuario asignado + Contraseña asignada</td><td>Marcos las llena a mano cuando la cuenta ya existe &mdash; llenar ambas dispara el correo de credenciales al solicitante.</td></tr>
+        <tr class="fila-verde"><td class="col-color">🟢</td><td class="col-nombre">¿Cuenta lista?</td><td>Ya tiene lista desplegable (Sí/No) &mdash; informativa, no dispara nada por sí sola.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Cambio de Contraseña</h3>
+    <table>
+      <thead><tr><th class="col-color">&nbsp;</th><th>Columna</th><th>Qué hacer</th></tr></thead>
+      <tbody>
+        <tr class="fila-roja"><td class="col-color">🔴</td><td class="col-nombre">Dominio</td><td>Se calcula solo del correo institucional capturado &mdash; no tocar.</td></tr>
+        <tr class="fila-amarilla"><td class="col-color">🟡</td><td class="col-nombre">Contraseña asignada</td><td>Marcos la llena a mano &mdash; dispara el correo con la nueva contraseña.</td></tr>
+        <tr class="fila-verde"><td class="col-color">🟢</td><td class="col-nombre">¿Cuenta lista?</td><td>Ya tiene lista desplegable (Sí/No) &mdash; informativa.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Reset 2FA</h3>
+    <table>
+      <thead><tr><th class="col-color">&nbsp;</th><th>Columna</th><th>Qué hacer</th></tr></thead>
+      <tbody>
+        <tr class="fila-amarilla"><td class="col-color">🟡</td><td class="col-nombre">¿Reset listo?</td><td>Ya tiene lista desplegable (Sí/No) &mdash; es el disparador de este trámite: marcarlo &ldquo;Sí&rdquo; avisa al solicitante que ya puede reconfigurar su autenticación.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Incidencias</h3>
+    <table>
+      <thead><tr><th class="col-color">&nbsp;</th><th>Columna</th><th>Qué hacer</th></tr></thead>
+      <tbody>
+        <tr class="fila-amarilla"><td class="col-color">🟡</td><td class="col-nombre">Usuario asignado + Contraseña asignada</td><td>Igual que en Alta &mdash; llenar ambas dispara el correo de credenciales nuevas.</td></tr>
+        <tr class="fila-verde"><td class="col-color">🟢</td><td class="col-nombre">¿Cuenta lista?</td><td>Ya tiene lista desplegable (Sí/No) &mdash; informativa.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Semáforo de Estado general</h3>
+    <table>
+      <thead><tr><th>Hoja</th><th>Valor final</th><th>Color</th></tr></thead>
+      <tbody>
+        <tr><td>Alta / Cambio de Contraseña</td><td>Solicitud recibida &rarr; Cuenta entregada</td><td style="background:#d1fae5;">&nbsp;</td></tr>
+        <tr><td>Reset 2FA</td><td>Solicitud recibida &rarr; Reset notificado</td><td style="background:#d1fae5;">&nbsp;</td></tr>
+        <tr><td>Incidencias</td><td>Solicitud recibida &rarr; Incidencia resuelta</td><td style="background:#d1fae5;">&nbsp;</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:.85rem;color:var(--muted);">&ldquo;Solicitud recibida&rdquo; se pinta gris claro en las 4; el valor final de cada hoja se pinta verde.</p>
   </div>
 
   <!-- SECCIÓN 5: FORMACIÓN DOCENTE -->

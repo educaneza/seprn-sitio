@@ -95,8 +95,32 @@ function altaObtenerHoja() {
   }
 
   altaAplicarValidacionEstado(hoja);
+  altaAplicarSemaforoYProteccion_(hoja);
 
   return hoja;
+}
+
+// ── "Planchado" (sep 2026): dropdown suave en Tipo de Cuenta/¿Cuenta
+// lista?, semáforo de color en Estado general, protección de solo aviso en
+// Fecha/Folio/Dominio/Usuario enviado/Fecha de entrega/Estado general.
+// Usuario asignado/Contraseña asignada (las que Marcos llena a mano para
+// disparar el correo de credenciales) y NP SIGEE se dejan libres a
+// propósito. Utilidades compartidas en Config.gs. ──
+const COL_ALTA_DOMINIO = 7;
+const COL_ALTA_TIPO_CUENTA = 8;
+const COL_ALTA_CUENTA_LISTA = 21;
+const COL_ALTA_USUARIO_ENVIADO = 22;
+const COL_ALTA_FECHA_ENTREGA = 23;
+const COL_ALTA_ESTADO = 24;
+const ALTA_TIPOS_CUENTA_VALIDOS = ['oficina', 'personal', 'N/A'];
+const ALTA_COLORES_ESTADO = { 'Solicitud recibida': '#e5e7eb', 'Cuenta entregada': '#d1fae5' };
+
+function altaAplicarSemaforoYProteccion_(hoja) {
+  aplicarValidacionListaSuave_(hoja, COL_ALTA_TIPO_CUENTA, ALTA_TIPOS_CUENTA_VALIDOS);
+  aplicarValidacionListaSuave_(hoja, COL_ALTA_CUENTA_LISTA, ['Sí', 'No']);
+  aplicarSemaforoPorValor_(hoja, COL_ALTA_ESTADO, ALTA_COLORES_ESTADO);
+  [1, 2, COL_ALTA_DOMINIO, COL_ALTA_USUARIO_ENVIADO, COL_ALTA_FECHA_ENTREGA, COL_ALTA_ESTADO]
+    .forEach(function (col) { protegerColumnaAutomatica_(hoja, col); });
 }
 
 // ── Dropdown en "Estado general" (protector, no cambia la lógica de arriba):

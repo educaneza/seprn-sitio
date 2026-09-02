@@ -87,8 +87,28 @@ function resetObtenerHoja() {
   }
 
   resetAplicarValidacionEstado(hoja);
+  resetAplicarSemaforoYProteccion_(hoja);
 
   return hoja;
+}
+
+// ── "Planchado" (sep 2026): dropdown suave en ¿Reset listo? (el disparador
+// manual de este tipo — a diferencia de los demás, aquí sí se marca en
+// amarillo en el manual visual, no verde, porque dispara la notificación),
+// semáforo de color en Estado general, protección de solo aviso en Fecha/
+// Folio/Usuario enviado/Fecha de entrega/Estado general. Utilidades
+// compartidas en Config.gs. ──
+const COL_RESET_LISTO = 12;
+const COL_RESET_USUARIO_ENVIADO = 13;
+const COL_RESET_FECHA_ENTREGA = 14;
+const COL_RESET_ESTADO = 15;
+const RESET_COLORES_ESTADO = { 'Solicitud recibida': '#e5e7eb', 'Reset notificado': '#d1fae5' };
+
+function resetAplicarSemaforoYProteccion_(hoja) {
+  aplicarValidacionListaSuave_(hoja, COL_RESET_LISTO, ['Sí', 'No']);
+  aplicarSemaforoPorValor_(hoja, COL_RESET_ESTADO, RESET_COLORES_ESTADO);
+  [1, 2, COL_RESET_USUARIO_ENVIADO, COL_RESET_FECHA_ENTREGA, COL_RESET_ESTADO]
+    .forEach(function (col) { protegerColumnaAutomatica_(hoja, col); });
 }
 
 // ── Dropdown en "Estado general" (protector, mismo criterio que
