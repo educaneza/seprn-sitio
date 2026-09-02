@@ -542,16 +542,15 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     tampoco se probó contra una vista previa real — pendiente confirmar después del siguiente
     deploy, considerando que WhatsApp cachea vistas previas ya generadas.
 16. **Extender el "planchado" (dropdowns + semáforo + protección de solo aviso) y el manual
-    visual a Soporte, Correo y Formación Docente** (piloto en Mantenimiento 1 sep 2026, repetido
-    en Asesorías la misma sesión sin sorpresas — ver `docs/ARCHITECTURE.md §24` y
-    `docs/manual-bases-tramites.html`): repetir el mismo patrón ya probado dos veces —
+    visual a Soporte y Formación Docente** (piloto en Mantenimiento 1 sep 2026, repetido en
+    Asesorías y Correo la misma sesión sin sorpresas — ver `docs/ARCHITECTURE.md §24` y
+    `docs/manual-bases-tramites.html`): repetir el mismo patrón ya probado tres veces —
     `{prefijo}ConfigurarValidacionYSemaforo()` en cada `.gs`, corrida una vez desde el editor de
     Apps Script, y una nueva sección en el manual— verificando primero contra la hoja en vivo de
     cada trámite (encabezados y catálogos reales pueden no coincidir exactamente con lo
-    documentado). Ojo con Correo: `Estado general` es texto libre a propósito (decisión ya tomada
-    de no cerrarlo a un catálogo), no convertirlo en dropdown. Ojo también con el diálogo de
-    `SpreadsheetApp.getUi().alert()` final: aparece en la pestaña del Sheet, no en la del editor
-    de Apps Script — hay que cerrarlo ahí para que el Registro de ejecución marque "completado".
+    documentado). Ojo con el diálogo de `SpreadsheetApp.getUi().alert()` final: aparece en la
+    pestaña del Sheet, no en la del editor de Apps Script — hay que cerrarlo ahí para que el
+    Registro de ejecución marque "completado".
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue

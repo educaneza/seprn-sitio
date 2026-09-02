@@ -622,6 +622,17 @@ arquitectura completo en `docs/ARCHITECTURE.md §16`. Resumen operativo:
   un helper genérico que ya no llamaba nadie desde antes de esta migración (código muerto, no
   una regresión de esta ronda). Licencias Office pasó a ser la tab activa por default (antes lo
   era Correo).
+- **"Planchado" de las 4 hojas — semáforo + dropdowns nuevos + protección de solo aviso (1 sep
+  2026, desplegado y verificado en vivo)**: `configurarValidacionYSemaforo()` en
+  `apps-script/correo/Config.gs` (utilidades compartidas entre los 4 tipos, a diferencia de
+  Mantenimiento/Asesorías que son proyectos separados), corrida una vez desde el editor. Cada
+  `Xxx.gs` (Alta/CambioContrasena/Reset2FA/Incidencias) tiene su propia
+  `xxxAplicarSemaforoYProteccion_()`. `Estado general` ya tenía su dropdown desde antes (ver
+  `docs/ARCHITECTURE.md §20`) — esta sesión solo le agregó el color. Dropdowns suaves nuevos en
+  `Tipo de Cuenta`/`¿Cuenta lista?` (Alta), `¿Cuenta lista?` (Cambio), `¿Reset listo?` (Reset, el
+  disparador real de ese tipo), `¿Cuenta lista?` (Incidencias). `Usuario asignado`/`Contraseña
+  asignada` (las que Marcos llena a mano para disparar el correo de credenciales) se dejan sin
+  tocar a propósito. Ver `docs/ARCHITECTURE.md §24` y `docs/manual-bases-tramites.html`.
 
 ### Mantenimiento (página propia desde el 27 ago 2026, ver `mantenimiento.html`)
 Ya no es solo texto ("solicita por oficio y vía estructura") — formulario "Solicitar

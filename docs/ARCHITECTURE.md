@@ -1869,6 +1869,33 @@ ejecución" se queda mostrando el spinner de "Se inició la ejecución" (sin pas
 hasta que alguien cierra ese diálogo en la hoja; si ambas pestañas están abiertas, hay que revisar
 la del Sheet para no pensar que la ejecución quedó colgada.
 
+**`configurarValidacionYSemaforo()` (`apps-script/correo/Config.gs`) — Correo Institucional
+(Alta/Cambio de Contraseña/Reset 2FA/Incidencias).** Único caso de los tres hasta ahora con 4
+hojas en un solo proyecto de Apps Script en vez de un proyecto por hoja — las utilidades
+compartidas (`aplicarValidacionListaSuave_()`, `aplicarSemaforoPorValor_()`,
+`protegerColumnaAutomatica_()`) viven una sola vez en `Config.gs`, y cada `Xxx.gs` solo define su
+propia `xxxAplicarSemaforoYProteccion_()` con sus columnas. La función orquestadora corre las 4 de
+una vez y también queda enganchada en cada `xxxObtenerHoja()`, mismo patrón que Mantenimiento/
+Asesorías. **Nota importante para no repetir un error de esta sesión**: `Estado general` en las 4
+hojas **ya tenía** su propio dropdown desde antes (`altaAplicarValidacionEstado()` y equivalentes,
+documentado desde agosto en `§20` de este archivo) — esta sesión solo le agregó el semáforo de
+color encima, no creó el dropdown. Un ítem del `docs/ROADMAP.md` (ítem 16) decía lo contrario
+("Estado general es texto libre, no convertirlo en dropdown") basado en una nota vieja sobre cómo
+se *muestra* en `oficina-virtual.html` (sin badge de color, por texto libre entre tipos), no sobre
+si la *hoja* tiene dropdown — se corrigió ese ítem al tocar esta sección. Además del semáforo:
+dropdowns suaves nuevos en `Tipo de Cuenta`/`¿Cuenta lista?` (Alta), `¿Cuenta lista?` (Cambio),
+`¿Reset listo?` (Reset — el disparador real de este tipo, por eso va en amarillo en el manual, no
+verde) y `¿Cuenta lista?` (Incidencias); protección de solo aviso en `Fecha`/`Folio`/`Usuario
+enviado`/`Fecha de entrega`/`Estado general` de las 4, más `Dominio` en Alta/Cambio (se calcula
+solo, nunca a mano). `Usuario asignado`/`Contraseña asignada` (Alta/Incidencias) y `Contraseña
+asignada` (Cambio) — los campos que Marcos sí llena a mano para disparar el correo de
+credenciales — se dejan sin dropdown ni protección a propósito. Verificado en vivo contra
+`Solicitudes_Correo_2026_2027`: las 4 hojas confirmadas columna por columna antes de escribir
+código; ejecutado desde el editor del proyecto "Webform Correo 2026-2027 - Backend" (mismo
+hallazgo del diálogo de alert en la pestaña del Sheet que en Asesorías); semáforo confirmado en
+vivo contra la única fila real que ya existía en Reset 2FA (`OTDE-2FA-0001`, `Estado general` =
+"Solicitud recibida" pintado en gris) — no se creó ninguna fila de prueba.
+
 **Verificado en vivo contra la hoja real** (`Solicitudes_Mantenimiento_2026`, antes de escribir
 código): headers exactos confirmados columna por columna, y los catálogos cerrados de
 Turno/Estado de instalación/Tipo de solicitante confirmados contra los `<select>` reales de
@@ -1884,6 +1911,6 @@ que no se tocaron — Jorge las borrará él mismo cuando tenga tiempo, ver `doc
 sección al exportar a PDF vía Cmd+P), mismo lenguaje visual institucional guinda/midnight que el
 resto del sitio. Leyenda de 3 colores (🟢 llenar libre / 🟡 tocar con cuidado, dispara
 automatización / 🔴 no tocar, se llena solo) y una tabla columna-por-columna por trámite ya
-tratado (Mantenimiento, Asesorías). Soporte/Correo/Formación Docente quedan como placeholder
-explícito "pendiente" — el documento es entregable tal cual sin prometer contenido no verificado
-de esos 3 sistemas.
+tratado (Mantenimiento, Asesorías, Correo — con una sub-tabla por cada uno de los 4 tipos de
+Correo). Soporte/Formación Docente quedan como placeholder explícito "pendiente" — el documento es
+entregable tal cual sin prometer contenido no verificado de esos 2 sistemas.
