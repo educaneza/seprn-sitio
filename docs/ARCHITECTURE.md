@@ -1826,9 +1826,9 @@ ya generadas, así que un link ya compartido antes puede tardar en reflejar el c
 
 Jorge pidió dejar las bases (hojas de Sheets) de los 5 trámites de Oficina Virtual "bien
 planchadas" para el equipo — listas desplegables donde aplique y semaforización por color — más
-un manual visual de qué mover, qué llenar y qué no tocar. Alcance de esta sesión: piloto completo
-en **Mantenimiento** (el mejor documentado); Asesorías/Soporte/Correo/Formación Docente quedan
-para sesiones siguientes repitiendo el mismo patrón (`docs/ROADMAP.md` ítem 16).
+un manual visual de qué mover, qué llenar y qué no tocar. Piloto completo en **Mantenimiento**,
+repetido después en **Asesorías** (mismo patrón, sin sorpresas); Soporte/Correo/Formación Docente
+quedan para sesiones siguientes (`docs/ROADMAP.md` ítem 16).
 
 **Por qué Apps Script y no la API de Drive ni clics manuales en la UI**: los 5 sistemas ya se
 operan así (`manConfigurarTokenPanel()`, `manInstalarTriggerCierre()`, etc. — funciones que Jorge
@@ -1857,18 +1857,33 @@ idempotente:
   borrar una columna protegida aparece el diálogo nativo de Sheets ("Estás intentando editar una
   parte de la hoja que no debería modificarse de forma accidental").
 
+**`aseConfigurarValidacionYSemaforo()` (`apps-script/asesorias.gs`)** — mismo patrón exacto,
+adaptado a las columnas de Asesorías (sin `Reportes de visita` ni `Técnico asignado`, esos no
+existen en este trámite): dropdowns suaves en `Tipo de Asesoría`, `Turno`, `Confirmó Mantenimiento
+Previo` y `Tipo de solicitante` (catálogos confirmados contra `asesorias.html`); semáforo en
+`Estatus` (mismos 5 colores); protección de solo aviso en `Fecha`/`Folio`/`Oficio (link Drive)`/
+las 2 columnas de Notificación. Ejecutado desde el editor del proyecto "Asesorias - Backend
+(asesorias.gs)" — **hallazgo operativo**: el `SpreadsheetApp.getUi().alert()` final de la función
+se muestra en la pestaña del Sheet, no en la del editor de Apps Script — el "Registro de
+ejecución" se queda mostrando el spinner de "Se inició la ejecución" (sin pasar a "completado")
+hasta que alguien cierra ese diálogo en la hoja; si ambas pestañas están abiertas, hay que revisar
+la del Sheet para no pensar que la ejecución quedó colgada.
+
 **Verificado en vivo contra la hoja real** (`Solicitudes_Mantenimiento_2026`, antes de escribir
 código): headers exactos confirmados columna por columna, y los catálogos cerrados de
 Turno/Estado de instalación/Tipo de solicitante confirmados contra los `<select>` reales de
 `mantenimiento.html`, no inferidos de la documentación. La hoja `Solicitudes` seguía sin ninguna
 fila real de datos al momento de esta sesión (`Contactos_Zona_Sector` sí tiene sus 88 filas
 reales) — se probó con una fila temporal (los 5 valores de `Estatus`, confirmando el color de
-cada uno) y se borró antes de cerrar la sesión.
+cada uno) y se borró antes de cerrar la sesión. Mismo chequeo repetido contra
+`Solicitudes_Asesorias_2026` en la sesión de Asesorías: headers y catálogos confirmados contra
+`asesorias.html`, sin necesidad de fila de prueba (ya había 3 filas reales de un smoke test previo
+que no se tocaron — Jorge las borrará él mismo cuando tenga tiempo, ver `docs/BITACORA.md`).
 
-**Manual visual — `docs/manual-bases-tramites.html` (nuevo)**: página imprimible (salto de
-página por sección al exportar a PDF vía Cmd+P), mismo lenguaje visual institucional
-guinda/midnight que el resto del sitio. Leyenda de 3 colores (🟢 llenar libre / 🟡 tocar con
-cuidado, dispara automatización / 🔴 no tocar, se llena solo) y una tabla columna-por-columna
-para Mantenimiento con ese semáforo aplicado. Las otras 4 secciones (Asesorías, Soporte, Correo,
-Formación Docente) quedan como placeholder explícito "pendiente" — el documento es entregable tal
-cual sin prometer contenido no verificado de los otros 4 sistemas.
+**Manual visual — `docs/manual-bases-tramites.html`**: página imprimible (salto de página por
+sección al exportar a PDF vía Cmd+P), mismo lenguaje visual institucional guinda/midnight que el
+resto del sitio. Leyenda de 3 colores (🟢 llenar libre / 🟡 tocar con cuidado, dispara
+automatización / 🔴 no tocar, se llena solo) y una tabla columna-por-columna por trámite ya
+tratado (Mantenimiento, Asesorías). Soporte/Correo/Formación Docente quedan como placeholder
+explícito "pendiente" — el documento es entregable tal cual sin prometer contenido no verificado
+de esos 3 sistemas.

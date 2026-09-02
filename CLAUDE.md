@@ -386,6 +386,13 @@ ya esté expandido).
 - **`?action=pendientes&token=...` (ago 2026)**: mismo endpoint que `mantenimiento.gs`, para el
   Panel OTDE. Token configurado con `aseConfigurarTokenPanel('secreto')`. Ver
   `docs/ARCHITECTURE.md §20`.
+- **"Planchado" de la hoja — dropdowns + semáforo + protección de solo aviso (1 sep 2026,
+  desplegado y verificado en vivo)**: `aseConfigurarValidacionYSemaforo()`, mismo patrón que
+  `manConfigurarValidacionYSemaforo()` de Mantenimiento, corrida una vez desde el editor (o el
+  menú "OTDE Asesorías" → "Aplicar validación y semáforo"). Dropdown suave en `Tipo de
+  Asesoría`/`Turno`/`Confirmó Mantenimiento Previo`/`Tipo de solicitante`, semáforo de color en
+  `Estatus`, aviso de "columna automática" en `Fecha`/`Folio`/`Oficio`/las 2 columnas de
+  Notificación. No toca la validación de `Estatus` ya existente. Ver `docs/ARCHITECTURE.md §24`.
 
 ### `apps-script/formacion-docente.gs`
 **Desplegado en producción desde jul 2026** (Spreadsheet real `Formacion_Docente_2026_2027`, URL real ya pegada en `APPS_SCRIPT_URL` de `formacion-docente.html`; la extinta `jornada-verano-2026.html` compartió este mismo backend hasta su eliminación el 13 jul 2026).

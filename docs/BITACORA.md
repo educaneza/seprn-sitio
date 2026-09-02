@@ -14,6 +14,21 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-09-01 (cont. 2) · "Planchado" de Asesorías (dropdowns + semáforo + protección) y su sección del manual visual
+
+| | |
+|---|---|
+| **Fecha** | 2026-09-01 |
+| **Sesión** | Jorge pidió "el mismo tratamiento para Asesorías" — repetir el piloto de Mantenimiento del checkpoint anterior en el segundo de los 5 trámites (`docs/ROADMAP.md` ítem 16). |
+| **`aseConfigurarValidacionYSemaforo()` nueva en `apps-script/asesorias.gs`** | Mismo patrón exacto que `manConfigurarValidacionYSemaforo()`, adaptado a las columnas de Asesorías (sin `Reportes de visita` ni `Técnico asignado`, no existen en este trámite): dropdown suave en `Tipo de Asesoría`/`Turno`/`Confirmó Mantenimiento Previo`/`Tipo de solicitante`; semáforo de color en `Estatus` (mismos 5 colores); protección "solo aviso" en `Fecha`/`Folio`/`Oficio (link Drive)`/las 2 columnas de Notificación. No toca la validación de `Estatus` que ya existía. Corrida desde el menú "OTDE Asesorías" → "Aplicar validación y semáforo" (item nuevo). Detalle completo en `docs/ARCHITECTURE.md §24`. |
+| **Verificado en vivo contra la hoja real antes de escribir código** | `Solicitudes_Asesorias_2026` abierta en el navegador: headers confirmados columna por columna contra `ENCABEZADOS_ASE_SOLICITUDES`, catálogos cerrados de Tipo de Asesoría/Turno/Tipo de solicitante confirmados contra los `<select>` reales de `asesorias.html`. Hallazgo de paso: la hoja sí tiene 3 filas reales — las del smoke test del checkpoint "Notificaciones de Telegram + correo por persona" (🧪, CCT `99ZZZ9999Z`) que seguían sin borrar; no se tocaron, Jorge las borrará él mismo. |
+| **Ejecución y verificación en el proyecto de Apps Script real** | Código pegado completo en el editor del proyecto "Asesorias - Backend (asesorias.gs)", guardado, y `aseConfigurarValidacionYSemaforo()` corrida desde el editor. **Hallazgo operativo nuevo**: el Registro de ejecución se quedó mostrando el spinner de "Se inició la ejecución" mucho más de lo esperado (~30s) — causa real: el `SpreadsheetApp.getUi().alert()` final se despliega en la pestaña del Sheet, no en la del editor, y bloquea el fin de la ejecución hasta que alguien lo cierra ahí; una vez cerrado el diálogo en la pestaña del Sheet, confirmado que la función sí había corrido completa y sin errores. Verificado visualmente: los 4 dropdowns nuevos muestran flecha de selección; `Estatus` de las 3 filas existentes ("Pendiente de validar") se colorea con el gris esperado. No se probaron los otros 4 valores de `Estatus` con una fila de prueba (a diferencia de Mantenimiento) — ya había filas reales con dropdown+color visibles, no hacía falta. |
+| **Manual visual — sección 2 de `docs/manual-bases-tramites.html` completada** | Reemplazado el placeholder "pendiente" de Asesorías por la tabla columna-por-columna completa (mismo criterio de colores que Mantenimiento) y una nota aclarando que Asesorías no tiene Técnico asignado ni hoja de Reportes de visita. Índice del documento actualizado (ya no dice "pendiente" para Asesorías). |
+| **Verificación** | Ejecución de la función confirmada sin errores (alert final desplegado con el mensaje de éxito). Dropdowns y semáforo confirmados visualmente contra las 3 filas reales ya existentes. Manual verificado renderizado en navegador (servidor local temporal, cerrado al terminar). `git diff --stat`: `apps-script/asesorias.gs` +91 líneas; `docs/manual-bases-tramites.html` +50/-2 líneas. |
+| **Commits** | Pendiente — sesión sin commitear todavía al momento de este checkpoint. |
+
+---
+
 ## CHECKPOINT — 2026-09-01 (cont.) · "Planchado" de Mantenimiento (dropdowns + semáforo + protección) y manual visual de bases para el equipo
 
 | | |
