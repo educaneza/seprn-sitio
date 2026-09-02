@@ -1821,3 +1821,54 @@ quedara solo con favicon SVG — no evidencia de que siguiera funcionando de ver
 sin publicar a producción y compartir un link real) — pendiente que Jorge confirme viendo la
 vista previa en su teléfono después del siguiente deploy. WhatsApp además cachea vistas previas
 ya generadas, así que un link ya compartido antes puede tardar en reflejar el cambio.
+
+## 24. "Planchado" de hojas de trámite: dropdowns + semáforo + protección de solo aviso (sep 2026)
+
+Jorge pidió dejar las bases (hojas de Sheets) de los 5 trámites de Oficina Virtual "bien
+planchadas" para el equipo — listas desplegables donde aplique y semaforización por color — más
+un manual visual de qué mover, qué llenar y qué no tocar. Alcance de esta sesión: piloto completo
+en **Mantenimiento** (el mejor documentado); Asesorías/Soporte/Correo/Formación Docente quedan
+para sesiones siguientes repitiendo el mismo patrón (`docs/ROADMAP.md` ítem 16).
+
+**Por qué Apps Script y no la API de Drive ni clics manuales en la UI**: los 5 sistemas ya se
+operan así (`manConfigurarTokenPanel()`, `manInstalarTriggerCierre()`, etc. — funciones que Jorge
+pega y corre una vez desde el editor) — seguir el mismo patrón deja todo versionado en el repo y
+es más confiable que cientos de clics manuales repartidos en varias hojas/pestañas.
+
+**`manConfigurarValidacionYSemaforo()` (`apps-script/mantenimiento.gs`)**, corrida una vez desde
+el editor de Apps Script (o el menú "OTDE Mantenimiento" → "Aplicar validación y semáforo"),
+idempotente:
+- **Dropdowns "suaves" nuevos** (`requireValueInList(..., true).setAllowInvalid(true)` — marcan
+  con triángulo de aviso un valor fuera de catálogo en vez de bloquear el guardado, a diferencia
+  de `Estatus`/`Técnico asignado` que sí bloquean porque alimentan un trigger): `Turno`, `Estado
+  de instalación` y `Tipo de solicitante` en `Solicitudes`, con los catálogos reales confirmados
+  contra `mantenimiento.html` (no inventados).
+- **Semáforo por color** (`setConditionalFormatRules`, coloreando por `whenTextEqualTo` sobre el
+  valor exacto — quita cualquier regla previa de esa columna antes de reescribir, para poder
+  correr la función varias veces sin acumular reglas duplicadas): `Estatus` en `Solicitudes` (5
+  colores, uno por valor de `ESTADOS_MAN_VALIDOS`) y `Estado del aula` en `Reportes de visita`
+  (los 4 valores de `MAN_ESTADOS_AULA` ya traen emoji semáforo en el texto — el color de fondo
+  solo lo refuerza). No toca la validación de `Estatus`/`Técnico asignado` que ya existía.
+- **Protección "solo aviso"** (`Range.protect().setWarningOnly(true)` — no bloquea a ningún
+  editor, solo muestra un diálogo de confirmación antes de sobreescribir) en las columnas
+  100% automáticas: `Fecha`, `Folio`, `Oficio (link Drive)` y las 3 columnas de
+  `Notificación de ... enviada` en `Solicitudes`; `PDF del reporte (link Drive)` y
+  `Notificación de reporte enviada` en `Reportes de visita`. Verificado en vivo: al intentar
+  borrar una columna protegida aparece el diálogo nativo de Sheets ("Estás intentando editar una
+  parte de la hoja que no debería modificarse de forma accidental").
+
+**Verificado en vivo contra la hoja real** (`Solicitudes_Mantenimiento_2026`, antes de escribir
+código): headers exactos confirmados columna por columna, y los catálogos cerrados de
+Turno/Estado de instalación/Tipo de solicitante confirmados contra los `<select>` reales de
+`mantenimiento.html`, no inferidos de la documentación. La hoja `Solicitudes` seguía sin ninguna
+fila real de datos al momento de esta sesión (`Contactos_Zona_Sector` sí tiene sus 88 filas
+reales) — se probó con una fila temporal (los 5 valores de `Estatus`, confirmando el color de
+cada uno) y se borró antes de cerrar la sesión.
+
+**Manual visual — `docs/manual-bases-tramites.html` (nuevo)**: página imprimible (salto de
+página por sección al exportar a PDF vía Cmd+P), mismo lenguaje visual institucional
+guinda/midnight que el resto del sitio. Leyenda de 3 colores (🟢 llenar libre / 🟡 tocar con
+cuidado, dispara automatización / 🔴 no tocar, se llena solo) y una tabla columna-por-columna
+para Mantenimiento con ese semáforo aplicado. Las otras 4 secciones (Asesorías, Soporte, Correo,
+Formación Docente) quedan como placeholder explícito "pendiente" — el documento es entregable tal
+cual sin prometer contenido no verificado de los otros 4 sistemas.

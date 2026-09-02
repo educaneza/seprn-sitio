@@ -14,6 +14,21 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-09-01 (cont.) · "Planchado" de Mantenimiento (dropdowns + semáforo + protección) y manual visual de bases para el equipo
+
+| | |
+|---|---|
+| **Fecha** | 2026-09-01 |
+| **Sesión** | Jorge pidió dos cosas para el equipo (Alejandro/Nancy/Marcos): un manual mayormente visual de qué mover/llenar/no tocar en las hojas de los 5 trámites de Oficina Virtual, y dejar esas hojas "bien planchadas" con listas desplegables y semaforización por color donde aplique. Alcance de esta sesión, decidido para planear una pieza a la vez: piloto completo en Mantenimiento; Asesorías/Soporte/Correo/Formación Docente quedan para sesiones siguientes repitiendo el mismo patrón (`docs/ROADMAP.md` ítem 16). |
+| **`manConfigurarValidacionYSemaforo()` nueva en `apps-script/mantenimiento.gs`** | Dropdown "suave" (marca con aviso, no bloquea) en `Turno`/`Estado de instalación`/`Tipo de solicitante`; semáforo de color (`setConditionalFormatRules`) en `Estatus` (Solicitudes, 5 colores) y `Estado del aula` (Reportes de visita, ya traía emoji semáforo en el texto); protección "solo aviso" (`Range.protect().setWarningOnly(true)`, no bloquea a nadie) en las columnas 100% automáticas (`Fecha`/`Folio`/`Oficio`/las 3 de Notificación). No toca la validación de `Estatus`/`Técnico asignado` que ya existía ni ningún trigger. Corrida una vez desde el menú "OTDE Mantenimiento" → "Aplicar validación y semáforo" (item nuevo del menú). Detalle completo en `docs/ARCHITECTURE.md §24`. |
+| **Verificado en vivo contra la hoja real antes de escribir código** | `Solicitudes_Mantenimiento_2026` abierta en el navegador: headers confirmados columna por columna, catálogos cerrados de Turno/Estado de instalación/Tipo de solicitante confirmados contra los `<select>` reales de `mantenimiento.html` (no inferidos de la documentación). Hallazgo de paso: la hoja `Solicitudes` seguía sin ninguna fila real de datos (`Contactos_Zona_Sector` sí tiene sus 88 filas reales) — nadie ha usado el webform público todavía. |
+| **Ejecución y verificación en el proyecto de Apps Script real** | Código pegado completo en el editor del proyecto "Mantenimiento - Backend (mantenimiento.gs)" (mismo patrón de siempre: copiar y pegar el `.gs` completo), guardado, y `manConfigurarValidacionYSemaforo()` corrida desde el editor — "Se completó la ejecución" sin errores. Verificado visualmente en la hoja real: los 3 dropdowns nuevos muestran flecha de selección; se probó temporalmente cada uno de los 5 valores de `Estatus` en una fila y el color cambió correctamente para los 5; se confirmó en vivo que intentar borrar una columna protegida (`Oficio`) dispara el diálogo nativo de Sheets de "solo aviso". La fila de prueba se borró antes de cerrar la sesión, la hoja quedó igual de vacía que al empezar. |
+| **Manual visual — `docs/manual-bases-tramites.html` (nuevo, 373 líneas)** | Mismo lenguaje visual institucional (guinda/midnight) que el resto del sitio, imprimible (salto de página por sección para exportar a PDF vía Cmd+P). Leyenda de 3 colores (🟢 llenar libre / 🟡 tocar con cuidado / 🔴 no tocar) y tabla columna-por-columna completa para Mantenimiento. Asesorías/Soporte/Correo/Formación Docente quedan como placeholder explícito "pendiente" — el documento es entregable tal cual sin prometer contenido no verificado de los otros 4 sistemas. |
+| **Verificación** | Ejecución de la función confirmada sin errores en el Registro de ejecución de Apps Script. Semáforo de `Estatus` probado en vivo con los 5 valores reales. Protección probada en vivo (diálogo de aviso disparado al intentar borrar `Oficio`). Manual verificado renderizado en navegador (servidor local temporal, `python3 -m http.server`, cerrado al terminar). `git diff --stat`: `apps-script/mantenimiento.gs` +99 líneas; `docs/manual-bases-tramites.html` nuevo, 373 líneas. |
+| **Commits** | Pendiente — sesión sin commitear todavía al momento de este checkpoint. |
+
+---
+
 ## CHECKPOINT — 2026-09-01 (cont.) · QA pre-difusión pública de Oficina Virtual + catálogo de Formación Docente ocultado + verificación de drift repo↔Apps Script
 
 | | |

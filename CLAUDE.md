@@ -156,7 +156,7 @@ ya esté expandido).
 | `ceremonias-civicas.html` | Ceremonias Cívicas — reserva de visitas de jefes/docentes SEPRN-wide (no un trámite de OTDE), histórico, cobertura y panel por clave (ver sección propia abajo) |
 | `ficha-ceremonias-civicas.html` | Ficha post-visita de Ceremonias Cívicas, localizada por folio — sin entrada en nav/footer, se comparte por link directo (ver sección propia abajo) |
 
-**Documentación interna adicional en `docs/`:** `ARCHITECTURE.md` (arquitectura técnica), `ROADMAP.md` (scores UX/UI + pendientes por feature), `DESIGN_SYSTEM.md` (tokens/patrones del rediseño premium de Formación Docente), `QA-NOTES.md` (bugs reales ya cazados, con causa raíz — consultar antes de escribir un `fetch()` o un `appendRow()` nuevo), `manual-formacion-docente.html` / `manual-sistema-registro.html` (manuales operativos visuales para quien administra cada Sheet).
+**Documentación interna adicional en `docs/`:** `ARCHITECTURE.md` (arquitectura técnica), `ROADMAP.md` (scores UX/UI + pendientes por feature), `DESIGN_SYSTEM.md` (tokens/patrones del rediseño premium de Formación Docente), `QA-NOTES.md` (bugs reales ya cazados, con causa raíz — consultar antes de escribir un `fetch()` o un `appendRow()` nuevo), `manual-formacion-docente.html` / `manual-sistema-registro.html` / `manual-bases-tramites.html` (manuales operativos visuales para quien administra cada Sheet — el último es semáforo de qué llenar/tocar-con-cuidado/no-tocar por columna, un trámite por sección).
 
 ## Páginas eliminadas (recrear cuando haya contenido validado)
 - `gestion-escolar.html`
@@ -302,6 +302,15 @@ ya esté expandido).
   importar cuál se llenó al último — folio, escuela, fecha, equipos con falla y link directo a
   `reporte-visita.html`. Probado contra producción real: ambos avisos dispararon correctamente,
   sin fugas. Ver `docs/ARCHITECTURE.md §15`.
+- **"Planchado" de la hoja — dropdowns + semáforo + protección de solo aviso (1 sep 2026,
+  piloto, desplegado y verificado en vivo)**: `manConfigurarValidacionYSemaforo()`, corrida una
+  vez desde el editor (o el menú "OTDE Mantenimiento" → "Aplicar validación y semáforo").
+  Dropdown suave nuevo en `Turno`/`Estado de instalación`/`Tipo de solicitante`, semáforo de
+  color en `Estatus` (Solicitudes) y `Estado del aula` (Reportes de visita), aviso de "columna
+  automática" en `Fecha`/`Folio`/`Oficio`/las 3 columnas de Notificación. No toca la validación
+  de `Estatus`/`Técnico asignado` ya existente. Manual visual del equipo en
+  `docs/manual-bases-tramites.html` (Asesorías/Soporte/Correo/Formación Docente pendientes,
+  mismo tratamiento). Ver `docs/ARCHITECTURE.md §24`.
 
 ### `apps-script/asesorias.gs`
 - **Nuevo (ago 2026)**: mismo patrón que `mantenimiento.gs` (Sheet propio con hojas
