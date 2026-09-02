@@ -250,7 +250,7 @@
     <h2>Contenido</h2>
     <ol>
       <li><a href="#s1">Mantenimiento</a> &mdash; <code>Solicitudes_Mantenimiento_2026</code></li>
-      <li><a href="#s2">Asesorías</a> <span class="estado-pendiente">(pendiente &mdash; mismo tratamiento en sesión siguiente)</span></li>
+      <li><a href="#s2">Asesorías</a> &mdash; <code>Solicitudes_Asesorias_2026</code></li>
       <li><a href="#s3">Soporte Técnico</a> <span class="estado-pendiente">(pendiente &mdash; mismo tratamiento en sesión siguiente)</span></li>
       <li><a href="#s4">Correo Institucional</a> <span class="estado-pendiente">(pendiente &mdash; mismo tratamiento en sesión siguiente)</span></li>
       <li><a href="#s5">Formación Docente</a> <span class="estado-pendiente">(pendiente &mdash; mismo tratamiento en sesión siguiente)</span></li>
@@ -324,7 +324,53 @@
         <span class="archivo">Solicitudes_Asesorias_2026</span>
       </div>
     </div>
-    <div class="placeholder"><strong>Pendiente.</strong> Mismo tratamiento (dropdowns + semáforo + aviso en columnas automáticas) en una sesión siguiente, verificando primero contra la hoja en vivo.</div>
+
+    <p>La hoja <strong>ya tiene listas desplegables y semáforo aplicados</strong> (septiembre 2026), mismo tratamiento que Mantenimiento.</p>
+
+    <h3>Hoja &ldquo;Solicitudes&rdquo;</h3>
+    <table>
+      <thead><tr><th class="col-color">&nbsp;</th><th>Columna</th><th>Qué hacer</th></tr></thead>
+      <tbody>
+        <tr class="fila-roja"><td class="col-color">🔴</td><td class="col-nombre">Fecha</td><td>Se llena sola al recibir la solicitud.</td></tr>
+        <tr class="fila-roja"><td class="col-color">🔴</td><td class="col-nombre">Folio</td><td>Autogenerado y consecutivo (<code>OTDE-ASE-NNNN</code>) &mdash; no editar ni reordenar.</td></tr>
+        <tr class="fila-verde"><td class="col-color">🟢</td><td class="col-nombre">Tipo de Asesoría</td><td>Ya tiene lista desplegable (Banco de Materiales y Chuka / Excel básico).</td></tr>
+        <tr class="fila-verde"><td class="col-color">🟢</td><td class="col-nombre">Nombre / Función / CCT / Sector / Zona / Escuela / WhatsApp / Correo</td><td>Datos que llenó quien solicitó. Corrígelos si ves un error de dedo o de escuela mal capturada.</td></tr>
+        <tr class="fila-verde"><td class="col-color">🟢</td><td class="col-nombre">Turno</td><td>Ya tiene lista desplegable (Matutino / Vespertino / Tiempo Completo / Discontinuo / No aplica).</td></tr>
+        <tr class="fila-verde"><td class="col-color">🟢</td><td class="col-nombre">Número de Docentes</td><td>Número de personas capturado por el solicitante (Excel básico también lo usa para personal administrativo).</td></tr>
+        <tr class="fila-verde"><td class="col-color">🟢</td><td class="col-nombre">Observaciones</td><td>Texto libre del solicitante.</td></tr>
+        <tr class="fila-roja"><td class="col-color">🔴</td><td class="col-nombre">Oficio (link Drive)</td><td>El sistema sube el PDF y pega el link solo.</td></tr>
+        <tr class="fila-amarilla"><td class="col-color">🟡</td><td class="col-nombre">Estatus</td><td>Lista desplegable de 5 valores, con semáforo de color. Cambiarlo dispara el aviso de cierre al llegar a <em>Resuelto</em> &mdash; ver semáforo abajo.</td></tr>
+        <tr class="fila-verde"><td class="col-color">🟢</td><td class="col-nombre">Notas de revisión</td><td>Espacio libre para que el equipo anote seguimiento.</td></tr>
+        <tr class="fila-verde"><td class="col-color">🟢</td><td class="col-nombre">Confirmó Mantenimiento Previo</td><td>Ya tiene lista desplegable (Sí / No / N/A) &mdash; la calcula el sistema al recibir la solicitud, corrígela solo si ves un valor claramente equivocado.</td></tr>
+        <tr class="fila-roja"><td class="col-color">🔴</td><td class="col-nombre">Notificación de cierre enviada</td><td>Casilla de control del sistema.</td></tr>
+        <tr class="fila-verde"><td class="col-color">🟢</td><td class="col-nombre">Tipo de solicitante</td><td>Ya tiene lista desplegable (escuela / supervisión / jefatura / SEPRN).</td></tr>
+        <tr class="fila-amarilla"><td class="col-color">🟡</td><td class="col-nombre">Fecha programada de visita</td><td>Al escribirla, avisa al solicitante (y a Zona/Sector si hay contacto registrado).</td></tr>
+        <tr class="fila-roja"><td class="col-color">🔴</td><td class="col-nombre">Notificación de fecha programada enviada</td><td>Casilla de control del sistema.</td></tr>
+        <tr class="fila-verde"><td class="col-color">🟢</td><td class="col-nombre">Temas de Excel</td><td>Texto libre (checklist del formulario, separado por &ldquo;; &rdquo;) &mdash; solo aplica a Excel básico, vacío para Banco de Materiales y Chuka.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Semáforo de Estatus</h3>
+    <table>
+      <thead><tr><th>Valor</th><th>Color</th><th>Significa</th></tr></thead>
+      <tbody>
+        <tr><td>Pendiente de validar</td><td style="background:#e5e7eb;">&nbsp;</td><td>Acaba de llegar, nadie la ha revisado.</td></tr>
+        <tr><td>Validado</td><td style="background:#dbeafe;">&nbsp;</td><td>El oficio ya se revisó, en cola para atenderse.</td></tr>
+        <tr><td>En atención</td><td style="background:#fef3c7;">&nbsp;</td><td>Ya se está trabajando (visita programada o en curso).</td></tr>
+        <tr><td>Resuelto</td><td style="background:#d1fae5;">&nbsp;</td><td>Cerrado &mdash; el sistema ya avisó al solicitante.</td></tr>
+        <tr><td>Rechazado</td><td style="background:#fee2e2;">&nbsp;</td><td>No procede.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="box box-info">
+      <div class="box-title">Hoja &ldquo;Contactos_Zona_Sector&rdquo;</div>
+      🟢 La llena Jorge a mano (Sector, Zona, Correo, Teléfono) &mdash; sin automatización. Mismas 88 filas ya compartidas con Mantenimiento.
+    </div>
+
+    <div class="box box-tip">
+      <div class="box-title">Nota</div>
+      A diferencia de Mantenimiento, Asesorías no tiene &ldquo;Técnico asignado&rdquo; ni hoja de Reportes de visita &mdash; el seguimiento de la visita se lleva fuera de este Sheet.
+    </div>
   </div>
 
   <!-- SECCIÓN 3: SOPORTE TÉCNICO -->

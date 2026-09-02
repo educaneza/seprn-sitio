@@ -85,6 +85,16 @@
 // PANEL OTDE (panel-otde.gs, Sheet aparte): doGet(?action=pendientes&
 // token=...) devuelve todas las solicitudes abiertas. Configura el token
 // una vez con aseConfigurarTokenPanel('un-secreto-largo') antes de usarlo.
+//
+// PLANCHADO DE LA HOJA (dropdowns + semáforo + aviso en columnas
+// automáticas, sep 2026): corre UNA vez aseConfigurarValidacionYSemaforo()
+// (o el menú "OTDE Asesorías" → "Aplicar validación y semáforo") para
+// agregar dropdown a Tipo de Asesoría/Turno/Confirmó Mantenimiento Previo/
+// Tipo de solicitante, color por Estatus, y un aviso de "columna
+// automática" en Fecha/Folio/Oficio/las 2 columnas de Notificación. Es
+// idempotente y no toca la validación de Estatus que ya existe. Ver
+// docs/manual-bases-tramites.html para la explicación visual de qué
+// significa cada color.
 // ============================================================
 
 const HOJA_ASE_SOLICITUDES = 'Solicitudes';
@@ -349,6 +359,86 @@ function aseAplicarValidacionEstatus(hoja) {
     .setAllowInvalid(false)
     .build();
   hoja.getRange(2, COL_ASE_ESTATUS, 1000, 1).setDataValidation(regla);
+}
+
+// ── "Planchado" de la hoja: dropdowns adicionales + semáforo por color +
+// aviso en columnas 100% automáticas. Corre UNA vez desde el editor (o el
+// menú "OTDE Asesorías" → "Aplicar validación y semáforo") — es
+// idempotente, se puede repetir sin riesgo. No toca la validación de
+// Estatus ni ningún trigger onEdit. Mismo patrón que
+// manConfigurarValidacionYSemaforo() en mantenimiento.gs. ──
+const ASE_TIPOS_ASESORIA_VALIDOS = ['Banco de Materiales y Chuka', 'Excel básico'];
+const ASE_TURNOS_VALIDOS = ['Matutino', 'Vespertino', 'Tiempo Completo', 'Discontinuo', 'No aplica (oficina)'];
+const ASE_CONFIRMO_MANTENIMIENTO_VALIDOS = ['Sí', 'No', 'N/A'];
+const ASE_TIPOS_SOLICITANTE_VALIDOS = ['escuela', 'supervision', 'jefatura', 'subdireccion'];
+const COL_ASE_TIPO_ASESORIA = 3;
+const COL_ASE_TURNO = 10;
+const COL_ASE_CONFIRMO_MANTENIMIENTO = 18;
+
+function aseConfigurarValidacionYSemaforo() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const solicitudes = ss.getSheetByName(HOJA_ASE_SOLICITUDES);
+  if (solicitudes) {
+    aseAplicarValidacionListaSuave_(solicitudes, COL_ASE_TIPO_ASESORIA, ASE_TIPOS_ASESORIA_VALIDOS);
+    aseAplicarValidacionListaSuave_(solicitudes, COL_ASE_TURNO, ASE_TURNOS_VALIDOS);
+    aseAplicarValidacionListaSuave_(solicitudes, COL_ASE_CONFIRMO_MANTENIMIENTO, ASE_CONFIRMO_MANTENIMIENTO_VALIDOS);
+    aseAplicarValidacionListaSuave_(solicitudes, COL_ASE_TIPO_SOLICITANTE_IDX + 1, ASE_TIPOS_SOLICITANTE_VALIDOS);
+    aseAplicarSemaforoPorValor_(solicitudes, COL_ASE_ESTATUS, ESTADOS_ASE_VALIDOS, ASE_COLORES_ESTATUS);
+    [1, 2, 15, COL_ASE_NOTIFICACION_CIERRE, COL_ASE_NOTIFICACION_PROGRAMADA]
+      .forEach(function (col) { aseProtegerColumnaAutomatica_(solicitudes, col); });
+  }
+  try { SpreadsheetApp.getUi().alert('Validación y semáforo aplicados en Solicitudes.'); } catch (err) {}
+}
+
+// Dropdown "suave": marca con triángulo de aviso un valor fuera de lista en
+// vez de bloquear el guardado — a diferencia de Estatus, estas columnas no
+// alimentan ningún trigger, así que no vale la pena arriesgar que alguien
+// no pueda anotar una excepción real.
+function aseAplicarValidacionListaSuave_(hoja, columna, valores) {
+  const regla = SpreadsheetApp.newDataValidation().requireValueInList(valores, true).setAllowInvalid(true).build();
+  hoja.getRange(2, columna, 1000, 1).setDataValidation(regla);
+}
+
+const ASE_COLORES_ESTATUS = {
+  'Pendiente de validar': '#e5e7eb',
+  'Validado': '#dbeafe',
+  'En atención': '#fef3c7',
+  'Resuelto': '#d1fae5',
+  'Rechazado': '#fee2e2'
+};
+
+// Colorea el fondo de una celda según su valor exacto — quita cualquier
+// regla previa de ESTA columna antes de reescribirla, para poder correr la
+// función varias veces sin acumular reglas duplicadas.
+function aseAplicarSemaforoPorValor_(hoja, columna, valores, colores) {
+  const rango = hoja.getRange(2, columna, 1000, 1);
+  const reglasSinEstaColumna = hoja.getConditionalFormatRules().filter(function (r) {
+    return r.getRanges().every(function (rg) { return rg.getColumn() !== columna; });
+  });
+  const reglasNuevas = valores
+    .filter(function (valor) { return colores[valor]; })
+    .map(function (valor) {
+      return SpreadsheetApp.newConditionalFormatRule()
+        .whenTextEqualTo(valor)
+        .setBackground(colores[valor])
+        .setRanges([rango])
+        .build();
+    });
+  hoja.setConditionalFormatRules(reglasSinEstaColumna.concat(reglasNuevas));
+}
+
+// Protección "solo aviso": no bloquea a nadie (todos los editores del Sheet
+// pueden seguir guardando), solo muestra una advertencia antes de
+// sobreescribir una celda que el sistema llena solo.
+function aseProtegerColumnaAutomatica_(hoja, columna) {
+  const yaProtegida = hoja.getProtections(SpreadsheetApp.ProtectionType.RANGE).some(function (p) {
+    const r = p.getRange();
+    return r.getColumn() === columna && r.getRow() === 2;
+  });
+  if (yaProtegida) return;
+  hoja.getRange(2, columna, 1000, 1).protect()
+    .setWarningOnly(true)
+    .setDescription('Columna automática — se llena sola, evita editarla a mano.');
 }
 
 // ── Crear la hoja de contactos vacía si no existe (Jorge la llena a mano) ──
@@ -877,6 +967,7 @@ function onOpen() {
     .addItem('Desinstalar trigger de cierre automático', 'aseDesinstalarTriggerCierre')
     .addItem('Instalar trigger de programación de visita', 'aseInstalarTriggerProgramacion')
     .addItem('Desinstalar trigger de programación de visita', 'aseDesinstalarTriggerProgramacion')
+    .addItem('Aplicar validación y semáforo', 'aseConfigurarValidacionYSemaforo')
     .addToUi();
 }
 
