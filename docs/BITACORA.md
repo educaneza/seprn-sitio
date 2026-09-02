@@ -14,6 +14,24 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-09-01 (cont.) · QA pre-difusión pública de Oficina Virtual + catálogo de Formación Docente ocultado + verificación de drift repo↔Apps Script
+
+| | |
+|---|---|
+| **Fecha** | 2026-09-01 |
+| **Sesión** | Jorge, a horas de difundir el link de `oficina-virtual.html` a toda la estructura educativa, preguntó qué pruebas correr antes. Se auditó el repo y `docs/BITACORA.md` para armar un plan de QA con riesgos concretos (no un checklist genérico), y se ejecutó en vivo lo que era seguro hacer sin crear solicitudes reales. |
+| **Catálogo de Formación Docente confirmado vacío — tarjeta ocultada** | Verificado en vivo contra el `doGet` real de `formacion-docente.gs`: `{"status":"ok","cursos":[]}` — confirma lo ya visto en el UAT del 31 ago (`docs/BITACORA.md`, checkpoint de ese día), y corrige una nota desactualizada de `CLAUDE.md` que aún decía "2 webinars". La tarjeta "Centro de Formación Docente" en `oficina-virtual.html` (la más visible del hub) pasó de `<a href="formacion-docente.html">` a `<div class="area-card ov-proximamente">`, mismo patrón visual que la card "Más servicios en camino" ya existente — reactivarla es un cambio de una línea en cuanto haya cursos dados de alta. |
+| **QA en vivo (sin crear solicitudes reales)** | Probado localmente (servidor estático) y luego confirmado en producción tras el deploy: las 4 páginas de trámite cargan y su navegación de vuelta al hub funciona; el buscador de folio (`GET ?action=consulta`, de solo lectura) responde correctamente tanto a un folio con formato inválido como a uno con prefijo válido pero inexistente; viewport móvil (390px) sin desbordamiento en el hub ni en Mantenimiento; `og-image.png`/`favicon.svg` cargan con 200; tag de Google Analytics presente. No se probó el 404 personalizado (el servidor estático local no replica el comportamiento de GitHub Pages) ni la vista previa real de WhatsApp — quedan para que Jorge las confirme directo en producción/WhatsApp. |
+| **Verificación de código desplegado vs. repo (los 4 backends)** | A petición de Jorge, comparación byte a byte (SHA-256, calculado en el propio navegador contra `monaco.editor.getModels()`, sin descargar ni pegar el código en texto plano) del código real en el editor de Apps Script contra cada `.gs`/`.js` del repo: Mantenimiento, Asesorías, Soporte y 8 de los 9 archivos de `apps-script/correo/` coinciden exactamente. Único hallazgo: `WebApp.gs` desplegado tiene 4 líneas extra ausentes del repo — detalle completo y causa raíz en `docs/QA-NOTES.md #25`. |
+| **Hallazgo de seguridad — `PANEL_TOKEN` hardcodeado y débil (`1234`)** | Derivado de investigar la discrepancia de `WebApp.gs` de arriba: la función temporal encontrada fija `PANEL_TOKEN` a `'1234'`, y ese es efectivamente el valor real configurado en las Propiedades del script de Mantenimiento, Asesorías y Soporte — no un placeholder. Ese token protege `?action=pendientes&token=...`, el endpoint que usa el Panel OTDE para leer las solicitudes abiertas de los 4 trámites. No bloquea la difusión de hoy (no es el endpoint que se comparte públicamente), queda como pendiente de higiene — ver `docs/QA-NOTES.md #25`. |
+| **`MODO_PRUEBA_CORREO` reconfirmado apagado** | Revisado directo en las Propiedades del script de Mantenimiento y Asesorías: la propiedad no aparece en ninguno de los dos — sigue apagada desde que Jorge la desactivó el 31 ago. |
+| **Limpieza de filas de prueba** | Jorge confirmó haber limpiado ya las filas 🧪 del smoke test de la sesión anterior en los Sheets de producción (fuera del alcance de esta sesión de código). |
+| **Prueba de envío real de los 4 trámites — deliberadamente no realizada** | Jorge decidió mantener su elección de la sesión del 31 ago: no forzar un envío de prueba marcado justo antes de la difusión (evita notificar en falso a Alejandro/Nancy/Marcos), y en su lugar dejar que las primeras solicitudes reales sirvan de validación. |
+| **Verificación** | `curl -sL` contra el `doGet` real de `formacion-docente.gs` (catálogo vacío confirmado). Pruebas de navegador (local y producción) descritas arriba. Hash SHA-256 in-browser de 13 archivos `.gs`/`.js` contra sus equivalentes del repo (`sha256sum` normalizado, CRLF→LF y sin salto de línea final, para evitar falsos positivos por formato). `git diff --stat` del fix de la tarjeta: 1 archivo, 4 inserciones, 5 eliminaciones. `git push` verificado sin conflicto (`git log --oneline -3 origin/main` comparado antes de empujar, sin divergencia). |
+| **Commits** | `da968f6` (fix de la tarjeta de Formación Docente, ya publicado en `origin/main`); pendiente el de esta actualización de documentación de cierre. |
+
+---
+
 ## CHECKPOINT — 2026-09-01 · Notificaciones de Telegram + correo por persona (Marcos/Alejandro/Nancy) en los 4 backends de trámite
 
 | | |

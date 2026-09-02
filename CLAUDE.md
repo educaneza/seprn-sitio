@@ -741,10 +741,16 @@ Formación Docente — es una utilidad de una sola pantalla que continúa un tr�
   (ver `docs/ARCHITECTURE.md §21`) y es genérico (no referencia IDs específicos), no por
   descuido.
 - **Grid de servicios** (patrón `.area-card` de `areas.html`, adaptado): Centro de Formación
-  Docente (→ `formacion-docente.html`, sin seguimiento — no aplica) y los 4 trámites tipo-ticket
-  (Mantenimiento/Asesorías/Correo/Soporte), cada uno con un link "Solicitar →" (deep-link a
-  `otde.html`) y "Consultar estatus →" (ancla a `#buscar-folio`). Una card "Próximamente"
-  (`.ov-proximamente`, borde punteado) deja la grid lista para crecer.
+  Docente y los 4 trámites tipo-ticket (Mantenimiento/Asesorías/Correo/Soporte), cada uno con un
+  link "Solicitar →" (deep-link a `otde.html`) y "Consultar estatus →" (ancla a `#buscar-folio`).
+  Una card "Próximamente" (`.ov-proximamente`, borde punteado) deja la grid lista para crecer.
+  **Formación Docente deshabilitada temporalmente (1 sep 2026)**: pasó de `<a href=
+  "formacion-docente.html">` a `<div class="area-card ov-proximamente">` (mismo patrón visual
+  que la card "Más servicios en camino") porque el catálogo real está vacío en producción
+  (verificado en vivo contra el `doGet` de `formacion-docente.gs`: `{"status":"ok","cursos":[]}`)
+  — la difusión pública del hub no debía arrancar con la tarjeta más visible sin nada
+  accionable. Reactivarla es un cambio de una línea (regresar el `href` y el texto "Ver
+  catálogo →") en cuanto haya cursos dados de alta en la hoja `Cursos`.
 - **Buscador de seguimiento** (`#buscar-folio`, debajo de la grid de tarjetas desde el 16 ago
   2026 — antes era el hero del hub, se reordenó para priorizar la acción principal de elegir un
   trámite sobre el caso secundario de consultar un folio ya existente): folio + correo → ruteo
@@ -883,7 +889,7 @@ Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/I
 - ~~**Barra CTE desactualizada**~~ — resuelto 10 ago 2026: `.update-banner` en `index.html` ahora
   dice "Fase Intensiva 2026-2027 ya disponible".
 - **Fase Intensiva 2026-2027 sin video** — falta agregar el `iframe` del Opening en `cte.html` cuando Jorge lo tenga
-- **Centro de Formación Docente** — dar de alta los primeros cursos propios del ciclo 26-27 en la hoja `Cursos` (hoy el catálogo solo tiene 2 webinars; Jorge los va agregando conforme haya más oferta)
+- **Centro de Formación Docente** — dar de alta los primeros cursos propios del ciclo 26-27 en la hoja `Cursos` (verificado en vivo el 1 sep 2026: el catálogo real está vacío, `{"status":"ok","cursos":[]}` — la nota de "2 webinars" de sesiones anteriores ya no aplica). Mientras tanto la tarjeta en `oficina-virtual.html` queda deshabilitada ("Próximamente", ver esa sección arriba) — reactivarla en cuanto haya cursos dados de alta.
 - **Correo/Mantenimiento/Asesorías** — los 3 backends nuevos ya están desplegados y con `Contactos_Zona_Sector` poblado (6 ago 2026, ver sus secciones arriba). Notificaciones de equipo (Telegram + correo) por trámite reorganizadas en sep 2026: ver sus secciones arriba y las de Soporte/Correo Institucional.
 - **QA pre-producción (6 ago 2026)** — hallazgos pendientes de atender antes de confiar el flujo completo:
   - ~~**Asesorías**: el checkbox de confirmación de asesoría previa no viaja en el payload al backend~~ — corregido: `otde.html` ahora manda `confirmaMantenimiento` en el payload, `asesorias.gs` lo valida server-side y lo guarda en la columna nueva `Confirmó Mantenimiento Previo` (col. R, autocompletada en la hoja ya desplegada vía el mismo patrón de auto-heal de encabezados que `formacion-docente.gs`).

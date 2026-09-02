@@ -581,6 +581,41 @@ escapador correspondiente — y, en general, cualquier llamada a `UrlFetchApp.fe
 `muteHttpExceptions: true` que nunca revise el código de respuesta: ese patrón traga cualquier
 error de la API remota en silencio, no solo este.
 
+## 25. Función temporal pegada en el editor real de `WebApp.gs`, con `PANEL_TOKEN` hardcodeado y débil
+
+**Síntoma:** verificación pre-difusión de Oficina Virtual (1 sep 2026) comparando byte a byte
+(hash SHA-256) el código desplegado en Apps Script contra los `.gs` del repo, en los 4 backends
+de trámite. 12 de 13 archivos coincidieron exactamente; solo `WebApp.gs` (proyecto "Webform
+Correo 2026-2027 - Backend") tenía 4 líneas extra al final, ausentes del repo:
+
+```js
+function _fijarTokenPanel() {
+  configurarTokenPanel('1234');
+}
+```
+
+**Causa raíz:** patrón ya advertido en el ítem 14 de este mismo archivo — una función temporal
+usada una sola vez desde el editor (▶️ Ejecutar) para fijar `PANEL_TOKEN` vía
+`configurarTokenPanel()` nunca se borró tras usarla. Al revisar las Propiedades del script de
+los 3 proyectos que ya tienen `PANEL_TOKEN` configurado (Mantenimiento, Asesorías, Soporte —
+Correo lo fija a través de esta misma función pegada), los tres tienen el mismo valor: `1234`.
+No es un placeholder de ejemplo — es el secreto real que protege
+`?action=pendientes&token=...`, el endpoint que el Panel OTDE (`panel-otde.gs`) usa para leer
+las solicitudes abiertas de los 4 trámites (folio, nombre, escuela, sector, zona, estatus).
+
+**Fix:** pendiente — no se tocó esta sesión. No bloquea la difusión de Oficina Virtual (ese
+endpoint no es el que se comparte públicamente), pero conviene, cuando haya tiempo: (1) borrar
+`_fijarTokenPanel()` del editor de `WebApp.gs`, y (2) regenerar `PANEL_TOKEN` con un valor largo
+y aleatorio en los 4 backends + `panel-otde.gs` (mismo secreto compartido entre los 5
+proyectos, ver `docs/ARCHITECTURE.md §20`).
+
+**Dónde puede volver a pasar:** cualquier función de un solo uso ejecutada desde el editor de
+Apps Script (▶️ Ejecutar) para fijar una Script Property — bórrala del archivo en cuanto la
+uses, igual que ya advierte el ítem 14 sobre no seleccionarla directo en el dropdown de
+Ejecutar. Un buen momento para cazar este patrón es justo antes de una difusión pública: comparar
+hash del código desplegado contra el repo en cada proyecto de Apps Script involucrado (ver
+sesión del 1 sep 2026 en `docs/BITACORA.md` para el método).
+
 ## Regla general al corregir cualquiera de estos patrones
 
 Cuando se encuentra uno de estos bugs en un archivo, **revisar si el mismo
