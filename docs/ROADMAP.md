@@ -553,12 +553,14 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     directamente con Jorge por no existir fuente de verdad en el código: `Modalidad`
     (Virtual/Presencial/Híbrido) y si `Requiere_codigo_asistencia`/`Activo`/
     `Registro_previo_requerido` son texto TRUE/FALSE (sí) o checkbox nativo de Sheets (en cuyo
-    caso no se les habría podido agregar dropdown sin quitarles el checkbox). **Pendiente real que
-    queda**: el código está listo en el repo pero no se pegó ni corrió contra los proyectos reales
-    de Apps Script de Soporte/Formación Docente — a diferencia de las 3 rondas anteriores, esta
-    sesión no tuvo acceso a las hojas en vivo, así que el primer chequeo visual (dropdowns/
-    semáforo/protección aparecen donde se espera) lo hace Jorge al desplegar, no quien escribió el
-    código.
+    caso no se les habría podido agregar dropdown sin quitarles el checkbox). **Pegado, corrido y
+    verificado en vivo el mismo 3 sep 2026** (sesión de seguimiento, vía Chrome automatizado):
+    Jorge pegó ambos `.gs` en sus proyectos reales pero no pudo correr las funciones ni
+    verificarlas visualmente; se completó con la extensión Claude in Chrome sobre su sesión de
+    Google ya autenticada — ambas ejecuciones sin errores, dropdown+semáforo de `Estatus`
+    confirmados en vivo en `Solicitudes_Soporte_2026` y dropdowns confirmados en
+    `Formacion_Docente_2026_2027` (hoja `Cursos`). Sin probar el diálogo de protección de solo
+    aviso en ninguna de las dos hojas en esta ronda.
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue

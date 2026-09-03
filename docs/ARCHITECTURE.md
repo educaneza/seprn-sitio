@@ -1936,14 +1936,22 @@ se protege — lo asigna OTDE a mano antes del evento, no es automático. Nuevo 
 `.addItem('Aplicar validación en Cursos', 'fdConfigurarValidacionYSemaforo')` en el menú "OTDE
 Formación".
 
-**Sin verificación en vivo contra las hojas reales en esta ronda** (a diferencia de las 3
-anteriores): esta sesión no tuvo acceso a los Sheets reales de Soporte/Formación Docente, así que
-los encabezados/columnas se confirmaron contra los arreglos `ENCABEZADOS_SOPORTE`/
-`ENCABEZADOS_CURSOS` ya trackeados en el repo (fuente de verdad de lo que el auto-heal de cada
-proyecto ya escribió en producción) en vez de abrir la hoja en el navegador. Pendiente que Jorge,
-al pegar y correr el código, confirme visualmente que dropdowns/semáforo/protección aparecen
-donde se espera — mismo checklist de verificación que las rondas anteriores, solo que esta vez el
-primer chequeo en vivo lo hace él, no la sesión que escribió el código.
+**Verificado en vivo contra las hojas reales en una sesión de seguimiento (3 sep 2026, mismo
+día)**: Jorge pegó los dos `.gs` en sus proyectos reales pero no pudo correr las funciones ni
+verificar visualmente; se completó por Chrome automatizado (extensión Claude in Chrome, con la
+sesión de Google de Jorge ya autenticada). `sopConfigurarValidacionYSemaforo()` y
+`fdConfigurarValidacionYSemaforo()` corridas desde el editor de Apps Script de cada proyecto —
+"Se completó la ejecución" sin errores en ambas, confirmado también en "Descripción general" del
+proyecto (última ejecución con hora exacta, sin errores en el resumen de 7 días). Verificado
+visualmente contra las hojas reales: en `Solicitudes_Soporte_2026`, el dropdown de `Estatus`
+abre la lista real de 5 valores (Pendiente de validar/Validado/En atención/Resuelto/Rechazado) y
+una fila ya resuelta se pinta de verde — semáforo confirmado, no solo el dropdown —, más flechas
+de dropdown visibles en `Urgencia`/`Tipo de ayuda`; en `Formacion_Docente_2026_2027`
+(hoja `Cursos`), flechas de dropdown visibles en las 5 columnas esperadas
+(`Categoria`/`Modalidad`/`Requiere_codigo_asistencia`/`Activo`/`Registro_previo_requerido`). No
+se probó en esta ronda el diálogo de protección de solo aviso (`ID_Curso`/`Recordatorio_*`/
+`Fecha`/`Folio`/`Notificación de cierre enviada`) — a diferencia de Mantenimiento, donde sí se
+intentó borrar una columna protegida para confirmar el diálogo nativo de Sheets.
 
 **Verificado en vivo contra la hoja real** (`Solicitudes_Mantenimiento_2026`, antes de escribir
 código): headers exactos confirmados columna por columna, y los catálogos cerrados de

@@ -204,16 +204,19 @@ ya esté expandido).
 - Para cambios: copiar el `.gs` completo en Apps Script y re-desplegar como aplicación web (Cualquier usuario) — **cuidado**: probar el endpoint con `curl -X POST`, o incluso desde un navegador headless con acceso real a internet (confirmado: el sandbox de pruebas SÍ tiene salida real a `script.google.com`), ejecuta `doPost` de verdad (escribe en Sheets y dispara Telegram). Para pruebas locales, interceptar la llamada de red (`page.route()` en Playwright) en vez de dejarla llegar al backend real
 - **Modo de prueba (código listo, aún sin desplegar, 11 ago 2026)**: `sopEnviarCorreo_()` — mismo wrapper que `manEnviarCorreo_()`/`aseEnviarCorreo_()`, activable con `sopActivarModoPrueba('correo')`/`sopDesactivarModoPrueba()` — ya reemplaza el único `MailApp.sendEmail()` de este archivo (el de cierre al solicitante) en el repo local, pero **no se pegó ni redesplegó** en el proyecto de Apps Script real esta sesión; en producción sigue corriendo la versión sin modo de prueba
 - **`?action=pendientes&token=...` (ago 2026)**: nuevo endpoint para el Panel OTDE (`apps-script/panel-otde.gs`, ver sección propia abajo) — regresa las solicitudes abiertas (Estatus ≠ Resuelto/Rechazado). Requiere `PANEL_TOKEN` en Propiedades del script, configurado con `sopConfigurarTokenPanel('secreto')` (correrla envuelta en una función temporal, no seleccionándola directo en ▶️ Ejecutar — ver `docs/QA-NOTES.md #14`). Detalle completo en `docs/ARCHITECTURE.md §20`
-- **"Planchado" de la hoja — dropdowns + semáforo + protección de solo aviso (código listo, aún
-  sin desplegar, 3 sep 2026)**: `sopConfigurarValidacionYSemaforo()`, mismo patrón que
+- **"Planchado" de la hoja — dropdowns + semáforo + protección de solo aviso (desplegado y
+  verificado en vivo, 3 sep 2026)**: `sopConfigurarValidacionYSemaforo()`, mismo patrón que
   Mantenimiento/Asesorías/Correo. `Estatus` ya tenía dropdown duro desde antes — esta ronda solo
   le agregó el semáforo de color (mismos 5 colores). Dropdowns suaves nuevos en `Urgencia`
   (Alta/Media/Baja) y `Tipo de ayuda` (7 valores, catálogos confirmados contra los `<select>`
   reales de `soporte.html`), protección de solo aviso en `Fecha`/`Folio`/`Notificación de cierre
   enviada`. Sin `Contactos_Zona_Sector` ni Oficio en este trámite, nada más que proteger. Item
   nuevo `.addItem('Aplicar validación y semáforo', 'sopConfigurarValidacionYSemaforo')` en el
-  menú "OTDE Soporte". Pendiente que Jorge pegue el código en el proyecto real y lo corra. Ver
-  `docs/ARCHITECTURE.md §24`.
+  menú "OTDE Soporte". Pegado y corrido en el proyecto real vía Chrome automatizado ("Se
+  completó la ejecución" sin errores) y verificado en vivo contra `Solicitudes_Soporte_2026`:
+  dropdown real de `Estatus` (5 valores) con semáforo verde sobre una fila ya resuelta, y
+  dropdowns visibles en `Urgencia`/`Tipo de ayuda`. Sin probar el diálogo de protección de solo
+  aviso en esta ronda. Ver `docs/ARCHITECTURE.md §24`.
 
 ### `apps-script/mantenimiento.gs`
 - **Nuevo (ago 2026)**: conectado a un Google Sheet propio (hojas `Solicitudes` y
@@ -420,8 +423,8 @@ ya esté expandido).
 - Responde `Content-Type: text/plain` para evitar preflight CORS, mismo patrón que el resto
 - **Cuidado con `appendRow([])`**: Apps Script no acepta un arreglo vacío — usar `appendRow([''])` para filas en blanco. Ver `docs/QA-NOTES.md` para este y otros bugs reales ya corregidos (fetch sin timeout, fecha -1 día por parseo UTC, etc.)
 - **Modo de prueba (código listo, aún sin desplegar, 11 ago 2026)**: `enviarCorreoLote()` ahora revisa la Script Property `MODO_PRUEBA_CORREO` (`fdActivarModoPrueba('correo')`/`fdDesactivarModoPrueba()`) y, si está activa, redirige `bcc`/`subject`/`htmlBody` al correo de prueba en vez de a los inscritos reales — en el repo local, pero **no se pegó ni redesplegó** en el proyecto de Apps Script real esta sesión; en producción sigue mandando a los inscritos de verdad
-- **"Planchado" de la hoja `Cursos` — dropdowns + protección de solo aviso (código listo, aún
-  sin desplegar, 3 sep 2026)**: `fdConfigurarValidacionYSemaforo()`, mismo patrón que
+- **"Planchado" de la hoja `Cursos` — dropdowns + protección de solo aviso (desplegado y
+  verificado en vivo, 3 sep 2026)**: `fdConfigurarValidacionYSemaforo()`, mismo patrón que
   Mantenimiento/Asesorías/Soporte, con dos diferencias: solo toca `Cursos` (`Inscripciones`/
   `Docentes` son datos transaccionales/computados, no captura manual, quedan fuera) y no hay
   columna tipo "Estatus" con semáforo de color — `Activo` ya cumple ese papel como interruptor.
@@ -431,8 +434,11 @@ ya esté expandido).
   (TRUE/FALSE — confirmado con Jorge que estas 3 columnas son texto escrito a mano, no checkbox
   nativo de Sheets, antes de agregarles dropdown). Protección de solo aviso en `ID_Curso` y las 3
   columnas `Recordatorio_*_enviado`. Item nuevo `.addItem('Aplicar validación en Cursos',
-  'fdConfigurarValidacionYSemaforo')` en el menú "OTDE Formación". Pendiente que Jorge pegue el
-  código en el proyecto real y lo corra. Ver `docs/ARCHITECTURE.md §24`.
+  'fdConfigurarValidacionYSemaforo')` en el menú "OTDE Formación". Pegado y corrido en el
+  proyecto real vía Chrome automatizado ("Se completó la ejecución" sin errores) y verificado en
+  vivo contra `Formacion_Docente_2026_2027`: dropdowns visibles en las 5 columnas de `Cursos`.
+  Sin probar el diálogo de protección de solo aviso en esta ronda. Ver `docs/ARCHITECTURE.md
+  §24`.
 - Para cambios: copiar el `.gs` completo en Apps Script y re-desplegar como aplicación web (Cualquier usuario) — recordar **Administrar implementaciones → Nueva versión**, no solo "Guardar" en el editor, o el sitio sigue sirviendo la versión anterior
 
 ### `apps-script/panel-otde.gs` (nuevo, ago 2026)

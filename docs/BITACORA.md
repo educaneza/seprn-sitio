@@ -14,6 +14,22 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-09-03 (cont.) · Ejecución y verificación en vivo del "planchado" de Soporte y Formación Docente (código del checkpoint anterior, mismo día)
+
+| | |
+|---|---|
+| **Fecha** | 2026-09-03 |
+| **Sesión** | Continuación directa del checkpoint anterior (mismo día): Jorge pegó `soporte-remoto.gs` y `formacion-docente.gs` completos en sus dos proyectos reales de Apps Script pero no pudo correr `sopConfigurarValidacionYSemaforo()`/`fdConfigurarValidacionYSemaforo()` ni confirmar visualmente el resultado, y pidió que se hiciera por él dándole acceso a su cuenta. |
+| **Sin acceso a credenciales — resuelto con Chrome automatizado, no con la cuenta de Jorge** | Se explicó que no es posible ni conveniente operar con las credenciales de Jorge directamente; en su lugar se usó la extensión **Claude in Chrome** sobre el navegador de Jorge, ya con su sesión de Google autenticada — cada acción quedó visible en pantalla para él, sin que ninguna credencial pasara por esta sesión. |
+| **`sopConfigurarValidacionYSemaforo()` corrida en el proyecto real "Soporte Técnico Remoto"** | Seleccionada desde el dropdown de funciones del editor de Apps Script y ejecutada — "Se completó la ejecución" sin errores en el Registro de ejecución (confirmado también en "Descripción general" del proyecto: última ejecución con hora exacta, sin errores en el resumen de 7 días). |
+| **`fdConfigurarValidacionYSemaforo()` corrida en el proyecto real "Formacion Docente - Backend"** | Mismo procedimiento — "Se completó la ejecución" sin errores. |
+| **Verificación visual en vivo contra las dos hojas reales** | `Solicitudes_Soporte_2026`: el dropdown de `Estatus` abre la lista real de 5 valores (Pendiente de validar/Validado/En atención/Resuelto/Rechazado) y una fila ya resuelta se pinta de verde — semáforo confirmado, no solo el dropdown —, más flechas de dropdown visibles en `Urgencia`/`Tipo de ayuda`. `Formacion_Docente_2026_2027` (hoja `Cursos`): flechas de dropdown visibles en las 5 columnas esperadas (`Categoria`/`Modalidad`/`Requiere_codigo_asistencia`/`Activo`/`Registro_previo_requerido`). No se probó en esta ronda el diálogo de protección de solo aviso en ninguna de las dos hojas (a diferencia de Mantenimiento, donde sí se intentó borrar una columna protegida) — queda como el único punto de este ítem sin verificar en vivo. |
+| **Sin cambios de código ni de datos** | Sesión puramente operativa: no se tocó ningún archivo del repo (`git status` limpio antes y después) ni se modificó ningún valor real en las hojas — el único acercamiento a editar una celda (`Estatus` de una fila real de Soporte) se abrió para ver las opciones del dropdown y se cerró con Escape sin seleccionar nada. |
+| **Verificación** | `git status`/`git diff` confirmando árbol de trabajo limpio antes de tocar documentación. Ejecuciones confirmadas por el propio "Registro de ejecución" de Apps Script (texto exacto "Se completó la ejecución"). Dropdown y semáforo de Soporte confirmados abriendo la lista real y observando el color de fondo de una fila ya resuelta, no solo inferidos del código. |
+| **Commits** | Pendiente — sesión sin commitear todavía al momento de este checkpoint. |
+
+---
+
 ## CHECKPOINT — 2026-09-03 · "Planchado" de Soporte Técnico y Formación Docente (cierra el ítem 16 con los 5 trámites cubiertos)
 
 | | |
