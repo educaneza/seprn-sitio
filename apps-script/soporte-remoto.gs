@@ -574,12 +574,69 @@ function sopDesinstalarTriggerCierre() {
   try { SpreadsheetApp.getUi().alert(quitados + ' trigger(s) de cierre eliminado(s).'); } catch (err) {}
 }
 
+// ── "Planchado": listas suaves + semáforo + protección de solo aviso ──
+const SOP_URGENCIAS_VALIDAS = ['Alta', 'Media', 'Baja'];
+const SOP_TIPOS_AYUDA_VALIDOS = ['Correo institucional', 'Office/Licencias', 'Impresora',
+  'Antivirus/Seguridad', 'Internet/Red', 'Equipo de cómputo (hardware)', 'Otro'];
+const SOP_COLORES_ESTATUS = {
+  'Pendiente de validar': '#e5e7eb',
+  'Validado': '#dbeafe',
+  'En atención': '#fef3c7',
+  'Resuelto': '#d1fae5',
+  'Rechazado': '#fee2e2'
+};
+
+function sopAplicarValidacionListaSuave_(hoja, columna, valores) {
+  const regla = SpreadsheetApp.newDataValidation().requireValueInList(valores, true).setAllowInvalid(true).build();
+  hoja.getRange(2, columna, 1000, 1).setDataValidation(regla);
+}
+
+function sopAplicarSemaforoPorValor_(hoja, columna, valores, colores) {
+  const rango = hoja.getRange(2, columna, 1000, 1);
+  const reglasSinEstaColumna = hoja.getConditionalFormatRules().filter(function (r) {
+    return r.getRanges().every(function (rg) { return rg.getColumn() !== columna; });
+  });
+  const reglasNuevas = valores
+    .filter(function (valor) { return colores[valor]; })
+    .map(function (valor) {
+      return SpreadsheetApp.newConditionalFormatRule()
+        .whenTextEqualTo(valor)
+        .setBackground(colores[valor])
+        .setRanges([rango])
+        .build();
+    });
+  hoja.setConditionalFormatRules(reglasSinEstaColumna.concat(reglasNuevas));
+}
+
+function sopProtegerColumnaAutomatica_(hoja, columna) {
+  const yaProtegida = hoja.getProtections(SpreadsheetApp.ProtectionType.RANGE).some(function (p) {
+    const r = p.getRange();
+    return r.getColumn() === columna && r.getRow() === 2;
+  });
+  if (yaProtegida) return;
+  hoja.getRange(2, columna, 1000, 1).protect()
+    .setWarningOnly(true)
+    .setDescription('Columna automática — se llena sola, evita editarla a mano.');
+}
+
+function sopConfigurarValidacionYSemaforo() {
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_SOPORTE);
+  if (hoja) {
+    sopAplicarValidacionListaSuave_(hoja, 12, SOP_URGENCIAS_VALIDAS);
+    sopAplicarValidacionListaSuave_(hoja, 13, SOP_TIPOS_AYUDA_VALIDOS);
+    sopAplicarSemaforoPorValor_(hoja, COL_SOP_ESTATUS, ESTADOS_SOP_VALIDOS, SOP_COLORES_ESTATUS);
+    [1, 2, COL_SOP_NOTIFICACION_CIERRE].forEach(function (col) { sopProtegerColumnaAutomatica_(hoja, col); });
+  }
+  try { SpreadsheetApp.getUi().alert('Validación y semáforo aplicados en Solicitudes.'); } catch (err) {}
+}
+
 // ── Menú del Sheet ──
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('OTDE Soporte')
     .addItem('Instalar trigger de cierre automático', 'sopInstalarTriggerCierre')
     .addItem('Desinstalar trigger de cierre automático', 'sopDesinstalarTriggerCierre')
+    .addItem('Aplicar validación y semáforo', 'sopConfigurarValidacionYSemaforo')
     .addToUi();
 }
 

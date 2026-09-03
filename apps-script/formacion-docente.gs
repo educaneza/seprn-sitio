@@ -438,6 +438,44 @@ function textResponse(text) {
     .setMimeType(ContentService.MimeType.TEXT);
 }
 
+// ── "Planchado": listas suaves + protección de solo aviso (hoja Cursos) ──
+const FD_CATEGORIAS_VALIDAS = ['Webinar', 'Seminario', 'Conferencia', 'Curso autogestivo',
+  'Acción formativa', 'Diplomado', 'Proyecto didáctico'];
+const FD_MODALIDADES_VALIDAS = ['Virtual', 'Presencial', 'Híbrido'];
+const FD_BOOLEANOS_VALIDOS = ['TRUE', 'FALSE'];
+
+function fdAplicarValidacionListaSuave_(hoja, columna, valores) {
+  const regla = SpreadsheetApp.newDataValidation().requireValueInList(valores, true).setAllowInvalid(true).build();
+  hoja.getRange(2, columna, 1000, 1).setDataValidation(regla);
+}
+
+function fdProtegerColumnaAutomatica_(hoja, columna) {
+  const yaProtegida = hoja.getProtections(SpreadsheetApp.ProtectionType.RANGE).some(function (p) {
+    const r = p.getRange();
+    return r.getColumn() === columna && r.getRow() === 2;
+  });
+  if (yaProtegida) return;
+  hoja.getRange(2, columna, 1000, 1).protect()
+    .setWarningOnly(true)
+    .setDescription('Columna automática — se llena sola, evita editarla a mano.');
+}
+
+function fdConfigurarValidacionYSemaforo() {
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Cursos');
+  if (hoja) {
+    fdAplicarValidacionListaSuave_(hoja, 2, FD_CATEGORIAS_VALIDAS);       // Categoria
+    fdAplicarValidacionListaSuave_(hoja, 5, FD_MODALIDADES_VALIDAS);      // Modalidad
+    fdAplicarValidacionListaSuave_(hoja, 9, FD_BOOLEANOS_VALIDOS);        // Requiere_codigo_asistencia
+    fdAplicarValidacionListaSuave_(hoja, 11, FD_BOOLEANOS_VALIDOS);       // Activo
+    fdAplicarValidacionListaSuave_(hoja, 13, FD_BOOLEANOS_VALIDOS);       // Registro_previo_requerido
+    fdProtegerColumnaAutomatica_(hoja, 1);   // ID_Curso
+    fdProtegerColumnaAutomatica_(hoja, 17);  // Recordatorio_inicio_enviado
+    fdProtegerColumnaAutomatica_(hoja, 18);  // Recordatorio_medio_enviado
+    fdProtegerColumnaAutomatica_(hoja, 19);  // Recordatorio_webinar_enviado
+  }
+  try { SpreadsheetApp.getUi().alert('Validación aplicada en Cursos.'); } catch (err) {}
+}
+
 // ============================================================
 // MENÚ Y HERRAMIENTAS ADMINISTRATIVAS (uso manual desde Sheets)
 // ============================================================
@@ -448,6 +486,7 @@ function onOpen() {
     .addItem('Generar ID de cursos faltantes', 'generarIdsCursosFaltantes')
     .addItem('Generar estadísticas', 'generarEstadisticas')
     .addItem('Actualizar vista de Inscripciones', 'actualizarVistaInscripciones')
+    .addItem('Aplicar validación en Cursos', 'fdConfigurarValidacionYSemaforo')
     .addSeparator()
     .addItem('Migrar Jornada Verano 2026', 'migrarJornadaVerano')
     .addSeparator()
