@@ -1827,8 +1827,9 @@ ya generadas, así que un link ya compartido antes puede tardar en reflejar el c
 Jorge pidió dejar las bases (hojas de Sheets) de los 5 trámites de Oficina Virtual "bien
 planchadas" para el equipo — listas desplegables donde aplique y semaforización por color — más
 un manual visual de qué mover, qué llenar y qué no tocar. Piloto completo en **Mantenimiento**,
-repetido después en **Asesorías** (mismo patrón, sin sorpresas); Soporte/Correo/Formación Docente
-quedan para sesiones siguientes (`docs/ROADMAP.md` ítem 16).
+repetido en **Asesorías** y **Correo** el mismo 1 sep 2026 (mismo patrón, sin sorpresas), y en
+**Soporte** y **Formación Docente** el 3 sep 2026 — con los 5 trámites cubiertos,
+`docs/ROADMAP.md` ítem 16 queda resuelto.
 
 **Por qué Apps Script y no la API de Drive ni clics manuales en la UI**: los 5 sistemas ya se
 operan así (`manConfigurarTokenPanel()`, `manInstalarTriggerCierre()`, etc. — funciones que Jorge
@@ -1896,6 +1897,54 @@ hallazgo del diálogo de alert en la pestaña del Sheet que en Asesorías); sem�
 vivo contra la única fila real que ya existía en Reset 2FA (`OTDE-2FA-0001`, `Estado general` =
 "Solicitud recibida" pintado en gris) — no se creó ninguna fila de prueba.
 
+**`sopConfigurarValidacionYSemaforo()` (`apps-script/soporte-remoto.gs`) — Soporte Técnico
+Remoto.** Diferencia principal frente a Mantenimiento/Asesorías: `Estatus` ya tenía un dropdown
+**duro** (`sopAplicarValidacionEstatus()`, bloqueante) desde ago 2026 — esta ronda no lo tocó,
+solo le agregó el semáforo de color por encima, reusando los mismos 5 colores de
+`MAN_COLORES_ESTATUS`/`ASE_COLORES_ESTATUS` (`ESTADOS_SOP_VALIDOS` es idéntico a los otros dos).
+Dropdowns suaves nuevos en `Urgencia` (Alta/Media/Baja) y `Tipo de ayuda` (7 valores) — ambos
+catálogos confirmados contra los `<select>` reales de `soporte.html`, no inventados. Protección
+de solo aviso en `Fecha`/`Folio`/`Notificación de cierre enviada`. Sin `Contactos_Zona_Sector` ni
+columna de Oficio en este trámite (decisión previa, no un hueco de esta ronda), así que no hay
+nada más que proteger. Los helpers (`sopAplicarValidacionListaSuave_`,
+`sopAplicarSemaforoPorValor_`, `sopProtegerColumnaAutomatica_`) no existían en este archivo antes
+de esta sesión — se escribieron nuevos, calcados de los de Mantenimiento/Asesorías (no hay
+`Config.gs` compartido aquí, es un proyecto de Apps Script propio). Nuevo item
+`.addItem('Aplicar validación y semáforo', 'sopConfigurarValidacionYSemaforo')` en el menú "OTDE
+Soporte".
+
+**`fdConfigurarValidacionYSemaforo()` (`apps-script/formacion-docente.gs`) — Formación Docente.**
+Alcance reducido a propósito: de las 3 pestañas del proyecto (`Docentes`/`Cursos`/
+`Inscripciones`), solo `Cursos` es captura manual de OTDE — `Docentes` se actualiza por upsert de
+RFC en cada `doPost` e `Inscripciones` tiene sus columnas de vista (I-O) calculadas por
+`VLOOKUP` en vivo, ninguna de las dos es un catálogo que alguien edite a mano. Tampoco hay un
+campo tipo "Estatus" en `Cursos` con semáforo de color — `Activo` ya cumple ese papel como
+interruptor simple (`TRUE`/`FALSE`), así que no se le agregó formato condicional, solo lista
+suave. Dropdowns suaves en `Categoria` (7 valores, mismo catálogo que `PREFIJOS_CATEGORIA`,
+ya usado para el prefijo del ID de curso) y `Modalidad`, `Requiere_codigo_asistencia`, `Activo`,
+`Registro_previo_requerido`. **Dos catálogos sin fuente de verdad en el código, confirmados
+directamente con Jorge en vez de inferirse**: `Modalidad` no tiene ningún catálogo cerrado en
+`formacion-docente.gs` ni en `formacion-docente.html` (es 100% captura manual, sin `<select>`
+que la restrinja) — se usó Virtual/Presencial/Híbrido por indicación explícita; y si
+`Requiere_codigo_asistencia`/`Activo`/`Registro_previo_requerido` ya eran checkbox nativo de
+Sheets o texto TRUE/FALSE escrito a mano tampoco era deducible del código (`String(row[x]).trim()
+.toUpperCase() === 'TRUE'` funciona igual con ambos) — Jorge confirmó que son texto a mano, así
+que sí se les agregó la lista suave `['TRUE','FALSE']` (de haber sido checkbox nativo, agregarles
+un dropdown de lista se lo habría quitado). Protección de solo aviso en `ID_Curso` (se genera
+solo al escribir `Categoria`) y las 3 columnas `Recordatorio_*_enviado`. `Codigo_asistencia` no
+se protege — lo asigna OTDE a mano antes del evento, no es automático. Nuevo item
+`.addItem('Aplicar validación en Cursos', 'fdConfigurarValidacionYSemaforo')` en el menú "OTDE
+Formación".
+
+**Sin verificación en vivo contra las hojas reales en esta ronda** (a diferencia de las 3
+anteriores): esta sesión no tuvo acceso a los Sheets reales de Soporte/Formación Docente, así que
+los encabezados/columnas se confirmaron contra los arreglos `ENCABEZADOS_SOPORTE`/
+`ENCABEZADOS_CURSOS` ya trackeados en el repo (fuente de verdad de lo que el auto-heal de cada
+proyecto ya escribió en producción) en vez de abrir la hoja en el navegador. Pendiente que Jorge,
+al pegar y correr el código, confirme visualmente que dropdowns/semáforo/protección aparecen
+donde se espera — mismo checklist de verificación que las rondas anteriores, solo que esta vez el
+primer chequeo en vivo lo hace él, no la sesión que escribió el código.
+
 **Verificado en vivo contra la hoja real** (`Solicitudes_Mantenimiento_2026`, antes de escribir
 código): headers exactos confirmados columna por columna, y los catálogos cerrados de
 Turno/Estado de instalación/Tipo de solicitante confirmados contra los `<select>` reales de
@@ -1910,7 +1959,7 @@ que no se tocaron — Jorge las borrará él mismo cuando tenga tiempo, ver `doc
 **Manual visual — `docs/manual-bases-tramites.html`**: página imprimible (salto de página por
 sección al exportar a PDF vía Cmd+P), mismo lenguaje visual institucional guinda/midnight que el
 resto del sitio. Leyenda de 3 colores (🟢 llenar libre / 🟡 tocar con cuidado, dispara
-automatización / 🔴 no tocar, se llena solo) y una tabla columna-por-columna por trámite ya
-tratado (Mantenimiento, Asesorías, Correo — con una sub-tabla por cada uno de los 4 tipos de
-Correo). Soporte/Formación Docente quedan como placeholder explícito "pendiente" — el documento es
-entregable tal cual sin prometer contenido no verificado de esos 2 sistemas.
+automatización / 🔴 no tocar, se llena solo) y una tabla columna-por-columna por cada uno de los 5
+trámites (Mantenimiento, Asesorías, Soporte, Correo — con una sub-tabla por cada uno de sus 4
+tipos —, Formación Docente), las 5 secciones completas desde el 3 sep 2026 — ya no quedan
+placeholders "pendiente" en la tabla de contenido.

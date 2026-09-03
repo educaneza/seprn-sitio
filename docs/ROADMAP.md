@@ -541,16 +541,24 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     WhatsApp muestre ícono y vista previa al compartir cualquier link, no solo el de `index.html`)
     tampoco se probó contra una vista previa real — pendiente confirmar después del siguiente
     deploy, considerando que WhatsApp cachea vistas previas ya generadas.
-16. **Extender el "planchado" (dropdowns + semáforo + protección de solo aviso) y el manual
-    visual a Soporte y Formación Docente** (piloto en Mantenimiento 1 sep 2026, repetido en
-    Asesorías y Correo la misma sesión sin sorpresas — ver `docs/ARCHITECTURE.md §24` y
-    `docs/manual-bases-tramites.html`): repetir el mismo patrón ya probado tres veces —
-    `{prefijo}ConfigurarValidacionYSemaforo()` en cada `.gs`, corrida una vez desde el editor de
-    Apps Script, y una nueva sección en el manual— verificando primero contra la hoja en vivo de
-    cada trámite (encabezados y catálogos reales pueden no coincidir exactamente con lo
-    documentado). Ojo con el diálogo de `SpreadsheetApp.getUi().alert()` final: aparece en la
-    pestaña del Sheet, no en la del editor de Apps Script — hay que cerrarlo ahí para que el
-    Registro de ejecución marque "completado".
+16. ~~**Extender el "planchado" (dropdowns + semáforo + protección de solo aviso) y el manual
+    visual a Soporte y Formación Docente**~~ (piloto en Mantenimiento 1 sep 2026, repetido en
+    Asesorías y Correo la misma sesión — **resuelto el 3 sep 2026 con los dos trámites que
+    faltaban**, ver `docs/ARCHITECTURE.md §24` y `docs/manual-bases-tramites.html`): mismo patrón
+    ya probado tres veces, `sopConfigurarValidacionYSemaforo()`/`fdConfigurarValidacionYSemaforo()`
+    nuevos en cada `.gs`, más las secciones §3/§5 del manual visual completadas (ya no quedan
+    placeholders "pendiente"). Con Soporte, `Estatus` ya tenía dropdown duro desde antes — solo se
+    le agregó el semáforo de color. Con Formación Docente, el alcance quedó reducido a la hoja
+    `Cursos` (única captura manual de las 3 pestañas del proyecto) y dos catálogos se confirmaron
+    directamente con Jorge por no existir fuente de verdad en el código: `Modalidad`
+    (Virtual/Presencial/Híbrido) y si `Requiere_codigo_asistencia`/`Activo`/
+    `Registro_previo_requerido` son texto TRUE/FALSE (sí) o checkbox nativo de Sheets (en cuyo
+    caso no se les habría podido agregar dropdown sin quitarles el checkbox). **Pendiente real que
+    queda**: el código está listo en el repo pero no se pegó ni corrió contra los proyectos reales
+    de Apps Script de Soporte/Formación Docente — a diferencia de las 3 rondas anteriores, esta
+    sesión no tuvo acceso a las hojas en vivo, así que el primer chequeo visual (dropdowns/
+    semáforo/protección aparecen donde se espera) lo hace Jorge al desplegar, no quien escribió el
+    código.
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue
