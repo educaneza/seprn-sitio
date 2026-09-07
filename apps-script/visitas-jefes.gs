@@ -136,14 +136,27 @@ function visConfigurarTokenDashboard(token) {
   PropertiesService.getScriptProperties().setProperty('DASHBOARD_TOKEN', token);
 }
 
+// ── Prueba temporal (sep 2026, a pedido de Jorge): quitar el candado del
+// panel de cobertura por unos días para ver si tiene sentido dejarlo
+// público. Corre visConfigurarDashboardPublico(true) UNA vez desde el
+// editor para activarlo; visConfigurarDashboardPublico(false) lo regresa
+// a pedir DASHBOARD_TOKEN sin tocar el valor ya guardado de la clave. ──
+function visConfigurarDashboardPublico(activo) {
+  PropertiesService.getScriptProperties().setProperty('DASHBOARD_PUBLICO', activo ? 'true' : 'false');
+}
+
 // ── Panel de cobertura: visitas realizadas por docente y por sector.
-// Requiere DASHBOARD_TOKEN (ver visConfigurarTokenDashboard arriba) — a
+// Requiere DASHBOARD_TOKEN (ver visConfigurarTokenDashboard arriba) salvo
+// que DASHBOARD_PUBLICO esté activo (prueba temporal, ver arriba) — a
 // diferencia de ?action=disponibilidad, aquí si tiene sentido agrupar por
 // persona, que es justo el dato que no debe quedar público. ──
 function visObtenerDashboard_(tokenRecibido) {
-  const tokenEsperado = PropertiesService.getScriptProperties().getProperty('DASHBOARD_TOKEN');
-  if (!tokenEsperado || tokenRecibido !== tokenEsperado) {
-    return visTextResponse(JSON.stringify({ status: 'no_autorizado' }));
+  const publico = PropertiesService.getScriptProperties().getProperty('DASHBOARD_PUBLICO') === 'true';
+  if (!publico) {
+    const tokenEsperado = PropertiesService.getScriptProperties().getProperty('DASHBOARD_TOKEN');
+    if (!tokenEsperado || tokenRecibido !== tokenEsperado) {
+      return visTextResponse(JSON.stringify({ status: 'no_autorizado' }));
+    }
   }
 
   const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_VIS_RESERVAS);
@@ -311,51 +324,76 @@ function visDoPostReservar_(datos) {
 
 // ── Ficha post-visita: actualiza la fila que ya creó la reserva (misma
 // idea que manDoPostReporteVisita_() en mantenimiento.gs). ──
+//
+// Idempotencia (sep 2026): el timeout de 120s del cliente puede vencer
+// mientras el servidor sigue guardando de fondo (hasta 68.7s con 20 fotos,
+// ver visSubirFotos_ más abajo) — el usuario, al ver "vuelve a intentarlo",
+// reenvía la misma ficha y antes eso volvía a subir todas las fotos desde
+// cero. Con LockService + el chequeo de estatus abajo, un folio que ya
+// quedó "Realizada" nunca vuelve a tocar Drive: el reenvío se responde
+// como éxito (status:'ya_enviada'), no se reintenta la subida.
 function visDoPostFicha_(datos) {
   const folio = String(datos.folio || '').trim().toUpperCase();
   if (!folio) {
     return visTextResponse(JSON.stringify({ status: 'error', mensaje: 'Falta el folio de la reserva.' }));
   }
 
-  const hoja = visObtenerHojaReservas();
-  const fila = visBuscarFilaPorFolio_(hoja, folio);
-  if (!fila) {
-    return visTextResponse(JSON.stringify({ status: 'error', mensaje: 'No se encontró ninguna reserva con folio "' + folio + '".' }));
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const hoja = visObtenerHojaReservas();
+    const fila = visBuscarFilaPorFolio_(hoja, folio);
+    if (!fila) {
+      return visTextResponse(JSON.stringify({ status: 'error', mensaje: 'No se encontró ninguna reserva con folio "' + folio + '".' }));
+    }
+    const estatusActual = String(fila.datos[COL_VIS_ESTATUS - 1] || '').trim();
+    if (estatusActual === 'Cancelada') {
+      return visTextResponse(JSON.stringify({ status: 'error', mensaje: 'Esa reserva fue cancelada, no se puede reportar.' }));
+    }
+    if (estatusActual === 'Realizada') {
+      const evidenciasPrevias = String(fila.datos[COL_VIS_EVIDENCIAS - 1] || '').trim();
+      return visTextResponse(JSON.stringify({
+        status: 'ya_enviada',
+        mensaje: 'Esta ficha ya había sido registrada anteriormente.',
+        folio: folio,
+        fotos: evidenciasPrevias ? evidenciasPrevias.split('\n').length : 0
+      }));
+    }
+
+    const observaciones = String(datos.observaciones || '').trim();
+    const nombreActividad = String(datos.nombreActividad || '').trim();
+    const proposito = String(datos.proposito || '').trim();
+    const descripcionActividad = String(datos.descripcionActividad || '').trim();
+    const cantidadAsistentes = String(datos.cantidadAsistentes || '').trim();
+    if (!observaciones || !nombreActividad || !proposito || !descripcionActividad || !cantidadAsistentes) {
+      throw new Error('Faltan campos obligatorios de la ficha (nombre de la actividad, propósito, cantidad de asistentes, descripción u operatividad).');
+    }
+
+    const cct = fila.datos[COL_VIS_CCT - 1];
+    const escuela = fila.datos[7];
+    const fechaPlaneadaISO = fila.datos[COL_VIS_FECHA_PLANEADA - 1] instanceof Date
+      ? Utilities.formatDate(fila.datos[COL_VIS_FECHA_PLANEADA - 1], 'America/Mexico_City', 'yyyy-MM-dd')
+      : String(fila.datos[COL_VIS_FECHA_PLANEADA - 1] || '');
+
+    const urls = visSubirFotos_(cct, escuela, fechaPlaneadaISO, datos.fotos);
+
+    const fechaVisitaReal = datos.fechaVisitaReal ? visFechaLocal_(datos.fechaVisitaReal) : new Date();
+
+    hoja.getRange(fila.rowIndex, COL_VIS_ESTATUS).setValue('Realizada');
+    hoja.getRange(fila.rowIndex, COL_VIS_FECHA_VISITA_REAL).setValue(fechaVisitaReal);
+    hoja.getRange(fila.rowIndex, COL_VIS_EVIDENCIAS).setValue(urls.join('\n'));
+    hoja.getRange(fila.rowIndex, COL_VIS_OBSERVACIONES).setValue(observaciones);
+    hoja.getRange(fila.rowIndex, COL_VIS_FECHA_FICHA).setValue(new Date());
+    hoja.getRange(fila.rowIndex, COL_VIS_NOMBRE_ACTIVIDAD).setValue(nombreActividad);
+    hoja.getRange(fila.rowIndex, COL_VIS_PROPOSITO).setValue(proposito);
+    hoja.getRange(fila.rowIndex, COL_VIS_CONVOCADOS).setValue(String(datos.convocados || '').trim());
+    hoja.getRange(fila.rowIndex, COL_VIS_DESCRIPCION_ACTIVIDAD).setValue(descripcionActividad);
+    hoja.getRange(fila.rowIndex, COL_VIS_CANTIDAD_ASISTENTES).setValue(cantidadAsistentes);
+
+    return visTextResponse(JSON.stringify({ status: 'ok', folio: folio, fotos: urls.length }));
+  } finally {
+    lock.releaseLock();
   }
-  if (String(fila.datos[COL_VIS_ESTATUS - 1] || '').trim() === 'Cancelada') {
-    return visTextResponse(JSON.stringify({ status: 'error', mensaje: 'Esa reserva fue cancelada, no se puede reportar.' }));
-  }
-
-  const cct = fila.datos[COL_VIS_CCT - 1];
-  const escuela = fila.datos[7];
-  const fechaPlaneadaISO = fila.datos[COL_VIS_FECHA_PLANEADA - 1] instanceof Date
-    ? Utilities.formatDate(fila.datos[COL_VIS_FECHA_PLANEADA - 1], 'America/Mexico_City', 'yyyy-MM-dd')
-    : String(fila.datos[COL_VIS_FECHA_PLANEADA - 1] || '');
-
-  const urls = visSubirFotos_(cct, escuela, fechaPlaneadaISO, datos.fotos);
-
-  const fechaVisitaReal = datos.fechaVisitaReal ? visFechaLocal_(datos.fechaVisitaReal) : new Date();
-  const observaciones = String(datos.observaciones || '').trim();
-  const nombreActividad = String(datos.nombreActividad || '').trim();
-  const proposito = String(datos.proposito || '').trim();
-  const descripcionActividad = String(datos.descripcionActividad || '').trim();
-  const cantidadAsistentes = String(datos.cantidadAsistentes || '').trim();
-  if (!observaciones || !nombreActividad || !proposito || !descripcionActividad || !cantidadAsistentes) {
-    throw new Error('Faltan campos obligatorios de la ficha (nombre de la actividad, propósito, cantidad de asistentes, descripción u operatividad).');
-  }
-
-  hoja.getRange(fila.rowIndex, COL_VIS_ESTATUS).setValue('Realizada');
-  hoja.getRange(fila.rowIndex, COL_VIS_FECHA_VISITA_REAL).setValue(fechaVisitaReal);
-  hoja.getRange(fila.rowIndex, COL_VIS_EVIDENCIAS).setValue(urls.join('\n'));
-  hoja.getRange(fila.rowIndex, COL_VIS_OBSERVACIONES).setValue(observaciones);
-  hoja.getRange(fila.rowIndex, COL_VIS_FECHA_FICHA).setValue(new Date());
-  hoja.getRange(fila.rowIndex, COL_VIS_NOMBRE_ACTIVIDAD).setValue(nombreActividad);
-  hoja.getRange(fila.rowIndex, COL_VIS_PROPOSITO).setValue(proposito);
-  hoja.getRange(fila.rowIndex, COL_VIS_CONVOCADOS).setValue(String(datos.convocados || '').trim());
-  hoja.getRange(fila.rowIndex, COL_VIS_DESCRIPCION_ACTIVIDAD).setValue(descripcionActividad);
-  hoja.getRange(fila.rowIndex, COL_VIS_CANTIDAD_ASISTENTES).setValue(cantidadAsistentes);
-
-  return visTextResponse(JSON.stringify({ status: 'ok', folio: folio, fotos: urls.length }));
 }
 
 // ── Obtener o crear la hoja de reservas ──
@@ -481,9 +519,13 @@ function visLunesDeLaSemana_(fecha) {
   return d;
 }
 
-// ── Subir las fotos de evidencia a Drive (carpeta plana, nombre codifica
-// CCT/escuela/fecha — mismo criterio que el resto del sitio para
-// oficios). Devuelve el arreglo de URLs. ──
+// ── Subir las fotos de evidencia a Drive, organizadas en una subcarpeta
+// por semana (sep 2026, a pedido de Jorge — antes todo caía en una sola
+// carpeta plana, cada vez más difícil de recorrer a mano). La subcarpeta
+// se deriva de la semana (lunes) de fechaISO — misma fecha planeada que ya
+// se usa en el nombre del archivo y en la columna "Semana (lunes)" de la
+// hoja, para que la carpeta coincida con lo que se ve en el histórico.
+// Devuelve el arreglo de URLs. ──
 function visSubirFotos_(cct, escuela, fechaISO, fotos) {
   if (!fotos || !fotos.length) {
     throw new Error('Adjunta al menos una foto como evidencia de la visita.');
@@ -492,7 +534,8 @@ function visSubirFotos_(cct, escuela, fechaISO, fotos) {
     throw new Error('Máximo ' + VIS_MAX_FOTOS + ' fotos por ficha.');
   }
 
-  const carpeta = visObtenerCarpetaFotos_();
+  const carpetaBase = visObtenerCarpetaFotos_();
+  const carpeta = visObtenerCarpetaSemana_(carpetaBase, fechaISO);
   const prefijo = (cct || 'SIN-CCT').toString().trim().toUpperCase() + ' — ' +
     (escuela || '').toString().trim() + ' — ' + (fechaISO || '');
 
@@ -507,9 +550,9 @@ function visSubirFotos_(cct, escuela, fechaISO, fotos) {
     const archivo = carpeta.createFile(blob);
     // Sin archivo.setSharing() por foto a propósito (perf test en vivo, ago 2026): cada
     // llamada a Drive cuesta ~1.5-2s adicionales, y con hasta 20 fotos eso duplicaba el
-    // tiempo total. La carpeta ya se comparte "cualquiera con el link, ver" una sola vez
-    // en visObtenerCarpetaFotos_() — los archivos nuevos deberían heredar ese acceso de
-    // la carpeta sin repetirlo por archivo. IMPORTANTE: esto se apoya en el comportamiento
+    // tiempo total. La carpeta de la semana ya se comparte "cualquiera con el link, ver"
+    // una sola vez en visObtenerCarpetaSemana_() — los archivos nuevos deberían heredar
+    // ese acceso sin repetirlo por archivo. IMPORTANTE: esto se apoya en el comportamiento
     // estándar de Drive (los archivos dentro de una carpeta compartida "con el link"
     // heredan esa visibilidad), pero no se pudo probar en vivo contra el backend real
     // (el redeploy es manual, vía el editor de Apps Script) — tras pegar y redesplegar
@@ -534,6 +577,25 @@ function visExtensionPorMime_(mime) {
 function visObtenerCarpetaFotos_() {
   const carpetas = DriveApp.getFoldersByName(CARPETA_VIS_FOTOS);
   const carpeta = carpetas.hasNext() ? carpetas.next() : DriveApp.createFolder(CARPETA_VIS_FOTOS);
+  carpeta.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  return carpeta;
+}
+
+// ── Subcarpeta por semana dentro de "Fotos de Visitas Jefes" (sep 2026),
+// nombrada con el lunes de la semana en ISO (mismo criterio que la columna
+// "Semana (lunes)" de la hoja) para que ordene bien alfabéticamente y
+// coincida con lo que ya se ve en el histórico. Se comparte igual que la
+// carpeta base — una sola llamada por envío, no por foto, mismo criterio
+// de rendimiento que visObtenerCarpetaFotos_() de arriba. Las fotos ya
+// subidas antes de este cambio se quedan donde estaban, en la raíz de
+// "Fotos de Visitas Jefes" — esto solo organiza los envíos nuevos. ──
+function visObtenerCarpetaSemana_(carpetaBase, fechaISO) {
+  const fecha = visFechaLocal_(fechaISO) || new Date();
+  const lunes = visLunesDeLaSemana_(fecha);
+  const nombre = 'Semana ' + Utilities.formatDate(lunes, 'America/Mexico_City', 'yyyy-MM-dd');
+
+  const existentes = carpetaBase.getFoldersByName(nombre);
+  const carpeta = existentes.hasNext() ? existentes.next() : carpetaBase.createFolder(nombre);
   carpeta.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
   return carpeta;
 }

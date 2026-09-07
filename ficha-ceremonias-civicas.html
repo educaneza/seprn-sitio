@@ -28,6 +28,42 @@
         .ficha-fotos-preview { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
         .ficha-fotos-preview img { width: 90px; height: 90px; object-fit: cover; border-radius: 6px; border: 1px solid #d6d1ca; }
         .ficha-oculto { display: none; }
+        /* Mensaje de confirmación/error muy notorio (sep 2026) — mismo componente que el
+        resto del sitio (.soporte-submit-msg) pero reforzado solo en esta página: el bug de
+        envíos duplicados venía en parte de que un usuario no estaba seguro de si su ficha
+        ya se había enviado y volvía a darle "Enviar". */
+        #ficha-msg.ok, #ficha-msg.error {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            margin-top: 20px;
+            padding: 20px 22px;
+            border-radius: 12px;
+            font-size: 15px;
+            line-height: 1.5;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.15);
+            border-left-width: 6px;
+            animation: ficha-msg-in 0.35s ease-out;
+        }
+        #ficha-msg.ok::before, #ficha-msg.error::before {
+            flex-shrink: 0;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: 700;
+            color: white;
+            margin-top: 1px;
+        }
+        #ficha-msg.ok::before { content: '✓'; background: #2e7d32; }
+        #ficha-msg.error::before { content: '!'; background: #9F2241; }
+        @keyframes ficha-msg-in {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="SEPRN">
@@ -556,6 +592,11 @@
                 msg.textContent = 'Ficha enviada. Gracias — la visita quedó marcada como realizada con ' + data.fotos + ' foto(s).';
                 document.getElementById('ficha-form').reset();
                 document.getElementById('ficha-fotos-preview').innerHTML = '';
+            } else if (data.status === 'ya_enviada') {
+                msg.className = 'soporte-submit-msg ok';
+                msg.textContent = data.mensaje + ' No es necesario volver a enviarla.';
+                document.getElementById('ficha-form').reset();
+                document.getElementById('ficha-fotos-preview').innerHTML = '';
             } else {
                 msg.className = 'soporte-submit-msg error';
                 msg.textContent = 'No se pudo enviar la ficha: ' + data.mensaje;
@@ -568,6 +609,7 @@
         } finally {
             btnSubmit.disabled = false;
             btnSubmit.style.opacity = '1';
+            msg.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         return false;
