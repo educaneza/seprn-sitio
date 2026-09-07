@@ -562,17 +562,22 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     confirmados en vivo en `Solicitudes_Soporte_2026` y dropdowns confirmados en
     `Formacion_Docente_2026_2027` (hoja `Cursos`). Sin probar el diálogo de protección de solo
     aviso en ninguna de las dos hojas en esta ronda.
-17. **Feedback de una semana en producción de Ceremonias Cívicas (6 sep 2026) — código listo,
-    falta desplegar y decidir** (ver `docs/BITACORA.md` y `docs/ARCHITECTURE.md §22` para el
-    detalle completo): `apps-script/visitas-jefes.gs` tiene el fix de fichas duplicadas
-    (`LockService` + idempotencia por folio) y la organización de fotos por semana, pero **no se
-    ha pegado ni redesplegado en el proyecto real de Apps Script** — hasta que eso pase, el bug de
-    duplicados sigue vivo en producción. Además: (a) el panel de cobertura quedó en modo público
-    temporal (`visConfigurarDashboardPublico(true)`, a correr tras el redeploy) — pendiente que
-    Jorge decida, tras unos días de prueba, si se queda público o se revierte a pedir clave; (b)
-    falta probar de punta a punta con un folio real que el reenvío de una ficha ya enviada
-    responda `ya_enviada` sin duplicar fotos en Drive — no se probó contra producción real en esta
-    sesión porque el fix todavía no estaba desplegado.
+17. **Feedback de una semana en producción de Ceremonias Cívicas (6 sep 2026) — desplegado,
+    queda decidir el panel público** (ver `docs/BITACORA.md` y `docs/ARCHITECTURE.md §22` para el
+    detalle completo): `apps-script/visitas-jefes.gs` con el fix de fichas duplicadas
+    (`LockService` + idempotencia por folio) y la organización de fotos por semana ya se pegó y
+    redesplegó en el proyecto real de Apps Script (6 sep 2026). El panel de cobertura ya quedó en
+    modo público confirmado en vivo — `DASHBOARD_PUBLICO=true` se fijó directo en Propiedades del
+    script (Configuración del proyecto ⚙️ → Propiedades del script) en vez de ejecutar
+    `visConfigurarDashboardPublico(true)` desde el dropdown ▶️ Ejecutar (esa función necesita un
+    argumento — correrla así la deja sin argumentos y guarda `'false'`, mismo gotcha que ya
+    advierte `docs/QA-NOTES.md #14`); verificado con un GET de solo lectura a
+    `?action=dashboard&token=` devolviendo datos reales sin token. Pendiente real: (a) que Jorge
+    decida, tras unos días de prueba, si el panel se queda público o se revierte a pedir clave
+    (`visConfigurarDashboardPublico(false)` o borrar la Script Property); (b) confirmar que el
+    reenvío de una ficha ya enviada responde `ya_enviada` sin duplicar fotos en Drive — decisión
+    de Jorge (6 sep 2026): sin prueba dirigida con folio de prueba, se valida orgánicamente
+    cuando algún jefe reenvíe una ficha real en los próximos días de uso normal.
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue
