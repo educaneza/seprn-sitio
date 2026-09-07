@@ -28,6 +28,22 @@
             .correo-panel-switcher { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
             .correo-panel-btn { width:100%; }
         }
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 12px;
+            margin: 25px 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
     </style>
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="SEPRN">
@@ -86,6 +102,28 @@
             <div class="highlight-box">
                 <p><strong>Sobre tus datos:</strong></p>
                 <p>Este formulario registra tu nombre, CCT, función, teléfono y correo personal — y, solo en Alta de cuenta, tu RFC y CURP — con el único fin de gestionar tu cuenta institucional y darte seguimiento a tu solicitud. No se comparten con terceros ajenos a OTDE.</p>
+            </div>
+
+            <h3>Tutorial: Configura la app de autenticación de Microsoft</h3>
+            <p>Sigue este video paso a paso de OTDE para activar la verificación en dos pasos (Microsoft Authenticator) en tu correo institucional.</p>
+            <div class="video-wrapper">
+                <iframe
+                    title="Tutorial: Configurar Microsoft Authenticator - OTDE SEPRN"
+                    src="https://www.youtube.com/embed/afue5xqv-sQ"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen>
+                </iframe>
+            </div>
+
+            <div class="highlight-box">
+                <p><strong>Importante: puedes configurar la app en 2 o más dispositivos con la misma cuenta.</strong></p>
+                <p>Normalmente solo el director(a) configura Microsoft Authenticator en su propio celular. El problema: cuando esa persona cambia de centro de trabajo, se lleva su teléfono y, con él, el único dispositivo autorizado — la escuela donde estaba se queda sin poder acceder al correo institucional. Para evitarlo, recomendamos que además del director(a), al menos otra persona de la escuela (subdirector(a) u otro encargado) configure también la app en su propio teléfono, siguiendo el mismo tutorial.</p>
+            </div>
+
+            <div class="highlight-box">
+                <p><strong>¿Ya tenías la app configurada pero ya no tienes ese celular?</strong></p>
+                <p>Si cambiaste de celular, lo perdiste o ya no tienes acceso al dispositivo donde configuraste Microsoft Authenticator, no necesitas ver el video de nuevo: usa el botón <strong>"Eliminar Método de Autenticación"</strong> de abajo para pedir que te quitemos el dispositivo anterior. Una vez hecho esto, podrás volver a seguir el tutorial y configurar la app en tu celular actual.</p>
             </div>
 
             <div class="correo-panel-switcher">
