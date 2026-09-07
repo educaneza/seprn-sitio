@@ -662,6 +662,21 @@ arquitectura completo en `docs/ARCHITECTURE.md §16`. Resumen operativo:
   disparador real de ese tipo), `¿Cuenta lista?` (Incidencias). `Usuario asignado`/`Contraseña
   asignada` (las que Marcos llena a mano para disparar el correo de credenciales) se dejan sin
   tocar a propósito. Ver `docs/ARCHITECTURE.md §24` y `docs/manual-bases-tramites.html`.
+- **Videotutorial de Microsoft Authenticator + avisos de multi-dispositivo (7 sep 2026)**: Jorge
+  reportó que configurar la app de autenticación de Microsoft sigue siendo un cuello de botella
+  real para directores/docentes pese al videotutorial que OTDE ya comparte por WhatsApp/oficio —
+  faltaba un lugar permanente en el sitio. Bloque nuevo insertado en `.content-block`, entre el
+  `.highlight-box` de "Sobre tus datos" y el `.correo-panel-switcher` (visible sin importar cuál
+  de los 4 trámites se esté viendo, porque el problema no es exclusivo de ninguno): el video
+  embebido (mismo patrón `.video-wrapper` de `otde.html`, CSS copiado inline aquí porque no vive
+  en `styles.css`) y dos `.highlight-box` de aviso. El primero explica que Authenticator admite
+  2+ dispositivos por cuenta — cuello de botella operativo real que Jorge identificó: cuando el
+  director(a) (único con el dispositivo configurado) cambia de centro de trabajo, se lleva su
+  celular y la escuela se queda sin acceso al correo hasta tramitar un nuevo alta/reset; la
+  recomendación es que otra persona de la escuela también configure la app. El segundo, agregado
+  a petición de Jorge para que la información llegue "muy digerida" a docentes, cubre el caso
+  de quien ya tenía la app configurada pero perdió el dispositivo — los dirige directo al botón
+  "Eliminar Método de Autenticación" ya existente en vez de repetir el video.
 
 ### Mantenimiento (página propia desde el 27 ago 2026, ver `mantenimiento.html`)
 Ya no es solo texto ("solicita por oficio y vía estructura") — formulario "Solicitar

@@ -14,6 +14,21 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-09-07 · Videotutorial de Microsoft Authenticator + avisos de multi-dispositivo en `correo.html`
+
+| | |
+|---|---|
+| **Fecha** | 2026-09-07 |
+| **Sesión** | Jorge reportó que configurar la app de autenticación de Microsoft (Authenticator) sigue siendo un dolor de cabeza recurrente para directores y docentes, pese a que OTDE ya grabó y compartió un videotutorial en YouTube por fuera del sitio. Pidió ubicar dónde incorporarlo (¿`otde.html`, `oficina-virtual.html`, o directo en el espacio de correos institucionales?) y, aparte, documentar que Authenticator admite 2 o más dispositivos por cuenta — un cuello de botella real: normalmente solo el director(a) lo configura en su celular, y al cambiar de centro de trabajo se lleva el único dispositivo autorizado, dejando a la escuela sin acceso al correo. |
+| **Ubicación decidida: `correo.html`, no `otde.html` ni `oficina-virtual.html`** | Exploración previa confirmó que `otde.html` ya no tiene contenido de correo desde la migración del 27 ago 2026, y `oficina-virtual.html` es solo un hub de tarjetas sin espacio para contenido explicativo. `correo.html` es el único lugar donde ya se habla de "verificación en dos pasos"/autenticación (panel "Eliminar Método de Autenticación"). |
+| **Bloque nuevo insertado antes del switcher de los 4 trámites** | Entre el `.highlight-box` de "Sobre tus datos" y `.correo-panel-switcher` — visible sin importar cuál de los 4 trámites (Alta/Cambio/Eliminar método/No puedo acceder) esté viendo el usuario, porque el problema de Authenticator no es exclusivo de ninguno. CSS `.video-wrapper`/`.video-wrapper iframe` copiado inline desde `otde.html` (líneas 140-155 ahí — no vive en `styles.css`), video embebido (`https://www.youtube.com/embed/afue5xqv-sQ`, id compartido por Jorge). |
+| **Aviso de multi-dispositivo, como caja destacada (no párrafo suelto)** | A petición explícita de Jorge (no solo texto corrido): `.highlight-box` reutilizado tal cual, mismo patrón guinda ya usado en toda la página para callouts — explica que se pueden configurar 2+ dispositivos con la misma cuenta y recomienda que, además del director(a), otra persona de la escuela también configure la app. |
+| **Segunda nota agregada tras feedback en vivo: "información muy digerida" para docentes** | Jorge revisó el bloque en el servidor local y pidió una nota adicional simple para el caso de quien ya tenía la app configurada pero ya no tiene acceso a ese dispositivo — segundo `.highlight-box` que los dirige directo al botón "Eliminar Método de Autenticación" ya existente en el switcher, en vez de repetir el video. |
+| **Verificación** | `git diff --stat correo.html`: 1 archivo, 38 inserciones, 0 eliminaciones — solo contenido nuevo, sin tocar formularios/JS/backend. Servidor local (`python3 -m http.server 8000` en `seprn-sitio/`, detenido al terminar) usado por Jorge para revisar visualmente el bloque completo en `http://localhost:8000/correo.html`; confirmó "se ve bien" antes de pedir la segunda nota. No se probó en dispositivo móvil real ni se verificó que el ID de video (`afue5xqv-sQ`) sea el definitivo — Jorge lo compartió directo desde el embed de YouTube. |
+| **Commits** | Pendiente — sesión sin commitear todavía al momento de este checkpoint. |
+
+---
+
 ## CHECKPOINT — 2026-09-06 · Feedback de una semana en producción de Ceremonias Cívicas: bug de fichas duplicadas, UX de navegación, paginación, panel de cobertura y fotos por semana
 
 | | |
