@@ -882,10 +882,16 @@ sitio, se comparte por link directo (hay un QR institucional, `images/qr-ceremon
 - **`ceremonias-civicas.html`** (renombrado de `visitas-escolares.html`): formulario de reserva
   (CCT con autocomplete + fallback manual con cascade Sector→Zona, campo "Subjefatura/Oficina"
   sin opción "Docente", sin correo/teléfono — el sistema no notifica a nadie, no tenía caso
-  pedirlos) + tabla de disponibilidad/histórico con buscador + contador de cobertura + panel de
-  cobertura por persona/sector protegido con clave (`DASHBOARD_TOKEN`) — **panel comentado/oculto
-  en el HTML a petición de Jorge**, no visible las primeras semanas del ciclo; el código (HTML +
-  JS + backend) queda completo, reactivarlo es quitar el comentario
+  pedirlos) + tabla de disponibilidad/histórico con buscador + paginación (20/página) + contador
+  de cobertura + panel de cobertura por persona/sector (`DASHBOARD_TOKEN`). El formulario de
+  reserva empieza **expandido por defecto** (sep 2026, feedback de que nadie intuía que había que
+  abrirlo) y arriba de él hay una guía "Cómo funciona, paso a paso" (4 pasos). El panel de
+  cobertura, que estuvo comentado/oculto hasta el 6 sep 2026, ya se reactivó, y esa misma sesión
+  quedó además en **modo público temporal sin clave** (`visConfigurarDashboardPublico(true)`,
+  prueba de unos días a pedido de Jorge — ver `docs/ARCHITECTURE.md §22` para revertirlo)
+- Bug real corregido (sep 2026): fichas duplicadas hasta 5 veces por reintentos tras timeout, sin
+  idempotencia en el backend — ver `docs/QA-NOTES.md #26`. Las fotos de Drive ahora además se
+  organizan en subcarpetas por semana (`Semana YYYY-MM-DD`)
 - **`ficha-ceremonias-civicas.html`** (renombrado dos veces: `ficha-visita-jefe.html` →
   `ficha-informativa-visita.html` → nombre final; el genérico quedó reservado para una futura
   Fase 2 de reporte general al Community Manager, ver `docs/ROADMAP.md` ítem 13): ficha
@@ -947,6 +953,7 @@ Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/I
 - **Fase Intensiva 2026-2027 sin video** — falta agregar el `iframe` del Opening en `cte.html` cuando Jorge lo tenga
 - **Centro de Formación Docente** — dar de alta los primeros cursos propios del ciclo 26-27 en la hoja `Cursos` (verificado en vivo el 1 sep 2026: el catálogo real está vacío, `{"status":"ok","cursos":[]}` — la nota de "2 webinars" de sesiones anteriores ya no aplica). Mientras tanto la tarjeta en `oficina-virtual.html` queda deshabilitada ("Próximamente", ver esa sección arriba) — reactivarla en cuanto haya cursos dados de alta.
 - **Correo/Mantenimiento/Asesorías** — los 3 backends nuevos ya están desplegados y con `Contactos_Zona_Sector` poblado (6 ago 2026, ver sus secciones arriba). Notificaciones de equipo (Telegram + correo) por trámite reorganizadas en sep 2026: ver sus secciones arriba y las de Soporte/Correo Institucional.
+- **Ceremonias Cívicas — `visitas-jefes.gs` con fixes sin desplegar (6 sep 2026)**: el fix de fichas duplicadas y la organización de fotos por semana están en el repo pero no en el proyecto real de Apps Script — pegar y redesplegar nueva versión, luego correr `visConfigurarDashboardPublico(true)` para el panel público. Ver `docs/ROADMAP.md` ítem 17.
 - **QA pre-producción (6 ago 2026)** — hallazgos pendientes de atender antes de confiar el flujo completo:
   - ~~**Asesorías**: el checkbox de confirmación de asesoría previa no viaja en el payload al backend~~ — corregido: `otde.html` ahora manda `confirmaMantenimiento` en el payload, `asesorias.gs` lo valida server-side y lo guarda en la columna nueva `Confirmó Mantenimiento Previo` (col. R, autocompletada en la hoja ya desplegada vía el mismo patrón de auto-heal de encabezados que `formacion-docente.gs`).
   - ~~**Asesorías**: el mensaje de error del checkbox no se limpia al marcarlo~~ — corregido: listener `change` en `ase-confirma-mantenimiento` limpia el error apenas se marca.

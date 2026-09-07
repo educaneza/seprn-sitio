@@ -528,11 +528,12 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     Sheet y backend propios (no comparte los de Ceremonias Cívicas). Nombre de archivo ya
     reservado: `ficha-informativa-visita.html`. Campo "Sede" pensado con buscador de CCT + texto
     libre de respaldo (no toda actividad ocurre en una escuela).
-14. **Párrafo largo del `.servicio-header` de `ceremonias-civicas.html`** (hallazgo de UI/UX,
-    30 ago 2026, no corregido a propósito — es contenido institucional de Jorge, no una decisión
-    de diseño mía): a anchos medios (~900-1100px, laptop no maximizada) el párrafo de 5-6 líneas
-    se convierte en una columna muy alta de texto centrado, empujando el botón "Reservar visita"
-    hacia abajo. Pendiente de que Jorge decida si acortarlo.
+14. ~~**Párrafo largo del `.servicio-header` de `ceremonias-civicas.html`**~~ (hallazgo de UI/UX,
+    30 ago 2026 — **decidido 6 sep 2026**): Jorge confirmó mantener el texto institucional
+    completo, sin acortarlo. El problema real (el botón "Reservar visita" quedaba empujado hacia
+    abajo, y no se leía como algo clicable) se resolvió por otra vía: el formulario ahora empieza
+    expandido por defecto y se agregó una guía "paso a paso" antes del formulario — ver
+    `docs/ARCHITECTURE.md §22`.
 15. **Dos fixes de la sesión del 30 ago 2026 (cont.) sin verificar en dispositivo real** (ver
     `docs/ARCHITECTURE.md §22`-`§23`): (a) el fix de "Fecha planeada" desbordada en móvil
     (`#vis-fecha` en `ceremonias-civicas.html`) se aplicó a ciegas — no se pudo reproducir el bug
@@ -561,6 +562,17 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     confirmados en vivo en `Solicitudes_Soporte_2026` y dropdowns confirmados en
     `Formacion_Docente_2026_2027` (hoja `Cursos`). Sin probar el diálogo de protección de solo
     aviso en ninguna de las dos hojas en esta ronda.
+17. **Feedback de una semana en producción de Ceremonias Cívicas (6 sep 2026) — código listo,
+    falta desplegar y decidir** (ver `docs/BITACORA.md` y `docs/ARCHITECTURE.md §22` para el
+    detalle completo): `apps-script/visitas-jefes.gs` tiene el fix de fichas duplicadas
+    (`LockService` + idempotencia por folio) y la organización de fotos por semana, pero **no se
+    ha pegado ni redesplegado en el proyecto real de Apps Script** — hasta que eso pase, el bug de
+    duplicados sigue vivo en producción. Además: (a) el panel de cobertura quedó en modo público
+    temporal (`visConfigurarDashboardPublico(true)`, a correr tras el redeploy) — pendiente que
+    Jorge decida, tras unos días de prueba, si se queda público o se revierte a pedir clave; (b)
+    falta probar de punta a punta con un folio real que el reenvío de una ficha ya enviada
+    responda `ya_enviada` sin duplicar fotos en Drive — no se probó contra producción real en esta
+    sesión porque el fix todavía no estaba desplegado.
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue

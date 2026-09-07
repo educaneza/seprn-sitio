@@ -1670,21 +1670,28 @@ una escuela con una visita "Realizada" en una semana distinta a la que se está 
 un campo opcional "Motivo de revisita" que viaja en el payload (`datos.motivoRevisita`) y se
 guarda en la columna X, para dejar rastro de por qué se repitió sin impedirlo.
 
-**Panel de cobertura por persona/sector, protegido con clave — oculto por ahora.** Visitas
-realizadas por persona y escuelas visitadas por sector, en barras CSS simples (sin librería
-nueva) dentro de `ceremonias-civicas.html`. Jorge planteó que, aunque el link del sitio "es solo
-para gente de confianza", puede filtrarse — y como el sitio no tiene login real (misma decisión
-ya tomada para todo el sitio, ver §19 sobre `oficina-virtual.html`), la respuesta fue acotar el
-problema en vez de resolverlo por completo: solo el panel de cobertura (que expone desempeño
-individual por docente) pide una clave — reservar y la ficha se quedan abiertos, igual que el
-resto del sitio. Mismo patrón `PANEL_TOKEN` que ya usa `panel-otde.gs`/`asesorias.gs`, aquí
-`DASHBOARD_TOKEN` (`visConfigurarTokenDashboard('clave')`, endpoint `?action=dashboard&token=...`
-→ `visObtenerDashboard_()`). **A diferencia del reporte PDF (abajo), este endpoint sí es parte
-del `doGet` del Web App — cualquier cambio a `visObtenerDashboard_()` necesita "Nueva
-implementación" al redesplegar, no basta con guardar en el editor.** El bloque HTML del panel
-quedó comentado (no borrado) en `ceremonias-civicas.html` a petición de Jorge — no lo quiere
-visible en las primeras semanas del ciclo; reactivarlo es quitar el comentario, el JS y el
-backend ya están completos.
+**Panel de cobertura por persona/sector, protegido con clave — reactivado, y con una prueba
+temporal sin clave (sep 2026).** Visitas realizadas por persona y escuelas visitadas por sector,
+en barras CSS simples (sin librería nueva) dentro de `ceremonias-civicas.html`. Jorge planteó que,
+aunque el link del sitio "es solo para gente de confianza", puede filtrarse — y como el sitio no
+tiene login real (misma decisión ya tomada para todo el sitio, ver §19 sobre
+`oficina-virtual.html`), la respuesta fue acotar el problema en vez de resolverlo por completo:
+solo el panel de cobertura (que expone desempeño individual por docente) pide una clave — reservar
+y la ficha se quedan abiertos, igual que el resto del sitio. Mismo patrón `PANEL_TOKEN` que ya usa
+`panel-otde.gs`/`asesorias.gs`, aquí `DASHBOARD_TOKEN` (`visConfigurarTokenDashboard('clave')`,
+endpoint `?action=dashboard&token=...` → `visObtenerDashboard_()`). **A diferencia del reporte PDF
+(abajo), este endpoint sí es parte del `doGet` del Web App — cualquier cambio a
+`visObtenerDashboard_()` necesita "Nueva implementación" al redesplegar, no basta con guardar en
+el editor.** El bloque HTML estuvo comentado (no borrado) hasta el 6 sep 2026 a petición de
+Jorge, para no mostrarlo en las primeras semanas del ciclo; con una semana de datos reales ya en
+producción, se reactivó. Esa misma sesión Jorge pidió además probar unos días **sin** el candado
+de clave, para ver si conviene dejarlo público: `visConfigurarDashboardPublico(activo)` nueva,
+guarda `DASHBOARD_PUBLICO` (`'true'`/`'false'`) en las Propiedades del script, y
+`visObtenerDashboard_()` revisa ese flag antes de exigir `DASHBOARD_TOKEN` — si está activo, deja
+pasar cualquier request sin importar el token recibido. El frontend quitó el campo de clave del
+HTML y dejó un botón directo "Ver panel". Revertir a acceso restringido es
+`visConfigurarDashboardPublico(false)` en el editor (no requiere redeploy, es una Script Property)
+más regresar el campo de clave al HTML si se quiere ocultar también la entrada visualmente.
 
 **Reporte PDF para quien da seguimiento sin usar Sheets ni correo activamente.** Distinto del
 panel de cobertura: aquí no hay manera digital razonable de darle acceso directo, así que la
@@ -1776,6 +1783,58 @@ concurrencia posible en Apps Script. Dos cambios, verificados en vivo con el mis
 Publicado directo a `origin/main` vía rama `publish-fix-fotos-ceremonias` (mismo mecanismo de
 publicación aislada de siempre) — commit `7a0127d`. Ver `docs/QA-NOTES.md #23` para el detalle
 en formato de bug cazado.
+
+**Idempotencia de la ficha post-visita (sep 2026) — cierra el hueco que dejó el fix de arriba.**
+El fix de rendimiento redujo cuánto tardaba el envío, pero no eliminó el escenario de que el
+timeout de 120s venciera con el servidor todavía guardando de fondo — y cuando eso pasaba, el
+mensaje de error invitaba a reintentar, y cada reintento repetía la subida completa de fotos
+porque `visDoPostFicha_()` no tenía ningún control de duplicados (a diferencia de
+`visDoPostReservar_()`, protegido desde su diseño original). Confirmado en producción: varios
+jefes con datos y fotos duplicadas hasta 5 veces. Fix: `visDoPostFicha_()` ahora envuelve toda su
+lógica en `LockService.getScriptLock()`, y antes de tocar Drive revisa si la fila ya tiene
+`Estatus === 'Realizada'` — si es así, responde `{status:'ya_enviada', folio, fotos}` sin volver a
+llamar `visSubirFotos_()`, y el frontend lo trata como éxito, no como error. De paso, la
+validación de campos obligatorios (antes corría después de subir las fotos) se movió antes de
+`visSubirFotos_()`, para que un envío con campos faltantes ya no deje fotos huérfanas en Drive.
+Ver `docs/QA-NOTES.md #26` para el detalle en formato de bug cazado.
+
+**Fotos organizadas por semana en Drive (sep 2026).** Todo caía antes en la raíz de la carpeta
+"Fotos de Visitas Jefes" — cada vez más difícil de recorrer a mano conforme avanza el ciclo.
+Nueva `visObtenerCarpetaSemana_(carpetaBase, fechaISO)`: crea o reutiliza una subcarpeta
+`Semana YYYY-MM-DD` (el lunes de la semana de `fechaISO`, mismo criterio que ya usa
+`visLunesDeLaSemana_()` para la columna "Semana (lunes)" de la hoja, así que el nombre de la
+carpeta coincide con lo que ya se ve en el histórico) y la comparte "cualquiera con el link, ver"
+una sola vez por envío — mismo criterio de rendimiento que `visObtenerCarpetaFotos_()`.
+`visSubirFotos_()` sube ahí en vez de a la carpeta raíz. Las fotos subidas antes de este cambio se
+quedan donde estaban; esto solo organiza los envíos nuevos, no migra el histórico.
+
+**Ronda de UX tras una semana en producción (6 sep 2026) — feedback real, no hallazgo interno.**
+Jorge trajo una lista de fricciones reportadas por los ~20 jefes usando el sistema:
+- El botón "Reservar visita" (patrón `.form-button`/`.form-container` compartido con las páginas
+  de trámite de OTDE, colapsado por defecto en esas páginas) no se leía como algo que había que
+  abrir, y se confundía con el buscador de historial de más abajo. Fix: en esta página el
+  formulario **empieza expandido** (`#form-reservar` con la clase `active` desde el HTML, el
+  botón arranca en su estado "Ocultar formulario") — sigue siendo colapsable con el mismo
+  `toggleReservarForm()` de siempre, solo cambió el estado inicial. El buscador (`#vis-buscar`)
+  ganó una etiqueta ("Buscar en el historial de abajo") y una aclaración explícita de que no
+  reserva nada.
+- El historial crecía sin límite (`visRenderTabla()` volcaba todo `visReservasCache` de una sola
+  vez). Se agregó paginación 100% cliente (`VIS_TABLA_PAGE_SIZE`=20, `visPaginaActual`, funciones
+  `visBuscarCambio()`/`visPaginaAnterior()`/`visPaginaSiguiente()`) — los datos ya se cargaban
+  completos en memoria, así que no hizo falta ningún cambio de backend ni de `?action=disponibilidad`.
+  La búsqueda resetea a la página 1; un clamp defensivo dentro de `visRenderTabla()` corrige
+  cualquier página fuera de rango aunque algo llame a las funciones de navegación directamente.
+- Los mensajes de confirmación/error (`.soporte-submit-msg`, compartida con los 4 trámites de
+  OTDE) eran un texto plano sin posición ni énfasis — parte del motivo por el que un jefe no
+  sabía si su ficha ya se había enviado. Reforzados solo en estas dos páginas (selectores por ID,
+  `#reservar-msg`/`#ficha-msg`, para no tocar la clase compartida): ícono circular (✓/!, vía
+  `::before` con `content`), sombra, borde lateral grueso, y `scrollIntoView()` automático al
+  mostrarse.
+- Se agregó una guía "Cómo funciona, paso a paso" (4 pasos) antes del formulario. Se probó
+  primero resumir el párrafo largo del `.servicio-header` (pendiente documentado en
+  `docs/ROADMAP.md` ítem 14) a una sola oración, pero Jorge pidió restaurar el texto institucional
+  completo — el problema de UI/UX de ese ítem terminó resolviéndose con el formulario expandido
+  por defecto y la guía nueva, no con acortar el contenido.
 
 ---
 

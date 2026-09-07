@@ -616,6 +616,43 @@ Ejecutar. Un buen momento para cazar este patrón es justo antes de una difusió
 hash del código desplegado contra el repo en cada proyecto de Apps Script involucrado (ver
 sesión del 1 sep 2026 en `docs/BITACORA.md` para el método).
 
+## 26. Ficha post-visita duplicada hasta 5 veces (datos y fotos) — sin `LockService` ni idempotencia en el backend
+
+**Síntoma:** una semana después de publicar `ficha-ceremonias-civicas.html`, varios jefes
+reportaron a Jorge que su información y sus fotos habían quedado duplicadas — en algunos casos
+hasta 5 veces — en la Sheet/Drive de Ceremonias Cívicas.
+
+**Causa raíz:** el propio código ya documentaba la pieza que lo explica. El envío de la ficha
+usa un timeout de cliente de 120s (`FICHA_TIMEOUT_ENVIO_MS`, agregado el 31 ago 2026 tras el fix
+de rendimiento), pero con 20 fotos el servidor podía tardar hasta 68.7s **y seguir guardando de
+fondo** aunque el navegador ya hubiera abortado el `fetch()` — el mismo patrón que motivó ese fix
+anterior. Cuando eso pasaba, `enviarFicha()` mostraba "El servidor tardó demasiado en responder.
+Vuelve a intentarlo en un momento." y reactivaba el botón "Enviar" — el jefe, siguiendo la
+instrucción en pantalla, volvía a enviar la misma ficha con las mismas fotos. `visDoPostFicha_()`
+no tenía `LockService` (a diferencia de `visDoPostReservar_()`, que sí lo tiene) ni ninguna
+verificación de "esto ya se guardó", así que cada reintento repetía `visSubirFotos_()` completo
+— nuevos archivos en Drive cada vez, sin ningún control de duplicados. Además, la validación de
+campos obligatorios corría *después* de subir las fotos, así que un envío con campos faltantes
+también dejaba fotos huérfanas en Drive antes de fallar.
+
+**Fix:** `visDoPostFicha_()` ahora envuelve toda su lógica en `LockService.getScriptLock()`
+(mismo patrón que `visDoPostReservar_()`) y, antes de tocar Drive, revisa si la fila ya tiene
+`Estatus === 'Realizada'` — si es así, responde `{status:'ya_enviada', ...}` sin volver a subir
+nada, y el frontend lo trata como éxito (mismo estilo visual que `status:'ok'`), no como error.
+La validación de campos obligatorios se movió antes de la llamada a `visSubirFotos_()`. Sin
+cambios en `visDoPostReservar_()` (ya tenía el lock desde su implementación original). Pendiente
+de verificar en vivo tras el redeploy: enviar una ficha de prueba, reenviar el mismo folio, y
+confirmar que Drive no recibe una segunda tanda de fotos.
+
+**Dónde puede volver a pasar:** cualquier endpoint de `doPost` que acepte reintentos del cliente
+(timeout, doble tap, dos pestañas) y haga una operación no idempotente (crear archivos, mandar
+correos, incrementar contadores) sin `LockService` + un chequeo de "esto ya se procesó" basado en
+una llave estable (aquí, el folio). `visDoPostReservar_()` ya estaba protegido porque su
+duplicado obvio (dos reservas de la misma escuela/semana) se pensó desde el diseño original; el
+riesgo aquí era menos evidente porque la ficha "solo" actualiza una fila que ya existe, en vez de
+crear una nueva — pero actualizar una fila sigue sin ser gratis si antes de eso se suben archivos
+a un servicio externo.
+
 ## Regla general al corregir cualquiera de estos patrones
 
 Cuando se encuentra uno de estos bugs en un archivo, **revisar si el mismo
