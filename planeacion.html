@@ -44,7 +44,13 @@
         .contacto-box h2 { font-size: 22px; color: #56212f; margin-bottom: 20px; }
         .contacto-item { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; font-size: 15px; color: #333; }
         .contacto-icon { font-size: 20px; width: 30px; }
-        @media(max-width:768px){ .oficinas-grid { grid-template-columns: 1fr; } }
+        .documentos-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; margin-top: 20px; }
+        .documento-card { background: white; border: 2px solid #d6d1ca; border-top: 4px solid #9F2241; border-radius: 14px; padding: 30px; transition: all 0.3s; }
+        .documento-card:hover { border-color: #9F2241; transform: translateY(-4px); box-shadow: 0 8px 25px rgba(159,34,65,0.15); }
+        .documento-icon { width: 64px; height: 64px; border-radius: 50%; background: rgba(159,34,65,0.08); display: flex; align-items: center; justify-content: center; margin-bottom: 18px; }
+        .documento-card h3 { font-size: 19px; font-weight: 600; color: #56212f; margin-bottom: 10px; line-height: 1.35; }
+        .documento-card p { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 22px; }
+        @media(max-width:768px){ .oficinas-grid, .documentos-grid { grid-template-columns: 1fr; } }
     </style>
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="SEPRN">
@@ -135,6 +141,20 @@
                     <li>Dar atención al público en materia de control escolar</li>
                 </ul>
             </div>
+        </div>
+    </div>
+</div>
+<div class="seccion">
+    <div class="section-header" style="margin-bottom:28px;">
+        <span class="section-eyebrow">DOCUMENTOS</span>
+        <h2 class="section-title">Documentos</h2>
+    </div>
+    <div class="documentos-grid">
+        <div class="documento-card fade-item">
+            <div class="documento-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-6 4 4 5-8"/></svg></div>
+            <h3>Evaluación Institucional Final 2025-2026</h3>
+            <p>Presentación utilizada en la Evaluación Institucional Final del ciclo escolar 2025-2026, resultado del trabajo conjunto de toda la Subdirección. Presentada por la Dra. Avelina Galindo Celix el 8 de septiembre de 2026.</p>
+            <a href="pdfs/planeacion/Evaluaci%C3%B3n%20Final%2025-26%20080926.pptx" class="download-button" download>Descargar presentación</a>
         </div>
     </div>
 </div>
