@@ -14,6 +14,20 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-09-08 · Presentación "Evaluación Institucional Final 2025-2026" publicada en Planeación, con vista previa sin convertir a PDF
+
+| | |
+|---|---|
+| **Fecha** | 2026-09-08 |
+| **Sesión** | Jorge tenía en la raíz del repo `Evaluación Final 25-26 080926.pptx` (mensaje de la Dra. Avelina Galindo Celix invitando a la transmisión en vivo de la Evaluación Institucional Final del ciclo) y pidió subirla al sitio, proponiendo él mismo que viviera en `planeacion.html` — confirmado: el "Objetivo" de esa página ya menciona explícitamente "informes de evaluación" y "Planeación Institucional" (SSII). |
+| **Hallazgo que cambió el enfoque: el archivo pesaba 96.9MB** | Rozaba el límite de 100MB por archivo de GitHub (mismo límite que ya hizo excluir del repo un PDF de 248MB, ver `.gitignore`). Inspección con `python-pptx`/Pillow (sin LibreOffice/`soffice` instalado localmente) mostró que 44 de sus 50 imágenes internas eran fotos guardadas como PNG sin comprimir — se recodificaron a JPEG calidad 85 editando el ZIP OOXML directamente (renombrado interno + fix de referencias en todos los `.xml`/`.rels`), bajando el archivo a **13.9MB** sin pérdida perceptible. Detalle técnico completo, incluida la verificación de que ninguna otra extensión del paquete podía referenciar un nombre de imagen, en `docs/ARCHITECTURE.md §25`. |
+| **Nueva sección "Documentos" en `planeacion.html`** | Primera sección de este tipo en una página de área simple (antes solo `protocolos.html`, un hub aparte, tenía tarjetas de documento). `.documento-card` con ícono, título, descripción adaptada del mensaje original (en tiempo pasado/evergreen, ya que la transmisión en vivo ya había ocurrido) y botón "Descargar presentación" — grid listo para más documentos futuros de esta Subjefatura. Archivo en `pdfs/planeacion/Evaluación Final 25-26 080926.pptx` (nombre conservado tal como se entregó, mismo criterio que `pdfs/cte/...`). |
+| **Vista previa sin convertir a PDF, en un segundo momento de la misma sesión** | Jorge preguntó si era viable una vista previa antes de descargar. Inspección con `python-pptx` reveló que las 45 diapositivas son, cada una, una sola imagen a pantalla completa (los demás shapes son placeholders vacíos) — se extrajeron esas 45 imágenes (`images/planeacion/evaluacion-institucional-2025-2026/slide-01.jpg`…`slide-45.jpg`, 7.1MB totales) y se armó un lightbox vanilla-JS (miniatura clicable + botón "Vista previa", imagen grande, flechas, contador "N/45", teclado, clic-fuera para cerrar) sin cargar las 45 imágenes por adelantado. Esta técnica no generaliza a cualquier `.pptx` — solo aplica cuando cada diapositiva es de verdad una sola imagen; ver la salvedad completa en `docs/ARCHITECTURE.md §25`. |
+| **Verificación** | `python-pptx` confirmó que el `.pptx` comprimido abre sin errores y conserva 45 diapositivas con sus imágenes resolviendo correctamente; revisión visual de una diapositiva extraída sin artefactos perceptibles. La sección "Documentos" sí se probó en Chrome real (servidor local, desktop y verificación del enlace de descarga) antes del primer commit; el lightbox del segundo commit **no se probó visualmente** porque la extensión Claude in Chrome estaba desconectada — se verificó en su lugar con `tidy -e` (sin errores estructurales reales), `node --check` sobre el `<script>` del lightbox (sintaxis limpia) y balance de `<div>`/IDs únicos; publicado a pedido explícito de Jorge sin esperar esa verificación visual — **queda pendiente que él mismo confirme en producción** que el lightbox funciona como se espera. |
+| **Commits** | `6186123` (sección Documentos + `.pptx` comprimido) y `36d7e69` (vista previa lightbox + 45 imágenes) — ambos ya en `origin/main`, pusheados durante la sesión a pedido explícito de Jorge en cada caso. |
+
+---
+
 ## CHECKPOINT — 2026-09-07 · Videotutorial de Microsoft Authenticator + avisos de multi-dispositivo en `correo.html`
 
 | | |

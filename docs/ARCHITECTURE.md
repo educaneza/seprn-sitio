@@ -2030,3 +2030,65 @@ automatización / 🔴 no tocar, se llena solo) y una tabla columna-por-columna 
 trámites (Mantenimiento, Asesorías, Soporte, Correo — con una sub-tabla por cada uno de sus 4
 tipos —, Formación Docente), las 5 secciones completas desde el 3 sep 2026 — ya no quedan
 placeholders "pendiente" en la tabla de contenido.
+
+---
+
+## 25. Documentos pesados en páginas de área: compresión de `.pptx` + vista previa sin convertirlo a PDF (sep 2026)
+
+Jorge pidió publicar en `planeacion.html` un `.pptx` (Evaluación Institucional Final 2025-2026,
+45 diapositivas) que pesaba **96.9 MB** — sin LibreOffice/`soffice` instalado localmente para
+convertirlo a PDF, y rozando el límite de 100MB por archivo de GitHub (mismo límite que ya hizo
+excluir del repo, vía `.gitignore`, un PDF de 248MB — ver `CLAUDE.md`). Dos problemas resueltos
+sin ninguna herramienta externa, solo con `python-pptx` + Pillow (ya disponibles en el entorno):
+
+**Compresión del `.pptx` (96.9MB → 13.9MB) editando el paquete ZIP directamente.** Un `.pptx` es
+un ZIP OOXML: se inspeccionó `ppt/media/*` y 44 de sus 50 imágenes eran fotos guardadas como PNG
+sin comprimir (RGB, sin canal alpha, ~2.3MB c/u — PNG usado donde JPEG basta). Esas 44 se
+recodificaron a JPEG calidad 85 (`Pillow`, `im.convert('RGB').save(..., format='JPEG',
+quality=85, optimize=True)`), renombrando el nombre interno de `imageN.png` a `imageN.jpeg`
+(`[Content_Types].xml` ya traía declarado `Default Extension="jpeg"`, no hizo falta tocarlo) y
+reemplazando ese nombre en **todos** los `.xml`/`.rels` del paquete con un string-replace exacto
+— seguro porque se confirmó antes que el paquete no tiene ninguna otra extensión que pudiera
+referenciar un nombre de imagen (`{'xml':70,'rels':62,'png':49,'jpeg':2}`, sin `.vml` ni otros
+formatos de dibujo). Las 6 imágenes con transparencia real (íconos/logos, ya pequeñas) se dejaron
+intactas. Verificado abriendo el resultado con `python-pptx` (conserva 45 slides, cada imagen
+resuelve su blob sin excepción) y revisando visualmente una diapositiva extraída — sin artefactos
+perceptibles a esa calidad/resolución.
+
+**Vista previa sin PDF: cada diapositiva resultó ser una sola imagen a pantalla completa.**
+Inspección con `python-pptx` (`shape.shape_type == 13` = `PICTURE`) mostró que las 45 diapositivas
+tienen exactamente 1 shape de imagen cada una — los demás shapes presentes en algunas (`PLACEHOLDER`
+de título/contenido) están vacíos (`shape.text_frame.text == ''`), sobras de layout sin contenido
+visible. Es decir: el diseño de este documento en particular es "una imagen = una diapositiva",
+así que **no hace falta un motor de renderizado de PowerPoint** para previsualizarlo — basta con
+extraer el `.image.blob` de esa única imagen por diapositiva. Se generaron 45 JPEGs
+(`im.convert` aplanando cualquier alpha sobre blanco, ancho máximo 1280px, calidad 80 → **7.1MB
+totales**) en `images/planeacion/evaluacion-institucional-2025-2026/slide-01.jpg` …
+`slide-45.jpg`. **Esta técnica no generaliza a cualquier `.pptx`** — solo funciona cuando el
+conteo de `PICTURE` por diapositiva es 1 y los demás shapes están vacíos; antes de reusarla para
+un documento nuevo, confirmar eso con el mismo chequeo de `python-pptx` en vez de asumirlo.
+
+**UI nueva en `planeacion.html` — primera sección "Documentos" en una página de área simple**
+(hasta ahora solo `protocolos.html`, un hub aparte, tenía tarjetas de documento). `.documento-card`
+(CSS page-specific en el `<style>` inline, mismo criterio que `.protocolo-card` de
+`protocolos.html` — no se movió a `styles.css`): miniatura clicable de la diapositiva 1 + botón
+"Vista previa" (abre un lightbox vanilla-JS: `#lightbox-overlay`, flechas prev/next, contador
+"N / 45", cierre con click-fuera/Escape/×, navegación con flechas del teclado) + botón "Descargar
+presentación" (`.download-button` compartido de `styles.css`). El lightbox no precarga las 45
+imágenes — solo pide la que se está mostrando (`slidePath(n)` arma la URL bajo demanda), así que
+el costo inicial de página es solo la miniatura de la diapositiva 1.
+
+**Convención de carpetas para este patrón**: el archivo descargable comprimido va en
+`pdfs/<area>/` (aquí `pdfs/planeacion/`, mismo patrón plano que `pdfs/protocolos/`); las imágenes
+de vista previa van en `images/<area>/<slug-del-documento>/slide-NN.jpg` (aquí
+`images/planeacion/evaluacion-institucional-2025-2026/`) — carpeta dedicada por documento, no una
+carpeta `images/planeacion/` plana, para que un segundo documento futuro no mezcle sus
+diapositivas con las de este.
+
+**Sin verificación visual en Chrome en esta sesión** (la extensión Claude in Chrome estaba
+desconectada) — se verificó en su lugar: `tidy -e` sin errores estructurales reales (solo los
+falsos positivos habituales de `<header>`/`<nav>`/`<svg>` no reconocidos por esa versión vieja de
+`tidy`), `node --check` sobre el bloque `<script>` del lightbox (sintaxis limpia), conteo de
+`<div>` balanceado, e IDs únicos. Publicado a pedido explícito de Jorge sin esperar esa
+verificación visual — **queda pendiente que él mismo confirme en producción** que el lightbox
+(flechas, teclado, cierre) funciona como se espera.

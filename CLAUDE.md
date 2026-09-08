@@ -491,7 +491,7 @@ ya esté expandido).
 1. No introducir npm, frameworks ni build steps — stack estático puro
 2. Cambios globales de UI → `styles.css`; cambios específicos de página → `<style>` inline en el HTML
 3. Para modificar estilos del header/footer: son inline en cada página, no hay componente compartido
-4. Imágenes en `images/`, PDFs en `pdfs/cte/cte-<ciclo>/<nombre-sesion>/` (ej. `pdfs/cte/cte-2026-2027/cte-fase-intensiva/`) o en `pdfs/protocolos/` para los protocolos oficiales del Estado de México (planos, sin subcarpeta — ver `protocolos.html` abajo), instaladores/ejecutables descargables en `descargas/` (ej. `.exe`, `.bat`)
+4. Imágenes en `images/`, PDFs en `pdfs/cte/cte-<ciclo>/<nombre-sesion>/` (ej. `pdfs/cte/cte-2026-2027/cte-fase-intensiva/`) o en `pdfs/protocolos/` para los protocolos oficiales del Estado de México (planos, sin subcarpeta — ver `protocolos.html` abajo), instaladores/ejecutables descargables en `descargas/` (ej. `.exe`, `.bat`). Documentos pesados de página de área (`.pptx`/`.pdf` propios de una Subjefatura, no institucionales): archivo descargable en `pdfs/<area>/`, diapositivas de vista previa (si aplica) en `images/<area>/<slug-del-documento>/slide-NN.jpg` — ver `docs/ARCHITECTURE.md §25` (compresión de `.pptx` + lightbox sin convertir a PDF, caso real en `planeacion.html`)
 5. Después de push: esperar 5-10 min o Cmd+Shift+R para invalidar caché de GitHub Pages
 6. Los PDFs de sesiones CTE se nombran con mayúsculas y acentos; URL-encodear la ó como `%C3%B3` en los hrefs
 7. **Sin emojis** en HTML — usar SVG inline para íconos de contacto (persona, correo, teléfono). Ver `contacto-icon` en cualquier página de área como referencia
