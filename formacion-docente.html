@@ -250,6 +250,18 @@
       font-size: .82rem; color: var(--ink-soft); line-height: 1.5;
       display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
     }
+    .cc-desc.expanded { -webkit-line-clamp: unset; overflow: visible; }
+    .cc-desc-toggle {
+      background: none; border: none; padding: 0; margin-top: -.35rem;
+      font-size: .78rem; font-weight: 700; cursor: pointer; text-align: left;
+      align-self: flex-start;
+    }
+    .cc-externo-tag {
+      display: inline-flex; align-items: center; gap: .35rem; align-self: flex-start;
+      font-size: .74rem; font-weight: 700; color: var(--warn); background: var(--warn-bg);
+      border-radius: 999px; padding: .3rem .7rem .3rem .6rem;
+    }
+    .cc-externo-tag svg { width: 12px; height: 12px; flex-shrink: 0; }
     .cc-info { display: flex; flex-direction: column; gap: .4rem; margin-top: .1rem; }
     .cc-pill { display: inline-flex; align-items: center; gap: .45rem; font-size: .82rem; font-weight: 500; color: var(--ink-soft); }
     .cc-pill svg { width: 15px; height: 15px; flex-shrink: 0; opacity: .55; }
@@ -295,6 +307,8 @@
       padding: .4rem .5rem .4rem .75rem; border-radius: 999px; max-width: 190px;
     }
     .rs-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .rs-chip-warn { flex-shrink: 0; width: 13px; height: 13px; color: #f5c86b; }
+    .rs-chip-warn svg { display: block; width: 100%; height: 100%; }
     .rs-chip button {
       flex-shrink: 0; width: 18px; height: 18px; border-radius: 50%; border: none; cursor: pointer;
       background: rgba(255,255,255,.14); color: #fff; display: flex; align-items: center; justify-content: center;
@@ -328,7 +342,10 @@
     .rsb-item { display: flex; align-items: center; gap: .7rem; }
     .rsb-item .rsb-icon { flex-shrink: 0; width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
     .rsb-item .rsb-icon svg { width: 17px; height: 17px; }
-    .rsb-item .rsb-nombre { flex: 1; min-width: 0; font-size: .82rem; font-weight: 600; color: var(--ink); line-height: 1.35; }
+    .rsb-item .rsb-nombre-wrap { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: .2rem; }
+    .rsb-item .rsb-nombre { font-size: .82rem; font-weight: 600; color: var(--ink); line-height: 1.35; }
+    .rsb-nota-externo { display: flex; align-items: center; gap: .3rem; font-size: .72rem; font-weight: 600; color: var(--warn); }
+    .rsb-nota-externo svg { width: 11px; height: 11px; flex-shrink: 0; }
     .rsb-item button { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; border: none; background: var(--canvas); color: var(--ink-faint); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s, color .15s; }
     .rsb-item button:hover { background: var(--danger-bg); color: var(--danger); }
     .rsb-item button svg { width: 10px; height: 10px; }
@@ -590,9 +607,9 @@
       <p>Toca la tarjeta del curso o webinar al que deseas inscribirte</p>
     </div>
 
-    <div class="aviso-legal">
+    <div class="aviso-legal" id="aviso-legal" style="display:none;">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      <span><strong>Este formulario no es tu inscripción oficial al curso.</strong> Es un registro interno de OTDE NEZA para dar seguimiento y generar estadística. Tu inscripción oficial (cuando aplique) se hace directamente en la plataforma o convocatoria de CoEEE — la liga, si el curso la tiene, aparece al final de este registro.</span>
+      <span><strong>Este formulario no es tu inscripción oficial al curso.</strong> Es un registro interno de OTDE NEZA para dar seguimiento y generar estadística. Tu inscripción oficial se hace directamente en la plataforma o convocatoria de CoEEE — la liga, si el curso la tiene, aparece al final de este registro.</span>
     </div>
 
     <div id="catalogo-cargando" class="catalogo-estado">
@@ -926,6 +943,9 @@
   // no dieron consentimiento para aparecer, solo se muestra el conteo real.
   const ICON_AVATAR = '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8.5" r="4"/><path d="M4 20.5c0-4.4 3.6-7.5 8-7.5s8 3.1 8 7.5"/></svg>';
   const ICON_AUDIENCE = '<svg viewBox="0 0 20 20" fill="currentColor"><path d="M7 9a3 3 0 100-6 3 3 0 000 6zM3.5 17a3.5 3.5 0 017 0 .5.5 0 01-.5.5h-6a.5.5 0 01-.5-.5zM14.5 9a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM12.9 12.1c.87.55 1.6 1.4 1.6 2.4v2h2a.5.5 0 00.5-.5V15a3.5 3.5 0 00-4.1-2.9z"/></svg>';
+  // Mismo ícono que .aviso-legal — un solo símbolo visual para "hay registro
+  // externo de por medio" en todo el flujo (tarjeta, chip, resumen, aviso).
+  const ICON_EXTERNO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
 
   // ── Estado global ──
   let cursosSeleccionados = []; // [{id, nombre, categoria, liga}]
@@ -1071,6 +1091,7 @@
             ${curso.modalidad ? `<span class="cc-pill">${ICON_MODALIDAD} <span class="cc-modalidad-txt"></span></span>` : ''}
             ${curso.dirigido_a ? `<span class="cc-pill">${ICON_AUDIENCE} <span class="cc-dirigido-txt"></span></span>` : ''}
           </div>
+          ${curso.liga_convocatoria ? `<div class="cc-externo-tag">${ICON_EXTERNO} Registro en plataforma externa</div>` : ''}
           ${inscritos > 0 ? `
           <div class="cc-inscritos">
             <span class="cc-avatares">${ICON_AVATAR}${ICON_AVATAR}${ICON_AVATAR}</span>
@@ -1088,6 +1109,28 @@
       if (curso.dirigido_a) card.querySelector('.cc-dirigido-txt').textContent = curso.dirigido_a;
 
       grid.appendChild(card);
+
+      // "Leer más": solo si el texto realmente se recorta a 3 líneas —
+      // se mide tras insertar en el DOM (scrollHeight solo es real ya
+      // en el layout).
+      if (curso.descripcion) {
+        const descEl = card.querySelector('.cc-desc');
+        requestAnimationFrame(() => {
+          if (descEl.scrollHeight > descEl.clientHeight + 1) {
+            const toggle = document.createElement('button');
+            toggle.type = 'button';
+            toggle.className = 'cc-desc-toggle';
+            toggle.style.color = style.solid;
+            toggle.textContent = 'Leer más';
+            toggle.addEventListener('click', ev => {
+              ev.stopPropagation();
+              const expanded = descEl.classList.toggle('expanded');
+              toggle.textContent = expanded ? 'Leer menos' : 'Leer más';
+            });
+            descEl.insertAdjacentElement('afterend', toggle);
+          }
+        });
+      }
     });
   }
 
@@ -1125,6 +1168,12 @@
   function actualizarResumenSticky() {
     const n = cursosSeleccionados.length;
 
+    // Aviso de inscripción no oficial: solo si algún curso seleccionado
+    // tiene Liga_convocatoria — con nada seleccionado, o solo cursos sin
+    // liga externa, no aplica y se mantiene oculto.
+    const algunoConLiga = cursosSeleccionados.some(c => c.liga);
+    document.getElementById('aviso-legal').style.display = algunoConLiga ? 'flex' : 'none';
+
     // Barra inferior (móvil/tablet, <960px)
     const barra = document.getElementById('resumen-sticky');
     barra.classList.toggle('visible', n > 0);
@@ -1136,6 +1185,14 @@
     cursosSeleccionados.forEach(c => {
       const chip = document.createElement('div');
       chip.className = 'rs-chip';
+
+      if (c.liga) {
+        const warnIcon = document.createElement('span');
+        warnIcon.className = 'rs-chip-warn';
+        warnIcon.title = 'Requiere registro en plataforma externa';
+        warnIcon.innerHTML = ICON_EXTERNO;
+        chip.appendChild(warnIcon);
+      }
 
       const span = document.createElement('span');
       span.textContent = c.nombre;
@@ -1176,10 +1233,22 @@
         icono.innerHTML = style.icon;
         item.appendChild(icono);
 
+        const nombreWrap = document.createElement('span');
+        nombreWrap.className = 'rsb-nombre-wrap';
+
         const nombre = document.createElement('span');
         nombre.className = 'rsb-nombre';
         nombre.textContent = c.nombre;
-        item.appendChild(nombre);
+        nombreWrap.appendChild(nombre);
+
+        if (c.liga) {
+          const nota = document.createElement('span');
+          nota.className = 'rsb-nota-externo';
+          nota.innerHTML = ICON_EXTERNO + ' Requiere registro externo';
+          nombreWrap.appendChild(nota);
+        }
+
+        item.appendChild(nombreWrap);
 
         const btn = document.createElement('button');
         btn.type = 'button';
