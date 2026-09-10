@@ -242,3 +242,47 @@ genérico de "Certificado" — la mayoría de las categorías (webinars, salvo
 UNETE) no emiten constancia; el chip real dice "Constancia según programa".
 Si se agrega un chip nuevo aquí, debe ser verdadero para **cualquier**
 categoría del catálogo, no solo para la que se tenía en mente al escribirlo.
+
+## Patrón: descripción expandible ("Leer más")
+
+`.cc-desc` recorta la `Descripcion` del curso a 3 líneas (`-webkit-line-clamp:
+3`). Como el texto es de largo variable (Jorge escribe lo que quiera en el
+Sheet), algunas descripciones se recortan y otras no — el botón "Leer más"
+solo se agrega si de verdad hay texto cortado, midiendo tras insertar la
+tarjeta en el DOM (`descEl.scrollHeight > descEl.clientHeight`, dentro de un
+`requestAnimationFrame` porque `scrollHeight` solo es real ya en el layout).
+Al expandir, `.cc-desc.expanded` quita el `line-clamp` y el botón cambia a
+"Leer menos" — la tarjeta crece y empuja las de abajo en el grid, aceptado a
+propósito (es el patrón esperado en catálogos con texto de longitud
+variable, más simple que un modal o tooltip aparte). El botón usa
+`ev.stopPropagation()` para no disparar `seleccionarCurso()` de la tarjeta.
+
+## Patrón: aviso de registro externo (dinámico, por curso y no solo global)
+
+Antes el aviso "Este formulario no es tu inscripción oficial al curso"
+(`.aviso-legal`) era un bloque estático siempre visible en el paso 1,
+aplicara o no al curso que el docente terminaba eligiendo — confuso cuando
+el catálogo mezcla cursos con y sin plataforma externa. Ahora son **tres
+señales relacionadas**, todas condicionadas a si el curso tiene
+`Liga_convocatoria` (no a `Registro_previo_requerido` — ese campo solo
+decide si el paso intermedio de registro externo se fuerza, ver "Registro
+previo externo" en `docs/ARCHITECTURE.md §12`; aquí basta con que exista una
+liga, forzada o no, para que aplique el aviso):
+
+1. **Badge en la tarjeta del catálogo** (`.cc-externo-tag`, pill ámbar con
+   `ICON_EXTERNO`) — visible para cualquier curso con liga, incluso antes de
+   seleccionar nada.
+2. **Nota por curso en el resumen de selección** — `.rsb-nota-externo` en el
+   panel de escritorio (debajo del nombre de ese curso específico) y
+   `.rs-chip-warn` (solo el ícono, sin texto, por espacio) en el chip móvil.
+3. **El aviso general** (`.aviso-legal`, oculto por defecto) — se muestra u
+   oculta en cada cambio de selección, dentro de `actualizarResumenSticky()`:
+   `algunoConLiga = cursosSeleccionados.some(c => c.liga)`. Con cero cursos
+   seleccionados, o solo cursos sin liga, permanece oculto.
+
+`ICON_EXTERNO` es el mismo ícono (círculo con "i") en las tres señales y en
+`.aviso-legal` — un solo símbolo visual para "hay una plataforma externa de
+por medio" en todo el flujo, en vez de tres íconos distintos para la misma
+idea. Si se agrega una cuarta superficie que necesite esta señal (ej. el
+paso de confirmación), reusar `ICON_EXTERNO` y la misma condición
+(`liga`/`liga_convocatoria`), no `registroPrevio`.

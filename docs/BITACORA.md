@@ -14,6 +14,19 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-09-10 (cont.) · Dos ajustes de UI en el catálogo de Formación Docente: descripción expandible y aviso de registro externo dinámico por curso
+
+| | |
+|---|---|
+| **Fecha** | 2026-09-10 |
+| **Sesión** | Continuación de la sesión anterior del mismo día (reactivación de la card). Jorge reportó dos problemas de UI al revisar el catálogo con el primer curso real: (1) descripciones de más de 3 líneas se veían cortadas sin forma de leerlas completas; (2) el aviso amarillo "Este formulario no es tu inscripción oficial al curso" aparecía siempre, aplicara o no al curso elegido. |
+| **Descripción expandible ("Leer más")** | `.cc-desc` sigue recortando a 3 líneas, pero ahora se mide con `scrollHeight > clientHeight` (dentro de `requestAnimationFrame`, tras insertar la tarjeta en el DOM) si el texto realmente se cortó — solo entonces se agrega el botón "Leer más"/"Leer menos" (`.cc-desc-toggle`, quita `-webkit-line-clamp` con la clase `.cc-desc.expanded`). El botón usa `stopPropagation()` para no disparar la selección de la tarjeta. |
+| **Aviso de registro externo, de estático a dinámico y en tres señales** | Primer intento: solo ocultar/mostrar el aviso general (`#aviso-legal`, oculto por defecto) según si algún curso seleccionado tiene `Liga_convocatoria` (`actualizarResumenSticky()`). Jorge preguntó si se vería "más pro" si el aviso fuera específico al curso en vez de solo general arriba — se acordó agregar, además del aviso general: un badge ámbar en la tarjeta del catálogo (`.cc-externo-tag`, "Registro en plataforma externa") y una nota por curso en el panel "Resumen de selección" (`.rsb-nota-externo` en escritorio, ícono `.rs-chip-warn` en el chip móvil por espacio). Las tres señales comparten el mismo ícono (`ICON_EXTERNO`) y la misma condición (`liga`/`Liga_convocatoria`, no `Registro_previo_requerido` — ese campo solo fuerza el paso intermedio de registro, es un condicional distinto). Detalle completo de ambos patrones en `docs/DESIGN_SYSTEM.md`. |
+| **Verificación** | El catálogo real solo tiene un curso (sin liga), así que no bastaba para probar el badge/nota/aviso en combinación — se armó un catálogo de prueba (`mock.json` con 2 cursos, uno con `liga_convocatoria` lleno) en un servidor local aparte, con `js/cct-db.js` copiado para que la página cargara sin errores, todo en el directorio de trabajo temporal (no en el repo). Verificado visualmente: el badge aparece solo en la tarjeta con liga; al seleccionar ambos cursos, la nota "Requiere registro externo" aparece solo bajo el curso correcto en el panel de escritorio y el ícono de advertencia aparece solo en su chip (probado también en viewport de 700px de ancho); el aviso general aparece al tener cualquiera de los dos seleccionados. Carpeta de prueba y servidor local eliminados al terminar. `git diff --stat`: 2 archivos (`formacion-docente.html`, `docs/DESIGN_SYSTEM.md`), 117 inserciones, 4 eliminaciones. |
+| **Commits** | Pendiente — sesión sin commitear todavía al momento de este checkpoint. |
+
+---
+
 ## CHECKPOINT — 2026-09-10 · Card de Centro de Formación Docente reactivada en Oficina Virtual, con primer curso real y fix de `formatearFecha`
 
 | | |
