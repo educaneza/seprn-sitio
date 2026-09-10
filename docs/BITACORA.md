@@ -14,6 +14,21 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-09-10 (cont. 2) · Cierra hueco de avisos duplicados en Ceremonias Cívicas — trigger diario instalado en producción, cascada de avisos y fricción real en el frontend
+
+| | |
+|---|---|
+| **Fecha** | 2026-09-10 |
+| **Sesión** | Jorge detectó con evidencia real (captura de pantalla) que la escuela "Revolución Mexicana" (CCT `15DPR0509L`) acumuló 3 reservas en semanas consecutivas por 3 personas distintas — la primera (31-ago, Erika) nunca llenó la ficha y se quedó "Reservada" para siempre, y ninguna de las 2 siguientes (Janet 14-sep, Nallely 21-sep) vio ningún aviso de que ya había actividad reciente en esa escuela. |
+| **Diagnóstico: dos causas combinadas** | (1) `visInstalarTriggerValidacion()` nunca se había instalado en el proyecto real de Apps Script — confirmado por Jorge en vivo revisando la pestaña "Activadores" — así que `visMarcarNoRealizadas_()` nunca corrió y la reserva de Erika nunca "envejeció". (2) Aunque el trigger hubiera corrido a tiempo, el hueco de diseño seguía ahí: todos los avisos de `ceremonias-civicas.html` (badge del autocomplete, `visRevisarConflicto()`, contador de cobertura) solo comparaban contra `estatus === 'Realizada'` — una fila "Reservada" de otra semana, completada o no, era invisible. Causa raíz completa en `docs/QA-NOTES.md #28`. |
+| **Fix operativo (Jorge, en el editor real de Apps Script)** | Instaló `visInstalarTriggerValidacion()` y lo confirmó en "Activadores"; corrió `visMarcarNoRealizadas_()` una vez para limpiar lo atorado (la fila de Erika pasó a "No realizada"; Janet/Nallely siguieron "Reservada" por estar dentro de su ventana de 3 días — correcto). Encontró en el camino que esa función no aparecía en el desplegable de funciones del editor por terminar en guion bajo — se envolvió en una función temporal sin guion bajo para poder ejecutarla. Causa raíz y fix documentados en `docs/QA-NOTES.md #29`. |
+| **Fix de frontend, todo en `ceremonias-civicas.html` sin tocar el `.gs`** | `visRevisarConflicto()` pasó a una cascada de 3 niveles al reservar — "Reservada" **vencida** (+3 días sin ficha, calculado 100% en el cliente con `visEsVencida()`, sin depender de que el trigger del backend esté corriendo) > "Reservada" **pendiente** (otra semana, dentro de su ventana) > "Realizada" (rama original). Motivo de revisita pasó de opcional a obligatorio; se agregó un checkbox de confirmación explícita que se resetea con cada cambio de CCT/fecha — fricción real, no un candado duro. `enviarReserva()` ahora refresca `visReservasCache` justo antes de validar. |
+| **Refinamiento tras ver el resultado en vivo (feedback de Jorge, mismo día)** | La etiqueta de cobertura se movía a una función compartida (`visEtiquetaCobertura()`, con fecha y nombre de quien reservó) y se trasladó de la sugerencia del autocomplete (que desaparece al elegir la escuela) a la caja de estatus verde que sí queda persistente tras seleccionar el CCT. La tabla de historial marca "⚠ Sin ficha" en cualquier "Reservada" vencida. "Ceremonia cívica semanal" quedó preseleccionada en Tipo de visita (única visita real que resta el ciclo), sin quitar "Inicio de ciclo escolar" del `<select>` — se necesitará de nuevo en el ciclo 2027-2028. |
+| **Verificación** | Servidor local + datos reales de producción (solo lectura, ninguna reserva de prueba se envió): badge y cascada de avisos citando a Erika/Nallely por nombre y fecha real; `validarReservaForm()` confirmado en consola devolviendo `false` sin motivo/checkbox y `true` con ambos; fila de Erika confirmada "No realizada" en el Sheet real tras la limpieza retroactiva; recarga de la tabla de historial confirmando "⚠ Sin ficha" solo en la fila vencida, no en las de Janet/Nallely. `git diff --stat` del primer commit: `ceremonias-civicas.html`, 115 inserciones, 10 eliminaciones. |
+| **Commits** | `05d6a8d` (cascada de avisos + checkbox + badges) y `50db3ea` (badge persistente con fecha/nombre, motivo obligatorio, tipo de visita preseleccionado) — ambos ya en `origin/main`, pusheados durante la sesión a pedido explícito de Jorge en cada caso. |
+
+---
+
 ## CHECKPOINT — 2026-09-10 (cont.) · Dos ajustes de UI en el catálogo de Formación Docente: descripción expandible y aviso de registro externo dinámico por curso
 
 | | |

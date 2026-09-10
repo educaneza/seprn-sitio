@@ -678,6 +678,67 @@ directo a `Utilities.formatDate()` (u otra API de fecha de Apps Script) confiand
 con `isNaN(fecha.getTime())` antes de formatear siempre que el valor de entrada pueda ser texto
 libre en vez de una fecha real capturada por un `date picker`.
 
+## 28. Avisos de cobertura de Ceremonias Cívicas solo miraban `estatus === 'Realizada'` — una "Reservada" nunca completada era invisible para quien reservaba después
+
+**Síntoma:** Jorge detectó con evidencia real que la escuela "Revolución Mexicana"
+(CCT `15DPR0509L`) acumuló 3 reservas en semanas consecutivas por 3 personas distintas — la
+primera (31-ago) nunca llegó a llenar la ficha, así que se quedó en estatus "Reservada" para
+siempre. Las 2 personas siguientes reservaron la misma escuela sin ver ningún aviso de que ya
+tenía actividad reciente.
+
+**Causa raíz (dos causas combinadas):** (1) `visInstalarTriggerValidacion()` nunca se había
+instalado en el proyecto real de Apps Script, así que `visMarcarNoRealizadas_()` — que debería
+marcar "No realizada" una "Reservada" sin ficha tras `VIS_DIAS_LIMITE_VALIDACION`=3 días — nunca
+corrió, y la reserva de la primera persona nunca dejó de contar como "activa" en apariencia. (2)
+Aunque el trigger hubiera corrido a tiempo, el hueco de diseño real seguía ahí: todos los avisos
+de `ceremonias-civicas.html` (badge del autocomplete, `visRevisarConflicto()`, contador de
+cobertura) solo comparaban contra `estatus === 'Realizada'` — una fila "Reservada" de otra
+semana, completada o no, era invisible para cualquiera de los tres.
+
+**Fix:** `visRevisarConflicto()` pasó a una cascada de 3 niveles (vencida > pendiente > ya
+realizada) que sí considera filas "Reservada" de otras semanas, con un `visEsVencida()` que
+calcula la ventana de 3 días **100% en el cliente** (no depende de que el trigger del backend
+esté corriendo — defensa en profundidad tras el fallo de arriba). El mismo criterio se
+compartió (`visEtiquetaCobertura()`) con el badge del autocomplete y con la caja de estatus
+persistente tras seleccionar la escuela. Motivo de revisita pasó de opcional a obligatorio, y se
+agregó un checkbox de confirmación explícita — ninguno de los dos es un candado duro, solo
+fricción real en vez de una advertencia ignorable. Ver `docs/ARCHITECTURE.md §22`.
+
+**Dónde puede volver a pasar:** cualquier flujo de este sitio que dependa de un trigger diario
+instalable (`visInstalarTriggerValidacion()`, `manInstalarTriggerCierre()`,
+`sopInstalarTriggerCierre()`, etc.) para que un estatus "avance" solo — si el trigger nunca se
+instaló o se cayó, cualquier lógica de aviso que solo mire el estatus "final" (`Realizada`,
+`Resuelto`, etc.) sin considerar el estatus intermedio vencido se queda ciega igual que aquí.
+
+## 29. Una función terminada en guion bajo (`visMarcarNoRealizadas_`) no aparece en el desplegable "Seleccionar función" del editor de Apps Script
+
+**Síntoma:** al instalar el trigger diario de arriba (nota 28), Jorge corrió
+`visInstalarTriggerValidacion()` sin problema desde el desplegable de funciones del editor, pero
+al buscar `visMarcarNoRealizadas_()` para correr la limpieza retroactiva una sola vez, la función
+**no aparecía en la lista** — pese a estar guardada en el archivo y no recibir ningún parámetro
+(así que no era el caso de la nota #14).
+
+**Causa raíz:** el editor nuevo de Apps Script excluye del desplegable "Seleccionar función" las
+funciones cuyo nombre termina en guion bajo — la misma convención de "función privada" que ya
+usa todo este proyecto (`visExisteReservaActiva_`, `visDoPostFicha_`,
+`visBuscarFilaPorFolio_`, etc.). No es un bug del código, es un comportamiento del editor que
+nadie había necesitado ejecutar manualmente hasta ahora — el resto de funciones con guion bajo
+de este sitio normalmente solo se llaman desde otro código, nunca directo desde el botón
+▶️ Ejecutar.
+
+**Fix:** envolverla en una función temporal sin guion bajo, guardar, y seleccionar/ejecutar esa
+en su lugar — mismo mecanismo que la nota #14, aunque la causa raíz es distinta (ahí faltaba un
+argumento; aquí falta que el nombre no termine en `_`):
+```js
+function ejecutarLimpiezaCeremoniasAhora() {
+  visMarcarNoRealizadas_();
+}
+```
+
+**Dónde puede volver a pasar:** cualquier función con guion bajo al final de cualquier backend
+de este sitio (todos siguen esta convención para "privado") que alguna vez necesite correrse
+manualmente desde el editor en vez de solo ser invocada por otro código.
+
 ## Regla general al corregir cualquiera de estos patrones
 
 Cuando se encuentra uno de estos bugs en un archivo, **revisar si el mismo

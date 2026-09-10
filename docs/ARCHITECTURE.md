@@ -1666,12 +1666,29 @@ impide duplicar escuela+semana; nada impedía que la misma escuela recibiera var
 semanas distintas mientras otras nunca se visitaban. Jorge confirmó que una revisita legítima
 (seguimiento a compromisos acordados en una visita anterior) debe seguir siendo posible, así que
 no cabía un bloqueo duro. En su lugar: un contador de cobertura en `ceremonias-civicas.html`
-("N de \<total\> escuelas visitadas este ciclo", calculado en el cliente contra `CCT_DB`), un
-badge "Ya visitada" en las sugerencias del autocomplete de CCT, y un aviso no bloqueante
-(`visRevisarConflicto()`, con la fecha + nombre + cargo de quien visitó antes) cuando se elige
-una escuela con una visita "Realizada" en una semana distinta a la que se está reservando — con
-un campo opcional "Motivo de revisita" que viaja en el payload (`datos.motivoRevisita`) y se
-guarda en la columna X, para dejar rastro de por qué se repitió sin impedirlo.
+("N de \<total\> escuelas visitadas este ciclo", calculado en el cliente contra `CCT_DB`) y un
+aviso al reservar con el motivo obligatorio (columna X, `datos.motivoRevisita`) para dejar
+rastro de por qué se repitió sin impedirlo.
+
+**Hueco encontrado y cerrado (10 sep 2026): los avisos solo miraban `estatus === 'Realizada'`,
+así que una "Reservada" nunca completada era invisible.** Causa raíz completa y fix en
+`docs/QA-NOTES.md #28`/`#29`. Resultado, todo en `ceremonias-civicas.html` sin tocar el `.gs`:
+`visRevisarConflicto()` es ahora una cascada de 3 niveles al reservar — "Reservada" **vencida**
+(misma escuela, +3 días después de su fecha planeada sin ficha, calculado en el cliente con
+`visEsVencida()` — **no depende de que el trigger diario del backend esté corriendo**, es
+defensa en profundidad) > "Reservada" **pendiente** (otra semana, dentro de su ventana) >
+"Realizada" (rama original, sin cambios). Motivo de revisita pasó de opcional a obligatorio, y
+se agregó un checkbox de confirmación explícita ("Leí el aviso... y decido continuar") que se
+resetea cada vez que cambia el CCT o la fecha — ninguno de los dos es un candado duro, solo
+fricción real en vez de una advertencia ignorable. `visEtiquetaCobertura()` unifica el mismo
+criterio (con fecha y nombre de quien reservó) en dos lugares: la sugerencia del autocomplete de
+CCT y, sobre todo, la caja de estatus verde que queda **persistente** después de seleccionar la
+escuela (antes solo vivía en la sugerencia, que desaparece al elegir — ahí es donde más importa
+verla). La tabla de historial marca "⚠ Sin ficha" en cualquier "Reservada" vencida, para
+detectarla con solo ver la tabla. `enviarReserva()` ahora refresca `visReservasCache` justo
+antes de validar, no solo al abrir la página. "Ceremonia cívica semanal" quedó preseleccionada
+en Tipo de visita (es la única visita real que resta el ciclo), sin quitar "Inicio de ciclo
+escolar" del `<select>` — se necesitará de nuevo en el ciclo 2027-2028.
 
 **Panel de cobertura por persona/sector, protegido con clave — reactivado, y con una prueba
 temporal sin clave (sep 2026).** Visitas realizadas por persona y escuelas visitadas por sector,
@@ -1715,7 +1732,13 @@ ocurrió — si no llega, se asume que no se hizo. `visMarcarNoRealizadas_()` re
 en estatus "Reservada" cuya fecha planeada tenga más de `VIS_DIAS_LIMITE_VALIDACION`=3 días y
 las marca "No realizada"; se instala como trigger de tiempo diario
 (`visInstalarTriggerValidacion()`, nunca llamado `onEdit` a secas, mismo criterio de triggers
-instalables del resto del sitio) desde el menú del Sheet, no automáticamente al desplegar.
+instalables del resto del sitio) desde el menú del Sheet, no automáticamente al desplegar. **Este
+trigger nunca se había instalado en el proyecto real** hasta el 10 sep 2026 — confirmado y
+corregido en la misma sesión del hallazgo de arriba, junto con una limpieza retroactiva
+(`visMarcarNoRealizadas_()` corrida una vez a mano). Al correrla, `visMarcarNoRealizadas_()` no
+aparecía en el desplegable de funciones del editor por terminar en guion bajo — hubo que
+envolverla en una función temporal sin guion bajo para poder seleccionarla (ver
+`docs/QA-NOTES.md #29`).
 
 **Decisión de arquitectura — Fase 2 (reporte general de actividad para el CM) queda separada,
 sin construir.** Jorge notó que el folio de Ceremonias Cívicas no puede ser la llave de entrada
