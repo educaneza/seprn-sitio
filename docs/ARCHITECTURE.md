@@ -637,6 +637,8 @@ Fecha_ultima_actualizacion   Activo (controla el catálogo)              CCT, Es
                              Recordatorio_inicio_enviado
                              Recordatorio_medio_enviado
                              Recordatorio_webinar_enviado
+                             Descripcion (opcional, propósito/objetivo)
+                             Dirigido_a (opcional, público objetivo)
 ```
 
 `obtenerHojaCursos()` completa sola cualquier encabezado que falte en una hoja ya creada antes de agregar una columna nueva (compara `ENCABEZADOS_CURSOS` contra `getLastColumn()`) — no hace falta migrar nada a mano cuando el modelo crece.
@@ -644,6 +646,7 @@ Fecha_ultima_actualizacion   Activo (controla el catálogo)              CCT, Es
 - **Upsert en `Docentes`**: si el RFC ya existe, se actualizan sus datos y `Fecha_ultima_actualizacion`; si no existe, se agrega. **Un valor nuevo vacío nunca sobrescribe uno bueno que ya hubiera** (`valorOMantener()`) — importante para migraciones históricas incompletas (ej. la de Jornada Verano, que no capturaba Teléfono).
 - **Catálogo dinámico + ventanas de fecha**: `Cursos` la administra OTDE a mano. El `doGet` regresa las filas con `Activo=TRUE` **y**, si `Visible_desde`/`Visible_hasta` están llenas, dentro de esa ventana (comparación por año/mes/día vía `soloFecha()`, sin depender de un trigger que pueda fallar en silencio — se evalúa en cada visita al sitio). `Activo=FALSE` siempre gana sobre las fechas.
 - **Prueba social real**: `doGet` también manda `inscritos` (conteo de `Inscripciones` por `ID_Curso`, `contarInscritosPorCurso()`) — el frontend solo lo muestra si es mayor a 0, nunca un número inventado.
+- **`Descripcion`/`Dirigido_a` (sep 2026, opcionales)**: propósito/objetivo del curso y público objetivo, texto libre, se muestran en la tarjeta del catálogo (`.cc-desc` y una pill con ícono de audiencia) solo si están llenas. `Fecha_inicio`/`Fecha_fin` admiten además texto libre (ej. "Por definir") para cursos sin fecha confirmada — `formatearFecha()` detecta con `isNaN` cuando el valor no es una fecha real y devuelve el texto tal cual en vez de una fecha falsa (ver `docs/QA-NOTES.md #27`).
 - **Sin gestión de constancias**: los webinars/seminarios no las emiten (salvo conferencias UNETE) y en los demás programas la emite la plataforma de CoEEE. OTDE solo registra participación para estadística propia.
 - **Deduplicación de inscripción**: antes de insertar en `Inscripciones`, se busca si ya existe la combinación (RFC, ID_Curso); si existe, se regresa el folio original con `duplicado:true`.
 

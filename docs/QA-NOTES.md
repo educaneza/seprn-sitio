@@ -653,6 +653,31 @@ riesgo aquí era menos evidente porque la ficha "solo" actualiza una fila que ya
 crear una nueva — pero actualizar una fila sigue sin ser gratis si antes de eso se suben archivos
 a un servicio externo.
 
+## 27. `formatearFecha()` convertía texto libre en `Fecha_inicio` a la fecha falsa "31/12/1969" en vez de mostrarlo tal cual
+
+**Síntoma:** al dar de alta un curso en `Cursos` con `Fecha_inicio` = "Por definir" (texto libre,
+sin fecha real capturada aún), el catálogo público (`doGet` de `formacion-docente.gs`) devolvía
+`"fecha_inicio":"31/12/1969"` en vez de "Por definir".
+
+**Causa raíz:** `formatearFecha(valor)` hacía `new Date(valor)` y pasaba el resultado directo a
+`Utilities.formatDate(...)` dentro de un `try/catch`, asumiendo que una fecha inválida lanzaría
+un error capturable. `new Date("Por definir")` sí da un objeto `Invalid Date`, pero
+`Utilities.formatDate()` en Apps Script no lanza excepción con un `Invalid Date` — lo trata como
+época 0 y lo formatea igual, produciendo "31/12/1969" (medianoche UTC del 1/1/1970 desplazada un
+día por el huso `America/Mexico_City`) en silencio. El `catch` nunca se disparaba.
+
+**Fix:** `formatearFecha()` ahora construye la fecha una vez (`const fecha = new Date(valor)`) y
+revisa `isNaN(fecha.getTime())` **antes** de llamar a `Utilities.formatDate()` — si no es una
+fecha válida, devuelve `String(valor)` tal cual, permitiendo texto libre como "Por definir" en
+`Fecha_inicio`/`Fecha_fin` para cursos sin fecha confirmada. El `try/catch` se conserva como
+respaldo adicional.
+
+**Dónde puede volver a pasar:** cualquier función que pase el resultado de `new Date(valor)`
+directo a `Utilities.formatDate()` (u otra API de fecha de Apps Script) confiando en que un
+`Invalid Date` va a lanzar una excepción — no todas las APIs de Apps Script lo hacen. Verificar
+con `isNaN(fecha.getTime())` antes de formatear siempre que el valor de entrada pueda ser texto
+libre en vez de una fecha real capturada por un `date picker`.
+
 ## Regla general al corregir cualquiera de estos patrones
 
 Cuando se encuentra uno de estos bugs en un archivo, **revisar si el mismo

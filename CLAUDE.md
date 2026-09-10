@@ -815,13 +815,12 @@ Formación Docente — es una utilidad de una sola pantalla que continúa un tr�
   Docente y los 4 trámites tipo-ticket (Mantenimiento/Asesorías/Correo/Soporte), cada uno con un
   link "Solicitar →" (deep-link a `otde.html`) y "Consultar estatus →" (ancla a `#buscar-folio`).
   Una card "Próximamente" (`.ov-proximamente`, borde punteado) deja la grid lista para crecer.
-  **Formación Docente deshabilitada temporalmente (1 sep 2026)**: pasó de `<a href=
-  "formacion-docente.html">` a `<div class="area-card ov-proximamente">` (mismo patrón visual
-  que la card "Más servicios en camino") porque el catálogo real está vacío en producción
-  (verificado en vivo contra el `doGet` de `formacion-docente.gs`: `{"status":"ok","cursos":[]}`)
-  — la difusión pública del hub no debía arrancar con la tarjeta más visible sin nada
-  accionable. Reactivarla es un cambio de una línea (regresar el `href` y el texto "Ver
-  catálogo →") en cuanto haya cursos dados de alta en la hoja `Cursos`.
+  **Formación Docente reactivada (10 sep 2026)**: había estado deshabilitada desde el 1 sep 2026
+  (`<div class="area-card ov-proximamente">`, catálogo vacío en producción) — se reactivó
+  (`<a href="formacion-docente.html" class="area-card">` + "Ver catálogo →") al dar de alta el
+  primer curso real en la hoja `Cursos` ("Formación Docente en Inteligencia Artificial",
+  Fundación Televisa, `ACF-2627-001`), verificado en vivo contra el `doGet` de
+  `formacion-docente.gs`.
 - **Buscador de seguimiento** (`#buscar-folio`, debajo de la grid de tarjetas desde el 16 ago
   2026 — antes era el hero del hub, se reordenó para priorizar la acción principal de elegir un
   trámite sobre el caso secundario de consultar un folio ya existente): folio + correo → ruteo
@@ -966,7 +965,17 @@ Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/I
 - ~~**Barra CTE desactualizada**~~ — resuelto 10 ago 2026: `.update-banner` en `index.html` ahora
   dice "Fase Intensiva 2026-2027 ya disponible".
 - **Fase Intensiva 2026-2027 sin video** — falta agregar el `iframe` del Opening en `cte.html` cuando Jorge lo tenga
-- **Centro de Formación Docente** — dar de alta los primeros cursos propios del ciclo 26-27 en la hoja `Cursos` (verificado en vivo el 1 sep 2026: el catálogo real está vacío, `{"status":"ok","cursos":[]}` — la nota de "2 webinars" de sesiones anteriores ya no aplica). Mientras tanto la tarjeta en `oficina-virtual.html` queda deshabilitada ("Próximamente", ver esa sección arriba) — reactivarla en cuanto haya cursos dados de alta.
+- ~~**Centro de Formación Docente** — dar de alta los primeros cursos propios del ciclo
+  26-27~~ — resuelto 10 sep 2026: primer curso dado de alta (`ACF-2627-001`, "Formación
+  Docente en Inteligencia Artificial", Fundación Televisa) y tarjeta reactivada en
+  `oficina-virtual.html` (ver esa sección arriba). Nuevas columnas `Descripcion`/`Dirigido_a`
+  en la hoja `Cursos` (auto-heal de `obtenerHojaCursos()`, igual que las anteriores) —
+  `descripcion` es el propósito/objetivo del curso, `dirigido_a` el público objetivo; ambas
+  opcionales, se muestran en la tarjeta del catálogo si están llenas. `formatearFecha()` ahora
+  detecta fechas inválidas (`isNaN`) y devuelve el texto tal cual en vez de formatear como
+  "31/12/1969" — permite usar texto libre como "Por definir" en `Fecha_inicio` para cursos sin
+  fecha confirmada aún (bug real encontrado y corregido en esta sesión). Sigue habiendo solo un
+  curso en el catálogo — agregar más cuando estén listos.
 - **Correo/Mantenimiento/Asesorías** — los 3 backends nuevos ya están desplegados y con `Contactos_Zona_Sector` poblado (6 ago 2026, ver sus secciones arriba). Notificaciones de equipo (Telegram + correo) por trámite reorganizadas en sep 2026: ver sus secciones arriba y las de Soporte/Correo Institucional.
 - **Ceremonias Cívicas — `visitas-jefes.gs` con fixes sin desplegar (6 sep 2026)**: el fix de fichas duplicadas y la organización de fotos por semana están en el repo pero no en el proyecto real de Apps Script — pegar y redesplegar nueva versión, luego correr `visConfigurarDashboardPublico(true)` para el panel público. Ver `docs/ROADMAP.md` ítem 17.
 - **QA pre-producción (6 ago 2026)** — hallazgos pendientes de atender antes de confiar el flujo completo:

@@ -14,6 +14,21 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-09-10 · Card de Centro de Formación Docente reactivada en Oficina Virtual, con primer curso real y fix de `formatearFecha`
+
+| | |
+|---|---|
+| **Fecha** | 2026-09-10 |
+| **Sesión** | Jorge pidió habilitar la card de Formación Docente en `oficina-virtual.html`. Verificación en vivo contra el `doGet` de `formacion-docente.gs` confirmó que el catálogo seguía vacío (`{"status":"ok","cursos":[]}`, mismo estado que el 1 sep 2026) — se acordó dar de alta un curso real primero en vez de reactivar la card con la tienda vacía. |
+| **Primer curso dado de alta, con dos problemas reales encontrados al revisarlo en la hoja `Cursos`** | Jorge agregó "Formación Docente en Inteligencia Artificial" (Fundación Televisa, Virtual Sincrónica) directo en el Sheet, pero le faltaba `ID_Curso` (por eso no aparecía en el catálogo — `doGet` exige esa columna no vacía) y su `Categoria` era "Taller", que no está en las 7 categorías oficiales de `PREFIJOS_CATEGORIA`. Con su confirmación se cambió a "Acción formativa" y se generó el ID (`ACF-2627-001`) desde el menú "OTDE Formación → Generar ID de cursos faltantes". |
+| **Columnas nuevas `Descripcion`/`Dirigido_a` en `Cursos`** | A pedido de Jorge, para mostrar propósito/objetivo del curso y público objetivo en la tarjeta del catálogo — dos columnas separadas (no una sola de texto libre combinado), agregadas al final de `ENCABEZADOS_CURSOS` (columnas T/U) para no correr los índices posicionales que ya usa `doGet`/los recordatorios. Frontend: `.cc-desc` (descripción truncada a 3 líneas) y una pill nueva con ícono de audiencia (`ICON_AUDIENCE`) para `dirigido_a`, ambas condicionales a que el campo venga lleno. Detalle en `docs/ARCHITECTURE.md §12`. |
+| **Bug real encontrado y corregido: `formatearFecha()` con texto libre** | Jorge quería poder poner "Por definir" en `Fecha_inicio` para este curso sin fecha confirmada aún. Primer intento mostró `"fecha_inicio":"31/12/1969"` en vez del texto — `Utilities.formatDate()` no lanza excepción con un `Invalid Date`, lo formatea en silencio como época 0. Fix: `formatearFecha()` ahora revisa `isNaN(fecha.getTime())` antes de formatear y devuelve el texto tal cual si no es una fecha real. Detalle completo con causa raíz en `docs/QA-NOTES.md #27`. |
+| **Reactivación de la card** | `oficina-virtual.html` revertido exactamente al estado previo al commit `da968f6` (que la había deshabilitado el 1 sep 2026): `<a href="formacion-docente.html" class="area-card">` con `<div class="ver-mas">Ver catálogo →</div>`, en vez de la `<div class="area-card ov-proximamente">` con texto "Próximamente". |
+| **Verificación** | Cambios de `.gs` desplegados en vivo dos veces vía Chrome automatizado (versión 13: columnas nuevas; versión 14: fix de `formatearFecha`) — cada una confirmada con `curl` contra el endpoint real antes de seguir. Servidor local (`python3 -m http.server`, detenido al terminar) usado para revisar visualmente `oficina-virtual.html` y `formacion-docente.html` antes de tocar producción: la card se ve activa ("SERVICIO" · "Ver catálogo →"), enlaza al catálogo, y la tarjeta del curso muestra correctamente descripción, "Por definir", modalidad y "Docentes y directivos". `git diff --stat` de código+docs (sin contar este mismo archivo, que se sigue editando): 6 archivos, 75 inserciones, 14 eliminaciones. |
+| **Commits** | Pendiente — sesión sin commitear todavía al momento de este checkpoint, a la espera de confirmación explícita de Jorge. |
+
+---
+
 ## CHECKPOINT — 2026-09-08 · Presentación "Evaluación Institucional Final 2025-2026" publicada en Planeación, con vista previa sin convertir a PDF
 
 | | |
