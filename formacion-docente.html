@@ -246,6 +246,10 @@
     .cc-body { padding: 1.15rem 1.25rem 1.4rem; flex: 1; display: flex; flex-direction: column; gap: .55rem; }
     .cc-categoria { font-size: .7rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
     .curso-nombre { font-family: var(--font-display); font-size: .98rem; font-weight: 700; color: var(--ink); line-height: 1.35; }
+    .cc-desc {
+      font-size: .82rem; color: var(--ink-soft); line-height: 1.5;
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+    }
     .cc-info { display: flex; flex-direction: column; gap: .4rem; margin-top: .1rem; }
     .cc-pill { display: inline-flex; align-items: center; gap: .45rem; font-size: .82rem; font-weight: 500; color: var(--ink-soft); }
     .cc-pill svg { width: 15px; height: 15px; flex-shrink: 0; opacity: .55; }
@@ -921,6 +925,7 @@
   // Avatar abstracto (silueta genérica) — nunca fotos reales: los inscritos
   // no dieron consentimiento para aparecer, solo se muestra el conteo real.
   const ICON_AVATAR = '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8.5" r="4"/><path d="M4 20.5c0-4.4 3.6-7.5 8-7.5s8 3.1 8 7.5"/></svg>';
+  const ICON_AUDIENCE = '<svg viewBox="0 0 20 20" fill="currentColor"><path d="M7 9a3 3 0 100-6 3 3 0 000 6zM3.5 17a3.5 3.5 0 017 0 .5.5 0 01-.5.5h-6a.5.5 0 01-.5-.5zM14.5 9a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM12.9 12.1c.87.55 1.6 1.4 1.6 2.4v2h2a.5.5 0 00.5-.5V15a3.5 3.5 0 00-4.1-2.9z"/></svg>';
 
   // ── Estado global ──
   let cursosSeleccionados = []; // [{id, nombre, categoria, liga}]
@@ -1060,9 +1065,11 @@
         <div class="cc-body">
           <div class="cc-categoria" style="color:${style.solid};"></div>
           <div class="curso-nombre"></div>
+          ${curso.descripcion ? `<div class="cc-desc"></div>` : ''}
           <div class="cc-info">
             ${rango ? `<span class="cc-pill">${ICON_CALENDAR} <span class="cc-fecha-txt"></span></span>` : ''}
             ${curso.modalidad ? `<span class="cc-pill">${ICON_MODALIDAD} <span class="cc-modalidad-txt"></span></span>` : ''}
+            ${curso.dirigido_a ? `<span class="cc-pill">${ICON_AUDIENCE} <span class="cc-dirigido-txt"></span></span>` : ''}
           </div>
           ${inscritos > 0 ? `
           <div class="cc-inscritos">
@@ -1075,8 +1082,10 @@
       // Texto vía textContent (evita inyección desde datos de la hoja)
       card.querySelector('.cc-categoria').textContent = curso.categoria || '';
       card.querySelector('.curso-nombre').textContent = curso.nombre || '';
+      if (curso.descripcion) card.querySelector('.cc-desc').textContent = curso.descripcion;
       if (rango) card.querySelector('.cc-fecha-txt').textContent = rango;
       if (curso.modalidad) card.querySelector('.cc-modalidad-txt').textContent = curso.modalidad;
+      if (curso.dirigido_a) card.querySelector('.cc-dirigido-txt').textContent = curso.dirigido_a;
 
       grid.appendChild(card);
     });

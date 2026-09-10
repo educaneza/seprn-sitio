@@ -123,6 +123,8 @@ function doGet() {
         fecha_fin:                 formatearFecha(row[6]),
         liga_convocatoria:         row[7] || '',
         registro_previo_requerido: String(row[12]).trim().toUpperCase() === 'TRUE',
+        descripcion:               row[19] || '',
+        dirigido_a:                row[20] || '',
         inscritos:                 inscritosPorCurso[row[0].toString().trim().toUpperCase()] || 0
       }));
 
@@ -276,7 +278,7 @@ const ENCABEZADOS_CURSOS = [
   'Requiere_codigo_asistencia', 'Codigo_asistencia', 'Activo', 'Notas',
   'Registro_previo_requerido', 'Visible_desde', 'Visible_hasta',
   'Hora_inicio', 'Recordatorio_inicio_enviado', 'Recordatorio_medio_enviado',
-  'Recordatorio_webinar_enviado'
+  'Recordatorio_webinar_enviado', 'Descripcion', 'Dirigido_a'
 ];
 // P Hora_inicio (opcional, solo relevante en eventos de un solo día como
 // webinars): hora de inicio, ej. 16:00. Sin esto no se puede mandar el
@@ -286,6 +288,11 @@ const ENCABEZADOS_CURSOS = [
 // mandar el mismo recordatorio dos veces — no las edites a mano salvo
 // para forzar un reenvío (bórralas y se vuelve a evaluar en la próxima
 // corrida del disparador).
+// T Descripcion (opcional): propósito/objetivo/de qué trata el curso,
+// texto libre — se muestra en la tarjeta del catálogo.
+// U Dirigido_a (opcional): público objetivo (ej. "Docentes de primaria",
+// "Personal administrativo") — texto libre, se muestra como pill en la
+// tarjeta junto a la modalidad.
 
 function obtenerHojaCursos() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -422,10 +429,17 @@ function validarCampos(d) {
 }
 
 // ── Formatear fecha para el catálogo (dd/MM/yyyy) ──
+// Si valor no es una fecha real (ej. texto libre como "Por definir"), new
+// Date(valor) da Invalid Date — Utilities.formatDate no lanza error en ese
+// caso, silenciosamente formatea como época 0 ("31/12/1969"). Se detecta con
+// isNaN antes de formatear para devolver el texto tal cual en vez de esa
+// fecha falsa.
 function formatearFecha(valor) {
   if (!valor) return '';
+  const fecha = new Date(valor);
+  if (isNaN(fecha.getTime())) return String(valor);
   try {
-    return Utilities.formatDate(new Date(valor), 'America/Mexico_City', 'dd/MM/yyyy');
+    return Utilities.formatDate(fecha, 'America/Mexico_City', 'dd/MM/yyyy');
   } catch (e) {
     return String(valor);
   }
