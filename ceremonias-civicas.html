@@ -269,8 +269,8 @@
                     <label for="vis-tipo-visita">Tipo de visita<span class="req">*</span></label>
                     <select id="vis-tipo-visita" required>
                         <option value="">— Selecciona una opción —</option>
+                        <option selected>Ceremonia cívica semanal</option>
                         <option>Inicio de ciclo escolar</option>
-                        <option>Ceremonia cívica semanal</option>
                     </select>
                     <div class="soporte-field-error" id="vis-tipo-visita-error">Selecciona el tipo de visita.</div>
                 </div>
@@ -282,7 +282,9 @@
                     <div class="vis-aviso-conflicto" id="vis-aviso-conflicto"></div>
                     <div class="vis-aviso-revisita" id="vis-aviso-revisita">
                         <p id="vis-revisita-texto" style="margin:0;"></p>
-                        <textarea id="vis-motivo-revisita" rows="2" placeholder="Motivo de la revisita (opcional) — ej. seguimiento a compromisos acordados en la visita anterior"></textarea>
+                        <label for="vis-motivo-revisita" style="display:block;margin-top:8px;font-size:13px;font-weight:600;">Motivo de la revisita<span class="req">*</span></label>
+                        <textarea id="vis-motivo-revisita" rows="2" placeholder="Ej. seguimiento a compromisos acordados en la visita anterior"></textarea>
+                        <div class="soporte-field-error" id="vis-motivo-revisita-error">Indica el motivo de la revisita.</div>
                         <label style="display:flex;align-items:flex-start;gap:8px;margin-top:8px;font-size:13px;">
                             <input type="checkbox" id="vis-confirma-aviso" style="margin-top:3px;">
                             <span>Leí el aviso anterior y decido continuar con esta reserva.</span>
@@ -497,11 +499,7 @@
             visSuggestions.innerHTML = '';
             matches.forEach(function (m) {
                 var li = document.createElement('li');
-                var visitada = visReservasCache.some(function (r) { return (r.cct || '').toUpperCase() === m.cct && r.estatus === 'Realizada'; });
-                var pendienteAuto = !visitada && visReservasCache.some(function (r) { return (r.cct || '').toUpperCase() === m.cct && r.estatus === 'Reservada'; });
-                li.innerHTML = '<span class="sg-code">' + m.cct + '</span> <span class="sg-name">' + m.nombre + ' — Sector ' + m.sector + (m.zona ? ', Zona ' + m.zona : '') + '</span>' +
-                    (visitada ? ' <span class="vis-badge vis-badge-realizada" style="margin-left:6px;">Ya visitada</span>' :
-                     pendienteAuto ? ' <span class="vis-badge vis-badge-reservada" style="margin-left:6px;">Reserva pendiente</span>' : '');
+                li.innerHTML = '<span class="sg-code">' + m.cct + '</span> <span class="sg-name">' + m.nombre + ' — Sector ' + m.sector + (m.zona ? ', Zona ' + m.zona : '') + '</span>' + visEtiquetaCobertura(m.cct);
                 li.addEventListener('mousedown', function () { visSeleccionarCct(m); });
                 visSuggestions.appendChild(li);
             });
@@ -547,7 +545,7 @@
         document.getElementById('vis-zona-val').value = m.zona || '';
         document.getElementById('vis-escuela-val').value = m.nombre || '';
         visStatusBox.className = 'sop-cct-status found';
-        visStatusBox.textContent = 'Sector ' + m.sector + (m.zona ? ' · Zona ' + m.zona : '') + ' · ' + m.nombre;
+        visStatusBox.innerHTML = 'Sector ' + m.sector + (m.zona ? ' · Zona ' + m.zona : '') + ' · ' + m.nombre + visEtiquetaCobertura(m.cct);
         document.getElementById('vis-manual-fields').classList.remove('visible');
         visCctEncontrada = true;
         visRevisarConflicto();
@@ -601,6 +599,33 @@
         return hoy > limite;
     }
 
+    // Etiqueta de cobertura para una CCT — usada en las sugerencias del autocomplete y en la
+    // caja de estatus persistente tras seleccionar la escuela (a diferencia de la sugerencia,
+    // esta caja no desaparece, así que es donde de verdad se ve la etiqueta después de elegir).
+    function visEtiquetaCobertura(cct) {
+        var cctU = (cct || '').toUpperCase();
+        var visitada = visReservasCache
+            .filter(function (r) { return (r.cct || '').toUpperCase() === cctU && r.estatus === 'Realizada'; })
+            .sort(function (a, b) { return (b.fechaVisitaReal || '').localeCompare(a.fechaVisitaReal || ''); })[0];
+        if (visitada) {
+            return ' <span class="vis-badge vis-badge-realizada" style="margin-left:6px;">Ya visitada el ' + visitada.fechaVisitaReal + ' por ' + visitada.nombre + '</span>';
+        }
+        var reservadas = visReservasCache
+            .filter(function (r) { return (r.cct || '').toUpperCase() === cctU && r.estatus === 'Reservada'; })
+            .sort(function (a, b) { return (b.fechaPlaneada || '').localeCompare(a.fechaPlaneada || ''); });
+        if (reservadas.length) {
+            // Misma prioridad que la cascada de visRevisarConflicto(): una vencida entre varias
+            // "Reservada" siempre se avisa, aunque no sea la más reciente.
+            var vencida = reservadas.find(function (r) { return visEsVencida(r.fechaPlaneada); });
+            if (vencida) {
+                return ' <span class="vis-badge vis-badge-no-realizada" style="margin-left:6px;">Reserva vencida del ' + vencida.fechaPlaneada + ' por ' + vencida.nombre + ' — sin ficha</span>';
+            }
+            var r = reservadas[0];
+            return ' <span class="vis-badge vis-badge-reservada" style="margin-left:6px;">Reserva pendiente del ' + r.fechaPlaneada + ' por ' + r.nombre + '</span>';
+        }
+        return '';
+    }
+
     function visRevisarConflicto() {
         var aviso = document.getElementById('vis-aviso-conflicto');
         var revisitaBox = document.getElementById('vis-aviso-revisita');
@@ -612,6 +637,8 @@
         revisitaBox.classList.remove('visible');
         confirmaChk.checked = false;
         confirmaErr.classList.remove('visible');
+        document.getElementById('vis-motivo-revisita').classList.remove('error');
+        document.getElementById('vis-motivo-revisita-error').classList.remove('visible');
         if (!cct || !fecha) return;
 
         var semana = visLunesDeLaSemana(fecha);
@@ -824,6 +851,11 @@
         }
 
         if (document.getElementById('vis-aviso-revisita').classList.contains('visible')) {
+            var motivoInput = document.getElementById('vis-motivo-revisita');
+            var motivoErr = document.getElementById('vis-motivo-revisita-error');
+            if (!motivoInput.value.trim()) { motivoInput.classList.add('error'); motivoErr.classList.add('visible'); ok = false; }
+            else { motivoInput.classList.remove('error'); motivoErr.classList.remove('visible'); }
+
             var confirmaChk = document.getElementById('vis-confirma-aviso');
             var confirmaErr = document.getElementById('vis-confirma-aviso-error');
             if (!confirmaChk.checked) { confirmaErr.classList.add('visible'); ok = false; }
