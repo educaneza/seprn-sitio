@@ -87,6 +87,7 @@
         .vis-badge-realizada { background: #d4edda; color: #1e5b2f; }
         .vis-badge-no-realizada { background: #f8d7da; color: #7a1f28; }
         .vis-badge-cancelada { background: #e2e2e2; color: #555; }
+        .vis-badge-alerta { display: inline-block; margin-left: 6px; font-size: 11px; font-weight: 700; color: #a94442; }
         .vis-filtro { margin: 16px 0 0 0; }
         .vis-filtro-label { display: block; font-size: 14px; font-weight: 600; color: #56212f; margin-bottom: 6px; }
         .vis-filtro input { width: 100%; max-width: 340px; padding: 10px 14px; border: 1px solid #d6d1ca; border-radius: 8px; font-family: inherit; font-size: 14px; }
@@ -282,6 +283,11 @@
                     <div class="vis-aviso-revisita" id="vis-aviso-revisita">
                         <p id="vis-revisita-texto" style="margin:0;"></p>
                         <textarea id="vis-motivo-revisita" rows="2" placeholder="Motivo de la revisita (opcional) — ej. seguimiento a compromisos acordados en la visita anterior"></textarea>
+                        <label style="display:flex;align-items:flex-start;gap:8px;margin-top:8px;font-size:13px;">
+                            <input type="checkbox" id="vis-confirma-aviso" style="margin-top:3px;">
+                            <span>Leí el aviso anterior y decido continuar con esta reserva.</span>
+                        </label>
+                        <div class="soporte-field-error" id="vis-confirma-aviso-error">Marca la casilla para confirmar que leíste el aviso.</div>
                     </div>
                 </div>
 
@@ -492,8 +498,10 @@
             matches.forEach(function (m) {
                 var li = document.createElement('li');
                 var visitada = visReservasCache.some(function (r) { return (r.cct || '').toUpperCase() === m.cct && r.estatus === 'Realizada'; });
+                var pendienteAuto = !visitada && visReservasCache.some(function (r) { return (r.cct || '').toUpperCase() === m.cct && r.estatus === 'Reservada'; });
                 li.innerHTML = '<span class="sg-code">' + m.cct + '</span> <span class="sg-name">' + m.nombre + ' — Sector ' + m.sector + (m.zona ? ', Zona ' + m.zona : '') + '</span>' +
-                    (visitada ? ' <span class="vis-badge vis-badge-realizada" style="margin-left:6px;">Ya visitada</span>' : '');
+                    (visitada ? ' <span class="vis-badge vis-badge-realizada" style="margin-left:6px;">Ya visitada</span>' :
+                     pendienteAuto ? ' <span class="vis-badge vis-badge-reservada" style="margin-left:6px;">Reserva pendiente</span>' : '');
                 li.addEventListener('mousedown', function () { visSeleccionarCct(m); });
                 visSuggestions.appendChild(li);
             });
@@ -580,13 +588,30 @@
         return d.toISOString().slice(0, 10);
     }
 
+    // Espejo de VIS_DIAS_LIMITE_VALIDACION en apps-script/visitas-jefes.gs — si ese valor
+    // cambia en el .gs, actualizar también aquí. Cálculo 100% en el cliente, no depende de que
+    // el trigger diario del backend (visMarcarNoRealizadas_) esté corriendo.
+    var VIS_DIAS_LIMITE_VALIDACION_CLIENTE = 3;
+    function visEsVencida(fechaPlaneadaStr) {
+        if (!fechaPlaneadaStr) return false;
+        var partes = fechaPlaneadaStr.split('-').map(Number);
+        var limite = new Date(partes[0], partes[1] - 1, partes[2]);
+        limite.setDate(limite.getDate() + VIS_DIAS_LIMITE_VALIDACION_CLIENTE);
+        var hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+        return hoy > limite;
+    }
+
     function visRevisarConflicto() {
         var aviso = document.getElementById('vis-aviso-conflicto');
         var revisitaBox = document.getElementById('vis-aviso-revisita');
+        var confirmaChk = document.getElementById('vis-confirma-aviso');
+        var confirmaErr = document.getElementById('vis-confirma-aviso-error');
         var cct = visInputCct ? visInputCct.value.trim().toUpperCase() : '';
         var fecha = document.getElementById('vis-fecha').value;
         aviso.classList.remove('visible');
         revisitaBox.classList.remove('visible');
+        confirmaChk.checked = false;
+        confirmaErr.classList.remove('visible');
         if (!cct || !fecha) return;
 
         var semana = visLunesDeLaSemana(fecha);
@@ -600,9 +625,37 @@
             return;
         }
 
-        // Sin conflicto esta semana: avisar (sin bloquear) si la escuela ya fue
-        // visitada en una semana distinta, para fomentar cobertura sin impedir
-        // una revisita legítima (seguimiento a compromisos acordados).
+        // Sin conflicto esta semana: avisar (sin bloquear) si la escuela tiene actividad en
+        // otra semana, para fomentar cobertura sin impedir una revisita legítima (seguimiento
+        // a compromisos acordados). Orden de urgencia: primero una "Reservada" vencida (nadie
+        // llenó la ficha, probablemente no ocurrió o se les olvidó reportar), luego una
+        // "Reservada" pendiente todavía dentro de su ventana, y solo si ninguna aplica, una
+        // "Realizada" ya confirmada.
+        var otrasReservadas = visReservasCache
+            .filter(function (r) { return (r.cct || '').toUpperCase() === cct && r.estatus === 'Reservada'; })
+            .sort(function (a, b) { return (b.fechaPlaneada || '').localeCompare(a.fechaPlaneada || ''); });
+        var vencida = otrasReservadas.find(function (r) { return visEsVencida(r.fechaPlaneada); });
+        if (vencida) {
+            document.getElementById('vis-revisita-texto').innerHTML =
+                '<strong>Atención:</strong> esta escuela tiene una reserva del ' + vencida.fechaPlaneada +
+                ' por ' + vencida.nombre + ' (' + vencida.cargo + ') que sigue marcada como "Reservada" ' +
+                'varios días después de su fecha planeada, sin ficha registrada — probablemente esa visita ' +
+                'no se reportó o no ocurrió. Antes de continuar, avisa a esa persona o a quien da seguimiento. ' +
+                'Si de todos modos vas a reservar esta escuela, indica el motivo abajo.';
+            revisitaBox.classList.add('visible');
+            return;
+        }
+        var pendiente = otrasReservadas[0];
+        if (pendiente) {
+            document.getElementById('vis-revisita-texto').textContent =
+                'Esta escuela ya tiene una visita programada para el ' + pendiente.fechaPlaneada +
+                ' por ' + pendiente.nombre + ' (' + pendiente.cargo + '), todavía dentro del plazo para ' +
+                'reportar su ficha. Verifica que no sea una duplicidad involuntaria; si es una revisita ' +
+                'intencional, indica el motivo abajo.';
+            revisitaBox.classList.add('visible');
+            return;
+        }
+
         var visitasPrevias = visReservasCache
             .filter(function (r) { return (r.cct || '').toUpperCase() === cct && r.estatus === 'Realizada'; })
             .sort(function (a, b) { return (b.fechaVisitaReal || '').localeCompare(a.fechaVisitaReal || ''); });
@@ -699,6 +752,7 @@
 
         filasPagina.forEach(function (r) {
             var badgeClase = VIS_BADGE_CLASE[r.estatus] || 'vis-badge-reservada';
+            var alertaVencida = r.estatus === 'Reservada' && visEsVencida(r.fechaPlaneada);
             var tr = document.createElement('tr');
             tr.innerHTML =
                 '<td>' + (r.semana || '') + '</td>' +
@@ -707,7 +761,9 @@
                 '<td>' + (r.sector || '') + '</td>' +
                 '<td>' + (r.zona || '') + '</td>' +
                 '<td>' + (r.tipoVisita || '') + '</td>' +
-                '<td><span class="vis-badge ' + badgeClase + '">' + r.estatus + '</span></td>' +
+                '<td><span class="vis-badge ' + badgeClase + '">' + r.estatus + '</span>' +
+                    (alertaVencida ? ' <span class="vis-badge-alerta" title="Más de ' + VIS_DIAS_LIMITE_VALIDACION_CLIENTE + ' días después de la fecha planeada, sin ficha registrada">⚠ Sin ficha</span>' : '') +
+                '</td>' +
                 '<td>' + (r.nombre || '') + (r.cargo ? ' (' + r.cargo + ')' : '') + '</td>' +
                 '<td>' + (r.fechaVisitaReal || '—') + '</td>';
             body.appendChild(tr);
@@ -767,6 +823,13 @@
             ok = false;
         }
 
+        if (document.getElementById('vis-aviso-revisita').classList.contains('visible')) {
+            var confirmaChk = document.getElementById('vis-confirma-aviso');
+            var confirmaErr = document.getElementById('vis-confirma-aviso-error');
+            if (!confirmaChk.checked) { confirmaErr.classList.add('visible'); ok = false; }
+            else { confirmaErr.classList.remove('visible'); }
+        }
+
         return ok;
     }
 
@@ -776,6 +839,16 @@
         var btnSubmit = document.getElementById('btn-reservar-submit');
         msg.className = 'soporte-submit-msg';
         msg.textContent = '';
+
+        // Refrescar el caché justo antes de validar — evita reservar contra datos viejos si la
+        // pestaña quedó abierta un rato (alguien más pudo haber reservado la misma escuela/semana).
+        if (visInputCct && visInputCct.value.trim() && document.getElementById('vis-fecha').value) {
+            try {
+                var freshData = await fetchJsonConTimeout(VISITAS_APPS_SCRIPT_URL + '?action=disponibilidad', { method: 'GET' });
+                if (freshData && freshData.items) visReservasCache = freshData.items;
+            } catch (err) { /* si falla el refresh, seguimos con el caché ya cargado */ }
+            visRevisarConflicto();
+        }
 
         if (!validarReservaForm()) return false;
 
