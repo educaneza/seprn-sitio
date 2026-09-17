@@ -471,8 +471,15 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
      (reemplazo del Form de 24 preguntas de v8.5) — el técnico llena el reporte en campo y un
      solo envío ya dispara PDF + correo, sin paso de menú aparte. Jorge redesplegó y probó ambas
      piezas juntas contra producción con modo de prueba activo: PDF legible, correo con
-     destinatarios correctos, sin fugas — detalle en `docs/ARCHITECTURE.md §15`. Fuera de esta
-     fase, a construir después: el trigger nocturno de fotos y el reporte mensual (ver Fase 3).
+     destinatarios correctos, sin fugas — detalle en `docs/ARCHITECTURE.md §15`. **Rediseñado y
+     probado en vivo dos veces más el 17 sep 2026** (mismo día): (a) todos los campos obligatorios,
+     enriquecidos, y fotos de evidencia obligatorias (mismo patrón de `visitas-jefes.gs`,
+     carpeta por folio); (b) caso urgente sin folio — `manCrearSolicitudUrgente_()` da de alta la
+     Solicitud automáticamente cuando la visita se atendió sin registro previo. Los 2 escenarios
+     (folio normal + caso urgente) se probaron contra producción real ese mismo día con modo de
+     prueba, sin bugs encontrados. Fuera de esta fase, a construir después: el reporte mensual
+     (ver Fase 3 — el trigger nocturno de fotos que originalmente iba aquí resultó no ser
+     necesario, ver abajo).
    - ~~**Aviso al técnico asignado**~~ (construido y **verificado en vivo 25 ago 2026**, sesión
      siguiente) — cierra un hueco de la Fase 1: al programar la fecha de visita, el sistema
      avisaba a solicitante+Zona/Sector pero nunca al técnico, que se seguía coordinando por fuera
@@ -481,10 +488,19 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
      cuanto fecha + técnico ya tienen valor, sin importar el orden. Jorge redesplegó y se probó
      contra producción real con modo de prueba activo: ambos avisos (solicitante y técnico)
      dispararon correctamente. Detalle en `docs/ARCHITECTURE.md §15`.
-   - **Fase 3 — no iniciada**: réplica de la organización nocturna de fotos y el reporte mensual
-     (formato Planeación, cruce contra el catálogo de direcciones) — menor prioridad, mayor
-     complejidad. Mientras no se construya, v8.5 sigue vivo en paralelo solo para estas dos
-     funciones (el resto del ciclo por-solicitud ya no lo necesita).
+   - **Fase 3 — reducida a un solo pendiente (17 sep 2026)**: originalmente incluía replicar la
+     organización nocturna de fotos de v8.5 (`organizarFotosNocturno()`, trigger de las 11pm) y el
+     reporte mensual. Al leer el código real de v8.5, se confirmó que ese trigger nocturno **no
+     aplica a la arquitectura nueva** — existe solo para compensar una limitación de Google Forms:
+     las fotos subidas por un Form caen todas en una sola carpeta plana (`CARPETA_FOTOS_FORMS_ID`),
+     sin poder enrutarlas por CCT/folio al momento del envío, así que v8.5 necesita un barrido
+     nocturno que las empareja por fecha de creación contra las carpetas de reporte del día y las
+     mueve. `reporte-visita.html`/`manSubirFotosReporte_()` no tienen ese problema: cada foto se
+     escribe directo a su subcarpeta por folio (`Fotos de Reportes de Visita/<folio>`) en el mismo
+     envío del formulario — ya queda organizada por escuela desde el primer momento, sin trigger ni
+     barrido posterior. **Único pendiente real de esta fase**: el reporte mensual (formato
+     Planeación, cruce contra el catálogo de direcciones) — menor prioridad, sigue viviendo solo en
+     v8.5 mientras no se construya.
    - **Fase 4 — no iniciada**: decidir el destino del histórico de v8.5 (380 aulas, reportes ya
      generados — probablemente archivo de solo lectura, no migración) y el corte real.
    Detalle completo del diseño de la Fase 1 y de la verificación en vivo de v8.5 que precedió la

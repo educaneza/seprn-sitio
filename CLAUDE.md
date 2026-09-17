@@ -340,15 +340,22 @@ ya esté expandido).
   correo `[PRUEBA]` con PDF adjunto — dejados sin limpiar a petición de Jorge. Ver
   `docs/ARCHITECTURE.md §15`.
 - **Caso urgente sin folio + Conectividad "WiFi y Cable" + Instalación múltiple (17 sep 2026,
-  cont., desplegado por Jorge, pendiente de probar en vivo con modo de prueba)**: "¿Atención sin
-  solicitud previa?" ahora es el primer campo; el Folio pasó a condicional — obligatorio solo si
-  la respuesta es "No". Con "Sí", un sub-bloque nuevo captura CCT (autocomplete + fallback
+  cont., desplegado por Jorge y verificado en vivo contra producción esa misma noche)**: "¿Atención
+  sin solicitud previa?" ahora es el primer campo; el Folio pasó a condicional — obligatorio solo
+  si la respuesta es "No". Con "Sí", un sub-bloque nuevo captura CCT (autocomplete + fallback
   manual)/Turno/Función/Nombre/Correo y `manCrearSolicitudUrgente_()` da de alta la Solicitud
   con folio autogenerado y `Estatus = 'Resuelto'` desde el inicio, para que el resto del pipeline
   (PDF, correo) siga igual. Instalación realizada pasó de `<select>` a checkboxes (varias
   opciones a la vez, unidas por `"; "`). Ver `docs/ARCHITECTURE.md §15` y
   `docs/QA-NOTES.md #32` (bug real de mensajes de error pegados al alternar la respuesta,
-  encontrado y corregido en la prueba de navegador).
+  encontrado y corregido en la prueba de navegador). **Verificado end-to-end contra producción
+  real con modo de prueba activo**: Escenario folio normal (`OTDE-MAN-0014`, 2 casillas de
+  instalación) — fila nueva sin sobrescribir el reporte previo del mismo folio, PDF+foto en
+  Drive, correo `[PRUEBA]` con destinatarios correctos. Escenario caso urgente (CCT
+  `15DPR0860F`, autocomplete real) — `manCrearSolicitudUrgente_()` dio de alta folio
+  `OTDE-MAN-0016` con `Estatus=Resuelto` desde el alta y nota automática correcta, y se confirmó
+  que **no** se dispara el correo de "solicitud recibida" (solo el del reporte) — comportamiento
+  esperado. Sin bugs encontrados en esta ronda.
 
 ### `apps-script/asesorias.gs`
 - **Nuevo (ago 2026)**: mismo patrón que `mantenimiento.gs` (Sheet propio con hojas
@@ -989,25 +996,23 @@ de la sesión realmente volvió obsoletos.
 ## Pendientes vigentes
 Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/Identidad) y
 `docs/BITACORA.md` para el historial de qué ya se hizo. Resumen de lo genuinamente abierto:
-- **`reporte-visita.html` — caso urgente sin folio, sin probar en vivo todavía**: Jorge ya
-  desplegó el `.gs` con `manCrearSolicitudUrgente_()` (17 sep 2026, cont.) pero falta correr
-  `manActivarModoPrueba('correo')` y probar los 3 escenarios (folio normal, caso urgente sin
-  folio, instalación con varias opciones) contra producción real antes de confiar el flujo con
-  datos reales — solo se probó en un servidor estático local, sin backend real. Ver
-  `docs/ARCHITECTURE.md §15`.
 - **Formación Docente — doble registro, seguimiento pendiente**: decidir si se renumera una de
   las dos filas del folio duplicado `OTDE-CAP-0089` (datos sin tocar); Paso 5 (reconciliar
   `Registro_externo` contra la lista real de Aula Digital cuando CoEEE la tenga disponible);
   borrar las 2 hojas de respaldo del reorden de `Inscripciones`; confirmar con Jorge por qué
   `ACF-2627-001` ya no aparece en el catálogo real (ver `docs/ROADMAP.md` ítem 18). Ver
   `docs/ROADMAP.md` ítem 19.
-- **Retiro de v8.5 — Fase 3 y Fase 4, no iniciadas** (ver `docs/ROADMAP.md` ítem 9): el trigger
-  nocturno de organización de fotos y el reporte mensual (formato Planeación, cruce contra el
-  catálogo de direcciones) siguen viviendo solo en el sistema viejo v8.5 — no se replicaron
-  todavía en `mantenimiento.gs`. Tampoco se decidió el destino del histórico de v8.5 (380 aulas,
-  reportes ya generados) ni el corte real. Mientras tanto, v8.5 sigue vivo en paralelo solo para
-  estas dos funciones — el resto del ciclo por-solicitud (intake, fecha programada, reporte
-  técnico con PDF, cierre) ya no lo necesita.
+- **Retiro de v8.5 — Fase 3 (reducida) y Fase 4, no iniciadas** (ver `docs/ROADMAP.md` ítem 9):
+  el trigger nocturno de organización de fotos de v8.5 (`organizarFotosNocturno()`) se descartó
+  como pendiente el 17 sep 2026 tras leer el código real — existe solo para compensar que los
+  Forms de Google dumpan las fotos en una sola carpeta plana sin poder enrutarlas por folio al
+  momento del envío; `reporte-visita.html`/`manSubirFotosReporte_()` no tienen ese problema
+  (escriben cada foto directo a su subcarpeta por folio en el mismo envío). Único pendiente real
+  de esta fase: el reporte mensual (formato Planeación, cruce contra el catálogo de direcciones),
+  que sigue viviendo solo en v8.5. Tampoco se decidió el destino del histórico de v8.5 (380
+  aulas, reportes ya generados) ni el corte real (Fase 4). Mientras tanto, v8.5 sigue vivo en
+  paralelo solo para estas funciones — el resto del ciclo por-solicitud (intake, fecha
+  programada, reporte técnico con PDF, cierre) ya no lo necesita.
 - **Recrear páginas eliminadas** — `gestion-escolar.html`, `investigacion-educativa.html`, `programas-educativos.html`, `servicio-profesional.html`: requieren contenido validado con la Dra. Galindo
 - ~~**Logomark SEPRN**~~ — resuelto 10 ago 2026 (ver `docs/ARCHITECTURE.md §18`): se descartó un
   escudo propio tras revisar `Guía de Contenidos Digitales.pdf` (raíz del repo, no rastreado en
