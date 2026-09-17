@@ -618,20 +618,20 @@ Nace de sistematizar el flujo real de convocatorias CoEEE (webinars, seminarios,
 ### Modelo de datos — 3 hojas relacionales en un solo Spreadsheet (no una hoja por curso)
 
 ```
-Docentes                    Cursos                              Inscripciones
-─────────                   ──────                              ─────────────
-RFC (llave, upsert)          ID_Curso (llave)                     Folio (llave, OTDE-CAP-NNNN)
-Nombre_completo              Categoria                             Fecha_registro
-Correo                       Nombre                                RFC_Docente     ──┐ FK
-Telefono                     Responsable                           ID_Curso        ──┤ FK
-CCT                          Modalidad                             Estado           │
-Escuela                      Fecha_inicio / Fecha_fin               Codigo_asistencia_capturado
-Sector / Zona / Municipio    Liga_convocatoria                      Fecha_actualizacion_estado
-Funcion                      Requiere_codigo_asistencia             Notas
-Fecha_primer_registro        Codigo_asistencia                      I-O: vista VLOOKUP (Nombre_Docente,
-Fecha_ultima_actualizacion   Activo (controla el catálogo)              CCT, Escuela, Sector, Zona,
-                             Notas                                      Funcion, Nombre_Curso) — en vivo,
-                             Registro_previo_requerido                  nunca se escriben como valor fijo
+Docentes                    Cursos                              Inscripciones (21 cols, por bloques — sep 2026)
+─────────                   ──────                              ────────────────────────────────────────────
+RFC (llave, upsert)          ID_Curso (llave)                     Registro:     Folio (OTDE-CAP-NNNN) | Fecha_registro
+Nombre_completo              Categoria                             Participante: RFC_Docente ──┐FK | Nombre_Docente* | Correo* | Telefono* | Funcion*
+Correo                       Nombre                                Centro:       CCT* | Escuela* | Sector* | Zona*
+Telefono                     Responsable                           Curso:        ID_Curso ──┤FK | Nombre_Curso*
+CCT                          Modalidad                             Seguimiento:  Registro_externo | Fecha_confirmacion_externa
+Escuela                      Fecha_inicio / Fecha_fin                            Recordatorios_pendiente | Fecha_ultimo_recordatorio
+Sector / Zona / Municipio    Liga_convocatoria                                   Estado | Codigo_asistencia_capturado
+Funcion                      Requiere_codigo_asistencia                         Fecha_actualizacion_estado | Notas
+Fecha_primer_registro        Codigo_asistencia                     * columnas de vista VLOOKUP contra Docentes/Cursos —
+Fecha_ultima_actualizacion   Activo (controla el catálogo)           en vivo, nunca se escriben como valor fijo
+                             Notas
+                             Registro_previo_requerido
                              Visible_desde / Visible_hasta
                              Hora_inicio
                              Recordatorio_inicio_enviado
@@ -643,7 +643,7 @@ Fecha_ultima_actualizacion   Activo (controla el catálogo)              CCT, Es
                              Valida_USICAMM / Valida_PROEEB (TRUE/FALSE)
 ```
 
-`obtenerHojaCursos()` completa sola cualquier encabezado que falte en una hoja ya creada antes de agregar una columna nueva (compara `ENCABEZADOS_CURSOS` contra `getLastColumn()`) — no hace falta migrar nada a mano cuando el modelo crece.
+`obtenerHojaCursos()` completa sola cualquier encabezado que falte en una hoja ya creada antes de agregar una columna nueva (compara `ENCABEZADOS_CURSOS` contra `getLastColumn()`) — no hace falta migrar nada a mano cuando el modelo crece. `Inscripciones` sigue el mismo principio pero por nombre en vez de por ancho: el código la lee/escribe **siempre por nombre de encabezado** (`indicesPorEncabezado_()`/`columnasInscripciones_()`), nunca por posición — reordenar sus columnas (menú "Reordenar columnas de Inscripciones", ya corrido en producción) no rompe recordatorios, estadísticas ni conteos.
 
 - **Modelo de 3 estados por curso (sep 2026)**: `evaluarEstadoCurso_(row, hoy)` distingue el periodo de **inscripción** (hasta `Fecha_limite_inscripcion`, o `Fecha_inicio` si esa columna está vacía) del periodo de **desarrollo** (`Fecha_inicio`/`Fecha_fin`) — son cosas distintas, un curso puede seguir en marcha con la inscripción ya cerrada. Estado **abierta** (normal): el curso se muestra igual que siempre. Estado **cerrada** (`hoy` pasó la fecha límite de inscripción pero no `Fecha_fin`): el curso sigue en el catálogo vigente con la leyenda "Inscripciones cerradas · Curso en desarrollo" (`.cc-cerrado-tag`) y sin botón de selección. Estado **pasado** (`hoy > Fecha_fin`): el curso sale del catálogo vigente y entra al historial (ver abajo). `parseFechaSegura_()` hace el parseo fail-open (mismo criterio que `formatearFecha()` con `isNaN` — un dato incompleto o texto libre como "Por definir" nunca oculta ni bloquea un curso por error).
 - **Historial "Cursos anteriores" (sep 2026)**: `doGet()` regresa además `cursos_pasados` — hasta `MAX_CURSOS_PASADOS` (6) cursos en estado "pasado", ordenados por `Fecha_fin` descendente. El tope y el orden se calculan en el backend (no en el frontend) porque `fecha_fin` llega ya formateada como texto `dd/MM/yyyy` (no ordenable) — el backend todavía tiene el `Date` real antes de formatear. A diferencia del catálogo vigente, `cursos_pasados` **no** pasa por `dentroDeVentanaVisible()`: esa ventana controla la aparición/desaparición de cursos vigentes, no aplica a un curso que ya cerró su periodo de desarrollo. En el frontend, `renderCursosPasados()` pinta las mismas tarjetas de `CATEGORIA_STYLE` pero de solo lectura (`.curso-card-historial`, `filter: grayscale(85%)` + `pointer-events: none`, sin CTA ni "Leer más") en `#cursos-pasados-wrap`, que se muestra siempre que haya al menos un curso pasado — **coexiste** con `#catalogo-vacio` (no lo reemplaza) y aparece tanto si hay cursos vigentes como si no, a propósito, para que el docente vea qué se ha ofrecido antes.
@@ -660,6 +660,54 @@ Fecha_ultima_actualizacion   Activo (controla el catálogo)              CCT, Es
 ### Registro previo externo (paso condicional, no global)
 
 A diferencia de `jornada-verano-2026.html` (que siempre manda a un solo portal CoEEE), aquí el catálogo mezcla categorías con y sin cupo real. `Registro_previo_requerido=TRUE` en un curso (más `Liga_convocatoria` llena) hace que el wizard inserte un paso intermedio — lista esa convocatoria, exige abrir el link y confirmar "ya me registré" antes de pasar al formulario de OTDE. Si ningún curso seleccionado lo requiere, no aparece ningún paso extra. Detalle de implementación en `docs/DESIGN_SYSTEM.md`.
+
+### Doble registro: seguimiento de la inscripción real en la plataforma externa (sep 2026)
+
+El paso anterior resuelve que el docente **llegue** a la plataforma externa; esta pieza resuelve
+que OTDE sepa si de verdad **completó** su inscripción ahí — el hueco que Jorge señaló: muchos
+docentes se registran en el formulario de OTDE pero nunca terminan su alta en Aula Digital (o al
+revés, se inscriben directo en la plataforma sin pasar por OTDE, y OTDE nunca se entera).
+
+- **Confirmación ligera, no verificación contra la plataforma**: cuando el curso tiene
+  `Liga_convocatoria`, el wizard pregunta "¿Ya te llegó el correo de bienvenida del curso?" — esa
+  confirmación de bienvenida de la plataforma externa es la señal acordada con Jorge (visual,
+  sin subir archivos ni cruzar contra ninguna lista de inscritos real). "Todavía no" no bloquea
+  el registro en OTDE, solo dispara el seguimiento de abajo.
+- **`Registro_externo` en `Inscripciones`** (uno de 3 valores fijos, `REGISTRO_EXTERNO` en el
+  `.gs`): `No aplica` (el curso no tiene `Liga_convocatoria`), `Pendiente` (el docente dijo
+  "todavía no") o `Confirmado por docente` (dijo "sí" en el formulario, o confirmó después por el
+  correo de recordatorio — ver abajo). `mejorarRegistroExterno_()` es la única función que
+  escribe esta columna: un reenvío del mismo folio solo puede **mejorar** el estado (vacío/
+  Pendiente → Confirmado), nunca degradarlo ni duplicar el folio.
+- **Entrada directa para quien se inscribió primero en la plataforma**: `?curso=ID` en la URL
+  precarga ese curso, y un enlace "¿Ya te inscribiste? Avísanos aquí" en el catálogo cubre a
+  quien llegó a la plataforma por otro medio (oficio, WhatsApp, redes de CoEEE) sin pasar primero
+  por OTDE.
+
+**Recordatorio automático + confirmación de un toque, solo para `Pendiente`:** un correo
+individual (agrupado por docente si tiene varios cursos pendientes, `MAX_RECORDATORIOS_PENDIENTE
+= 2` por inscripción, nunca el mismo día del registro) sale al día siguiente del registro y de
+nuevo a `DIAS_ANTES_CIERRE_RECORDATORIO` (2) días o menos del cierre de inscripción
+(`decidirRecordatorioPendiente_()`), solo para cursos `Activo=TRUE` con inscripción abierta, con
+`RESERVA_CUOTA_CORREO=20` de margen para el resto de los Apps Script de la cuenta. El correo trae
+dos botones por curso: "Ir a inscribirme" (la `Liga_convocatoria`) y "Sí, ya me llegó", firmado
+con `HMAC-SHA256` del folio (`tokenConfirmacion_()`, secreto propio del proyecto en Script
+Properties, generado solo — la firma es lo único que impide confirmar el folio de otra persona
+adivinándolo). Ese botón abre `formacion-docente.html?confirmar=<folio>&t=<firma>`, que
+`doGet` enruta a `confirmarDesdeCorreo_()` — responde solo el nombre del curso (sin nombre, RFC
+ni correo del docente), valida la firma, y llama a `mejorarRegistroExterno_()` bajo el mismo
+`LockService` que `doPost`. Columnas `Recordatorios_pendiente`/`Fecha_ultimo_recordatorio`
+llevan la cuenta para no reenviar de más.
+
+### Candado contra folios duplicados (sep 2026)
+
+`doPost()` toma `LockService.getScriptLock()` alrededor de **todo** el registro (lectura del
+folio máximo, upsert en `Docentes`, inserción en `Inscripciones`) — antes la única protección era
+que el propio cliente manda un `POST` por curso en serie, lo que no protege contra dos
+*clientes* distintos registrándose casi al mismo tiempo. Ese hueco real produjo un folio
+duplicado en producción antes de este fix — ver `docs/QA-NOTES.md #31`. El mismo candado protege
+también "Reordenar columnas de Inscripciones" y `confirmarDesdeCorreo_()`, para que ninguno se
+cruce con un registro a la mitad.
 
 ### Recordatorios automáticos por correo
 
@@ -686,8 +734,9 @@ Docente
         │     (catálogo Activo=TRUE + ventana de fecha + inscritos)  (formacion-docente.gs)
         ├── selecciona 1+ cursos (multi-select)
         ├── [paso condicional] registro previo externo si aplica
-        └── POST secuencial por curso (evita race condition        ├── upsert en Docentes (valorOMantener)
-              en generarFolio())  ─────────────────────────────────►├── dedupe + folio en Inscripciones
+        └── POST secuencial por curso, uno a la vez  ──────────────►├── LockService (folio sin duplicados, §candado)
+                                                                     ├── upsert en Docentes (valorOMantener)
+                                                                     ├── dedupe + folio en Inscripciones
                                                                      └── Google Sheets
 
                                     Disparadores de tiempo (independientes de doGet/doPost)

@@ -289,13 +289,16 @@
     <section id="inscripciones">
       <h2><span class="h2-num">04</span>Inscripciones</h2>
       <p>Una fila por cada combinación docente + curso. El <code>Folio</code> tiene formato <code class="mono">OTDE-CAP-0001</code>, secuencial.</p>
+      <p><strong>Desde sep 2026 las columnas van agrupadas por bloques</strong> (no A–O fijas como antes): Registro (<code>Folio</code>, <code>Fecha_registro</code>) → Participante (<code>RFC_Docente</code>, <code>Nombre_Docente</code>, <code>Correo</code>, <code>Telefono</code>, <code>Funcion</code>) → Centro de trabajo (<code>CCT</code>, <code>Escuela</code>, <code>Sector</code>, <code>Zona</code>) → Curso (<code>ID_Curso</code>, <code>Nombre_Curso</code>) → Seguimiento (<code>Registro_externo</code>, <code>Fecha_confirmacion_externa</code>, <code>Recordatorios_pendiente</code>, <code>Fecha_ultimo_recordatorio</code>, <code>Estado</code>, <code>Codigo_asistencia_capturado</code>, <code>Fecha_actualizacion_estado</code>, <code>Notas</code>). El sistema ya no depende de que estén en un orden fijo — lee cada columna por su nombre de encabezado, así que si algún día se reordenan a mano nada se rompe.</p>
       <ul>
         <li><strong>Estado</strong> — hoy solo se usa "Registrado". Las fases siguientes del proyecto (validar asistencia, marcar "Participó") escribirán aquí.</li>
-        <li><strong>Columnas I–O</strong> (Nombre_Docente, CCT, Escuela, Sector, Zona, Funcion, Nombre_Curso) — son fórmulas <code>VLOOKUP</code>, no datos capturados. Se actualizan solas si cambias algo en Docentes o Cursos; no las edites a mano, edítalas ahí.</li>
+        <li><strong>Nombre_Docente, Correo, Telefono, Funcion, CCT, Escuela, Sector, Zona, Nombre_Curso</strong> — son fórmulas <code>VLOOKUP</code>, no datos capturados. Se actualizan solas si cambias algo en Docentes o Cursos; no las edites a mano, edítalas ahí.</li>
+        <li><strong>Registro_externo</strong> — "No aplica" (el curso no tiene liga externa), "Pendiente" (el docente dijo que todavía no le llega el correo de bienvenida de la plataforma) o "Confirmado por docente" (dijo que sí, o confirmó después desde el correo de recordatorio). El sistema nunca hace retroceder este valor de Confirmado a Pendiente.</li>
+        <li><strong>Recordatorios_pendiente / Fecha_ultimo_recordatorio</strong> — llevan la cuenta de cuántos correos de recordatorio ya recibió esa inscripción (máximo 2) para no reenviar de más. No editar a mano salvo para corregir un error puntual.</li>
       </ul>
       <div class="callout ok">
-        <div class="callout-title">Si ves columnas I–O vacías en filas viejas</div>
-        <p>Corre <span class="chip true" style="font-weight:700;">Actualizar vista de Inscripciones</span> del menú — rellena la fórmula en cualquier fila que no la tenga, sin tocar los datos de A–H.</p>
+        <div class="callout-title">Si ves columnas VLOOKUP vacías en filas viejas</div>
+        <p>Corre <span class="chip true" style="font-weight:700;">Actualizar vista de Inscripciones</span> del menú — rellena la fórmula en cualquier fila que no la tenga, sin tocar los demás datos.</p>
       </div>
     </section>
 
@@ -321,8 +324,36 @@
         <div class="menu-item">
           <span class="mi-name">Actualizar vista de Inscripciones</span>
           <div class="mi-body">
-            <p>Rellena las columnas I–O (ver sección 04) en todas las filas de Inscripciones, incluyendo encabezados si faltan.</p>
+            <p>Rellena las columnas VLOOKUP (ver sección 04) en todas las filas de Inscripciones, incluyendo encabezados si faltan.</p>
             <p class="mi-when">Cuándo: si ves esas columnas vacías, o después de una migración manual.</p>
+          </div>
+        </div>
+        <div class="menu-item">
+          <span class="mi-name">Reordenar columnas de Inscripciones</span>
+          <div class="mi-body">
+            <p>Copia la hoja a un orden por bloques (Registro → Participante → Centro de trabajo → Curso → Seguimiento) y deja un respaldo de la hoja anterior con fecha en el nombre.</p>
+            <p class="mi-when">Cuándo: ya no hace falta correrlo de nuevo en operación normal — quedó como herramienta para si el orden vuelve a desordenarse.</p>
+          </div>
+        </div>
+        <div class="menu-item">
+          <span class="mi-name">Enviar recordatorios a pendientes ahora</span>
+          <div class="mi-body">
+            <p>Fuerza la corrida del recordatorio a quien tiene <code>Registro_externo = Pendiente</code>, sin esperar al disparador diario.</p>
+            <p class="mi-when">Cuándo: para probar el flujo o adelantar un envío puntual.</p>
+          </div>
+        </div>
+        <div class="menu-item">
+          <span class="mi-name">Enviar recordatorio de prueba de un folio</span>
+          <div class="mi-body">
+            <p>Manda el correo de recordatorio de un folio específico al correo de prueba, sin tocar las columnas de conteo de la hoja real.</p>
+            <p class="mi-when">Cuándo: para revisar cómo se ve el correo antes de un envío masivo.</p>
+          </div>
+        </div>
+        <div class="menu-item">
+          <span class="mi-name">Activar / desactivar modo de prueba de correo</span>
+          <div class="mi-body">
+            <p>Redirige todos los correos salientes del proyecto a una sola dirección de prueba, sin avisar a docentes reales. En modo de prueba, los recordatorios no marcan <code>Recordatorios_pendiente</code>/<code>Fecha_ultimo_recordatorio</code>.</p>
+            <p class="mi-when">Cuándo: antes de probar cualquier cambio que mande correo. Siempre desactivarlo al terminar.</p>
           </div>
         </div>
         <div class="menu-item">

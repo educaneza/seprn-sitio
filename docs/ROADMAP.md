@@ -595,6 +595,16 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     columnas nuevas llenas) se sigue viendo igual (regresión) y que un curso de prueba con cada
     estado se ve como se espera. Ver `docs/BITACORA.md`, checkpoint 16 sep 2026.
 
+19. **Doble registro OTDE + plataforma externa en Formación Docente** (construido, desplegado y
+    verificado en producción 16 sep 2026 — ver `docs/ARCHITECTURE.md` §"Doble registro" y
+    `docs/BITACORA.md`, checkpoint 16 sep 2026 cont. 3): flujo guiado de 3 pasos, `Registro_externo`
+    persistido en `Inscripciones`, `LockService` en `doPost` y recordatorio automático con
+    confirmación de un toque. Pendiente, en orden: (a) decidir si se renumera una de las dos
+    filas del folio duplicado `OTDE-CAP-0089` (datos sin tocar, ver `docs/QA-NOTES.md #31`); (b)
+    Paso 5 — reconciliar `Registro_externo` con la lista real de inscritos de Aula Digital cuando
+    CoEEE la tenga disponible (hoy esa lista solo es obtenible *a veces*); (c) borrar las 2 hojas
+    de respaldo `Inscripciones_respaldo_20260916`/`..._2318` cuando ya no se necesiten.
+
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue
 abierto de esa entrega (decisión de notificación de cierre de ticket, limpieza de función

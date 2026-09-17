@@ -739,6 +739,55 @@ function ejecutarLimpiezaCeremoniasAhora() {
 de este sitio (todos siguen esta convención para "privado") que alguna vez necesite correrse
 manualmente desde el editor en vez de solo ser invocada por otro código.
 
+## 30. Botón "Enviando…" quedaba congelado tras "Volver a elegir cursos" en un envío parcialmente fallido
+
+**Síntoma:** al QA-probar el flujo de doble registro (16 sep 2026), un envío de varios cursos que
+fallaba a la mitad (ver también la nota #19, envío secuencial) dejaba visible la opción "Volver a
+elegir cursos". Al usarla y volver a intentar el registro, el botón `btn-submit` de
+`formacion-docente.html` se quedaba mostrando "Enviando…" y deshabilitado — sin ningún error en
+consola, el registro nunca llegaba a completarse ni a fallar visiblemente otra vez.
+
+**Causa raíz:** en `enviarFormulario()` (`formacion-docente.html`), la rama de envío parcial
+(algunos cursos sí, otros no) hacía su `return` **antes** de llegar al código que reactivaba
+`btn-submit` (`btn.disabled = false; btn.textContent = 'Confirmar registro';`) — ese código vivía
+suelto al final de la función, no en un bloque que corriera pasara lo que pasara. Las ramas de
+éxito total y error total sí llegaban a reactivarlo por casualidad de dónde estaba su propio
+`return`; la parcial no.
+
+**Fix:** la reactivación del botón se movió a un bloque `finally` del `try/catch` de
+`enviarFormulario()` — corre en **todos** los caminos (éxito, error total, error parcial),
+comentado en el propio código como "en TODOS los caminos, incluido el registro parcial".
+
+**Dónde puede volver a pasar:** cualquier función con varias ramas de salida (éxito/error
+total/parcial) que reactive estado de UI (botones, spinners) en unas ramas y no en otras —
+revisar que la limpieza esté en las tres, no solo en las dos más obvias de probar.
+
+## 31. Folio `OTDE-CAP-0089` duplicado — dos docentes distintos, generado 1 segundo aparte, sin `LockService` en `doPost`
+
+**Síntoma:** al revisar `Inscripciones` durante el reorden de columnas del Paso 3 (16 sep 2026),
+se encontró el folio `OTDE-CAP-0089` repetido en dos filas con RFC/nombre de docente distintos,
+con `Fecha_registro` 1 segundo de diferencia (10 sep 2026). Una de esas dos filas (189) era
+además la misma fila que ya se sabía sin sus fórmulas VLOOKUP (hallazgo previo del mismo reorden).
+
+**Causa raíz:** `generarFolio()` leía el máximo folio existente y sumaba 1, sin ningún candado —
+dos `doPost` casi simultáneos (dos docentes registrándose al mismo tiempo, o el envío secuencial
+por curso del propio cliente cruzándose con otro usuario) podían leer el mismo máximo antes de
+que el primero terminara de escribir su fila, y ambos calculaban el mismo folio siguiente. El
+único mecanismo previo era enviar los registros en serie *desde el cliente* (un curso a la vez),
+que no protege contra dos *clientes* distintos escribiendo a la vez.
+
+**Fix:** ya cerrado como efecto colateral del Paso 3 (no fue una corrección dirigida a este bug
+específico) — `doPost()` ahora toma `LockService.getScriptLock()` alrededor de todo el registro
+(folio + upsert de `Docentes` + inserción en `Inscripciones`), mismo candado que ya usa
+"Reordenar columnas de Inscripciones" para no colisionar con un registro a la mitad. **Los datos
+del folio duplicado no se tocaron** — queda pendiente que Jorge decida si renumera una de las dos
+filas (ver `docs/ROADMAP.md`).
+
+**Dónde puede volver a pasar:** cualquier backend de este sitio que genere un folio secuencial
+leyendo "el máximo + 1" sin `LockService` alrededor de la lectura y la escritura — mismo patrón
+de riesgo ya corregido aquí que en la nota #26 (Ceremonias Cívicas), aunque la causa específica
+ahí era duplicar una operación completa por reintento, no una carrera entre dos folios.
+
 ## Regla general al corregir cualquiera de estos patrones
 
 Cuando se encuentra uno de estos bugs en un archivo, **revisar si el mismo

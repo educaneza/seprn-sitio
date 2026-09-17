@@ -262,12 +262,12 @@ variable, más simple que un modal o tooltip aparte). El botón usa
 Antes el aviso "Este formulario no es tu inscripción oficial al curso"
 (`.aviso-legal`) era un bloque estático siempre visible en el paso 1,
 aplicara o no al curso que el docente terminaba eligiendo — confuso cuando
-el catálogo mezcla cursos con y sin plataforma externa. Ahora son **tres
-señales relacionadas**, todas condicionadas a si el curso tiene
-`Liga_convocatoria` (no a `Registro_previo_requerido` — ese campo solo
-decide si el paso intermedio de registro externo se fuerza, ver "Registro
-previo externo" en `docs/ARCHITECTURE.md §12`; aquí basta con que exista una
-liga, forzada o no, para que aplique el aviso):
+el catálogo mezcla cursos con y sin plataforma externa. Son **tres señales
+relacionadas**, todas condicionadas a si el curso tiene `Liga_convocatoria`
+(no a `Registro_previo_requerido` — ese campo solo decide si el paso
+intermedio de registro externo se fuerza, ver "Registro previo externo" en
+`docs/ARCHITECTURE.md §12`; aquí basta con que exista una liga, forzada o
+no, para que aplique el aviso):
 
 1. **Badge en la tarjeta del catálogo** (`.cc-externo-tag`, pill ámbar con
    `ICON_EXTERNO`) — visible para cualquier curso con liga, incluso antes de
@@ -275,17 +275,59 @@ liga, forzada o no, para que aplique el aviso):
 2. **Nota por curso en el resumen de selección** — `.rsb-nota-externo` en el
    panel de escritorio (debajo del nombre de ese curso específico) y
    `.rs-chip-warn` (solo el ícono, sin texto, por espacio) en el chip móvil.
-3. **El aviso general** (`.aviso-legal`, oculto por defecto) — se muestra u
-   oculta en cada cambio de selección, dentro de `actualizarResumenSticky()`:
+3. **El aviso general** (`.aviso-legal`, oculto por defecto, dentro del
+   paso 2 — formulario OTDE) — se muestra u oculta en cada cambio de
+   selección, dentro de `actualizarResumenSticky()`:
    `algunoConLiga = cursosSeleccionados.some(c => c.liga)`. Con cero cursos
    seleccionados, o solo cursos sin liga, permanece oculto.
 
-`ICON_EXTERNO` es el mismo ícono (círculo con "i") en las tres señales y en
-`.aviso-legal` — un solo símbolo visual para "hay una plataforma externa de
-por medio" en todo el flujo, en vez de tres íconos distintos para la misma
-idea. Si se agrega una cuarta superficie que necesite esta señal (ej. el
-paso de confirmación), reusar `ICON_EXTERNO` y la misma condición
-(`liga`/`liga_convocatoria`), no `registroPrevio`.
+`ICON_EXTERNO` es el mismo ícono (círculo con "i") en las tres señales — un
+solo símbolo visual para "hay una plataforma externa de por medio" en todo
+el flujo, en vez de íconos distintos para la misma idea.
+
+## Patrón: paso intermedio guiado + confirmación de doble registro (sep 2026)
+
+Las tres señales de arriba avisan que hay una plataforma externa de por
+medio; este patrón es el paso completo que se inserta cuando el docente
+elige un curso con `Registro_previo_requerido=TRUE` — construido para
+cerrar el hueco que Jorge señaló: docentes que se registran con OTDE pero
+nunca terminan su alta real en la plataforma (o al revés). Modelo completo
+del dato en `docs/ARCHITECTURE.md` §"Doble registro".
+
+- **Indicador de 3 pasos** (`.steps-wrapper`, arriba del contenido): "Elige
+  tu curso" → "Inscríbete" (`#step-ind-ext`, oculto por defecto,
+  `actualizarIndicadorPasos()` lo revela solo si algún curso seleccionado
+  tiene `registroPrevio && liga`) → "Avisa a OTDE". Una sola palabra en la
+  etiqueta del paso 2 a propósito: con dos líneas el indicador crecía y
+  empujaba las tarjetas del catálogo al aparecer.
+- **Guía visual de 4 íconos** (`.guia-externa`, sin texto largo): Entra o
+  crea tu cuenta → Confirma tu correo (solo la 1ª vez) → Inscríbete al
+  curso → Te llega el correo de bienvenida. El 4º paso es literalmente la
+  pregunta que sigue.
+- **Pregunta de confirmación** (`.decision-externa`): "¿Ya te llegó el
+  correo de bienvenida del curso?" con dos salidas, ninguna bloqueante —
+  "Sí, ya me llegó" (`continuarDesdeExterno(true)`) y "Todavía no — avisar
+  a OTDE de todos modos" (`continuarDesdeExterno(false)`). El correo de
+  bienvenida de la plataforma es la señal acordada con Jorge: visual y
+  ligera, sin subir archivos ni cruzar contra ninguna lista de inscritos
+  real de la plataforma.
+- **Confirmación final con checklist por curso**: dos `crearCheck()` por
+  curso con plataforma externa — "Registro con OTDE" (siempre `ok`) e
+  "Inscripción en la plataforma" (`ok` si confirmó, `pendiente` con el
+  texto "Tu lugar no está apartado hasta que te llegue el correo de
+  bienvenida. Te enviaremos un recordatorio por correo." si no) — con un
+  CTA "Ir a inscribirme" (`ICON_LINK_EXT` + la `Liga_convocatoria`) cuando
+  quedó pendiente.
+- **Navegación entre pasos con `history.pushState`**: el botón Atrás del
+  navegador regresa de paso 2 a la guía externa (o de ahí al catálogo) sin
+  perder los datos ya capturados — no es solo un `display:none` sin
+  historial.
+- **Gotcha de scroll**: bajar al indicador de pasos (no hasta arriba del
+  hero) usa `scrollTo({behavior:'instant'})`, no `'smooth'` — en Chrome,
+  `'smooth'` junto con la animación `.paso-enter` / el cambio de foco no
+  hace scroll en absoluto, en silencio (sin error, simplemente no se movía
+  la página). Si se toca cualquier `scrollTo` de este flujo, probar en
+  Chrome real, no asumir que `'smooth'` es equivalente.
 
 ## Patrón: etiqueta de validez oficial (USICAMM/PROEEB)
 
