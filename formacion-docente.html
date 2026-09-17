@@ -636,6 +636,11 @@
     #paso-confirmacion h2 { font-family: var(--font-display); font-size: 1.75rem; font-weight: 800; color: var(--midnight); letter-spacing: -.01em; margin-bottom: .6rem; }
     #paso-confirmacion .conf-sub { color: var(--ink-soft); font-size: 1rem; max-width: 42ch; margin: 0 auto 1.75rem; line-height: 1.5; }
 
+    /* ── Vista del botón "Sí, ya me llegó" del correo de recordatorio ── */
+    #paso-confirmar-correo { text-align: center; padding-top: 1.5rem; }
+    #paso-confirmar-correo h2 { font-family: var(--font-display); font-size: 1.75rem; font-weight: 800; color: var(--midnight); letter-spacing: -.01em; margin-bottom: .6rem; text-wrap: balance; }
+    #paso-confirmar-correo .conf-sub { color: var(--ink-soft); font-size: 1rem; max-width: 42ch; margin: 0 auto 1.75rem; line-height: 1.5; }
+
     .folio-item {
       background: var(--paper); border: 1px solid var(--hairline); border-radius: var(--radius-md);
       padding: 1.3rem 1.5rem; text-align: left; margin-bottom: 1rem; box-shadow: var(--shadow-1);
@@ -1043,6 +1048,17 @@
     <div style="margin-top:1rem;">
       <button class="btn-secondary" onclick="regresarPaso1()">← Cambiar selección</button>
     </div>
+  </div>
+
+  <!-- ══ CONFIRMACIÓN DESDE EL CORREO DE RECORDATORIO ══
+       formacion-docente.html?confirmar=<folio>&t=<firma> (botón "Sí, ya me
+       llegó"). No carga el catálogo: solo registra y muestra el resultado. -->
+  <div id="paso-confirmar-correo" class="narrow" style="display:none;" aria-live="polite">
+    <div class="catalogo-spinner" id="cc-spinner"></div>
+    <div class="check-icon" id="cc-icono" style="display:none;"></div>
+    <h2 id="cc-titulo">Registrando tu confirmación…</h2>
+    <p class="conf-sub" id="cc-texto"></p>
+    <a href="formacion-docente.html" class="btn-primary" id="cc-boton" style="display:none;width:auto;padding:.9rem 2.25rem;">Ver cursos disponibles</a>
   </div>
 
   <!-- ══ CONFIRMACIÓN ══ -->
@@ -2160,7 +2176,7 @@
         checks.appendChild(crearCheck('ok', 'Avisaste a OTDE', ''));
         if (externoPendiente(r.curso)) {
           checks.appendChild(crearCheck('pendiente', 'Falta: inscribirte en la plataforma',
-            'Tu lugar no está apartado hasta que te llegue el correo de bienvenida.'));
+            'Tu lugar no está apartado hasta que te llegue el correo de bienvenida. Te enviaremos un recordatorio por correo.'));
         } else {
           checks.appendChild(crearCheck('ok', 'Inscripción en la plataforma', 'Te llegó el correo de bienvenida.'));
         }
@@ -2246,7 +2262,55 @@
     el.addEventListener('change', limpiar);
   });
 
-  cargarCatalogo();
+  // ── Botón "Sí, ya me llegó" del correo de recordatorio (Paso 4) ──
+  async function confirmarInscripcionDesdeCorreo(folio, token) {
+    document.getElementById('paso-1').style.display = 'none';
+    document.querySelector('.steps-wrapper').style.display = 'none';
+    document.getElementById('paso-confirmar-correo').style.display = 'block';
+    history.replaceState({ paso: 'confirmar-correo' }, '');
+
+    const terminar = (exito, titulo, texto, textoBoton, hrefBoton) => {
+      document.getElementById('cc-spinner').style.display = 'none';
+      const icono = document.getElementById('cc-icono');
+      icono.classList.toggle('pendiente', !exito);
+      icono.innerHTML = exito ? ICON_CHECK_CONFIRMACION : ICON_EXTERNO;
+      icono.style.display = 'inline-flex';
+      document.getElementById('cc-titulo').textContent = titulo;
+      document.getElementById('cc-texto').textContent = texto;
+      const boton = document.getElementById('cc-boton');
+      boton.textContent = textoBoton;
+      boton.href = hrefBoton;
+      boton.style.display = 'inline-flex';
+    };
+
+    try {
+      const res = await fetchJsonConTimeout(APPS_SCRIPT_URL + '?action=confirmar&folio=' +
+        encodeURIComponent(folio) + '&t=' + encodeURIComponent(token));
+      if (res.status === 'ok') {
+        terminar(true,
+          res.yaConfirmado ? 'Ya lo teníamos registrado' : '¡Listo! Registramos tu inscripción',
+          'Tu inscripción en «' + res.curso + '» ya está confirmada. Ya no te enviaremos recordatorios de este curso.',
+          'Ver cursos disponibles', 'formacion-docente.html');
+      } else if (res.status === 'invalido') {
+        terminar(false, 'Este enlace no es válido',
+          'Puede estar incompleto o ya no corresponder a una inscripción pendiente. Copia el enlace completo desde tu correo, o avísanos desde la página del curso.',
+          'Ver cursos disponibles', 'formacion-docente.html');
+      } else {
+        throw new Error(res.mensaje || 'Error desconocido');
+      }
+    } catch (err) {
+      terminar(false, 'No pudimos registrar tu confirmación',
+        'Puede ser tu conexión o el servidor está ocupado. Intenta de nuevo en un momento.',
+        'Intentar de nuevo', location.href);
+    }
+  }
+
+  const paramsIniciales = new URLSearchParams(location.search);
+  if (paramsIniciales.get('confirmar') && paramsIniciales.get('t')) {
+    confirmarInscripcionDesdeCorreo(paramsIniciales.get('confirmar'), paramsIniciales.get('t'));
+  } else {
+    cargarCatalogo();
+  }
 </script>
 </body>
 </html>

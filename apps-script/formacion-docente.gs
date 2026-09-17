@@ -62,8 +62,9 @@
 //     Participante:      C RFC_Docente | D Nombre_Docente* | E Correo* | F Telefono* | G Funcion*
 //     Centro de trabajo: H CCT* | I Escuela* | J Sector* | K Zona*
 //     Curso:             L ID_Curso | M Nombre_Curso*
-//     Seguimiento:       N Registro_externo | O Fecha_confirmacion_externa | P Estado
-//                        Q Codigo_asistencia_capturado | R Fecha_actualizacion_estado | S Notas
+//     Seguimiento:       N Registro_externo | O Fecha_confirmacion_externa
+//                        P Recordatorios_pendiente | Q Fecha_ultimo_recordatorio | R Estado
+//                        S Codigo_asistencia_capturado | T Fecha_actualizacion_estado | U Notas
 //     * Fórmula VLOOKUP en vivo contra Docentes/Cursos — se recalculan solas
 //     si cambian los datos del docente o del curso. Ver VISTA_INSCRIPCIONES.
 //     El código lee esta hoja SIEMPRE por nombre de encabezado, nunca por
@@ -91,7 +92,8 @@ const ENCABEZADOS_INSCRIPCIONES = [
   'RFC_Docente', 'Nombre_Docente', 'Correo', 'Telefono', 'Funcion',
   'CCT', 'Escuela', 'Sector', 'Zona',
   'ID_Curso', 'Nombre_Curso',
-  'Registro_externo', 'Fecha_confirmacion_externa', 'Estado',
+  'Registro_externo', 'Fecha_confirmacion_externa',
+  'Recordatorios_pendiente', 'Fecha_ultimo_recordatorio', 'Estado',
   'Codigo_asistencia_capturado', 'Fecha_actualizacion_estado', 'Notas'
 ];
 
@@ -227,7 +229,13 @@ function construirCursoApi_(row, estadoInscripcion, inscritosPorCurso) {
 }
 
 // ── doGet: catálogo de cursos activos + historial de cursos pasados ──
-function doGet() {
+function doGet(e) {
+  // Botón "Sí, ya me llegó" del recordatorio a pendientes (ver
+  // confirmarDesdeCorreo_). Cualquier otra llamada regresa el catálogo.
+  const params = (e && e.parameter) || {};
+  if (params.action === 'confirmar') {
+    return textResponse(JSON.stringify(confirmarDesdeCorreo_(params.folio, params.t)));
+  }
   try {
     const hoja  = obtenerHojaCursos();
     const datos = hoja.getDataRange().getValues().slice(1);
@@ -560,12 +568,12 @@ function darFormatoHojaInscripciones_(hoja) {
   const anchos = {
     Folio: 125, Fecha_registro: 150, RFC_Docente: 135, Nombre_Docente: 230, Correo: 220, Telefono: 105,
     Funcion: 150, Escuela: 200, ID_Curso: 110, Nombre_Curso: 260, Registro_externo: 170,
-    Fecha_confirmacion_externa: 170, Notas: 220
+    Fecha_confirmacion_externa: 170, Recordatorios_pendiente: 160, Fecha_ultimo_recordatorio: 170, Notas: 220
   };
   Object.keys(anchos).forEach(h => { if (h in cols) hoja.setColumnWidth(cols[h] + 1, anchos[h]); });
 
   const filas = Math.max(hoja.getMaxRows() - 1, 1);
-  ['Fecha_registro', 'Fecha_confirmacion_externa', 'Fecha_actualizacion_estado'].forEach(h => {
+  ['Fecha_registro', 'Fecha_confirmacion_externa', 'Fecha_ultimo_recordatorio', 'Fecha_actualizacion_estado'].forEach(h => {
     if (h in cols) hoja.getRange(2, cols[h] + 1, filas, 1).setNumberFormat('d/M/yyyy H:mm:ss');
   });
   if ('Codigo_asistencia_capturado' in cols) {
@@ -876,6 +884,10 @@ function onOpen() {
     .addSeparator()
     .addItem('Instalar recordatorios automáticos', 'instalarRecordatoriosAutomaticos')
     .addItem('Desinstalar recordatorios automáticos', 'desinstalarRecordatoriosAutomaticos')
+    .addSeparator()
+    .addItem('Enviar recordatorios a pendientes ahora', 'fdMenuEnviarPendientesAhora')
+    .addItem('Enviar recordatorio de prueba de un folio', 'fdMenuRecordatorioPruebaFolio')
+    .addItem('Activar / desactivar modo de prueba de correo', 'fdMenuModoPrueba')
     .addSeparator()
     .addItem('Instalar auto-generación de ID de curso', 'instalarTriggerAutoId')
     .addItem('Desinstalar auto-generación de ID de curso', 'desinstalarTriggerAutoId')
@@ -1517,6 +1529,297 @@ function enviarRecordatoriosDiarios() {
       }
     }
   }
+
+  // 3. Inscripción pendiente en la plataforma externa (Paso 4, sep 2026).
+  // Aislado: si falla, no afecta los recordatorios de curso de arriba.
+  try {
+    const res = enviarRecordatoriosPendientes_();
+    console.log('Recordatorios a pendientes: ' + res.enviados + ' enviado(s), ' + res.pospuestos + ' pospuesto(s).');
+  } catch (err) {
+    console.error('enviarRecordatoriosPendientes_ falló: ' + err.message);
+  }
+}
+
+// ============================================================
+// RECORDATORIO A PENDIENTES DE INSCRIPCIÓN EXTERNA (Paso 4, sep 2026)
+//
+// A quien dijo "Todavía no me llega el correo de bienvenida" (Registro_externo
+// = Pendiente) se le manda un correo INDIVIDUAL con dos botones por curso:
+// "Ir a inscribirme" (liga del curso) y "Sí, ya me llegó" (confirma con un
+// toque vía formacion-docente.html?confirmar=<folio>&t=<firma>).
+//
+// Reglas (decididas con Jorge), máximo MAX_RECORDATORIOS_PENDIENTE por
+// inscripción, nunca el mismo día del registro:
+//   1. Al día siguiente (o después) de registrarse como Pendiente.
+//   2. A DIAS_ANTES_CIERRE_RECORDATORIO días o menos del cierre de inscripción
+//      (Fecha_limite_inscripcion, o Fecha_inicio si no hay), siempre que hayan
+//      pasado DIAS_ENTRE_RECORDATORIOS_PENDIENTE desde el primero. Si ambas
+//      coinciden el mismo día, sale UN solo correo (cuenta como el último).
+// Solo cursos Activo=TRUE con inscripción abierta. Un correo por docente
+// aunque tenga varios cursos pendientes. Deja RESERVA_CUOTA_CORREO de cuota
+// para los demás Apps Script de la cuenta; lo que no alcance sale mañana
+// (las columnas solo se marcan si el correo salió de verdad).
+// ============================================================
+
+const SITIO_FORMACION_URL = 'https://educaneza.github.io/seprn-sitio/formacion-docente.html';
+const MAX_RECORDATORIOS_PENDIENTE = 2;
+const DIAS_ANTES_CIERRE_RECORDATORIO = 2;
+const DIAS_ENTRE_RECORDATORIOS_PENDIENTE = 2;
+const RESERVA_CUOTA_CORREO = 20;
+
+// ── Firma del botón "Sí, ya me llegó": HMAC-SHA256 del folio con un secreto
+// propio del proyecto (Script Properties, se genera solo la primera vez).
+// Sin la firma correcta nadie puede confirmar el folio de otra persona. ──
+function secretoConfirmacion_() {
+  const props = PropertiesService.getScriptProperties();
+  let secreto = props.getProperty('SECRETO_CONFIRMACION');
+  if (!secreto) {
+    secreto = Utilities.getUuid() + Utilities.getUuid();
+    props.setProperty('SECRETO_CONFIRMACION', secreto);
+  }
+  return secreto;
+}
+
+function tokenConfirmacion_(folio) {
+  const firma = Utilities.computeHmacSha256Signature(String(folio).trim(), secretoConfirmacion_());
+  return Utilities.base64EncodeWebSafe(firma).replace(/=+$/, '').slice(0, 24);
+}
+
+function ligaConfirmacion_(folio) {
+  return SITIO_FORMACION_URL + '?confirmar=' + encodeURIComponent(String(folio).trim()) +
+    '&t=' + tokenConfirmacion_(folio);
+}
+
+// ── doGet ?action=confirmar&folio=&t= : Pendiente → Confirmado por docente ──
+// Respuesta mínima (sin nombre, RFC ni correo): solo el nombre del curso.
+function confirmarDesdeCorreo_(folio, token) {
+  folio = String(folio || '').trim();
+  if (!folio || !token || String(token) !== tokenConfirmacion_(folio)) return { status: 'invalido' };
+
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(25000);
+  } catch (errLock) {
+    return { status: 'error', mensaje: 'El sistema está ocupado, intenta de nuevo en unos segundos.' };
+  }
+  try {
+    const hoja = obtenerHojaInscripciones();
+    const datos = hoja.getDataRange().getValues();
+    const cols = indicesPorEncabezado_(datos[0]);
+    for (let i = 1; i < datos.length; i++) {
+      if (String(datos[i][cols.Folio]).trim() !== folio) continue;
+      const actual = String(datos[i][cols.Registro_externo] || '').trim();
+      const curso = String(datos[i][cols.Nombre_Curso] || datos[i][cols.ID_Curso] || '');
+      if (actual === REGISTRO_EXTERNO.CONFIRMADO) return { status: 'ok', curso: curso, yaConfirmado: true };
+      if (actual !== REGISTRO_EXTERNO.PENDIENTE) return { status: 'invalido' };
+      mejorarRegistroExterno_(hoja, { folio: folio, fila: i + 1, registroExterno: actual },
+        REGISTRO_EXTERNO.CONFIRMADO, new Date());
+      return { status: 'ok', curso: curso, yaConfirmado: false };
+    }
+    return { status: 'invalido' };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// ── ¿Toca recordatorio a esta inscripción pendiente? Devuelve el nuevo valor
+// de Recordatorios_pendiente (1 o 2), o 0 si hoy no toca. ──
+function decidirRecordatorioPendiente_(row, cols, filaCurso, hoy) {
+  const enviados = Number(row[cols.Recordatorios_pendiente]) || 0;
+  if (enviados >= MAX_RECORDATORIOS_PENDIENTE) return 0;
+
+  const fechaRegistro = parseFechaSegura_(row[cols.Fecha_registro]);
+  if (!fechaRegistro) return 0;
+  const dias = (a, b) => Math.round((a - b) / 86400000);
+  if (dias(hoy, fechaRegistro) < 1) return 0; // nunca el mismo día del registro
+
+  const ultimo = parseFechaSegura_(row[cols.Fecha_ultimo_recordatorio]);
+  const limite = filaCurso[21] ? parseFechaSegura_(filaCurso[21]) : parseFechaSegura_(filaCurso[5]);
+
+  const tocaPorCierre = limite !== null &&
+    dias(limite, hoy) <= DIAS_ANTES_CIERRE_RECORDATORIO &&
+    (enviados === 0 || (ultimo !== null && dias(hoy, ultimo) >= DIAS_ENTRE_RECORDATORIOS_PENDIENTE));
+  if (tocaPorCierre) return MAX_RECORDATORIOS_PENDIENTE;
+  if (enviados === 0) return 1;
+  return 0;
+}
+
+// ── Recorre Inscripciones y manda los recordatorios que tocan hoy ──
+function enviarRecordatoriosPendientes_() {
+  const hoy = soloFecha(new Date());
+  const modoPrueba = !!PropertiesService.getScriptProperties().getProperty('MODO_PRUEBA_CORREO');
+
+  const cursosPorId = {};
+  obtenerHojaCursos().getDataRange().getValues().slice(1).forEach(r => {
+    const id = String(r[0]).trim().toUpperCase();
+    if (id) cursosPorId[id] = r;
+  });
+  const docentesPorRfc = {};
+  obtenerHojaDocentes().getDataRange().getValues().slice(1).forEach(r => {
+    docentesPorRfc[String(r[0]).trim().toUpperCase()] = r;
+  });
+
+  const hoja = obtenerHojaInscripciones();
+  const datos = hoja.getDataRange().getValues();
+  const cols = indicesPorEncabezado_(datos[0]);
+
+  const porDocente = {};
+  for (let i = 1; i < datos.length; i++) {
+    const row = datos[i];
+    if (String(row[cols.Registro_externo]).trim() !== REGISTRO_EXTERNO.PENDIENTE) continue;
+    const filaCurso = cursosPorId[String(row[cols.ID_Curso]).trim().toUpperCase()];
+    if (!filaCurso || String(filaCurso[10]).trim().toUpperCase() !== 'TRUE') continue;
+    const estado = evaluarEstadoCurso_(filaCurso, hoy);
+    if (estado.esPasado || estado.estadoInscripcion === 'cerrada') continue;
+
+    const nuevoConteo = decidirRecordatorioPendiente_(row, cols, filaCurso, hoy);
+    if (!nuevoConteo) continue;
+
+    const rfc = String(row[cols.RFC_Docente]).trim().toUpperCase();
+    (porDocente[rfc] = porDocente[rfc] || []).push({
+      fila: i + 1, folio: String(row[cols.Folio]).trim(), filaCurso: filaCurso, nuevoConteo: nuevoConteo
+    });
+  }
+
+  let enviados = 0, pospuestos = 0;
+  Object.keys(porDocente).forEach(rfc => {
+    const docente = docentesPorRfc[rfc];
+    const correo = docente ? String(docente[2]).trim() : '';
+    if (!correo) return;
+    if (MailApp.getRemainingDailyQuota() <= RESERVA_CUOTA_CORREO) { pospuestos++; return; }
+
+    const items = porDocente[rfc];
+    const mensaje = construirCorreoPendiente_(items);
+    if (!enviarCorreoIndividual_(correo, mensaje.asunto, mensaje.html)) { pospuestos++; return; }
+    enviados++;
+
+    // En modo de prueba NO se marcan las columnas: el correo fue a la
+    // dirección de prueba, así que el docente real debe recibirlo después.
+    if (modoPrueba) return;
+    const ahora = new Date();
+    items.forEach(it => {
+      hoja.getRange(it.fila, cols.Recordatorios_pendiente + 1).setValue(it.nuevoConteo);
+      hoja.getRange(it.fila, cols.Fecha_ultimo_recordatorio + 1).setValue(ahora);
+    });
+  });
+  return { enviados: enviados, pospuestos: pospuestos };
+}
+
+function escaparHtml_(texto) {
+  return String(texto || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ── Correo del recordatorio: un bloque por curso con sus dos botones ──
+function construirCorreoPendiente_(items) {
+  const boton = (href, texto, fondo) =>
+    '<a href="' + escaparHtml_(href) + '" style="display:inline-block;background:' + fondo + ';color:#ffffff;' +
+    'text-decoration:none;font:bold 14px/1.2 Arial,Helvetica,sans-serif;padding:12px 18px;border-radius:8px;margin:6px 6px 0 0;">' +
+    texto + '</a>';
+
+  const bloques = items.map(it => {
+    const c = it.filaCurso;
+    const limite = c[21] || c[5];
+    return '<div style="padding:4px 0 16px 0;border-bottom:1px solid #e6e2da;margin-bottom:14px;">' +
+      '<div style="font:bold 16px/1.4 Arial,Helvetica,sans-serif;color:#1a1a1a;">' + escaparHtml_(c[2]) + '</div>' +
+      (limite ? '<div style="font:13px/1.5 Arial,Helvetica,sans-serif;color:#8A5A16;margin-top:2px;">Cierre de inscripciones: <strong>' + escaparHtml_(formatearFecha(limite)) + '</strong></div>' : '') +
+      '<div style="font:13px/1.5 Arial,Helvetica,sans-serif;color:#555555;margin-top:10px;">1. Inscríbete en la plataforma del curso:</div>' +
+      boton(c[7], 'Ir a inscribirme &rarr;', '#9F2241') +
+      '<div style="font:13px/1.5 Arial,Helvetica,sans-serif;color:#555555;margin-top:12px;">2. Cuando te llegue el correo de bienvenida del curso, avísanos con un toque:</div>' +
+      boton(ligaConfirmacion_(it.folio), '&#10003; Sí, ya me llegó', '#146C43') +
+    '</div>';
+  }).join('');
+
+  const unCurso = items.length === 1;
+  return {
+    asunto: unCurso
+      ? 'Te falta un paso para apartar tu lugar en "' + items[0].filaCurso[2] + '"'
+      : 'Te falta un paso para apartar tu lugar en ' + items.length + ' cursos',
+    html: construirCorreoHtml({
+      chip: 'TE FALTA UN PASO',
+      titulo: 'Tu lugar todavía no está apartado',
+      cuerpo: 'Hola, avisaste a OTDE NEZA que te interesa ' + (unCurso ? 'este curso' : 'estos cursos') +
+        ', pero todavía no confirmas tu inscripción en la plataforma. <strong>Tu lugar solo se aparta ahí</strong>, ' +
+        'y la prueba es el correo de bienvenida que te manda la plataforma.',
+      detalle: bloques
+    })
+  };
+}
+
+// ── Envío individual (no BCC), con revisión de modo de prueba. true si salió. ──
+function enviarCorreoIndividual_(para, asunto, cuerpoHtml) {
+  const correoPrueba = PropertiesService.getScriptProperties().getProperty('MODO_PRUEBA_CORREO');
+  try {
+    MailApp.sendEmail({
+      to: correoPrueba || para,
+      replyTo: CORREO_REPLY_TO_INSTITUCIONAL,
+      subject: correoPrueba ? '[PRUEBA] ' + asunto : asunto,
+      htmlBody: correoPrueba
+        ? '<div style="background:#fff3cd;border:1px solid #e0a800;border-radius:6px;padding:10px 16px;margin-bottom:16px;' +
+          'font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#555;"><strong>Modo de prueba activo</strong> — destino real: ' +
+          escaparHtml_(para) + '</div>' + cuerpoHtml
+        : cuerpoHtml,
+      name: 'OTDE NEZA · Centro de Formación Docente'
+    });
+    return true;
+  } catch (err) {
+    console.error('No se pudo enviar a ' + para + ': ' + err.message);
+    return false;
+  }
+}
+
+// ── Menú: activar/desactivar modo de prueba sin tocar el código ──
+function fdMenuModoPrueba() {
+  const ui = SpreadsheetApp.getUi();
+  const actual = PropertiesService.getScriptProperties().getProperty('MODO_PRUEBA_CORREO');
+  if (actual) {
+    const r = ui.alert('Modo de prueba ACTIVO', 'Todos los correos van a: ' + actual + '\n\n¿Desactivarlo? Los correos volverán a ir a los docentes.', ui.ButtonSet.YES_NO);
+    if (r === ui.Button.YES) {
+      fdDesactivarModoPrueba();
+      ui.alert('Modo de prueba desactivado. Los correos vuelven a ir a los docentes.');
+    }
+    return;
+  }
+  const r = ui.prompt('Activar modo de prueba', 'Correo que recibirá TODOS los envíos (recordatorios incluidos) mientras esté activo:', ui.ButtonSet.OK_CANCEL);
+  if (r.getSelectedButton() !== ui.Button.OK) return;
+  const correo = r.getResponseText().trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) { ui.alert('Correo inválido: ' + correo); return; }
+  fdActivarModoPrueba(correo);
+  ui.alert('Modo de prueba ACTIVO: todos los correos van a ' + correo + '. No olvides desactivarlo al terminar.');
+}
+
+// ── Menú: manda a la dirección de prueba el recordatorio de UN folio, sin
+// aplicar reglas ni marcar columnas — para revisar el diseño y el botón. ──
+function fdMenuRecordatorioPruebaFolio() {
+  const ui = SpreadsheetApp.getUi();
+  const correoPrueba = PropertiesService.getScriptProperties().getProperty('MODO_PRUEBA_CORREO');
+  if (!correoPrueba) { ui.alert('Primero activa el modo de prueba (menú OTDE Formación).'); return; }
+
+  const r = ui.prompt('Recordatorio de prueba', 'Folio de la inscripción (ej. OTDE-CAP-0270):', ui.ButtonSet.OK_CANCEL);
+  if (r.getSelectedButton() !== ui.Button.OK) return;
+  const folio = r.getResponseText().trim().toUpperCase();
+
+  const datos = obtenerHojaInscripciones().getDataRange().getValues();
+  const cols = indicesPorEncabezado_(datos[0]);
+  const row = datos.slice(1).find(x => String(x[cols.Folio]).trim().toUpperCase() === folio);
+  if (!row) { ui.alert('No existe el folio ' + folio); return; }
+  const filaCurso = obtenerFilaCurso_(obtenerHojaCursos(), String(row[cols.ID_Curso]).trim().toUpperCase());
+  if (!filaCurso) { ui.alert('El curso de ese folio ya no está en la hoja Cursos.'); return; }
+
+  const mensaje = construirCorreoPendiente_([{ folio: folio, filaCurso: filaCurso }]);
+  const ok = enviarCorreoIndividual_(String(row[cols.Correo] || '(sin correo)'), mensaje.asunto, mensaje.html);
+  ui.alert(ok ? 'Enviado a ' + correoPrueba + '.' : 'No se pudo enviar (revisa el registro de ejecución).');
+}
+
+// ── Menú: aplica las reglas y envía ahora (mismo código que el activador diario) ──
+function fdMenuEnviarPendientesAhora() {
+  const ui = SpreadsheetApp.getUi();
+  const modo = PropertiesService.getScriptProperties().getProperty('MODO_PRUEBA_CORREO');
+  const r = ui.alert('Enviar recordatorios a pendientes',
+    (modo ? 'Modo de prueba ACTIVO: todo irá a ' + modo + '.' : 'ATENCIÓN: modo de prueba desactivado, los correos irán a los docentes.') +
+    '\n\n¿Continuar?', ui.ButtonSet.YES_NO);
+  if (r !== ui.Button.YES) return;
+  const res = enviarRecordatoriosPendientes_();
+  ui.alert('Listo: ' + res.enviados + ' correo(s) enviado(s), ' + res.pospuestos + ' pospuesto(s) por cuota o error.');
 }
 
 // ── Recordatorio de "empieza en 30 minutos", evaluado cada 15 minutos ──
