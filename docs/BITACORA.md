@@ -14,6 +14,19 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-09-17 · Confirmado en vivo: validez USICAMM/PROEEB ya desplegada en producción
+
+| | |
+|---|---|
+| **Fecha** | 2026-09-17 |
+| **Sesión** | El checkpoint anterior (16 sep, cont. 3) había dejado sin verificar si el código de validez USICAMM/PROEEB (`aa26bf7`, mismo archivo `.gs` que los Pasos 2-4 de doble registro) había quedado publicado en producción como efecto colateral de esos despliegues. Jorge pidió confirmarlo directamente contra el sistema real en vez de asumir cualquiera de las dos cosas. |
+| **Verificación** | `curl` al `doGet` real (`APPS_SCRIPT_URL` de `formacion-docente.html`) — el JSON de respuesta ya trae `valida_usicamm`, `valida_proeeb`, `estado_inscripcion` y `cursos_pasados`, campos que solo existen con el código de `aa26bf7`. **Confirmado: ya está en producción.** `docs/ROADMAP.md` ítem 18 y las 3 menciones correspondientes en `CLAUDE.md` se actualizaron de "código listo, sin desplegar" a "desplegado y confirmado". |
+| **Estado real capturado en el catálogo** | 2 cursos vigentes (`ACF-2627-002` "Gamificación como metodología para los proyectos de aula" y `ACF-2627-003` "Uso de la IA para el diseño de material educativo interactivo", ambos con `Valida_USICAMM`/`Valida_PROEEB=TRUE`, 1 inscrito cada uno) y 5 en el historial de "Cursos anteriores" (`AUT-2627-001` a `005`, ninguno válido para USICAMM/PROEEB, entre 16 y 39 inscritos cada uno). Jorge ya dio de alta estos cursos y capturó las columnas nuevas por su cuenta, sin que quedara registrado en una sesión previa. |
+| **Hallazgo sin resolver, no asumido** | El curso original `ACF-2627-001` ("Formación Docente en Inteligencia Artificial", Fundación Televisa — el único que existía en el checkpoint del 10 sep) **no aparece ni en vigentes ni en el historial** de esta respuesta. No se investigó la causa (¿`Activo=FALSE` a propósito, curso eliminado de la hoja, otro motivo?) — queda pendiente confirmar con Jorge antes de asumir cualquiera. |
+| **Commits** | Pendiente — sesión sin commitear todavía al momento de este checkpoint. |
+
+---
+
 ## CHECKPOINT — 2026-09-16 (cont. 3) · Flujo guiado de doble registro (OTDE + plataforma externa) en Formación Docente, con recordatorio automático y confirmación de un toque
 
 | | |
@@ -25,7 +38,7 @@ para qué otro documento tocar además de este.
 | **Paso 4 — recordatorio automático + confirmación de un toque (commit `c15dd11`)** | A quien quedó en `Registro_externo=Pendiente` se le manda un correo individual (agrupado por docente, máx. 2 por inscripción, nunca el mismo día del registro) al día siguiente del registro y de nuevo a ≤2 días del cierre de inscripción, con un botón firmado (HMAC-SHA256 del folio, `tokenConfirmacion_()`) que abre `formacion-docente.html?confirmar=<folio>&t=<firma>` → `doGet ?action=confirmar` → `Pendiente → Confirmado` sin exponer datos personales, protegido con el mismo `LockService`. Columnas nuevas `Recordatorios_pendiente`/`Fecha_ultimo_recordatorio` (segundo reorden de la hoja → respaldo `Inscripciones_respaldo_20260916_2318`). Solo cursos `Activo=TRUE` con inscripción abierta; `RESERVA_CUOTA_CORREO=20` deja cupo diario para el resto de los Apps Script de la cuenta. Menú nuevo: modo de prueba de correo, recordatorio de prueba por folio, envío manual a pendientes (en modo de prueba no se marcan las columnas). Verificado end-to-end en producción con Jorge tocando el botón real (fila de prueba → Confirmado); modo de prueba desactivado y filas de prueba borradas con su autorización, hoja de vuelta a 11 cursos / 283 docentes / 369 inscripciones. |
 | **Verificación** | `git diff --stat` de los 3 commits combinados: 3 archivos, 1,298 inserciones, 225 eliminaciones. Paso 3 y Paso 4 verificados en vivo contra el Sheet y el Apps Script real; Paso 2 solo contra un mock local. |
 | **Commits** | `d0ae2a9`, `c236975`, `c15dd11` — los 3 ya en `origin/main`, pusheados durante la sesión a pedido explícito de Jorge. |
-| **Pendiente** | Decidir si se renumera una de las dos filas del folio duplicado `OTDE-CAP-0089` (datos no tocados); Paso 5 (reconciliar con la lista de inscritos de Aula Digital cuando CoEEE la tenga disponible); borrar las 2 hojas de respaldo (`Inscripciones_respaldo_20260916` y `..._2318`) cuando ya no se necesiten. **Sin verificar**: si al pegar el `.gs` completo para desplegar la versión 16/17 de Pasos 3-4 también quedó publicado en producción el código de validez USICAMM/PROEEB del checkpoint anterior (mismo archivo, commit `aa26bf7` anterior a estos tres) — `docs/ROADMAP.md` ítem 18 lo sigue marcando como sin desplegar; confirmar contra el proyecto real de Apps Script antes de asumir cualquiera de las dos cosas. |
+| **Pendiente** | Decidir si se renumera una de las dos filas del folio duplicado `OTDE-CAP-0089` (datos no tocados); Paso 5 (reconciliar con la lista de inscritos de Aula Digital cuando CoEEE la tenga disponible); borrar las 2 hojas de respaldo (`Inscripciones_respaldo_20260916` y `..._2318`) cuando ya no se necesiten. La duda sobre si el código de validez USICAMM/PROEEB también quedó publicado al desplegar Pasos 3-4 se confirmó **sí** el 17 sep 2026 — ver el checkpoint de arriba. |
 
 ---
 

@@ -579,21 +579,22 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     de Jorge (6 sep 2026): sin prueba dirigida con folio de prueba, se valida orgánicamente
     cuando algún jefe reenvíe una ficha real en los próximos días de uso normal.
 
-18. **Validez USICAMM/PROEEB + historial "Cursos anteriores" en Formación Docente** (construido
-    16 sep 2026, **código en el repo, sin pegar ni desplegar en el proyecto real de Apps
-    Script**): 3 columnas nuevas en `Cursos` (`Fecha_limite_inscripcion`, `Valida_USICAMM`,
-    `Valida_PROEEB`), modelo de 3 estados de inscripción, historial de hasta 6 cursos pasados
-    (siempre visible, con o sin cursos vigentes) y rechazo server-side en `doPost()` para
-    registros a cursos ya concluidos — detalle completo en `docs/ARCHITECTURE.md §12` y
-    `docs/DESIGN_SYSTEM.md`. Pendiente, en orden: (a) pegar `apps-script/formacion-docente.gs`
-    completo en el editor real y **Administrar implementaciones → Nueva versión**; (b) visitar
-    `formacion-docente.html` una vez para que `obtenerHojaCursos()` autocomplete las 3 columnas
-    nuevas en la hoja `Cursos` real; (c) opcionalmente correr el menú "OTDE Formación → Aplicar
-    validación en Cursos" para el dropdown TRUE/FALSE de las 2 columnas booleanas nuevas; (d)
-    capturar `Valida_USICAMM`/`Valida_PROEEB`/`Fecha_limite_inscripcion` en los cursos reales que
-    apliquen; (e) verificar en producción que el curso real actual (`ACF-2627-001`, sin las
-    columnas nuevas llenas) se sigue viendo igual (regresión) y que un curso de prueba con cada
-    estado se ve como se espera. Ver `docs/BITACORA.md`, checkpoint 16 sep 2026.
+18. ~~**Validez USICAMM/PROEEB + historial "Cursos anteriores" en Formación Docente**~~ —
+    resuelto: **confirmado desplegado en producción vía `curl` al `doGet` real el 17 sep 2026**
+    (el JSON ya trae `valida_usicamm`/`valida_proeeb`/`estado_inscripcion`/`cursos_pasados`,
+    campos que solo existen con este código). 3 columnas nuevas en `Cursos`
+    (`Fecha_limite_inscripcion`, `Valida_USICAMM`, `Valida_PROEEB`), modelo de 3 estados de
+    inscripción, historial de hasta 6 cursos pasados (siempre visible, con o sin cursos vigentes)
+    y rechazo server-side en `doPost()` para registros a cursos ya concluidos — detalle completo
+    en `docs/ARCHITECTURE.md §12` y `docs/DESIGN_SYSTEM.md`. En producción al momento de
+    verificar: 2 cursos vigentes (`ACF-2627-002`/`ACF-2627-003`, ambos con
+    `Valida_USICAMM`/`Valida_PROEEB=TRUE`) y 5 en el historial de pasados
+    (`AUT-2627-001`…`005`, ninguno válido para USICAMM/PROEEB). **Pendiente real, no de
+    despliegue**: el curso original `ACF-2627-001` ("Formación Docente en Inteligencia
+    Artificial") ya no aparece ni en vigentes ni en el historial de esta respuesta — sin
+    diagnosticar si Jorge lo dio de baja a propósito (`Activo=FALSE`) o si hay algo que revisar;
+    confirmar con él antes de asumir cualquiera de las dos. Ver `docs/BITACORA.md`, checkpoint
+    17 sep 2026.
 
 19. **Doble registro OTDE + plataforma externa en Formación Docente** (construido, desplegado y
     verificado en producción 16 sep 2026 — ver `docs/ARCHITECTURE.md` §"Doble registro" y
