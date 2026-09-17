@@ -788,6 +788,41 @@ leyendo "el máximo + 1" sin `LockService` alrededor de la lectura y la escritur
 de riesgo ya corregido aquí que en la nota #26 (Ceremonias Cívicas), aunque la causa específica
 ahí era duplicar una operación completa por reintento, no una carrera entre dos folios.
 
+## 32. Mensajes de error del fallback manual de CCT quedaban pegados en rojo al alternar la respuesta de "sin solicitud previa" en `reporte-visita.html`
+
+**Síntoma:** en la prueba de navegador del ajuste "caso urgente sin folio" (17 sep 2026), se
+reprodujo este flujo: marcar "Sí" en "¿Atención sin solicitud previa?", capturar una CCT no
+encontrada, dejar Zona y Escuela del fallback manual vacíos, validar (correctamente marca error
+en esos dos campos), luego cambiar la respuesta a "No" y de vuelta a "Sí" — los mensajes de error
+de Zona/Escuela manual **reaparecían en rojo de inmediato**, antes de que el técnico volviera a
+tocar nada.
+
+**Causa raíz:** el listener de `change` en `#sin-solicitud` limpiaba los errores de los campos
+"felices" del sub-bloque (`urg-cct`, `urg-turno`, `urg-funcion`, `urg-otra-funcion`, `urg-nombre`,
+`urg-correo`) al pasar a "No", pero no los del fallback manual (`urg-tipo-cct-manual`,
+`urg-sector-manual`, `urg-zona-manual`, `urg-escuela-manual`) — la lista de `limpiarError()` a
+llamar se armó pensando en el camino feliz (CCT encontrada), sin considerar que el sub-bloque
+completo puede haber quedado marcado con errores del fallback manual desde una validación previa.
+Como `validarFormulario()` solo *agrega* la clase de error cuando algo falta (nunca la quita por
+sí sola si ya es válido — el resto del formulario sigue el mismo patrón, apoyándose en que el
+usuario dispare un evento `change`/`input` real al corregir el campo), esos mensajes viejos
+quedaban vivos en el DOM aunque el bloque estuviera oculto, y reaparecían intactos en cuanto el
+bloque se volvía a mostrar.
+
+**Fix:** ampliar la lista de campos que se limpian al elegir "No" para incluir también los 4 del
+fallback manual (`reporte-visita.html`, listener de `sin-solicitud`):
+```js
+['urg-cct', 'urg-tipo-cct-manual', 'urg-sector-manual', 'urg-zona-manual', 'urg-escuela-manual',
+ 'urg-turno', 'urg-funcion', 'urg-otra-funcion', 'urg-nombre', 'urg-correo'].forEach(limpiarError);
+```
+Verificado en consola: mismo escenario reproducido, `after: []` (sin errores visibles) al volver
+a "Sí".
+
+**Dónde puede volver a pasar:** cualquier sub-bloque condicional de este sitio con más de un
+"camino" interno (aquí: CCT encontrada vs. fallback manual) cuyo toggle de nivel superior limpie
+errores a mano en vez de reutilizar una función que cubra *todos* los campos del sub-bloque, sin
+importar por cuál camino interno se llegó a marcarlos.
+
 ## Regla general al corregir cualquiera de estos patrones
 
 Cuando se encuentra uno de estos bugs en un archivo, **revisar si el mismo

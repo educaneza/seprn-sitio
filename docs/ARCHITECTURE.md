@@ -1238,6 +1238,37 @@ que el contenido sea más útil para OTDE, y que la captura siga siendo fácil y
   `Fotos de Reportes de Visita/OTDE-MAN-0014`, correo con `[PRUEBA]` y PDF adjunto. A diferencia
   de rondas de prueba anteriores de este archivo, la fila/PDF/foto de prueba se dejaron sin
   limpiar a petición explícita de Jorge (quedan marcados "PRUEBA — ignorar").
+- **Caso urgente sin folio: auto-alta de Solicitud, Conectividad "WiFi y Cable" e Instalación
+  realizada a selección múltiple (17 sep 2026, cont.).** El campo "¿Atención sin solicitud previa
+  registrada?" se movió al principio del formulario y el Folio pasó a condicional a su respuesta
+  — obligatorio si "No" (comportamiento de siempre), oculto y no exigido si "Sí". El reto real:
+  sin folio no hay de dónde leer CCT/escuela/sector/zona/correo (`manBuscarSolicitudPorFolio_()`
+  depende de una fila ya existente en `Solicitudes`), así que un sub-bloque nuevo "Identificación
+  de la escuela" (visible solo con "Sí") captura esos datos en el momento: CCT con autocomplete
+  (`js/cct-db.js`, agregado a este archivo) replicando el patrón `manSeleccionarCct`/`manResetCct`/
+  `manActualizarZonas`/`manActualizarTipoCct` de `mantenimiento.html` con prefijo `urg`, fallback
+  manual de Tipo de CCT/Sector/Zona/Escuela, Turno, Función/Cargo (`otdePoblarFuncion()`), Nombre
+  y Correo de contacto. `manCrearSolicitudUrgente_(datos)` (nueva, junto a `manGenerarFolio`/
+  `manValidarCampos`) da de alta la fila en `Solicitudes` con folio autogenerado y
+  `Estatus = 'Resuelto'` desde el inicio (la visita ya ocurrió) más una nota de que fue
+  automática — deja en blanco WhatsApp/Equipos con falla/Oficio/Tipo de equipo, que no aplican
+  retroactivamente. Devuelve el mismo shape que `manBuscarSolicitudPorFolio_()`, así que
+  `manDoPostReporteVisita_()` no distingue el camino más allá de ese punto. Como el alta ocurre
+  por script, no dispara `manOnEditCierre`/`manOnEditProgramacion` (los triggers `onEdit`
+  instalables no reaccionan a ediciones hechas por Apps Script) — el único correo que sale es el
+  propio `manEnviarReporteVisita_()` de siempre, sin riesgo de duplicado. Conectividad ganó la
+  opción "Sí — WiFi y Cable" (columna `Conectividad` sigue siendo texto libre, sin cambio de
+  backend). Instalación realizada pasó de `<select>` único a checkboxes (mismo patrón
+  `check-list`/`check-item` de Actividades preventivas/correctivas, con "Otro" + texto libre),
+  uniendo las opciones marcadas con `"; "` — igual que "Temas de Excel" en `asesorias.gs`; la
+  columna N sigue siendo texto libre, sin cambio de backend tampoco. Probado en navegador contra
+  un servidor local (sin tocar el backend real): reordenamiento, toggle folio↔identificación en
+  ambas direcciones, autocomplete de CCT (encontrado y no encontrado, con fallback y zonas por
+  sector), Función repoblada por tipo de CCT, checkboxes con selección múltiple, y el payload
+  final inspeccionado directamente. Jorge desplegó el `.gs` a producción tras la prueba; falta
+  correr `manActivarModoPrueba('correo')` contra producción real antes de confiar el flujo con
+  datos reales. Bug real encontrado y corregido en la prueba: mensajes de error del fallback
+  manual quedaban pegados en rojo al alternar la respuesta — ver `docs/QA-NOTES.md #32`.
 
 ## 16. Webform de Correo Institucional en paralelo al Google Form (agosto 2026)
 

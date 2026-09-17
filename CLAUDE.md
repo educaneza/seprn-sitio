@@ -339,6 +339,16 @@ ya esté expandido).
   real `OTDE-MAN-0014`): fila de 27 columnas, PDF en una sola página, foto subida y comprimida,
   correo `[PRUEBA]` con PDF adjunto — dejados sin limpiar a petición de Jorge. Ver
   `docs/ARCHITECTURE.md §15`.
+- **Caso urgente sin folio + Conectividad "WiFi y Cable" + Instalación múltiple (17 sep 2026,
+  cont., desplegado por Jorge, pendiente de probar en vivo con modo de prueba)**: "¿Atención sin
+  solicitud previa?" ahora es el primer campo; el Folio pasó a condicional — obligatorio solo si
+  la respuesta es "No". Con "Sí", un sub-bloque nuevo captura CCT (autocomplete + fallback
+  manual)/Turno/Función/Nombre/Correo y `manCrearSolicitudUrgente_()` da de alta la Solicitud
+  con folio autogenerado y `Estatus = 'Resuelto'` desde el inicio, para que el resto del pipeline
+  (PDF, correo) siga igual. Instalación realizada pasó de `<select>` a checkboxes (varias
+  opciones a la vez, unidas por `"; "`). Ver `docs/ARCHITECTURE.md §15` y
+  `docs/QA-NOTES.md #32` (bug real de mensajes de error pegados al alternar la respuesta,
+  encontrado y corregido en la prueba de navegador).
 
 ### `apps-script/asesorias.gs`
 - **Nuevo (ago 2026)**: mismo patrón que `mantenimiento.gs` (Sheet propio con hojas
@@ -979,6 +989,12 @@ de la sesión realmente volvió obsoletos.
 ## Pendientes vigentes
 Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/Identidad) y
 `docs/BITACORA.md` para el historial de qué ya se hizo. Resumen de lo genuinamente abierto:
+- **`reporte-visita.html` — caso urgente sin folio, sin probar en vivo todavía**: Jorge ya
+  desplegó el `.gs` con `manCrearSolicitudUrgente_()` (17 sep 2026, cont.) pero falta correr
+  `manActivarModoPrueba('correo')` y probar los 3 escenarios (folio normal, caso urgente sin
+  folio, instalación con varias opciones) contra producción real antes de confiar el flujo con
+  datos reales — solo se probó en un servidor estático local, sin backend real. Ver
+  `docs/ARCHITECTURE.md §15`.
 - **Formación Docente — doble registro, seguimiento pendiente**: decidir si se renumera una de
   las dos filas del folio duplicado `OTDE-CAP-0089` (datos sin tocar); Paso 5 (reconciliar
   `Registro_externo` contra la lista real de Aula Digital cuando CoEEE la tenga disponible);
