@@ -324,6 +324,21 @@ ya esté expandido).
   de `Estatus`/`Técnico asignado` ya existente. Manual visual del equipo en
   `docs/manual-bases-tramites.html` (Asesorías/Soporte/Correo/Formación Docente pendientes,
   mismo tratamiento). Ver `docs/ARCHITECTURE.md §24`.
+- **Rediseño de `reporte-visita.html` — todo obligatorio + campos enriquecidos + fotos de
+  evidencia (17 sep 2026, desplegado por Jorge y verificado en vivo contra producción)**: pasó
+  de 3 campos obligatorios (de ~18) a ~24, de 5 secciones a 8, y de puro texto libre a selects/
+  checkboxes/numéricos donde un catálogo produce datos más útiles (Aula en uso, Mobiliario,
+  Conectividad, Actividades preventivas/correctivas, Instalación realizada). Campos nuevos:
+  Modelo/marca del equipo, Toolwiz Time Freeze, ¿Requiere segunda visita?, ¿Atención sin
+  solicitud previa registrada? (trazabilidad de casos urgentes sin folio previo), Descripción de
+  la atención realizada, y **fotos de evidencia obligatorias** (mismo patrón de compresión+Drive
+  que `visitas-jefes.gs`, carpeta "Fotos de Reportes de Visita" con subcarpeta por folio).
+  `ENCABEZADOS_MAN_REPORTES` creció de 20 a 27 columnas (las 7 nuevas van al final, U-AA, mismo
+  criterio que `Solicitudes`); `manValidarDatosReporte_()` ahora exige todas las columnas
+  capturables. Verificado end-to-end contra producción real con modo de prueba activo (folio
+  real `OTDE-MAN-0014`): fila de 27 columnas, PDF en una sola página, foto subida y comprimida,
+  correo `[PRUEBA]` con PDF adjunto — dejados sin limpiar a petición de Jorge. Ver
+  `docs/ARCHITECTURE.md §15`.
 
 ### `apps-script/asesorias.gs`
 - **Nuevo (ago 2026)**: mismo patrón que `mantenimiento.gs` (Sheet propio con hojas

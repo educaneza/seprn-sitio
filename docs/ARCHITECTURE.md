@@ -1182,6 +1182,63 @@ Zona/Sector, sin resolver para quien de verdad atiende.
   **Lección**: tras cualquier "Eliminar fila" por automatización de navegador, verificar con una
   captura de pantalla inmediata que la fila correcta desapareció — no asumirlo y seguir adelante.
 
+**Rediseño de `reporte-visita.html`: todo obligatorio, campos enriquecidos y fotos de evidencia
+(17 sep 2026, construido, desplegado por Jorge y verificado en vivo contra producción).** Jorge
+comparó el webform contra el Google Form viejo que se usaba antes de digitalizar este trámite
+(compartió el PDF de referencia) y encontró que la digitalización había perdido estructura:
+solo 3 de ~18 campos eran obligatorios, todo el resto era texto libre sin ninguna carga de
+fotos, y no existía un campo narrativo de "qué se hizo hoy". Pidió que todo sea obligatorio,
+que el contenido sea más útil para OTDE, y que la captura siga siendo fácil y sin fricción.
+
+- **Formulario: de 5 secciones/3 obligatorios a 8 secciones/~24 obligatorios.** Varios campos
+  pasaron de textarea libre a datos estructurados — más rápidos de llenar y más útiles para
+  reportes: Aula en uso al llegar y Mobiliario (select categórico, con descripción de ayuda),
+  Conectividad (select), Equipos atendidos/funcionales/no funcionales (numéricos, con aviso no
+  bloqueante si no cuadran), Actividades preventivas/correctivas (checkboxes de catálogo con un
+  checkbox "Ninguna" exclusivo), Instalación realizada (select de 7 valores, mismo catálogo que
+  el Form viejo). Campos nuevos: Modelo/marca del equipo, Toolwiz Time Freeze, ¿Requiere segunda
+  visita?, ¿Atención sin solicitud previa registrada? (trazabilidad de casos urgentes/
+  extraordinarios sin folio previo — ver más abajo), Descripción de la atención realizada (el
+  campo narrativo que faltaba), y Fotografías de evidencia. Inicio/Fin de visita pasaron de
+  opcional a obligatorio. Los campos genuinamente narrativos que a veces no tienen nada que
+  decir (Seguimiento requerido, Observaciones) son obligatorios pero con un chip "Ninguna"/
+  "Ninguno" que los llena con un toque, para no forzar fricción donde no la hay. `reporte-visita.html`
+  ahora carga `js/tramites-shared.js` (antes tenía su propia copia de `fetchJsonConTimeout` sin
+  el parámetro `timeoutMs`) para reutilizar `leerArchivoBase64()` y el timeout extendido.
+- **¿Atención sin solicitud previa registrada?** nace de una pregunta de Jorge esa misma sesión:
+  una escuela se atendió en calidad de urgente sin haber pasado por `mantenimiento.html`. Se
+  confirmó que `manDoPostReporteVisita_()` exige que el folio ya exista en `Solicitudes` pero no
+  valida el orden cronológico entre solicitud y atención — la solución operativa es llenar la
+  solicitud (aunque sea después de la visita) antes del reporte. El campo nuevo no cambia esa
+  regla, solo le da trazabilidad para que OTDE identifique estos casos en sus reportes.
+- **Fotos de evidencia — mismo patrón que Ceremonias Cívicas, adaptado.** `manSubirFotosReporte_()`/
+  `manObtenerCarpetaFotosReporte_()`/`manObtenerCarpetaFotosPorFolio_()` son un calco de
+  `visSubirFotos_()`/`visObtenerCarpetaFotos_()` (`apps-script/visitas-jefes.gs`, §22 abajo):
+  compresión en canvas en el navegador (1600px de ancho, JPEG calidad 0.8, hasta 20 fotos) antes
+  de subir, carpeta Drive "Fotos de Reportes de Visita" compartida una sola vez por envío (no por
+  foto — aplica desde el inicio el fix de rendimiento ya conocido de Ceremonias Cívicas, ver
+  `docs/QA-NOTES.md #23`). Diferencia deliberada: subcarpeta **por folio**, no por semana — el
+  folio ya identifica de forma única cada reporte, así que no hace falta agrupar por fecha.
+- **Backend: 7 columnas nuevas al final de "Reportes de visita" (U-AA)** — Atención sin solicitud
+  previa, Modelo/marca del equipo, ¿Se atendieron equipos administrativos?, ¿Se instaló Toolwiz
+  Time Freeze?, ¿Requiere segunda visita?, Descripción de la atención realizada, Fotografías de
+  evidencia (URLs, una por línea, mismo formato que `COL_VIS_EVIDENCIAS`). Mismo criterio que las
+  columnas agregadas al final de `Solicitudes`: las 20 columnas existentes no se movieron, así
+  que `COL_MAN_REP_PDF_URL`/`COL_MAN_REP_NOTIFICACION` no cambiaron de índice. `manValidarDatosReporte_()`
+  ahora exige las ~24 columnas capturables (antes solo Responsable/Fecha de atención/Estado del
+  aula). `manGenerarPDFReporte_()` ganó las secciones nuevas (con un aviso destacado si la
+  atención fue sin solicitud previa) y sigue cabiendo en una sola página, confirmado contra el
+  PDF real.
+- **Verificado end-to-end en vivo contra producción**: con `manActivarModoPrueba(...)` activo
+  (función temporal en el editor, mismo patrón de `docs/QA-NOTES.md #14`), se envió un reporte
+  real desde una copia local de `reporte-visita.html` (servida por `python3 -m http.server`,
+  apuntando al endpoint de producción real) usando el folio real más reciente de `Solicitudes`
+  (`OTDE-MAN-0014`) y una foto de prueba. Confirmado: fila con las 27 columnas correctas en el
+  Sheet, PDF en Drive con las secciones nuevas en una sola página, foto comprimida en
+  `Fotos de Reportes de Visita/OTDE-MAN-0014`, correo con `[PRUEBA]` y PDF adjunto. A diferencia
+  de rondas de prueba anteriores de este archivo, la fila/PDF/foto de prueba se dejaron sin
+  limpiar a petición explícita de Jorge (quedan marcados "PRUEBA — ignorar").
+
 ## 16. Webform de Correo Institucional en paralelo al Google Form (agosto 2026)
 
 `otde.html` reemplazó, en código, el `<iframe>` del Google Form que hasta ahora capturaba las
