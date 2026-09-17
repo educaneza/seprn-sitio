@@ -99,13 +99,36 @@
     .campo label .opcional { font-weight: 400; color: var(--muted); text-transform: none; }
     .campo label .req { color: var(--guinda-ac); }
 
+    .label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .5rem;
+      margin-bottom: .35rem;
+    }
+    .label-row label { margin-bottom: 0; }
+
+    .chip-ninguna {
+      border: 1.5px solid var(--border);
+      background: #fff;
+      color: var(--muted);
+      font-size: .72rem;
+      font-weight: 700;
+      padding: .2rem .65rem;
+      border-radius: 999px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: border-color .15s, color .15s;
+    }
+    .chip-ninguna:hover { border-color: var(--guinda-ac); color: var(--guinda-ac); }
+
     .fila-2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: .75rem;
     }
 
-    input[type="text"], input[type="date"], input[type="time"],
+    input[type="text"], input[type="date"], input[type="time"], input[type="number"],
     select, textarea {
       width: 100%;
       padding: .7rem .85rem;
@@ -135,6 +158,69 @@
     }
     .error-msg.visible { display: block; }
 
+    .select-help {
+      font-size: .78rem;
+      color: var(--muted);
+      margin-top: .35rem;
+      display: none;
+    }
+    .select-help.visible { display: block; }
+
+    .aviso-inline {
+      font-size: .78rem;
+      color: #92400e;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 8px;
+      padding: .55rem .75rem;
+      margin-top: .5rem;
+      display: none;
+    }
+    .aviso-inline.visible { display: block; }
+
+    .campo-oculto { display: none; }
+
+    .check-list {
+      display: flex;
+      flex-direction: column;
+      gap: .55rem;
+      margin-top: .1rem;
+      padding-left: .6rem;
+      border-left: 2px solid transparent;
+    }
+    .check-list.campo-error { border-left-color: #dc2626; }
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: .55rem;
+      font-size: .88rem;
+      color: var(--text);
+    }
+    .check-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--guinda-ac);
+      flex-shrink: 0;
+      margin: 0;
+    }
+    .check-item.otro-item { flex-wrap: wrap; }
+    .check-item .otro-input {
+      flex: 1;
+      min-width: 160px;
+      padding: .5rem .65rem;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      font-size: .85rem;
+      color: var(--text);
+      font-family: inherit;
+    }
+    .check-item.ninguna-item {
+      border-top: 1px dashed var(--arena);
+      padding-top: .55rem;
+      margin-top: .1rem;
+      color: var(--muted);
+    }
+
     #folio {
       font-family: 'Courier New', monospace;
       font-size: 1.1rem;
@@ -142,6 +228,26 @@
       letter-spacing: .04em;
       text-transform: uppercase;
       text-align: center;
+    }
+
+    .hint {
+      font-size: .78rem;
+      color: var(--muted);
+      margin-top: .35rem;
+    }
+
+    .fotos-preview {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+      gap: .5rem;
+      margin-top: .65rem;
+    }
+    .fotos-preview img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid var(--border);
     }
 
     .btn {
@@ -240,8 +346,14 @@
             <option value="">Selecciona…</option>
             <option value="Alejandro Morales García">Alejandro Morales García</option>
             <option value="Marcos Colín Mora">Marcos Colín Mora</option>
+            <option value="Otro">Otro</option>
           </select>
           <div class="error-msg" id="err-responsable">Selecciona quién realizó la visita.</div>
+        </div>
+        <div class="campo campo-oculto" id="wrap-otro-responsable">
+          <label for="otro-responsable">Nombre del responsable <span class="req">*</span></label>
+          <input type="text" id="otro-responsable" autocomplete="off">
+          <div class="error-msg" id="err-otro-responsable">Escribe el nombre de quien realizó la visita.</div>
         </div>
         <div class="campo">
           <label for="fecha-atencion">Fecha de atención <span class="req">*</span></label>
@@ -250,65 +362,167 @@
         </div>
         <div class="fila-2">
           <div class="campo">
-            <label for="inicio-visita">Inicio <span class="opcional">(opcional)</span></label>
+            <label for="inicio-visita">Inicio <span class="req">*</span></label>
             <input type="time" id="inicio-visita">
+            <div class="error-msg" id="err-inicio-visita">Indica la hora de inicio.</div>
           </div>
           <div class="campo">
-            <label for="fin-visita">Fin <span class="opcional">(opcional)</span></label>
+            <label for="fin-visita">Fin <span class="req">*</span></label>
             <input type="time" id="fin-visita">
+            <div class="error-msg" id="err-fin-visita">Indica la hora de término.</div>
           </div>
+        </div>
+        <div class="aviso-inline" id="aviso-horas">La hora de fin no puede ser anterior o igual a la de inicio — revísalo antes de enviar.</div>
+        <div class="campo">
+          <label for="sin-solicitud">¿Esta visita se atendió sin solicitud previa registrada (caso urgente)? <span class="req">*</span></label>
+          <select id="sin-solicitud">
+            <option value="">Selecciona…</option>
+            <option value="Sí">Sí — fue una atención de urgencia, sin solicitud previa en el sistema</option>
+            <option value="No">No — ya existía una solicitud registrada antes de esta visita</option>
+          </select>
+          <div class="error-msg" id="err-sin-solicitud">Indica si hubo solicitud previa registrada.</div>
         </div>
       </fieldset>
 
       <fieldset>
         <legend>Aula al llegar</legend>
         <div class="campo">
-          <label for="aula-en-uso">Aula en uso al llegar <span class="opcional">(opcional)</span></label>
-          <textarea id="aula-en-uso" rows="2"></textarea>
+          <label for="aula-en-uso">¿El aula estaba en uso al llegar? <span class="req">*</span></label>
+          <select id="aula-en-uso">
+            <option value="">Selecciona…</option>
+            <option value="Sí">Sí</option>
+            <option value="No">No</option>
+            <option value="Parcialmente">Parcialmente</option>
+          </select>
+          <div class="error-msg" id="err-aula-en-uso">Indica si el aula estaba en uso al llegar.</div>
         </div>
         <div class="campo">
-          <label for="mobiliario">Mobiliario <span class="opcional">(opcional)</span></label>
-          <textarea id="mobiliario" rows="2"></textarea>
+          <label for="mobiliario">Condición del mobiliario <span class="req">*</span></label>
+          <select id="mobiliario">
+            <option value="">Selecciona…</option>
+            <option value="Buena" data-desc="Mobiliario completo, mesas y sillas en buen estado, sin daños evidentes.">Buena</option>
+            <option value="Regular" data-desc="Mobiliario funcional pero con deterioro visible: sillas rotas, mesas inestables, falta alguna pieza.">Regular</option>
+            <option value="Deteriorada" data-desc="Mobiliario en mal estado generalizado, piezas faltantes o dañadas que afectan el uso del aula.">Deteriorada</option>
+          </select>
+          <div class="select-help" id="ayuda-mobiliario"></div>
+          <div class="error-msg" id="err-mobiliario">Selecciona la condición del mobiliario.</div>
         </div>
       </fieldset>
 
       <fieldset>
-        <legend>Equipos</legend>
-        <div class="campo">
-          <label for="equipos-atendidos">Equipos atendidos <span class="opcional">(opcional)</span></label>
-          <textarea id="equipos-atendidos" rows="2"></textarea>
+        <legend>Equipos del aula de medios</legend>
+        <div class="fila-2">
+          <div class="campo">
+            <label for="equipos-atendidos">Equipos atendidos <span class="req">*</span></label>
+            <input type="number" id="equipos-atendidos" min="0" step="1" inputmode="numeric">
+            <div class="error-msg" id="err-equipos-atendidos">Indica cuántos equipos se atendieron.</div>
+          </div>
+          <div class="campo">
+            <label for="equipos-funcionales">Funcionales al final <span class="req">*</span></label>
+            <input type="number" id="equipos-funcionales" min="0" step="1" inputmode="numeric">
+            <div class="error-msg" id="err-equipos-funcionales">Indica cuántos quedaron funcionales.</div>
+          </div>
         </div>
         <div class="campo">
-          <label for="equipos-funcionales">Equipos funcionales <span class="opcional">(opcional)</span></label>
-          <textarea id="equipos-funcionales" rows="2"></textarea>
+          <label for="equipos-no-funcionales">Equipos no funcionales al finalizar <span class="req">*</span></label>
+          <input type="number" id="equipos-no-funcionales" min="0" step="1" inputmode="numeric">
+          <div class="hint">Los que no pudieron rehabilitarse hoy — por complejidad técnica, falta de tiempo o refacciones.</div>
+          <div class="error-msg" id="err-equipos-no-funcionales">Indica cuántos quedaron sin funcionar.</div>
+        </div>
+        <div class="aviso-inline" id="aviso-conteo">Funcionales + no funcionales no coincide con el total de equipos atendidos — revísalo (puede ser correcto si hay equipos ya contados en otra jornada).</div>
+        <div class="campo">
+          <label for="modelo-equipo">Modelo / marca del equipo(s) <span class="req">*</span></label>
+          <input type="text" id="modelo-equipo" autocomplete="off" placeholder="Ej. HP Mini 110, HP Compaq dc5800">
+          <div class="hint">Si hay varios modelos, sepáralos con coma.</div>
+          <div class="error-msg" id="err-modelo-equipo">Escribe el modelo o marca de los equipos atendidos.</div>
         </div>
         <div class="campo">
-          <label for="equipos-no-funcionales">Equipos no funcionales <span class="opcional">(opcional)</span></label>
-          <textarea id="equipos-no-funcionales" rows="2"></textarea>
+          <label for="conectividad">Conectividad del aula <span class="req">*</span></label>
+          <select id="conectividad">
+            <option value="">Selecciona…</option>
+            <option value="Sí — WiFi">Sí — WiFi</option>
+            <option value="Sí — Cable">Sí — Cable</option>
+            <option value="No">No</option>
+          </select>
+          <div class="error-msg" id="err-conectividad">Indica el estado de la conexión a internet.</div>
         </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Equipos administrativos</legend>
         <div class="campo">
-          <label for="equipos-admin">Equipos administrativos <span class="opcional">(opcional)</span></label>
-          <textarea id="equipos-admin" rows="2"></textarea>
+          <label for="equipos-admin-si-no">¿Se atendieron equipos administrativos adicionales? <span class="req">*</span></label>
+          <select id="equipos-admin-si-no">
+            <option value="">Selecciona…</option>
+            <option value="Sí">Sí</option>
+            <option value="No">No</option>
+          </select>
+          <div class="error-msg" id="err-equipos-admin-si-no">Indica si se atendieron equipos administrativos.</div>
         </div>
-        <div class="campo">
-          <label for="conectividad">Conectividad <span class="opcional">(opcional)</span></label>
-          <textarea id="conectividad" rows="2"></textarea>
+        <div class="campo campo-oculto" id="wrap-equipos-admin-cantidad">
+          <label for="equipos-admin-cantidad">Cantidad de equipos administrativos atendidos <span class="req">*</span></label>
+          <input type="number" id="equipos-admin-cantidad" min="0" step="1" inputmode="numeric">
+          <div class="error-msg" id="err-equipos-admin-cantidad">Indica cuántos equipos administrativos se atendieron.</div>
         </div>
       </fieldset>
 
       <fieldset>
         <legend>Actividades realizadas</legend>
         <div class="campo">
-          <label for="actividades-preventivas">Actividades preventivas <span class="opcional">(opcional)</span></label>
-          <textarea id="actividades-preventivas" rows="2"></textarea>
+          <label>Actividades preventivas <span class="req">*</span></label>
+          <div class="check-list" id="grupo-preventivas">
+            <label class="check-item"><input type="checkbox" class="chk-preventiva" value="Limpieza interna de polvo"><span>Limpieza interna de polvo</span></label>
+            <label class="check-item"><input type="checkbox" class="chk-preventiva" value="Revisión de cableado y conexiones"><span>Revisión de cableado y conexiones</span></label>
+            <label class="check-item"><input type="checkbox" class="chk-preventiva" value="Actualización de software básico"><span>Actualización de software básico</span></label>
+            <label class="check-item"><input type="checkbox" class="chk-preventiva" value="Escaneo de virus o malware"><span>Escaneo de virus o malware</span></label>
+            <label class="check-item"><input type="checkbox" class="chk-preventiva" value="Optimización del sistema operativo"><span>Optimización del sistema operativo</span></label>
+            <label class="check-item"><input type="checkbox" class="chk-preventiva" value="Revisión de periféricos (mouse, teclado, audífonos)"><span>Revisión de periféricos (mouse, teclado, audífonos)</span></label>
+            <label class="check-item ninguna-item"><input type="checkbox" id="preventivas-ninguna" value="Ninguna"><span>Ninguna</span></label>
+          </div>
+          <div class="error-msg" id="err-preventivas">Marca al menos una opción (o "Ninguna").</div>
         </div>
         <div class="campo">
-          <label for="actividades-correctivas">Actividades correctivas <span class="opcional">(opcional)</span></label>
-          <textarea id="actividades-correctivas" rows="2"></textarea>
+          <label>Actividades correctivas <span class="req">*</span></label>
+          <div class="check-list" id="grupo-correctivas">
+            <label class="check-item"><input type="checkbox" class="chk-correctiva" value="Reemplazo de periféricos defectuosos"><span>Reemplazo de periféricos defectuosos</span></label>
+            <label class="check-item"><input type="checkbox" class="chk-correctiva" value="Reinstalación de sistema operativo"><span>Reinstalación de sistema operativo</span></label>
+            <label class="check-item"><input type="checkbox" class="chk-correctiva" value="Sustitución de disco duro o memoria RAM"><span>Sustitución de disco duro o memoria RAM</span></label>
+            <label class="check-item"><input type="checkbox" class="chk-correctiva" value="Corrección de errores de software"><span>Corrección de errores de software</span></label>
+            <label class="check-item"><input type="checkbox" class="chk-correctiva" value="Configuración de red o internet"><span>Configuración de red o internet</span></label>
+            <label class="check-item otro-item"><input type="checkbox" id="correctiva-otro-check" value="Otro"><span>Otro:</span><input type="text" class="otro-input" id="correctiva-otro-texto" autocomplete="off"></label>
+            <label class="check-item ninguna-item"><input type="checkbox" id="correctivas-ninguna" value="Ninguna"><span>Ninguna</span></label>
+          </div>
+          <div class="error-msg" id="err-correctivas">Marca al menos una opción (o "Ninguna").</div>
+          <div class="error-msg" id="err-correctiva-otro-texto">Especifica la actividad correctiva.</div>
         </div>
         <div class="campo">
-          <label for="instalacion-realizada">Instalación realizada <span class="opcional">(opcional)</span></label>
-          <textarea id="instalacion-realizada" rows="2"></textarea>
+          <label for="instalacion-realizada">Instalación realizada en el aula <span class="req">*</span></label>
+          <select id="instalacion-realizada">
+            <option value="">Selecciona…</option>
+            <option value="Windows 10 + Banco de materiales">Windows 10 + Banco de materiales</option>
+            <option value="Windows 10 — Equipo administrativo">Windows 10 — Equipo administrativo</option>
+            <option value="ChromeOS Flex">ChromeOS Flex</option>
+            <option value="Mantenimiento correctivo sin reinstalación">Mantenimiento correctivo sin reinstalación</option>
+            <option value="Mantenimiento preventivo">Mantenimiento preventivo</option>
+            <option value="Diagnóstico — sin intervención">Diagnóstico — sin intervención</option>
+            <option value="Otro">Otro</option>
+          </select>
+          <div class="error-msg" id="err-instalacion-realizada">Selecciona el tipo de instalación realizada.</div>
+        </div>
+        <div class="campo campo-oculto" id="wrap-instalacion-otro">
+          <label for="instalacion-otro">Especifica la instalación realizada <span class="req">*</span></label>
+          <input type="text" id="instalacion-otro" autocomplete="off">
+          <div class="error-msg" id="err-instalacion-otro">Escribe qué instalación se realizó.</div>
+        </div>
+        <div class="campo">
+          <label for="toolwiz">¿Se instaló/verificó Toolwiz Time Freeze? <span class="req">*</span></label>
+          <select id="toolwiz">
+            <option value="">Selecciona…</option>
+            <option value="Sí">Sí</option>
+            <option value="No">No</option>
+            <option value="Ya estaba instalado">Ya estaba instalado</option>
+          </select>
+          <div class="error-msg" id="err-toolwiz">Indica el estado de Toolwiz Time Freeze.</div>
         </div>
       </fieldset>
 
@@ -326,12 +540,51 @@
           <div class="error-msg" id="err-estado-aula">Selecciona el estado del aula al terminar la visita.</div>
         </div>
         <div class="campo">
-          <label for="seguimiento">Seguimiento requerido <span class="opcional">(opcional)</span></label>
-          <textarea id="seguimiento" rows="2"></textarea>
+          <label for="segunda-visita">¿Se requiere una segunda visita para completar la intervención? <span class="req">*</span></label>
+          <select id="segunda-visita">
+            <option value="">Selecciona…</option>
+            <option value="Sí">Sí</option>
+            <option value="No">No</option>
+          </select>
+          <div class="error-msg" id="err-segunda-visita">Indica si se requiere una segunda visita.</div>
         </div>
         <div class="campo">
-          <label for="observaciones">Observaciones <span class="opcional">(opcional)</span></label>
+          <div class="label-row">
+            <label for="seguimiento">Seguimiento requerido</label>
+            <button type="button" class="chip-ninguna" data-llenar="seguimiento" data-valor="Ninguno">Ninguno</button>
+          </div>
+          <textarea id="seguimiento" rows="2"></textarea>
+          <div class="error-msg" id="err-seguimiento">Escribe el seguimiento requerido (o toca "Ninguno").</div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Evidencia fotográfica</legend>
+        <div class="campo">
+          <label for="fotos-evidencia">Fotografías de evidencia <span class="req">*</span></label>
+          <input type="file" id="fotos-evidencia" accept="image/*" multiple>
+          <div class="hint">Hasta 20 fotos. Se comprimen automáticamente antes de enviarse — puedes subirlas directo desde tu celular.</div>
+          <div class="error-msg" id="err-fotos-evidencia">Adjunta al menos una foto.</div>
+          <div class="fotos-preview" id="fotos-preview"></div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Descripción y observaciones</legend>
+        <div class="campo">
+          <label for="descripcion-atencion">Descripción de la atención realizada <span class="req">*</span></label>
+          <textarea id="descripcion-atencion" rows="3"></textarea>
+          <div class="hint">¿Qué se hizo hoy? ¿Qué problemas se encontraron y cómo se resolvieron? ¿Qué quedó pendiente?</div>
+          <div class="error-msg" id="err-descripcion-atencion">Describe la atención realizada.</div>
+        </div>
+        <div class="campo">
+          <div class="label-row">
+            <label for="observaciones">Observaciones adicionales</label>
+            <button type="button" class="chip-ninguna" data-llenar="observaciones" data-valor="Ninguna">Ninguna</button>
+          </div>
           <textarea id="observaciones" rows="2"></textarea>
+          <div class="hint">Refacciones necesarias, situaciones especiales o pendientes para la próxima jornada.</div>
+          <div class="error-msg" id="err-observaciones">Escribe tus observaciones (o toca "Ninguna").</div>
         </div>
       </fieldset>
 
@@ -351,55 +604,246 @@
   </div>
 </main>
 
+<script src="js/tramites-shared.js"></script>
 <script>
 // Misma URL de despliegue que MANTENIMIENTO_APPS_SCRIPT_URL en otde.html —
 // un solo proyecto de Apps Script, sin despliegue aparte para este formulario.
 const MANTENIMIENTO_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxxhyMUI8VuuxC29fWgkMWULwLdB7OhNJ-XawgtdseZY5hgV9P6I9uHFfiCMbAJzZb1/exec';
 
-const REPORTE_TIMEOUT_MS = 30000;
-async function fetchJsonConTimeout(url, opciones) {
-  const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), REPORTE_TIMEOUT_MS);
-  try {
-    const r = await fetch(url, Object.assign({}, opciones, { signal: ctrl.signal }));
-    return await r.json();
-  } finally {
-    clearTimeout(t);
-  }
+// ── Fotos de evidencia: mismo patrón de compresión+subida que
+// ficha-ceremonias-civicas.html (fetchJsonConTimeout/leerArchivoBase64 vienen
+// de js/tramites-shared.js). Un envío con varias fotos tarda más que el resto
+// del sitio, por eso el timeout extendido solo para este formulario. ──
+const REP_MAX_FOTOS = 20;
+const REP_MAX_FOTO_BYTES_ORIGINAL = 15 * 1024 * 1024; // antes de comprimir
+const REP_COMPRESION_ANCHO_MAX = 1600;
+const REP_COMPRESION_CALIDAD = 0.8;
+const REP_FOTOS_TIMEOUT_MS = 120000;
+
+function comprimirImagen(file) {
+  return new Promise(function (resolve, reject) {
+    var img = new Image();
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      img.onload = function () {
+        var ratio = Math.min(1, REP_COMPRESION_ANCHO_MAX / img.width);
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * ratio);
+        canvas.height = Math.round(img.height * ratio);
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(function (blob) {
+          blob ? resolve(blob) : reject(new Error('No se pudo comprimir la imagen.'));
+        }, 'image/jpeg', REP_COMPRESION_CALIDAD);
+      };
+      img.onerror = function () { reject(new Error('No se pudo leer la imagen.')); };
+      img.src = e.target.result;
+    };
+    reader.onerror = function () { reject(reader.error); };
+    reader.readAsDataURL(file);
+  });
 }
+
+document.getElementById('fotos-evidencia').addEventListener('change', function () {
+  var preview = document.getElementById('fotos-preview');
+  preview.innerHTML = '';
+  var files = Array.from(this.files || []);
+  files.slice(0, REP_MAX_FOTOS).forEach(function (file) {
+    var img = document.createElement('img');
+    img.src = URL.createObjectURL(file);
+    preview.appendChild(img);
+  });
+  limpiarError('fotos-evidencia');
+});
 
 function limpiarError(id) {
   const campo = document.getElementById(id);
   const err = document.getElementById('err-' + id);
-  campo.classList.remove('campo-error');
+  if (campo) campo.classList.remove('campo-error');
   if (err) err.classList.remove('visible');
 }
 
-['folio', 'responsable', 'fecha-atencion', 'estado-aula'].forEach(id => {
-  document.getElementById(id).addEventListener('input', () => limpiarError(id));
-  document.getElementById(id).addEventListener('change', () => limpiarError(id));
-});
-
 function marcarError(id) {
-  document.getElementById(id).classList.add('campo-error');
+  const campo = document.getElementById(id);
+  if (campo) campo.classList.add('campo-error');
   const err = document.getElementById('err-' + id);
   if (err) err.classList.add('visible');
+}
+
+// Campos simples (select/text/number/date/time), obligatorios, con error-msg propio.
+const CAMPOS_SIMPLES = [
+  'folio', 'responsable', 'fecha-atencion', 'inicio-visita', 'fin-visita', 'sin-solicitud',
+  'aula-en-uso', 'mobiliario', 'equipos-atendidos', 'equipos-funcionales', 'equipos-no-funcionales',
+  'modelo-equipo', 'conectividad', 'equipos-admin-si-no', 'instalacion-realizada', 'toolwiz',
+  'estado-aula', 'segunda-visita', 'seguimiento', 'descripcion-atencion', 'observaciones'
+];
+CAMPOS_SIMPLES.forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('input', () => limpiarError(id));
+  el.addEventListener('change', () => limpiarError(id));
+});
+['otro-responsable', 'equipos-admin-cantidad', 'instalacion-otro'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => limpiarError(id));
+});
+
+// ── Mostrar/ocultar "Otro" del responsable ──
+document.getElementById('responsable').addEventListener('change', function () {
+  const wrap = document.getElementById('wrap-otro-responsable');
+  wrap.classList.toggle('campo-oculto', this.value !== 'Otro');
+  if (this.value !== 'Otro') { document.getElementById('otro-responsable').value = ''; limpiarError('otro-responsable'); }
+});
+
+// ── Descripción de ayuda bajo "Condición del mobiliario" ──
+document.getElementById('mobiliario').addEventListener('change', function () {
+  const ayuda = document.getElementById('ayuda-mobiliario');
+  const opt = this.options[this.selectedIndex];
+  const desc = opt ? opt.getAttribute('data-desc') : '';
+  if (desc) { ayuda.textContent = desc; ayuda.classList.add('visible'); }
+  else { ayuda.textContent = ''; ayuda.classList.remove('visible'); }
+});
+
+// ── Aviso no bloqueante: fin de visita debe ser posterior al inicio ──
+function revisarHoras() {
+  const inicio = document.getElementById('inicio-visita').value;
+  const fin = document.getElementById('fin-visita').value;
+  const aviso = document.getElementById('aviso-horas');
+  aviso.classList.toggle('visible', !!(inicio && fin && fin <= inicio));
+}
+document.getElementById('inicio-visita').addEventListener('change', revisarHoras);
+document.getElementById('fin-visita').addEventListener('change', revisarHoras);
+
+// ── Aviso no bloqueante: funcionales + no funcionales vs. atendidos ──
+function revisarConteoEquipos() {
+  const atendidos = document.getElementById('equipos-atendidos').value;
+  const funcionales = document.getElementById('equipos-funcionales').value;
+  const noFuncionales = document.getElementById('equipos-no-funcionales').value;
+  const aviso = document.getElementById('aviso-conteo');
+  if (atendidos === '' || funcionales === '' || noFuncionales === '') { aviso.classList.remove('visible'); return; }
+  const coincide = (Number(funcionales) + Number(noFuncionales)) === Number(atendidos);
+  aviso.classList.toggle('visible', !coincide);
+}
+['equipos-atendidos', 'equipos-funcionales', 'equipos-no-funcionales'].forEach(id => {
+  document.getElementById(id).addEventListener('input', revisarConteoEquipos);
+});
+
+// ── Mostrar/ocultar cantidad de equipos administrativos ──
+document.getElementById('equipos-admin-si-no').addEventListener('change', function () {
+  const wrap = document.getElementById('wrap-equipos-admin-cantidad');
+  const esSi = this.value === 'Sí';
+  wrap.classList.toggle('campo-oculto', !esSi);
+  if (!esSi) { document.getElementById('equipos-admin-cantidad').value = ''; limpiarError('equipos-admin-cantidad'); }
+});
+
+// ── Mostrar/ocultar "Otro" de instalación realizada ──
+document.getElementById('instalacion-realizada').addEventListener('change', function () {
+  const wrap = document.getElementById('wrap-instalacion-otro');
+  wrap.classList.toggle('campo-oculto', this.value !== 'Otro');
+  if (this.value !== 'Otro') { document.getElementById('instalacion-otro').value = ''; limpiarError('instalacion-otro'); }
+});
+
+// ── Checkbox "Ninguna" exclusivo dentro de un grupo ──
+function configurarGrupoExclusivo(grupoId, selectorOpciones, idNinguna) {
+  const grupo = document.getElementById(grupoId);
+  const ninguna = document.getElementById(idNinguna);
+  const opciones = Array.from(grupo.querySelectorAll(selectorOpciones));
+  opciones.forEach(chk => {
+    chk.addEventListener('change', () => {
+      if (chk.checked) ninguna.checked = false;
+      grupo.classList.remove('campo-error');
+      document.getElementById('err-' + grupoId.replace('grupo-', '')).classList.remove('visible');
+    });
+  });
+  ninguna.addEventListener('change', () => {
+    if (ninguna.checked) opciones.forEach(chk => { chk.checked = false; });
+    grupo.classList.remove('campo-error');
+    document.getElementById('err-' + grupoId.replace('grupo-', '')).classList.remove('visible');
+  });
+}
+configurarGrupoExclusivo('grupo-preventivas', '.chk-preventiva', 'preventivas-ninguna');
+configurarGrupoExclusivo('grupo-correctivas', '.chk-correctiva, #correctiva-otro-check', 'correctivas-ninguna');
+
+document.getElementById('correctiva-otro-check').addEventListener('change', function () {
+  if (!this.checked) { document.getElementById('correctiva-otro-texto').value = ''; limpiarError('correctiva-otro-texto'); }
+});
+document.getElementById('correctiva-otro-texto').addEventListener('input', () => limpiarError('correctiva-otro-texto'));
+
+// ── Chips "Ninguna"/"Ninguno" — llenan el campo con un toque ──
+document.querySelectorAll('.chip-ninguna').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const campo = document.getElementById(btn.dataset.llenar);
+    campo.value = btn.dataset.valor;
+    limpiarError(btn.dataset.llenar);
+  });
+});
+
+function valoresGrupo(selectorOpciones, idNinguna) {
+  const ninguna = document.getElementById(idNinguna);
+  if (ninguna.checked) return 'Ninguna';
+  return Array.from(document.querySelectorAll(selectorOpciones))
+    .filter(chk => chk.checked)
+    .map(chk => chk.value)
+    .join('; ');
 }
 
 function validarFormulario() {
   let valido = true;
 
-  const folio = document.getElementById('folio').value.trim();
-  if (!folio) { marcarError('folio'); valido = false; }
+  CAMPOS_SIMPLES.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el.value || !String(el.value).trim()) { marcarError(id); valido = false; }
+  });
 
-  const responsable = document.getElementById('responsable').value;
-  if (!responsable) { marcarError('responsable'); valido = false; }
+  if (document.getElementById('responsable').value === 'Otro' &&
+      !document.getElementById('otro-responsable').value.trim()) {
+    marcarError('otro-responsable'); valido = false;
+  }
 
-  const fechaAtencion = document.getElementById('fecha-atencion').value;
-  if (!fechaAtencion) { marcarError('fecha-atencion'); valido = false; }
+  if (document.getElementById('equipos-admin-si-no').value === 'Sí' &&
+      document.getElementById('equipos-admin-cantidad').value === '') {
+    marcarError('equipos-admin-cantidad'); valido = false;
+  }
 
-  const estadoAula = document.getElementById('estado-aula').value;
-  if (!estadoAula) { marcarError('estado-aula'); valido = false; }
+  if (document.getElementById('instalacion-realizada').value === 'Otro' &&
+      !document.getElementById('instalacion-otro').value.trim()) {
+    marcarError('instalacion-otro'); valido = false;
+  }
+
+  const preventivasMarcadas = document.querySelectorAll('.chk-preventiva:checked').length > 0 ||
+    document.getElementById('preventivas-ninguna').checked;
+  if (!preventivasMarcadas) {
+    document.getElementById('grupo-preventivas').classList.add('campo-error');
+    document.getElementById('err-preventivas').classList.add('visible');
+    valido = false;
+  }
+
+  const correctivaOtroChecked = document.getElementById('correctiva-otro-check').checked;
+  const correctivasMarcadas = document.querySelectorAll('.chk-correctiva:checked').length > 0 ||
+    correctivaOtroChecked || document.getElementById('correctivas-ninguna').checked;
+  if (!correctivasMarcadas) {
+    document.getElementById('grupo-correctivas').classList.add('campo-error');
+    document.getElementById('err-correctivas').classList.add('visible');
+    valido = false;
+  }
+  if (correctivaOtroChecked && !document.getElementById('correctiva-otro-texto').value.trim()) {
+    marcarError('correctiva-otro-texto'); valido = false;
+  }
+
+  const files = Array.from(document.getElementById('fotos-evidencia').files || []);
+  const errFotos = document.getElementById('err-fotos-evidencia');
+  if (!files.length) {
+    marcarError('fotos-evidencia');
+    errFotos.textContent = 'Adjunta al menos una foto.';
+    valido = false;
+  } else if (files.length > REP_MAX_FOTOS) {
+    marcarError('fotos-evidencia');
+    errFotos.textContent = 'Máximo ' + REP_MAX_FOTOS + ' fotos.';
+    valido = false;
+  } else if (files.some(f => f.size > REP_MAX_FOTO_BYTES_ORIGINAL)) {
+    marcarError('fotos-evidencia');
+    errFotos.textContent = 'Una de las fotos es demasiado pesada (máximo 15MB antes de comprimir).';
+    valido = false;
+  }
 
   return valido;
 }
@@ -413,38 +857,83 @@ document.getElementById('form-reporte').addEventListener('submit', async (e) => 
 
   if (!validarFormulario()) return;
 
-  const payload = {
-    accion: 'reporteVisita',
-    folio: document.getElementById('folio').value.trim().toUpperCase(),
-    responsable: document.getElementById('responsable').value,
-    fechaAtencion: document.getElementById('fecha-atencion').value,
-    inicioVisita: document.getElementById('inicio-visita').value,
-    finVisita: document.getElementById('fin-visita').value,
-    aulaEnUso: document.getElementById('aula-en-uso').value.trim(),
-    mobiliario: document.getElementById('mobiliario').value.trim(),
-    equiposAtendidos: document.getElementById('equipos-atendidos').value.trim(),
-    equiposFuncionales: document.getElementById('equipos-funcionales').value.trim(),
-    equiposNoFuncionales: document.getElementById('equipos-no-funcionales').value.trim(),
-    equiposAdministrativos: document.getElementById('equipos-admin').value.trim(),
-    conectividad: document.getElementById('conectividad').value.trim(),
-    actividadesPreventivas: document.getElementById('actividades-preventivas').value.trim(),
-    actividadesCorrectivas: document.getElementById('actividades-correctivas').value.trim(),
-    instalacionRealizada: document.getElementById('instalacion-realizada').value.trim(),
-    estadoAula: document.getElementById('estado-aula').value,
-    seguimientoRequerido: document.getElementById('seguimiento').value.trim(),
-    observaciones: document.getElementById('observaciones').value.trim()
-  };
-
   const btn = document.getElementById('btn-enviar');
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Enviando…';
 
   try {
-    const d = await fetchJsonConTimeout(MANTENIMIENTO_APPS_SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(payload)
-    });
+    const files = Array.from(document.getElementById('fotos-evidencia').files || []);
+    const fotos = [];
+    for (let i = 0; i < files.length; i++) {
+      btn.innerHTML = '<span class="spinner"></span>Comprimiendo y subiendo fotos (' + (i + 1) + ' de ' + files.length + ')…';
+      const comprimida = await comprimirImagen(files[i]);
+      const base64 = await leerArchivoBase64(comprimida);
+      fotos.push({ base64: base64, nombre: files[i].name, tipo: 'image/jpeg' });
+    }
+    btn.innerHTML = '<span class="spinner"></span>Enviando…';
+
+    const responsableSeleccionado = document.getElementById('responsable').value;
+    const responsableFinal = responsableSeleccionado === 'Otro'
+      ? document.getElementById('otro-responsable').value.trim()
+      : responsableSeleccionado;
+
+    const instalacionSeleccionada = document.getElementById('instalacion-realizada').value;
+    const instalacionFinal = instalacionSeleccionada === 'Otro'
+      ? document.getElementById('instalacion-otro').value.trim()
+      : instalacionSeleccionada;
+
+    const payload = {
+      accion: 'reporteVisita',
+      folio: document.getElementById('folio').value.trim().toUpperCase(),
+      responsable: responsableFinal,
+      fechaAtencion: document.getElementById('fecha-atencion').value,
+      inicioVisita: document.getElementById('inicio-visita').value,
+      finVisita: document.getElementById('fin-visita').value,
+      atencionSinSolicitud: document.getElementById('sin-solicitud').value,
+      aulaEnUso: document.getElementById('aula-en-uso').value,
+      mobiliario: document.getElementById('mobiliario').value,
+      equiposAtendidos: document.getElementById('equipos-atendidos').value,
+      equiposFuncionales: document.getElementById('equipos-funcionales').value,
+      equiposNoFuncionales: document.getElementById('equipos-no-funcionales').value,
+      modeloEquipo: document.getElementById('modelo-equipo').value.trim(),
+      conectividad: document.getElementById('conectividad').value,
+      equiposAdministrativosSiNo: document.getElementById('equipos-admin-si-no').value,
+      equiposAdministrativos: document.getElementById('equipos-admin-si-no').value === 'Sí'
+        ? document.getElementById('equipos-admin-cantidad').value
+        : '0',
+      actividadesPreventivas: valoresGrupo('.chk-preventiva:checked', 'preventivas-ninguna'),
+      actividadesCorrectivas: (function () {
+        if (document.getElementById('correctivas-ninguna').checked) return 'Ninguna';
+        const partes = Array.from(document.querySelectorAll('.chk-correctiva:checked')).map(chk => chk.value);
+        if (document.getElementById('correctiva-otro-check').checked) {
+          partes.push('Otro: ' + document.getElementById('correctiva-otro-texto').value.trim());
+        }
+        return partes.join('; ');
+      })(),
+      instalacionRealizada: instalacionFinal,
+      toolwizTimeFreeze: document.getElementById('toolwiz').value,
+      estadoAula: document.getElementById('estado-aula').value,
+      segundaVisitaRequerida: document.getElementById('segunda-visita').value,
+      seguimientoRequerido: document.getElementById('seguimiento').value.trim(),
+      descripcionAtencion: document.getElementById('descripcion-atencion').value.trim(),
+      observaciones: document.getElementById('observaciones').value.trim(),
+      fotos: fotos
+    };
+
+    let avisoLento = setTimeout(() => {
+      btn.innerHTML = '<span class="spinner"></span>Enviando… con varias fotos puede tardar un poco más.';
+    }, 10000);
+
+    let d;
+    try {
+      d = await fetchJsonConTimeout(MANTENIMIENTO_APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(payload)
+      }, REP_FOTOS_TIMEOUT_MS);
+    } finally {
+      clearTimeout(avisoLento);
+    }
 
     if (d.status === 'ok') {
       document.getElementById('ok-folio').textContent = 'Folio: ' + d.folio;
@@ -467,6 +956,13 @@ document.getElementById('form-reporte').addEventListener('submit', async (e) => 
 
 document.getElementById('btn-otro').addEventListener('click', () => {
   document.getElementById('form-reporte').reset();
+  document.getElementById('fotos-preview').innerHTML = '';
+  document.getElementById('wrap-otro-responsable').classList.add('campo-oculto');
+  document.getElementById('wrap-equipos-admin-cantidad').classList.add('campo-oculto');
+  document.getElementById('wrap-instalacion-otro').classList.add('campo-oculto');
+  document.getElementById('ayuda-mobiliario').classList.remove('visible');
+  document.getElementById('aviso-horas').classList.remove('visible');
+  document.getElementById('aviso-conteo').classList.remove('visible');
   document.getElementById('screen-ok').classList.add('hidden');
   document.getElementById('screen-form').classList.remove('hidden');
   window.scrollTo(0, 0);

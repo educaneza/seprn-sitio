@@ -112,6 +112,14 @@
 //   O Equipos administrativos | P Estado del aula | Q Seguimiento requerido
 //   R Observaciones | S PDF del reporte (link Drive)
 //   T Notificación de reporte enviada
+//   U Atención sin solicitud previa | V Modelo/marca del equipo
+//   W ¿Se atendieron equipos administrativos? | X ¿Se instaló Toolwiz Time Freeze?
+//   Y ¿Requiere segunda visita? | Z Descripción de la atención realizada
+//   AA Fotografías de evidencia (URLs, una por línea)
+// (U-AA agregadas al final a propósito — rediseño del formulario, sep 2026 —
+// para no correr los índices de S/T ya usados por COL_MAN_REP_PDF_URL/
+// COL_MAN_REP_NOTIFICACION, mismo criterio que las columnas agregadas al
+// final en "Solicitudes".)
 // ============================================================
 
 const HOJA_MAN_SOLICITUDES = 'Solicitudes';
@@ -155,20 +163,47 @@ const ESTADOS_MAN_VALIDOS = ['Pendiente de validar', 'Validado', 'En atención',
 // notifica. Ver docs/ARCHITECTURE.md §15. ──
 const HOJA_MAN_REPORTES = 'Reportes de visita';
 const CARPETA_MAN_REPORTES = 'Reportes de Visita';
+const CARPETA_MAN_REPORTES_FOTOS = 'Fotos de Reportes de Visita';
+const MAN_MAX_FOTOS_REPORTE = 20;
 const ENCABEZADOS_MAN_REPORTES = [
   'Folio', 'Responsable de visita', 'Fecha de atención', 'Inicio de la visita',
   'Fin de la visita', 'Aula en uso al llegar', 'Mobiliario', 'Equipos atendidos',
   'Equipos funcionales', 'Equipos no funcionales', 'Conectividad',
   'Actividades preventivas', 'Actividades correctivas', 'Instalación realizada',
   'Equipos administrativos', 'Estado del aula', 'Seguimiento requerido',
-  'Observaciones', 'PDF del reporte (link Drive)', 'Notificación de reporte enviada'
+  'Observaciones', 'PDF del reporte (link Drive)', 'Notificación de reporte enviada',
+  'Atención sin solicitud previa', 'Modelo/marca del equipo',
+  '¿Se atendieron equipos administrativos?', '¿Se instaló Toolwiz Time Freeze?',
+  '¿Requiere segunda visita?', 'Descripción de la atención realizada',
+  'Fotografías de evidencia'
 ];
 const COL_MAN_REP_FOLIO = 1;
 const COL_MAN_REP_RESPONSABLE = 2;
 const COL_MAN_REP_FECHA_ATENCION = 3;
+const COL_MAN_REP_INICIO_VISITA = 4;
+const COL_MAN_REP_FIN_VISITA = 5;
+const COL_MAN_REP_AULA_EN_USO = 6;
+const COL_MAN_REP_MOBILIARIO = 7;
+const COL_MAN_REP_EQUIPOS_ATENDIDOS = 8;
+const COL_MAN_REP_EQUIPOS_FUNCIONALES = 9;
+const COL_MAN_REP_EQUIPOS_NO_FUNCIONALES = 10;
+const COL_MAN_REP_CONECTIVIDAD = 11;
+const COL_MAN_REP_ACTIVIDADES_PREVENTIVAS = 12;
+const COL_MAN_REP_ACTIVIDADES_CORRECTIVAS = 13;
+const COL_MAN_REP_INSTALACION_REALIZADA = 14;
+const COL_MAN_REP_EQUIPOS_ADMIN = 15;
 const COL_MAN_REP_ESTADO_AULA = 16;
+const COL_MAN_REP_SEGUIMIENTO = 17;
+const COL_MAN_REP_OBSERVACIONES = 18;
 const COL_MAN_REP_PDF_URL = 19;
 const COL_MAN_REP_NOTIFICACION = 20;
+const COL_MAN_REP_SIN_SOLICITUD = 21;
+const COL_MAN_REP_MODELO_EQUIPO = 22;
+const COL_MAN_REP_EQUIPOS_ADMIN_SI_NO = 23;
+const COL_MAN_REP_TOOLWIZ = 24;
+const COL_MAN_REP_SEGUNDA_VISITA = 25;
+const COL_MAN_REP_DESCRIPCION_ATENCION = 26;
+const COL_MAN_REP_FOTOS_EVIDENCIA = 27;
 // Nombre → correo, para el "cc" del correo del reporte y el selector de la
 // hoja. Mismo criterio de "no inventar" que el resto del sitio — confirmado
 // por Jorge, no copiado de v8.5 (ese proyecto no expuso los correos reales
@@ -470,6 +505,9 @@ function manConfigurarValidacionYSemaforo() {
   const reportes = ss.getSheetByName(HOJA_MAN_REPORTES);
   if (reportes) {
     manAplicarSemaforoPorValor_(reportes, COL_MAN_REP_ESTADO_AULA, MAN_ESTADOS_AULA, MAN_COLORES_ESTADO_AULA);
+    [COL_MAN_REP_SIN_SOLICITUD, COL_MAN_REP_EQUIPOS_ADMIN_SI_NO, COL_MAN_REP_SEGUNDA_VISITA]
+      .forEach(function (col) { manAplicarValidacionListaSuave_(reportes, col, ['Sí', 'No']); });
+    manAplicarValidacionListaSuave_(reportes, COL_MAN_REP_TOOLWIZ, ['Sí', 'No', 'Ya estaba instalado']);
     [COL_MAN_REP_PDF_URL, COL_MAN_REP_NOTIFICACION]
       .forEach(function (col) { manProtegerColumnaAutomatica_(reportes, col); });
   }
@@ -567,6 +605,8 @@ function manAsegurarHojaReportes(ss) {
     hoja.setColumnWidth(8, 200);  // Equipos atendidos
     hoja.setColumnWidth(16, 320); // Estado del aula
     hoja.setColumnWidth(18, 240); // Observaciones
+    hoja.setColumnWidth(26, 280); // Descripción de la atención realizada
+    hoja.setColumnWidth(27, 240); // Fotografías de evidencia
   } else {
     const colsActuales = hoja.getLastColumn();
     if (colsActuales < ENCABEZADOS_MAN_REPORTES.length) {
@@ -578,10 +618,18 @@ function manAsegurarHojaReportes(ss) {
   }
 
   hoja.getRange(2, COL_MAN_REP_RESPONSABLE, 1000, 1).setDataValidation(
-    SpreadsheetApp.newDataValidation().requireValueInList(Object.keys(MAN_TECNICOS), true).setAllowInvalid(false).build()
+    SpreadsheetApp.newDataValidation().requireValueInList(Object.keys(MAN_TECNICOS), true).setAllowInvalid(true).build()
   );
   hoja.getRange(2, COL_MAN_REP_ESTADO_AULA, 1000, 1).setDataValidation(
     SpreadsheetApp.newDataValidation().requireValueInList(MAN_ESTADOS_AULA, true).setAllowInvalid(false).build()
+  );
+  [COL_MAN_REP_SIN_SOLICITUD, COL_MAN_REP_EQUIPOS_ADMIN_SI_NO, COL_MAN_REP_SEGUNDA_VISITA].forEach(function (col) {
+    hoja.getRange(2, col, 1000, 1).setDataValidation(
+      SpreadsheetApp.newDataValidation().requireValueInList(['Sí', 'No'], true).setAllowInvalid(true).build()
+    );
+  });
+  hoja.getRange(2, COL_MAN_REP_TOOLWIZ, 1000, 1).setDataValidation(
+    SpreadsheetApp.newDataValidation().requireValueInList(['Sí', 'No', 'Ya estaba instalado'], true).setAllowInvalid(true).build()
   );
 }
 
@@ -1104,13 +1152,17 @@ function manNotificarTecnicoAsignado(fila) {
 }
 
 // ============================================================
-// FASE 2 (primer corte): REPORTE TÉCNICO DE LA VISITA
+// FASE 2 (rediseño sep 2026): REPORTE TÉCNICO DE LA VISITA
 // Acción manual de menú, no un trigger automático — a diferencia de la
-// programación de fecha (un solo campo), aquí el técnico llena ~15 campos
-// en varios momentos, así que un onEdit de una sola columna dispararía el
-// correo a medio llenar. Jorge/el técnico terminan la fila en "Reportes de
-// visita" y corren "Generar y enviar reporte de visita" desde el menú,
-// dando el folio.
+// programación de fecha (un solo campo), aquí el técnico llena ~24 campos
+// obligatorios en varios momentos, así que un onEdit de una sola columna
+// dispararía el correo a medio llenar. Jorge/el técnico terminan la fila en
+// "Reportes de visita" y corren "Generar y enviar reporte de visita" desde
+// el menú, dando el folio. Este camino de respaldo no comprime/sube fotos
+// por sí mismo (eso solo lo hace reporte-visita.html en el navegador) — si
+// se usa, la columna "Fotografías de evidencia" debe llenarse a mano con al
+// menos un link de Drive, porque manValidarDatosReporte_ ahora la exige
+// igual que el resto de columnas.
 // ============================================================
 
 // ── Busca la fila de Solicitudes con ese folio, regresa los datos que el
@@ -1144,15 +1196,39 @@ function manBuscarFilaReportePorFolio_(hoja, folio) {
   return null;
 }
 
-// ── Campos mínimos para generar el reporte — no se exige llenar las ~15
-// columnas completas (equipos sin atender, observaciones libres, etc. son
-// legítimamente opcionales), solo lo indispensable para que el PDF y el
-// correo tengan sentido. ──
+// ── Rediseño del formulario (sep 2026): todo el reporte es obligatorio —
+// Jorge pidió cerrar el hueco de captura incompleta que dejaba el diseño
+// anterior (solo 3 campos exigidos de ~18). Cada columna capturable se
+// valida aquí, en el mismo orden que ENCABEZADOS_MAN_REPORTES, para que el
+// mensaje de error liste exactamente lo que falta. ──
 function manValidarDatosReporte_(datos) {
   const faltantes = [];
-  if (!String(datos[COL_MAN_REP_RESPONSABLE - 1] || '').trim()) faltantes.push('Responsable de visita');
-  if (!datos[COL_MAN_REP_FECHA_ATENCION - 1]) faltantes.push('Fecha de atención');
-  if (!String(datos[COL_MAN_REP_ESTADO_AULA - 1] || '').trim()) faltantes.push('Estado del aula');
+  const requerido = (col, etiqueta) => {
+    if (!String(datos[col - 1] || '').trim()) faltantes.push(etiqueta);
+  };
+  requerido(COL_MAN_REP_RESPONSABLE, 'Responsable de visita');
+  requerido(COL_MAN_REP_FECHA_ATENCION, 'Fecha de atención');
+  requerido(COL_MAN_REP_INICIO_VISITA, 'Inicio de la visita');
+  requerido(COL_MAN_REP_FIN_VISITA, 'Fin de la visita');
+  requerido(COL_MAN_REP_AULA_EN_USO, 'Aula en uso al llegar');
+  requerido(COL_MAN_REP_MOBILIARIO, 'Mobiliario');
+  requerido(COL_MAN_REP_EQUIPOS_ATENDIDOS, 'Equipos atendidos');
+  requerido(COL_MAN_REP_EQUIPOS_FUNCIONALES, 'Equipos funcionales');
+  requerido(COL_MAN_REP_EQUIPOS_NO_FUNCIONALES, 'Equipos no funcionales');
+  requerido(COL_MAN_REP_CONECTIVIDAD, 'Conectividad');
+  requerido(COL_MAN_REP_ACTIVIDADES_PREVENTIVAS, 'Actividades preventivas');
+  requerido(COL_MAN_REP_ACTIVIDADES_CORRECTIVAS, 'Actividades correctivas');
+  requerido(COL_MAN_REP_INSTALACION_REALIZADA, 'Instalación realizada');
+  requerido(COL_MAN_REP_ESTADO_AULA, 'Estado del aula');
+  requerido(COL_MAN_REP_SEGUIMIENTO, 'Seguimiento requerido');
+  requerido(COL_MAN_REP_OBSERVACIONES, 'Observaciones');
+  requerido(COL_MAN_REP_SIN_SOLICITUD, 'Atención sin solicitud previa');
+  requerido(COL_MAN_REP_MODELO_EQUIPO, 'Modelo/marca del equipo');
+  requerido(COL_MAN_REP_EQUIPOS_ADMIN_SI_NO, '¿Se atendieron equipos administrativos?');
+  requerido(COL_MAN_REP_TOOLWIZ, '¿Se instaló Toolwiz Time Freeze?');
+  requerido(COL_MAN_REP_SEGUNDA_VISITA, '¿Requiere segunda visita?');
+  requerido(COL_MAN_REP_DESCRIPCION_ATENCION, 'Descripción de la atención realizada');
+  requerido(COL_MAN_REP_FOTOS_EVIDENCIA, 'Fotografías de evidencia');
   return faltantes;
 }
 
@@ -1161,6 +1237,63 @@ function manObtenerCarpetaReportes_() {
   const carpetas = DriveApp.getFoldersByName(CARPETA_MAN_REPORTES);
   if (carpetas.hasNext()) return carpetas.next();
   return DriveApp.createFolder(CARPETA_MAN_REPORTES);
+}
+
+// ── Fotografías de evidencia del reporte técnico (rediseño sep 2026) —
+// mismo patrón que visSubirFotos_()/visObtenerCarpetaFotos_() en
+// apps-script/visitas-jefes.gs: comparte la carpeta UNA sola vez (no por
+// foto), evitando el costo de rendimiento ya conocido ahí (docs/QA-NOTES.md
+// #23 — hasta 68.7s con 20 fotos cuando se compartía cada archivo por
+// separado). Subcarpeta por folio (no por semana, como en Ceremonias
+// Cívicas) porque el folio ya identifica de forma única cada reporte. ──
+function manObtenerCarpetaFotosReporte_() {
+  const carpetas = DriveApp.getFoldersByName(CARPETA_MAN_REPORTES_FOTOS);
+  const carpeta = carpetas.hasNext() ? carpetas.next() : DriveApp.createFolder(CARPETA_MAN_REPORTES_FOTOS);
+  carpeta.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  return carpeta;
+}
+
+function manObtenerCarpetaFotosPorFolio_(carpetaBase, folio) {
+  const existentes = carpetaBase.getFoldersByName(folio);
+  const carpeta = existentes.hasNext() ? existentes.next() : carpetaBase.createFolder(folio);
+  carpeta.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  return carpeta;
+}
+
+function manExtensionPorMime_(mime) {
+  if (mime.indexOf('png') !== -1) return 'png';
+  if (mime.indexOf('webp') !== -1) return 'webp';
+  return 'jpg';
+}
+
+// ── Sube las fotos de evidencia (ya comprimidas en el navegador) a la
+// subcarpeta del folio. Devuelve el array de URLs individuales, mismo
+// formato que COL_VIS_EVIDENCIAS en visitas-jefes.gs (una URL por línea en
+// la celda). Reenviar el mismo folio (upsert) vuelve a subir las fotos —
+// mismo límite ya aceptado de "sin versionado" que el resto de este
+// formulario, no solo de las fotos. ──
+function manSubirFotosReporte_(folio, fotos) {
+  if (!fotos || !fotos.length) {
+    throw new Error('Adjunta al menos una fotografía de evidencia.');
+  }
+  if (fotos.length > MAN_MAX_FOTOS_REPORTE) {
+    throw new Error('Máximo ' + MAN_MAX_FOTOS_REPORTE + ' fotos por reporte.');
+  }
+
+  const carpetaBase = manObtenerCarpetaFotosReporte_();
+  const carpeta = manObtenerCarpetaFotosPorFolio_(carpetaBase, folio);
+
+  return fotos.map(function (foto, idx) {
+    const bytes = Utilities.base64Decode(foto.base64);
+    if (bytes.length > MAN_TAMANO_MAX_BYTES) {
+      throw new Error('Una de las fotos pesa más de 8MB. Comprímela e intenta de nuevo.');
+    }
+    const mimeType = foto.tipo || 'image/jpeg';
+    const nombreLimpio = folio + ' — ' + (idx + 1) + '.' + manExtensionPorMime_(mimeType);
+    const blob = Utilities.newBlob(bytes, mimeType, nombreLimpio);
+    const archivo = carpeta.createFile(blob);
+    return archivo.getUrl();
+  });
 }
 
 // ── Logo institucional (images/Pleca 4x.png del sitio, redimensionado a
@@ -1207,8 +1340,8 @@ function manCalcularDuracion_(inicio, fin) {
 function manGenerarPDFReporte_(solicitud, datos) {
   const ahora = new Date();
   const fechaAtencion = datos[COL_MAN_REP_FECHA_ATENCION - 1];
-  const inicio = datos[3];
-  const fin = datos[4];
+  const inicio = datos[COL_MAN_REP_INICIO_VISITA - 1];
+  const fin = datos[COL_MAN_REP_FIN_VISITA - 1];
   const responsable = String(datos[COL_MAN_REP_RESPONSABLE - 1] || '').trim();
 
   const fechaTexto = fechaAtencion instanceof Date
@@ -1225,34 +1358,48 @@ function manGenerarPDFReporte_(solicitud, datos) {
   const seccion = (titulo) =>
     '<tr><td colspan="2" class="seccion">' + manEscapeHtml_(titulo) + '</td></tr>';
 
+  const sinSolicitud = String(datos[COL_MAN_REP_SIN_SOLICITUD - 1] || '').trim();
+  const fotosEvidencia = String(datos[COL_MAN_REP_FOTOS_EVIDENCIA - 1] || '').trim();
+  const numFotos = fotosEvidencia ? fotosEvidencia.split('\n').filter(Boolean).length : 0;
+
   const filasHtml =
     seccion('Datos de la escuela') +
     fila('CCT', val(solicitud.cct)) +
     fila('Escuela', val(solicitud.escuela)) +
     fila('Sector / Zona', 'Sector ' + val(solicitud.sector) + ' · Zona ' + val(solicitud.zona)) +
     fila('Solicitó', val(solicitud.nombre)) +
+    (sinSolicitud === 'Sí'
+      ? fila('Aviso', '<strong>Atención de urgencia — sin solicitud previa registrada al momento de la visita</strong>')
+      : '') +
     seccion('Visita técnica') +
     fila('Responsable de visita', val(responsable)) +
     fila('Inicio de la visita', manFormatearHora12_(inicio)) +
     fila('Fin de la visita', manFormatearHora12_(fin)) +
     fila('Duración de la jornada', manCalcularDuracion_(inicio, fin)) +
-    fila('Aula en uso al llegar', val(datos[5])) +
-    fila('Mobiliario', val(datos[6])) +
-    fila('Conectividad', val(datos[10])) +
+    fila('Aula en uso al llegar', val(datos[COL_MAN_REP_AULA_EN_USO - 1])) +
+    fila('Mobiliario', val(datos[COL_MAN_REP_MOBILIARIO - 1])) +
+    fila('Conectividad', val(datos[COL_MAN_REP_CONECTIVIDAD - 1])) +
     seccion('Equipos atendidos') +
-    fila('Equipos atendidos', val(datos[7])) +
-    fila('Equipos funcionales', val(datos[8])) +
-    fila('Equipos no funcionales', val(datos[9])) +
-    fila('Equipos administrativos', val(datos[14])) +
+    fila('Equipos atendidos', val(datos[COL_MAN_REP_EQUIPOS_ATENDIDOS - 1])) +
+    fila('Equipos funcionales', val(datos[COL_MAN_REP_EQUIPOS_FUNCIONALES - 1])) +
+    fila('Equipos no funcionales', val(datos[COL_MAN_REP_EQUIPOS_NO_FUNCIONALES - 1])) +
+    fila('Modelo / marca', val(datos[COL_MAN_REP_MODELO_EQUIPO - 1])) +
+    fila('Equipos administrativos', val(datos[COL_MAN_REP_EQUIPOS_ADMIN - 1])) +
     seccion('Actividades realizadas') +
-    fila('Preventivas', val(datos[11])) +
-    fila('Correctivas', val(datos[12])) +
-    fila('Instalación realizada', val(datos[13])) +
+    fila('Preventivas', val(datos[COL_MAN_REP_ACTIVIDADES_PREVENTIVAS - 1])) +
+    fila('Correctivas', val(datos[COL_MAN_REP_ACTIVIDADES_CORRECTIVAS - 1])) +
+    fila('Instalación realizada', val(datos[COL_MAN_REP_INSTALACION_REALIZADA - 1])) +
+    fila('Toolwiz Time Freeze', val(datos[COL_MAN_REP_TOOLWIZ - 1])) +
     seccion('Resultado de la intervención') +
     fila('Estado del aula', val(datos[COL_MAN_REP_ESTADO_AULA - 1])) +
-    fila('Seguimiento requerido', val(datos[16])) +
-    seccion('Observaciones') +
-    fila('Observaciones', val(datos[17]));
+    fila('¿Requiere segunda visita?', val(datos[COL_MAN_REP_SEGUNDA_VISITA - 1])) +
+    fila('Seguimiento requerido', val(datos[COL_MAN_REP_SEGUIMIENTO - 1])) +
+    seccion('Descripción y observaciones') +
+    fila('Descripción de la atención', val(datos[COL_MAN_REP_DESCRIPCION_ATENCION - 1])) +
+    fila('Observaciones', val(datos[COL_MAN_REP_OBSERVACIONES - 1])) +
+    fila('Fotografías de evidencia', numFotos
+      ? numFotos + ' foto(s) — ver carpeta de Drive'
+      : '—');
 
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
   * { box-sizing: border-box; }
@@ -1413,8 +1560,15 @@ function manDoPostReporteVisita_(datos) {
   const inicioVisita = manFechaHoraLocal_(datos.fechaAtencion, datos.inicioVisita);
   const finVisita = manFechaHoraLocal_(datos.fechaAtencion, datos.finVisita);
 
+  // Fotos de evidencia (rediseño sep 2026) — se suben antes de armar
+  // filaValores para tener las URLs listas; manSubirFotosReporte_ lanza un
+  // Error (capturado por el try/catch de doPost) si no llegó ninguna foto,
+  // aunque el cliente ya lo exige (defensa en profundidad).
+  const urlsFotos = manSubirFotosReporte_(folio, datos.fotos);
+
   // Mismo orden que ENCABEZADOS_MAN_REPORTES — PDF y Notificación se llenan
-  // después de generar el reporte, abajo.
+  // después de generar el reporte, abajo. Las 7 columnas nuevas del
+  // rediseño van al final (U-AA), después de esos dos placeholders.
   const filaValores = [
     folio,
     String(datos.responsable || '').trim(),
@@ -1435,7 +1589,14 @@ function manDoPostReporteVisita_(datos) {
     String(datos.seguimientoRequerido || '').trim(),
     String(datos.observaciones || '').trim(),
     '',
-    ''
+    '',
+    String(datos.atencionSinSolicitud || '').trim(),
+    String(datos.modeloEquipo || '').trim(),
+    String(datos.equiposAdministrativosSiNo || '').trim(),
+    String(datos.toolwizTimeFreeze || '').trim(),
+    String(datos.segundaVisitaRequerida || '').trim(),
+    String(datos.descripcionAtencion || '').trim(),
+    urlsFotos.join('\n')
   ];
 
   const faltantes = manValidarDatosReporte_(filaValores);
