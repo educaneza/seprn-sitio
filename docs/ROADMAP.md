@@ -579,6 +579,22 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     de Jorge (6 sep 2026): sin prueba dirigida con folio de prueba, se valida orgánicamente
     cuando algún jefe reenvíe una ficha real en los próximos días de uso normal.
 
+18. **Validez USICAMM/PROEEB + historial "Cursos anteriores" en Formación Docente** (construido
+    16 sep 2026, **código en el repo, sin pegar ni desplegar en el proyecto real de Apps
+    Script**): 3 columnas nuevas en `Cursos` (`Fecha_limite_inscripcion`, `Valida_USICAMM`,
+    `Valida_PROEEB`), modelo de 3 estados de inscripción, historial de hasta 6 cursos pasados
+    (siempre visible, con o sin cursos vigentes) y rechazo server-side en `doPost()` para
+    registros a cursos ya concluidos — detalle completo en `docs/ARCHITECTURE.md §12` y
+    `docs/DESIGN_SYSTEM.md`. Pendiente, en orden: (a) pegar `apps-script/formacion-docente.gs`
+    completo en el editor real y **Administrar implementaciones → Nueva versión**; (b) visitar
+    `formacion-docente.html` una vez para que `obtenerHojaCursos()` autocomplete las 3 columnas
+    nuevas en la hoja `Cursos` real; (c) opcionalmente correr el menú "OTDE Formación → Aplicar
+    validación en Cursos" para el dropdown TRUE/FALSE de las 2 columnas booleanas nuevas; (d)
+    capturar `Valida_USICAMM`/`Valida_PROEEB`/`Fecha_limite_inscripcion` en los cursos reales que
+    apliquen; (e) verificar en producción que el curso real actual (`ACF-2627-001`, sin las
+    columnas nuevas llenas) se sigue viendo igual (regresión) y que un curso de prueba con cada
+    estado se ve como se espera. Ver `docs/BITACORA.md`, checkpoint 16 sep 2026.
+
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue
 abierto de esa entrega (decisión de notificación de cierre de ticket, limpieza de función

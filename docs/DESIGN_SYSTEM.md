@@ -286,3 +286,73 @@ por medio" en todo el flujo, en vez de tres íconos distintos para la misma
 idea. Si se agrega una cuarta superficie que necesite esta señal (ej. el
 paso de confirmación), reusar `ICON_EXTERNO` y la misma condición
 (`liga`/`liga_convocatoria`), no `registroPrevio`.
+
+## Patrón: etiqueta de validez oficial (USICAMM/PROEEB)
+
+`.cc-valida-badge` (sep 2026) marca un curso con validez oficial para los
+procesos de USICAMM y/o PROEEB — información que le importa al docente
+tanto o más que la categoría del curso, así que se le dio esquina propia:
+**superior derecha** de `.cc-header`, en espejo de `.cc-sel-badge` (que ya
+ocupa la superior izquierda) para que nunca se superpongan aunque una
+tarjeta esté seleccionada y validada a la vez. Nuevos tokens `--oficial`/
+`--oficial-bg` (azul, el mismo que ya usa `oficina-virtual.html` en su
+badge "validado" — reusar el lenguaje visual ya establecido para "esto es
+oficial/confiable" en vez de inventar un color nuevo), deliberadamente
+distinto de `--ok` (verde = selección) y `--warn` (ámbar = registro
+externo).
+
+A diferencia de `.cc-sel-badge`, **siempre es visible cuando aplica**, no
+depende de ningún estado de interacción — se decide una sola vez al
+construir el `innerHTML` de la tarjeta:
+
+```js
+let validaLabel = '';
+if (curso.valida_usicamm && curso.valida_proeeb) validaLabel = 'USICAMM · PROEEB';
+else if (curso.valida_usicamm) validaLabel = 'USICAMM';
+else if (curso.valida_proeeb) validaLabel = 'PROEEB';
+```
+
+Un curso con ambas validaciones muestra **una sola** etiqueta combinada, no
+dos badges apilados — evita que la esquina de la tarjeta se sature. El
+mismo badge se reutiliza tal cual en las tarjetas del historial "Cursos
+anteriores" (ver patrón siguiente): la validez de un curso sigue siendo
+información útil aunque ya haya pasado.
+
+## Patrón: 3 estados de inscripción + historial "Cursos anteriores"
+
+Antes un curso solo tenía dos estados implícitos: visible (`Activo=TRUE` +
+dentro de `Visible_desde`/`Visible_hasta`) o invisible. Jorge pidió un
+matiz real: el periodo de **inscripción** de un curso no es lo mismo que
+su periodo de **desarrollo** — un curso puede seguir corriendo con la
+inscripción ya cerrada, y eso debe verse distinto de "ya terminó por
+completo". El modelo quedó en 3 estados, calculados en `doGet()` (detalle
+de la lógica de fechas en `docs/ARCHITECTURE.md §12`):
+
+1. **Abierta** (default): tarjeta normal, sin cambios visuales.
+2. **Cerrada**: venció `Fecha_limite_inscripcion` (o `Fecha_inicio` si esa
+   columna está vacía) pero no `Fecha_fin`. La tarjeta se queda en el
+   catálogo vigente — **no** desaparece — con la leyenda `.cc-cerrado-tag`
+   ("Inscripciones cerradas · Curso en desarrollo", tono neutro
+   `--ink-soft`/`--hairline`, deliberadamente distinto de `--warn` que ya
+   significa "registro en plataforma externa") y sin el
+   `addEventListener('click', ...)` de selección — la tarjeta se marca con
+   la clase `.cerrado`, que solo neutraliza el cursor/hover, sin ponerla
+   en gris (sigue siendo un curso vigente, no historial).
+3. **Pasado**: venció también `Fecha_fin`. El curso sale por completo del
+   catálogo vigente y pasa a la sección `#cursos-pasados-wrap`
+   ("Cursos anteriores"), pintada por `renderCursosPasados()` — misma
+   `CATEGORIA_STYLE` y pills de fecha/modalidad/dirigido_a que las
+   tarjetas normales, pero **de solo lectura**: `.curso-card-historial`
+   aplica `filter: grayscale(85%)`, `opacity: .62` y `pointer-events: none`
+   (bloquea toda interacción sin tener que auditar cada handler uno por
+   uno), sin `cc-sel-badge`, sin "Leer más", sin `cc-externo-tag`/inscritos
+   (ya no aplica registrarse a algo que terminó).
+
+**El historial se muestra siempre que exista, no solo cuando el catálogo
+vigente está vacío** — es la pieza central del pedido original de Jorge:
+que los docentes vean qué se ha ofrecido antes y les genere estar más
+atentos a futuras convocatorias, incluso con cursos vigentes disponibles.
+Por eso `#cursos-pasados-wrap` es un bloque hermano independiente de
+`#cursos-grid`/`#catalogo-vacio` — nunca los reemplaza, solo se
+muestra/oculta con su propia condición (`cursos_pasados.length > 0`) en
+`cargarCatalogo()`/`actualizarCatalogoEnSegundoPlano()`.
