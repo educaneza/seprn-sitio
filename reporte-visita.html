@@ -180,6 +180,47 @@
 
     .campo-oculto { display: none; }
 
+    .urg-cct-wrapper { position: relative; }
+    .urg-cct-wrapper ul {
+      list-style: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      max-height: 220px;
+      overflow-y: auto;
+      z-index: 20;
+      display: none;
+    }
+    .urg-cct-wrapper ul li {
+      padding: .5rem .75rem;
+      font-size: .82rem;
+      cursor: pointer;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .urg-cct-wrapper ul li:last-child { border-bottom: none; }
+    .urg-cct-wrapper ul li:hover, .urg-cct-wrapper ul li.active { background: #fdf2f4; }
+    .urg-cct-wrapper ul li .sg-code { font-weight: 700; color: var(--guinda); margin-right: .4rem; }
+    .urg-cct-wrapper ul li .sg-name { color: var(--muted); }
+
+    .urg-cct-status { font-size: .78rem; margin-top: .35rem; display: none; }
+    .urg-cct-status.visible { display: block; }
+    .urg-cct-status.found { color: #15803d; }
+    .urg-cct-status.warn { color: #92400e; }
+
+    .urg-manual-fields {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: .6rem;
+    }
+    .urg-manual-fields p.manual-aviso { font-size: .8rem; color: #92400e; margin-bottom: .75rem; }
+
     .check-list {
       display: flex;
       flex-direction: column;
@@ -336,9 +377,122 @@
       <fieldset>
         <legend>Identificación</legend>
         <div class="campo">
+          <label for="sin-solicitud">¿Esta visita se atendió sin solicitud previa registrada (caso urgente)? <span class="req">*</span></label>
+          <select id="sin-solicitud">
+            <option value="">Selecciona…</option>
+            <option value="Sí">Sí — fue una atención de urgencia, sin solicitud previa en el sistema</option>
+            <option value="No">No — ya existía una solicitud registrada antes de esta visita</option>
+          </select>
+          <div class="error-msg" id="err-sin-solicitud">Indica si hubo solicitud previa registrada.</div>
+        </div>
+        <div class="campo" id="wrap-folio">
           <label for="folio">Folio de la solicitud <span class="req">*</span></label>
           <input type="text" id="folio" placeholder="OTDE-MAN-0007" autocomplete="off" autocorrect="off" spellcheck="false">
           <div class="error-msg" id="err-folio">Escribe el folio de la solicitud (ej. OTDE-MAN-0007).</div>
+        </div>
+        <div class="campo campo-oculto" id="wrap-urgente-id">
+          <label>Identificación de la escuela <span class="req">*</span></label>
+          <div class="hint" style="margin-bottom:.5rem;">Sin folio, necesitamos estos datos para generar la solicitud, el reporte y notificar a la escuela.</div>
+
+          <div class="campo">
+            <label for="urg-cct">Clave de Centro de Trabajo (CCT) <span class="req">*</span></label>
+            <div class="urg-cct-wrapper">
+              <input type="text" id="urg-cct" placeholder="15DPR0000A" maxlength="10" autocomplete="off" style="text-transform:uppercase;font-family:monospace;">
+              <ul id="urg-cct-suggestions"></ul>
+            </div>
+            <div class="urg-cct-status" id="urg-cct-status"></div>
+            <div class="error-msg" id="err-urg-cct">Ingresa una CCT válida o captura los datos manualmente.</div>
+          </div>
+
+          <div class="urg-manual-fields campo-oculto" id="urg-manual-fields">
+            <p class="manual-aviso">No encontramos esa CCT. Captura los datos manualmente:</p>
+            <div class="campo">
+              <label for="urg-tipo-cct-manual">Tipo de CCT <span class="req">*</span></label>
+              <select id="urg-tipo-cct-manual">
+                <option value="">Selecciona…</option>
+                <option value="escuela">Escuela</option>
+                <option value="supervision">Zona escolar (Supervisión)</option>
+                <option value="jefatura">Sector educativo (Jefatura)</option>
+                <option value="subdireccion">SEPRN</option>
+              </select>
+              <div class="error-msg" id="err-urg-tipo-cct-manual">Selecciona el tipo de CCT.</div>
+            </div>
+            <div class="campo campo-oculto" id="urg-sector-group">
+              <label for="urg-sector-manual">Sector <span class="req">*</span></label>
+              <select id="urg-sector-manual">
+                <option value="">Selecciona…</option>
+                <option value="I">Sector I</option>
+                <option value="II">Sector II</option>
+                <option value="III">Sector III</option>
+                <option value="IV">Sector IV</option>
+                <option value="V">Sector V</option>
+                <option value="VI">Sector VI</option>
+                <option value="VII">Sector VII</option>
+                <option value="VIII">Sector VIII</option>
+                <option value="IX">Sector IX</option>
+                <option value="X">Sector X</option>
+                <option value="XI">Sector XI</option>
+                <option value="XII">Sector XII</option>
+                <option value="XIII">Sector XIII</option>
+              </select>
+              <div class="error-msg" id="err-urg-sector-manual">Selecciona un sector.</div>
+            </div>
+            <div class="campo campo-oculto" id="urg-zona-group">
+              <label for="urg-zona-manual">Zona escolar <span class="req">*</span></label>
+              <select id="urg-zona-manual">
+                <option value="">Selecciona…</option>
+              </select>
+              <div class="error-msg" id="err-urg-zona-manual">Selecciona una zona.</div>
+            </div>
+            <div class="campo">
+              <label for="urg-escuela-manual">Nombre de la escuela o unidad <span class="req">*</span></label>
+              <input type="text" id="urg-escuela-manual" placeholder="Nombre oficial" autocomplete="off">
+              <div class="error-msg" id="err-urg-escuela-manual">Ingresa el nombre de la escuela o unidad.</div>
+            </div>
+          </div>
+
+          <input type="hidden" id="urg-sector-val">
+          <input type="hidden" id="urg-zona-val">
+          <input type="hidden" id="urg-escuela-val">
+          <input type="hidden" id="urg-tipo-cct-val">
+
+          <div class="campo">
+            <label for="urg-turno">Turno <span class="req">*</span></label>
+            <select id="urg-turno">
+              <option value="">Selecciona…</option>
+              <option>Matutino</option>
+              <option>Vespertino</option>
+              <option>Tiempo Completo</option>
+              <option>Discontinuo</option>
+              <option>No aplica (oficina)</option>
+            </select>
+            <div class="error-msg" id="err-urg-turno">Selecciona el turno.</div>
+          </div>
+
+          <div class="campo">
+            <label for="urg-funcion">Función/Cargo de quien recibe <span class="req">*</span></label>
+            <select id="urg-funcion">
+              <option value="">Selecciona…</option>
+            </select>
+            <div class="error-msg" id="err-urg-funcion">Selecciona la función o cargo.</div>
+          </div>
+          <div class="campo campo-oculto" id="urg-otra-funcion-group">
+            <label for="urg-otra-funcion">Especifica la función <span class="req">*</span></label>
+            <input type="text" id="urg-otra-funcion" maxlength="80" autocomplete="off">
+            <div class="error-msg" id="err-urg-otra-funcion">Especifica la función.</div>
+          </div>
+
+          <div class="campo">
+            <label for="urg-nombre">Nombre de quien recibe/contacto <span class="req">*</span></label>
+            <input type="text" id="urg-nombre" autocomplete="off">
+            <div class="error-msg" id="err-urg-nombre">Escribe el nombre de quien recibe la visita.</div>
+          </div>
+          <div class="campo">
+            <label for="urg-correo">Correo de contacto <span class="req">*</span></label>
+            <input type="email" id="urg-correo" placeholder="correo@dee.edu.mx" autocomplete="off">
+            <div class="hint">Aquí llegará el reporte de la visita en PDF.</div>
+            <div class="error-msg" id="err-urg-correo">Ingresa un correo válido.</div>
+          </div>
         </div>
         <div class="campo">
           <label for="responsable">Responsable de la visita <span class="req">*</span></label>
@@ -373,15 +527,6 @@
           </div>
         </div>
         <div class="aviso-inline" id="aviso-horas">La hora de fin no puede ser anterior o igual a la de inicio — revísalo antes de enviar.</div>
-        <div class="campo">
-          <label for="sin-solicitud">¿Esta visita se atendió sin solicitud previa registrada (caso urgente)? <span class="req">*</span></label>
-          <select id="sin-solicitud">
-            <option value="">Selecciona…</option>
-            <option value="Sí">Sí — fue una atención de urgencia, sin solicitud previa en el sistema</option>
-            <option value="No">No — ya existía una solicitud registrada antes de esta visita</option>
-          </select>
-          <div class="error-msg" id="err-sin-solicitud">Indica si hubo solicitud previa registrada.</div>
-        </div>
       </fieldset>
 
       <fieldset>
@@ -442,6 +587,7 @@
             <option value="">Selecciona…</option>
             <option value="Sí — WiFi">Sí — WiFi</option>
             <option value="Sí — Cable">Sí — Cable</option>
+            <option value="Sí — WiFi y Cable">Sí — WiFi y Cable</option>
             <option value="No">No</option>
           </select>
           <div class="error-msg" id="err-conectividad">Indica el estado de la conexión a internet.</div>
@@ -496,23 +642,18 @@
           <div class="error-msg" id="err-correctiva-otro-texto">Especifica la actividad correctiva.</div>
         </div>
         <div class="campo">
-          <label for="instalacion-realizada">Instalación realizada en el aula <span class="req">*</span></label>
-          <select id="instalacion-realizada">
-            <option value="">Selecciona…</option>
-            <option value="Windows 10 + Banco de materiales">Windows 10 + Banco de materiales</option>
-            <option value="Windows 10 — Equipo administrativo">Windows 10 — Equipo administrativo</option>
-            <option value="ChromeOS Flex">ChromeOS Flex</option>
-            <option value="Mantenimiento correctivo sin reinstalación">Mantenimiento correctivo sin reinstalación</option>
-            <option value="Mantenimiento preventivo">Mantenimiento preventivo</option>
-            <option value="Diagnóstico — sin intervención">Diagnóstico — sin intervención</option>
-            <option value="Otro">Otro</option>
-          </select>
-          <div class="error-msg" id="err-instalacion-realizada">Selecciona el tipo de instalación realizada.</div>
-        </div>
-        <div class="campo campo-oculto" id="wrap-instalacion-otro">
-          <label for="instalacion-otro">Especifica la instalación realizada <span class="req">*</span></label>
-          <input type="text" id="instalacion-otro" autocomplete="off">
-          <div class="error-msg" id="err-instalacion-otro">Escribe qué instalación se realizó.</div>
+          <label>Instalación realizada en el aula <span class="req">*</span></label>
+          <div class="check-list" id="grupo-instalacion">
+            <label class="check-item"><input type="checkbox" class="chk-instalacion" value="Windows 10 + Banco de materiales"><span>Windows 10 + Banco de materiales</span></label>
+            <label class="check-item"><input type="checkbox" class="chk-instalacion" value="Windows 10 — Equipo administrativo"><span>Windows 10 — Equipo administrativo</span></label>
+            <label class="check-item"><input type="checkbox" class="chk-instalacion" value="ChromeOS Flex"><span>ChromeOS Flex</span></label>
+            <label class="check-item"><input type="checkbox" class="chk-instalacion" value="Mantenimiento correctivo sin reinstalación"><span>Mantenimiento correctivo sin reinstalación</span></label>
+            <label class="check-item"><input type="checkbox" class="chk-instalacion" value="Mantenimiento preventivo"><span>Mantenimiento preventivo</span></label>
+            <label class="check-item"><input type="checkbox" class="chk-instalacion" value="Diagnóstico — sin intervención"><span>Diagnóstico — sin intervención</span></label>
+            <label class="check-item otro-item"><input type="checkbox" id="instalacion-otro-check" value="Otro"><span>Otro:</span><input type="text" class="otro-input" id="instalacion-otro" autocomplete="off"></label>
+          </div>
+          <div class="error-msg" id="err-instalacion-realizada">Marca al menos una opción.</div>
+          <div class="error-msg" id="err-instalacion-otro">Especifica la instalación realizada.</div>
         </div>
         <div class="campo">
           <label for="toolwiz">¿Se instaló/verificó Toolwiz Time Freeze? <span class="req">*</span></label>
@@ -604,6 +745,7 @@
   </div>
 </main>
 
+<script src="js/cct-db.js"></script>
 <script src="js/tramites-shared.js"></script>
 <script>
 // Misma URL de despliegue que MANTENIMIENTO_APPS_SCRIPT_URL en otde.html —
@@ -671,10 +813,12 @@ function marcarError(id) {
 }
 
 // Campos simples (select/text/number/date/time), obligatorios, con error-msg propio.
+// 'folio' se validó aparte (condicional a 'sin-solicitud') y 'instalacion-realizada' pasó a
+// ser un grupo de checkboxes (ver más abajo) — ninguno de los dos va en esta lista genérica.
 const CAMPOS_SIMPLES = [
-  'folio', 'responsable', 'fecha-atencion', 'inicio-visita', 'fin-visita', 'sin-solicitud',
+  'responsable', 'fecha-atencion', 'inicio-visita', 'fin-visita', 'sin-solicitud',
   'aula-en-uso', 'mobiliario', 'equipos-atendidos', 'equipos-funcionales', 'equipos-no-funcionales',
-  'modelo-equipo', 'conectividad', 'equipos-admin-si-no', 'instalacion-realizada', 'toolwiz',
+  'modelo-equipo', 'conectividad', 'equipos-admin-si-no', 'toolwiz',
   'estado-aula', 'segunda-visita', 'seguimiento', 'descripcion-atencion', 'observaciones'
 ];
 CAMPOS_SIMPLES.forEach(id => {
@@ -683,9 +827,185 @@ CAMPOS_SIMPLES.forEach(id => {
   el.addEventListener('input', () => limpiarError(id));
   el.addEventListener('change', () => limpiarError(id));
 });
-['otro-responsable', 'equipos-admin-cantidad', 'instalacion-otro'].forEach(id => {
+['otro-responsable', 'equipos-admin-cantidad', 'instalacion-otro', 'folio'].forEach(id => {
   document.getElementById(id).addEventListener('input', () => limpiarError(id));
 });
+// Campos del sub-bloque "Identificación de la escuela" (caso urgente, sin folio) — mismo
+// tratamiento de limpiar-error-al-tocar que el resto del formulario.
+['urg-cct', 'urg-tipo-cct-manual', 'urg-sector-manual', 'urg-zona-manual', 'urg-escuela-manual',
+ 'urg-turno', 'urg-funcion', 'urg-otra-funcion', 'urg-nombre', 'urg-correo'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('input', () => limpiarError(id));
+  el.addEventListener('change', () => limpiarError(id));
+});
+
+// ── Folio condicional: "sin solicitud previa" = Sí oculta el folio y muestra la
+// identificación de la escuela (se crea una Solicitud nueva en el backend); "No" (o sin elegir
+// todavía) mantiene el comportamiento de siempre, folio obligatorio. ──
+document.getElementById('sin-solicitud').addEventListener('change', function () {
+  const esUrgente = this.value === 'Sí';
+  document.getElementById('wrap-folio').classList.toggle('campo-oculto', esUrgente);
+  document.getElementById('wrap-urgente-id').classList.toggle('campo-oculto', !esUrgente);
+  if (esUrgente) {
+    document.getElementById('folio').value = '';
+    limpiarError('folio');
+  } else {
+    // Limpia también los errores del fallback manual (zona/sector/escuela/tipo de CCT) —
+    // el bloque completo queda oculto, pero sin esto los mensajes viejos reaparecen en rojo
+    // apenas se vuelve a elegir "Sí", antes de que el técnico toque nada.
+    ['urg-cct', 'urg-tipo-cct-manual', 'urg-sector-manual', 'urg-zona-manual', 'urg-escuela-manual',
+     'urg-turno', 'urg-funcion', 'urg-otra-funcion', 'urg-nombre', 'urg-correo'].forEach(limpiarError);
+  }
+});
+
+// ── CCT autocomplete del sub-bloque "Identificación de la escuela" — mismo patrón que
+// mantenimiento.html/asesorias.html (docs/ARCHITECTURE.md §11), prefijo "urg" para no chocar
+// con otras páginas. ──
+var urgCctEncontrada = false;
+var urgSectorZonas = {};
+if (typeof CCT_DB !== 'undefined') {
+  CCT_DB.forEach(function (e) {
+    if (!e.zona || e.tipo !== 'escuela') return;
+    if (!urgSectorZonas[e.sector]) urgSectorZonas[e.sector] = [];
+    if (urgSectorZonas[e.sector].indexOf(e.zona) === -1) urgSectorZonas[e.sector].push(e.zona);
+  });
+  Object.keys(urgSectorZonas).forEach(function (s) {
+    urgSectorZonas[s].sort(function (a, b) { return a - b; });
+  });
+}
+
+var urgInputCct, urgSuggestions, urgStatusBox, urgActiveSugg = -1;
+
+function urgInitCctAutocomplete() {
+  urgInputCct = document.getElementById('urg-cct');
+  urgSuggestions = document.getElementById('urg-cct-suggestions');
+  urgStatusBox = document.getElementById('urg-cct-status');
+  if (!urgInputCct || typeof CCT_DB === 'undefined') return;
+
+  urgInputCct.addEventListener('input', function () {
+    var q = urgInputCct.value.trim().toUpperCase();
+    urgResetCct();
+    if (q.length < 3) { urgSuggestions.style.display = 'none'; return; }
+
+    var matches = CCT_DB.filter(function (e) {
+      return e.cct.includes(q) || e.nombre.toUpperCase().includes(q);
+    }).slice(0, 10);
+
+    if (!matches.length) { urgSuggestions.style.display = 'none'; return; }
+
+    urgSuggestions.innerHTML = '';
+    matches.forEach(function (m) {
+      var li = document.createElement('li');
+      li.innerHTML = '<span class="sg-code">' + m.cct + '</span> <span class="sg-name">' + m.nombre + ' — Sector ' + m.sector + (m.zona ? ', Zona ' + m.zona : '') + '</span>';
+      li.addEventListener('mousedown', function () { urgSeleccionarCct(m); });
+      urgSuggestions.appendChild(li);
+    });
+    urgSuggestions.style.display = 'block';
+    urgActiveSugg = -1;
+  });
+
+  urgInputCct.addEventListener('keydown', function (e) {
+    var items = urgSuggestions.querySelectorAll('li');
+    if (!items.length) return;
+    if (e.key === 'ArrowDown') { urgActiveSugg = Math.min(urgActiveSugg + 1, items.length - 1); urgHighlightSugg(items); e.preventDefault(); }
+    if (e.key === 'ArrowUp') { urgActiveSugg = Math.max(urgActiveSugg - 1, 0); urgHighlightSugg(items); e.preventDefault(); }
+    if (e.key === 'Enter' && urgActiveSugg >= 0) {
+      var q = urgInputCct.value.trim().toUpperCase();
+      var m = CCT_DB.filter(function (e) { return e.cct.includes(q) || e.nombre.toUpperCase().includes(q); })[urgActiveSugg];
+      if (m) { urgSeleccionarCct(m); e.preventDefault(); }
+    }
+    if (e.key === 'Escape') { urgSuggestions.style.display = 'none'; }
+  });
+
+  urgInputCct.addEventListener('blur', function () {
+    setTimeout(function () { urgSuggestions.style.display = 'none'; }, 150);
+  });
+
+  urgInputCct.addEventListener('change', function () {
+    if (!urgCctEncontrada) {
+      var exacto = CCT_DB.filter(function (e) { return e.cct === urgInputCct.value.trim().toUpperCase(); })[0];
+      if (exacto) { urgSeleccionarCct(exacto); return; }
+    }
+    if (!urgCctEncontrada && urgInputCct.value.trim().length >= 8) {
+      urgStatusBox.className = 'urg-cct-status warn visible';
+      urgStatusBox.textContent = 'CCT no encontrada en nuestra base. Puedes capturar los datos manualmente.';
+      document.getElementById('urg-manual-fields').classList.remove('campo-oculto');
+      limpiarError('urg-cct');
+    }
+  });
+}
+
+function urgHighlightSugg(items) {
+  items.forEach(function (li, i) { li.classList.toggle('active', i === urgActiveSugg); });
+}
+
+function urgSeleccionarCct(m) {
+  urgInputCct.value = m.cct;
+  urgSuggestions.style.display = 'none';
+  document.getElementById('urg-sector-val').value = m.sector;
+  document.getElementById('urg-zona-val').value = m.zona || '';
+  document.getElementById('urg-escuela-val').value = m.nombre || '';
+  document.getElementById('urg-tipo-cct-val').value = m.tipo || '';
+  urgStatusBox.className = 'urg-cct-status found visible';
+  urgStatusBox.textContent = 'Sector ' + m.sector + (m.zona ? ' · Zona ' + m.zona : '') + ' · ' + m.nombre;
+  document.getElementById('urg-manual-fields').classList.add('campo-oculto');
+  urgCctEncontrada = true;
+  otdePoblarFuncion('urg-funcion', m.tipo);
+}
+
+function urgResetCct() {
+  document.getElementById('urg-sector-val').value = '';
+  document.getElementById('urg-zona-val').value = '';
+  document.getElementById('urg-escuela-val').value = '';
+  document.getElementById('urg-tipo-cct-val').value = '';
+  urgStatusBox.className = 'urg-cct-status';
+  urgCctEncontrada = false;
+  otdePoblarFuncion('urg-funcion', null);
+}
+
+document.getElementById('urg-tipo-cct-manual').addEventListener('change', function () {
+  var tipo = this.value;
+  var sectorGroup = document.getElementById('urg-sector-group');
+  sectorGroup.classList.toggle('campo-oculto', !(tipo === 'escuela' || tipo === 'supervision' || tipo === 'jefatura'));
+  if (tipo !== 'escuela' && tipo !== 'supervision') {
+    document.getElementById('urg-zona-group').classList.add('campo-oculto');
+  } else {
+    urgActualizarZonas();
+  }
+  document.getElementById('urg-tipo-cct-val').value = tipo;
+  otdePoblarFuncion('urg-funcion', tipo);
+});
+
+document.getElementById('urg-sector-manual').addEventListener('change', urgActualizarZonas);
+
+function urgActualizarZonas() {
+  var tipo = document.getElementById('urg-tipo-cct-manual').value;
+  var sector = document.getElementById('urg-sector-manual').value;
+  var zonaGroup = document.getElementById('urg-zona-group');
+  var zonaSelect = document.getElementById('urg-zona-manual');
+  zonaSelect.innerHTML = '<option value="">Selecciona…</option>';
+
+  if (!sector || (tipo !== 'escuela' && tipo !== 'supervision')) {
+    zonaGroup.classList.add('campo-oculto');
+    return;
+  }
+  (urgSectorZonas[sector] || []).forEach(function (z) {
+    var o = document.createElement('option');
+    o.value = z; o.textContent = 'Zona ' + z;
+    zonaSelect.appendChild(o);
+  });
+  zonaGroup.classList.remove('campo-oculto');
+}
+
+document.getElementById('urg-funcion').addEventListener('change', function () {
+  var grp = document.getElementById('urg-otra-funcion-group');
+  var esOtro = this.value === 'Otro';
+  grp.classList.toggle('campo-oculto', !esOtro);
+  if (!esOtro) { document.getElementById('urg-otra-funcion').value = ''; limpiarError('urg-otra-funcion'); }
+});
+
+urgInitCctAutocomplete();
+otdePoblarFuncion('urg-funcion', null);
 
 // ── Mostrar/ocultar "Otro" del responsable ──
 document.getElementById('responsable').addEventListener('change', function () {
@@ -735,11 +1055,18 @@ document.getElementById('equipos-admin-si-no').addEventListener('change', functi
   if (!esSi) { document.getElementById('equipos-admin-cantidad').value = ''; limpiarError('equipos-admin-cantidad'); }
 });
 
-// ── Mostrar/ocultar "Otro" de instalación realizada ──
-document.getElementById('instalacion-realizada').addEventListener('change', function () {
-  const wrap = document.getElementById('wrap-instalacion-otro');
-  wrap.classList.toggle('campo-oculto', this.value !== 'Otro');
-  if (this.value !== 'Otro') { document.getElementById('instalacion-otro').value = ''; limpiarError('instalacion-otro'); }
+// ── "Instalación realizada" — checkbox "Otro" limpia su texto libre al desmarcarse
+// (el grupo permite varias opciones a la vez, no exclusivas como preventivas/correctivas). ──
+function limpiarErrorInstalacion() {
+  document.getElementById('grupo-instalacion').classList.remove('campo-error');
+  document.getElementById('err-instalacion-realizada').classList.remove('visible');
+}
+document.getElementById('instalacion-otro-check').addEventListener('change', function () {
+  if (!this.checked) { document.getElementById('instalacion-otro').value = ''; limpiarError('instalacion-otro'); }
+  limpiarErrorInstalacion();
+});
+document.querySelectorAll('.chk-instalacion').forEach(chk => {
+  chk.addEventListener('change', limpiarErrorInstalacion);
 });
 
 // ── Checkbox "Ninguna" exclusivo dentro de un grupo ──
@@ -804,7 +1131,54 @@ function validarFormulario() {
     marcarError('equipos-admin-cantidad'); valido = false;
   }
 
-  if (document.getElementById('instalacion-realizada').value === 'Otro' &&
+  // ── Folio condicional / identificación de la escuela (caso urgente) ──
+  const sinSolicitud = document.getElementById('sin-solicitud').value;
+  if (sinSolicitud === 'No') {
+    if (!document.getElementById('folio').value.trim()) { marcarError('folio'); valido = false; }
+  } else if (sinSolicitud === 'Sí') {
+    const cctInput = document.getElementById('urg-cct');
+    const manualVisible = !document.getElementById('urg-manual-fields').classList.contains('campo-oculto');
+    const cctTextOk = cctInput.value.trim().length >= 3;
+    if (!(urgCctEncontrada || (manualVisible && cctTextOk))) {
+      marcarError('urg-cct'); valido = false;
+    } else if (!manualVisible && !urgCctEncontrada && cctTextOk) {
+      document.getElementById('urg-manual-fields').classList.remove('campo-oculto');
+      valido = false;
+    }
+
+    if (manualVisible) {
+      const tipoCct = document.getElementById('urg-tipo-cct-manual').value;
+      if (!tipoCct) { marcarError('urg-tipo-cct-manual'); valido = false; }
+
+      const sectorReq = tipoCct === 'escuela' || tipoCct === 'supervision' || tipoCct === 'jefatura';
+      const zonaReq = tipoCct === 'escuela' || tipoCct === 'supervision';
+      if (sectorReq && !document.getElementById('urg-sector-manual').value) { marcarError('urg-sector-manual'); valido = false; }
+      if (zonaReq && !document.getElementById('urg-zona-manual').value) { marcarError('urg-zona-manual'); valido = false; }
+      if (!document.getElementById('urg-escuela-manual').value.trim()) { marcarError('urg-escuela-manual'); valido = false; }
+    }
+
+    if (!document.getElementById('urg-turno').value) { marcarError('urg-turno'); valido = false; }
+
+    const urgFuncionVal = document.getElementById('urg-funcion').value;
+    if (!urgFuncionVal) { marcarError('urg-funcion'); valido = false; }
+    if (urgFuncionVal === 'Otro' && !document.getElementById('urg-otra-funcion').value.trim()) {
+      marcarError('urg-otra-funcion'); valido = false;
+    }
+
+    if (!document.getElementById('urg-nombre').value.trim()) { marcarError('urg-nombre'); valido = false; }
+
+    const urgCorreo = document.getElementById('urg-correo').value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(urgCorreo)) { marcarError('urg-correo'); valido = false; }
+  }
+
+  const instalacionMarcada = document.querySelectorAll('.chk-instalacion:checked').length > 0 ||
+    document.getElementById('instalacion-otro-check').checked;
+  if (!instalacionMarcada) {
+    document.getElementById('grupo-instalacion').classList.add('campo-error');
+    document.getElementById('err-instalacion-realizada').classList.add('visible');
+    valido = false;
+  }
+  if (document.getElementById('instalacion-otro-check').checked &&
       !document.getElementById('instalacion-otro').value.trim()) {
     marcarError('instalacion-otro'); valido = false;
   }
@@ -877,14 +1251,21 @@ document.getElementById('form-reporte').addEventListener('submit', async (e) => 
       ? document.getElementById('otro-responsable').value.trim()
       : responsableSeleccionado;
 
-    const instalacionSeleccionada = document.getElementById('instalacion-realizada').value;
-    const instalacionFinal = instalacionSeleccionada === 'Otro'
-      ? document.getElementById('instalacion-otro').value.trim()
-      : instalacionSeleccionada;
+    const instalacionFinal = (function () {
+      const partes = Array.from(document.querySelectorAll('.chk-instalacion:checked')).map(chk => chk.value);
+      if (document.getElementById('instalacion-otro-check').checked) {
+        partes.push('Otro: ' + document.getElementById('instalacion-otro').value.trim());
+      }
+      return partes.join('; ');
+    })();
+
+    const sinSolicitudVal = document.getElementById('sin-solicitud').value;
+    const manualUrgVisible = !document.getElementById('urg-manual-fields').classList.contains('campo-oculto');
+    const urgFuncionSeleccionada = document.getElementById('urg-funcion').value;
 
     const payload = {
       accion: 'reporteVisita',
-      folio: document.getElementById('folio').value.trim().toUpperCase(),
+      folio: sinSolicitudVal === 'Sí' ? '' : document.getElementById('folio').value.trim().toUpperCase(),
       responsable: responsableFinal,
       fechaAtencion: document.getElementById('fecha-atencion').value,
       inicioVisita: document.getElementById('inicio-visita').value,
@@ -919,6 +1300,27 @@ document.getElementById('form-reporte').addEventListener('submit', async (e) => 
       observaciones: document.getElementById('observaciones').value.trim(),
       fotos: fotos
     };
+
+    // ── Caso urgente (sin folio): el backend crea la Solicitud a partir de estos datos ──
+    if (sinSolicitudVal === 'Sí') {
+      payload.urgCct = document.getElementById('urg-cct').value.trim().toUpperCase();
+      payload.urgSector = manualUrgVisible
+        ? document.getElementById('urg-sector-manual').value
+        : document.getElementById('urg-sector-val').value;
+      payload.urgZona = manualUrgVisible
+        ? document.getElementById('urg-zona-manual').value
+        : document.getElementById('urg-zona-val').value;
+      payload.urgEscuela = manualUrgVisible
+        ? toTitleCase(document.getElementById('urg-escuela-manual').value.trim())
+        : document.getElementById('urg-escuela-val').value;
+      payload.urgTipoCct = document.getElementById('urg-tipo-cct-val').value;
+      payload.urgTurno = document.getElementById('urg-turno').value;
+      payload.urgFuncion = urgFuncionSeleccionada === 'Otro'
+        ? document.getElementById('urg-otra-funcion').value.trim()
+        : urgFuncionSeleccionada;
+      payload.urgNombre = toTitleCase(document.getElementById('urg-nombre').value.trim());
+      payload.urgCorreo = document.getElementById('urg-correo').value.trim();
+    }
 
     let avisoLento = setTimeout(() => {
       btn.innerHTML = '<span class="spinner"></span>Enviando… con varias fotos puede tardar un poco más.';
@@ -959,10 +1361,18 @@ document.getElementById('btn-otro').addEventListener('click', () => {
   document.getElementById('fotos-preview').innerHTML = '';
   document.getElementById('wrap-otro-responsable').classList.add('campo-oculto');
   document.getElementById('wrap-equipos-admin-cantidad').classList.add('campo-oculto');
-  document.getElementById('wrap-instalacion-otro').classList.add('campo-oculto');
+  document.getElementById('wrap-folio').classList.remove('campo-oculto');
+  document.getElementById('wrap-urgente-id').classList.add('campo-oculto');
+  document.getElementById('urg-manual-fields').classList.add('campo-oculto');
+  document.getElementById('urg-sector-group').classList.add('campo-oculto');
+  document.getElementById('urg-zona-group').classList.add('campo-oculto');
+  document.getElementById('urg-otra-funcion-group').classList.add('campo-oculto');
+  urgResetCct();
+  otdePoblarFuncion('urg-funcion', null);
   document.getElementById('ayuda-mobiliario').classList.remove('visible');
   document.getElementById('aviso-horas').classList.remove('visible');
   document.getElementById('aviso-conteo').classList.remove('visible');
+  limpiarErrorInstalacion();
   document.getElementById('screen-ok').classList.add('hidden');
   document.getElementById('screen-form').classList.remove('hidden');
   window.scrollTo(0, 0);

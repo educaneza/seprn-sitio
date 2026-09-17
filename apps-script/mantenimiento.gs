@@ -689,6 +689,74 @@ function manObtenerCarpetaOficios() {
   return DriveApp.createFolder(CARPETA_MAN_OFICIOS);
 }
 
+// ── Alta automática de Solicitud para un reporte de visita "sin solicitud previa
+// registrada" (caso urgente, sep 2026 — ver reporte-visita.html). Sin folio no hay fila en
+// Solicitudes de dónde leer CCT/escuela/sector/zona/correo para el PDF y el correo de
+// notificación (manBuscarSolicitudPorFolio_()), así que el técnico captura esos datos mínimos
+// en el momento y esta función da de alta la Solicitud retroactivamente: folio generado igual
+// que en el intake normal, Estatus = 'Resuelto' desde el inicio (la visita ya ocurrió) y una
+// nota que deja rastro de que fue automática. No pasa por manValidarCampos/manSubirOficio (no
+// aplica WhatsApp/equipos con falla/oficio a una visita ya hecha) ni dispara Telegram/correo de
+// "solicitud recibida" — el único aviso que sale es el propio correo del reporte de visita.
+// Como el alta ocurre por script (no por edición manual en la hoja), tampoco dispara
+// manOnEditCierre/manOnEditProgramacion (los triggers onEdit instalables no se activan con
+// ediciones hechas por Apps Script), así que no hay riesgo de correo duplicado. Devuelve el
+// mismo shape que manBuscarSolicitudPorFolio_() para que manDoPostReporteVisita_ no tenga que
+// distinguir entre ambos caminos más adelante. ──
+function manCrearSolicitudUrgente_(datos) {
+  const requeridos = ['urgCct', 'urgTurno', 'urgFuncion', 'urgNombre', 'urgCorreo'];
+  for (const campo of requeridos) {
+    if (!datos[campo] || !String(datos[campo]).trim()) {
+      throw new Error('Falta el campo "' + campo + '" para registrar la escuela del caso urgente.');
+    }
+  }
+  const correo = String(datos.urgCorreo).trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+    throw new Error('Correo inválido en el caso urgente: ' + correo);
+  }
+
+  const hoja = manObtenerHojaSolicitudes();
+  const folio = manGenerarFolio(hoja);
+  const nombre = String(datos.urgNombre).trim();
+  const cct = String(datos.urgCct).trim().toUpperCase();
+  const sector = String(datos.urgSector || '').trim();
+  const zona = String(datos.urgZona || '').toString().trim();
+  const escuela = String(datos.urgEscuela || '').trim();
+
+  // Mismo orden que ENCABEZADOS_MAN_SOLICITUDES — las columnas que no aplican a una visita
+  // ya realizada (WhatsApp, Equipos con falla, Oficio, Tipo de equipo, etc.) quedan en blanco.
+  hoja.appendRow([
+    new Date(),
+    folio,
+    nombre,
+    String(datos.urgFuncion).trim(),
+    cct,
+    sector,
+    zona,
+    escuela,
+    String(datos.urgTurno).trim(),
+    '',
+    correo,
+    '',
+    '',
+    'Resuelto',
+    'Generada automáticamente desde reporte de visita urgente (sin solicitud previa registrada).',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    ''
+  ]);
+
+  return { folio: folio, nombre: nombre, cct: cct, sector: sector, zona: zona, escuela: escuela, correo: correo };
+}
+
 // ── Buscar los contactos de Zona y de Sector en la hoja de contactos —
 // pueden ser dos filas distintas (Zona específica + Sector de respaldo sin
 // Zona) y ambas jefaturas quieren enterarse, así que se devuelven las que
@@ -1546,14 +1614,28 @@ function manFechaHoraLocal_(isoFecha, horaHHmm) {
 // menú de arriba, aquí un solo envío ya arma el PDF y notifica — se llena
 // de una sola sentada en campo, no en varias sesiones sobre la hoja. ──
 function manDoPostReporteVisita_(datos) {
-  const folio = String(datos.folio || '').trim().toUpperCase();
-  if (!folio) {
-    return manTextResponse(JSON.stringify({ status: 'error', mensaje: 'Falta el folio.' }));
-  }
+  let folio = String(datos.folio || '').trim().toUpperCase();
+  let solicitud;
 
-  const solicitud = manBuscarSolicitudPorFolio_(folio);
-  if (!solicitud) {
-    return manTextResponse(JSON.stringify({ status: 'error', mensaje: 'No se encontró una solicitud con folio "' + folio + '" en Solicitudes.' }));
+  if (!folio) {
+    // Caso urgente (rediseño sep 2026): sin folio, solo se acepta si el técnico marcó
+    // "atención sin solicitud previa" y capturó los datos mínimos de la escuela — de ahí se
+    // da de alta una Solicitud nueva con folio generado, y el resto de esta función sigue
+    // igual que el camino normal (ver manCrearSolicitudUrgente_ arriba).
+    if (String(datos.atencionSinSolicitud || '').trim() !== 'Sí') {
+      return manTextResponse(JSON.stringify({ status: 'error', mensaje: 'Falta el folio.' }));
+    }
+    try {
+      solicitud = manCrearSolicitudUrgente_(datos);
+    } catch (err) {
+      return manTextResponse(JSON.stringify({ status: 'error', mensaje: err.message }));
+    }
+    folio = solicitud.folio;
+  } else {
+    solicitud = manBuscarSolicitudPorFolio_(folio);
+    if (!solicitud) {
+      return manTextResponse(JSON.stringify({ status: 'error', mensaje: 'No se encontró una solicitud con folio "' + folio + '" en Solicitudes.' }));
+    }
   }
 
   const fechaAtencion = manFechaHoraLocal_(datos.fechaAtencion);
