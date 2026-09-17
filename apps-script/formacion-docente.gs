@@ -34,6 +34,8 @@
 //     I Requiere_codigo_asistencia | J Codigo_asistencia
 //     K Activo | L Notas | M Registro_previo_requerido
 //     N Visible_desde | O Visible_hasta
+//     ... V Fecha_limite_inscripcion | W Valida_USICAMM | X Valida_PROEEB
+//     (ver detalle de estas 3 últimas más abajo, junto a ENCABEZADOS_CURSOS)
 //
 //   Registro_previo_requerido (TRUE/FALSE, tú lo decides por curso): si es
 //   TRUE y hay Liga_convocatoria, el formulario OBLIGA a pasar por esa liga
@@ -69,6 +71,7 @@
 // ============================================================
 
 const CICLO_ESCOLAR = '2627'; // 2026-2027 — actualizar cada ciclo
+const MAX_CURSOS_PASADOS = 6; // tope de cursos en el historial "Cursos anteriores"
 
 const HOJA_DOCENTES      = 'Docentes';
 const HOJA_CURSOS        = 'Cursos';
@@ -100,37 +103,89 @@ function dentroDeVentanaVisible(visibleDesde, visibleHasta) {
   return true;
 }
 
-// ── doGet: catálogo de cursos activos ──
+// ── Parseo seguro de fecha: null si el valor no es una fecha real (vacío,
+// o texto libre como "Por definir") — nunca lanza ni compara contra una
+// fecha falsa como "31/12/1969". Fail-open: úsalo antes de cualquier
+// comparación de estado, para que un dato incompleto nunca oculte ni
+// bloquee un curso por error. ──
+function parseFechaSegura_(valor) {
+  if (!valor) return null;
+  const d = soloFecha(valor);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+// ── Estado de un curso según Fecha_fin y la fecha límite de inscripción
+// (columna V, con fallback a Fecha_inicio si no está capturada). Modelo de
+// 3 estados: inscripción abierta (normal) → inscripción cerrada pero el
+// curso sigue en desarrollo (se queda en el catálogo con leyenda, sin
+// CTA) → pasado (fuera del catálogo vigente, entra al historial). ──
+function evaluarEstadoCurso_(row, hoy) {
+  const fechaFin = parseFechaSegura_(row[6]);
+  const fechaLimite = row[21] ? parseFechaSegura_(row[21]) : parseFechaSegura_(row[5]);
+  return {
+    esPasado: fechaFin !== null && hoy > fechaFin,
+    fechaFinOrden: fechaFin ? fechaFin.getTime() : null,
+    estadoInscripcion: (fechaLimite !== null && hoy > fechaLimite) ? 'cerrada' : 'abierta'
+  };
+}
+
+// ── Construye el objeto de curso que viaja al catálogo — compartido por
+// los cursos vigentes y los del historial ("cursos_pasados"). ──
+function construirCursoApi_(row, estadoInscripcion, inscritosPorCurso) {
+  return {
+    id:                        row[0].toString().trim(),
+    categoria:                 row[1],
+    nombre:                    row[2],
+    responsable:               row[3],
+    modalidad:                 row[4],
+    fecha_inicio:              formatearFecha(row[5]),
+    fecha_fin:                 formatearFecha(row[6]),
+    liga_convocatoria:         row[7] || '',
+    registro_previo_requerido: String(row[12]).trim().toUpperCase() === 'TRUE',
+    descripcion:               row[19] || '',
+    dirigido_a:                row[20] || '',
+    valida_usicamm:            String(row[22]).trim().toUpperCase() === 'TRUE',
+    valida_proeeb:             String(row[23]).trim().toUpperCase() === 'TRUE',
+    estado_inscripcion:        estadoInscripcion,
+    inscritos:                 inscritosPorCurso[row[0].toString().trim().toUpperCase()] || 0
+  };
+}
+
+// ── doGet: catálogo de cursos activos + historial de cursos pasados ──
 function doGet() {
   try {
     const hoja  = obtenerHojaCursos();
     const datos = hoja.getDataRange().getValues().slice(1);
     const inscritosPorCurso = contarInscritosPorCurso();
+    const hoy = soloFecha(new Date());
 
-    const cursos = datos
-      .filter(row =>
-        String(row[10]).trim().toUpperCase() === 'TRUE' &&
-        String(row[0]).trim() &&
-        dentroDeVentanaVisible(row[13], row[14])
-      )
-      .map(row => ({
-        id:                        row[0].toString().trim(),
-        categoria:                 row[1],
-        nombre:                    row[2],
-        responsable:               row[3],
-        modalidad:                 row[4],
-        fecha_inicio:              formatearFecha(row[5]),
-        fecha_fin:                 formatearFecha(row[6]),
-        liga_convocatoria:         row[7] || '',
-        registro_previo_requerido: String(row[12]).trim().toUpperCase() === 'TRUE',
-        descripcion:               row[19] || '',
-        dirigido_a:                row[20] || '',
-        inscritos:                 inscritosPorCurso[row[0].toString().trim().toUpperCase()] || 0
-      }));
+    const cursos = [];
+    const pasadosCandidatos = [];
 
-    return textResponse(JSON.stringify({ status: 'ok', cursos }));
+    datos
+      .filter(row => String(row[10]).trim().toUpperCase() === 'TRUE' && String(row[0]).trim())
+      .forEach(row => {
+        const { esPasado, fechaFinOrden, estadoInscripcion } = evaluarEstadoCurso_(row, hoy);
+        const cursoApi = construirCursoApi_(row, estadoInscripcion, inscritosPorCurso);
+
+        if (esPasado) {
+          // El historial no pasa por dentroDeVentanaVisible(): esa ventana
+          // controla la aparición/desaparición de cursos vigentes, no aplica
+          // a un curso que ya cerró su periodo de desarrollo.
+          pasadosCandidatos.push({ cursoApi, fechaFinOrden });
+        } else if (dentroDeVentanaVisible(row[13], row[14])) {
+          cursos.push(cursoApi);
+        }
+      });
+
+    const cursos_pasados = pasadosCandidatos
+      .sort((a, b) => (b.fechaFinOrden || 0) - (a.fechaFinOrden || 0))
+      .slice(0, MAX_CURSOS_PASADOS)
+      .map(c => c.cursoApi);
+
+    return textResponse(JSON.stringify({ status: 'ok', cursos, cursos_pasados }));
   } catch (err) {
-    return textResponse(JSON.stringify({ status: 'error', mensaje: err.message, cursos: [] }));
+    return textResponse(JSON.stringify({ status: 'error', mensaje: err.message, cursos: [], cursos_pasados: [] }));
   }
 }
 
@@ -158,8 +213,16 @@ function doPost(e) {
     const ahora    = new Date();
 
     const hojaCursos = obtenerHojaCursos();
-    if (!existeCurso(hojaCursos, idCurso)) {
+    const filaCurso = obtenerFilaCurso_(hojaCursos, idCurso);
+    if (!filaCurso) {
       throw new Error('Curso no encontrado: ' + idCurso);
+    }
+    // Capa de seguridad del lado servidor: la UI ya deja de ofrecer el clic
+    // en cursos pasados, pero esto evita un registro colado por una llamada
+    // directa al endpoint (curl, caché vieja del cliente, etc.) a un curso
+    // cuyo periodo de desarrollo ya terminó.
+    if (evaluarEstadoCurso_(filaCurso, soloFecha(new Date())).esPasado) {
+      throw new Error('Este curso ya concluyó y no acepta más registros: ' + idCurso);
     }
 
     const hojaDocentes = obtenerHojaDocentes();
@@ -243,10 +306,11 @@ function buscarInscripcionExistente(hoja, rfc, idCurso) {
   return null;
 }
 
-// ── ¿Existe este ID_Curso en el catálogo? ──
-function existeCurso(hoja, idCurso) {
+// ── Busca la fila de este ID_Curso en el catálogo. null si no existe. ──
+function obtenerFilaCurso_(hoja, idCurso) {
   const datos = hoja.getDataRange().getValues();
-  return datos.slice(1).some(row => String(row[0]).trim().toUpperCase() === idCurso);
+  const fila = datos.slice(1).find(row => String(row[0]).trim().toUpperCase() === idCurso);
+  return fila || null;
 }
 
 // ── Obtener o crear hoja Docentes ──
@@ -278,7 +342,8 @@ const ENCABEZADOS_CURSOS = [
   'Requiere_codigo_asistencia', 'Codigo_asistencia', 'Activo', 'Notas',
   'Registro_previo_requerido', 'Visible_desde', 'Visible_hasta',
   'Hora_inicio', 'Recordatorio_inicio_enviado', 'Recordatorio_medio_enviado',
-  'Recordatorio_webinar_enviado', 'Descripcion', 'Dirigido_a'
+  'Recordatorio_webinar_enviado', 'Descripcion', 'Dirigido_a',
+  'Fecha_limite_inscripcion', 'Valida_USICAMM', 'Valida_PROEEB'
 ];
 // P Hora_inicio (opcional, solo relevante en eventos de un solo día como
 // webinars): hora de inicio, ej. 16:00. Sin esto no se puede mandar el
@@ -293,6 +358,17 @@ const ENCABEZADOS_CURSOS = [
 // U Dirigido_a (opcional): público objetivo (ej. "Docentes de primaria",
 // "Personal administrativo") — texto libre, se muestra como pill en la
 // tarjeta junto a la modalidad.
+// V Fecha_limite_inscripcion (opcional): último día para inscribirse —
+// distinto de Fecha_inicio/Fecha_fin, que son el periodo de DESARROLLO del
+// curso. Vacía → se usa Fecha_inicio como límite. Pasada esta fecha (pero
+// con Fecha_fin todavía en el futuro), el curso sigue visible en el
+// catálogo con la leyenda "Inscripciones cerradas · Curso en desarrollo" y
+// sin botón de registro — solo desaparece del catálogo vigente (pasa al
+// historial "Cursos anteriores") cuando también termina Fecha_fin.
+// W Valida_USICAMM / X Valida_PROEEB (TRUE/FALSE, independientes entre
+// sí — un curso puede tener una, otra, ambas o ninguna): validez oficial
+// del curso para esos procesos. Se muestran como etiqueta destacada en la
+// tarjeta ("USICAMM", "PROEEB" o "USICAMM · PROEEB" si aplican las dos).
 
 function obtenerHojaCursos() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -482,6 +558,8 @@ function fdConfigurarValidacionYSemaforo() {
     fdAplicarValidacionListaSuave_(hoja, 9, FD_BOOLEANOS_VALIDOS);        // Requiere_codigo_asistencia
     fdAplicarValidacionListaSuave_(hoja, 11, FD_BOOLEANOS_VALIDOS);       // Activo
     fdAplicarValidacionListaSuave_(hoja, 13, FD_BOOLEANOS_VALIDOS);       // Registro_previo_requerido
+    fdAplicarValidacionListaSuave_(hoja, 23, FD_BOOLEANOS_VALIDOS);       // Valida_USICAMM
+    fdAplicarValidacionListaSuave_(hoja, 24, FD_BOOLEANOS_VALIDOS);       // Valida_PROEEB
     fdProtegerColumnaAutomatica_(hoja, 1);   // ID_Curso
     fdProtegerColumnaAutomatica_(hoja, 17);  // Recordatorio_inicio_enviado
     fdProtegerColumnaAutomatica_(hoja, 18);  // Recordatorio_medio_enviado

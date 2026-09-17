@@ -40,6 +40,8 @@
       --danger:  #B3261E;
       --danger-bg:#FBEAE9;
       --danger-line:#F1C8C4;
+      --oficial:    #1d4e89;
+      --oficial-bg: #e5eefb;
 
       /* ── Escala ── */
       --radius-lg: 22px;
@@ -173,6 +175,13 @@
     /* ── PASO 1: cuadrícula + panel lateral (escritorio ≥960px) ── */
     .paso1-body { display: block; }
 
+    /* ── HISTORIAL DE CURSOS ANTERIORES ── */
+    .ch-header { margin: 2.4rem 0 1.1rem; }
+    .ch-title { font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; color: var(--ink); margin: 0 0 .3rem; }
+    .ch-sub { font-size: .85rem; color: var(--ink-soft); margin: 0; }
+    .curso-card-historial { filter: grayscale(85%); opacity: .62; cursor: default; pointer-events: none; }
+    .curso-card-historial:hover { transform: none; box-shadow: var(--shadow-1); }
+
     /* ── COURSE CARDS ── */
     .cursos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.15rem; margin-bottom: 2rem; }
     @media (max-width: 560px) { .cursos-grid { grid-template-columns: 1fr; } }
@@ -243,6 +252,16 @@
       transition: opacity .3s var(--ease), transform .5s cubic-bezier(.34,1.56,.64,1);
     }
 
+    /* Validez oficial USICAMM/PROEEB: esquina opuesta a .cc-sel-badge,
+       siempre visible cuando aplica (no depende de .selected). */
+    .cc-valida-badge {
+      position: absolute; top: .85rem; right: .85rem; z-index: 2;
+      display: inline-flex; align-items: center; gap: .3rem;
+      background: var(--oficial-bg); color: var(--oficial); font-size: .68rem; font-weight: 700;
+      padding: .3rem .65rem .3rem .5rem; border-radius: 999px;
+    }
+    .cc-valida-badge svg { width: 12px; height: 12px; flex-shrink: 0; }
+
     .cc-body { padding: 1.15rem 1.25rem 1.4rem; flex: 1; display: flex; flex-direction: column; gap: .55rem; }
     .cc-categoria { font-size: .7rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
     .curso-nombre { font-family: var(--font-display); font-size: .98rem; font-weight: 700; color: var(--ink); line-height: 1.35; }
@@ -262,6 +281,18 @@
       border-radius: 999px; padding: .3rem .7rem .3rem .6rem;
     }
     .cc-externo-tag svg { width: 12px; height: 12px; flex-shrink: 0; }
+
+    /* Inscripción cerrada pero el curso sigue en desarrollo: tono neutro,
+       distinto de --warn (que ya significa "registro en plataforma externa"). */
+    .cc-cerrado-tag {
+      display: inline-flex; align-items: center; gap: .35rem; align-self: flex-start;
+      font-size: .74rem; font-weight: 700; color: var(--ink-soft); background: var(--hairline);
+      border-radius: 999px; padding: .3rem .7rem .3rem .6rem;
+    }
+    .cc-cerrado-tag svg { width: 12px; height: 12px; flex-shrink: 0; }
+    .curso-card.cerrado { cursor: default; }
+    .curso-card.cerrado:hover { transform: none; box-shadow: var(--shadow-1); border-color: var(--hairline); }
+
     .cc-info { display: flex; flex-direction: column; gap: .4rem; margin-top: .1rem; }
     .cc-pill { display: inline-flex; align-items: center; gap: .45rem; font-size: .82rem; font-weight: 500; color: var(--ink-soft); }
     .cc-pill svg { width: 15px; height: 15px; flex-shrink: 0; opacity: .55; }
@@ -683,6 +714,19 @@
       </div>
     </div>
 
+    <!-- Historial "Cursos anteriores": convocatorias ya cerradas, en gris/
+         bloqueadas — se muestra siempre que haya al menos un curso pasado,
+         tanto si hay cursos vigentes como si no (ver renderCursosPasados()
+         y cargarCatalogo()). Vive dentro de #paso-1 para ocultarse junto
+         con el resto al cambiar de paso. -->
+    <div id="cursos-pasados-wrap" style="display:none;">
+      <div class="ch-header">
+        <h3 class="ch-title">Cursos anteriores</h3>
+        <p class="ch-sub">Convocatorias ya cerradas, como referencia — mantente atento a las próximas.</p>
+      </div>
+      <div class="cursos-grid" id="cursos-pasados-grid"></div>
+    </div>
+
     <!-- Resumen sticky: solo en móvil/tablet (<960px, ver CSS). Aparece
          solo cuando hay al menos un curso elegido. Vive dentro de paso-1
          para que se oculte solo al cambiar de paso. -->
@@ -946,6 +990,9 @@
   // Mismo ícono que .aviso-legal — un solo símbolo visual para "hay registro
   // externo de por medio" en todo el flujo (tarjeta, chip, resumen, aviso).
   const ICON_EXTERNO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+  // Sello de validez oficial (USICAMM/PROEEB) y reloj de "inscripción cerrada".
+  const ICON_SEAL = '<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 1a4 4 0 00-4 4v2H5a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2V9a2 2 0 00-2-2h-1V5a4 4 0 00-4-4zm2 6V5a2 2 0 10-4 0v2h4z" clip-rule="evenodd"/></svg>';
+  const ICON_CLOCK = '<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v5a1 1 0 00.5.87l3 1.73a1 1 0 001-1.74L11 9.42V5z" clip-rule="evenodd"/></svg>';
 
   // ── Estado global ──
   let cursosSeleccionados = []; // [{id, nombre, categoria, liga}]
@@ -969,13 +1016,19 @@
   // mientras se refresca en segundo plano.
   const CATALOGO_CACHE_KEY = 'otde_catalogo_formacion_docente';
 
+  function mostrarCursosPasados(cursosPasados) {
+    renderCursosPasados(cursosPasados || []);
+    document.getElementById('cursos-pasados-wrap').style.display =
+      (cursosPasados && cursosPasados.length) ? 'block' : 'none';
+  }
+
   async function cargarCatalogo() {
     const cacheado = sessionStorage.getItem(CATALOGO_CACHE_KEY);
 
     if (cacheado) {
       // Mostrar de inmediato lo que ya teníamos, y refrescar sin bloquear la UI.
       try {
-        const cursos = JSON.parse(cacheado);
+        const { cursos, cursos_pasados } = JSON.parse(cacheado);
         document.getElementById('catalogo-cargando').style.display = 'none';
         if (cursos.length) {
           renderCursos(cursos);
@@ -983,6 +1036,7 @@
         } else {
           document.getElementById('catalogo-vacio').style.display = 'block';
         }
+        mostrarCursosPasados(cursos_pasados);
         actualizarCatalogoEnSegundoPlano();
         return;
       } catch (e) { /* caché corrupta, seguir con carga normal */ }
@@ -1015,7 +1069,8 @@
 
       if (res.status !== 'ok') throw new Error(res.mensaje || 'Error desconocido');
 
-      sessionStorage.setItem(CATALOGO_CACHE_KEY, JSON.stringify(res.cursos));
+      sessionStorage.setItem(CATALOGO_CACHE_KEY, JSON.stringify({ cursos: res.cursos, cursos_pasados: res.cursos_pasados || [] }));
+      mostrarCursosPasados(res.cursos_pasados);
 
       if (!res.cursos.length) {
         document.getElementById('catalogo-vacio').style.display = 'block';
@@ -1040,11 +1095,12 @@
     try {
       const res = await fetchJsonConTimeout(APPS_SCRIPT_URL);
       if (res.status !== 'ok') return;
-      const nuevo = JSON.stringify(res.cursos);
+      const nuevo = JSON.stringify({ cursos: res.cursos, cursos_pasados: res.cursos_pasados || [] });
       if (nuevo === sessionStorage.getItem(CATALOGO_CACHE_KEY)) return; // sin cambios
       if (cursosSeleccionados.length) return; // se seleccionó algo mientras esperábamos la respuesta
 
       sessionStorage.setItem(CATALOGO_CACHE_KEY, nuevo);
+      mostrarCursosPasados(res.cursos_pasados);
       if (!res.cursos.length) {
         document.getElementById('cursos-grid').style.display = 'none';
         document.getElementById('catalogo-vacio').style.display = 'block';
@@ -1062,25 +1118,32 @@
 
     cursos.forEach(curso => {
       const style = CATEGORIA_STYLE[curso.categoria] || CATEGORIA_STYLE._default;
+      const cerrado = curso.estado_inscripcion === 'cerrada';
 
       const card = document.createElement('div');
-      card.className = 'curso-card';
+      card.className = 'curso-card' + (cerrado ? ' cerrado' : '');
       card.dataset.id = curso.id;
       card.dataset.nombre = curso.nombre;
       card.dataset.categoria = curso.categoria || '';
       card.dataset.liga = curso.liga_convocatoria || '';
       card.dataset.registroPrevio = curso.registro_previo_requerido ? '1' : '';
-      card.addEventListener('click', () => seleccionarCurso(card));
+      if (!cerrado) card.addEventListener('click', () => seleccionarCurso(card));
 
       const rango = curso.fecha_inicio
         ? (curso.fecha_fin && curso.fecha_fin !== curso.fecha_inicio ? curso.fecha_inicio + ' – ' + curso.fecha_fin : curso.fecha_inicio)
         : '';
       const inscritos = Number(curso.inscritos) || 0;
 
+      let validaLabel = '';
+      if (curso.valida_usicamm && curso.valida_proeeb) validaLabel = 'USICAMM · PROEEB';
+      else if (curso.valida_usicamm) validaLabel = 'USICAMM';
+      else if (curso.valida_proeeb) validaLabel = 'PROEEB';
+
       card.innerHTML = `
         <div class="cc-header" style="background:${style.tint};">
           <div class="cc-icon-wrap" style="color:${style.solid};">${style.icon}</div>
           <span class="cc-sel-badge">${ICON_CHECK_SM} Seleccionado</span>
+          ${validaLabel ? `<span class="cc-valida-badge">${ICON_SEAL} ${validaLabel}</span>` : ''}
         </div>
         <div class="cc-body">
           <div class="cc-categoria" style="color:${style.solid};"></div>
@@ -1091,7 +1154,8 @@
             ${curso.modalidad ? `<span class="cc-pill">${ICON_MODALIDAD} <span class="cc-modalidad-txt"></span></span>` : ''}
             ${curso.dirigido_a ? `<span class="cc-pill">${ICON_AUDIENCE} <span class="cc-dirigido-txt"></span></span>` : ''}
           </div>
-          ${curso.liga_convocatoria ? `<div class="cc-externo-tag">${ICON_EXTERNO} Registro en plataforma externa</div>` : ''}
+          ${cerrado ? `<div class="cc-cerrado-tag">${ICON_CLOCK} Inscripciones cerradas · Curso en desarrollo</div>` : ''}
+          ${!cerrado && curso.liga_convocatoria ? `<div class="cc-externo-tag">${ICON_EXTERNO} Registro en plataforma externa</div>` : ''}
           ${inscritos > 0 ? `
           <div class="cc-inscritos">
             <span class="cc-avatares">${ICON_AVATAR}${ICON_AVATAR}${ICON_AVATAR}</span>
@@ -1131,6 +1195,57 @@
           }
         });
       }
+    });
+  }
+
+  // ── Historial "Cursos anteriores": versión de solo lectura de las
+  // tarjetas — sin selección, sin CTA de registro externo, sin "Leer más".
+  // El badge de validez USICAMM/PROEEB se conserva (sigue siendo útil como
+  // referencia histórica). Se muestra/oculta desde cargarCatalogo()/
+  // actualizarCatalogoEnSegundoPlano(), no aquí. ──
+  function renderCursosPasados(cursosPasados) {
+    const grid = document.getElementById('cursos-pasados-grid');
+    grid.innerHTML = '';
+
+    cursosPasados.forEach(curso => {
+      const style = CATEGORIA_STYLE[curso.categoria] || CATEGORIA_STYLE._default;
+
+      const card = document.createElement('div');
+      card.className = 'curso-card curso-card-historial';
+
+      const rango = curso.fecha_inicio
+        ? (curso.fecha_fin && curso.fecha_fin !== curso.fecha_inicio ? curso.fecha_inicio + ' – ' + curso.fecha_fin : curso.fecha_inicio)
+        : '';
+
+      let validaLabel = '';
+      if (curso.valida_usicamm && curso.valida_proeeb) validaLabel = 'USICAMM · PROEEB';
+      else if (curso.valida_usicamm) validaLabel = 'USICAMM';
+      else if (curso.valida_proeeb) validaLabel = 'PROEEB';
+
+      card.innerHTML = `
+        <div class="cc-header" style="background:${style.tint};">
+          <div class="cc-icon-wrap" style="color:${style.solid};">${style.icon}</div>
+          ${validaLabel ? `<span class="cc-valida-badge">${ICON_SEAL} ${validaLabel}</span>` : ''}
+        </div>
+        <div class="cc-body">
+          <div class="cc-categoria" style="color:${style.solid};"></div>
+          <div class="curso-nombre"></div>
+          <div class="cc-info">
+            ${rango ? `<span class="cc-pill">${ICON_CALENDAR} <span class="cc-fecha-txt"></span></span>` : ''}
+            ${curso.modalidad ? `<span class="cc-pill">${ICON_MODALIDAD} <span class="cc-modalidad-txt"></span></span>` : ''}
+            ${curso.dirigido_a ? `<span class="cc-pill">${ICON_AUDIENCE} <span class="cc-dirigido-txt"></span></span>` : ''}
+          </div>
+        </div>
+      `;
+
+      // Texto vía textContent (evita inyección desde datos de la hoja)
+      card.querySelector('.cc-categoria').textContent = curso.categoria || '';
+      card.querySelector('.curso-nombre').textContent = curso.nombre || '';
+      if (rango) card.querySelector('.cc-fecha-txt').textContent = rango;
+      if (curso.modalidad) card.querySelector('.cc-modalidad-txt').textContent = curso.modalidad;
+      if (curso.dirigido_a) card.querySelector('.cc-dirigido-txt').textContent = curso.dirigido_a;
+
+      grid.appendChild(card);
     });
   }
 
