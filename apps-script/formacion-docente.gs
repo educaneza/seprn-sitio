@@ -56,14 +56,18 @@
 //       siguiente de esa fecha (ese día todavía es visible).
 //     - Activo=FALSE siempre gana — apaga el curso sin importar las fechas.
 //
-//   Inscripciones — una fila por registro (transaccional)
-//     A Folio | B Fecha_registro | C RFC_Docente | D ID_Curso
-//     E Estado | F Codigo_asistencia_capturado
-//     G Fecha_actualizacion_estado | H Notas
-//     I-O: columnas de solo lectura con fórmula VLOOKUP (Nombre_Docente,
-//     CCT, Escuela, Sector, Zona, Funcion, Nombre_Curso) — se recalculan
-//     solas si cambian los datos del docente o del curso, no se escriben
-//     como valores estáticos. Ver agregarInscripcion().
+//   Inscripciones — una fila por registro (transaccional), columnas en
+//   bloques (sep 2026, ver ENCABEZADOS_INSCRIPCIONES):
+//     Registro:          A Folio | B Fecha_registro
+//     Participante:      C RFC_Docente | D Nombre_Docente* | E Correo* | F Telefono* | G Funcion*
+//     Centro de trabajo: H CCT* | I Escuela* | J Sector* | K Zona*
+//     Curso:             L ID_Curso | M Nombre_Curso*
+//     Seguimiento:       N Registro_externo | O Fecha_confirmacion_externa | P Estado
+//                        Q Codigo_asistencia_capturado | R Fecha_actualizacion_estado | S Notas
+//     * Fórmula VLOOKUP en vivo contra Docentes/Cursos — se recalculan solas
+//     si cambian los datos del docente o del curso. Ver VISTA_INSCRIPCIONES.
+//     El código lee esta hoja SIEMPRE por nombre de encabezado, nunca por
+//     posición: reordenar columnas no rompe recordatorios ni estadísticas.
 //
 // NOTA: el campo Codigo_asistencia_capturado y el flujo de cierre
 // de webinars (validar asistencia) se implementan en una fase
@@ -76,6 +80,77 @@ const MAX_CURSOS_PASADOS = 6; // tope de cursos en el historial "Cursos anterior
 const HOJA_DOCENTES      = 'Docentes';
 const HOJA_CURSOS        = 'Cursos';
 const HOJA_INSCRIPCIONES = 'Inscripciones';
+
+// ── Inscripciones: orden de columnas por bloques (sep 2026) ──
+// Registro → Participante → Centro de trabajo → Curso → Seguimiento.
+// Solo define el orden al CREAR la hoja o al correr "Reordenar columnas de
+// Inscripciones"; la lectura/escritura siempre es por nombre (ver
+// indicesPorEncabezado_), así que el código funciona con cualquier orden.
+const ENCABEZADOS_INSCRIPCIONES = [
+  'Folio', 'Fecha_registro',
+  'RFC_Docente', 'Nombre_Docente', 'Correo', 'Telefono', 'Funcion',
+  'CCT', 'Escuela', 'Sector', 'Zona',
+  'ID_Curso', 'Nombre_Curso',
+  'Registro_externo', 'Fecha_confirmacion_externa', 'Estado',
+  'Codigo_asistencia_capturado', 'Fecha_actualizacion_estado', 'Notas'
+];
+
+// Columnas calculadas con VLOOKUP en vivo: [rango, índice de columna, llave].
+// Docentes!A:J = RFC, Nombre, Correo, Telefono, CCT, Escuela, Sector, Zona,
+// Municipio, Funcion. Cursos!A:C = ID_Curso, Categoria, Nombre.
+const VISTA_INSCRIPCIONES = {
+  Nombre_Docente: ['Docentes!A:J', 2, 'RFC_Docente'],
+  Correo:         ['Docentes!A:J', 3, 'RFC_Docente'],
+  Telefono:       ['Docentes!A:J', 4, 'RFC_Docente'],
+  Funcion:        ['Docentes!A:J', 10, 'RFC_Docente'],
+  CCT:            ['Docentes!A:J', 5, 'RFC_Docente'],
+  Escuela:        ['Docentes!A:J', 6, 'RFC_Docente'],
+  Sector:         ['Docentes!A:J', 7, 'RFC_Docente'],
+  Zona:           ['Docentes!A:J', 8, 'RFC_Docente'],
+  Nombre_Curso:   ['Cursos!A:C', 3, 'ID_Curso']
+};
+
+// Registro_externo: ¿el docente confirmó su inscripción en la plataforma del
+// curso (le llegó el correo de bienvenida)? Lo declara el propio docente en
+// el formulario — no es verificación contra la plataforma. Vacío = registro
+// anterior a esta columna, o página vieja en caché que no manda el dato.
+const REGISTRO_EXTERNO = {
+  CONFIRMADO: 'Confirmado por docente',
+  PENDIENTE:  'Pendiente',
+  NO_APLICA:  'No aplica'
+};
+
+// ── { 'Nombre_encabezado': índice 0-based } a partir de la fila de encabezados ──
+function indicesPorEncabezado_(filaEncabezados) {
+  const mapa = {};
+  filaEncabezados.forEach((h, i) => {
+    const nombre = String(h).trim();
+    if (nombre && !(nombre in mapa)) mapa[nombre] = i;
+  });
+  return mapa;
+}
+
+function columnasInscripciones_(hoja) {
+  const ancho = Math.max(hoja.getLastColumn(), 1);
+  return indicesPorEncabezado_(hoja.getRange(1, 1, 1, ancho).getValues()[0]);
+}
+
+// ── Índice 0-based → letra de columna (0 → A, 25 → Z, 26 → AA) ──
+function letraColumna_(indice) {
+  let n = indice + 1, letras = '';
+  while (n > 0) {
+    const m = (n - 1) % 26;
+    letras = String.fromCharCode(65 + m) + letras;
+    n = Math.floor((n - 1) / 26);
+  }
+  return letras;
+}
+
+// ── Fórmula de vista para una columna calculada, en una fila dada ──
+function formulaVista_(nombreColumna, fila, cols) {
+  const [rango, indice, llave] = VISTA_INSCRIPCIONES[nombreColumna];
+  return '=IFERROR(VLOOKUP(' + letraColumna_(cols[llave]) + fila + ',' + rango + ',' + indice + ',FALSE),"")';
+}
 
 const PREFIJOS_CATEGORIA = {
   'Webinar':               'WEB',
@@ -192,10 +267,11 @@ function doGet() {
 // ── Cuenta cuántas Inscripciones tiene cada ID_Curso ──
 // Prueba social real para el catálogo (nunca un número inventado).
 function contarInscritosPorCurso() {
-  const filas = obtenerHojaInscripciones().getDataRange().getValues().slice(1);
+  const datos = obtenerHojaInscripciones().getDataRange().getValues();
+  const cols = indicesPorEncabezado_(datos[0]);
   const conteo = {};
-  filas.forEach(row => {
-    const idCurso = String(row[3]).trim().toUpperCase(); // ID_Curso
+  datos.slice(1).forEach(row => {
+    const idCurso = String(row[cols.ID_Curso]).trim().toUpperCase();
     if (!idCurso) return;
     conteo[idCurso] = (conteo[idCurso] || 0) + 1;
   });
@@ -204,6 +280,16 @@ function contarInscritosPorCurso() {
 
 // ── doPost: recibe un registro (docente + un curso) ──
 function doPost(e) {
+  // Candado: dos registros simultáneos podían leer el mismo folio máximo en
+  // generarFolio(); además, "Reordenar columnas de Inscripciones" toma este
+  // mismo candado para que ningún registro se cuele a la mitad de la copia.
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(25000);
+  } catch (errLock) {
+    return textResponse(JSON.stringify({ status: 'error', mensaje: 'El sistema está ocupado, intenta de nuevo en unos segundos.' }));
+  }
+
   try {
     const datos = JSON.parse(e.postData.contents);
     validarCampos(datos);
@@ -228,20 +314,59 @@ function doPost(e) {
     const hojaDocentes = obtenerHojaDocentes();
     upsertDocente(hojaDocentes, datos, rfc, ahora);
 
+    const registroExterno = resolverRegistroExterno_(filaCurso, datos.registro_externo);
+
     const hojaInscripciones = obtenerHojaInscripciones();
-    const folioExistente = buscarInscripcionExistente(hojaInscripciones, rfc, idCurso);
-    if (folioExistente) {
-      return textResponse(JSON.stringify({ status: 'ok', folio: folioExistente, duplicado: true }));
+    const existente = buscarInscripcionExistente(hojaInscripciones, rfc, idCurso);
+    if (existente) {
+      // El docente puede volver a "solo avisar" que ya le llegó el correo de
+      // bienvenida: no se duplica el folio, pero sí se mejora el estado.
+      mejorarRegistroExterno_(hojaInscripciones, existente, registroExterno, ahora);
+      return textResponse(JSON.stringify({ status: 'ok', folio: existente.folio, duplicado: true }));
     }
 
     const folio = generarFolio(hojaInscripciones);
-    agregarInscripcion(hojaInscripciones, folio, ahora, rfc, idCurso, 'Registrado', '');
+    agregarInscripcion(hojaInscripciones, folio, ahora, rfc, idCurso, 'Registrado', '', registroExterno);
 
     return textResponse(JSON.stringify({ status: 'ok', folio: folio, duplicado: false }));
 
   } catch (err) {
     return textResponse(JSON.stringify({ status: 'error', mensaje: err.message }));
+  } finally {
+    lock.releaseLock();
   }
+}
+
+// ── Registro_externo según el CURSO (servidor) + lo que declaró el docente ──
+// "No aplica" lo decide el servidor con la hoja Cursos, no el cliente: mismo
+// criterio que el formulario (Registro_previo_requerido=TRUE y con liga).
+function resolverRegistroExterno_(filaCurso, valorCliente) {
+  const exigePrevio = String(filaCurso[12]).trim().toUpperCase() === 'TRUE' &&
+                      String(filaCurso[7] || '').trim() !== '';
+  if (!exigePrevio) return REGISTRO_EXTERNO.NO_APLICA;
+  const valor = String(valorCliente || '').trim().toLowerCase();
+  if (valor === 'confirmado') return REGISTRO_EXTERNO.CONFIRMADO;
+  if (valor === 'pendiente') return REGISTRO_EXTERNO.PENDIENTE;
+  return ''; // página vieja en caché que todavía no manda el dato
+}
+
+// ── Mejora (nunca empeora) el Registro_externo de una inscripción existente ──
+// Permitido: vacío → cualquier valor; Pendiente → Confirmado. Nunca se baja
+// de Confirmado a Pendiente por un reenvío.
+function mejorarRegistroExterno_(hoja, existente, nuevo, ahora) {
+  const actual = existente.registroExterno;
+  const mejora = nuevo && (
+    actual === '' ||
+    (actual === REGISTRO_EXTERNO.PENDIENTE && nuevo === REGISTRO_EXTERNO.CONFIRMADO)
+  );
+  if (!mejora) return false;
+
+  const cols = columnasInscripciones_(hoja);
+  hoja.getRange(existente.fila, cols.Registro_externo + 1).setValue(nuevo);
+  if (nuevo === REGISTRO_EXTERNO.CONFIRMADO) {
+    hoja.getRange(existente.fila, cols.Fecha_confirmacion_externa + 1).setValue(ahora);
+  }
+  return true;
 }
 
 // Si el valor nuevo viene vacío, conserva el que ya había en la hoja — evita
@@ -295,12 +420,18 @@ function upsertDocente(hoja, d, rfc, ahora) {
 }
 
 // ── ¿Ya existe una inscripción de este RFC a este curso? ──
+// Devuelve { folio, fila (1-based), registroExterno } o null.
 function buscarInscripcionExistente(hoja, rfc, idCurso) {
   const datos = hoja.getDataRange().getValues();
+  const cols = indicesPorEncabezado_(datos[0]);
   for (let i = 1; i < datos.length; i++) {
-    if (String(datos[i][2]).trim().toUpperCase() === rfc &&
-        String(datos[i][3]).trim().toUpperCase() === idCurso) {
-      return datos[i][0];
+    if (String(datos[i][cols.RFC_Docente]).trim().toUpperCase() === rfc &&
+        String(datos[i][cols.ID_Curso]).trim().toUpperCase() === idCurso) {
+      return {
+        folio: datos[i][cols.Folio],
+        fila: i + 1,
+        registroExterno: cols.Registro_externo === undefined ? '' : String(datos[i][cols.Registro_externo]).trim()
+      };
     }
   }
   return null;
@@ -394,71 +525,230 @@ function obtenerHojaCursos() {
 }
 
 // ── Obtener o crear hoja Inscripciones ──
+// Hoja nueva: se crea directo con el orden por bloques. Hoja existente: si le
+// falta algún encabezado de ENCABEZADOS_INSCRIPCIONES (ej. Correo/Telefono/
+// Registro_externo en una hoja creada antes de sep 2026), se agrega AL FINAL
+// sin mover nada — para dejarla en el orden por bloques está el menú
+// "Reordenar columnas de Inscripciones".
 function obtenerHojaInscripciones() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let hoja = ss.getSheetByName(HOJA_INSCRIPCIONES);
   if (!hoja) {
     hoja = ss.insertSheet(HOJA_INSCRIPCIONES);
-    hoja.appendRow([
-      'Folio', 'Fecha_registro', 'RFC_Docente', 'ID_Curso', 'Estado',
-      'Codigo_asistencia_capturado', 'Fecha_actualizacion_estado', 'Notas',
-      'Nombre_Docente', 'CCT', 'Escuela', 'Sector', 'Zona', 'Funcion', 'Nombre_Curso'
-    ]);
-    estilizarEncabezado(hoja, 15);
-    hoja.setColumnWidth(9, 200);  // Nombre_Docente
-    hoja.setColumnWidth(11, 200); // Escuela
-    hoja.setColumnWidth(15, 240); // Nombre_Curso
+    hoja.getRange(1, 1, 1, ENCABEZADOS_INSCRIPCIONES.length).setValues([ENCABEZADOS_INSCRIPCIONES]);
+    darFormatoHojaInscripciones_(hoja);
+    return hoja;
+  }
+
+  const cols = columnasInscripciones_(hoja);
+  const faltantes = ENCABEZADOS_INSCRIPCIONES.filter(h => !(h in cols));
+  if (faltantes.length) {
+    const desde = hoja.getLastColumn() + 1;
+    hoja.getRange(1, desde, 1, faltantes.length)
+      .setValues([faltantes])
+      .setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
   }
   return hoja;
 }
 
-// ── Agrega una fila a Inscripciones + fórmulas de vista (I-O) ──
-// Las columnas I-O son VLOOKUP en vivo contra Docentes/Cursos: si el
+// ── Estilo de Inscripciones: encabezado, fila fija, filtro, anchos, formatos ──
+function darFormatoHojaInscripciones_(hoja) {
+  const cols = columnasInscripciones_(hoja);
+  const ancho = hoja.getLastColumn();
+  estilizarEncabezado(hoja, ancho);
+
+  const anchos = {
+    Folio: 125, Fecha_registro: 150, RFC_Docente: 135, Nombre_Docente: 230, Correo: 220, Telefono: 105,
+    Funcion: 150, Escuela: 200, ID_Curso: 110, Nombre_Curso: 260, Registro_externo: 170,
+    Fecha_confirmacion_externa: 170, Notas: 220
+  };
+  Object.keys(anchos).forEach(h => { if (h in cols) hoja.setColumnWidth(cols[h] + 1, anchos[h]); });
+
+  const filas = Math.max(hoja.getMaxRows() - 1, 1);
+  ['Fecha_registro', 'Fecha_confirmacion_externa', 'Fecha_actualizacion_estado'].forEach(h => {
+    if (h in cols) hoja.getRange(2, cols[h] + 1, filas, 1).setNumberFormat('d/M/yyyy H:mm:ss');
+  });
+  if ('Codigo_asistencia_capturado' in cols) {
+    hoja.getRange(2, cols.Codigo_asistencia_capturado + 1, filas, 1).setNumberFormat('@');
+  }
+
+  // Lista suave + color en Registro_externo: ámbar = pendiente, verde = confirmado.
+  if ('Registro_externo' in cols) {
+    const rango = hoja.getRange(2, cols.Registro_externo + 1, filas, 1);
+    rango.setDataValidation(SpreadsheetApp.newDataValidation()
+      .requireValueInList([REGISTRO_EXTERNO.CONFIRMADO, REGISTRO_EXTERNO.PENDIENTE, REGISTRO_EXTERNO.NO_APLICA], true)
+      .setAllowInvalid(true).build());
+    const reglas = hoja.getConditionalFormatRules().filter(r =>
+      !r.getRanges().some(rg => rg.getColumn() === cols.Registro_externo + 1));
+    reglas.push(
+      SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo(REGISTRO_EXTERNO.PENDIENTE)
+        .setBackground('#FCF3E3').setFontColor('#8A5A16').setRanges([rango]).build(),
+      SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo(REGISTRO_EXTERNO.CONFIRMADO)
+        .setBackground('#E9F5EE').setFontColor('#146C43').setRanges([rango]).build()
+    );
+    hoja.setConditionalFormatRules(reglas);
+  }
+
+  // Filtro sobre TODAS las filas de la hoja (no solo las que hoy tienen
+  // datos), para que los registros nuevos queden dentro del filtro.
+  if (!hoja.getFilter()) {
+    hoja.getRange(1, 1, hoja.getMaxRows(), ancho).createFilter();
+  }
+}
+
+// ── Agrega una fila a Inscripciones (datos + fórmulas de vista) ──
+// Escribe por nombre de encabezado, en una sola operación. Las columnas de
+// VISTA_INSCRIPCIONES son VLOOKUP en vivo contra Docentes/Cursos: si el
 // docente actualiza sus datos (otra inscripción) o cambia el nombre del
-// curso, se reflejan solas — no son una copia congelada al momento del
-// registro.
-function agregarInscripcion(hoja, folio, fecha, rfc, idCurso, estado, notas) {
-  hoja.appendRow([folio, fecha, rfc, idCurso, estado, '', '', notas || '']);
-  const fila = hoja.getLastRow();
-  hoja.getRange(fila, 9, 1, 7).setFormulas([formulasVistaInscripcion(fila)]);
+// curso, se reflejan solas — no son una copia congelada.
+function agregarInscripcion(hoja, folio, fecha, rfc, idCurso, estado, notas, registroExterno) {
+  const cols = columnasInscripciones_(hoja);
+  const fila = hoja.getLastRow() + 1;
+  const ancho = Math.max(...Object.values(cols)) + 1;
+  // A diferencia de appendRow(), getRange() no crece la hoja sola.
+  if (fila > hoja.getMaxRows()) hoja.insertRowsAfter(hoja.getMaxRows(), 200);
+  const valores = new Array(ancho).fill('');
+
+  const poner = (h, v) => { if (h in cols) valores[cols[h]] = v; };
+  poner('Folio', folio);
+  poner('Fecha_registro', fecha);
+  poner('RFC_Docente', rfc);
+  poner('ID_Curso', idCurso);
+  poner('Estado', estado);
+  poner('Notas', notas || '');
+  poner('Registro_externo', registroExterno || '');
+  if (registroExterno === REGISTRO_EXTERNO.CONFIRMADO) poner('Fecha_confirmacion_externa', fecha);
+  Object.keys(VISTA_INSCRIPCIONES).forEach(h => poner(h, formulaVista_(h, fila, cols)));
+
+  // setValues interpreta los textos que empiezan con "=" como fórmulas.
+  hoja.getRange(fila, 1, 1, ancho).setValues([valores]);
 }
 
-// ── Fórmulas de vista para una fila dada de Inscripciones ──
-function formulasVistaInscripcion(fila) {
-  return [
-    '=IFERROR(VLOOKUP(C' + fila + ',Docentes!A:J,2,FALSE),"")',  // Nombre_Docente
-    '=IFERROR(VLOOKUP(C' + fila + ',Docentes!A:J,5,FALSE),"")',  // CCT
-    '=IFERROR(VLOOKUP(C' + fila + ',Docentes!A:J,6,FALSE),"")',  // Escuela
-    '=IFERROR(VLOOKUP(C' + fila + ',Docentes!A:J,7,FALSE),"")',  // Sector
-    '=IFERROR(VLOOKUP(C' + fila + ',Docentes!A:J,8,FALSE),"")',  // Zona
-    '=IFERROR(VLOOKUP(C' + fila + ',Docentes!A:J,10,FALSE),"")', // Funcion
-    '=IFERROR(VLOOKUP(D' + fila + ',Cursos!A:C,3,FALSE),"")'     // Nombre_Curso
-  ];
-}
-
-// ── Repara/rellena las columnas I-O para filas que no las tengan aún ──
-// (filas creadas antes de este cambio, o migradas manualmente). Segura
-// de correr varias veces — solo sobrescribe encabezados y fórmulas, no
-// los datos de las columnas A-H.
+// ── Repara/rellena las columnas de vista en todas las filas ──
+// (filas creadas antes de un cambio de columnas, o migradas a mano). Segura
+// de correr varias veces: solo reescribe las fórmulas de VISTA_INSCRIPCIONES,
+// nunca los datos capturados. Escribe por columna, no fila por fila.
 function actualizarVistaInscripciones() {
-  const hoja = obtenerHojaInscripciones();
-
-  // Por si la hoja ya existía de antes (creada con solo 8 columnas):
-  // aseguramos los encabezados I-O sin tocar los de A-H.
-  hoja.getRange(1, 9, 1, 7).setValues([[
-    'Nombre_Docente', 'CCT', 'Escuela', 'Sector', 'Zona', 'Funcion', 'Nombre_Curso'
-  ]]);
-  hoja.getRange(1, 9, 1, 7).setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
+  const hoja = obtenerHojaInscripciones(); // completa encabezados faltantes
+  const cols = columnasInscripciones_(hoja);
 
   const ultimaFila = hoja.getLastRow();
   if (ultimaFila < 2) {
     SpreadsheetApp.getUi().alert('Encabezados actualizados. Aún no hay inscripciones para rellenar.');
     return;
   }
-  for (let fila = 2; fila <= ultimaFila; fila++) {
-    hoja.getRange(fila, 9, 1, 7).setFormulas([formulasVistaInscripcion(fila)]);
-  }
+  Object.keys(VISTA_INSCRIPCIONES).forEach(h => {
+    const formulas = [];
+    for (let fila = 2; fila <= ultimaFila; fila++) formulas.push([formulaVista_(h, fila, cols)]);
+    hoja.getRange(2, cols[h] + 1, formulas.length, 1).setFormulas(formulas);
+  });
   SpreadsheetApp.getUi().alert('Vista actualizada en ' + (ultimaFila - 1) + ' inscripción(es).');
+}
+
+// ============================================================
+// REORDENAR COLUMNAS DE INSCRIPCIONES (sep 2026, se corre UNA vez)
+//
+// Deja Inscripciones en el orden por bloques de ENCABEZADOS_INSCRIPCIONES.
+// No mueve columnas en sitio: arma una hoja nueva, copia los datos por
+// NOMBRE de encabezado, regenera las fórmulas, verifica que no se perdió
+// ninguna fila y solo entonces intercambia las hojas. La hoja anterior queda
+// intacta como "Inscripciones_respaldo_AAAAMMDD" (se puede borrar a mano
+// cuando se confirme que todo está bien). Toma el mismo candado que doPost:
+// ningún registro nuevo se cuela a la mitad de la copia.
+// ============================================================
+function reordenarColumnasInscripciones() {
+  const ui = SpreadsheetApp.getUi();
+  const resultado = reordenarColumnasInscripciones_();
+  ui.alert(resultado.mensaje);
+}
+
+function reordenarColumnasInscripciones_() {
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(30000)) {
+    return { ok: false, mensaje: 'Hay un registro en curso. Intenta de nuevo en unos segundos.' };
+  }
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const vieja = ss.getSheetByName(HOJA_INSCRIPCIONES);
+    if (!vieja) return { ok: false, mensaje: 'No existe la hoja "' + HOJA_INSCRIPCIONES + '".' };
+
+    const datos = vieja.getDataRange().getValues();
+    const encabezados = datos[0].map(h => String(h).trim());
+    const colsViejas = indicesPorEncabezado_(encabezados);
+
+    if (JSON.stringify(encabezados.filter(Boolean)) === JSON.stringify(ENCABEZADOS_INSCRIPCIONES)) {
+      return { ok: true, mensaje: 'Inscripciones ya está en el orden nuevo. No se cambió nada.' };
+    }
+    const faltanBase = ['Folio', 'Fecha_registro', 'RFC_Docente', 'ID_Curso'].filter(h => !(h in colsViejas));
+    if (faltanBase.length) {
+      return { ok: false, mensaje: 'No se reordenó: faltan columnas base (' + faltanBase.join(', ') + ').' };
+    }
+
+    // Filas con al menos un dato capturado (las de vista son fórmulas).
+    const columnasDatos = ENCABEZADOS_INSCRIPCIONES.filter(h => !(h in VISTA_INSCRIPCIONES) && h in colsViejas);
+    const indicesFilas = [];
+    for (let i = 1; i < datos.length; i++) {
+      if (columnasDatos.some(h => String(datos[i][colsViejas[h]]).trim() !== '')) indicesFilas.push(i);
+    }
+    const n = indicesFilas.length;
+
+    const nombreTemporal = HOJA_INSCRIPCIONES + '_nueva';
+    const previa = ss.getSheetByName(nombreTemporal);
+    if (previa) ss.deleteSheet(previa); // de un intento anterior interrumpido
+    const nueva = ss.insertSheet(nombreTemporal, vieja.getIndex());
+    const colsNuevas = indicesPorEncabezado_(ENCABEZADOS_INSCRIPCIONES);
+    const anchoNuevo = ENCABEZADOS_INSCRIPCIONES.length;
+
+    if (nueva.getMaxColumns() < anchoNuevo) nueva.insertColumnsAfter(nueva.getMaxColumns(), anchoNuevo - nueva.getMaxColumns());
+    if (nueva.getMaxRows() < n + 1) nueva.insertRowsAfter(nueva.getMaxRows(), n + 1 - nueva.getMaxRows());
+    nueva.getRange(1, 1, 1, anchoNuevo).setValues([ENCABEZADOS_INSCRIPCIONES]);
+    darFormatoHojaInscripciones_(nueva);
+
+    if (n > 0) {
+      // Datos capturados: columna por columna, conservando el formato de
+      // número de la hoja vieja (fechas) antes de escribir los valores.
+      ENCABEZADOS_INSCRIPCIONES.forEach(h => {
+        if (h in VISTA_INSCRIPCIONES || !(h in colsViejas)) return;
+        const destino = nueva.getRange(2, colsNuevas[h] + 1, n, 1);
+        if (h === 'Codigo_asistencia_capturado') destino.setNumberFormat('@');
+        destino.setValues(indicesFilas.map(i => [datos[i][colsViejas[h]]]));
+      });
+      // Fórmulas de vista, regeneradas según las columnas nuevas.
+      Object.keys(VISTA_INSCRIPCIONES).forEach(h => {
+        const formulas = [];
+        for (let k = 0; k < n; k++) formulas.push([formulaVista_(h, k + 2, colsNuevas)]);
+        nueva.getRange(2, colsNuevas[h] + 1, n, 1).setFormulas(formulas);
+      });
+    }
+    SpreadsheetApp.flush();
+
+    // Verificación antes de intercambiar: mismas filas, mismo folio/RFC/curso.
+    const copia = n > 0 ? nueva.getRange(2, 1, n, anchoNuevo).getValues() : [];
+    const discrepancias = indicesFilas.filter((i, k) =>
+      ['Folio', 'RFC_Docente', 'ID_Curso'].some(h =>
+        String(copia[k][colsNuevas[h]]) !== String(datos[i][colsViejas[h]])));
+    if (nueva.getLastRow() - 1 !== n || discrepancias.length) {
+      ss.deleteSheet(nueva);
+      return { ok: false, mensaje: 'No se reordenó: la copia no coincide con el original (' +
+        (nueva.getLastRow() - 1) + ' vs ' + n + ' filas, ' + discrepancias.length + ' discrepancias). La hoja original no se tocó.' };
+    }
+
+    let nombreRespaldo = HOJA_INSCRIPCIONES + '_respaldo_' + Utilities.formatDate(new Date(), 'America/Mexico_City', 'yyyyMMdd');
+    if (ss.getSheetByName(nombreRespaldo)) {
+      nombreRespaldo += '_' + Utilities.formatDate(new Date(), 'America/Mexico_City', 'HHmm');
+    }
+    vieja.setName(nombreRespaldo);
+    nueva.setName(HOJA_INSCRIPCIONES);
+    vieja.setTabColor('#948A8E');
+    ss.setActiveSheet(vieja);
+    ss.moveActiveSheet(ss.getNumSheets());
+    ss.setActiveSheet(nueva);
+
+    return { ok: true, n: n, respaldo: nombreRespaldo,
+      mensaje: 'Listo: ' + n + ' inscripción(es) en el orden nuevo. La hoja anterior quedó como "' + nombreRespaldo + '".' };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 // ── Estilo estándar de encabezado (igual al resto del sitio) ──
@@ -473,9 +763,10 @@ function estilizarEncabezado(hoja, numCols) {
 // ── Generar folio único ──
 function generarFolio(hoja) {
   const datos  = hoja.getDataRange().getValues();
+  const colFolio = indicesPorEncabezado_(datos[0]).Folio;
   const prefix = 'OTDE-CAP-';
   const maxNum = datos.slice(1)
-    .map(row => String(row[0]))
+    .map(row => String(row[colFolio]))
     .filter(f => f.startsWith(prefix))
     .map(f => parseInt(f.replace(prefix, ''), 10) || 0)
     .reduce((a, b) => Math.max(a, b), 0);
@@ -578,6 +869,7 @@ function onOpen() {
     .addItem('Generar ID de cursos faltantes', 'generarIdsCursosFaltantes')
     .addItem('Generar estadísticas', 'generarEstadisticas')
     .addItem('Actualizar vista de Inscripciones', 'actualizarVistaInscripciones')
+    .addItem('Reordenar columnas de Inscripciones', 'reordenarColumnasInscripciones')
     .addItem('Aplicar validación en Cursos', 'fdConfigurarValidacionYSemaforo')
     .addSeparator()
     .addItem('Migrar Jornada Verano 2026', 'migrarJornadaVerano')
@@ -672,7 +964,9 @@ function desinstalarTriggerAutoId() {
 function generarEstadisticas() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const hojaInsc = obtenerHojaInscripciones();
-  const inscripciones = hojaInsc.getDataRange().getValues().slice(1);
+  const datosInsc = hojaInsc.getDataRange().getValues();
+  const colsInsc = indicesPorEncabezado_(datosInsc[0]);
+  const inscripciones = datosInsc.slice(1).filter(row => String(row[colsInsc.Folio]).trim());
 
   if (!inscripciones.length) {
     SpreadsheetApp.getUi().alert('No hay inscripciones aún.');
@@ -688,12 +982,14 @@ function generarEstadisticas() {
     cursosPorId[String(r[0]).trim().toUpperCase()] = r;
   });
 
-  const porCurso = {}, porSector = {}, porMunicipio = {}, porEstado = {};
+  const porCurso = {}, porSector = {}, porMunicipio = {}, porEstado = {}, porRegistroExterno = {};
 
   inscripciones.forEach(row => {
-    const rfc     = String(row[2]).trim().toUpperCase();
-    const idCurso = String(row[3]).trim().toUpperCase();
-    const estado  = String(row[4]).trim() || 'Registrado';
+    const rfc     = String(row[colsInsc.RFC_Docente]).trim().toUpperCase();
+    const idCurso = String(row[colsInsc.ID_Curso]).trim().toUpperCase();
+    const estado  = String(row[colsInsc.Estado]).trim() || 'Registrado';
+    const registroExterno = String(row[colsInsc.Registro_externo] || '').trim() || 'Sin dato (registro anterior)';
+    porRegistroExterno[registroExterno] = (porRegistroExterno[registroExterno] || 0) + 1;
     const doc     = docentesPorRfc[rfc];
     const cur     = cursosPorId[idCurso];
 
@@ -734,6 +1030,11 @@ function generarEstadisticas() {
   resumen.appendRow(['']);
   resumen.appendRow(['POR ESTADO', 'Inscripciones']);
   Object.entries(porEstado).forEach(([k, v]) => resumen.appendRow([k, v]));
+
+  resumen.appendRow(['']);
+  resumen.appendRow(['POR REGISTRO EN PLATAFORMA EXTERNA', 'Inscripciones']);
+  Object.entries(porRegistroExterno).sort((a, b) => b[1] - a[1])
+    .forEach(([k, v]) => resumen.appendRow([k, v]));
 
   resumen.getRange(1, 1).setFontWeight('bold').setFontSize(13);
   resumen.getRange(5, 1, 1, 2).setFontWeight('bold').setBackground('#9F2241').setFontColor('#fff');
@@ -865,7 +1166,9 @@ function migrarJornadaVerano() {
 
   const hojaDocentes = obtenerHojaDocentes();
   const hojaInscripciones = obtenerHojaInscripciones();
-  const inscripcionesExistentes = hojaInscripciones.getDataRange().getValues().slice(1);
+  const datosInscripciones = hojaInscripciones.getDataRange().getValues();
+  const colFolio = indicesPorEncabezado_(datosInscripciones[0]).Folio;
+  const foliosExistentes = new Set(datosInscripciones.slice(1).map(r => String(r[colFolio]).trim()));
 
   let migrados = 0, saltados = 0, sinCurso = 0;
 
@@ -878,16 +1181,15 @@ function migrarJornadaVerano() {
 
     if (!rfc || !idCurso) { sinCurso++; return; }
 
-    const yaExiste = inscripcionesExistentes.some(r => String(r[0]).trim() === String(folio).trim());
-    if (yaExiste) { saltados++; return; }
+    if (foliosExistentes.has(String(folio).trim())) { saltados++; return; }
 
     upsertDocente(hojaDocentes, {
       nombre: nombre, correo: correo || '', telefono: '', cct: cct, escuela: escuela,
       sector: sector, zona: zona, municipio: CCT_MUNICIPIO_MAP[cct] || '', funcion: funcion
     }, rfc, fecha || new Date());
 
-    agregarInscripcion(hojaInscripciones, folio, fecha, rfc, idCurso, 'Registrado', 'Migrado de Jornada Verano 2026');
-    inscripcionesExistentes.push([folio]);
+    agregarInscripcion(hojaInscripciones, folio, fecha, rfc, idCurso, 'Registrado', 'Migrado de Jornada Verano 2026', '');
+    foliosExistentes.add(String(folio).trim());
     migrados++;
   });
 
@@ -969,7 +1271,9 @@ function combinarFechaHora(fecha, hora) {
 
 // ── Correos de todos los docentes con inscripción activa a un curso ──
 function obtenerCorreosInscritos(idCurso) {
-  const inscripciones = obtenerHojaInscripciones().getDataRange().getValues().slice(1);
+  const datosInsc = obtenerHojaInscripciones().getDataRange().getValues();
+  const cols = indicesPorEncabezado_(datosInsc[0]);
+  const inscripciones = datosInsc.slice(1);
   const docentesPorRfc = {};
   obtenerHojaDocentes().getDataRange().getValues().slice(1).forEach(r => {
     docentesPorRfc[String(r[0]).trim().toUpperCase()] = r;
@@ -977,8 +1281,8 @@ function obtenerCorreosInscritos(idCurso) {
 
   const correos = new Set();
   inscripciones.forEach(row => {
-    if (String(row[3]).trim().toUpperCase() !== idCurso) return; // ID_Curso
-    const rfc = String(row[2]).trim().toUpperCase(); // RFC_Docente
+    if (String(row[cols.ID_Curso]).trim().toUpperCase() !== idCurso) return;
+    const rfc = String(row[cols.RFC_Docente]).trim().toUpperCase();
     const doc = docentesPorRfc[rfc];
     const correo = doc ? String(doc[2]).trim() : ''; // Docentes!Correo
     if (correo) correos.add(correo);

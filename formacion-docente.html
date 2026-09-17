@@ -139,7 +139,9 @@
     .hero-meta .m { display: flex; align-items: center; gap: .45rem; }
     @media (max-width: 560px) {
       .hero { padding: 1.5rem 1.25rem 1.25rem; }
-      .hero .subtitle, .hero-meta { display: none; }
+      /* En celular el badge ocupaba 2 líneas: se oculta para que el primer
+         curso siga viéndose sin scroll con el botón "Avísanos aquí". */
+      .hero .badge, .hero .subtitle, .hero-meta { display: none; }
     }
 
     /* ── STEPS INDICATOR ── */
@@ -317,6 +319,29 @@
     .cc-inscritos-txt { font-size: .76rem; color: var(--ink-faint); font-weight: 500; }
 
     .catalogo-estado { text-align: center; padding: 3.5rem 1rem; color: var(--ink-soft); font-size: .95rem; }
+
+    /* ── Entrada rápida "ya me inscribí, solo vengo a avisar" ──
+       Botón y estado activo con la misma altura, en el mismo lugar: al
+       activarlo no se mueven las tarjetas. */
+    .solo-aviso { display: flex; justify-content: center; align-items: center; min-height: 58px; margin: -.5rem 0 1.25rem; }
+    .solo-aviso[hidden], .solo-aviso [hidden] { display: none !important; }
+    .solo-aviso-btn, .solo-aviso-activo {
+      display: inline-flex; align-items: center; gap: .55rem; min-height: 46px;
+      border-radius: 999px; font-size: .88rem; font-weight: 700; line-height: 1.3;
+    }
+    .solo-aviso-btn {
+      background: var(--ok-bg); color: var(--ok); border: 1.5px solid var(--ok-line);
+      padding: .55rem 1.15rem; cursor: pointer; font-family: inherit; text-align: left;
+      transition: border-color .2s var(--ease), background .2s var(--ease);
+    }
+    .solo-aviso-btn:hover { border-color: var(--ok); }
+    .solo-aviso-btn svg, .solo-aviso-activo svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .solo-aviso-activo { background: var(--ok); color: #fff; padding: .4rem .45rem .4rem 1.1rem; }
+    .solo-aviso-activo button {
+      background: rgba(255,255,255,.18); color: #fff; border: none; border-radius: 999px;
+      padding: .5rem .9rem; font: inherit; font-size: .8rem; cursor: pointer; min-height: 36px;
+    }
+    .solo-aviso-activo button:hover { background: rgba(255,255,255,.3); }
 
     /* ── RESUMEN STICKY (barra flotante con la selección) ── */
     .resumen-sticky {
@@ -699,6 +724,24 @@
       <h2>Selecciona uno o varios cursos</h2>
       <p>Toca la tarjeta del curso o webinar al que deseas inscribirte</p>
     </div>
+
+    <!-- Entrada rápida para quien ya se inscribió en la plataforma (ej. se
+         enteró por la difusión de CoEEE) y solo viene a avisar a OTDE. Solo
+         aparece si hay algún curso abierto con registro previo externo. -->
+    <div class="solo-aviso" id="solo-aviso" hidden>
+      <button type="button" class="solo-aviso-btn" id="solo-aviso-btn" onclick="activarSoloAviso(true)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        ¿Ya te inscribiste en la plataforma? Avísanos aquí
+      </button>
+      <div class="solo-aviso-activo" id="solo-aviso-activo" role="status" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        <span>Elige el curso donde ya te inscribiste</span>
+        <button type="button" onclick="activarSoloAviso(false)">Cancelar</button>
+      </div>
+    </div>
+
+    <!-- Liga ?curso=ID con un curso que ya no está disponible. -->
+    <div class="aviso-legal" id="aviso-enlace" role="status" style="display:none;"></div>
 
     <div id="catalogo-cargando" class="catalogo-estado">
       <div class="catalogo-spinner"></div>
@@ -1145,6 +1188,7 @@
           document.getElementById('catalogo-vacio').style.display = 'block';
         }
         mostrarCursosPasados(cursos_pasados);
+        aplicarCursoDesdeUrl();
         actualizarCatalogoEnSegundoPlano();
         return;
       } catch (e) { /* caché corrupta, seguir con carga normal */ }
@@ -1183,11 +1227,13 @@
 
       if (!res.cursos.length) {
         document.getElementById('catalogo-vacio').style.display = 'block';
+        aplicarCursoDesdeUrl();
         return;
       }
 
       renderCursos(res.cursos);
       document.getElementById('cursos-grid').style.display = 'grid';
+      aplicarCursoDesdeUrl();
 
     } catch (err) {
       clearTimeout(avisoLento);
@@ -1320,6 +1366,9 @@
         });
       }
     });
+
+    document.getElementById('solo-aviso').hidden = !cursos.some(c =>
+      c.registro_previo_requerido && c.liga_convocatoria && c.estado_inscripcion !== 'cerrada');
   }
 
   // ── Historial "Cursos anteriores": versión de solo lectura de las
@@ -1509,7 +1558,11 @@
     if (!cursosSeleccionados.length) return;
 
     const conRegistroPrevio = cursosConRegistroPrevio();
-    if (conRegistroPrevio.length) {
+    if (conRegistroPrevio.length && soloAviso) {
+      // Entrada rápida: ya se inscribió en la plataforma, no necesita la guía.
+      confirmoExterno = 'si';
+      mostrarFormularioOtde();
+    } else if (conRegistroPrevio.length) {
       mostrarPasoExterno(conRegistroPrevio);
     } else {
       confirmoExterno = null;
@@ -1676,6 +1729,54 @@
     [...cursosSeleccionados].forEach(c => quitarCurso(c.id));
     confirmoExterno = null;
     registroCompletado = false;
+    activarSoloAviso(false);
+  }
+
+  // ── Entrada rápida "ya me inscribí en la plataforma, solo vengo a avisar" ──
+  let soloAviso = false;
+  function activarSoloAviso(activo) {
+    soloAviso = activo;
+    document.getElementById('solo-aviso-btn').hidden = activo;
+    document.getElementById('solo-aviso-activo').hidden = !activo;
+  }
+
+  // ── Liga directa por curso, para oficios/WhatsApp/QR:
+  //    formacion-docente.html?curso=ACF-2627-002 (varios: ?curso=ID1,ID2)
+  //    Preselecciona y avanza solo; si algún curso ya no está disponible, se
+  //    queda en el catálogo con un aviso. Se aplica una sola vez por carga. ──
+  let cursoDesdeUrlAplicado = false;
+  function aplicarCursoDesdeUrl() {
+    if (cursoDesdeUrlAplicado) return;
+    cursoDesdeUrlAplicado = true;
+
+    const param = new URLSearchParams(location.search).get('curso');
+    if (!param) return;
+    const ids = param.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+
+    let encontrados = 0;
+    ids.forEach(id => {
+      const card = document.querySelector('#cursos-grid .curso-card[data-id="' + CSS.escape(id) + '"]');
+      if (!card || card.classList.contains('cerrado')) return;
+      if (!card.classList.contains('selected')) seleccionarCurso(card);
+      encontrados++;
+    });
+
+    if (ids.length && encontrados === ids.length) {
+      irPaso2();
+      return;
+    }
+    const aviso = document.getElementById('aviso-enlace');
+    aviso.textContent = encontrados
+      ? 'Algunos cursos de tu enlace ya no están disponibles. Revisa tu selección y toca Continuar.'
+      : 'El curso de tu enlace ya no está disponible o ya cerró inscripciones. Revisa los cursos abiertos.';
+    aviso.style.display = 'flex';
+  }
+
+  // Valor de Registro_externo que viaja al servidor, por curso. El servidor
+  // vuelve a decidir "No aplica" con la hoja Cursos (no confía en el cliente).
+  function registroExternoDe(curso) {
+    if (!(curso.registroPrevio && curso.liga)) return 'no_aplica';
+    return confirmoExterno === 'si' ? 'confirmado' : 'pendiente';
   }
 
   // Retriggerea la animación de entrada quitando y volviendo a poner la clase
@@ -1844,7 +1945,7 @@
         const res = await fetchJsonConTimeout(APPS_SCRIPT_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({ ...base, id_curso: c.id })
+          body: JSON.stringify({ ...base, id_curso: c.id, registro_externo: registroExternoDe(c) })
         });
         if (res.status !== 'ok') throw new Error(res.mensaje || 'Error desconocido');
         resultados.push({ folio: res.folio, duplicado: !!res.duplicado, curso: c });
