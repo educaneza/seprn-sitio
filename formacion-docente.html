@@ -654,6 +654,12 @@
     .folio-item .fi-liga { display: inline-flex; align-items: center; gap: .3rem; margin-top: .85rem; font-size: .85rem; color: var(--midnight); font-weight: 700; text-decoration: none; }
     .folio-item .fi-liga:hover { color: var(--acento); }
 
+    .conf-folio-tip {
+      max-width: 42ch; margin: 0 auto 1.5rem; padding: .85rem 1.1rem; text-align: left;
+      background: var(--canvas); border: 1px solid var(--hairline); border-radius: var(--radius-sm);
+      font-size: .82rem; line-height: 1.5; color: var(--ink-soft);
+    }
+
     .error-global {
       background: var(--danger-bg); border-left: 3px solid var(--danger); border-radius: var(--radius-sm);
       padding: 1rem 1.15rem; font-size: .9rem; color: #7a1c17; margin-bottom: 1.25rem; display: none; font-weight: 500;
@@ -1092,6 +1098,8 @@
     <div id="pendientes-aviso"></div>
     <div id="folios-lista"></div>
 
+    <p class="conf-folio-tip"><strong>Guarda tu folio:</strong> tómale una captura de pantalla o anótalo. Tu folio te servirá para cualquier aclaración o para subir tu constancia cuando aplique.</p>
+
     <a href="otde.html" class="btn-primary" style="display:inline-flex;width:auto;padding:.9rem 2.25rem;margin-top:.75rem;">
       ← Volver a la OTDE
     </a>
@@ -1363,7 +1371,7 @@
             ${curso.dirigido_a ? `<span class="cc-pill">${ICON_AUDIENCE} <span class="cc-dirigido-txt"></span></span>` : ''}
           </div>
           ${cerrado ? `<div class="cc-cerrado-tag">${ICON_CLOCK} Inscripciones cerradas · Curso en desarrollo</div>` : ''}
-          ${!cerrado && curso.liga_convocatoria ? `<div class="cc-externo-tag">${ICON_EXTERNO} Registro en plataforma externa</div>` : ''}
+          ${!cerrado && curso.registro_previo_requerido && curso.liga_convocatoria ? `<div class="cc-externo-tag">${ICON_EXTERNO} Registro en plataforma externa</div>` : ''}
           ${inscritos > 0 ? `
           <div class="cc-inscritos">
             <span class="cc-avatares">${ICON_AVATAR}${ICON_AVATAR}${ICON_AVATAR}</span>
@@ -1515,7 +1523,7 @@
       const chip = document.createElement('div');
       chip.className = 'rs-chip';
 
-      if (c.liga) {
+      if (c.registroPrevio && c.liga) {
         const warnIcon = document.createElement('span');
         warnIcon.className = 'rs-chip-warn';
         warnIcon.title = 'Requiere registro en plataforma externa';
@@ -1570,7 +1578,7 @@
         nombre.textContent = c.nombre;
         nombreWrap.appendChild(nombre);
 
-        if (c.liga) {
+        if (c.registroPrevio && c.liga) {
           const nota = document.createElement('span');
           nota.className = 'rsb-nota-externo';
           nota.innerHTML = ICON_EXTERNO + ' Requiere registro externo';
@@ -1670,7 +1678,7 @@
   // ── PASO 2: FORMULARIO OTDE (datos personales) ──
   function mostrarFormularioOtde(opciones) {
     const n = cursosSeleccionados.length;
-    document.getElementById('aviso-legal').style.display = cursosSeleccionados.some(c => c.liga) ? 'flex' : 'none';
+    document.getElementById('aviso-legal').style.display = cursosSeleccionados.some(c => c.registroPrevio && c.liga) ? 'flex' : 'none';
     document.getElementById('rc-titulo').textContent = n === 1 ? 'Curso seleccionado' : n + ' cursos seleccionados';
     const lista = document.getElementById('rc-lista');
     lista.innerHTML = '';
