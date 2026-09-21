@@ -92,6 +92,31 @@
         .vis-filtro-label { display: block; font-size: 14px; font-weight: 600; color: #56212f; margin-bottom: 6px; }
         .vis-filtro input { width: 100%; max-width: 340px; padding: 10px 14px; border: 1px solid #d6d1ca; border-radius: 8px; font-family: inherit; font-size: 14px; }
         .vis-filtro-hint { margin: 6px 0 0; font-size: 12px; color: #977e5b; max-width: 340px; }
+        .vis-chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+        .vis-chip {
+            padding: 6px 14px;
+            border: 1.5px solid #d6d1ca;
+            border-radius: 999px;
+            background: white;
+            color: #56212f;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .vis-chip:hover { border-color: #9F2241; }
+        .vis-chip.active { background: #56212f; border-color: #56212f; color: white; }
+        .vis-chip-alerta { border-color: #f3c2c2; color: #7a1f28; }
+        .vis-chip-alerta.active { background: #9F2241; border-color: #9F2241; color: white; }
+        .vis-chip-count { font-size: 11px; font-weight: 700; opacity: 0.75; }
+        .vis-filtro-fechas-row { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; }
+        .vis-filtro-fecha-sublabel { display: block; font-size: 12px; color: #977e5b; margin-bottom: 4px; }
+        .vis-filtro-fechas-row input[type="date"] { padding: 8px 12px; border: 1px solid #d6d1ca; border-radius: 8px; font-family: inherit; font-size: 13px; max-width: 170px; }
+        .vis-filtro-limpiar { margin-left: auto; }
         .vis-paginacion { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 14px; flex-wrap: wrap; }
         .vis-pag-btn { padding: 8px 16px; border: 1.5px solid #56212f; border-radius: 8px; background: white; color: #56212f; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
         .vis-pag-btn:hover:not(:disabled) { background: #56212f; color: white; }
@@ -109,6 +134,9 @@
         .vis-bar-track { flex: 1; background: #F0EDE7; border-radius: 6px; height: 16px; overflow: hidden; }
         .vis-bar-fill { background: #9F2241; height: 100%; border-radius: 6px; }
         .vis-bar-value { width: 56px; text-align: right; flex-shrink: 0; font-weight: 600; color: #56212f; }
+        .vis-bar-row-vacio .vis-bar-label { color: #9F2241; font-weight: 700; }
+        .vis-bar-row-vacio .vis-bar-track { background: #f8d7da; }
+        .vis-bar-row-vacio .vis-bar-value { color: #9F2241; }
         .vis-dashboard-titulo { color: #56212f; font-size: 15px; margin: 22px 0 10px; }
     </style>
     <meta property="og:type" content="website">
@@ -322,6 +350,31 @@
             <input type="text" id="vis-buscar" placeholder="Escuela, CCT o sector..." oninput="visBuscarCambio()">
             <p class="vis-filtro-hint">Esta casilla solo filtra la tabla de abajo — no reserva una visita. Para reservar, usa el formulario de arriba.</p>
         </div>
+        <div class="vis-filtro">
+            <span class="vis-filtro-label">Filtrar por estatus</span>
+            <div class="vis-chip-row" id="vis-filtro-estatus-row">
+                <button type="button" class="vis-chip active" id="vis-chip-todos" data-estatus="todos" onclick="visFiltrarEstatus(this)">Todos <span class="vis-chip-count"></span></button>
+                <button type="button" class="vis-chip" id="vis-chip-reservada" data-estatus="Reservada" onclick="visFiltrarEstatus(this)">Reservada <span class="vis-chip-count"></span></button>
+                <button type="button" class="vis-chip" id="vis-chip-realizada" data-estatus="Realizada" onclick="visFiltrarEstatus(this)">Realizada <span class="vis-chip-count"></span></button>
+                <button type="button" class="vis-chip" id="vis-chip-no-realizada" data-estatus="No realizada" onclick="visFiltrarEstatus(this)">No realizada <span class="vis-chip-count"></span></button>
+                <button type="button" class="vis-chip" id="vis-chip-cancelada" data-estatus="Cancelada" onclick="visFiltrarEstatus(this)">Cancelada <span class="vis-chip-count"></span></button>
+                <button type="button" class="vis-chip vis-chip-alerta" id="vis-chip-vencida" data-estatus="Vencida" onclick="visFiltrarEstatus(this)">⚠ Vencida <span class="vis-chip-count"></span></button>
+            </div>
+        </div>
+        <div class="vis-filtro">
+            <span class="vis-filtro-label">Filtrar por fecha planeada</span>
+            <div class="vis-filtro-fechas-row">
+                <div>
+                    <label for="vis-filtro-fecha-desde" class="vis-filtro-fecha-sublabel">Desde</label>
+                    <input type="date" id="vis-filtro-fecha-desde" onchange="visFiltroFechaCambio()">
+                </div>
+                <div>
+                    <label for="vis-filtro-fecha-hasta" class="vis-filtro-fecha-sublabel">Hasta</label>
+                    <input type="date" id="vis-filtro-fecha-hasta" onchange="visFiltroFechaCambio()">
+                </div>
+                <button type="button" class="vis-pag-btn vis-filtro-limpiar" id="vis-filtro-limpiar" onclick="visLimpiarFiltros()" style="display:none;">Limpiar filtros</button>
+            </div>
+        </div>
         <div class="vis-tabla-wrap">
             <div id="vis-tabla-wrap-inicio"></div>
             <div id="vis-cargando" class="vis-cargando">Cargando…</div>
@@ -339,6 +392,61 @@
             <button type="button" class="vis-pag-btn" id="vis-pag-anterior" onclick="visPaginaAnterior()">← Anterior</button>
             <span class="vis-pag-info" id="vis-pag-info"></span>
             <button type="button" class="vis-pag-btn" id="vis-pag-siguiente" onclick="visPaginaSiguiente()">Siguiente →</button>
+        </div>
+    </div>
+
+    <div class="content-block">
+        <h3>Reagendar o cancelar mi visita</h3>
+        <p>Si reservaste una visita y no vas a poder realizarla en la fecha planeada, puedes reagendarla o cancelarla aquí — solo necesitas tu folio.</p>
+
+        <div id="vis-gestion-buscar-form">
+            <div class="soporte-form-group">
+                <label for="vis-gestion-folio-input">Folio de tu visita<span class="req">*</span></label>
+                <input type="text" id="vis-gestion-folio-input" placeholder="SEPRN-CC-0001" style="text-transform:uppercase;font-family:monospace;">
+                <div class="soporte-field-error" id="vis-gestion-folio-input-error">Ingresa el folio de tu visita.</div>
+            </div>
+            <button class="form-button" type="button" onclick="visBuscarFolioGestion()"><span>Buscar</span></button>
+        </div>
+        <div id="vis-gestion-folio-encontrado" style="display:none;font-size:14px;color:#333;margin-top:10px;">
+            Folio localizado: <strong id="vis-gestion-folio-valor"></strong> —
+            <a href="#" onclick="visMostrarBuscadorGestion(); return false;" style="color:#9F2241;">buscar otro folio</a>
+        </div>
+        <div id="vis-gestion-msg" class="soporte-submit-msg"></div>
+
+        <div id="vis-gestion-detalle" style="display:none;margin-top:16px;">
+            <div class="highlight-box" id="vis-gestion-resumen"></div>
+
+            <div id="vis-gestion-acciones" style="display:none;">
+                <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;">
+                    <button class="form-button" type="button" onclick="visMostrarReagendar()"><span>Reagendar visita</span></button>
+                    <button class="vis-pag-btn" type="button" onclick="visMostrarCancelar()">Cancelar visita</button>
+                </div>
+
+                <div id="vis-reagendar-form" style="display:none;margin-top:14px;">
+                    <div class="soporte-form-group">
+                        <label for="vis-reagendar-fecha">Nueva fecha planeada<span class="req">*</span></label>
+                        <input type="date" id="vis-reagendar-fecha">
+                        <div class="soporte-field-error" id="vis-reagendar-fecha-error">Selecciona la nueva fecha.</div>
+                    </div>
+                    <div class="soporte-form-group">
+                        <label for="vis-reagendar-motivo">Motivo de la reagendación<span class="req">*</span></label>
+                        <textarea id="vis-reagendar-motivo" rows="2" placeholder="Ej. la ceremonia se pospuso por lluvia"></textarea>
+                        <div class="soporte-field-error" id="vis-reagendar-motivo-error">Indica el motivo de la reagendación.</div>
+                    </div>
+                    <button class="form-button" type="button" id="vis-reagendar-submit" onclick="visConfirmarReagendar()"><span>Confirmar reagendación</span></button>
+                </div>
+
+                <div id="vis-cancelar-form" style="display:none;margin-top:14px;">
+                    <div class="soporte-form-group">
+                        <label for="vis-cancelar-motivo">Motivo de la cancelación<span class="req">*</span></label>
+                        <textarea id="vis-cancelar-motivo" rows="2" placeholder="Ej. ya no fue posible asistir por agenda"></textarea>
+                        <div class="soporte-field-error" id="vis-cancelar-motivo-error">Indica el motivo de la cancelación.</div>
+                    </div>
+                    <button class="form-button" type="button" id="vis-cancelar-submit" onclick="visConfirmarCancelar()"><span>Confirmar cancelación</span></button>
+                </div>
+            </div>
+
+            <div id="vis-gestion-bloqueado" class="soporte-field-hint" style="display:none;"></div>
         </div>
     </div>
 
@@ -576,6 +684,17 @@
     var visReservasCache = [];
     var VIS_TABLA_PAGE_SIZE = 20;
     var visPaginaActual = 1;
+    // Filtros del historial (sep 2026) — se combinan por AND con el buscador de texto.
+    var visFiltroEstatus = 'todos';      // 'todos' | 'Reservada' | 'Realizada' | 'No realizada' | 'Cancelada' | 'Vencida'
+    var visFiltroFechaDesde = '';        // yyyy-mm-dd, contra fechaPlaneada
+    var visFiltroFechaHasta = '';        // yyyy-mm-dd, contra fechaPlaneada
+    var VIS_CHIP_IDS = {
+        'Reservada': 'vis-chip-reservada',
+        'Realizada': 'vis-chip-realizada',
+        'No realizada': 'vis-chip-no-realizada',
+        'Cancelada': 'vis-chip-cancelada',
+        'Vencida': 'vis-chip-vencida'
+    };
 
     function visLunesDeLaSemana(fechaStr) {
         var partes = fechaStr.split('-').map(Number);
@@ -724,6 +843,190 @@
         texto.innerHTML = '<strong>' + n + ' de ' + totalEscuelas + '</strong> escuelas visitadas este ciclo.';
     }
 
+    // ── Reagendar/cancelar mi visita (sep 2026) — mismo patrón "buscar por folio,
+    // colapsar a una línea" que ya usa ficha-ceremonias-civicas.html. El folio es
+    // la única llave (igual que el resto del sitio, sin login real). ──
+    var visGestionFolioActual = '';
+    var visGestionEstatusActual = '';
+
+    function visMostrarBuscadorGestion() {
+        document.getElementById('vis-gestion-buscar-form').style.display = 'block';
+        document.getElementById('vis-gestion-folio-encontrado').style.display = 'none';
+        document.getElementById('vis-gestion-detalle').style.display = 'none';
+        document.getElementById('vis-gestion-msg').className = 'soporte-submit-msg';
+        document.getElementById('vis-gestion-msg').textContent = '';
+        visGestionFolioActual = '';
+        visGestionEstatusActual = '';
+    }
+
+    async function visBuscarFolioGestion() {
+        var input = document.getElementById('vis-gestion-folio-input');
+        var errEl = document.getElementById('vis-gestion-folio-input-error');
+        var folio = input.value.trim().toUpperCase();
+        var msg = document.getElementById('vis-gestion-msg');
+        msg.className = 'soporte-submit-msg';
+        msg.textContent = '';
+
+        if (!folio) {
+            input.classList.add('error');
+            errEl.classList.add('visible');
+            return;
+        }
+        input.classList.remove('error');
+        errEl.classList.remove('visible');
+
+        try {
+            var data = await fetchJsonConTimeout(VISITAS_APPS_SCRIPT_URL + '?action=consulta&folio=' + encodeURIComponent(folio), { method: 'GET' });
+            if (data.status !== 'ok') {
+                msg.className = 'soporte-submit-msg error';
+                msg.textContent = 'No encontramos ninguna visita con ese folio. Verifica que esté bien escrito.';
+                return;
+            }
+            visMostrarGestion(data);
+        } catch (err) {
+            msg.className = 'soporte-submit-msg error';
+            msg.textContent = 'No se pudo consultar el folio. Verifica tu conexión e intenta de nuevo.';
+        }
+    }
+
+    function visMostrarGestion(reserva) {
+        visGestionFolioActual = reserva.folio;
+        visGestionEstatusActual = reserva.estatus;
+
+        document.getElementById('vis-gestion-buscar-form').style.display = 'none';
+        document.getElementById('vis-gestion-folio-valor').textContent = reserva.folio;
+        document.getElementById('vis-gestion-folio-encontrado').style.display = 'block';
+
+        document.getElementById('vis-gestion-resumen').innerHTML =
+            '<p style="margin:0;"><strong>' + (reserva.escuela || '') + '</strong> (' + (reserva.cct || '') + ')<br>' +
+            'Fecha planeada: ' + (reserva.fechaPlaneada || '—') + ' · Estatus: <span class="vis-badge ' +
+            (VIS_BADGE_CLASE[reserva.estatus] || 'vis-badge-reservada') + '">' + reserva.estatus + '</span></p>';
+
+        document.getElementById('vis-reagendar-form').style.display = 'none';
+        document.getElementById('vis-cancelar-form').style.display = 'none';
+
+        var accionable = reserva.estatus === 'Reservada' || reserva.estatus === 'No realizada';
+        document.getElementById('vis-gestion-acciones').style.display = accionable ? 'block' : 'none';
+
+        var bloqueado = document.getElementById('vis-gestion-bloqueado');
+        if (!accionable) {
+            bloqueado.textContent = reserva.estatus === 'Realizada'
+                ? 'Esta visita ya se realizó y tiene ficha registrada — no se puede reagendar ni cancelar.'
+                : 'Esta reserva ya está cancelada.';
+            bloqueado.style.display = 'block';
+        } else {
+            bloqueado.style.display = 'none';
+        }
+
+        document.getElementById('vis-gestion-detalle').style.display = 'block';
+        document.getElementById('vis-gestion-detalle').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function visMostrarReagendar() {
+        document.getElementById('vis-cancelar-form').style.display = 'none';
+        document.getElementById('vis-reagendar-form').style.display = 'block';
+        var fechaInput = document.getElementById('vis-reagendar-fecha');
+        fechaInput.min = new Date().toISOString().slice(0, 10);
+    }
+
+    function visMostrarCancelar() {
+        document.getElementById('vis-reagendar-form').style.display = 'none';
+        document.getElementById('vis-cancelar-form').style.display = 'block';
+    }
+
+    async function visConfirmarReagendar() {
+        var fechaInput = document.getElementById('vis-reagendar-fecha');
+        var fechaErr = document.getElementById('vis-reagendar-fecha-error');
+        var motivoInput = document.getElementById('vis-reagendar-motivo');
+        var motivoErr = document.getElementById('vis-reagendar-motivo-error');
+        var ok = true;
+
+        if (!fechaInput.value) { fechaInput.classList.add('error'); fechaErr.classList.add('visible'); ok = false; }
+        else { fechaInput.classList.remove('error'); fechaErr.classList.remove('visible'); }
+
+        if (!motivoInput.value.trim()) { motivoInput.classList.add('error'); motivoErr.classList.add('visible'); ok = false; }
+        else { motivoInput.classList.remove('error'); motivoErr.classList.remove('visible'); }
+
+        if (!ok) return;
+
+        var btn = document.getElementById('vis-reagendar-submit');
+        btn.disabled = true;
+        var msg = document.getElementById('vis-gestion-msg');
+        try {
+            var data = await fetchJsonConTimeout(VISITAS_APPS_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({
+                    accion: 'reagendar',
+                    folio: visGestionFolioActual,
+                    nuevaFecha: fechaInput.value,
+                    motivo: motivoInput.value.trim()
+                })
+            });
+            if (data.status === 'ok') {
+                msg.className = 'soporte-submit-msg ok';
+                msg.textContent = 'Listo — tu visita se reagendó para el ' + fechaInput.value + '.';
+                motivoInput.value = '';
+                document.getElementById('vis-reagendar-form').style.display = 'none';
+                await cargarDisponibilidad();
+            } else {
+                msg.className = 'soporte-submit-msg error';
+                msg.textContent = 'No se pudo reagendar: ' + data.mensaje;
+            }
+        } catch (err) {
+            msg.className = 'soporte-submit-msg error';
+            msg.textContent = 'No se pudo consultar el servidor. Verifica tu conexión e intenta de nuevo.';
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    async function visConfirmarCancelar() {
+        var motivoInput = document.getElementById('vis-cancelar-motivo');
+        var motivoErr = document.getElementById('vis-cancelar-motivo-error');
+
+        if (!motivoInput.value.trim()) {
+            motivoInput.classList.add('error');
+            motivoErr.classList.add('visible');
+            return;
+        }
+        motivoInput.classList.remove('error');
+        motivoErr.classList.remove('visible');
+
+        if (!confirm('¿Seguro que quieres cancelar esta visita? Esta acción no se puede deshacer.')) return;
+
+        var btn = document.getElementById('vis-cancelar-submit');
+        btn.disabled = true;
+        var msg = document.getElementById('vis-gestion-msg');
+        try {
+            var data = await fetchJsonConTimeout(VISITAS_APPS_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({
+                    accion: 'cancelar',
+                    folio: visGestionFolioActual,
+                    motivo: motivoInput.value.trim()
+                })
+            });
+            if (data.status === 'ok' || data.status === 'ya_cancelada') {
+                msg.className = 'soporte-submit-msg ok';
+                msg.textContent = data.status === 'ya_cancelada' ? 'Esta reserva ya estaba cancelada.' : 'Listo — tu visita se canceló.';
+                motivoInput.value = '';
+                document.getElementById('vis-cancelar-form').style.display = 'none';
+                document.getElementById('vis-gestion-acciones').style.display = 'none';
+                await cargarDisponibilidad();
+            } else {
+                msg.className = 'soporte-submit-msg error';
+                msg.textContent = 'No se pudo cancelar: ' + data.mensaje;
+            }
+        } catch (err) {
+            msg.className = 'soporte-submit-msg error';
+            msg.textContent = 'No se pudo consultar el servidor. Verifica tu conexión e intenta de nuevo.';
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
     var VIS_BADGE_CLASE = {
         'Reservada': 'vis-badge-reservada',
         'Realizada': 'vis-badge-realizada',
@@ -731,9 +1034,59 @@
         'Cancelada': 'vis-badge-cancelada'
     };
 
+    // Mismos 13 sectores (numeración romana) ya usados en el <select> de sector manual —
+    // sirve solo para desempatar el orden del panel de cobertura, no es un catálogo nuevo.
+    var VIS_ROMANOS_ORDEN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII'];
+    function visOrdenSector(s) {
+        var i = VIS_ROMANOS_ORDEN.indexOf(s);
+        return i === -1 ? 999 : i;
+    }
+
     function visBuscarCambio() {
         visPaginaActual = 1;
         visRenderTabla();
+    }
+
+    function visFiltrarEstatus(btn) {
+        visFiltroEstatus = btn.getAttribute('data-estatus');
+        visPaginaActual = 1;
+        document.querySelectorAll('#vis-filtro-estatus-row .vis-chip').forEach(function (b) {
+            b.classList.toggle('active', b === btn);
+        });
+        visRenderTabla();
+    }
+
+    function visFiltroFechaCambio() {
+        visFiltroFechaDesde = document.getElementById('vis-filtro-fecha-desde').value;
+        visFiltroFechaHasta = document.getElementById('vis-filtro-fecha-hasta').value;
+        visPaginaActual = 1;
+        visRenderTabla();
+    }
+
+    function visLimpiarFiltros() {
+        document.getElementById('vis-buscar').value = '';
+        document.getElementById('vis-filtro-fecha-desde').value = '';
+        document.getElementById('vis-filtro-fecha-hasta').value = '';
+        visFiltroFechaDesde = '';
+        visFiltroFechaHasta = '';
+        visFiltroEstatus = 'todos';
+        document.querySelectorAll('#vis-filtro-estatus-row .vis-chip').forEach(function (b) {
+            b.classList.toggle('active', b.getAttribute('data-estatus') === 'todos');
+        });
+        visPaginaActual = 1;
+        visRenderTabla();
+    }
+
+    function visActualizarContadoresEstatus() {
+        var conteos = { 'Reservada': 0, 'Realizada': 0, 'No realizada': 0, 'Cancelada': 0, 'Vencida': 0 };
+        visReservasCache.forEach(function (r) {
+            if (conteos.hasOwnProperty(r.estatus)) conteos[r.estatus]++;
+            if (r.estatus === 'Reservada' && visEsVencida(r.fechaPlaneada)) conteos['Vencida']++;
+        });
+        document.getElementById('vis-chip-todos').querySelector('.vis-chip-count').textContent = visReservasCache.length;
+        Object.keys(conteos).forEach(function (k) {
+            document.getElementById(VIS_CHIP_IDS[k]).querySelector('.vis-chip-count').textContent = conteos[k];
+        });
     }
 
     function visPaginaAnterior() {
@@ -764,8 +1117,26 @@
             });
         }
 
+        if (visFiltroEstatus === 'Vencida') {
+            filas = filas.filter(function (r) { return r.estatus === 'Reservada' && visEsVencida(r.fechaPlaneada); });
+        } else if (visFiltroEstatus !== 'todos') {
+            filas = filas.filter(function (r) { return r.estatus === visFiltroEstatus; });
+        }
+
+        if (visFiltroFechaDesde) {
+            filas = filas.filter(function (r) { return (r.fechaPlaneada || '') >= visFiltroFechaDesde; });
+        }
+        if (visFiltroFechaHasta) {
+            filas = filas.filter(function (r) { return (r.fechaPlaneada || '') <= visFiltroFechaHasta; });
+        }
+
+        visActualizarContadoresEstatus();
+        var hayFiltrosActivos = !!(filtro || visFiltroEstatus !== 'todos' || visFiltroFechaDesde || visFiltroFechaHasta);
+        document.getElementById('vis-filtro-limpiar').style.display = hayFiltrosActivos ? 'inline-block' : 'none';
+
         if (!filas.length) {
-            body.innerHTML = '<tr><td colspan="9" style="color:#977e5b;">Sin reservas todavía.</td></tr>';
+            body.innerHTML = '<tr><td colspan="9" style="color:#977e5b;">' +
+                (hayFiltrosActivos ? 'Sin resultados con estos filtros.' : 'Sin reservas todavía.') + '</td></tr>';
             paginacion.style.display = 'none';
             return;
         }
@@ -968,8 +1339,8 @@
         }
     }
 
-    function visBarra(etiqueta, valor, valorTexto, pct) {
-        return '<div class="vis-bar-row">' +
+    function visBarra(etiqueta, valor, valorTexto, pct, claseExtra) {
+        return '<div class="vis-bar-row' + (claseExtra ? ' ' + claseExtra : '') + '">' +
             '<div class="vis-bar-label" title="' + etiqueta + '">' + etiqueta + '</div>' +
             '<div class="vis-bar-track"><div class="vis-bar-fill" style="width:' + pct + '%;"></div></div>' +
             '<div class="vis-bar-value">' + valorTexto + '</div></div>';
@@ -991,12 +1362,32 @@
                 totalPorSector[e.sector] = (totalPorSector[e.sector] || 0) + 1;
             });
         }
-        var porSector = data.porSector || [];
-        var htmlSector = porSector.map(function (s) {
-            var total = totalPorSector[s.sector] || 0;
-            var pct = total ? Math.round((s.escuelasVisitadas / total) * 100) : 0;
-            var valorTexto = s.escuelasVisitadas + (total ? ' / ' + total : '');
-            return visBarra('Sector ' + s.sector, s.escuelasVisitadas, valorTexto, pct);
+        // Un sector puede tener escuelas en CCT_DB pero cero visitas — antes se omitía por
+        // completo porque este bloque iteraba solo data.porSector (backend, solo sectores con
+        // ≥1 "Realizada"). Ahora se itera sobre totalPorSector (el catálogo completo) para que
+        // "0/X" también aparezca.
+        var visitadasPorSector = {};
+        (data.porSector || []).forEach(function (s) { visitadasPorSector[s.sector] = s.escuelasVisitadas; });
+
+        var sectores = Object.keys(totalPorSector).map(function (sector) {
+            var total = totalPorSector[sector];
+            var visitadas = visitadasPorSector[sector] || 0;
+            var pct = total ? Math.round((visitadas / total) * 100) : 0;
+            return { sector: sector, visitadas: visitadas, total: total, pct: pct };
+        });
+
+        // Cobertura más baja primero — el punto de este cambio es que un sector en 0 sea
+        // imposible de pasar por alto. Empates en % se desempatan por el orden natural de
+        // sectores (I, II, III...).
+        sectores.sort(function (a, b) {
+            if (a.pct !== b.pct) return a.pct - b.pct;
+            return visOrdenSector(a.sector) - visOrdenSector(b.sector);
+        });
+
+        var htmlSector = sectores.map(function (s) {
+            var etiqueta = (s.visitadas === 0 ? '⚠ ' : '') + 'Sector ' + s.sector;
+            var claseExtra = s.visitadas === 0 ? 'vis-bar-row-vacio' : '';
+            return visBarra(etiqueta, s.visitadas, s.visitadas + ' / ' + s.total, s.pct, claseExtra);
         }).join('') || '<p class="vis-cargando">Sin datos todavía.</p>';
         document.getElementById('dashboard-por-sector').innerHTML = htmlSector;
     }

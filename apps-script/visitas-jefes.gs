@@ -91,7 +91,7 @@ const ENCABEZADOS_VIS_RESERVAS = [
   'Observaciones de operatividad', 'Fecha de ficha enviada',
   'Nombre de la actividad', 'Propósito', 'Convocados/Participantes',
   'Descripción general de la actividad', 'Cantidad de asistentes',
-  'Motivo de revisita (si aplica)'
+  'Motivo de revisita (si aplica)', 'Historial de cambios (reagendaciones/cancelación)'
 ];
 const COL_VIS_CCT = 7;
 const COL_VIS_SEMANA = 12;
@@ -107,6 +107,7 @@ const COL_VIS_CONVOCADOS = 21;
 const COL_VIS_DESCRIPCION_ACTIVIDAD = 22;
 const COL_VIS_CANTIDAD_ASISTENTES = 23;
 const COL_VIS_MOTIVO_REVISITA = 24;
+const COL_VIS_HISTORIAL_CAMBIOS = 25;
 
 const ESTADOS_VIS_VALIDOS = ['Reservada', 'Realizada', 'No realizada', 'Cancelada'];
 const TIPOS_VIS_VALIDOS = ['Inicio de ciclo escolar', 'Ceremonia cívica semanal'];
@@ -261,11 +262,14 @@ function visListarDisponibilidad() {
   return visTextResponse(JSON.stringify({ status: 'ok', items: items }));
 }
 
-// ── doPost: reservar visita, o completar la ficha post-visita ──
+// ── doPost: reservar visita, completar la ficha post-visita, o
+// reagendar/cancelar una reserva ya existente (sep 2026) ──
 function doPost(e) {
   try {
     const datos = JSON.parse(e.postData.contents);
     if (datos.accion === 'ficha') return visDoPostFicha_(datos);
+    if (datos.accion === 'cancelar') return visDoPostCancelar_(datos);
+    if (datos.accion === 'reagendar') return visDoPostReagendar_(datos);
     return visDoPostReservar_(datos);
   } catch (err) {
     return visTextResponse(JSON.stringify({ status: 'error', mensaje: err.message }));
@@ -396,6 +400,110 @@ function visDoPostFicha_(datos) {
   }
 }
 
+// ── Cancelar una reserva ya existente (sep 2026) — mismo motivo obligatorio que
+// reagendar. "Realizada"/"Cancelada" quedan terminales (ver comentario junto a
+// visDoPostReagendar_); "Reservada"/"No realizada" son accionables. Cancelar no
+// requiere ningún ajuste extra al cupo CCT+semana: visExisteReservaActiva_ ya
+// solo bloquea por "Reservada"/"Realizada", así que el cupo queda libre solo. ──
+function visDoPostCancelar_(datos) {
+  const folio = String(datos.folio || '').trim().toUpperCase();
+  const motivo = String(datos.motivo || '').trim();
+  if (!folio) {
+    return visTextResponse(JSON.stringify({ status: 'error', mensaje: 'Falta el folio de la reserva.' }));
+  }
+  if (!motivo) {
+    return visTextResponse(JSON.stringify({ status: 'error', mensaje: 'Indica el motivo de la cancelación.' }));
+  }
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const hoja = visObtenerHojaReservas();
+    const fila = visBuscarFilaPorFolio_(hoja, folio);
+    if (!fila) {
+      return visTextResponse(JSON.stringify({ status: 'error', mensaje: 'No se encontró ninguna reserva con folio "' + folio + '".' }));
+    }
+
+    const estatusActual = String(fila.datos[COL_VIS_ESTATUS - 1] || '').trim();
+    if (estatusActual === 'Cancelada') {
+      return visTextResponse(JSON.stringify({ status: 'ya_cancelada', mensaje: 'Esta reserva ya estaba cancelada.', folio: folio }));
+    }
+    if (estatusActual === 'Realizada') {
+      return visTextResponse(JSON.stringify({ status: 'error', mensaje: 'Esta visita ya se realizó y tiene ficha registrada, no se puede cancelar.' }));
+    }
+
+    hoja.getRange(fila.rowIndex, COL_VIS_ESTATUS).setValue('Cancelada');
+    visRegistrarCambio_(hoja, fila.rowIndex, 'Cancelada — ' + motivo);
+
+    return visTextResponse(JSON.stringify({ status: 'ok', folio: folio }));
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// ── Reagendar una reserva ya existente (sep 2026) — edita la misma fila (mismo
+// folio, no crea una reserva nueva), mismo criterio que visDoPostFicha_. Vuelve
+// a correr visExisteReservaActiva_ contra la semana destino (excluyendo su
+// propia fila) para no crear un doble-booking al mover la fecha. Si la reserva
+// venía de "No realizada" (el trigger diario ya la marcó por falta de ficha),
+// reagendar la regresa a "Reservada" — es la vía para recuperar ese caso sin
+// tener que crear una reserva nueva sin relación con la original. ──
+function visDoPostReagendar_(datos) {
+  const folio = String(datos.folio || '').trim().toUpperCase();
+  const motivo = String(datos.motivo || '').trim();
+  if (!folio) {
+    return visTextResponse(JSON.stringify({ status: 'error', mensaje: 'Falta el folio de la reserva.' }));
+  }
+  if (!motivo) {
+    return visTextResponse(JSON.stringify({ status: 'error', mensaje: 'Indica el motivo de la reagendación.' }));
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(datos.nuevaFecha || '').trim())) {
+    return visTextResponse(JSON.stringify({ status: 'error', mensaje: 'Selecciona la nueva fecha planeada.' }));
+  }
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const hoja = visObtenerHojaReservas();
+    const fila = visBuscarFilaPorFolio_(hoja, folio);
+    if (!fila) {
+      return visTextResponse(JSON.stringify({ status: 'error', mensaje: 'No se encontró ninguna reserva con folio "' + folio + '".' }));
+    }
+
+    const estatusActual = String(fila.datos[COL_VIS_ESTATUS - 1] || '').trim();
+    if (estatusActual === 'Cancelada') {
+      return visTextResponse(JSON.stringify({ status: 'error', mensaje: 'Esta reserva está cancelada, no se puede reagendar.' }));
+    }
+    if (estatusActual === 'Realizada') {
+      return visTextResponse(JSON.stringify({ status: 'error', mensaje: 'Esta visita ya se realizó y tiene ficha registrada, no se puede reagendar.' }));
+    }
+
+    const nuevaFechaPlaneada = visFechaLocal_(datos.nuevaFecha);
+    const nuevaSemana = visLunesDeLaSemana_(nuevaFechaPlaneada);
+    const cct = fila.datos[COL_VIS_CCT - 1];
+
+    const conflicto = visExisteReservaActiva_(hoja, cct, nuevaSemana, fila.rowIndex);
+    if (conflicto) {
+      return visTextResponse(JSON.stringify({ status: 'error', mensaje: 'Esa escuela ya tiene otra visita ' +
+        (conflicto.estatus === 'Realizada' ? 'realizada' : 'programada') + ' esa semana, por ' + conflicto.nombre +
+        ' (' + conflicto.cargo + '). Elige otra fecha.' }));
+    }
+
+    const fechaAnteriorStr = fila.datos[COL_VIS_FECHA_PLANEADA - 1] instanceof Date
+      ? Utilities.formatDate(fila.datos[COL_VIS_FECHA_PLANEADA - 1], 'America/Mexico_City', 'yyyy-MM-dd')
+      : String(fila.datos[COL_VIS_FECHA_PLANEADA - 1] || '');
+
+    hoja.getRange(fila.rowIndex, COL_VIS_FECHA_PLANEADA).setValue(nuevaFechaPlaneada);
+    hoja.getRange(fila.rowIndex, COL_VIS_SEMANA).setValue(nuevaSemana);
+    hoja.getRange(fila.rowIndex, COL_VIS_ESTATUS).setValue('Reservada');
+    visRegistrarCambio_(hoja, fila.rowIndex, 'Reagendada de ' + fechaAnteriorStr + ' a ' + datos.nuevaFecha + ' — ' + motivo);
+
+    return visTextResponse(JSON.stringify({ status: 'ok', folio: folio }));
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 // ── Obtener o crear la hoja de reservas ──
 function visObtenerHojaReservas() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -430,6 +538,17 @@ function visObtenerHojaReservas() {
   return hoja;
 }
 
+// ── Agrega una entrada con fecha al historial de cambios de una reserva
+// (columna Y, sep 2026) — varias líneas unidas por "\n", mismo patrón que
+// ya usa Evidencias (columna P), para no perder el rastro si una visita
+// se reagenda más de una vez. ──
+function visRegistrarCambio_(hoja, rowIndex, entrada) {
+  const actual = String(hoja.getRange(rowIndex, COL_VIS_HISTORIAL_CAMBIOS).getValue() || '').trim();
+  const fechaStr = Utilities.formatDate(new Date(), 'America/Mexico_City', 'dd/MM/yyyy HH:mm');
+  const nuevaLinea = '[' + fechaStr + '] ' + entrada;
+  hoja.getRange(rowIndex, COL_VIS_HISTORIAL_CAMBIOS).setValue(actual ? actual + '\n' + nuevaLinea : nuevaLinea);
+}
+
 // ── Buscar una fila por folio (columna B) ──
 function visBuscarFilaPorFolio_(hoja, folio) {
   const datos = hoja.getDataRange().getValues();
@@ -445,13 +564,16 @@ function visBuscarFilaPorFolio_(hoja, folio) {
 // ── ¿Ya hay una reserva activa (Reservada/Realizada) para esta escuela
 // esta semana? Compara por CCT + lunes de la semana, no por fecha exacta,
 // porque una ceremonia cívica podría moverse de día dentro de la misma
-// semana sin dejar de ser "la misma semana". ──
-function visExisteReservaActiva_(hoja, cct, semanaLunesDate) {
+// semana sin dejar de ser "la misma semana". `excluirRowIndex` (sep 2026,
+// opcional) permite que un reagendar valide la semana destino sin chocar
+// contra su propia fila. ──
+function visExisteReservaActiva_(hoja, cct, semanaLunesDate, excluirRowIndex) {
   const datos = hoja.getDataRange().getValues();
   const cctNorm = String(cct).trim().toUpperCase();
   const semanaStr = Utilities.formatDate(semanaLunesDate, 'America/Mexico_City', 'yyyy-MM-dd');
 
   for (let i = 1; i < datos.length; i++) {
+    if (excluirRowIndex && (i + 1) === excluirRowIndex) continue;
     const fila = datos[i];
     const filaCct = String(fila[COL_VIS_CCT - 1] || '').trim().toUpperCase();
     if (filaCct !== cctNorm) continue;
@@ -664,10 +786,36 @@ function visDesinstalarTriggerValidacion() {
 const CARPETA_VIS_REPORTES = 'Reportes de Seguimiento — Ceremonias Cívicas';
 const VIS_REPORTE_DIAS_ATRAS = 14; // ventana de "recientes" para realizadas/no realizadas
 
+// ── Pide, vía un cuadro de diálogo del Sheet, la fecha de referencia para
+// generar el reporte ("como si se generara ese día") — vacío = hoy. Cancelar
+// aborta sin generar nada. Compartido por ambos reportes (sep 2026). ──
+function visPedirFechaReferencia_(tituloReporte) {
+  const ui = SpreadsheetApp.getUi();
+  const resp = ui.prompt(
+    tituloReporte,
+    'Fecha de referencia del reporte (dd/mm/aaaa). Deja vacío para generarlo con la fecha de hoy.',
+    ui.ButtonSet.OK_CANCEL
+  );
+  if (resp.getSelectedButton() !== ui.Button.OK) return null;
+  const texto = resp.getResponseText().trim();
+  if (!texto) return new Date();
+
+  const m = texto.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  const fecha = m ? new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1])) : null;
+  if (!fecha || isNaN(fecha.getTime())) {
+    ui.alert('Fecha inválida. Usa el formato dd/mm/aaaa (ej. 15/09/2026), o déjala vacía para hoy.');
+    return null;
+  }
+  return fecha;
+}
+
 function visGenerarReporteSeguimiento_() {
+  const hoy = visPedirFechaReferencia_('Generar reporte de seguimiento (PDF)');
+  if (!hoy) return; // canceló o fecha inválida (ya se avisó)
+  const ahora = new Date(); // fecha/hora REAL de generación, para el pie del PDF
+
   const hoja = visObtenerHojaReservas();
   const filas = hoja.getDataRange().getValues().slice(1).filter(function (r) { return r[1]; });
-  const hoy = new Date();
   const limiteAtras = new Date(hoy.getTime());
   limiteAtras.setDate(limiteAtras.getDate() - VIS_REPORTE_DIAS_ATRAS);
 
@@ -684,7 +832,10 @@ function visGenerarReporteSeguimiento_() {
     .filter(function (r) {
       if (String(r[COL_VIS_ESTATUS - 1]).trim() !== 'Realizada') return false;
       const f = r[COL_VIS_FECHA_VISITA_REAL - 1];
-      return f instanceof Date && f >= limiteAtras;
+      // Límite superior "f <= hoy" (sep 2026, junto con la fecha de referencia elegible):
+      // sin esto, un reporte generado "como si fuera" una fecha pasada podría mostrar
+      // visitas que en ese momento todavía no habían ocurrido.
+      return f instanceof Date && f >= limiteAtras && f <= hoy;
     })
     .sort(function (a, b) { return new Date(b[COL_VIS_FECHA_VISITA_REAL - 1]) - new Date(a[COL_VIS_FECHA_VISITA_REAL - 1]); });
 
@@ -692,7 +843,7 @@ function visGenerarReporteSeguimiento_() {
     .filter(function (r) {
       if (String(r[COL_VIS_ESTATUS - 1]).trim() !== 'No realizada') return false;
       const f = r[COL_VIS_FECHA_PLANEADA - 1];
-      return f instanceof Date && f >= limiteAtras;
+      return f instanceof Date && f >= limiteAtras && f <= hoy;
     })
     .sort(function (a, b) { return new Date(b[COL_VIS_FECHA_PLANEADA - 1]) - new Date(a[COL_VIS_FECHA_PLANEADA - 1]); });
 
@@ -732,8 +883,9 @@ function visGenerarReporteSeguimiento_() {
     '.pie { border-top:1px solid #d6d1ca; margin-top:20px; padding-top:8px; text-align:center; font-size:8px; color:#6b6b6b; }' +
     '</style></head><body>' +
     '<div class="encabezado"><h1>Seguimiento de Ceremonias Cívicas</h1>' +
-    '<p>SEPRN · Subdirección de Educación Primaria en la Región de Nezahualcóyotl — generado el ' +
-    Utilities.formatDate(hoy, 'America/Mexico_City', "dd/MM/yyyy 'a las' HH:mm") + ' hrs</p></div>' +
+    '<p>SEPRN · Subdirección de Educación Primaria en la Región de Nezahualcóyotl<br>' +
+    'Fecha de referencia: ' + Utilities.formatDate(hoy, 'America/Mexico_City', 'dd/MM/yyyy') +
+    ' · Generado el ' + Utilities.formatDate(ahora, 'America/Mexico_City', "dd/MM/yyyy 'a las' HH:mm") + ' hrs</p></div>' +
     '<h2>Próximas visitas</h2>' +
     (proximas.length
       ? '<table><tr><th>Escuela (CCT)</th><th>Fecha</th><th>Tipo</th><th>Quién visita</th></tr>' + filasProximas + '</table>'
@@ -760,6 +912,87 @@ function visGenerarReporteSeguimiento_() {
   return archivo.getUrl();
 }
 
+// ── Segundo reporte (sep 2026), más acotado: solo las columnas C, D, G, H, I,
+// J, O, Q, U, V, W (Nombre, Cargo/Área, CCT, Escuela, Sector, Zona, Fecha de
+// visita real, Observaciones de operatividad, Convocados/Participantes,
+// Descripción general de la actividad, Cantidad de asistentes) de las visitas
+// "Realizada" en la misma ventana de VIS_REPORTE_DIAS_ATRAS días que ya usa la
+// sección "Visitas realizadas" de arriba — mismo criterio de fecha de
+// referencia, misma técnica HTML→PDF. Se llama "resumido", no "de difusión":
+// la columna Q (Observaciones de operatividad) es uso interno según
+// ficha-ceremonias-civicas.html, así que este PDF no debe presentarse como
+// listo para reenviar tal cual afuera de OTDE. ──
+function visGenerarReporteResumen_() {
+  const hoy = visPedirFechaReferencia_('Generar reporte resumido de visitas realizadas (PDF)');
+  if (!hoy) return;
+  const ahora = new Date();
+
+  const hoja = visObtenerHojaReservas();
+  const filas = hoja.getDataRange().getValues().slice(1).filter(function (r) { return r[1]; });
+  const limiteAtras = new Date(hoy.getTime());
+  limiteAtras.setDate(limiteAtras.getDate() - VIS_REPORTE_DIAS_ATRAS);
+
+  const val = function (v) { return visEscapeHtmlReporte_(v || '—'); };
+  const fechaTexto = function (f) {
+    return f instanceof Date ? Utilities.formatDate(f, 'America/Mexico_City', 'dd/MM/yyyy') : '—';
+  };
+
+  const realizadas = filas
+    .filter(function (r) {
+      if (String(r[COL_VIS_ESTATUS - 1]).trim() !== 'Realizada') return false;
+      const f = r[COL_VIS_FECHA_VISITA_REAL - 1];
+      return f instanceof Date && f >= limiteAtras && f <= hoy;
+    })
+    .sort(function (a, b) { return new Date(b[COL_VIS_FECHA_VISITA_REAL - 1]) - new Date(a[COL_VIS_FECHA_VISITA_REAL - 1]); });
+
+  const filasTabla = realizadas.map(function (r) {
+    return '<tr>' +
+      '<td>' + val(r[2]) + '</td><td>' + val(r[3]) + '</td>' +               // C, D
+      '<td>' + val(r[6]) + '</td><td>' + val(r[7]) + '</td>' +               // G, H
+      '<td>' + val(r[8]) + '</td><td>' + val(r[9]) + '</td>' +               // I, J
+      '<td>' + fechaTexto(r[COL_VIS_FECHA_VISITA_REAL - 1]) + '</td>' +      // O
+      '<td>' + val(r[COL_VIS_OBSERVACIONES - 1]) + '</td>' +                 // Q
+      '<td>' + val(r[COL_VIS_CONVOCADOS - 1]) + '</td>' +                    // U
+      '<td>' + val(r[COL_VIS_DESCRIPCION_ACTIVIDAD - 1]) + '</td>' +         // V
+      '<td>' + val(r[COL_VIS_CANTIDAD_ASISTENTES - 1]) + '</td></tr>';       // W
+  }).join('');
+
+  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>' +
+    '* { box-sizing: border-box; } body { font-family: Arial, Helvetica, sans-serif; color:#222; font-size:9.5px; margin:0; padding:24px 26px; }' +
+    '.encabezado { background:#56212f; color:#F9F8F5; padding:14px 18px; border-radius:8px 8px 0 0; }' +
+    '.encabezado h1 { margin:0; font-size:15px; } .encabezado p { margin:4px 0 0; font-size:10px; opacity:.85; }' +
+    'table { width:100%; border-collapse:collapse; font-size:8.5px; margin-top:14px; }' +
+    'th { text-align:left; background:#F9F8F5; color:#56212f; padding:5px 6px; border-bottom:1.5px solid #d6d1ca; }' +
+    'td { padding:5px 6px; border-bottom:1px solid #e5e1da; vertical-align:top; }' +
+    '.vacio { color:#977e5b; font-size:10.5px; padding:10px 0; }' +
+    '.pie { border-top:1px solid #d6d1ca; margin-top:16px; padding-top:8px; text-align:center; font-size:8px; color:#6b6b6b; }' +
+    '</style></head><body>' +
+    '<div class="encabezado"><h1>Reporte resumido de visitas realizadas — Ceremonias Cívicas</h1>' +
+    '<p>SEPRN · Subdirección de Educación Primaria en la Región de Nezahualcóyotl<br>' +
+    'Fecha de referencia: ' + Utilities.formatDate(hoy, 'America/Mexico_City', 'dd/MM/yyyy') +
+    ' · Realizadas en los últimos ' + VIS_REPORTE_DIAS_ATRAS + ' días · Generado el ' +
+    Utilities.formatDate(ahora, 'America/Mexico_City', "dd/MM/yyyy 'a las' HH:mm") + ' hrs</p></div>' +
+    (realizadas.length
+      ? '<table><tr><th>Nombre</th><th>Cargo/Área</th><th>CCT</th><th>Escuela</th><th>Sector</th><th>Zona</th>' +
+        '<th>Fecha de visita</th><th>Operatividad</th><th>Convocados</th><th>Descripción</th><th>Asistentes</th></tr>' +
+        filasTabla + '</table>'
+      : '<p class="vacio">Sin visitas realizadas en este periodo.</p>') +
+    '<div class="pie">Documento generado autom&aacute;ticamente desde el sistema de Ceremonias C&iacute;vicas.</div>' +
+    '</body></html>';
+
+  const blobHtml = Utilities.newBlob(html, 'text/html', 'reporte-resumen.html');
+  const pdfBlob = blobHtml.getAs('application/pdf')
+    .setName('Resumen visitas realizadas — ' + Utilities.formatDate(hoy, 'America/Mexico_City', 'dd-MM-yyyy') + '.pdf');
+
+  const carpeta = visObtenerCarpetaReportes_();
+  const archivo = carpeta.createFile(pdfBlob);
+  archivo.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+
+  try { SpreadsheetApp.getUi().alert('Reporte generado:\n' + archivo.getUrl()); } catch (err) {}
+
+  return archivo.getUrl();
+}
+
 function visObtenerCarpetaReportes_() {
   const carpetas = DriveApp.getFoldersByName(CARPETA_VIS_REPORTES);
   if (carpetas.hasNext()) return carpetas.next();
@@ -770,11 +1003,128 @@ function visEscapeHtmlReporte_(valor) {
   return String(valor == null ? '' : valor).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+// ── Dashboard en la propia hoja de cálculo (sep 2026) — pestaña "Dashboard"
+// dentro de esta misma Sheet, actualizada desde el menú. Mismo estilo visual
+// que apps-script/panel-otde.gs (encabezado guinda, celdas coloreadas), pero
+// sin UrlFetchApp/token: los datos ya viven en esta misma Sheet, así que se
+// leen directo con visObtenerHojaReservas(). ──
+const HOJA_VIS_DASHBOARD = 'Dashboard';
+
+// Mismos colores que .vis-badge-* en ceremonias-civicas.html, para que la
+// hoja se lea como el mismo sistema que el sitio.
+const VIS_COLOR_ESTATUS = {
+  'Reservada':    { bg: '#fff3cd', fg: '#7a5b00' },
+  'Realizada':    { bg: '#d4edda', fg: '#1e5b2f' },
+  'No realizada': { bg: '#f8d7da', fg: '#7a1f28' },
+  'Cancelada':    { bg: '#e2e2e2', fg: '#555555' }
+};
+
+function visObtenerHojaDashboard_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let hoja = ss.getSheetByName(HOJA_VIS_DASHBOARD);
+  if (!hoja) hoja = ss.insertSheet(HOJA_VIS_DASHBOARD);
+  return hoja;
+}
+
+// ── Escribe un bloque (título + encabezados + filas) empezando en `fila`.
+// `colorFila(filaDatos)` opcional: regresa {bg,fg} para colorear esa fila de
+// datos, o null para dejarla sin color. Regresa la siguiente fila libre (deja
+// un renglón en blanco de separación después del bloque). ──
+function visEscribirBloqueDashboard_(hoja, fila, titulo, encabezados, filasDatos, colorFila) {
+  const numCols = encabezados.length;
+  hoja.getRange(fila, 1, 1, numCols).merge().setValue(titulo)
+    .setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
+  fila++;
+  hoja.getRange(fila, 1, 1, numCols).setValues([encabezados])
+    .setFontWeight('bold').setBackground('#F9F8F5').setFontColor('#56212f');
+  fila++;
+  if (filasDatos.length) {
+    hoja.getRange(fila, 1, filasDatos.length, numCols).setValues(filasDatos);
+    if (colorFila) {
+      filasDatos.forEach(function (fd, i) {
+        const c = colorFila(fd);
+        if (c) hoja.getRange(fila + i, 1, 1, numCols).setBackground(c.bg).setFontColor(c.fg);
+      });
+    }
+    fila += filasDatos.length;
+  } else {
+    hoja.getRange(fila, 1).setValue('Sin datos todavía.').setFontColor('#977e5b');
+    fila++;
+  }
+  return fila + 1;
+}
+
+function visActualizarDashboardHoja_() {
+  const hojaReservas = visObtenerHojaReservas();
+  const filas = hojaReservas.getDataRange().getValues().slice(1).filter(function (r) { return r[1]; });
+  const realizadas = filas.filter(function (r) { return String(r[COL_VIS_ESTATUS - 1]).trim() === 'Realizada'; });
+  const total = filas.length;
+
+  const conteoEstatus = { 'Reservada': 0, 'Realizada': 0, 'No realizada': 0, 'Cancelada': 0 };
+  filas.forEach(function (r) {
+    const e = String(r[COL_VIS_ESTATUS - 1]).trim();
+    if (conteoEstatus.hasOwnProperty(e)) conteoEstatus[e]++;
+  });
+  const filasEstatus = Object.keys(conteoEstatus).map(function (e) {
+    return [e, conteoEstatus[e], total ? Math.round((conteoEstatus[e] / total) * 100) + '%' : '0%'];
+  });
+
+  const porPersona = {};
+  realizadas.forEach(function (r) {
+    const key = r[2] + '||' + r[3];
+    porPersona[key] = (porPersona[key] || 0) + 1;
+  });
+  const filasPersona = Object.keys(porPersona).map(function (key) {
+    const p = key.split('||'); return [p[0], p[1], porPersona[key]];
+  }).sort(function (a, b) { return b[2] - a[2]; });
+
+  const porSector = {};
+  realizadas.forEach(function (r) {
+    const s = r[8] || '(sin sector)';
+    porSector[s] = (porSector[s] || 0) + 1;
+  });
+  const filasSector = Object.keys(porSector).map(function (s) { return [s, porSector[s]]; })
+    .sort(function (a, b) { return b[1] - a[1]; });
+
+  const porSemana = {};
+  realizadas.forEach(function (r) {
+    const f = r[COL_VIS_FECHA_VISITA_REAL - 1];
+    if (!(f instanceof Date)) return;
+    const key = Utilities.formatDate(visLunesDeLaSemana_(f), 'America/Mexico_City', 'yyyy-MM-dd');
+    porSemana[key] = (porSemana[key] || 0) + 1;
+  });
+  const filasSemana = Object.keys(porSemana).sort().map(function (key) { return [key, porSemana[key]]; });
+
+  const hoja = visObtenerHojaDashboard_();
+  if (hoja.getLastRow() > 0) hoja.getRange(1, 1, hoja.getMaxRows(), hoja.getMaxColumns()).breakApart();
+  hoja.clear();
+  hoja.setColumnWidths(1, 3, 180);
+
+  let fila = 1;
+  hoja.getRange(fila, 1).setValue('Dashboard — Ceremonias Cívicas · actualizado ' +
+    Utilities.formatDate(new Date(), 'America/Mexico_City', "dd/MM/yyyy 'a las' HH:mm") + ' hrs')
+    .setFontWeight('bold').setFontColor('#56212f');
+  fila += 2;
+
+  fila = visEscribirBloqueDashboard_(hoja, fila, 'MEZCLA DE ESTATUS', ['Estatus', 'Cantidad', '% del total'],
+    filasEstatus, function (f) { return VIS_COLOR_ESTATUS[f[0]] || null; });
+  fila = visEscribirBloqueDashboard_(hoja, fila, 'VISITAS REALIZADAS POR PERSONA',
+    ['Nombre', 'Cargo/Área', 'Visitas realizadas'], filasPersona);
+  fila = visEscribirBloqueDashboard_(hoja, fila, 'VISITAS REALIZADAS POR SECTOR',
+    ['Sector', 'Visitas realizadas'], filasSector);
+  fila = visEscribirBloqueDashboard_(hoja, fila, 'TENDENCIA SEMANAL (semana de la visita real)',
+    ['Semana (lunes)', 'Visitas realizadas'], filasSemana);
+
+  try { SpreadsheetApp.getUi().alert('Dashboard actualizado.'); } catch (err) {}
+}
+
 // ── Menú del Sheet ──
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('SEPRN Visitas')
     .addItem('Generar reporte de seguimiento (PDF)', 'visGenerarReporteSeguimiento_')
+    .addItem('Generar reporte resumido de visitas realizadas (PDF)', 'visGenerarReporteResumen_')
+    .addItem('Actualizar dashboard (hoja)', 'visActualizarDashboardHoja_')
     .addSeparator()
     .addItem('Instalar trigger de validación diaria ("No realizada")', 'visInstalarTriggerValidacion')
     .addItem('Desinstalar trigger de validación diaria', 'visDesinstalarTriggerValidacion')
