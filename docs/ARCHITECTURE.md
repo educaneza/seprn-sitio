@@ -1329,6 +1329,21 @@ Refactor notable de esta ronda: con 4 formularios en la misma tab usando CCT-aut
 copia del patrón, es la convención normal del resto del sitio; aquí la 4ª repetición casi
 idéntica en un mismo archivo cruzó el umbral).
 
+**Quinto tipo: Cambio de Contraseña + Eliminar Autenticación (sep 2026)** — SIGEE
+(`sigee.dee.edu.mx`) se modernizó (nuevo dominio con TLS, panel de solicitudes propio,
+seguimiento en dos etapas, catálogo de cuentas exportable) y agregó este tipo como solicitud
+combinada de primera clase en su propio formulario "Nueva solicitud", junto con "Actualización
+de datos" y "Baja/eliminar cuenta" (estas dos, documentadas como pendiente en
+`docs/ROADMAP.md`, no construidas). El webform propio se empató con la modalidad que Jorge
+priorizó: `apps-script/correo/CambioYReset.gs` replica exactamente el patrón de
+`CambioContrasena.gs` (mismos 6 campos requeridos, mismo mecanismo de dominio/CCT/notificación),
+solo fusiona los dos correos de entrega (contraseña nueva + pasos de Authenticator) en uno. No
+fue necesario un despliegue nuevo ni una constante de URL nueva — `WebApp.gs` sigue siendo un
+único proyecto y el tipo nuevo (`cambioContrasenaYReset`, folio `OTDE-CYR-NNNN`) se agregó al
+mismo `switch` de `doPost`, reusando `CAMBIO_APPS_SCRIPT_URL`. SIGEE sigue sin exponer ninguna
+API — esto no cambia el mecanismo de correlación manual (`NP SIGEE` en `Alta.gs`) ni pretende
+reemplazarlo.
+
 ## 17. `cte.html`: archivo de ciclo escolar dentro de la misma página (agosto 2026)
 
 Hasta el ciclo 2025-2026, `cte.html` era una sola lista plana de `.sesion-accordion` (acordeón

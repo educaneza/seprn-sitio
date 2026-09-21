@@ -621,14 +621,37 @@ vez. Ver `docs/QA-NOTES.md #16`.
 Reemplaza en código, tipo por tipo, al `<iframe>` del Google Form viejo — ver el modelo de
 arquitectura completo en `docs/ARCHITECTURE.md §16`. Resumen operativo:
 
-- **Switcher aplanado a 4 botones al mismo nivel (ago 2026)**: `.correo-panel-btn`,
-  `mostrarCorreoPanel('alta'|'cam'|'rst'|'inc')` — Alta de cuenta | Cambio de Contraseña |
-  Eliminar Método de Autenticación | No puedo acceder a mi cuenta. Antes era un switcher de 2
-  (Alta / "Cambio de contraseña · Eliminar autenticación · Otro") con un sub-switcher anidado
-  de 3 dentro del segundo — Jorge reportó que se veían amontonados (más notorio en móvil, poco
-  espacio para 3 botones con textos largos dentro de un panel ya angosto); se aplanó a un solo
-  nivel, con más espacio (`gap`) y grid de 2 columnas en móvil. Los 4 tipos ya están completos —
-  el `<iframe>` quedó retirado por completo del código.
+- **Switcher aplanado a botones al mismo nivel (ago 2026, creció a 5 en sep 2026)**:
+  `.correo-panel-btn`, `mostrarCorreoPanel('alta'|'cam'|'rst'|'cyr'|'inc')` — Alta de cuenta |
+  Cambio de Contraseña | Eliminar Método de Autenticación | Cambio de Contraseña + Eliminar
+  Autenticación | No puedo acceder a mi cuenta. Antes era un switcher de 2 (Alta / "Cambio de
+  contraseña · Eliminar autenticación · Otro") con un sub-switcher anidado de 3 dentro del
+  segundo — Jorge reportó que se veían amontonados (más notorio en móvil, poco espacio para 3
+  botones con textos largos dentro de un panel ya angosto); se aplanó a un solo nivel, con más
+  espacio (`gap`) y grid de 2 columnas en móvil. El `<iframe>` quedó retirado por completo del
+  código.
+- **Quinto tipo — Cambio de Contraseña + Eliminar Autenticación (sep 2026, desplegado y
+  verificado por `curl`)**: SIGEE (`sigee.dee.edu.mx`, v7.1 — migró desde la URL vieja por IP
+  `189.206.211.185/sigid`) modernizó su módulo "Correo Institucional" y agregó este tipo
+  combinado como solicitud de primera clase en su propio formulario de "Nueva solicitud", junto
+  con "Actualización de datos" y "Baja/eliminar cuenta" (estas dos, pendientes, ver
+  `docs/ROADMAP.md`). Jorge pidió priorizar el combinado por ser el caso más frecuente. Backend
+  nuevo en `apps-script/correo/CambioYReset.gs` (`HOJA_CAMBIO_RESET = 'Cambio y Eliminar
+  Autenticación'`, folio `OTDE-CYR-NNNN`, mismos 6 campos requeridos que Cambio de
+  Contraseña/Eliminar Autenticación por separado, correo final combinado con contraseña nueva +
+  pasos de Authenticator). Reusa la misma URL de despliegue (`CAMBIO_APPS_SCRIPT_URL`) y
+  `crearCctAutocomplete('cyr')` — no fue necesario un despliegue nuevo, solo repegar los 5
+  archivos y "Nueva versión". Verificado con `curl` (no un formulario real, para no escribir en
+  el Sheet ni disparar correos/Telegram de prueba): `doPost` con `{"tipo":
+  "cambioContrasenaYReset"}` sin más campos responde `{"status":"error","mensaje":"Campo
+  requerido: cct"}` (confirma que el `case` nuevo en `WebApp.gs` enruta a
+  `manejarCambioContrasenaYReset()`), y agregar `cct` avanza el error al siguiente campo
+  (`escuela`) — contra un tipo inventado de control, que sí da "Tipo de solicitud no
+  reconocido". Nota de tooling: los Apps Script Web Apps responden con un 302 a
+  `script.googleusercontent.com/macros/echo?...` que hay que seguir con **GET** — `curl -L -X
+  POST` reintenta el POST contra esa URL y devuelve la página de error genérica de Google
+  Drive, no la respuesta real. Falta la prueba de extremo a extremo con datos completos (fila
+  real en el Sheet, correo y Telegram reales) — ver `docs/ROADMAP.md`.
 - **"2FA" renombrado a "Eliminar método de autenticación" (ago 2026)**: mismo término que usa
   SIGEE (para que Jorge/Marcos mapeen 1:1 al procesar), con una aclaración en paréntesis para
   docentes ("código de seguridad extra que a veces se traba"). El identificador interno que
@@ -638,16 +661,17 @@ arquitectura completo en `docs/ARCHITECTURE.md §16`. Resumen operativo:
   `OnFormSubmit.gs`/`OnEditTrigger.gs`/`ResumenSemanal.gs`, atado al Form viejo que sigue usando
   Marcos, sin git) — el backend nuevo es un proyecto de Apps Script separado y en paralelo, cuyo
   código fuente vive en **`apps-script/correo/`** de este repo (`Config.gs`, `WebApp.gs`,
-  `Alta.gs`, `CambioContrasena.gs`, `Reset2FA.gs`, `Incidencias.gs`, `OnEdit.gs`,
-  `GenerarResumenSIGEE.gs`, `ResumenSemanal.gs` — un solo trigger `onEditWebform` que enruta por
-  nombre de hoja). **Movido a este repo el 31 ago 2026** desde `Correos-institucionales/
+  `Alta.gs`, `CambioContrasena.gs`, `Reset2FA.gs`, `CambioYReset.gs` (sep 2026), `Incidencias.gs`,
+  `OnEdit.gs`, `GenerarResumenSIGEE.gs`, `ResumenSemanal.gs` — un solo trigger `onEditWebform`
+  que enruta por nombre de hoja). **Movido a este repo el 31 ago 2026** desde `Correos-institucionales/
   webform-2026-2027/` (nació ahí como proyecto paralelo antes de que existiera el ecosistema
   unificado) — el despliegue real en Apps Script no cambió, solo dónde vive la copia editable.
   **Desplegado (6 ago 2026)**: Spreadsheet
   `Solicitudes_Correo_2026_2027`, proyecto "Webform Correo 2026-2027 - Backend", las 4
   constantes (`ALTA_CORREO_APPS_SCRIPT_URL`, `CAMBIO_APPS_SCRIPT_URL`, `RESET_APPS_SCRIPT_URL`,
-  `INCIDENCIA_APPS_SCRIPT_URL`) apuntan a la misma URL real (`WebApp.gs` enruta los 4 tipos por
-  `datos.tipo`, un solo despliegue). El switcher del sitio ya mostraba los 4 tipos nativos desde
+  `INCIDENCIA_APPS_SCRIPT_URL`) apuntan a la misma URL real (`WebApp.gs` enruta por `datos.tipo`,
+  un solo despliegue — 5 tipos desde sep 2026, sin constante nueva: el 5º reusa
+  `CAMBIO_APPS_SCRIPT_URL`). El switcher del sitio ya mostraba los 4 tipos nativos originales desde
   antes de este despliegue, así que técnicamente el webform ya está en producción — pero el
   sistema viejo de Marcos sigue vivo en paralelo; retirarlo es una decisión de Jorge, no
   automática por haber desplegado esto.

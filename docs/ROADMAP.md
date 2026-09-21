@@ -655,6 +655,31 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     del mismo folio en otro día agregue una fila nueva en vez de sobrescribir la del día anterior;
     y revisar visualmente en un cliente de correo real que el botón CTA ya se lea en blanco.
 
+23. **SIGEE se modernizó — dos modalidades de Correo Institucional quedan pendientes de empatar**
+    (investigado en vivo 21 sep 2026, ver `docs/ARCHITECTURE.md` §16 y `docs/BITACORA.md`):
+    SIGEE (`sigee.dee.edu.mx`, v7.1 — migró de la URL vieja por IP `189.206.211.185/sigid`) ahora
+    ofrece 6 tipos de solicitud en su propio formulario "Nueva solicitud"; el webform de OTDE ya
+    empata 5 (el 5º, "Cambio de Contraseña + Eliminar Autenticación", se agregó esta misma
+    sesión — ver `apps-script/correo/CambioYReset.gs`). Quedan sin construir, documentados para
+    cuando Jorge las priorice:
+    - **Actualización de datos**: en SIGEE, "Validar cuenta existente" (buscador de correo
+      institucional dentro de la estructura autorizada) + los mismos campos de Alta (Tipo de
+      cuenta, RFC, CCT, Nombre/Apellidos, CURP, Función) para corregir datos de una cuenta ya
+      creada.
+    - **Baja / eliminar cuenta**: en SIGEE, "Validar cuenta existente" + solo Observaciones — el
+      trámite más simple de los 6.
+    También quedaron descartadas explícitamente por Jorge (no reconsiderar sin que él lo pida):
+    reconciliación automática contra "Consultar cuentas" de SIGEE por CURP (prefiere mantener la
+    trazabilidad manual actual, columna "NP SIGEE" en `Alta.gs`), y cualquier automatización tipo
+    RPA/browser automation que llene el formulario de SIGEE por él — SIGEE sigue sin exponer
+    ninguna API.
+    - **Falta además la prueba de extremo a extremo del 5º tipo ya construido**: se verificó por
+      `curl` que el despliegue enruta correctamente y valida los campos en el orden esperado (sin
+      escribir en el Sheet ni disparar correos/Telegram, a propósito), pero no se probó el flujo
+      completo con datos reales (fila nueva en "Cambio y Eliminar Autenticación", correo
+      combinado de entrega, aviso a Marcos) — ver `docs/ARCHITECTURE.md` §16 para el detalle de
+      las pruebas ya corridas.
+
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue
 abierto de esa entrega (decisión de notificación de cierre de ticket, limpieza de función
