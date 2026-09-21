@@ -637,6 +637,24 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     cancelar, los 4 mensajes según estatus), el reporte de seguimiento con una fecha de referencia
     pasada, y "Actualizar dashboard (hoja)" contra los datos reales del ciclo.
 
+21. **Mantenimiento — decidir si "¿Requiere segunda visita? = No" debe auto-marcar `Estatus =
+    Resuelto`** (planteado 21 sep 2026, explícitamente pospuesto por Jorge para decidir después
+    — ver `docs/BITACORA.md`, checkpoint 21 sep 2026): el diseño explorado usaría el mismo
+    precedente que `manCrearSolicitudUrgente_()` (escritura por script no dispara
+    `manOnEditCierre`, así que no habría un segundo correo de cierre — el correo del reporte ya
+    cubre el aviso). Punto abierto que motivó la pausa: `manCrearSolicitudUrgente_()` ya fuerza
+    `Estatus=Resuelto` en un caso urgente sin folio sin mirar esta respuesta — si ese caso urgente
+    sí requiere una segunda visita, hoy quedaría marcado `Resuelto` de todas formas, y no está
+    decidido si eso también debe cambiar. No implementado.
+22. **Mantenimiento — verificación en vivo pendiente de los 2 fixes del 21 sep 2026** (ver
+    `docs/BITACORA.md` para el detalle): Jorge ya redesplegó `mantenimiento.gs` y los 3 backends
+    con el fix del botón CTA, confirmado por `curl` que los 3 endpoints siguen respondiendo bien
+    tras el redespliegue — pero eso solo confirma que el despliegue no se rompió, no las 3
+    conductas nuevas en sí. Falta probar contra producción real (modo de prueba): que el correo
+    de rechazo efectivamente llegue con el motivo de "Notas de revisión"; que un segundo reporte
+    del mismo folio en otro día agregue una fila nueva en vez de sobrescribir la del día anterior;
+    y revisar visualmente en un cliente de correo real que el botón CTA ya se lea en blanco.
+
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue
 abierto de esa entrega (decisión de notificación de cierre de ticket, limpieza de función
