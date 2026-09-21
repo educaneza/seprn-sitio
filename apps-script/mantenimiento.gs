@@ -941,6 +941,9 @@ function manCorreoHtml_(opts) {
 }
 
 const MAN_CTA_SEGUIMIENTO = 'https://educaneza.github.io/seprn-sitio/oficina-virtual.html#buscar-folio';
+// Link directo al formulario (no al buscador de estatus) — usado en el
+// correo de rechazo, donde la acción pedida es volver a llenarlo completo.
+const MAN_CTA_FORMULARIO = 'https://educaneza.github.io/seprn-sitio/mantenimiento.html';
 
 // ── Confirma al solicitante que su solicitud quedó registrada, con Zona y
 // Sector en copia (CC) si hay contacto(s) registrados — un solo correo por
@@ -980,7 +983,9 @@ function manNotificarSolicitudRecibida(folio, d) {
   }
 }
 
-// ── onEdit instalable: dispara al marcar Estatus = "Resuelto" ──
+// ── onEdit instalable: dispara al marcar Estatus = "Resuelto" o "Rechazado"
+// (sep 2026: antes solo reaccionaba a "Resuelto" — Rechazado quedaba sin
+// ninguna notificación, ver docs/ARCHITECTURE.md §19.1) ──
 // No se llama "onEdit" a propósito: así solo corre vía el trigger instalable
 // (manInstalarTriggerCierre), nunca como trigger simple sin autorización
 // para MailApp.
@@ -999,13 +1004,17 @@ function manOnEditCierre(e) {
 
     for (let fila = filaInicio; fila <= filaFin; fila++) {
       const estatus = String(hoja.getRange(fila, COL_MAN_ESTATUS).getValue()).trim();
-      if (estatus !== 'Resuelto') continue;
+      if (estatus !== 'Resuelto' && estatus !== 'Rechazado') continue;
 
       const yaNotificado = String(hoja.getRange(fila, COL_MAN_NOTIFICACION_CIERRE).getValue()).trim();
       if (yaNotificado === 'Sí') continue;
 
       const datosFila = hoja.getRange(fila, 1, 1, ENCABEZADOS_MAN_SOLICITUDES.length).getValues()[0];
-      manNotificarCierre(datosFila);
+      if (estatus === 'Resuelto') {
+        manNotificarCierre(datosFila);
+      } else {
+        manNotificarRechazo(datosFila);
+      }
       hoja.getRange(fila, COL_MAN_NOTIFICACION_CIERRE).setValue('Sí');
     }
   } catch (err) {
@@ -1047,6 +1056,59 @@ function manNotificarCierre(fila) {
       filas: filas,
       ctaHref: MAN_CTA_SEGUIMIENTO,
       ctaTexto: 'Ver el detalle de tu solicitud'
+    });
+
+    const opciones = {
+      to: correo,
+      subject: asunto,
+      htmlBody: html,
+      name: 'OTDE | Oficina de Tecnología para el Desarrollo Educativo',
+      replyTo: 'otde.nezahualcoyotl@dee.edu.mx'
+    };
+    if (cc) opciones.cc = cc;
+    manEnviarCorreo_(opciones);
+  } catch (err) {
+    // Silencioso: el Sheet ya quedó actualizado aunque falle este aviso
+  }
+}
+
+// ── Avisa que la solicitud fue rechazada, con el motivo capturado en
+// "Notas de revisión" (mismo campo que usa el cierre, reutilizado aquí en
+// vez de agregar una columna "Motivo de rechazo" aparte) — mismo esqueleto
+// que manNotificarCierre (to = solicitante, cc = Zona/Sector). Pide volver a
+// llenar el formulario completo para corregir y reenviar: no hay edición
+// parcial de una solicitud ya enviada (decisión de Jorge, sep 2026). ──
+function manNotificarRechazo(fila) {
+  try {
+    const folio = fila[1];
+    const nombre = fila[2];
+    const cct = fila[4];
+    const sector = fila[5];
+    const zona = fila[6];
+    const escuela = fila[7];
+    const correo = String(fila[10] || '').trim();
+    const motivo = String(fila[14] || '').trim();
+    const tipoSolicitante = String(fila[COL_MAN_TIPO_SOLICITANTE_IDX] || '').trim();
+
+    if (!correo) return;
+
+    const contactos = manFiltrarContactosPorTipo(
+      manBuscarContactosZonaSector(sector, zona), tipoSolicitante);
+    const cc = contactos.map(c => c.correo).join(',');
+    const asunto = 'Tu solicitud de mantenimiento fue rechazada — ' + folio;
+    const filas = [
+      { icono: '🎫', etiqueta: 'Folio', valor: folio },
+      { icono: '🏫', etiqueta: 'Escuela / CCT', valor: manEscapeHtml_(escuela || '') + ' — ' + manEscapeHtml_(cct) },
+      { icono: '👤', etiqueta: 'Solicitó', valor: manEscapeHtml_(nombre) },
+      { icono: '⚠️', etiqueta: 'Motivo del rechazo', valor: motivo ? manEscapeHtml_(motivo) : 'Sin motivo capturado — contacta a OTDE para más detalle.' }
+    ];
+
+    const html = manCorreoHtml_({
+      titulo: 'Solicitud de mantenimiento rechazada',
+      introHtml: '<p style="margin:0 0 16px 0;font-size:15px;color:#333333;line-height:1.7;">Tu solicitud de mantenimiento no pudo ser validada por OTDE. Revisa el motivo abajo y, si necesitas corregir algo (por ejemplo el oficio adjunto o algún dato del formulario), vuelve a llenar el formulario completo con la información correcta.</p>',
+      filas: filas,
+      ctaHref: MAN_CTA_FORMULARIO,
+      ctaTexto: 'Volver a llenar el formulario'
     });
 
     const opciones = {
@@ -1253,7 +1315,12 @@ function manBuscarSolicitudPorFolio_(folio) {
 }
 
 // ── Busca la fila de "Reportes de visita" con ese folio. Regresa
-// {rowIndex, datos} (rowIndex en base 1, tal cual lo usa getRange) o null. ──
+// {rowIndex, datos} (rowIndex en base 1, tal cual lo usa getRange) o null.
+// Usada solo por la acción de menú manual (manGenerarYEnviarReporteVisita),
+// que opera sobre una fila específica ya llenada a mano en la hoja — ahí
+// buscar solo por folio sigue siendo correcto. Para el doPost del
+// formulario del técnico usar manBuscarFilaReportePorFolioYFecha_ de abajo,
+// que además distingue por fecha (ver esa función). ──
 function manBuscarFilaReportePorFolio_(hoja, folio) {
   const valores = hoja.getDataRange().getValues();
   for (let i = 1; i < valores.length; i++) {
@@ -1262,6 +1329,36 @@ function manBuscarFilaReportePorFolio_(hoja, folio) {
     }
   }
   return null;
+}
+
+// ── Igual que manBuscarFilaReportePorFolio_, pero además exige que
+// "Fecha de atención" sea el mismo día calendario (año/mes/día, no
+// getTime() — evita falsos negativos por conversión de huso horario al leer
+// el Date de vuelta del Sheet). Bug real corregido sep 2026: una segunda
+// visita al día siguiente, mismo folio, sobrescribía el reporte del primer
+// día en vez de agregarse como fila nueva — el emparejamiento anterior
+// (manBuscarFilaReportePorFolio_) ignoraba la fecha por completo. Con esto,
+// mismo folio + mismo día sigue sobrescribiendo (permite corregir una
+// captura del mismo día, comportamiento original intencional); mismo folio +
+// día distinto ya no hace match, así que manDoPostReporteVisita_ hace
+// appendRow en vez de sobrescribir. ──
+function manBuscarFilaReportePorFolioYFecha_(hoja, folio, fechaAtencion) {
+  const valores = hoja.getDataRange().getValues();
+  for (let i = 1; i < valores.length; i++) {
+    if (String(valores[i][COL_MAN_REP_FOLIO - 1]).trim().toUpperCase() !== folio) continue;
+    const fechaFila = valores[i][COL_MAN_REP_FECHA_ATENCION - 1];
+    if (manMismoDiaCalendario_(fechaFila, fechaAtencion)) {
+      return { rowIndex: i + 1, datos: valores[i] };
+    }
+  }
+  return null;
+}
+
+function manMismoDiaCalendario_(a, b) {
+  if (!(a instanceof Date) || !(b instanceof Date)) return false;
+  return a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
 }
 
 // ── Rediseño del formulario (sep 2026): todo el reporte es obligatorio —
@@ -1687,7 +1784,7 @@ function manDoPostReporteVisita_(datos) {
   }
 
   const hojaReportes = manObtenerHojaReportes_();
-  const filaExistente = manBuscarFilaReportePorFolio_(hojaReportes, folio);
+  const filaExistente = manBuscarFilaReportePorFolioYFecha_(hojaReportes, folio, fechaAtencion);
   let rowIndex;
   if (filaExistente) {
     rowIndex = filaExistente.rowIndex;

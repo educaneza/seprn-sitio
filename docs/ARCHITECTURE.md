@@ -833,8 +833,11 @@ solo al pegar una versión nueva del código.
   mismo patrón `to`/`cc` que el aviso de alta, ver arriba). Antes (ago 2026) eran 2 correos
   sueltos por evento (uno al solicitante, otro a un solo contacto de Zona/Sector); el rediseño
   de correo combinado reduce el conteo de envíos mientras aumenta el alcance de información.
-  `Rechazado` queda en el dropdown pero deliberadamente sin lógica todavía — mismo mecanismo,
-  se puede sumar después sin rediseñar nada.
+  **`Rechazado` también notifica (sep 2026, solo en Mantenimiento por ahora — Asesorías sigue
+  sin esta rama)**: el mismo trigger (`manOnEditCierre`) reacciona también a `'Rechazado'` y
+  llama `manNotificarRechazo()` en vez de `manNotificarCierre()` — mismo `to`/`cc`, pero el
+  correo trae además el motivo (tomado de `Notas de revisión`, sin agregar una columna nueva) y
+  el CTA apunta a volver a llenar `mantenimiento.html` completo, no a consultar estatus.
 - Una columna nueva `Notificación de cierre enviada` (auto-heal de encabezados, mismo patrón
   que ya usaba `aseObtenerHojaSolicitudes()`) evita reenviar si Jorge cambia el Estatus fuera de
   `Resuelto` y vuelve a `Resuelto`.
@@ -1461,9 +1464,14 @@ ocurría 100% fuera del sitio ahora empieza dentro (nodos `L`/`M`, sólidos) —
 técnica en sí y su reporte con PDF siguen en v8.5 (nodo `I`, punteado). Ver §15 arriba para el
 detalle de código.
 
-`Rechazado` está disponible en el dropdown de Estatus pero **no dispara ninguna notificación** —
-a diferencia de `Resuelto`, es una rama sin lógica implementada (deliberado, no un bug). Ver
-también: §11 (patrón CCT), §15 (correo combinado, CC por jerarquía, modo de prueba).
+**`Rechazado` sí notifica (sep 2026)** — hasta entonces estaba disponible en el dropdown de
+Estatus pero no disparaba ninguna notificación (rama sin lógica implementada, deliberado). Ahora
+`manOnEditCierre` reacciona a `Resuelto` **y** `Rechazado` (mismo trigger instalable, mismo guard
+de "ya notificado"); al rechazar, `manNotificarRechazo()` manda un correo a solicitante (cc
+Zona/Sector) con el motivo tomado de `Notas de revisión` — se reutiliza esa columna en vez de
+agregar una "Motivo de rechazo" aparte — y un CTA a volver a llenar `mantenimiento.html` completo
+(no hay edición parcial de una solicitud ya enviada, decisión de Jorge). Ver también: §11 (patrón
+CCT), §15 (correo combinado, CC por jerarquía, modo de prueba).
 
 ### 19.2 Asesorías (`OTDE-ASE-NNNN`)
 
