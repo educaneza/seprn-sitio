@@ -491,6 +491,20 @@ ya esté expandido).
   vivo contra `Formacion_Docente_2026_2027`: dropdowns visibles en las 5 columnas de `Cursos`.
   Sin probar el diálogo de protección de solo aviso en esta ronda. Ver `docs/ARCHITECTURE.md
   §24`.
+- **Recordatorio y carga de constancia para conferencias UNETE (sep 2026, construido y
+  verificado E2E en producción real, sin modo de prueba)**: solo para cursos con la columna
+  nueva `Liga_tutorial_constancia` llena en `Cursos` (opt-in por curso, el resto del catálogo
+  sigue igual) — agrega esa liga al correo de aviso normal y, tras la conferencia, dos
+  recordatorios (inmediato + al día siguiente, `enviarRecordatoriosConstancia_()`) con una liga
+  firmada distinta a la del doble registro que abre una carga de archivo a Drive
+  (`subirConstancia_()`), cerrada automáticamente al segundo día de terminada la conferencia
+  (`ventanaConstanciaAbierta_()`). Columna nueva `Hora_fin` en `Cursos`; 5 columnas nuevas en
+  `Inscripciones` (`Constancia_recordatorios_enviados`, `Fecha_ultimo_recordatorio_constancia`,
+  `Constancia_recibida`, `Fecha_recepcion_constancia`, `Liga_constancia_drive`). Detalle completo
+  en `docs/ARCHITECTURE.md §12`. **Dos bugs reales encontrados y corregidos en la prueba E2E**:
+  el `.html` no estaba publicado en GitHub Pages pese al `.gs` ya redesplegado (`docs/QA-NOTES.md
+  #35`), y al proyecto le faltaba autorizar el permiso de `DriveApp` por ser la primera vez que
+  este `.gs` toca Drive (`docs/QA-NOTES.md #36`) — ya resuelto, no requiere acción.
 - Para cambios: copiar el `.gs` completo en Apps Script y re-desplegar como aplicación web (Cualquier usuario) — recordar **Administrar implementaciones → Nueva versión**, no solo "Guardar" en el editor, o el sitio sigue sirviendo la versión anterior
 
 ### `apps-script/panel-otde.gs` (nuevo, ago 2026)
@@ -955,7 +969,8 @@ Página autónoma (no importa `styles.css`). Vinculada desde `otde.html` mediant
 - **Sin paso de redirección externa obligatorio para todos**: solo los cursos marcados con cupo real fuerzan ese paso — el resto muestra la liga como referencia en la confirmación. Ver `docs/DESIGN_SYSTEM.md`
 - **Campos**: Nombre completo, RFC, Correo, Teléfono (10 dígitos), CCT (autocomplete), Función — deliberadamente mínimo; Sector/Zona/Escuela/Municipio se autocompletan desde `cct-db.js`. Nombre/Escuela manual homologados a Title Case
 - **Modelo de datos relacional en Sheets**: `Docentes` + `Cursos` + `Inscripciones`, ver detalle en la sección de `apps-script/formacion-docente.gs` arriba
-- **Constancias fuera de alcance**: ni los webinars (salvo UNETE) ni los programas de CoEEE requieren que OTDE administre el documento — solo seguimiento estadístico. La franja de confianza al pie de la página lo refleja como "Constancia según programa", nunca como promesa genérica
+- **Constancias fuera de alcance, salvo UNETE (sep 2026, ya implementado)**: ni los webinars/seminarios ni los programas de CoEEE requieren que OTDE administre el documento — solo seguimiento estadístico. La única excepción real es el Ciclo de Conferencias Virtuales de UNETE, que sí tiene recordatorio + carga de constancia (ver `apps-script/formacion-docente.gs` arriba y `docs/ARCHITECTURE.md §12`) — activado por curso, no por categoría. La franja de confianza al pie de la página lo refleja como "Constancia según programa", nunca como promesa genérica
+- **Carga de constancia (sep 2026)**: sección `#paso-subir-constancia` (`mostrarSubirConstancia()`/`enviarConstancia()`), activada por `formacion-docente.html?subirConstancia=<folio>&t=<firma>` — mismo patrón de página que la confirmación del doble registro, pero con un campo de archivo en vez de un botón de un clic
 - **Diseño premium propio (jul 2026)**: tipografía Inter/Inter Tight (Google Fonts), tarjetas de curso con fondo pastel por categoría + ícono grande, prueba social real de inscritos (nunca inventada — se oculta si es 0), resumen de selección como panel lateral sticky en escritorio (≥960px) / barra flotante en móvil, ambos alimentados por una sola función `actualizarResumenSticky()`. Detalle completo de tokens y patrones en `docs/DESIGN_SYSTEM.md` — **consultarlo antes de rediseñar cualquier parte de esta página**, ya tiene su propio sistema
 - **Recordatorios automáticos** y **ventanas de fecha por curso** (`Visible_desde`/`Visible_hasta`): ver sección de `apps-script/formacion-docente.gs` arriba
 - **Etiqueta de validez USICAMM/PROEEB + historial "Cursos anteriores" (sep 2026, desplegado y confirmado en producción el 17 sep 2026)**: `.cc-valida-badge` destaca los cursos con `Valida_USICAMM`/`Valida_PROEEB` (combinadas en una sola etiqueta si aplican ambas). Cursos con inscripción cerrada pero aún en desarrollo muestran `.cc-cerrado-tag` y pierden el CTA de selección, sin salir del catálogo. Sección nueva `#cursos-pasados-wrap` (`renderCursosPasados()`) con hasta 6 cursos ya concluidos, en gris/bloqueados (`.curso-card-historial`), siempre visible cuando hay historial — con o sin cursos vigentes disponibles — y coexistiendo con el mensaje de `#catalogo-vacio` en vez de reemplazarlo. Detalle completo del modelo de 3 estados en `docs/ARCHITECTURE.md §12` y `docs/DESIGN_SYSTEM.md`; estado real verificado en `docs/ROADMAP.md` ítem 18

@@ -744,6 +744,55 @@ Docente
                                     └── enviarRecordatoriosWebinar() — 1x/hora
 ```
 
+### Recordatorio y carga de constancia (conferencias UNETE, sep 2026)
+
+Resuelve un caso puntual, no una regla general del catálogo: el "Ciclo de Conferencias
+Virtuales de UNETE" se transmite por YouTube y UNETE emite constancia de participación si el
+docente completa un trámite en su propio sitio — a diferencia del resto de Formación Docente
+("Sin gestión de constancias" arriba), aquí OTDE sí necesita una copia digital de esa constancia.
+
+- **Activación opt-in por curso, no un tipo nuevo**: la sola presencia de la columna nueva
+  `Liga_tutorial_constancia` en `Cursos` (liga al tutorial de UNETE para tramitar la constancia)
+  activa todo el mecanismo para ese curso — el resto del catálogo, con esa columna vacía, sigue
+  igual que siempre. Columna nueva `Hora_fin` (opcional): hora en que termina la conferencia,
+  usada para calcular el momento exacto del primer recordatorio; sin ella se asume que termina a
+  las 23:59 de `Fecha_fin` (fail-open, mismo criterio que el resto de horas opcionales de esta
+  hoja).
+- **Doble liga en el correo de aviso ya existente**: `lineaTutorialConstancia_()` agrega el link
+  al tutorial de UNETE al mismo correo de "empieza en 1 día"/"empieza en 30 minutos" (solo si
+  `Liga_tutorial_constancia` está llena) — no es un correo aparte.
+- **Recordatorio post-conferencia** (`enviarRecordatoriosConstancia_()`, llamado desde
+  `enviarRecordatoriosWebinar()` — reusa esa cadencia de 15 min en vez de instalar un disparador
+  nuevo): recordatorio 1 en cuanto `ahora >= finConferencia_()`; recordatorio 2 al día siguiente
+  de terminada la conferencia, si aún no llega la constancia. Columnas nuevas en `Inscripciones`
+  (`Constancia_recordatorios_enviados`, `Fecha_ultimo_recordatorio_constancia`), mismo patrón de
+  conteo con tope (`MAX_RECORDATORIOS_CONSTANCIA=2`) que `Recordatorios_pendiente` del doble
+  registro.
+- **Ventana de carga**: abierta los días 0 y 1 desde `Fecha_fin`, cerrada a partir del día 2
+  (`ventanaConstanciaAbierta_()`, `DIAS_LIMITE_CONSTANCIA=2`) — se revalida tanto al mostrar el
+  formulario (`constanciaInfo_()`) como al recibir el archivo (`subirConstancia_()`), nunca solo
+  del lado del cliente.
+- **Liga firmada distinta a la del doble registro**: `tokenConstancia_()`/`ligaConstancia_()`
+  firman `'constancia:' + folio` (no solo el folio, como `tokenConfirmacion_()`) — a propósito,
+  para que ninguna de las dos ligas sirva para la otra acción. Abre
+  `formacion-docente.html?subirConstancia=<folio>&t=<firma>`, ruteado en `doGet`/`doPost` igual
+  que la confirmación del doble registro.
+- **Carga a Drive**: mismo patrón base64 → `Utilities.base64Decode` → `DriveApp.createFile()`
+  que `mantenimiento.gs` (oficios) — carpeta propia "Constancias de Conferencias", compartida
+  "cualquiera con el link, ver". `Inscripciones` se actualiza con `Constancia_recibida` (Sí/No),
+  `Fecha_recepcion_constancia` y `Liga_constancia_drive`.
+- **`formacion-docente.html`**: sección `#paso-subir-constancia` (`mostrarSubirConstancia()`/
+  `enviarConstancia()`) — antes de mostrar el formulario, pide `constanciaInfo` para no ofrecer
+  la carga si ya se recibió o si el plazo ya venció.
+- **Gotcha de despliegue (encontrado en la prueba E2E real, sep 2026)**: el `.gs` y el `.html` se
+  despliegan por caminos completamente distintos (Apps Script vs. `git push` a GitHub Pages) —
+  redesplegar uno no implica que el otro esté publicado. Además, la primera vez que un proyecto
+  de Apps Script toca un servicio nuevo (aquí, `DriveApp`), el redespliegue de una versión nueva
+  **no** re-dispara el consentimiento de permisos por sí solo — hace falta correr una vez, desde
+  el editor, una función que lo use (los nombres de función que terminan en `_` no aparecen en el
+  selector de "Ejecutar" del editor, hay que exponer una envoltura temporal sin guion bajo) para
+  que aparezca el enlace de "otorgar permisos".
+
 ### Ciclo escolar y archivado
 
 Un Spreadsheet por ciclo (`Formacion_Docente_2026_2027`), con el `.gs` bound a él vía `CICLO_ESCOLAR = '2627'` (afecta el prefijo del `ID_Curso`). Al cerrar el ciclo: duplicar el Spreadsheet completo, actualizar la constante y volver a desplegar.

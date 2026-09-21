@@ -882,6 +882,61 @@ solo dentro de un bloque `<style>` del `<head>` — en correo, a diferencia de u
 que asumir que el cliente puede ignorar `<style>` por completo y poner lo importante (sobre todo
 `color` de texto sobre un fondo de color) también inline.
 
+## 35. `.gs` redesplegado ≠ `.html` publicado — el enlace real del correo abría el catálogo, no el formulario nuevo
+
+**Síntoma:** al probar de punta a punta (sin modo de prueba) el recordatorio de constancia de
+conferencias UNETE (21 sep 2026), el correo real llegó bien y la liga firmada tenía el formato
+correcto (`formacion-docente.html?subirConstancia=<folio>&t=<firma>`), pero al abrirla en el
+sitio en producción se veía el catálogo normal de Formación Docente — nunca la mini-página de
+carga de constancia.
+
+**Causa raíz:** Jorge había redesplegado `apps-script/formacion-docente.gs` en Apps Script (así
+que el backend ya generaba la liga correcta), pero `formacion-docente.html` — con el manejo de
+`?subirConstancia=` y la sección `#paso-subir-constancia` — seguía solo en el working directory
+local, sin `git push` a `origin/main`. Backend y frontend de este sitio se despliegan por
+caminos completamente independientes (Apps Script vs. GitHub Pages); redesplegar uno no implica
+que el otro esté publicado, y no hay ningún aviso automático que lo detecte.
+
+**Fix:** `git add`/`commit`/`push` de `formacion-docente.html` junto con el `.gs` ya
+redesplegado (commit `331ee97`). Confirmado con `curl` contra la URL real que el CDN de GitHub
+Pages ya servía el código nuevo (`grep -c "subirConstancia"` > 0) antes de reintentar en el
+navegador — la caché del navegador, no la del CDN, fue lo que hizo falta invalidar con una
+recarga forzada.
+
+**Dónde puede volver a pasar:** cualquier feature que toque un backend en Apps Script y su
+página en el sitio a la vez — antes de dar una prueba en vivo por fallida, confirmar por
+separado que **ambas** mitades están realmente publicadas (`git status`/`git log` contra
+`origin/main` para el `.html`, "Administrar implementaciones" para el `.gs`), no solo una de
+las dos.
+
+## 36. Primera vez que un proyecto de Apps Script toca `DriveApp`: redesplegar no re-pide el permiso nuevo
+
+**Síntoma:** en la misma prueba de constancia UNETE, al subir el archivo real la respuesta fue
+`Exception: You do not have permission to call DriveApp.getFoldersByName` y, después de
+resolver eso, `...DriveApp.createFolder` — pese a que el `.gs` con el código de `DriveApp` ya
+estaba redesplegado como nueva versión.
+
+**Causa raíz:** los scopes de OAuth de un proyecto de Apps Script se autorizan una sola vez, la
+primera vez que el código de una versión desplegada intenta usar un servicio nuevo — desplegar
+una versión nueva **no** vuelve a pedir permisos por sí solo, ni siquiera si esa versión agrega
+una llamada a un servicio (aquí, `DriveApp`) que el proyecto nunca había usado antes.
+
+**Fix:** correr una vez, desde el editor de Apps Script (no desde el Web App desplegado), una
+función que toque el servicio nuevo — aquí, una envoltura temporal que llamaba a
+`obtenerCarpetaConstancias_()` — y aceptar el enlace "Haz clic aquí para otorgar permisos" que
+aparece en el registro de ejecución. El permiso queda asociado a la cuenta que autoriza, no a
+una versión de despliegue en particular, así que después de aceptarlo el Web App ya publicado
+funciona sin volver a desplegar. **Gotcha de tooling encontrado en el camino:** las funciones
+cuyo nombre termina en `_` (la convención de "privada" de este repo) no aparecen en el selector
+de "Ejecutar" del editor — hace falta una envoltura temporal con nombre sin guion bajo para
+poder correrlas manualmente, y quitarla otra vez al terminar.
+
+**Dónde puede volver a pasar:** cualquier `.gs` de este repo al que se le agregue por primera
+vez una llamada a un servicio de Google que antes no usaba (`DriveApp`, `CalendarApp`,
+`GmailApp` con permisos más amplios, etc.) — antes de dar un redespliegue por listo, probar en
+vivo (aunque sea corriendo la función una vez desde el editor) en vez de asumir que "ya se
+autorizó cuando se pegó el código".
+
 ## Regla general al corregir cualquiera de estos patrones
 
 Cuando se encuentra uno de estos bugs en un archivo, **revisar si el mismo
