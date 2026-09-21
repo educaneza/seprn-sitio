@@ -14,6 +14,21 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-09-21 (cont. 3) · Formación Docente: badge/aviso de "plataforma externa" ya no dependen solo de tener liga, + nota de folio en la confirmación
+
+| | |
+|---|---|
+| **Fecha** | 2026-09-21 |
+| **Sesión** | Jorge estaba en vivo revisando el flujo de Formación Docente durante la conferencia "Hablemos de IA: IA ubicua en la educación" y notó que, pese a que esa conferencia no requiere registro externo (solo con OTDE; el link se muestra al final y se manda en el recordatorio), la tarjeta del catálogo mostraba la etiqueta "Registro en plataforma externa" y el paso 2 mostraba el aviso "Este registro es para OTDE...". Diagnosticado en modo plan (Explore) antes de tocar código. |
+| **Causa raíz** | 4 lugares en `formacion-docente.html` mostraban esas señales con solo `liga_convocatoria`/`liga` (que exista un link), sin revisar `registro_previo_requerido`/`registroPrevio` — la señal real de que el registro externo es obligatorio. `Liga_convocatoria` se usa legítimamente en esta conferencia para guardar el link mostrado como referencia al final y mandado en el recordatorio, sin que eso implique registro obligatorio. La pantalla de confirmación ya distinguía bien ambos casos desde antes; el bug estaba solo en las señales previas al envío. Detalle completo en `docs/QA-NOTES.md #37`. |
+| **Fix en `formacion-docente.html`** | Se agregó la condición `registro_previo_requerido`/`registroPrevio` junto al chequeo de liga en: badge de la tarjeta (`.cc-externo-tag`, línea ~1374), ícono del chip móvil (`.rs-chip-warn`, ~1526), nota del panel de escritorio (`.rsb-nota-externo`, ~1581) y el aviso `#aviso-legal` del paso 2 (~1681, dentro de `mostrarFormularioOtde()`). No se tocó nada en `apps-script/formacion-docente.gs` ni en la hoja `Cursos` — el dato de `Liga_convocatoria` de la conferencia se sigue usando igual. |
+| **Nota de folio en la confirmación** | Jorge pidió agregar una nota para que el docente guarde/tome captura de su folio, ya que el registro nunca manda un correo de confirmación inmediato (confirmado revisando `doPost()` en el `.gs`: solo los recordatorios automáticos posteriores mandan correo). Párrafo fijo nuevo bajo `#folios-lista` (clase `.conf-folio-tip`), wording ajustado por Jorge: "Guarda tu folio: tómale una captura de pantalla o anótalo. Tu folio te servirá para cualquier aclaración o para subir tu constancia cuando aplique." |
+| **Documentación actualizada** | `docs/DESIGN_SYSTEM.md` ("Patrón: aviso de registro externo") corregido para reflejar la condición real (antes documentaba el comportamiento viejo —con bug— como intencional) y para apuntar a la función real donde se togglea `#aviso-legal` (`mostrarFormularioOtde()`, no `actualizarResumenSticky()`). `docs/QA-NOTES.md` — entrada nueva #37 con la causa raíz completa. |
+| **Verificación** | `git diff --stat`: `formacion-docente.html` (+12/-4). Revisado a mano contra las condiciones ya correctas del resto del archivo (`cursosConRegistroPrevio()`, `externoPendiente()`, rama "paso obligatorio" de `mostrarConfirmacion()`), que ya usaban `registroPrevio && liga` desde antes — el fix las alinea, no inventa un criterio nuevo. Pendiente de que Jorge confirme en vivo en el catálogo publicado que la tarjeta de "Hablemos de IA" ya no muestra la etiqueta y que un curso con `Registro_previo_requerido=TRUE` real sigue mostrándola igual que antes (ver checklist de verificación). |
+| **Commits** | Pendiente de comitear — no se ha pedido push. |
+
+---
+
 ## CHECKPOINT — 2026-09-21 (cont. 2) · Formación Docente: recordatorio + carga de constancia para conferencias UNETE, probado E2E en producción
 
 | | |

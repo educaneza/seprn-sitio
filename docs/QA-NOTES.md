@@ -937,6 +937,43 @@ vez una llamada a un servicio de Google que antes no usaba (`DriveApp`, `Calenda
 vivo (aunque sea corriendo la función una vez desde el editor) en vez de asumir que "ya se
 autorizó cuando se pegó el código".
 
+## 37. Badge "Registro en plataforma externa" y aviso "Este registro es para OTDE" se mostraban con solo tener `Liga_convocatoria`, aunque la inscripción externa no fuera obligatoria
+
+**Síntoma:** revisando en vivo la conferencia "Hablemos de IA" (Categoria=Conferencia,
+`Registro_previo_requerido=FALSE`), la tarjeta del catálogo mostraba la etiqueta amarilla
+"Registro en plataforma externa" y, al continuar al formulario OTDE, aparecía el aviso "Este
+registro es para OTDE. Tu lugar en el curso solo se aparta en la plataforma del curso." — pese
+a que el flujo real de esa conferencia es registrarse solo con OTDE; el link guardado en
+`Liga_convocatoria` es el link de la conferencia, que se muestra como referencia al terminar el
+registro y se manda después en el recordatorio automático, no una plataforma externa donde haya
+que apartar lugar.
+
+**Causa raíz:** 4 lugares en `formacion-docente.html` decidían mostrar esas señales con solo
+`curso.liga_convocatoria`/`c.liga` (que exista un link), sin revisar
+`curso.registro_previo_requerido`/`c.registroPrevio` — la señal correcta de que el registro
+externo es en verdad obligatorio. Esto no era un despiste puntual: `docs/DESIGN_SYSTEM.md`
+("Patrón: aviso de registro externo") documentaba ese comportamiento como intencional
+("condicionadas a si el curso tiene `Liga_convocatoria` ... aquí basta con que exista una liga,
+forzada o no"), sin anticipar el caso de un curso con liga informativa pero sin cupo real
+externo. La pantalla de confirmación (`mostrarConfirmacion()`) sí distinguía bien los dos casos
+desde antes (paso obligatorio vs. "Ver convocatoria →" de referencia) — el bug estaba solo en
+las 4 señales previas al envío: badge de la tarjeta (`.cc-externo-tag`), ícono del chip móvil
+(`.rs-chip-warn`), nota del panel de escritorio (`.rsb-nota-externo`) y el aviso `#aviso-legal`
+del paso 2.
+
+**Fix:** las 4 condiciones ahora exigen `registro_previo_requerido`/`registroPrevio` **y**
+`liga_convocatoria`/`liga`, igual que ya lo hacían `cursosConRegistroPrevio()`,
+`externoPendiente()` y la rama "paso obligatorio" de `mostrarConfirmacion()`. `docs/DESIGN_SYSTEM.md`
+actualizado para reflejar la condición corregida. Se aprovechó la misma sesión para agregar una
+nota fija en la confirmación ("Guarda tu folio…") ya que el registro nunca manda correo de
+confirmación inmediato — solo los recordatorios automáticos posteriores.
+
+**Dónde puede volver a pasar:** cualquier curso/conferencia futuro donde `Liga_convocatoria` se
+use para guardar un link informativo (mostrado al final, mandado por recordatorio) sin que el
+registro en esa plataforma sea realmente obligatorio — confirmar que
+`Registro_previo_requerido=FALSE` en la hoja `Cursos` para esos casos, y que ninguna señal nueva
+de "plataforma externa" se agregue mirando solo si existe una liga.
+
 ## Regla general al corregir cualquiera de estos patrones
 
 Cuando se encuentra uno de estos bugs en un archivo, **revisar si el mismo

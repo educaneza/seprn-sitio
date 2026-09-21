@@ -263,23 +263,27 @@ Antes el aviso "Este formulario no es tu inscripción oficial al curso"
 (`.aviso-legal`) era un bloque estático siempre visible en el paso 1,
 aplicara o no al curso que el docente terminaba eligiendo — confuso cuando
 el catálogo mezcla cursos con y sin plataforma externa. Son **tres señales
-relacionadas**, todas condicionadas a si el curso tiene `Liga_convocatoria`
-(no a `Registro_previo_requerido` — ese campo solo decide si el paso
-intermedio de registro externo se fuerza, ver "Registro previo externo" en
-`docs/ARCHITECTURE.md §12`; aquí basta con que exista una liga, forzada o
-no, para que aplique el aviso):
+relacionadas**, todas condicionadas a `Registro_previo_requerido=TRUE` **y**
+a que el curso tenga `Liga_convocatoria` (no basta con que exista la liga:
+un curso puede guardar ahí un link puramente informativo — p. ej. el link
+de una conferencia, mostrado como referencia al final y mandado en el
+recordatorio — sin que el registro en esa plataforma sea obligatorio; ver
+"Registro previo externo" en `docs/ARCHITECTURE.md §12` y
+`docs/QA-NOTES.md #37`, el bug real de sep 2026 donde estas tres señales sí
+solo miraban la liga):
 
 1. **Badge en la tarjeta del catálogo** (`.cc-externo-tag`, pill ámbar con
-   `ICON_EXTERNO`) — visible para cualquier curso con liga, incluso antes de
-   seleccionar nada.
+   `ICON_EXTERNO`) — visible solo para cursos con `registro_previo_requerido`
+   y liga, incluso antes de seleccionar nada.
 2. **Nota por curso en el resumen de selección** — `.rsb-nota-externo` en el
    panel de escritorio (debajo del nombre de ese curso específico) y
-   `.rs-chip-warn` (solo el ícono, sin texto, por espacio) en el chip móvil.
+   `.rs-chip-warn` (solo el ícono, sin texto, por espacio) en el chip móvil,
+   ambas dentro de `actualizarResumenSticky()`.
 3. **El aviso general** (`.aviso-legal`, oculto por defecto, dentro del
-   paso 2 — formulario OTDE) — se muestra u oculta en cada cambio de
-   selección, dentro de `actualizarResumenSticky()`:
-   `algunoConLiga = cursosSeleccionados.some(c => c.liga)`. Con cero cursos
-   seleccionados, o solo cursos sin liga, permanece oculto.
+   paso 2 — formulario OTDE) — se muestra u oculta en `mostrarFormularioOtde()`:
+   `cursosSeleccionados.some(c => c.registroPrevio && c.liga)`. Con cero
+   cursos seleccionados, o solo cursos sin registro previo obligatorio,
+   permanece oculto.
 
 `ICON_EXTERNO` es el mismo ícono (círculo con "i") en las tres señales — un
 solo símbolo visual para "hay una plataforma externa de por medio" en todo
