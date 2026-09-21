@@ -959,6 +959,18 @@ sitio, se comparte por link directo (hay un QR institucional, `images/qr-ceremon
 - Bug real corregido (sep 2026): fichas duplicadas hasta 5 veces por reintentos tras timeout, sin
   idempotencia en el backend — ver `docs/QA-NOTES.md #26`. Las fotos de Drive ahora además se
   organizan en subcarpetas por semana (`Semana YYYY-MM-DD`)
+- **Cuatro mejoras por etapas (20 sep 2026, desplegadas y confirmadas por Jorge)**, detalle
+  completo en `docs/ARCHITECTURE.md §22`: (1) filtros de historial (chips de estatus incl. "⚠
+  Vencida", rango de fechas) y el Panel de cobertura ahora lista también los sectores en 0/X,
+  ordenados por menor cobertura primero; (2) nueva sección "Reagendar o cancelar mi visita"
+  (autoservicio por folio, motivo obligatorio, columna Y `Historial de cambios` en la Sheet); (3)
+  el reporte de seguimiento ahora acepta una fecha de referencia (`visPedirFechaReferencia_()`) y
+  hay un segundo reporte PDF (`visGenerarReporteResumen_()`, columnas C/D/G/H/I/J/O/Q/U/V/W de
+  visitas `Realizada`) — rediseñado de tabla a tarjetas el mismo día tras feedback de Jorge de que
+  la tabla original era ilegible; (4) nueva pestaña **"Dashboard" dentro de la misma Sheet**
+  (`visActualizarDashboardHoja_()`, menú "SEPRN Visitas") con mezcla de estatus, visitas por
+  persona/sector y tendencia semanal — **este es el dashboard que Jorge había pedido desde antes**,
+  no el panel de cobertura del sitio (que resuelve un pedido distinto, sectores sin visitar).
 - **`ficha-ceremonias-civicas.html`** (renombrado dos veces: `ficha-visita-jefe.html` →
   `ficha-informativa-visita.html` → nombre final; el genérico quedó reservado para una futura
   Fase 2 de reporte general al Community Manager, ver `docs/ROADMAP.md` ítem 13): ficha
@@ -1040,7 +1052,17 @@ Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/I
   fecha confirmada aún (bug real encontrado y corregido en esta sesión). Sigue habiendo solo un
   curso en el catálogo — agregar más cuando estén listos.
 - **Correo/Mantenimiento/Asesorías** — los 3 backends nuevos ya están desplegados y con `Contactos_Zona_Sector` poblado (6 ago 2026, ver sus secciones arriba). Notificaciones de equipo (Telegram + correo) por trámite reorganizadas en sep 2026: ver sus secciones arriba y las de Soporte/Correo Institucional.
-- **Ceremonias Cívicas — `visitas-jefes.gs` con fixes sin desplegar (6 sep 2026)**: el fix de fichas duplicadas y la organización de fotos por semana están en el repo pero no en el proyecto real de Apps Script — pegar y redesplegar nueva versión, luego correr `visConfigurarDashboardPublico(true)` para el panel público. Ver `docs/ROADMAP.md` ítem 17.
+- ~~**Ceremonias Cívicas — `visitas-jefes.gs` con fixes sin desplegar (6 sep 2026)**~~ — nota
+  desactualizada, corregida el 20 sep 2026: esos fixes (fichas duplicadas, fotos por semana) ya
+  se habían pegado y redesplegado el 6 sep 2026 (`docs/ROADMAP.md` ítem 17 sí lo tenía correcto,
+  esta sección quedó desincronizada). Sigue abierto el pendiente (a) de ese mismo ítem: decidir si
+  el panel de cobertura se queda público o vuelve a pedir clave.
+- **Ceremonias Cívicas — verificación en vivo pendiente de las 4 etapas del 20 sep 2026**: Jorge
+  ya pegó y redesplegó `visitas-jefes.gs` (confirmado) y probó el reporte resumido (encontró y se
+  corrigió el problema de legibilidad de la tabla). Falta probar en vivo, con una reserva real:
+  reagendar/cancelar (conflicto de semana, liberación del cupo al cancelar, los mensajes por
+  estatus), el reporte de seguimiento con una fecha de referencia pasada, y "Actualizar dashboard
+  (hoja)" contra los datos reales del ciclo. Ver `docs/ROADMAP.md` ítem 20.
 - **QA pre-producción (6 ago 2026)** — hallazgos pendientes de atender antes de confiar el flujo completo:
   - ~~**Asesorías**: el checkbox de confirmación de asesoría previa no viaja en el payload al backend~~ — corregido: `otde.html` ahora manda `confirmaMantenimiento` en el payload, `asesorias.gs` lo valida server-side y lo guarda en la columna nueva `Confirmó Mantenimiento Previo` (col. R, autocompletada en la hoja ya desplegada vía el mismo patrón de auto-heal de encabezados que `formacion-docente.gs`).
   - ~~**Asesorías**: el mensaje de error del checkbox no se limpia al marcarlo~~ — corregido: listener `change` en `ase-confirma-mantenimiento` limpia el error apenas se marca.

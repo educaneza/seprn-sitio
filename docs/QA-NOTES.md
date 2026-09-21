@@ -823,6 +823,36 @@ a "Sí".
 errores a mano en vez de reutilizar una función que cubra *todos* los campos del sub-bloque, sin
 importar por cuál camino interno se llegó a marcarlos.
 
+## 33. Los filtros de "recientes" de los reportes PDF de Ceremonias Cívicas solo tenían límite inferior — una fecha de referencia pasada podía mostrar visitas "del futuro" respecto a ella
+
+**Síntoma:** encontrado con un arnés de pruebas en Node, **antes de llegar a producción**, al
+implementar la fecha de referencia (`visPedirFechaReferencia_()`) para
+`visGenerarReporteSeguimiento_()`/`visGenerarReporteResumen_()` (`apps-script/visitas-jefes.gs`,
+20 sep 2026): con una fecha de referencia pasada (ej. 15/09/2026), una visita `Realizada` con
+`Fecha de visita real` posterior a esa fecha (ej. 18/09/2026, mientras la fecha real del sistema
+era 20/09/2026) aparecía igual en el reporte — como si, generado "el 15 de septiembre", el
+reporte ya supiera de una visita que en ese momento todavía no había pasado.
+
+**Causa raíz:** los tres filtros de ventana ("Realizadas recientes"/"No realizadas recientes" del
+reporte de seguimiento, y el filtro de `visGenerarReporteResumen_()`) solo comparaban
+`f >= limiteAtras` (límite inferior). Mientras `hoy` estuvo fijo a `new Date()` (diseño original,
+antes de esta sesión) esto nunca importaba — nada en la Sheet puede estar fechado en el futuro
+respecto al momento real de ejecución. En cuanto `hoy` pasó a ser una fecha de referencia elegible
+por el usuario, dejó de ser cierto: cualquier fila fechada entre la fecha de referencia y la fecha
+real del sistema quedaba "en el futuro" respecto a la referencia, pero seguía pasando el filtro.
+
+**Fix:** agregar `&& f <= hoy` a los tres filtros afectados (dos en
+`visGenerarReporteSeguimiento_()`, uno en `visGenerarReporteResumen_()`). Verificado con 9 casos
+en un arnés de Node que simula `SpreadsheetApp`/`Utilities`/`DriveApp`, incluyendo explícitamente
+una fila fechada después de la fecha de referencia elegida (debe excluirse) junto a una fila
+dentro de la ventana (debe incluirse) y una anterior a la ventana (debe excluirse) — los tres
+casos en la misma corrida.
+
+**Dónde puede volver a pasar:** cualquier filtro de "ventana reciente" (`fecha >= limite`) escrito
+asumiendo implícitamente que `hoy`/`ahora` es siempre el momento real de ejecución — si ese valor
+alguna vez se vuelve parametrizable (una fecha de referencia, un "generar como si fuera tal día"),
+el límite inferior deja de ser suficiente por sí solo y hace falta el superior también.
+
 ## Regla general al corregir cualquiera de estos patrones
 
 Cuando se encuentra uno de estos bugs en un archivo, **revisar si el mismo

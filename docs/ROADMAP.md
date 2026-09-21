@@ -622,6 +622,21 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     CoEEE la tenga disponible (hoy esa lista solo es obtenible *a veces*); (c) borrar las 2 hojas
     de respaldo `Inscripciones_respaldo_20260916`/`..._2318` cuando ya no se necesiten.
 
+20. **Ceremonias Cívicas — 4 etapas + rediseño de reporte, desplegadas 20 sep 2026, falta
+    verificación en vivo contra datos reales** (ver `docs/ARCHITECTURE.md` §22 para el detalle
+    completo de cada etapa, `docs/QA-NOTES.md #33` para el bug de ventana de fecha encontrado y
+    corregido antes de desplegar): filtros de historial + sectores 0/X en el Panel de cobertura
+    (frontend, ya en `origin/main`); reagendar/cancelar visita (columna `Historial de cambios`
+    nueva, dos acciones nuevas en `doPost`); fecha de referencia en el reporte de seguimiento +
+    segundo reporte resumido (rediseñado de tabla a tarjetas el mismo día, tras que Jorge lo
+    probara y reportara que la tabla original era difícil de leer); dashboard nuevo **dentro de
+    la propia Sheet** (pestaña "Dashboard", no en el sitio — corrección de rumbo real sobre lo que
+    Jorge había pedido desde el mensaje original). Jorge ya pegó y redesplegó `visitas-jefes.gs`
+    (confirmado) y probó el reporte resumido. **Pendiente**: probar en vivo, con una reserva real,
+    reagendar/cancelar (conflicto de semana al reagendar, liberación del cupo CCT+semana al
+    cancelar, los 4 mensajes según estatus), el reporte de seguimiento con una fecha de referencia
+    pasada, y "Actualizar dashboard (hoja)" contra los datos reales del ciclo.
+
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue
 abierto de esa entrega (decisión de notificación de cierre de ticket, limpieza de función

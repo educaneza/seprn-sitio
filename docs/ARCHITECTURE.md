@@ -2006,6 +2006,79 @@ Jorge trajo una lista de fricciones reportadas por los ~20 jefes usando el siste
   completo — el problema de UI/UX de ese ítem terminó resolviéndose con el formulario expandido
   por defecto y la guía nueva, no con acortar el contenido.
 
+**Cuatro mejoras por etapas, pedidas por Jorge tras una semana de uso real (20 sep 2026,
+implementadas por etapas — cada una probada con un arnés de Node antes de entregarse — y
+desplegadas por Jorge el mismo día).**
+
+- **Etapa 1 — filtros de historial + sectores sin visitar, 100% frontend.** `visRenderTabla()`
+  ganó chips de estatus (Todos/Reservada/Realizada/No realizada/Cancelada/**⚠ Vencida**, este
+  último un pseudo-estatus — `estatus==='Reservada' && visEsVencida(fechaPlaneada)`, reutiliza la
+  misma lógica del badge "⚠ Sin ficha" ya existente) y un rango de fechas Desde/Hasta sobre
+  `fechaPlaneada`, combinados por AND con el buscador de texto ya existente. Panel de cobertura:
+  `renderDashboard()` calculaba `totalPorSector` completo (iterando todo `CCT_DB`) pero solo
+  pintaba `data.porSector` (backend, solo sectores con ≥1 visita "Realizada") — un sector en cero
+  simplemente nunca aparecía aunque el dato para saberlo ya estaba en memoria. Fix: iterar sobre
+  `Object.keys(totalPorSector)`, cruzando contra `data.porSector` (default 0), ordenado de menor a
+  mayor cobertura para que los sectores en 0 —marcados "⚠ 0 / X", track rosa, texto
+  guinda-acento— queden arriba, no al fondo de la lista.
+- **Etapa 2 — reagendar/cancelar visita, backend + frontend.** Nueva sección "Reagendar o
+  cancelar mi visita" en `ceremonias-civicas.html`, mismo patrón "folio manual → colapsa a una
+  línea" que ya usa `ficha-ceremonias-civicas.html` (ids propios `vis-gestion-*`) — **decisión
+  deliberada de no ofrecer un selector de la lista**: `visListarDisponibilidad()` no incluye
+  folio a propósito (es el único "secreto" que autoriza actuar sobre una reserva ajena; listarlo
+  en la tabla pública del historial le habría dado a cualquiera de los ~20 jefes la capacidad de
+  reagendar/cancelar la reserva de otro). Backend: dos acciones nuevas en `doPost`
+  (`accion:'reagendar'`/`'cancelar'` → `visDoPostReagendar_()`/`visDoPostCancelar_()`), mismo
+  molde que `visDoPostFicha_()` (`LockService` + `visBuscarFilaPorFolio_()` + chequeo de estatus).
+  `Realizada`/`Cancelada` quedan terminales; `Reservada`/`No realizada` son accionables a
+  propósito — si el trigger diario ya marcó "No realizada" por falta de ficha, reagendar la
+  regresa a "Reservada" en vez de obligar a crear una reserva nueva sin relación con la original.
+  `visExisteReservaActiva_()` ganó un 4º parámetro opcional `excluirRowIndex` (retrocompatible)
+  para que reagendar valide la semana destino sin chocar contra su propia fila. Columna nueva Y,
+  `COL_VIS_HISTORIAL_CAMBIOS=25` ("Historial de cambios"), auto-heal vía el mecanismo ya existente
+  de `visObtenerHojaReservas()` — bitácora de líneas unidas por `\n` (mismo patrón que
+  "Evidencias"), escrita por el helper nuevo `visRegistrarCambio_()`.
+- **Etapa 3 — fecha de referencia en el reporte PDF + segundo reporte resumido, 100% backend,
+  acciones de menú (sin redeploy del Web App).** `visGenerarReporteSeguimiento_()` (el reporte ya
+  existente) ahora arranca con `visPedirFechaReferencia_()` (`ui.prompt` dd/mm/aaaa, vacío=hoy,
+  cancelar aborta sin generar nada) — la fecha elegida sustituye a `new Date()` para calcular
+  `limiteAtras` y el nombre del archivo, mientras una variable `ahora` aparte guarda el momento
+  real de generación para el pie del PDF ("Fecha de referencia" vs. "Generado el", ya no una sola
+  fecha ambigua). **Bug real encontrado en pruebas, antes de llegar a producción**: los filtros de
+  "recientes" solo tenían límite inferior (`f >= limiteAtras`); con `hoy` fijo a "ahora mismo"
+  (diseño original) nunca importaba, pero en cuanto `hoy` puede ser una fecha pasada, una fila
+  fechada *después* de esa referencia se colaba igual — el reporte mostraba visitas que "en ese
+  momento" todavía no habían pasado. Corregido agregando `&& f <= hoy` a los tres filtros
+  afectados. Ver `docs/QA-NOTES.md #33`. `visGenerarReporteResumen_()` es el segundo reporte
+  (columnas C/D/G/H/I/J/O/Q/U/V/W, acotado a `Realizada` dentro de la misma ventana que la sección
+  "Realizadas" del reporte 1) — llamado "resumido", no "de difusión": la columna Q (Observaciones
+  de operatividad) está documentada en `ficha-ceremonias-civicas.html` como uso interno, mezclarla
+  bajo el nombre "difusión" habría sugerido que el PDF está listo para reenviar tal cual afuera de
+  OTDE. **Rediseñado el mismo día tras feedback de Jorge** ("difícil de leer"): la primera versión
+  metía las 11 columnas en una sola fila de tabla a 8.5px; el rediseño usa tarjetas (mismo patrón
+  visual que la sección "Realizadas" del reporte 1 — título con escuela+fecha, línea de metadatos,
+  cada campo de contenido en su propia línea etiquetada a todo el ancho). Ambos reportes
+  reutilizan `visObtenerCarpetaReportes_()` (mismo folder de Drive) y `visFechaLocal_()`/
+  `visLunesDeLaSemana_()` ya existentes.
+- **Etapa 4 — dashboard dentro de la propia hoja de cálculo, no en el sitio.** Corrección de
+  rumbo real, no un simple ajuste: la pregunta de aclaración inicial solo ofrecía dos opciones de
+  frontend ("ampliar el panel de cobertura del sitio" / "página nueva") — ninguna era lo que Jorge
+  pedía desde el mensaje original. El "dashboard" siempre fue uno **dentro de la Sheet**, mismo
+  espíritu que `apps-script/panel-otde.gs` pero sin su arquitectura de proyecto-aparte-con-
+  `UrlFetchApp`-y-token (innecesaria aquí: los datos ya viven en la misma Sheet a la que
+  `visitas-jefes.gs` ya está bound). Nueva pestaña "Dashboard" (`visObtenerHojaDashboard_()`,
+  get-or-create), actualizada por `visActualizarDashboardHoja_()` desde el menú "SEPRN Visitas" →
+  "Actualizar dashboard (hoja)": cuatro bloques apilados (mezcla de estatus con % y los mismos
+  colores que `.vis-badge-*` del sitio; visitas realizadas por persona, sin el límite de
+  `DASHBOARD_TOKEN` del panel del sitio porque aquí solo entra quien ya tiene acceso de edición a
+  la Sheet; por sector; tendencia semanal agrupada por la semana de la **Fecha de visita real**,
+  no la planeada, para que un reagendar no distorsione la lectura), escritos por el helper
+  genérico `visEscribirBloqueDashboard_()` (título+encabezados+filas+color opcional). Sin
+  cobertura 0/X en esta pestaña — deliberado, para no duplicar en el `.gs` el catálogo de
+  escuelas-por-sector que hoy solo vive en `js/cct-db.js` (inaccesible desde Apps Script sin
+  mantenerlo por partida doble); ese ángulo ya lo cubre el Panel de cobertura del sitio (Etapa 1).
+  Presentación tabla-con-colores, no gráficas nativas de Sheets — decisión de Jorge.
+
 ---
 
 ## 23. Favicon PNG + `og:image` en las 26 páginas del sitio (agosto 2026)
