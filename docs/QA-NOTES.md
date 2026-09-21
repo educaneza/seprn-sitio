@@ -853,6 +853,35 @@ asumiendo implícitamente que `hoy`/`ahora` es siempre el momento real de ejecuc
 alguna vez se vuelve parametrizable (una fecha de referencia, un "generar como si fuera tal día"),
 el límite inferior deja de ser suficiente por sí solo y hace falta el superior también.
 
+## 34. Botón CTA de los correos de Mantenimiento/Asesorías/Soporte se veía en azul/morado en vez de blanco — el color solo estaba en el `<style>` del `<head>`
+
+**Síntoma:** Jorge reportó (21 sep 2026) que el texto del botón CTA de los correos automatizados
+(ej. "Consultar estatus de tu solicitud") se leía en azul/morado/un tono oscuro difícil de
+distinguir del fondo, en vez del blanco que el código declaraba.
+
+**Causa raíz:** en `mantenimiento.gs`/`soporte-remoto.gs`/`asesorias.gs`, el botón se construía
+como `'<a href="' + opts.ctaHref + '" class="btn">...'`, dependiendo 100% de la regla
+`.btn{...color:#ffffff...}` dentro de un bloque `<style>` en el `<head>` del correo, sin ningún
+`style=` inline en el propio `<a>`. Varios clientes de correo (Outlook, Gmail, Apple Mail) ignoran
+o pisan ese `<style>` con su color de link por default — justo el bug que `formacion-docente.gs`
+(`construirCorreoHtml()`) y los 4 archivos de `apps-script/correo/` ya evitaban a propósito
+(comentario explícito en `construirCorreoHtml()`: *"Estilos 100% inline... porque los clientes de
+correo ignoran `<style>` en el `<head>` con frecuencia"*) — solo estos 3 backends se habían quedado
+con el patrón viejo.
+
+**Fix:** agregar el mismo `style="..."` del `.btn` directamente inline sobre el `<a>` (dejando
+`class="btn"` como respaldo redundante), idéntico en los 3 archivos:
+```js
+const cta = opts.ctaHref
+  ? '<a href="' + opts.ctaHref + '" class="btn" style="display:inline-block;background-color:#9F2241;color:#ffffff;text-decoration:none;font-size:14px;font-weight:bold;text-align:center;padding:12px 22px;border-radius:6px;">' + (opts.ctaTexto || '...') + ' &rarr;</a>'
+  : '';
+```
+
+**Dónde puede volver a pasar:** cualquier correo HTML nuevo que declare color/fondo de un `<a>`
+solo dentro de un bloque `<style>` del `<head>` — en correo, a diferencia de una página web, hay
+que asumir que el cliente puede ignorar `<style>` por completo y poner lo importante (sobre todo
+`color` de texto sobre un fondo de color) también inline.
+
 ## Regla general al corregir cualquiera de estos patrones
 
 Cuando se encuentra uno de estos bugs en un archivo, **revisar si el mismo

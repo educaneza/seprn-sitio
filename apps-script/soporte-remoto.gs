@@ -460,8 +460,11 @@ function sopCorreoHtml_(opts) {
     (opts.colorCaja || '#9F2241') + ';border-radius:4px;margin-bottom:14px;">' +
     '<tr><td style="padding:15px 17px;">' + filasHtml + '</td></tr></table>';
 
+  // style inline además de class="btn": varios clientes de correo (Outlook,
+  // Gmail, Apple Mail) ignoran el color del <style> del <head> y aplican su
+  // propio azul/morado de link por default — el inline sí sobrevive.
   const cta = opts.ctaHref
-    ? '<a href="' + opts.ctaHref + '" class="btn">' + (opts.ctaTexto || 'Consultar estatus de tu solicitud') + ' &rarr;</a>'
+    ? '<a href="' + opts.ctaHref + '" class="btn" style="display:inline-block;background-color:#9F2241;color:#ffffff;text-decoration:none;font-size:14px;font-weight:bold;text-align:center;padding:12px 22px;border-radius:6px;">' + (opts.ctaTexto || 'Consultar estatus de tu solicitud') + ' &rarr;</a>'
     : '';
 
   const aviso = '<div class="aviso"><p style="margin:0;font-size:12px;color:#7a6a5a;line-height:1.6;">⚠️ ' +
