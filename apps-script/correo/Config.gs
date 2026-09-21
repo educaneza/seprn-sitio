@@ -143,13 +143,14 @@ function escapeMarkdown_(valor) {
   return String(valor == null ? '' : valor).replace(/([_*[\]`])/g, '\\$1');
 }
 
-// ── "Planchado" de las 4 hojas (Alta/Cambio/Reset/Incidencias): dropdowns
-// suaves + semáforo por color en "Estado general" + protección de solo
-// aviso en columnas automáticas. Utilidades compartidas aquí (a diferencia
-// de mantenimiento.gs/asesorias.gs en seprn-sitio, que son proyectos
-// separados y duplican cada helper) — cada Xxx.gs las usa desde su propia
-// función `xxxAplicarSemaforoYProteccion_()`. Ver configurarValidacionYSemaforo()
-// más abajo para correrlas las 4 de una vez. ──
+// ── "Planchado" de las 5 hojas (Alta/Cambio/Reset/Cambio y Eliminar
+// Autenticación/Incidencias): dropdowns suaves + semáforo por color en
+// "Estado general" + protección de solo aviso en columnas automáticas.
+// Utilidades compartidas aquí (a diferencia de mantenimiento.gs/
+// asesorias.gs en seprn-sitio, que son proyectos separados y duplican
+// cada helper) — cada Xxx.gs las usa desde su propia función
+// `xxxAplicarSemaforoYProteccion_()`. Ver configurarValidacionYSemaforo()
+// más abajo para correrlas las 5 de una vez. ──
 function aplicarValidacionListaSuave_(hoja, columna, valores) {
   const regla = SpreadsheetApp.newDataValidation().requireValueInList(valores, true).setAllowInvalid(true).build();
   hoja.getRange(2, columna, 1000, 1).setDataValidation(regla);
@@ -203,10 +204,12 @@ function configurarValidacionYSemaforo() {
   if (cambio) cambioAplicarSemaforoYProteccion_(cambio);
   const reset = ss.getSheetByName(HOJA_RESET);
   if (reset) resetAplicarSemaforoYProteccion_(reset);
+  const cambioReset = ss.getSheetByName(HOJA_CAMBIO_RESET);
+  if (cambioReset) cambioResetAplicarSemaforoYProteccion_(cambioReset);
   const incidencias = ss.getSheetByName(HOJA_INCIDENCIAS);
   if (incidencias) incidenciaAplicarSemaforoYProteccion_(incidencias);
   try {
-    SpreadsheetApp.getUi().alert('Validación y semáforo aplicados en Alta/Cambio de Contraseña/Reset 2FA/Incidencias.');
+    SpreadsheetApp.getUi().alert('Validación y semáforo aplicados en Alta/Cambio de Contraseña/Reset 2FA/Cambio y Eliminar Autenticación/Incidencias.');
   } catch (err) {}
 }
 

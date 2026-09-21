@@ -2,23 +2,23 @@
 // SEPRN · OTDE — Resumen semanal de solicitudes pendientes
 // ============================================================
 // Puerto de apps-script/ResumenSemanal.gs (sistema viejo, 6 hojas del
-// Google Form) a las 4 hojas del webform 2026-2027. Mismo propósito:
-// cada lunes 9am, un correo a Marcos + OTDE con el conteo de
-// solicitudes pendientes por tipo, para no depender de que alguien
-// abra el Sheet a revisar.
+// Google Form) a las hojas del webform 2026-2027 (4 originales + Cambio
+// y Eliminar Autenticación, sep 2026). Mismo propósito: cada lunes 9am,
+// un correo a Marcos + OTDE con el conteo de solicitudes pendientes por
+// tipo, para no depender de que alguien abra el Sheet a revisar.
 //
 // "Pendiente" aquí es más simple que en el sistema viejo: cada tipo
 // solo tiene 2 estados en "Estado general" — 'Solicitud recibida'
 // (inicial) y un estado final propio por tipo ('Cuenta entregada',
 // 'Reset notificado', 'Incidencia resuelta' — ver altaRevisarEdicion/
-// cambioRevisarEdicion/resetRevisarEdicion/incidenciaRevisarEdicion).
-// Pendiente = todavía en 'Solicitud recibida', sin importar cuál sea
-// el estado final de ese tipo.
+// cambioRevisarEdicion/resetRevisarEdicion/cambioResetRevisarEdicion/
+// incidenciaRevisarEdicion). Pendiente = todavía en 'Solicitud
+// recibida', sin importar cuál sea el estado final de ese tipo.
 // ============================================================
 
 function resumenSemanal() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const hojasValidas = [HOJA_ALTA, HOJA_CAMBIO, HOJA_RESET, HOJA_INCIDENCIAS];
+  const hojasValidas = [HOJA_ALTA, HOJA_CAMBIO, HOJA_RESET, HOJA_CAMBIO_RESET, HOJA_INCIDENCIAS];
 
   const conteos = {};
   let totalPendientes = 0;

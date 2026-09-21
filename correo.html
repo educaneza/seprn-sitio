@@ -130,6 +130,7 @@
                 <button type="button" id="btn-correo-panel-alta" class="correo-panel-btn active" onclick="mostrarCorreoPanel('alta')">Alta de cuenta</button>
                 <button type="button" id="btn-correo-panel-cam" class="correo-panel-btn" onclick="mostrarCorreoPanel('cam')">Cambio de Contraseña</button>
                 <button type="button" id="btn-correo-panel-rst" class="correo-panel-btn" onclick="mostrarCorreoPanel('rst')">Eliminar Método de Autenticación</button>
+                <button type="button" id="btn-correo-panel-cyr" class="correo-panel-btn" onclick="mostrarCorreoPanel('cyr')">Cambio de Contraseña + Eliminar Autenticación</button>
                 <button type="button" id="btn-correo-panel-inc" class="correo-panel-btn" onclick="mostrarCorreoPanel('inc')">No puedo acceder a mi cuenta</button>
             </div>
 
@@ -460,6 +461,96 @@
                     </div>
                 </div>
 
+                <!-- Panel: Cambio de Contraseña + Eliminar Autenticación (webform nuevo, sep 2026 — empata con el tipo combinado de SIGEE) -->
+                <div id="correo-panel-cyr" style="display:none;">
+                    <div class="highlight-box">
+                        <p>Úsala si necesitas las dos cosas a la vez: una contraseña nueva y que te quitemos el método de autenticación de dos pasos actual.</p>
+                    </div>
+                    <button class="form-button" id="btn-cyr" aria-expanded="false" onclick="toggleCyrForm(this)">
+                        <span id="btn-cyr-text">Solicitar Cambio de Contraseña + Eliminar Autenticación</span>
+                        <span id="btn-cyr-arrow">▼</span>
+                    </button>
+                    <div id="form-cyr" class="form-container">
+                        <form id="cyr-form" onsubmit="return enviarSolicitudCambioReset(event)" novalidate>
+                            <div class="soporte-form-group">
+                                <label for="cyr-correo-institucional">Correo institucional (el que ya tienes)<span class="req">*</span></label>
+                                <input type="email" id="cyr-correo-institucional" placeholder="tucorreo@dee.edu.mx" required>
+                                <div class="soporte-field-error" id="cyr-correo-institucional-error">Ingresa tu correo institucional (@dee.edu.mx o @aulamexiquense.mx).</div>
+                            </div>
+                            <div class="soporte-form-group">
+                                <label for="cyr-cct">Clave de Centro de Trabajo (CCT)<span class="req">*</span></label>
+                                <div class="sop-cct-wrapper">
+                                    <input type="text" id="cyr-cct" placeholder="15DPR0000A" maxlength="10" autocomplete="off" style="text-transform:uppercase;font-family:monospace;" required>
+                                    <ul id="cyr-cct-suggestions"></ul>
+                                </div>
+                                <div class="sop-cct-status" id="cyr-cct-status"></div>
+                                <div class="soporte-field-error" id="cyr-cct-error">Ingresa una CCT válida.</div>
+                            </div>
+                            <div class="sop-manual-fields" id="cyr-manual-fields">
+                                <p class="manual-aviso">No encontramos esa CCT. Captura los datos manualmente:</p>
+                                <div class="soporte-form-group">
+                                    <label for="cyr-tipo-cct-manual">Tipo de CCT<span class="req">*</span></label>
+                                    <select id="cyr-tipo-cct-manual" onchange="otdeActualizarTipoCct('cyr')">
+                                        <option value="">— Selecciona una opción —</option>
+                                        <option value="escuela">Escuela</option>
+                                        <option value="supervision">Zona escolar (Supervisión)</option>
+                                        <option value="jefatura">Sector educativo (Jefatura)</option>
+                                        <option value="subdireccion">SEPRN</option>
+                                    </select>
+                                    <div class="soporte-field-error" id="cyr-tipo-cct-manual-error">Selecciona el tipo de CCT.</div>
+                                </div>
+                                <div class="soporte-form-group" id="cyr-sector-group" style="display:none;">
+                                    <label for="cyr-sector-manual">Sector<span class="req">*</span></label>
+                                    <select id="cyr-sector-manual" onchange="cyrActualizarZonas()">
+                                        <option value="">— Selecciona sector —</option>
+                                        <option value="I">Sector I</option><option value="II">Sector II</option><option value="III">Sector III</option>
+                                        <option value="IV">Sector IV</option><option value="V">Sector V</option><option value="VI">Sector VI</option>
+                                        <option value="VII">Sector VII</option><option value="VIII">Sector VIII</option><option value="IX">Sector IX</option>
+                                        <option value="X">Sector X</option><option value="XI">Sector XI</option><option value="XII">Sector XII</option>
+                                        <option value="XIII">Sector XIII</option>
+                                    </select>
+                                    <div class="soporte-field-error" id="cyr-sector-manual-error">Selecciona un sector.</div>
+                                </div>
+                                <div class="soporte-form-group" id="cyr-zona-group" style="display:none;">
+                                    <label for="cyr-zona-manual">Zona escolar<span class="req">*</span></label>
+                                    <select id="cyr-zona-manual"><option value="">— Selecciona zona —</option></select>
+                                    <div class="soporte-field-error" id="cyr-zona-manual-error">Selecciona una zona.</div>
+                                </div>
+                                <div class="soporte-form-group">
+                                    <label for="cyr-escuela-manual">Nombre de la escuela o unidad<span class="req">*</span></label>
+                                    <input type="text" id="cyr-escuela-manual" placeholder="Nombre oficial">
+                                    <div class="soporte-field-error" id="cyr-escuela-manual-error">Ingresa el nombre de la escuela o unidad.</div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="cyr-sector-val"><input type="hidden" id="cyr-zona-val"><input type="hidden" id="cyr-escuela-val"><input type="hidden" id="cyr-tipo-cct-val">
+
+                            <div class="soporte-form-group">
+                                <label for="cyr-nombre">Nombre completo<span class="req">*</span></label>
+                                <input type="text" id="cyr-nombre" required>
+                                <div class="soporte-field-error" id="cyr-nombre-error">Ingresa tu nombre completo.</div>
+                            </div>
+                            <div class="soporte-form-group">
+                                <label for="cyr-correo-personal">Correo electrónico personal<span class="req">*</span></label>
+                                <input type="email" id="cyr-correo-personal" placeholder="tucorreo@gmail.com" required>
+                                <div class="soporte-field-hint">Aquí te avisaremos cuando tengamos tu nueva contraseña. Usa uno activo — revisa spam / correo no deseado si no ves nuestro mensaje.</div>
+                                <div class="soporte-field-error" id="cyr-correo-personal-error">Ingresa un correo válido.</div>
+                            </div>
+                            <div class="soporte-form-group">
+                                <label for="cyr-telefono">Teléfono (WhatsApp)<span class="req">*</span></label>
+                                <input type="tel" id="cyr-telefono" placeholder="5512345678" maxlength="10" inputmode="numeric" required>
+                                <div class="soporte-field-hint">Al dejar este número autorizas que OTDE te contacte por WhatsApp para dar seguimiento a tu solicitud.</div>
+                                <div class="soporte-field-error" id="cyr-telefono-error">Ingresa un teléfono válido (10 dígitos).</div>
+                            </div>
+                            <div class="soporte-form-group">
+                                <label for="cyr-observaciones">Observaciones</label>
+                                <textarea id="cyr-observaciones" placeholder="Opcional"></textarea>
+                            </div>
+                            <button type="submit" class="form-button" id="btn-cyr-submit"><span>Enviar Solicitud</span></button>
+                            <div id="cyr-msg" class="soporte-submit-msg"></div>
+                        </form>
+                    </div>
+                </div>
+
                 <!-- Sub-panel: Incidencias -->
                 <div id="correo-panel-inc" style="display:none;">
                     <div class="highlight-box">
@@ -629,11 +720,14 @@
     // para el backend.
     const ALTA_CORREO_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwjy-jx1J0riVAlcAkuwAqKq9LMQVIxs4R_ikBIRPXXntO3FwMkGTPBf90W5A8FPAD7/exec';
 
-    // Switcher de 4 botones al mismo nivel (ago 2026 — antes "Alta" vs "Otros" con
+    // Switcher de botones al mismo nivel (ago 2026 — antes "Alta" vs "Otros" con
     // un sub-switcher anidado de 3 botones para Cambio/Eliminar autenticación/
-    // Incidencias; se aplanó para no amontonar botones dentro de un panel).
+    // Incidencias; se aplanó para no amontonar botones dentro de un panel). 5º
+    // botón agregado sep 2026 (Cambio de Contraseña + Eliminar Autenticación,
+    // empata con el tipo combinado de SIGEE) antes de Incidencias, que sigue al
+    // final por ser un tipo propio del sitio, no de SIGEE.
     function mostrarCorreoPanel(tipo) {
-        ['alta', 'cam', 'rst', 'inc'].forEach(function(t) {
+        ['alta', 'cam', 'rst', 'cyr', 'inc'].forEach(function(t) {
             document.getElementById('correo-panel-' + t).style.display = (t === tipo) ? 'block' : 'none';
             document.getElementById('btn-correo-panel-' + t).classList.toggle('active', t === tipo);
         });
@@ -1243,6 +1337,7 @@
 
     var camCct = crearCctAutocomplete('cam');
     var rstCct = crearCctAutocomplete('rst');
+    var cyrCct = crearCctAutocomplete('cyr');
     var incCct = crearCctAutocomplete('inc');
 
     function validarCctYManual(prefijo, estado) {
@@ -1440,6 +1535,74 @@
                 msg.textContent = 'Solicitud registrada (folio ' + data.folio + '). Te avisaremos a tu correo personal en cuanto el reset esté listo.';
                 document.getElementById('rst-form').reset();
                 resetFormularioCctManual('rst', rstCct);
+            } else {
+                msg.classList.add('error'); msg.textContent = 'No se pudo registrar la solicitud: ' + data.mensaje;
+            }
+        } catch (err) {
+            msg.classList.add('error');
+            msg.textContent = err.name === 'AbortError' ? 'El servidor tardó demasiado en responder. Tu solicitud pudo haberse guardado igual; si no recibes contacto de la OTDE, intenta de nuevo.' : 'No se pudo enviar la solicitud. Verifica tu conexión e intenta de nuevo.';
+        } finally {
+            btnSubmit.disabled = false; btnSubmit.style.opacity = '1';
+        }
+        return false;
+    }
+
+    // ── Cambio de Contraseña + Eliminar Autenticación (sep 2026 — empata con
+    // el tipo combinado que SIGEE ofrece en su formulario de Nueva solicitud) ──
+    function toggleCyrForm(btn) {
+        var container = document.getElementById('form-cyr');
+        var text = document.getElementById('btn-cyr-text');
+        var arrow = document.getElementById('btn-cyr-arrow');
+        if (container.classList.contains('active')) {
+            container.classList.remove('active'); text.textContent = 'Solicitar Cambio de Contraseña + Eliminar Autenticación'; arrow.textContent = '▼'; btn.setAttribute('aria-expanded', 'false');
+        } else {
+            container.classList.add('active'); text.textContent = 'Ocultar Formulario'; arrow.textContent = '▲'; btn.setAttribute('aria-expanded', 'true');
+            setTimeout(function() { container.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 400);
+        }
+    }
+    document.getElementById('cyr-nombre').addEventListener('blur', function() { if (this.value.trim()) this.value = toTitleCase(this.value); });
+    document.getElementById('cyr-escuela-manual').addEventListener('blur', function() { if (this.value.trim()) this.value = toTitleCase(this.value); });
+
+    function validarCyrForm() {
+        var ok = validarCctYManual('cyr', cyrCct);
+        var campos = [
+            { id: 'cyr-correo-institucional', err: 'cyr-correo-institucional-error', test: function(input) { return validarCorreoInstitucional(input); } },
+            { id: 'cyr-nombre',               err: 'cyr-nombre-error',               test: function(input) { return input.value.trim().length >= 3; } },
+            { id: 'cyr-correo-personal',      err: 'cyr-correo-personal-error',      test: function(input) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value.trim()); } },
+            { id: 'cyr-telefono',             err: 'cyr-telefono-error',             test: function(input) { return /^\d{10}$/.test(input.value.trim()); } }
+        ];
+        campos.forEach(function(c) {
+            var input = document.getElementById(c.id), errEl = document.getElementById(c.err);
+            if (!c.test(input)) { input.classList.add('error'); errEl.classList.add('visible'); ok = false; }
+            else { input.classList.remove('error'); errEl.classList.remove('visible'); }
+        });
+        return ok;
+    }
+
+    async function enviarSolicitudCambioReset(evt) {
+        evt.preventDefault();
+        var msg = document.getElementById('cyr-msg');
+        var btnSubmit = document.getElementById('btn-cyr-submit');
+        msg.className = 'soporte-submit-msg'; msg.textContent = '';
+        if (!validarCyrForm()) return false;
+
+        var cctDatos = datosCctYManual('cyr');
+        var datos = Object.assign({ tipo: 'cambioContrasenaYReset' }, cctDatos, {
+            correoInstitucional: document.getElementById('cyr-correo-institucional').value,
+            nombre: toTitleCase(document.getElementById('cyr-nombre').value.trim()),
+            correoPersonal: document.getElementById('cyr-correo-personal').value,
+            telefono: document.getElementById('cyr-telefono').value,
+            observaciones: document.getElementById('cyr-observaciones').value
+        });
+
+        btnSubmit.disabled = true; btnSubmit.style.opacity = '0.6';
+        try {
+            const data = await fetchJsonConTimeout(CAMBIO_APPS_SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(datos) });
+            if (data.status === 'ok') {
+                msg.classList.add('ok');
+                msg.textContent = 'Solicitud registrada (folio ' + data.folio + '). Te avisaremos a tu correo personal en cuanto tengamos tu nueva contraseña.';
+                document.getElementById('cyr-form').reset();
+                resetFormularioCctManual('cyr', cyrCct);
             } else {
                 msg.classList.add('error'); msg.textContent = 'No se pudo registrar la solicitud: ' + data.mensaje;
             }

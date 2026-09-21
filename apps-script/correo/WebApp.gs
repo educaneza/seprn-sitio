@@ -5,7 +5,10 @@
 // tipos del sistema viejo ya están migrados (6 → 4: Alta dee +
 // Alta aulamexiquense se consolidaron en uno solo, mismo criterio
 // para Cambio de Contraseña; Reset 2FA e Incidencias se migraron
-// tal cual). Cada uno vive en su propio archivo Xxx.gs.
+// tal cual). Cada uno vive en su propio archivo Xxx.gs. Un 5º tipo,
+// Cambio de Contraseña + Eliminar Autenticación (CambioYReset.gs),
+// se agregó sep 2026 para empatar con el tipo combinado que SIGEE
+// ofrece hoy en su propio formulario de "Nueva solicitud".
 //
 // CONSULTA DE FOLIO (Oficina Virtual OTDE, ago 2026): doGet(?action=
 // consulta&folio=...&correo=...) enruta por el prefijo del folio a
@@ -15,7 +18,7 @@
 //
 // PANEL OTDE (panel-otde.gs, en seprn-sitio/apps-script, Sheet aparte):
 // doGet(?action=pendientes&token=...) devuelve las solicitudes de los
-// 4 tipos que siguen en "Solicitud recibida". Configura el token una
+// 5 tipos que siguen en "Solicitud recibida". Configura el token una
 // vez con configurarTokenPanel('un-secreto-largo') — el mismo valor
 // usado en mantenimiento.gs/asesorias.gs/soporte-remoto.gs (repo
 // seprn-sitio) y en panel-otde.gs.
@@ -53,7 +56,7 @@ function listarPendientesCorreo(tokenRecibido) {
   }
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const hojas = [HOJA_ALTA, HOJA_CAMBIO, HOJA_RESET, HOJA_INCIDENCIAS];
+  const hojas = [HOJA_ALTA, HOJA_CAMBIO, HOJA_RESET, HOJA_CAMBIO_RESET, HOJA_INCIDENCIAS];
   const items = [];
 
   hojas.forEach(function (nombreHoja) {
@@ -116,6 +119,7 @@ function manejarConsultaCorreo(folioBuscado, correoBuscado) {
     'OTDE-ALT-': HOJA_ALTA,
     'OTDE-CAM-': HOJA_CAMBIO,
     'OTDE-2FA-': HOJA_RESET,
+    'OTDE-CYR-': HOJA_CAMBIO_RESET,
     'OTDE-INC-': HOJA_INCIDENCIAS
   };
   const noEncontrado = function () {
@@ -166,6 +170,8 @@ function doPost(e) {
         return manejarCambioContrasena(datos);
       case 'reset2FA':
         return manejarReset2FA(datos);
+      case 'cambioContrasenaYReset':
+        return manejarCambioContrasenaYReset(datos);
       case 'incidencia':
         return manejarIncidencia(datos);
       default:

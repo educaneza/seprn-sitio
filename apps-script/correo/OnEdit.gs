@@ -2,8 +2,8 @@
  * Un solo trigger onEdit para todo el proyecto — enruta por el
  * nombre de la hoja editada a la función de revisión de ese tipo
  * (cada una vive en su propio archivo: Alta.gs, CambioContrasena.gs,
- * Reset2FA.gs, Incidencias.gs). Más simple de instalar/mantener que
- * un trigger por hoja.
+ * Reset2FA.gs, CambioYReset.gs, Incidencias.gs). Más simple de
+ * instalar/mantener que un trigger por hoja.
  *
  * Cada función de revisión repite el mismo cuidado que el proyecto
  * viejo (OnEditTrigger.gs): no usa e.value porque solo existe en
@@ -27,6 +27,9 @@ function onEditWebform(e) {
       break;
     case HOJA_RESET:
       resetRevisarEdicion(e);
+      break;
+    case HOJA_CAMBIO_RESET:
+      cambioResetRevisarEdicion(e);
       break;
     case HOJA_INCIDENCIAS:
       incidenciaRevisarEdicion(e);
