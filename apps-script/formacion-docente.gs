@@ -35,7 +35,8 @@
 //     K Activo | L Notas | M Registro_previo_requerido
 //     N Visible_desde | O Visible_hasta
 //     ... V Fecha_limite_inscripcion | W Valida_USICAMM | X Valida_PROEEB
-//     (ver detalle de estas 3 últimas más abajo, junto a ENCABEZADOS_CURSOS)
+//     ... Y Liga_tutorial_constancia | Z Hora_fin
+//     (ver detalle de estas columnas más abajo, junto a ENCABEZADOS_CURSOS)
 //
 //   Registro_previo_requerido (TRUE/FALSE, tú lo decides por curso): si es
 //   TRUE y hay Liga_convocatoria, el formulario OBLIGA a pasar por esa liga
@@ -65,6 +66,9 @@
 //     Seguimiento:       N Registro_externo | O Fecha_confirmacion_externa
 //                        P Recordatorios_pendiente | Q Fecha_ultimo_recordatorio | R Estado
 //                        S Codigo_asistencia_capturado | T Fecha_actualizacion_estado | U Notas
+//                        V Constancia_recordatorios_enviados | W Fecha_ultimo_recordatorio_constancia
+//                        X Constancia_recibida | Y Fecha_recepcion_constancia | Z Liga_constancia_drive
+//     (las últimas 5, sep 2026 — ver "RECORDATORIO Y CARGA DE CONSTANCIA")
 //     * Fórmula VLOOKUP en vivo contra Docentes/Cursos — se recalculan solas
 //     si cambian los datos del docente o del curso. Ver VISTA_INSCRIPCIONES.
 //     El código lee esta hoja SIEMPRE por nombre de encabezado, nunca por
@@ -94,7 +98,13 @@ const ENCABEZADOS_INSCRIPCIONES = [
   'ID_Curso', 'Nombre_Curso',
   'Registro_externo', 'Fecha_confirmacion_externa',
   'Recordatorios_pendiente', 'Fecha_ultimo_recordatorio', 'Estado',
-  'Codigo_asistencia_capturado', 'Fecha_actualizacion_estado', 'Notas'
+  'Codigo_asistencia_capturado', 'Fecha_actualizacion_estado', 'Notas',
+  // Recolección de constancia (sep 2026, ver "RECORDATORIO Y CARGA DE
+  // CONSTANCIA" más abajo) — solo aplica a cursos con Liga_tutorial_constancia
+  // llena en Cursos (ej. conferencias UNETE). Agregadas al final a propósito,
+  // mismo criterio de auto-heal por nombre que el resto de esta hoja.
+  'Constancia_recordatorios_enviados', 'Fecha_ultimo_recordatorio_constancia',
+  'Constancia_recibida', 'Fecha_recepcion_constancia', 'Liga_constancia_drive'
 ];
 
 // Columnas calculadas con VLOOKUP en vivo: [rango, índice de columna, llave].
@@ -236,6 +246,12 @@ function doGet(e) {
   if (params.action === 'confirmar') {
     return textResponse(JSON.stringify(confirmarDesdeCorreo_(params.folio, params.t)));
   }
+  // Liga firmada del recordatorio de constancia (ver más abajo) — info previa
+  // antes de mostrar el formulario de carga, para no ofrecerlo si ya se
+  // recibió o si el plazo ya venció.
+  if (params.action === 'constanciaInfo') {
+    return textResponse(JSON.stringify(constanciaInfo_(params.folio, params.t)));
+  }
   try {
     const hoja  = obtenerHojaCursos();
     const datos = hoja.getDataRange().getValues().slice(1);
@@ -300,6 +316,14 @@ function doPost(e) {
 
   try {
     const datos = JSON.parse(e.postData.contents);
+
+    // Carga de constancia desde la liga firmada del recordatorio post-
+    // conferencia (ver "RECORDATORIO Y CARGA DE CONSTANCIA" más abajo) — no
+    // es un registro nuevo, se ramifica antes de validarCampos().
+    if (datos.accion === 'subirConstancia') {
+      return textResponse(JSON.stringify(subirConstancia_(datos)));
+    }
+
     validarCampos(datos);
 
     const rfc      = datos.rfc.trim().toUpperCase();
@@ -482,7 +506,8 @@ const ENCABEZADOS_CURSOS = [
   'Registro_previo_requerido', 'Visible_desde', 'Visible_hasta',
   'Hora_inicio', 'Recordatorio_inicio_enviado', 'Recordatorio_medio_enviado',
   'Recordatorio_webinar_enviado', 'Descripcion', 'Dirigido_a',
-  'Fecha_limite_inscripcion', 'Valida_USICAMM', 'Valida_PROEEB'
+  'Fecha_limite_inscripcion', 'Valida_USICAMM', 'Valida_PROEEB',
+  'Liga_tutorial_constancia', 'Hora_fin'
 ];
 // P Hora_inicio (opcional, solo relevante en eventos de un solo día como
 // webinars): hora de inicio, ej. 16:00. Sin esto no se puede mandar el
@@ -508,6 +533,19 @@ const ENCABEZADOS_CURSOS = [
 // sí — un curso puede tener una, otra, ambas o ninguna): validez oficial
 // del curso para esos procesos. Se muestran como etiqueta destacada en la
 // tarjeta ("USICAMM", "PROEEB" o "USICAMM · PROEEB" si aplican las dos).
+// Y Liga_tutorial_constancia (opcional, sep 2026): liga al tutorial de la
+// plataforma externa (ej. UNETE) para tramitar la constancia de
+// participación. Su sola presencia es la señal que activa el recordatorio
+// + carga de constancia de este curso — ver "RECORDATORIO Y CARGA DE
+// CONSTANCIA" más abajo. Se agrega también al correo de aviso del curso
+// (lineaTutorialConstancia_()), igual que Descripcion/Dirigido_a: solo se
+// muestra si está llena.
+// Z Hora_fin (opcional, sep 2026): hora en que termina la conferencia/
+// webinar (ej. 18:00), para calcular el momento exacto en que debe salir
+// el primer recordatorio de constancia. Vacía → se asume que termina a las
+// 23:59 de Fecha_fin (fail-open, igual criterio que el resto de fechas/
+// horas opcionales de esta hoja: nunca bloquea el recordatorio, solo lo
+// vuelve menos preciso).
 
 function obtenerHojaCursos() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -568,16 +606,22 @@ function darFormatoHojaInscripciones_(hoja) {
   const anchos = {
     Folio: 125, Fecha_registro: 150, RFC_Docente: 135, Nombre_Docente: 230, Correo: 220, Telefono: 105,
     Funcion: 150, Escuela: 200, ID_Curso: 110, Nombre_Curso: 260, Registro_externo: 170,
-    Fecha_confirmacion_externa: 170, Recordatorios_pendiente: 160, Fecha_ultimo_recordatorio: 170, Notas: 220
+    Fecha_confirmacion_externa: 170, Recordatorios_pendiente: 160, Fecha_ultimo_recordatorio: 170, Notas: 220,
+    Liga_constancia_drive: 220
   };
   Object.keys(anchos).forEach(h => { if (h in cols) hoja.setColumnWidth(cols[h] + 1, anchos[h]); });
 
   const filas = Math.max(hoja.getMaxRows() - 1, 1);
-  ['Fecha_registro', 'Fecha_confirmacion_externa', 'Fecha_ultimo_recordatorio', 'Fecha_actualizacion_estado'].forEach(h => {
+  ['Fecha_registro', 'Fecha_confirmacion_externa', 'Fecha_ultimo_recordatorio', 'Fecha_actualizacion_estado',
+    'Fecha_ultimo_recordatorio_constancia', 'Fecha_recepcion_constancia'].forEach(h => {
     if (h in cols) hoja.getRange(2, cols[h] + 1, filas, 1).setNumberFormat('d/M/yyyy H:mm:ss');
   });
   if ('Codigo_asistencia_capturado' in cols) {
     hoja.getRange(2, cols.Codigo_asistencia_capturado + 1, filas, 1).setNumberFormat('@');
+  }
+  if ('Constancia_recibida' in cols) {
+    hoja.getRange(2, cols.Constancia_recibida + 1, filas, 1).setDataValidation(
+      SpreadsheetApp.newDataValidation().requireValueInList(['Sí', 'No'], true).setAllowInvalid(true).build());
   }
 
   // Lista suave + color en Registro_externo: ámbar = pendiente, verde = confirmado.
@@ -887,6 +931,7 @@ function onOpen() {
     .addSeparator()
     .addItem('Enviar recordatorios a pendientes ahora', 'fdMenuEnviarPendientesAhora')
     .addItem('Enviar recordatorio de prueba de un folio', 'fdMenuRecordatorioPruebaFolio')
+    .addItem('Enviar recordatorio de prueba de constancia (folio)', 'fdMenuRecordatorioConstanciaPruebaFolio')
     .addItem('Activar / desactivar modo de prueba de correo', 'fdMenuModoPrueba')
     .addSeparator()
     .addItem('Instalar auto-generación de ID de curso', 'instalarTriggerAutoId')
@@ -1273,6 +1318,8 @@ const COL_HORA_INICIO = 15;                    // P (0-indexado: 15)
 const COL_RECORDATORIO_INICIO = 16;            // Q
 const COL_RECORDATORIO_MEDIO = 17;             // R
 const COL_RECORDATORIO_WEBINAR = 18;           // S
+const COL_LIGA_TUTORIAL_CONSTANCIA = 24;       // Y
+const COL_HORA_FIN = 25;                       // Z
 
 // ── Combina la fecha (Y/M/D) de una celda con la hora (H:M) de otra ──
 function combinarFechaHora(fecha, hora) {
@@ -1416,6 +1463,17 @@ function construirCorreoHtml(opts) {
   '</body></html>';
 }
 
+// ── Línea extra para el correo de aviso de cursos con Liga_tutorial_constancia
+// llena (ej. conferencias UNETE) — se agrega al "detalle" del correo, no
+// reemplaza el botón principal (que sigue siendo la Liga_convocatoria/acceso
+// al curso). Vacía si el curso no pide constancia. ──
+function lineaTutorialConstancia_(ligaTutorial) {
+  return ligaTutorial
+    ? '<br><br>Al terminar, no olvides tramitar tu constancia de participación: ' +
+      '<a href="' + ligaTutorial + '" style="color:#9F2241;font-weight:bold;">Ver tutorial para tramitarla</a>.'
+    : '';
+}
+
 // ── Avisa una vez al día (máximo) si algún activador de recordatorios
 // desapareció — evita que el sistema se quede sordo en silencio. ──
 function verificarActivadoresInstalados() {
@@ -1497,7 +1555,8 @@ function enviarRecordatoriosDiarios() {
               : 'Hola, te recordamos que tu curso <strong>' + row[2] + '</strong> comienza el <strong>' +
                 formatearFecha(row[5]) + '</strong>. Prepárate con anticipación para sacarle el máximo provecho.',
             detalle: 'Curso: ' + row[2] + '<br>Inicio: ' + formatearFecha(row[5]) +
-              (esDeUnDia ? '' : '<br>Término: ' + formatearFecha(row[6])),
+              (esDeUnDia ? '' : '<br>Término: ' + formatearFecha(row[6])) +
+              lineaTutorialConstancia_(row[COL_LIGA_TUTORIAL_CONSTANCIA]),
             liga: row[7] || '',
             textoLiga: 'Ver convocatoria / acceso'
           }));
@@ -1865,13 +1924,269 @@ function enviarRecordatoriosWebinar() {
             ? 'Tu curso/webinar <strong>' + row[2] + '</strong> ya comenzó hoy a las <strong>' + horaTexto + ' hrs</strong>. Conéctate ahora.'
             : 'Tu curso/webinar <strong>' + row[2] + '</strong> empieza hoy a las <strong>' + horaTexto +
               ' hrs</strong>. Ten a la mano tu conexión y materiales.',
-          detalle: 'Curso: ' + row[2] + '<br>Hoy a las: ' + horaTexto + ' hrs',
+          detalle: 'Curso: ' + row[2] + '<br>Hoy a las: ' + horaTexto + ' hrs' +
+            lineaTutorialConstancia_(row[COL_LIGA_TUTORIAL_CONSTANCIA]),
           liga: row[7] || '',
           textoLiga: 'Ir a la transmisión / acceso'
         }));
       if (enviado) hoja.getRange(fila, COL_RECORDATORIO_WEBINAR + 1).setValue('TRUE');
     }
   }
+
+  // Recordatorio + carga de constancia (sep 2026). Aislado: si falla, no
+  // afecta el aviso de "empieza en 30 minutos" de arriba. Reusa este mismo
+  // disparador de cada 15 min porque necesita precisión de minutos para el
+  // primer recordatorio ("inmediatamente después de la conferencia") — el
+  // segundo ("al día siguiente") también queda cubierto por esta misma
+  // cadencia a lo largo del día.
+  try {
+    const resConstancia = enviarRecordatoriosConstancia_();
+    console.log('Recordatorios de constancia: ' + resConstancia.enviados + ' enviado(s), ' + resConstancia.pospuestos + ' pospuesto(s).');
+  } catch (err) {
+    console.error('enviarRecordatoriosConstancia_ falló: ' + err.message);
+  }
+}
+
+// ============================================================
+// RECORDATORIO Y CARGA DE CONSTANCIA (sep 2026)
+//
+// Solo para cursos con Liga_tutorial_constancia llena en Cursos (hoy: el
+// Ciclo de Conferencias Virtuales de UNETE) — la mayoría de webinars/
+// seminarios no la necesitan (ver "Sin gestión de constancias" en
+// docs/ARCHITECTURE.md). Reglas decididas con Jorge:
+//   1. Recordatorio 1: inmediatamente después de terminar la conferencia
+//      (o en los siguientes 15 min, cadencia del disparador que lo llama).
+//   2. Recordatorio 2: al día siguiente de terminada, si aún no llega la
+//      constancia.
+//   3. El formulario de carga se cierra al segundo día de terminada la
+//      conferencia (DIAS_LIMITE_CONSTANCIA) — ya no acepta cargas ni se
+//      manda un tercer recordatorio.
+// Cada correo trae una liga firmada (HMAC, mismo mecanismo que
+// tokenConfirmacion_() del doble registro pero con un mensaje distinto —
+// nunca intercambiable con esa liga) que abre
+// formacion-docente.html?subirConstancia=<folio>&t=<firma>, una carga
+// directa a Drive (mismo patrón que mantenimiento.gs/visitas-jefes.gs).
+// ============================================================
+
+const CARPETA_CONSTANCIAS = 'Constancias de Conferencias';
+const DIAS_LIMITE_CONSTANCIA = 2; // el formulario cierra al llegar a este número de días desde Fecha_fin
+const MAX_RECORDATORIOS_CONSTANCIA = 2;
+const TAMANO_MAX_CONSTANCIA_BYTES = 8 * 1024 * 1024;
+
+function tokenConstancia_(folio) {
+  const firma = Utilities.computeHmacSha256Signature('constancia:' + String(folio).trim(), secretoConfirmacion_());
+  return Utilities.base64EncodeWebSafe(firma).replace(/=+$/, '').slice(0, 24);
+}
+
+function ligaConstancia_(folio) {
+  return SITIO_FORMACION_URL + '?subirConstancia=' + encodeURIComponent(String(folio).trim()) +
+    '&t=' + tokenConstancia_(folio);
+}
+
+// ── ¿Sigue abierto el formulario de carga para este curso, hoy? ──
+// Días 0 y 1 desde Fecha_fin: abierto. Día 2 en adelante: cerrado.
+function ventanaConstanciaAbierta_(filaCurso, hoy) {
+  const fin = parseFechaSegura_(filaCurso[6]);
+  if (!fin) return false;
+  const dias = Math.round((hoy - fin) / 86400000);
+  return dias >= 0 && dias < DIAS_LIMITE_CONSTANCIA;
+}
+
+// ── Momento exacto en que termina la conferencia, para el recordatorio
+// inmediato. Sin Hora_fin capturada, se asume que termina a las 23:59 de
+// Fecha_fin (fail-open: nunca bloquea el recordatorio, solo lo retrasa). ──
+function finConferencia_(filaCurso) {
+  if (filaCurso[COL_HORA_FIN]) return combinarFechaHora(filaCurso[6], filaCurso[COL_HORA_FIN]);
+  const f = soloFecha(filaCurso[6]);
+  return new Date(f.getFullYear(), f.getMonth(), f.getDate(), 23, 59, 59);
+}
+
+// ── ¿Toca recordatorio de constancia a esta inscripción? Devuelve el nuevo
+// valor de Constancia_recordatorios_enviados (1 o 2), o 0 si hoy no toca. ──
+function decidirRecordatorioConstancia_(row, cols, filaCurso, ahora, hoy) {
+  if (String(row[cols.Constancia_recibida] || '').trim() === 'Sí') return 0;
+  const enviados = Number(row[cols.Constancia_recordatorios_enviados]) || 0;
+  if (enviados >= MAX_RECORDATORIOS_CONSTANCIA) return 0;
+  if (!ventanaConstanciaAbierta_(filaCurso, hoy)) return 0; // plazo ya vencido, no insiste
+
+  if (enviados === 0) {
+    return ahora >= finConferencia_(filaCurso) ? 1 : 0;
+  }
+  const fin = parseFechaSegura_(filaCurso[6]);
+  return (fin && Math.round((hoy - fin) / 86400000) >= 1) ? 2 : 0;
+}
+
+// ── Correo del recordatorio de constancia (uno u otro según "numero") ──
+function construirCorreoConstancia_(filaCurso, folio, numero) {
+  const nombreCurso = filaCurso[2];
+  const ligaTutorial = filaCurso[COL_LIGA_TUTORIAL_CONSTANCIA];
+  const esUltimo = numero === MAX_RECORDATORIOS_CONSTANCIA;
+  const pasoTutorial = ligaTutorial
+    ? '1. Tramita tu constancia: <a href="' + escaparHtml_(ligaTutorial) + '" style="color:#9F2241;font-weight:bold;">Ver tutorial</a><br>2. '
+    : '';
+  return {
+    asunto: (esUltimo ? 'Último aviso: envíanos' : 'Envíanos') + ' tu constancia de "' + nombreCurso + '"',
+    html: construirCorreoHtml({
+      chip: esUltimo ? 'ÚLTIMO AVISO' : 'GRACIAS POR PARTICIPAR',
+      titulo: esUltimo ? 'Todavía no recibimos tu constancia' : '¡Gracias por participar!',
+      cuerpo: 'Hola, gracias por asistir a <strong>' + escaparHtml_(nombreCurso) + '</strong>. Para que OTDE registre tu ' +
+        'participación necesitamos una copia digital de tu constancia' +
+        (esUltimo ? ' — este es el último recordatorio, el formulario de carga se cierra pronto.' : '.'),
+      detalle: pasoTutorial + 'Sube aquí tu constancia (PDF o imagen):',
+      liga: ligaConstancia_(folio),
+      textoLiga: 'Subir mi constancia'
+    })
+  };
+}
+
+// ── Recorre Inscripciones de cursos con Liga_tutorial_constancia y manda
+// los recordatorios que tocan hoy — un correo individual por folio, mismo
+// patrón que enviarRecordatoriosPendientes_(). ──
+function enviarRecordatoriosConstancia_() {
+  const ahora = new Date();
+  const hoy = soloFecha(ahora);
+  const modoPrueba = !!PropertiesService.getScriptProperties().getProperty('MODO_PRUEBA_CORREO');
+
+  const cursosPorId = {};
+  obtenerHojaCursos().getDataRange().getValues().slice(1).forEach(r => {
+    const id = String(r[0]).trim().toUpperCase();
+    if (id && String(r[COL_LIGA_TUTORIAL_CONSTANCIA] || '').trim()) cursosPorId[id] = r;
+  });
+  if (!Object.keys(cursosPorId).length) return { enviados: 0, pospuestos: 0 };
+
+  const docentesPorRfc = {};
+  obtenerHojaDocentes().getDataRange().getValues().slice(1).forEach(r => {
+    docentesPorRfc[String(r[0]).trim().toUpperCase()] = r;
+  });
+
+  const hoja = obtenerHojaInscripciones();
+  const datos = hoja.getDataRange().getValues();
+  const cols = indicesPorEncabezado_(datos[0]);
+
+  let enviados = 0, pospuestos = 0;
+  for (let i = 1; i < datos.length; i++) {
+    const row = datos[i];
+    const filaCurso = cursosPorId[String(row[cols.ID_Curso]).trim().toUpperCase()];
+    if (!filaCurso) continue;
+
+    const nuevoConteo = decidirRecordatorioConstancia_(row, cols, filaCurso, ahora, hoy);
+    if (!nuevoConteo) continue;
+
+    const rfc = String(row[cols.RFC_Docente]).trim().toUpperCase();
+    const docente = docentesPorRfc[rfc];
+    const correo = docente ? String(docente[2]).trim() : '';
+    if (!correo) continue;
+    if (MailApp.getRemainingDailyQuota() <= RESERVA_CUOTA_CORREO) { pospuestos++; continue; }
+
+    const folio = String(row[cols.Folio]).trim();
+    const mensaje = construirCorreoConstancia_(filaCurso, folio, nuevoConteo);
+    if (!enviarCorreoIndividual_(correo, mensaje.asunto, mensaje.html)) { pospuestos++; continue; }
+    enviados++;
+
+    // En modo de prueba NO se marcan las columnas: el correo fue a la
+    // dirección de prueba, el docente real debe recibirlo después.
+    if (modoPrueba) continue;
+    hoja.getRange(i + 1, cols.Constancia_recordatorios_enviados + 1).setValue(nuevoConteo);
+    hoja.getRange(i + 1, cols.Fecha_ultimo_recordatorio_constancia + 1).setValue(ahora);
+  }
+  return { enviados: enviados, pospuestos: pospuestos };
+}
+
+// ── doGet ?action=constanciaInfo&folio=&t= : info previa a mostrar el
+// formulario de carga (¿ya se recibió? ¿sigue abierto el plazo?). Respuesta
+// mínima, igual criterio que confirmarDesdeCorreo_(): solo el nombre del
+// curso. ──
+function constanciaInfo_(folio, token) {
+  folio = String(folio || '').trim();
+  if (!folio || !token || String(token) !== tokenConstancia_(folio)) return { status: 'invalido' };
+
+  const datos = obtenerHojaInscripciones().getDataRange().getValues();
+  const cols = indicesPorEncabezado_(datos[0]);
+  for (let i = 1; i < datos.length; i++) {
+    if (String(datos[i][cols.Folio]).trim() !== folio) continue;
+    const curso = String(datos[i][cols.Nombre_Curso] || datos[i][cols.ID_Curso] || '');
+    if (String(datos[i][cols.Constancia_recibida] || '').trim() === 'Sí') {
+      return { status: 'ok', curso: curso, yaRecibida: true, abierta: false };
+    }
+    const filaCurso = obtenerFilaCurso_(obtenerHojaCursos(), String(datos[i][cols.ID_Curso]).trim().toUpperCase());
+    const abierta = !!filaCurso && ventanaConstanciaAbierta_(filaCurso, soloFecha(new Date()));
+    return { status: 'ok', curso: curso, yaRecibida: false, abierta: abierta };
+  }
+  return { status: 'invalido' };
+}
+
+// ── doPost {accion:'subirConstancia', folio, t, archivoBase64, archivoNombre,
+// archivoTipo} : guarda el archivo en Drive y lo enlaza a la inscripción. ──
+function subirConstancia_(d) {
+  const folio = String(d.folio || '').trim();
+  if (!folio || !d.t || String(d.t) !== tokenConstancia_(folio)) return { status: 'invalido' };
+  if (!d.archivoBase64 || !d.archivoNombre) return { status: 'error', mensaje: 'Falta adjuntar el archivo.' };
+
+  const hoja = obtenerHojaInscripciones();
+  const datos = hoja.getDataRange().getValues();
+  const cols = indicesPorEncabezado_(datos[0]);
+
+  for (let i = 1; i < datos.length; i++) {
+    if (String(datos[i][cols.Folio]).trim() !== folio) continue;
+    const curso = String(datos[i][cols.Nombre_Curso] || datos[i][cols.ID_Curso] || '');
+
+    if (String(datos[i][cols.Constancia_recibida] || '').trim() === 'Sí') {
+      return { status: 'ok', curso: curso, yaRecibida: true };
+    }
+
+    const filaCurso = obtenerFilaCurso_(obtenerHojaCursos(), String(datos[i][cols.ID_Curso]).trim().toUpperCase());
+    if (!filaCurso || !ventanaConstanciaAbierta_(filaCurso, soloFecha(new Date()))) {
+      return { status: 'cerrado' };
+    }
+
+    const bytes = Utilities.base64Decode(d.archivoBase64);
+    if (bytes.length > TAMANO_MAX_CONSTANCIA_BYTES) {
+      return { status: 'error', mensaje: 'El archivo es demasiado grande (máximo 8MB).' };
+    }
+    const mimeType = d.archivoTipo || 'application/octet-stream';
+    const blob = Utilities.newBlob(bytes, mimeType, folio + ' — ' + d.archivoNombre);
+    const archivo = obtenerCarpetaConstancias_().createFile(blob);
+    archivo.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+
+    const ahora = new Date();
+    hoja.getRange(i + 1, cols.Constancia_recibida + 1).setValue('Sí');
+    hoja.getRange(i + 1, cols.Fecha_recepcion_constancia + 1).setValue(ahora);
+    hoja.getRange(i + 1, cols.Liga_constancia_drive + 1).setValue(archivo.getUrl());
+
+    return { status: 'ok', curso: curso, yaRecibida: false };
+  }
+  return { status: 'invalido' };
+}
+
+function obtenerCarpetaConstancias_() {
+  const carpetas = DriveApp.getFoldersByName(CARPETA_CONSTANCIAS);
+  return carpetas.hasNext() ? carpetas.next() : DriveApp.createFolder(CARPETA_CONSTANCIAS);
+}
+
+// ── Menú: manda a la dirección de prueba el recordatorio de constancia de
+// UN folio, sin aplicar reglas ni marcar columnas. ──
+function fdMenuRecordatorioConstanciaPruebaFolio() {
+  const ui = SpreadsheetApp.getUi();
+  const correoPrueba = PropertiesService.getScriptProperties().getProperty('MODO_PRUEBA_CORREO');
+  if (!correoPrueba) { ui.alert('Primero activa el modo de prueba (menú OTDE Formación).'); return; }
+
+  const r = ui.prompt('Recordatorio de constancia de prueba', 'Folio de la inscripción (ej. OTDE-CAP-0270):', ui.ButtonSet.OK_CANCEL);
+  if (r.getSelectedButton() !== ui.Button.OK) return;
+  const folio = r.getResponseText().trim().toUpperCase();
+
+  const datos = obtenerHojaInscripciones().getDataRange().getValues();
+  const cols = indicesPorEncabezado_(datos[0]);
+  const row = datos.slice(1).find(x => String(x[cols.Folio]).trim().toUpperCase() === folio);
+  if (!row) { ui.alert('No existe el folio ' + folio); return; }
+  const filaCurso = obtenerFilaCurso_(obtenerHojaCursos(), String(row[cols.ID_Curso]).trim().toUpperCase());
+  if (!filaCurso) { ui.alert('El curso de ese folio ya no está en la hoja Cursos.'); return; }
+  if (!String(filaCurso[COL_LIGA_TUTORIAL_CONSTANCIA] || '').trim()) {
+    ui.alert('Ese curso no tiene Liga_tutorial_constancia — no pide constancia.'); return;
+  }
+
+  const mensaje = construirCorreoConstancia_(filaCurso, folio, 1);
+  const ok = enviarCorreoIndividual_(String(row[cols.Correo] || '(sin correo)'), mensaje.asunto, mensaje.html);
+  ui.alert(ok ? 'Enviado a ' + correoPrueba + '.' : 'No se pudo enviar (revisa el registro de ejecución).');
 }
 
 // ── Instala los disparadores. Es seguro correrlo de nuevo — borra y
