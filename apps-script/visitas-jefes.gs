@@ -945,25 +945,34 @@ function visGenerarReporteResumen_() {
     })
     .sort(function (a, b) { return new Date(b[COL_VIS_FECHA_VISITA_REAL - 1]) - new Date(a[COL_VIS_FECHA_VISITA_REAL - 1]); });
 
-  const filasTabla = realizadas.map(function (r) {
-    return '<tr>' +
-      '<td>' + val(r[2]) + '</td><td>' + val(r[3]) + '</td>' +               // C, D
-      '<td>' + val(r[6]) + '</td><td>' + val(r[7]) + '</td>' +               // G, H
-      '<td>' + val(r[8]) + '</td><td>' + val(r[9]) + '</td>' +               // I, J
-      '<td>' + fechaTexto(r[COL_VIS_FECHA_VISITA_REAL - 1]) + '</td>' +      // O
-      '<td>' + val(r[COL_VIS_OBSERVACIONES - 1]) + '</td>' +                 // Q
-      '<td>' + val(r[COL_VIS_CONVOCADOS - 1]) + '</td>' +                    // U
-      '<td>' + val(r[COL_VIS_DESCRIPCION_ACTIVIDAD - 1]) + '</td>' +         // V
-      '<td>' + val(r[COL_VIS_CANTIDAD_ASISTENTES - 1]) + '</td></tr>';       // W
+  // Tarjetas, no tabla (sep 2026, corregido tras feedback de Jorge: 11
+  // columnas en una sola fila de tabla a 8.5px era ilegible, sobre todo con
+  // texto libre largo — Convocados/Descripción/Operatividad — aplastado en
+  // celdas angostas. Mismo criterio que la sección "Realizadas" del reporte
+  // de seguimiento (visGenerarReporteSeguimiento_): una tarjeta por visita,
+  // identidad en título/meta, cada campo de contenido en su propia línea
+  // etiquetada a todo el ancho.
+  const tarjetas = realizadas.map(function (r) {
+    return '<div class="tarjeta">' +
+      '<div class="tarjeta-titulo">' + val(r[7]) + ' — ' + fechaTexto(r[COL_VIS_FECHA_VISITA_REAL - 1]) + '</div>' +
+      '<div class="tarjeta-meta">Visitó: ' + val(r[2]) + ' (' + val(r[3]) + ') · CCT ' + val(r[6]) +
+        ' · Sector ' + val(r[8]) + ' · Zona ' + val(r[9]) + '</div>' +
+      '<div class="tarjeta-campo"><strong>Convocados/Participantes:</strong> ' + val(r[COL_VIS_CONVOCADOS - 1]) + '</div>' +
+      '<div class="tarjeta-campo"><strong>Descripción de la actividad:</strong> ' + val(r[COL_VIS_DESCRIPCION_ACTIVIDAD - 1]) + '</div>' +
+      '<div class="tarjeta-campo"><strong>Cantidad de asistentes:</strong> ' + val(r[COL_VIS_CANTIDAD_ASISTENTES - 1]) + '</div>' +
+      '<div class="tarjeta-campo"><strong>Operatividad:</strong> ' + val(r[COL_VIS_OBSERVACIONES - 1]) + '</div>' +
+      '</div>';
   }).join('');
 
   const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>' +
-    '* { box-sizing: border-box; } body { font-family: Arial, Helvetica, sans-serif; color:#222; font-size:9.5px; margin:0; padding:24px 26px; }' +
+    '* { box-sizing: border-box; } body { font-family: Arial, Helvetica, sans-serif; color:#222; font-size:11px; margin:0; padding:30px 34px; }' +
     '.encabezado { background:#56212f; color:#F9F8F5; padding:14px 18px; border-radius:8px 8px 0 0; }' +
-    '.encabezado h1 { margin:0; font-size:15px; } .encabezado p { margin:4px 0 0; font-size:10px; opacity:.85; }' +
-    'table { width:100%; border-collapse:collapse; font-size:8.5px; margin-top:14px; }' +
-    'th { text-align:left; background:#F9F8F5; color:#56212f; padding:5px 6px; border-bottom:1.5px solid #d6d1ca; }' +
-    'td { padding:5px 6px; border-bottom:1px solid #e5e1da; vertical-align:top; }' +
+    '.encabezado h1 { margin:0; font-size:16px; } .encabezado p { margin:4px 0 0; font-size:10px; opacity:.85; }' +
+    '.tarjeta { border:1px solid #d6d1ca; border-left:4px solid #9F2241; border-radius:6px; padding:10px 14px; margin:14px 0 10px; }' +
+    '.tarjeta-titulo { font-weight:bold; color:#56212f; font-size:12px; }' +
+    '.tarjeta-meta { color:#6b6b6b; font-size:9.5px; margin:2px 0 8px; }' +
+    '.tarjeta-campo { font-size:10.5px; line-height:1.45; margin:3px 0; }' +
+    '.tarjeta-campo strong { color:#56212f; }' +
     '.vacio { color:#977e5b; font-size:10.5px; padding:10px 0; }' +
     '.pie { border-top:1px solid #d6d1ca; margin-top:16px; padding-top:8px; text-align:center; font-size:8px; color:#6b6b6b; }' +
     '</style></head><body>' +
@@ -972,11 +981,7 @@ function visGenerarReporteResumen_() {
     'Fecha de referencia: ' + Utilities.formatDate(hoy, 'America/Mexico_City', 'dd/MM/yyyy') +
     ' · Realizadas en los últimos ' + VIS_REPORTE_DIAS_ATRAS + ' días · Generado el ' +
     Utilities.formatDate(ahora, 'America/Mexico_City', "dd/MM/yyyy 'a las' HH:mm") + ' hrs</p></div>' +
-    (realizadas.length
-      ? '<table><tr><th>Nombre</th><th>Cargo/Área</th><th>CCT</th><th>Escuela</th><th>Sector</th><th>Zona</th>' +
-        '<th>Fecha de visita</th><th>Operatividad</th><th>Convocados</th><th>Descripción</th><th>Asistentes</th></tr>' +
-        filasTabla + '</table>'
-      : '<p class="vacio">Sin visitas realizadas en este periodo.</p>') +
+    (realizadas.length ? tarjetas : '<p class="vacio">Sin visitas realizadas en este periodo.</p>') +
     '<div class="pie">Documento generado autom&aacute;ticamente desde el sistema de Ceremonias C&iacute;vicas.</div>' +
     '</body></html>';
 
