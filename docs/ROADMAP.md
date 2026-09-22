@@ -506,17 +506,39 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
      generados — probablemente archivo de solo lectura, no migración) y el corte real.
    Detalle completo del diseño de la Fase 1 y de la verificación en vivo de v8.5 que precedió la
    Fase 2 en `docs/BITACORA.md`, checkpoints 24 ago 2026 y 25 ago 2026.
-10. **Tamaño del artifact de GitHub Pages (335 MB) — riesgo de timeout en el deploy** (detectado
-    27 ago 2026, tras un deploy fallido real — ver `docs/BITACORA.md`, checkpoint "Incidente:
-    deploy de Correo falló por timeout"): el run #119 de `pages build and deployment` falló con
-    "Timeout reached, aborting!" subiendo el artifact; el run inmediato anterior, mismo tamaño,
-    había tardado solo 14s — fue lentitud puntual de infraestructura, no un límite duro, y se
-    resolvió reintentando sin tocar código. El repo trackea 354 MB en total, con varios
-    zips/pptx de sesiones CTE entre 12 y 69 MB en `pdfs/cte/` (`sexta-sesion-completa.zip` 69
-    MB, `presentacion-tema12.pptx` 53 MB, entre los más grandes). Jorge decidió no atacarlo esta
-    sesión. Si se repite, opciones a evaluar (no decididas): mover el material histórico de CTE
-    fuera del repo (enlace externo, Drive) en vez de servirlo desde GitHub Pages, o Git LFS para
-    los binarios grandes.
+10. **Tamaño del repo — riesgo de timeout en el deploy y de tocar el límite de 1 GB de GitHub
+    Pages** (detectado 27 ago 2026, revisado y actualizado 21 sep 2026 — decisión pospuesta las
+    dos veces, sin atacarlo todavía):
+    - **Origen (27 ago 2026)**: un deploy real de `pages build and deployment` falló con
+      "Timeout reached, aborting!" subiendo el artifact (run #119); el run inmediato anterior,
+      mismo tamaño, había tardado solo 14s — se concluyó que fue lentitud puntual de
+      infraestructura, no un límite duro, y se resolvió reintentando sin tocar código. En ese
+      momento el repo trackeaba 354 MB.
+    - **Estado actual (21 sep 2026, tras publicar Primera Sesión Ordinaria 2026-2027)**:
+      contenido publicado (lo que Git trackea y GitHub Pages sirve, sin `.git`) subió a
+      **514 MB**; el historial `.git` ya pesa **491 MB** (crece con cada archivo nuevo, nunca
+      baja — no hay reescritura de historia). Un solo commit de esta sesión agregó ~145 MB
+      (incluyendo un ZIP de 80 MB, ya por encima de los 50 MB que GitHub recomienda como máximo
+      por archivo — advertencia real recibida en el push, aunque no bloqueante porque el límite
+      duro es 100 MB por archivo).
+    - **Git LFS descartado como opción viable (confirmado 21 sep 2026)**: GitHub Pages **no
+      resuelve punteros de Git LFS al desplegar** — serviría el archivo de puntero (texto) en
+      vez del PDF/ZIP real a quien lo descargue desde `cte.html`. Es una limitación documentada
+      de GitHub Pages, no algo configurable. Con el sitio sirviendo estos materiales
+      directamente desde Pages (sin build step ni CDN propio), LFS no funciona tal como está
+      armado el proyecto — la única ruta real que queda es mover el material pesado fuera del
+      repo (enlace externo, Drive) y dejar solo el link en `cte.html`.
+    - **Umbrales para retomar esto sin esperar a que colapse** (Jorge pidió que se le avise
+      proactivamente al acercarse, en vez de descubrirlo con un fallo real):
+      - Contenido publicado (sin `.git`) ≥ **800 MB** (80% del límite recomendado de 1 GB de
+        GitHub Pages) — hoy en 514 MB (~51%).
+      - Cualquier archivo nuevo ≥ **80 MB** (se acerca al límite duro de 100 MB por archivo).
+      - Un deploy de GitHub Pages falla por timeout una segunda vez (la primera, ago 2026, se
+        resolvió solo con un reintento — la segunda ya no se trataría como ruido).
+      Cualquier sesión que agregue material pesado a `pdfs/` (especialmente ZIPs/PPTX de
+      sesiones CTE) debe revisar contenido publicado total (`git ls-files` + tamaño en disco) y
+      el tamaño del archivo más grande del commit contra estos umbrales, y avisar a Jorge de
+      inmediato si se cruzan — no esperar al cierre de sesión ni a que el deploy falle.
 11. ~~**Soporte Técnico Remoto sin correo de confirmación al enviar**~~ (detectado 28 ago 2026,
     resuelto 31 ago 2026) — se agregó `sopNotificarSolicitudRecibida()` a
     `apps-script/soporte-remoto.gs`, llamada desde `doPost` junto a `notificarTelegram`. Soporte
