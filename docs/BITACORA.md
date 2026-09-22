@@ -14,6 +14,21 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-09-21 (cont. 5) · Tamaño del repo: cifras reales actualizadas, Git LFS descartado, umbrales de aviso proactivo
+
+| | |
+|---|---|
+| **Fecha** | 2026-09-21 |
+| **Sesión** | A raíz de la publicación de Primera Sesión Ordinaria (checkpoint anterior), Jorge preguntó por el pendiente ya anotado sobre el tamaño del repo (`docs/ROADMAP.md` ítem 10, ago 2026) y pidió revisar el tamaño actual del `.git`. Se le explicó qué es Git LFS a petición suya. Decidió dejar la decisión de fondo para después, pero pidió aviso proactivo — no solo una nota pasiva — en cuanto el repo se acerque a un límite real. |
+| **Medición real** | Contenido publicado (`git ls-files`, sin `.git`): **514.4 MB**. Historial `.git`: **491 MB** (339 MB empaquetados + ~152 MB sueltos del commit recién hecho). Working tree completo: ~1.2 GB. Archivos más pesados: `cte-primera-sesión-completa.zip` (80 MB, nuevo esta sesión), `sexta-sesion-completa.zip` (69 MB), `presentacion-tema12.pptx` (53 MB), `2627_s1_doc1_cultura_de_paz.pdf` (33 MB, nuevo esta sesión) — todos en `pdfs/cte/`. |
+| **Git LFS descartado como opción viable** | GitHub Pages no resuelve punteros de Git LFS al desplegar — serviría el archivo de puntero (texto) en vez del PDF/ZIP real a quien lo descargue desde `cte.html`. Es una limitación documentada de GitHub Pages, no configurable. Con el sitio sirviendo estos materiales directo desde Pages sin build step, la única ruta real para bajar el peso sigue siendo mover el material pesado fuera del repo (enlace externo, Drive). |
+| **Umbrales de aviso agregados** (`docs/ROADMAP.md` ítem 10, `CLAUDE.md` regla 4) | Contenido publicado ≥ 800 MB (hoy 514 MB, ~51%); cualquier archivo nuevo ≥ 80 MB; un segundo timeout de deploy de GitHub Pages (el primero, ago 2026, se resolvió solo con un reintento). Cualquier sesión que agregue material pesado a `pdfs/` debe revisar estos umbrales y avisar a Jorge de inmediato si se cruzan, no esperar al cierre de sesión. |
+| **Memoria persistente** | Se guardó `feedback_avisar_tamano_repo_seprn.md` en el sistema de memoria (fuera del repo) para que sesiones futuras recuerden avisar proactivamente aunque no estén revisando `docs/ROADMAP.md` en ese momento. |
+| **Documentación actualizada** | `docs/ROADMAP.md` (ítem 10 reescrito con cifras reales y umbrales), `CLAUDE.md` (regla nueva bajo la regla 4, sobre revisar tamaño antes de comitear material pesado). |
+| **Commits** | `5f2cc1c`, pusheado a `origin/main` a pedido explícito de Jorge. |
+
+---
+
 ## CHECKPOINT — 2026-09-21 (cont. 4) · CTE: Opening de Fase Intensiva + nueva Primera Sesión Ordinaria 2026-2027 (video + 5 materiales) publicados
 
 | | |
@@ -25,7 +40,7 @@ para qué otro documento tocar además de este.
 | **`index.html`** | Banner `.update-banner` actualizado de "Fase Intensiva 2026-2027 ya disponible" a "Primera Sesión Ordinaria 2026-2027 ya disponible" — es la sesión más reciente ahora. |
 | **Documentación actualizada** | `CLAUDE.md` (tabla de sesiones CTE + pendiente resuelto), `docs/ROADMAP.md` (mismo pendiente tachado). |
 | **Verificación** | Revisado a mano el anidado de `<div>` alrededor de la edición (el conteo global de `<div>`/`</div>` en `cte.html` tiene el mismo desbalance de +1 que ya existía antes de esta sesión — no es nuevo). Sin servidor local levantado ni prueba en navegador esta ronda — cambio de solo HTML/enlaces estáticos, mismo patrón ya usado docenas de veces en este archivo. |
-| **Commits** | Pendiente de comitear — incluye 6 archivos binarios nuevos (~145MB entre PPTX/PDFs/ZIP) en `pdfs/cte/cte-2026-2027/cte-primera-sesión/`, todos bajo el límite de 100MB de GitHub. |
+| **Commits** | `6799128`, pusheado a `origin/main` a pedido explícito de Jorge — incluye 6 archivos binarios nuevos (~145MB entre PPTX/PDFs/ZIP) en `pdfs/cte/cte-2026-2027/cte-primera-sesión/`, todos bajo el límite de 100MB de GitHub. |
 
 ---
 
