@@ -390,9 +390,10 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
 3. ~~**Barra CTE desactualizada**~~ — resuelto 10 ago 2026: `.update-banner` de `index.html`
    ahora dice "Fase Intensiva 2026-2027 ya disponible" (antes decía "Octava Sesión Ordinaria
    2025-2026 ya disponible", el ciclo cerrado).
-4. **Fase Intensiva 2026-2027 sin video** — el acordeón en `cte.html` solo tiene los 9
-   materiales + ZIP, sin `video-container`. Agregar el iframe (`data-src`, mismo patrón que el
-   resto) cuando Jorge tenga el video del Opening.
+4. ~~**Fase Intensiva 2026-2027 sin video**~~ — resuelto 21 sep 2026: se publicó el Opening de
+   Fase Intensiva (`bXq_TtMf_pc`) y, junto con él, el Opening y los 5 materiales de la nueva
+   Primera Sesión Ordinaria 2026-2027 (`vhuipmEOEuY`), que pasó a ser el acordeón activo/NUEVO
+   del ciclo. Ver `docs/BITACORA.md` y `CLAUDE.md` (tabla de sesiones CTE).
 5. ~~**Mensaje de error duplicado en CCT no encontrada**~~ — resuelto 10 ago 2026: en los 6
    formularios que comparten el patrón (`otde.html`: Mantenimiento, Asesorías, Soporte, y los 4
    sub-formularios de Correo vía `crearCctAutocomplete()`; y `formacion-docente.html`), el

@@ -97,7 +97,8 @@ conocida, no corregida a propósito (decisión de Jorge).
 
 | Sesión | Ciclo | Opening YT | Grabación | Materiales | ZIP |
 |---|---|---|---|---|---|
-| Fase Intensiva 2026-2027 | 2026-2027 (actual) | — | — | 9 PDFs (`pdfs/cte/cte-2026-2027/cte-fase-intensiva/`) | ✅ (`cte-fase-intensiva-completa.zip`) |
+| Primera Sesión Ordinaria 2026-2027 | 2026-2027 (actual) | `vhuipmEOEuY` | — | 5 materiales (PPTX + 4 PDFs, `pdfs/cte/cte-2026-2027/cte-primera-sesión/`) | ✅ (`cte-primera-sesión-completa.zip`) |
+| Fase Intensiva 2026-2027 | 2026-2027 (actual) | `bXq_TtMf_pc` | — | 9 PDFs (`pdfs/cte/cte-2026-2027/cte-fase-intensiva/`) | ✅ (`cte-fase-intensiva-completa.zip`) |
 | Taller Intensivo de Cierre (16-17 jul 2026) | 2025-2026 (archivo) | `1PXPphhZd9s` | — (evento no ocurrió) | 5 materiales (`pdfs/cte/cte-2025-2026/taller-intensivo-docentes/`) | ✅ |
 | Octava Ordinaria | 2025-2026 (archivo) | `BRneovXdqL8` | — | PPTX + PDF orientaciones | ✅ |
 | Séptima Ordinaria | 2025-2026 (archivo) | `oUA9r4zKdgo` | — | PPTX + 7 materiales | ✅ |
@@ -1078,7 +1079,12 @@ Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/I
   identidad gráfica completo.
 - ~~**Barra CTE desactualizada**~~ — resuelto 10 ago 2026: `.update-banner` en `index.html` ahora
   dice "Fase Intensiva 2026-2027 ya disponible".
-- **Fase Intensiva 2026-2027 sin video** — falta agregar el `iframe` del Opening en `cte.html` cuando Jorge lo tenga
+- ~~**Fase Intensiva 2026-2027 sin video**~~ — resuelto 21 sep 2026: se publicaron los opening
+  de Fase Intensiva (`bXq_TtMf_pc`) y de la nueva Primera Sesión Ordinaria 2026-2027
+  (`vhuipmEOEuY`), junto con los 5 materiales de esta última (PPTX + 4 PDFs,
+  `pdfs/cte/cte-2026-2027/cte-primera-sesión/`). Primera Sesión Ordinaria pasó a ser el
+  acordeón activo/NUEVO del ciclo; Fase Intensiva se colapsó debajo, sin perder su badge de
+  sesión del ciclo actual. Banner de `index.html` actualizado al mismo texto.
 - ~~**Centro de Formación Docente** — dar de alta los primeros cursos propios del ciclo
   26-27~~ — resuelto 10 sep 2026: primer curso dado de alta (`ACF-2627-001`, "Formación
   Docente en Inteligencia Artificial", Fundación Televisa) y tarjeta reactivada en

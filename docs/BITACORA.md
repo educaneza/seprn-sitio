@@ -14,6 +14,21 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-09-21 (cont. 4) · CTE: Opening de Fase Intensiva + nueva Primera Sesión Ordinaria 2026-2027 (video + 5 materiales) publicados
+
+| | |
+|---|---|
+| **Fecha** | 2026-09-21 |
+| **Sesión** | Jorge ya tenía en mano los dos videos de Opening pendientes (Fase Intensiva 2026-2027 y la nueva Primera Sesión Ordinaria) y los materiales de esta última, ya copiados a `pdfs/cte/cte-2026-2027/cte-primera-sesión/` (untracked) antes de empezar. Pedido directo de publicar ambos opening + los materiales de la primera sesión. |
+| **Cambios en `cte.html`** | Se agregó el `video-container`/`iframe` (`data-src`, lazy-load, mismo patrón que el resto de sesiones) con el Opening de Fase Intensiva (`bXq_TtMf_pc`) al acordeón ya existente. Se agregó un acordeón nuevo "Primera Sesión Ordinaria 2026-2027" arriba de Fase Intensiva, con su propio Opening (`vhuipmEOEuY`) y los 5 materiales (PPTX + 4 PDFs) ya presentes en disco, más el ZIP y el link a Portal SEP (mismo patrón que cualquier sesión ordinaria completa, ej. Octava). Primera Sesión Ordinaria pasó a ser el acordeón `active`/badge NUEVO (más reciente); Fase Intensiva perdió el badge NUEVO y quedó colapsada, pero se queda dentro del bloque del ciclo actual (2026-2027), no se archiva — sigue siendo del ciclo vigente. |
+| **Encoding de rutas** | La carpeta nueva lleva tilde (`cte-primera-sesión`) y el PPTX tiene espacios + tilde (`SEPRN Primera Sesión Ordinaria CTE 2026-2027.pptx`) — todos los `href` usan `%C3%B3`/`%20`, mismo criterio que el resto del sitio (regla 6 de `CLAUDE.md`). |
+| **`index.html`** | Banner `.update-banner` actualizado de "Fase Intensiva 2026-2027 ya disponible" a "Primera Sesión Ordinaria 2026-2027 ya disponible" — es la sesión más reciente ahora. |
+| **Documentación actualizada** | `CLAUDE.md` (tabla de sesiones CTE + pendiente resuelto), `docs/ROADMAP.md` (mismo pendiente tachado). |
+| **Verificación** | Revisado a mano el anidado de `<div>` alrededor de la edición (el conteo global de `<div>`/`</div>` en `cte.html` tiene el mismo desbalance de +1 que ya existía antes de esta sesión — no es nuevo). Sin servidor local levantado ni prueba en navegador esta ronda — cambio de solo HTML/enlaces estáticos, mismo patrón ya usado docenas de veces en este archivo. |
+| **Commits** | Pendiente de comitear — incluye 6 archivos binarios nuevos (~145MB entre PPTX/PDFs/ZIP) en `pdfs/cte/cte-2026-2027/cte-primera-sesión/`, todos bajo el límite de 100MB de GitHub. |
+
+---
+
 ## CHECKPOINT — 2026-09-21 (cont. 3) · Formación Docente: badge/aviso de "plataforma externa" ya no dependen solo de tener liga, + nota de folio en la confirmación
 
 | | |
