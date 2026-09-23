@@ -1362,32 +1362,138 @@ function fdDesactivarModoPrueba() {
   PropertiesService.getScriptProperties().deleteProperty('MODO_PRUEBA_CORREO');
 }
 
-// ── Envío en lote (BCC) con revisión de cuota. Devuelve true si se mandó. ──
-function enviarCorreoLote(destinatarios, asunto, cuerpoHtml) {
-  if (!destinatarios.length) return false;
+// ── Envío en lote (BCC). Trocea en varios correos si hay más destinatarios
+// que el límite por mensaje (bug real, 22 sep 2026: con 119 inscritos en un
+// solo BCC, MailApp.sendEmail reventaba "Límite Excedido: Destinatarios de
+// correo electrónico por mensaje" y el recordatorio nunca salía — ver
+// docs/QA-NOTES.md #38). El límite de 45 ya no es estrictamente necesario
+// con Brevo (soporta más por mensaje), se deja igual por margen de sobra.
+// Devuelve true si AL MENOS UN lote se mandó (no todos — un lote fallido no
+// debe perder los demás). ──
+const MAX_DESTINATARIOS_POR_CORREO = 45; // margen amplio, ya no atado al límite de Gmail
 
-  if (MailApp.getRemainingDailyQuota() < 1) {
-    console.log('Cuota de correo agotada por hoy — se reintenta mañana: ' + asunto);
+function trocearArreglo_(arr, tamano) {
+  const lotes = [];
+  for (let i = 0; i < arr.length; i += tamano) lotes.push(arr.slice(i, i + tamano));
+  return lotes;
+}
+
+// ── Validación mínima de formato — no garantiza que la cuenta exista, solo
+// filtra direcciones claramente mal capturadas antes de que envenenen un
+// lote completo (bug real, 22 sep 2026: un solo correo mal escrito tumbaba
+// el lote entero de MailApp.sendEmail — "Invalid email"). ──
+function esEmailValido_(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).trim());
+}
+
+// ============================================================
+// ENVÍO VÍA BREVO, NO MailApp (sep 2026)
+//
+// MailApp.sendEmail() comparte una cuota de ~100 destinatarios/día entre
+// TODAS las automatizaciones de la cuenta de Google de OTDE — con 119
+// inscritos en una sola conferencia (UNETE, 22 sep 2026) esa cuota se
+// agotó y el recordatorio nunca salió (ver docs/QA-NOTES.md #38/#39).
+// Brevo (https://www.brevo.com) da 300 destinatarios/día gratis, sin
+// tarjeta y sin necesitar un dominio propio (basta un remitente
+// verificado) — resuelve el mismo problema sin depender de la cuota de
+// Gmail ni de un trámite institucional para conseguir Workspace.
+//
+// Requiere:
+//   1. Script Property BREVO_API_KEY (Configuración del proyecto →
+//      Propiedades de las secuencias de comandos) — ya generada y
+//      guardada el 22 sep 2026, no viaja en este código.
+//   2. Que CORREO_REMITENTE_BREVO esté verificado en Brevo (Configuración
+//      → Remitentes, dominio, IP → confirmar desde el enlace que Brevo
+//      manda a esa dirección). Sin esto, la API rechaza el envío.
+//
+// PENDIENTE: este bloque no se ha probado contra la API real todavía —
+// falta confirmar el remitente en Brevo y correr un envío de prueba antes
+// de pegar esto en el editor de Apps Script real. Ver docs/ROADMAP.md.
+// ============================================================
+
+const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
+const CORREO_REMITENTE_BREVO = 'otde.nezahualcoyotl@gmail.com';
+
+// ── Manda un correo vía la API de Brevo. `destinatarios` es un arreglo de
+// correos — con más de uno se manda en un solo mensaje con todos en BCC
+// (nadie ve al resto), mismo comportamiento que antes con MailApp
+// (to: uno mismo, bcc: destinatarios reales); Brevo exige un "to" aunque
+// el resto vaya en bcc, así que se usa el remitente como "to" visible.
+// Devuelve true solo si Brevo aceptó el envío. ──
+function enviarPorBrevo_(destinatarios, asunto, cuerpoHtml) {
+  const apiKey = PropertiesService.getScriptProperties().getProperty('BREVO_API_KEY');
+  if (!apiKey) {
+    console.error('enviarPorBrevo_: falta la Script Property BREVO_API_KEY.');
     return false;
   }
 
+  const payload = {
+    sender: { name: 'OTDE NEZA · Centro de Formación Docente', email: CORREO_REMITENTE_BREVO },
+    replyTo: { email: CORREO_REPLY_TO_INSTITUCIONAL },
+    subject: asunto,
+    htmlContent: cuerpoHtml
+  };
+
+  if (destinatarios.length === 1) {
+    payload.to = [{ email: destinatarios[0] }];
+  } else {
+    payload.to = [{ email: CORREO_REMITENTE_BREVO }];
+    payload.bcc = destinatarios.map(function(correo) { return { email: correo }; });
+  }
+
+  try {
+    const respuesta = UrlFetchApp.fetch(BREVO_API_URL, {
+      method: 'post',
+      contentType: 'application/json',
+      headers: { 'api-key': apiKey },
+      payload: JSON.stringify(payload),
+      muteHttpExceptions: true
+    });
+    const codigo = respuesta.getResponseCode();
+    if (codigo >= 200 && codigo < 300) return true;
+    console.error('enviarPorBrevo_: Brevo respondió ' + codigo + ': ' + respuesta.getContentText());
+    return false;
+  } catch (err) {
+    console.error('enviarPorBrevo_: error de red al llamar a Brevo: ' + err.message);
+    return false;
+  }
+}
+
+function enviarCorreoLote(destinatarios, asunto, cuerpoHtml) {
   const correoPrueba = PropertiesService.getScriptProperties().getProperty('MODO_PRUEBA_CORREO');
   const enModoPrueba = !!correoPrueba;
 
-  MailApp.sendEmail({
-    to: Session.getEffectiveUser().getEmail(),
-    bcc: enModoPrueba ? correoPrueba : destinatarios.join(','),
-    replyTo: CORREO_REPLY_TO_INSTITUCIONAL,
-    subject: enModoPrueba ? '[PRUEBA] ' + asunto : asunto,
-    htmlBody: enModoPrueba
+  const validos = destinatarios.filter(esEmailValido_);
+  const invalidos = destinatarios.filter(function(c) { return !esEmailValido_(c); });
+  if (invalidos.length) {
+    console.error('enviarCorreoLote: ' + invalidos.length + ' correo(s) con formato inválido, se omiten: ' + invalidos.join(', '));
+  }
+  if (!validos.length) return false;
+
+  // En modo de prueba todo va a un solo correo (el de prueba) — no hay nada
+  // que trocear, siempre es un solo destinatario real.
+  const lotes = enModoPrueba ? [validos] : trocearArreglo_(validos, MAX_DESTINATARIOS_POR_CORREO);
+
+  // Cada lote se manda aislado: si uno falla (ej. una dirección que pasó el
+  // formato pero el servidor igual rechaza), los demás lotes no se pierden.
+  let enviados = 0;
+  lotes.forEach(function(lote) {
+    const asuntoFinal = enModoPrueba ? '[PRUEBA] ' + asunto : asunto;
+    const cuerpoFinal = enModoPrueba
       ? '<div style="background:#fff3cd;border:1px solid #e0a800;border-radius:6px;' +
         'padding:10px 16px;margin-bottom:16px;font-family:Arial,Helvetica,sans-serif;' +
         'font-size:13px;color:#555;"><strong>Modo de prueba activo</strong> — destino real (CCO): ' +
         destinatarios.join(', ') + '</div>' + cuerpoHtml
-      : cuerpoHtml,
-    name: 'OTDE NEZA · Centro de Formación Docente'
+      : cuerpoHtml;
+    const paraEnviar = enModoPrueba ? [correoPrueba] : lote;
+
+    if (enviarPorBrevo_(paraEnviar, asuntoFinal, cuerpoFinal)) {
+      enviados++;
+    } else {
+      console.error('enviarCorreoLote: falló un lote de ' + lote.length + ' destinatario(s) (vía Brevo).');
+    }
   });
-  return true;
+  return enviados > 0;
 }
 
 // ── Plantilla HTML compartida por los 3 tipos de recordatorio ──
@@ -1475,7 +1581,10 @@ function lineaTutorialConstancia_(ligaTutorial) {
 }
 
 // ── Avisa una vez al día (máximo) si algún activador de recordatorios
-// desapareció — evita que el sistema se quede sordo en silencio. ──
+// desapareció — evita que el sistema se quede sordo en silencio.
+// Se deja a propósito en MailApp (no Brevo, sep 2026): es un solo correo
+// interno a Jorge, volumen mínimo, y conviene que no dependa del mismo
+// servicio que está avisando que algo se rompió. ──
 function verificarActivadoresInstalados() {
   const props = PropertiesService.getScriptProperties();
   const hoy = Utilities.formatDate(new Date(), 'America/Mexico_City', 'yyyy-MM-dd');
@@ -1518,6 +1627,10 @@ function enviarRecordatoriosDiarios() {
 
   for (let i = 1; i < datos.length; i++) {
     const row = datos[i];
+    // Aislado por curso: si uno truena (ej. bug real 22 sep 2026, BCC con más
+    // destinatarios que el límite de Gmail), no debe tumbar el resto del
+    // recorrido ni el bloque 3 (pendientes de registro externo) de abajo.
+    try {
     const idCurso = String(row[0]).trim().toUpperCase();
     if (!idCurso || !row[5] || !row[6]) continue; // sin ID o sin fechas
 
@@ -1587,6 +1700,9 @@ function enviarRecordatoriosDiarios() {
         if (enviado) hoja.getRange(fila, COL_RECORDATORIO_MEDIO + 1).setValue('TRUE');
       }
     }
+    } catch (err) {
+      console.error('enviarRecordatoriosDiarios: error en curso ' + row[0] + ': ' + err.message);
+    }
   }
 
   // 3. Inscripción pendiente en la plataforma externa (Paso 4, sep 2026).
@@ -1615,8 +1731,8 @@ function enviarRecordatoriosDiarios() {
 //      pasado DIAS_ENTRE_RECORDATORIOS_PENDIENTE desde el primero. Si ambas
 //      coinciden el mismo día, sale UN solo correo (cuenta como el último).
 // Solo cursos Activo=TRUE con inscripción abierta. Un correo por docente
-// aunque tenga varios cursos pendientes. Deja RESERVA_CUOTA_CORREO de cuota
-// para los demás Apps Script de la cuenta; lo que no alcance sale mañana
+// aunque tenga varios cursos pendientes. Lo que Brevo rechace (sep 2026,
+// ver enviarPorBrevo_) se cuenta como pospuesto y se reintenta mañana
 // (las columnas solo se marcan si el correo salió de verdad).
 // ============================================================
 
@@ -1624,7 +1740,6 @@ const SITIO_FORMACION_URL = 'https://educaneza.github.io/seprn-sitio/formacion-d
 const MAX_RECORDATORIOS_PENDIENTE = 2;
 const DIAS_ANTES_CIERRE_RECORDATORIO = 2;
 const DIAS_ENTRE_RECORDATORIOS_PENDIENTE = 2;
-const RESERVA_CUOTA_CORREO = 20;
 
 // ── Firma del botón "Sí, ya me llegó": HMAC-SHA256 del folio con un secreto
 // propio del proyecto (Script Properties, se genera solo la primera vez).
@@ -1745,7 +1860,6 @@ function enviarRecordatoriosPendientes_() {
     const docente = docentesPorRfc[rfc];
     const correo = docente ? String(docente[2]).trim() : '';
     if (!correo) return;
-    if (MailApp.getRemainingDailyQuota() <= RESERVA_CUOTA_CORREO) { pospuestos++; return; }
 
     const items = porDocente[rfc];
     const mensaje = construirCorreoPendiente_(items);
@@ -1804,26 +1918,21 @@ function construirCorreoPendiente_(items) {
   };
 }
 
-// ── Envío individual (no BCC), con revisión de modo de prueba. true si salió. ──
+// ── Envío individual (no BCC), con revisión de modo de prueba. true si salió.
+// Vía Brevo (sep 2026, ver enviarPorBrevo_ arriba), ya no MailApp. ──
 function enviarCorreoIndividual_(para, asunto, cuerpoHtml) {
   const correoPrueba = PropertiesService.getScriptProperties().getProperty('MODO_PRUEBA_CORREO');
-  try {
-    MailApp.sendEmail({
-      to: correoPrueba || para,
-      replyTo: CORREO_REPLY_TO_INSTITUCIONAL,
-      subject: correoPrueba ? '[PRUEBA] ' + asunto : asunto,
-      htmlBody: correoPrueba
-        ? '<div style="background:#fff3cd;border:1px solid #e0a800;border-radius:6px;padding:10px 16px;margin-bottom:16px;' +
-          'font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#555;"><strong>Modo de prueba activo</strong> — destino real: ' +
-          escaparHtml_(para) + '</div>' + cuerpoHtml
-        : cuerpoHtml,
-      name: 'OTDE NEZA · Centro de Formación Docente'
-    });
-    return true;
-  } catch (err) {
-    console.error('No se pudo enviar a ' + para + ': ' + err.message);
-    return false;
-  }
+  const destino = correoPrueba || para;
+  const asuntoFinal = correoPrueba ? '[PRUEBA] ' + asunto : asunto;
+  const cuerpoFinal = correoPrueba
+    ? '<div style="background:#fff3cd;border:1px solid #e0a800;border-radius:6px;padding:10px 16px;margin-bottom:16px;' +
+      'font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#555;"><strong>Modo de prueba activo</strong> — destino real: ' +
+      escaparHtml_(para) + '</div>' + cuerpoHtml
+    : cuerpoHtml;
+
+  if (enviarPorBrevo_([destino], asuntoFinal, cuerpoFinal)) return true;
+  console.error('No se pudo enviar a ' + para + ' (vía Brevo).');
+  return false;
 }
 
 // ── Menú: activar/desactivar modo de prueba sin tocar el código ──
@@ -1892,6 +2001,10 @@ function enviarRecordatoriosWebinar() {
 
   for (let i = 1; i < datos.length; i++) {
     const row = datos[i];
+    // Aislado por curso: si uno truena (ej. bug real 22 sep 2026, BCC con más
+    // destinatarios que el límite de Gmail), no debe tumbar el resto del
+    // recorrido ni el recordatorio de constancia de abajo.
+    try {
     const idCurso = String(row[0]).trim().toUpperCase();
     if (!idCurso || !row[5] || !row[6] || !row[COL_HORA_INICIO]) continue;
     if (String(row[COL_RECORDATORIO_WEBINAR] || '').trim().toUpperCase() === 'TRUE') continue;
@@ -1930,6 +2043,9 @@ function enviarRecordatoriosWebinar() {
           textoLiga: 'Ir a la transmisión / acceso'
         }));
       if (enviado) hoja.getRange(fila, COL_RECORDATORIO_WEBINAR + 1).setValue('TRUE');
+    }
+    } catch (err) {
+      console.error('enviarRecordatoriosWebinar: error en curso ' + row[0] + ': ' + err.message);
     }
   }
 
@@ -2076,7 +2192,6 @@ function enviarRecordatoriosConstancia_() {
     const docente = docentesPorRfc[rfc];
     const correo = docente ? String(docente[2]).trim() : '';
     if (!correo) continue;
-    if (MailApp.getRemainingDailyQuota() <= RESERVA_CUOTA_CORREO) { pospuestos++; continue; }
 
     const folio = String(row[cols.Folio]).trim();
     const mensaje = construirCorreoConstancia_(filaCurso, folio, nuevoConteo);
