@@ -36,6 +36,7 @@
 //     N Visible_desde | O Visible_hasta
 //     ... V Fecha_limite_inscripcion | W Valida_USICAMM | X Valida_PROEEB
 //     ... Y Liga_tutorial_constancia | Z Hora_fin
+//     AA Hora_limite_inscripcion | AB Cupo_agotado | AC Ocultar_historial
 //     (ver detalle de estas columnas más abajo, junto a ENCABEZADOS_CURSOS)
 //
 //   Registro_previo_requerido (TRUE/FALSE, tú lo decides por curso): si es
@@ -201,24 +202,53 @@ function parseFechaSegura_(valor) {
   return isNaN(d.getTime()) ? null : d;
 }
 
-// ── Estado de un curso según Fecha_fin y la fecha límite de inscripción
-// (columna V, con fallback a Fecha_inicio si no está capturada). Modelo de
-// 3 estados: inscripción abierta (normal) → inscripción cerrada pero el
-// curso sigue en desarrollo (se queda en el catálogo con leyenda, sin
-// CTA) → pasado (fuera del catálogo vigente, entra al historial). ──
-function evaluarEstadoCurso_(row, hoy) {
+// ── Hora (H, M) de una celda: Date de Sheets (celda con formato de hora) o
+// texto tipo "14:00" / "14:00 h". null si no se entiende (fail-open). ──
+function horaYMinutos_(valor) {
+  if (Object.prototype.toString.call(valor) === '[object Date]' && !isNaN(valor)) return { h: valor.getHours(), m: valor.getMinutes() };
+  const t = String(valor || '').trim().match(/^(\d{1,2}):(\d{2})/);
+  if (!t || Number(t[1]) > 23 || Number(t[2]) > 59) return null;
+  return { h: Number(t[1]), m: Number(t[2]) };
+}
+
+// ── Momento exacto en que cierra la inscripción: Fecha_limite_inscripcion
+// (V, con fallback a Fecha_inicio) + Hora_limite_inscripcion (AA). Sin hora
+// (o con una que no se entiende) → cierra al terminar ese día, como siempre.
+// null si no hay fecha límite real. ──
+function momentoCierreInscripcion_(row) {
+  const fecha = row[21] ? parseFechaSegura_(row[21]) : parseFechaSegura_(row[5]);
+  if (!fecha) return null;
+  const hora = row[COL_HORA_LIMITE_INSCRIPCION] ? horaYMinutos_(row[COL_HORA_LIMITE_INSCRIPCION]) : null;
+  return hora
+    ? new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate(), hora.h, hora.m)
+    : new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate(), 23, 59, 59, 999);
+}
+
+// ── Estado de un curso según Fecha_fin, el cierre de inscripción (fecha +
+// hora opcional) y Cupo_agotado. Modelo de 4 estados: inscripción abierta
+// (normal) → cupo agotado (sigue visible, sin registros nuevos salvo "solo
+// vengo a avisar") → inscripción cerrada pero el curso sigue en desarrollo
+// (se queda en el catálogo con leyenda, sin CTA) → pasado (fuera del
+// catálogo vigente, entra al historial). `ahora` lleva hora real: el cierre
+// se evalúa al minuto; esPasado sigue siendo por día. ──
+function evaluarEstadoCurso_(row, ahora) {
   const fechaFin = parseFechaSegura_(row[6]);
-  const fechaLimite = row[21] ? parseFechaSegura_(row[21]) : parseFechaSegura_(row[5]);
+  const cierre = momentoCierreInscripcion_(row);
+  let estadoInscripcion = 'abierta';
+  if (cierre !== null && ahora > cierre) estadoInscripcion = 'cerrada';
+  else if (String(row[COL_CUPO_AGOTADO]).trim().toUpperCase() === 'TRUE') estadoInscripcion = 'agotada';
   return {
-    esPasado: fechaFin !== null && hoy > fechaFin,
+    esPasado: fechaFin !== null && soloFecha(ahora) > fechaFin,
     fechaFinOrden: fechaFin ? fechaFin.getTime() : null,
-    estadoInscripcion: (fechaLimite !== null && hoy > fechaLimite) ? 'cerrada' : 'abierta'
+    estadoInscripcion: estadoInscripcion
   };
 }
 
 // ── Construye el objeto de curso que viaja al catálogo — compartido por
 // los cursos vigentes y los del historial ("cursos_pasados"). ──
 function construirCursoApi_(row, estadoInscripcion, inscritosPorCurso) {
+  const cierre = momentoCierreInscripcion_(row);
+  const hora = row[COL_HORA_LIMITE_INSCRIPCION] ? horaYMinutos_(row[COL_HORA_LIMITE_INSCRIPCION]) : null;
   return {
     id:                        row[0].toString().trim(),
     categoria:                 row[1],
@@ -234,7 +264,13 @@ function construirCursoApi_(row, estadoInscripcion, inscritosPorCurso) {
     valida_usicamm:            String(row[22]).trim().toUpperCase() === 'TRUE',
     valida_proeeb:             String(row[23]).trim().toUpperCase() === 'TRUE',
     estado_inscripcion:        estadoInscripcion,
-    inscritos:                 inscritosPorCurso[row[0].toString().trim().toUpperCase()] || 0
+    // Cierre de inscripción: fecha y hora para mostrar ("Inscríbete hasta
+    // …") + instante exacto para que la página cierre sola si se queda
+    // abierta. Vacíos si no hay fecha límite real (fail-open).
+    fecha_limite_inscripcion:  cierre ? formatearFecha(cierre) : '',
+    hora_limite_inscripcion:   hora ? ('0' + hora.h).slice(-2) + ':' + ('0' + hora.m).slice(-2) : '',
+    cierre_inscripcion_iso:    cierre ? cierre.toISOString() : '',
+    inscritos:                inscritosPorCurso[row[0].toString().trim().toUpperCase()] || 0
   };
 }
 
@@ -256,24 +292,28 @@ function doGet(e) {
     const hoja  = obtenerHojaCursos();
     const datos = hoja.getDataRange().getValues().slice(1);
     const inscritosPorCurso = contarInscritosPorCurso();
-    const hoy = soloFecha(new Date());
+    const ahora = new Date();
 
     const cursos = [];
     const pasadosCandidatos = [];
 
     datos
-      .filter(row => String(row[10]).trim().toUpperCase() === 'TRUE' && String(row[0]).trim())
+      .filter(row => String(row[0]).trim())
       .forEach(row => {
-        const { esPasado, fechaFinOrden, estadoInscripcion } = evaluarEstadoCurso_(row, hoy);
-        const cursoApi = construirCursoApi_(row, estadoInscripcion, inscritosPorCurso);
+        const activo = String(row[10]).trim().toUpperCase() === 'TRUE';
+        const { esPasado, fechaFinOrden, estadoInscripcion } = evaluarEstadoCurso_(row, ahora);
 
         if (esPasado) {
-          // El historial no pasa por dentroDeVentanaVisible(): esa ventana
-          // controla la aparición/desaparición de cursos vigentes, no aplica
-          // a un curso que ya cerró su periodo de desarrollo.
-          pasadosCandidatos.push({ cursoApi, fechaFinOrden });
-        } else if (dentroDeVentanaVisible(row[13], row[14])) {
-          cursos.push(cursoApi);
+          // El historial NO depende de Activo (sep 2026): era costumbre
+          // apagar el curso al terminar, y eso lo borraba también de
+          // "Cursos anteriores". Para sacar uno de aquí (prueba, cancelado)
+          // está Ocultar_historial=TRUE. Tampoco pasa por
+          // dentroDeVentanaVisible(): esa ventana controla la aparición/
+          // desaparición de cursos vigentes, no la de un curso ya terminado.
+          if (String(row[COL_OCULTAR_HISTORIAL]).trim().toUpperCase() === 'TRUE') return;
+          pasadosCandidatos.push({ cursoApi: construirCursoApi_(row, estadoInscripcion, inscritosPorCurso), fechaFinOrden });
+        } else if (activo && dentroDeVentanaVisible(row[13], row[14])) {
+          cursos.push(construirCursoApi_(row, estadoInscripcion, inscritosPorCurso));
         }
       });
 
@@ -339,17 +379,33 @@ function doPost(e) {
     // en cursos pasados, pero esto evita un registro colado por una llamada
     // directa al endpoint (curl, caché vieja del cliente, etc.) a un curso
     // cuyo periodo de desarrollo ya terminó.
-    if (evaluarEstadoCurso_(filaCurso, soloFecha(new Date())).esPasado) {
+    const estadoCurso = evaluarEstadoCurso_(filaCurso, ahora);
+    if (estadoCurso.esPasado) {
       throw new Error('Este curso ya concluyó y no acepta más registros: ' + idCurso);
     }
-
-    const hojaDocentes = obtenerHojaDocentes();
-    upsertDocente(hojaDocentes, datos, rfc, ahora);
 
     const registroExterno = resolverRegistroExterno_(filaCurso, datos.registro_externo);
 
     const hojaInscripciones = obtenerHojaInscripciones();
     const existente = buscarInscripcionExistente(hojaInscripciones, rfc, idCurso);
+
+    // Cierre por fecha/hora y por cupo: solo frena registros NUEVOS (quien ya
+    // tiene folio sí puede volver a avisar que le llegó el correo de
+    // bienvenida). Con cupo agotado se acepta además a quien declara que ya
+    // se inscribió en la plataforma externa ("solo vengo a avisar"): esa
+    // persona sí tiene lugar y OTDE necesita su registro.
+    if (!existente) {
+      if (estadoCurso.estadoInscripcion === 'cerrada') {
+        throw new Error('Las inscripciones de este curso ya cerraron: ' + filaCurso[2]);
+      }
+      if (estadoCurso.estadoInscripcion === 'agotada' && registroExterno !== REGISTRO_EXTERNO.CONFIRMADO) {
+        throw new Error('Cupo agotado — ya no hay lugares disponibles en: ' + filaCurso[2]);
+      }
+    }
+
+    const hojaDocentes = obtenerHojaDocentes();
+    upsertDocente(hojaDocentes, datos, rfc, ahora);
+
     if (existente) {
       // El docente puede volver a "solo avisar" que ya le llegó el correo de
       // bienvenida: no se duplica el folio, pero sí se mejora el estado.
@@ -507,7 +563,8 @@ const ENCABEZADOS_CURSOS = [
   'Hora_inicio', 'Recordatorio_inicio_enviado', 'Recordatorio_medio_enviado',
   'Recordatorio_webinar_enviado', 'Descripcion', 'Dirigido_a',
   'Fecha_limite_inscripcion', 'Valida_USICAMM', 'Valida_PROEEB',
-  'Liga_tutorial_constancia', 'Hora_fin'
+  'Liga_tutorial_constancia', 'Hora_fin',
+  'Hora_limite_inscripcion', 'Cupo_agotado', 'Ocultar_historial'
 ];
 // P Hora_inicio (opcional, solo relevante en eventos de un solo día como
 // webinars): hora de inicio, ej. 16:00. Sin esto no se puede mandar el
@@ -546,6 +603,19 @@ const ENCABEZADOS_CURSOS = [
 // 23:59 de Fecha_fin (fail-open, igual criterio que el resto de fechas/
 // horas opcionales de esta hoja: nunca bloquea el recordatorio, solo lo
 // vuelve menos preciso).
+// AA Hora_limite_inscripcion (opcional, sep 2026): hora exacta en que
+// cierra la inscripción el día de Fecha_limite_inscripcion (ej. 14:00).
+// Vacía → cierra al terminar ese día (23:59), como siempre. Se evalúa al
+// minuto en doGet/doPost, y la página se cierra sola si queda abierta.
+// AB Cupo_agotado (TRUE/FALSE, sep 2026): márcalo a mano cuando ya no hay
+// lugares aunque la inscripción siga en fecha. El curso sigue visible con
+// la leyenda "Cupo agotado", sin registros nuevos — salvo quien ya se
+// inscribió en la plataforma externa y viene a "solo avisar". Si ya pasó
+// el cierre, gana "Inscripciones cerradas".
+// AC Ocultar_historial (TRUE/FALSE, sep 2026): "Cursos anteriores" ya no
+// depende de Activo (apagar un curso al terminar lo borraba del
+// historial); usa esta columna para sacar de ahí un curso de prueba o
+// cancelado.
 
 function obtenerHojaCursos() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -903,6 +973,18 @@ function fdConfigurarValidacionYSemaforo() {
     fdAplicarValidacionListaSuave_(hoja, 13, FD_BOOLEANOS_VALIDOS);       // Registro_previo_requerido
     fdAplicarValidacionListaSuave_(hoja, 23, FD_BOOLEANOS_VALIDOS);       // Valida_USICAMM
     fdAplicarValidacionListaSuave_(hoja, 24, FD_BOOLEANOS_VALIDOS);       // Valida_PROEEB
+    obtenerHojaCursos(); // asegura que existan los encabezados AA-AC
+    fdAplicarValidacionListaSuave_(hoja, 28, FD_BOOLEANOS_VALIDOS);       // Cupo_agotado
+    fdAplicarValidacionListaSuave_(hoja, 29, FD_BOOLEANOS_VALIDOS);       // Ocultar_historial
+    // Nota al pasar el cursor por el encabezado: qué fecha va en cada columna
+    // (inscripción vs. desarrollo del curso) — la confusión más común al capturar.
+    hoja.getRange(1, 6).setNote('Día en que EMPIEZA el curso (desarrollo, no inscripción).');
+    hoja.getRange(1, 7).setNote('Día en que TERMINA el curso. Al día siguiente pasa a "Cursos anteriores".');
+    hoja.getRange(1, 14).setNote('Opcional. Día en que el curso aparece en el catálogo (apertura de inscripción).');
+    hoja.getRange(1, 22).setNote('Último día para inscribirse. Vacía = se usa Fecha_inicio.');
+    hoja.getRange(1, 27).setNote('Opcional. Hora exacta de cierre ese día (ej. 14:00). Vacía = cierra a las 23:59.');
+    hoja.getRange(1, 28).setNote('TRUE = ya no hay lugares: el curso sigue visible con "Cupo agotado" y no acepta registros nuevos (salvo quien ya se inscribió en la plataforma externa y viene a avisar).');
+    hoja.getRange(1, 29).setNote('TRUE = no mostrar en "Cursos anteriores" (cursos de prueba o cancelados). Activo=FALSE ya NO lo quita del historial.');
     fdProtegerColumnaAutomatica_(hoja, 1);   // ID_Curso
     fdProtegerColumnaAutomatica_(hoja, 17);  // Recordatorio_inicio_enviado
     fdProtegerColumnaAutomatica_(hoja, 18);  // Recordatorio_medio_enviado
@@ -1320,6 +1402,9 @@ const COL_RECORDATORIO_MEDIO = 17;             // R
 const COL_RECORDATORIO_WEBINAR = 18;           // S
 const COL_LIGA_TUTORIAL_CONSTANCIA = 24;       // Y
 const COL_HORA_FIN = 25;                       // Z
+const COL_HORA_LIMITE_INSCRIPCION = 26;        // AA
+const COL_CUPO_AGOTADO = 27;                   // AB
+const COL_OCULTAR_HISTORIAL = 28;              // AC
 
 // ── Combina la fecha (Y/M/D) de una celda con la hora (H:M) de otra ──
 function combinarFechaHora(fecha, hora) {
@@ -1757,7 +1842,8 @@ function enviarRecordatoriosDiarios() {
 //      (Fecha_limite_inscripcion, o Fecha_inicio si no hay), siempre que hayan
 //      pasado DIAS_ENTRE_RECORDATORIOS_PENDIENTE desde el primero. Si ambas
 //      coinciden el mismo día, sale UN solo correo (cuenta como el último).
-// Solo cursos Activo=TRUE con inscripción abierta. Un correo por docente
+// Solo cursos Activo=TRUE con inscripción abierta (ni cerrada ni con cupo
+// agotado: mandaría a completar un registro en un curso sin lugar). Un correo por docente
 // aunque tenga varios cursos pendientes. Deja RESERVA_CUOTA_CORREO de cuota
 // para los demás Apps Script de la cuenta; lo que no alcance sale mañana
 // (las columnas solo se marcan si el correo salió de verdad).
@@ -1848,7 +1934,8 @@ function decidirRecordatorioPendiente_(row, cols, filaCurso, hoy) {
 
 // ── Recorre Inscripciones y manda los recordatorios que tocan hoy ──
 function enviarRecordatoriosPendientes_() {
-  const hoy = soloFecha(new Date());
+  const ahora = new Date();
+  const hoy = soloFecha(ahora);
   const modoPrueba = !!PropertiesService.getScriptProperties().getProperty('MODO_PRUEBA_CORREO');
 
   const cursosPorId = {};
@@ -1871,8 +1958,8 @@ function enviarRecordatoriosPendientes_() {
     if (String(row[cols.Registro_externo]).trim() !== REGISTRO_EXTERNO.PENDIENTE) continue;
     const filaCurso = cursosPorId[String(row[cols.ID_Curso]).trim().toUpperCase()];
     if (!filaCurso || String(filaCurso[10]).trim().toUpperCase() !== 'TRUE') continue;
-    const estado = evaluarEstadoCurso_(filaCurso, hoy);
-    if (estado.esPasado || estado.estadoInscripcion === 'cerrada') continue;
+    const estado = evaluarEstadoCurso_(filaCurso, ahora);
+    if (estado.esPasado || estado.estadoInscripcion !== 'abierta') continue;
 
     const nuevoConteo = decidirRecordatorioPendiente_(row, cols, filaCurso, hoy);
     if (!nuevoConteo) continue;
@@ -1920,10 +2007,14 @@ function construirCorreoPendiente_(items) {
 
   const bloques = items.map(it => {
     const c = it.filaCurso;
-    const limite = c[21] || c[5];
+    const cierre = momentoCierreInscripcion_(c);
+    const hora = c[COL_HORA_LIMITE_INSCRIPCION] ? horaYMinutos_(c[COL_HORA_LIMITE_INSCRIPCION]) : null;
+    const limite = cierre
+      ? formatearFecha(cierre) + (hora ? ' a las ' + ('0' + hora.h).slice(-2) + ':' + ('0' + hora.m).slice(-2) + ' h' : '')
+      : '';
     return '<div style="padding:4px 0 16px 0;border-bottom:1px solid #e6e2da;margin-bottom:14px;">' +
       '<div style="font:bold 16px/1.4 Arial,Helvetica,sans-serif;color:#1a1a1a;">' + escaparHtml_(c[2]) + '</div>' +
-      (limite ? '<div style="font:13px/1.5 Arial,Helvetica,sans-serif;color:#8A5A16;margin-top:2px;">Cierre de inscripciones: <strong>' + escaparHtml_(formatearFecha(limite)) + '</strong></div>' : '') +
+      (limite ? '<div style="font:13px/1.5 Arial,Helvetica,sans-serif;color:#8A5A16;margin-top:2px;">Cierre de inscripciones: <strong>' + escaparHtml_(limite) + '</strong></div>' : '') +
       '<div style="font:13px/1.5 Arial,Helvetica,sans-serif;color:#555555;margin-top:10px;">1. Inscríbete en la plataforma del curso:</div>' +
       boton(c[7], 'Ir a inscribirme &rarr;', '#9F2241') +
       '<div style="font:13px/1.5 Arial,Helvetica,sans-serif;color:#555555;margin-top:12px;">2. Cuando te llegue el correo de bienvenida del curso, avísanos con un toque:</div>' +

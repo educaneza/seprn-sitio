@@ -227,44 +227,62 @@
         0 6px 16px -4px rgba(30,23,32,.12);
     }
 
-    /* Encabezado: fondo pastel propio por categoría + un ícono grande y
-       centrado, más "ilustración de producto" que rectángulo de color. */
+    /* Encabezado: fondo pastel propio por categoría, más bajo que antes
+       (148px → ~110px) y ya no solo decorativo: ícono a la izquierda y,
+       debajo, el chip de estado de la inscripción — lo primero que se lee. */
     .cc-header {
-      padding: 1.5rem; display: flex; align-items: center; justify-content: center;
-      min-height: 148px; position: relative; flex-shrink: 0; overflow: hidden;
+      padding: 1rem 1.1rem .95rem; display: flex; flex-direction: column; align-items: flex-start; gap: .7rem;
+      position: relative; flex-shrink: 0; overflow: hidden;
     }
     .cc-header::before {
       content: ''; position: absolute; inset: 0;
-      background: radial-gradient(120% 140% at 50% 15%, rgba(255,255,255,.65), transparent 60%);
+      background: radial-gradient(120% 140% at 20% 0%, rgba(255,255,255,.65), transparent 60%);
     }
     .cc-icon-wrap {
       position: relative; z-index: 1;
-      width: 84px; height: 84px; background: var(--paper); border-radius: 22px;
+      width: 52px; height: 52px; background: var(--paper); border-radius: 15px;
       display: flex; align-items: center; justify-content: center;
       transition: transform .4s var(--ease);
-      box-shadow: 0 10px 24px -10px rgba(30,23,32,.22);
+      box-shadow: 0 8px 18px -8px rgba(30,23,32,.22);
     }
     .curso-card:hover .cc-icon-wrap { transform: scale(1.06) rotate(-2deg); }
     .curso-card.selected .cc-icon-wrap { transform: scale(1.03) rotate(-2deg); }
-    .cc-icon-wrap svg { width: 42px; height: 42px; }
+    .cc-icon-wrap svg { width: 26px; height: 26px; }
 
-    /* Solo un círculo con palomita (sin texto "Seleccionado"): con texto,
-       chocaba con .cc-valida-badge en tarjetas angostas — 57px encimados a
-       768px, medido en QA sep 2026. El borde verde de .selected ya refuerza
-       el estado; el nombre accesible va en aria-pressed de la tarjeta. */
+    /* Palomita de "elegido": pegada a la esquina del ícono (sin texto — con
+       texto chocaba con .cc-valida-badge en tarjetas angostas, QA sep 2026).
+       El borde verde de .selected y el botón "Elegido" refuerzan el estado;
+       el nombre accesible va en aria-pressed de la tarjeta. */
     .cc-sel-badge {
-      position: absolute; top: .85rem; left: .85rem; z-index: 2;
+      position: absolute; top: -7px; right: -7px; z-index: 2;
       display: inline-flex; align-items: center; justify-content: center;
-      width: 30px; height: 30px; border-radius: 50%;
-      background: var(--ok); color: #fff;
-      opacity: 0; transform: translateY(-6px) scale(.85); pointer-events: none;
-      box-shadow: 0 4px 12px rgba(20,108,67,.35);
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--ok); color: #fff; border: 2px solid var(--paper);
+      opacity: 0; transform: scale(.6); pointer-events: none;
+      box-shadow: 0 3px 8px rgba(20,108,67,.35);
     }
-    .cc-sel-badge svg { width: 15px; height: 15px; }
+    .cc-sel-badge svg { width: 11px; height: 11px; }
     .curso-card.selected .cc-sel-badge {
-      opacity: 1; transform: translateY(0) scale(1);
+      opacity: 1; transform: scale(1);
       transition: opacity .3s var(--ease), transform .5s cubic-bezier(.34,1.56,.64,1);
     }
+
+    /* Chip de estado de la inscripción (dentro de la cabecera). Un color por
+       estado: abierta (verde), cierra pronto (ámbar), cupo agotado (rojo),
+       cerrada / concluido (neutro). */
+    .cc-estado {
+      position: relative; z-index: 1;
+      display: inline-flex; align-items: center; gap: .4rem; max-width: 100%;
+      background: var(--paper); color: var(--ok);
+      font-size: .72rem; font-weight: 700; line-height: 1.25;
+      padding: .32rem .7rem .32rem .6rem; border-radius: 999px;
+      box-shadow: 0 1px 2px rgba(30,23,32,.06);
+    }
+    .cc-estado-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+    .cc-estado svg { width: 12px; height: 12px; flex-shrink: 0; }
+    .cc-estado.urgente { color: var(--warn); }
+    .cc-estado.agotada { color: var(--danger); }
+    .cc-estado.cerrada { color: var(--ink-soft); }
 
     /* Validez oficial USICAMM/PROEEB: esquina opuesta a .cc-sel-badge,
        siempre visible cuando aplica (no depende de .selected). */
@@ -297,16 +315,46 @@
     }
     .cc-externo-tag svg { width: 12px; height: 12px; flex-shrink: 0; }
 
-    /* Inscripción cerrada pero el curso sigue en desarrollo: tono neutro,
-       distinto de --warn (que ya significa "registro en plataforma externa"). */
-    .cc-cerrado-tag {
-      display: inline-flex; align-items: center; gap: .35rem; align-self: flex-start;
-      font-size: .74rem; font-weight: 700; color: var(--ink-soft); background: var(--hairline);
-      border-radius: 999px; padding: .3rem .7rem .3rem .6rem;
+    /* Tarjetas que no aceptan registro nuevo: sin elevación ni clic.
+       .agotado vuelve a ser elegible solo en modo "solo vengo a avisar"
+       (#cursos-grid.modo-aviso): esa persona ya tiene lugar en la plataforma. */
+    .curso-card.cerrado, .curso-card.agotado { cursor: default; }
+    .curso-card.cerrado:hover, .curso-card.agotado:hover { transform: none; box-shadow: var(--shadow-1); border-color: var(--hairline); }
+    .curso-card.cerrado:hover .cc-icon-wrap, .curso-card.agotado:hover .cc-icon-wrap { transform: none; }
+    .modo-aviso .curso-card.agotado { cursor: pointer; }
+    .modo-aviso .curso-card.agotado:hover { border-color: transparent; box-shadow: var(--shadow-2); transform: translateY(-5px); }
+
+    /* Fechas con etiqueta: inscripción y desarrollo del curso por separado
+       (antes un solo rango sin etiqueta, que se leía como "inscripción"). */
+    .cc-fechas {
+      display: flex; flex-direction: column; gap: .1rem;
+      background: var(--canvas); border: 1px solid var(--hairline); border-radius: var(--radius-sm);
+      padding: .6rem .75rem; margin-top: .1rem;
     }
-    .cc-cerrado-tag svg { width: 12px; height: 12px; flex-shrink: 0; }
-    .curso-card.cerrado { cursor: default; }
-    .curso-card.cerrado:hover { transform: none; box-shadow: var(--shadow-1); border-color: var(--hairline); }
+    .cc-fecha-val + .cc-fecha-lbl { margin-top: .45rem; }
+    .cc-fecha-lbl { font-size: .66rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-faint); }
+    .cc-fecha-val { font-size: .83rem; font-weight: 600; color: var(--ink); line-height: 1.35; }
+    .cc-fecha-val.pasada { color: var(--ink-soft); font-weight: 500; }
+
+    /* Botón visual al pie: la tarjeta entera sigue siendo el botón real
+       (role=button + teclado); esto solo hace visible que se puede elegir. */
+    .cc-pie { margin-top: auto; padding-top: .45rem; display: flex; flex-direction: column; gap: .55rem; }
+    .cc-cta {
+      display: flex; align-items: center; justify-content: center; gap: .45rem;
+      min-height: 42px; border-radius: 999px; font-size: .86rem; font-weight: 700;
+      border: 1.5px solid currentColor; background: var(--paper);
+      transition: background .25s var(--ease), color .25s var(--ease), border-color .25s var(--ease);
+    }
+    .cc-cta svg { width: 14px; height: 14px; }
+    .cc-cta-elegido { display: none; }
+    .curso-card:hover .cc-cta { background: var(--canvas); }
+    .curso-card.selected .cc-cta { background: var(--ok); border-color: var(--ok); color: #fff !important; }
+    .curso-card.selected .cc-cta-elegir { display: none; }
+    .curso-card.selected .cc-cta-elegido { display: inline-flex; align-items: center; gap: .4rem; }
+    .curso-card.agotado .cc-cta { display: none; }
+    .modo-aviso .curso-card.agotado .cc-cta { display: flex; }
+    .cc-no-disponible { font-size: .8rem; font-weight: 600; color: var(--ink-soft); text-align: center; padding: .55rem 0 .1rem; }
+    .modo-aviso .curso-card.agotado .cc-no-disponible { display: none; }
 
     .cc-info { display: flex; flex-direction: column; gap: .4rem; margin-top: .1rem; }
     .cc-pill { display: inline-flex; align-items: center; gap: .45rem; font-size: .82rem; font-weight: 500; color: var(--ink-soft); }
@@ -1156,7 +1204,6 @@
     }
   };
 
-  const ICON_CALENDAR = '<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>';
   const ICON_MODALIDAD = '<svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 5a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2h-4l1 2H7l1-2H4a2 2 0 01-2-2V5z"/></svg>';
   const ICON_CLOSE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
   const ICON_CHECK_SM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
@@ -1172,6 +1219,9 @@
   const ICON_SEAL = '<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>';
   const ICON_CHECK_CONFIRMACION = '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
   const ICON_LINK_EXT ='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+  // "Cupo agotado": grupo de personas con una barra (lleno), no candado —
+  // el candado ya se descartó por leerse como "bloqueado/error" (QA sep 2026).
+  const ICON_CUPO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><line x1="17" y1="11" x2="22" y2="11"/></svg>';
   const ICON_CLOCK = '<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v5a1 1 0 00.5.87l3 1.73a1 1 0 001-1.74L11 9.42V5z" clip-rule="evenodd"/></svg>';
 
   // ── Estado global ──
@@ -1315,28 +1365,116 @@
     } catch (e) { /* silencioso: ya se mostró la versión cacheada */ }
   }
 
+  // ── Fechas legibles para la tarjeta ("vie 26 sep", "29 sep – 10 oct") ──
+  // El backend manda dd/mm/aaaa; si llega texto libre ("Por definir") se
+  // muestra tal cual.
+  const DIAS_CORTOS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+  const MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+  function parseFechaDMA(txt) {
+    const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(String(txt || '').trim());
+    return m ? new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1])) : null;
+  }
+
+  function fechaCorta(d, conDia) {
+    const anio = d.getFullYear() !== new Date().getFullYear() ? ' ' + d.getFullYear() : '';
+    return (conDia ? DIAS_CORTOS[d.getDay()] + ' ' : '') + d.getDate() + ' ' + MESES_CORTOS[d.getMonth()] + anio;
+  }
+
+  // Periodo de desarrollo del curso: un día ("jue 2 oct") o rango
+  // ("6 – 10 oct", "29 sep – 10 oct").
+  function textoPeriodoCurso(curso) {
+    const ini = parseFechaDMA(curso.fecha_inicio);
+    const fin = parseFechaDMA(curso.fecha_fin);
+    if (!ini) return curso.fecha_inicio || '';
+    if (!fin || fin.getTime() === ini.getTime()) return fechaCorta(ini, true);
+    const mismoMes = ini.getMonth() === fin.getMonth() && ini.getFullYear() === fin.getFullYear();
+    return (mismoMes ? String(ini.getDate()) : fechaCorta(ini, false)) + ' – ' + fechaCorta(fin, false);
+  }
+
+  function textoHora(curso) {
+    return curso.hora_limite_inscripcion ? curso.hora_limite_inscripcion + ' h' : '';
+  }
+
+  // Estado efectivo: el del servidor, salvo que el cierre (fecha + hora) ya
+  // haya pasado mientras la página seguía abierta o venía de la caché.
+  function estadoEfectivo(curso) {
+    const cierre = curso.cierre_inscripcion_iso ? Date.parse(curso.cierre_inscripcion_iso) : NaN;
+    if (!isNaN(cierre) && Date.now() > cierre) return 'cerrada';
+    return curso.estado_inscripcion || 'abierta';
+  }
+
+  // Chip de la cabecera: clase de color + ícono + texto.
+  function chipEstado(curso, estado) {
+    if (estado === 'cerrada') return { clase: 'cerrada', icono: ICON_CLOCK, texto: 'Inscripciones cerradas' };
+    if (estado === 'agotada') return { clase: 'agotada', icono: ICON_CUPO, texto: 'Cupo agotado' };
+    const cierre = curso.cierre_inscripcion_iso ? new Date(curso.cierre_inscripcion_iso) : null;
+    if (cierre && !isNaN(cierre)) {
+      const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+      const diaCierre = new Date(cierre); diaCierre.setHours(0, 0, 0, 0);
+      const dias = Math.round((diaCierre - hoy) / 86400000);
+      const hora = textoHora(curso);
+      if (dias === 0) return { clase: 'urgente', icono: ICON_CLOCK, texto: 'Cierra hoy' + (hora ? ' · ' + hora : '') };
+      if (dias === 1) return { clase: 'urgente', icono: ICON_CLOCK, texto: 'Cierra mañana' + (hora ? ' · ' + hora : '') };
+    }
+    return { clase: '', icono: '<span class="cc-estado-dot"></span>', texto: 'Inscripción abierta' };
+  }
+
+  // Renglón de inscripción del bloque de fechas: etiqueta + valor.
+  function textoInscripcion(curso, estado) {
+    const limite = parseFechaDMA(curso.fecha_limite_inscripcion);
+    if (!limite) return null;
+    const hora = textoHora(curso);
+    return {
+      lbl: estado === 'cerrada' ? 'Inscripción cerró' : 'Inscríbete hasta',
+      val: fechaCorta(limite, true) + (hora ? ' · ' + hora : '')
+    };
+  }
+
+  function etiquetaValidez(curso) {
+    if (curso.valida_usicamm && curso.valida_proeeb) return 'USICAMM · PROEEB';
+    if (curso.valida_usicamm) return 'USICAMM';
+    if (curso.valida_proeeb) return 'PROEEB';
+    return '';
+  }
+
+  // Último catálogo vigente pintado — para volver a pintarlo si un cierre
+  // se cumple con la página abierta (vigilarCierres()).
+  let catalogoActual = [];
+
   function renderCursos(cursos) {
+    catalogoActual = cursos;
     const grid = document.getElementById('cursos-grid');
     grid.innerHTML = '';
 
     cursos.forEach(curso => {
       const style = CATEGORIA_STYLE[curso.categoria] || CATEGORIA_STYLE._default;
-      const cerrado = curso.estado_inscripcion === 'cerrada';
+      const estado = estadoEfectivo(curso);
+      const cerrado = estado === 'cerrada';
+      const agotado = estado === 'agotada';
+      const chip = chipEstado(curso, estado);
 
       const card = document.createElement('div');
-      card.className = 'curso-card' + (cerrado ? ' cerrado' : '');
+      card.className = 'curso-card' + (cerrado ? ' cerrado' : '') + (agotado ? ' agotado' : '');
       card.dataset.id = curso.id;
       card.dataset.nombre = curso.nombre;
       card.dataset.categoria = curso.categoria || '';
       card.dataset.liga = curso.liga_convocatoria || '';
       card.dataset.registroPrevio = curso.registro_previo_requerido ? '1' : '';
+      card.dataset.cierre = curso.cierre_inscripcion_iso || '';
       if (cerrado) {
         card.setAttribute('aria-disabled', 'true');
       } else {
         // Tarjeta operable con teclado (antes era un div solo con clic).
-        card.tabIndex = 0;
+        // Una agotada solo se puede elegir en modo "solo vengo a avisar":
+        // seleccionarCurso() lo revisa y activarSoloAviso() ajusta su foco.
         card.setAttribute('role', 'button');
         card.setAttribute('aria-pressed', 'false');
+        if (agotado && !soloAviso) {
+          card.setAttribute('aria-disabled', 'true');
+        } else {
+          card.tabIndex = 0;
+        }
         card.addEventListener('click', () => seleccionarCurso(card));
         card.addEventListener('keydown', ev => {
           if (ev.target !== card || (ev.key !== 'Enter' && ev.key !== ' ')) return;
@@ -1345,46 +1483,60 @@
         });
       }
 
-      const rango = curso.fecha_inicio
-        ? (curso.fecha_fin && curso.fecha_fin !== curso.fecha_inicio ? curso.fecha_inicio + ' – ' + curso.fecha_fin : curso.fecha_inicio)
-        : '';
+      const periodo = textoPeriodoCurso(curso);
+      const inscripcion = textoInscripcion(curso, estado);
       const inscritos = Number(curso.inscritos) || 0;
-
-      let validaLabel = '';
-      if (curso.valida_usicamm && curso.valida_proeeb) validaLabel = 'USICAMM · PROEEB';
-      else if (curso.valida_usicamm) validaLabel = 'USICAMM';
-      else if (curso.valida_proeeb) validaLabel = 'PROEEB';
+      const validaLabel = etiquetaValidez(curso);
 
       card.innerHTML = `
         <div class="cc-header" style="background:${style.tint};">
-          <div class="cc-icon-wrap" style="color:${style.solid};">${style.icon}</div>
-          <span class="cc-sel-badge" aria-hidden="true">${ICON_CHECK_SM}</span>
+          <div class="cc-icon-wrap" style="color:${style.solid};">
+            ${style.icon}
+            <span class="cc-sel-badge" aria-hidden="true">${ICON_CHECK_SM}</span>
+          </div>
           ${validaLabel ? `<span class="cc-valida-badge">${ICON_SEAL} ${validaLabel}</span>` : ''}
+          <span class="cc-estado ${chip.clase}">${chip.icono}<span class="cc-estado-txt"></span></span>
         </div>
         <div class="cc-body">
           <div class="cc-categoria" style="color:${style.solid};"></div>
           <div class="curso-nombre"></div>
           ${curso.descripcion ? `<div class="cc-desc"></div>` : ''}
+          ${inscripcion || periodo ? `
+          <div class="cc-fechas">
+            ${inscripcion ? `<span class="cc-fecha-lbl cc-fecha-insc-lbl"></span><span class="cc-fecha-val cc-fecha-insc${cerrado ? ' pasada' : ''}"></span>` : ''}
+            ${periodo ? `<span class="cc-fecha-lbl">Curso</span><span class="cc-fecha-val cc-fecha-curso"></span>` : ''}
+          </div>` : ''}
           <div class="cc-info">
-            ${rango ? `<span class="cc-pill">${ICON_CALENDAR} <span class="cc-fecha-txt"></span></span>` : ''}
             ${curso.modalidad ? `<span class="cc-pill">${ICON_MODALIDAD} <span class="cc-modalidad-txt"></span></span>` : ''}
             ${curso.dirigido_a ? `<span class="cc-pill">${ICON_AUDIENCE} <span class="cc-dirigido-txt"></span></span>` : ''}
           </div>
-          ${cerrado ? `<div class="cc-cerrado-tag">${ICON_CLOCK} Inscripciones cerradas · Curso en desarrollo</div>` : ''}
-          ${!cerrado && curso.registro_previo_requerido && curso.liga_convocatoria ? `<div class="cc-externo-tag">${ICON_EXTERNO} Registro en plataforma externa</div>` : ''}
           ${inscritos > 0 ? `
           <div class="cc-inscritos">
             <span class="cc-avatares">${ICON_AVATAR}${ICON_AVATAR}${ICON_AVATAR}</span>
             <span class="cc-inscritos-txt">${inscritos} inscrito${inscritos === 1 ? '' : 's'}</span>
           </div>` : ''}
+          ${cerrado ? '' : `
+          <div class="cc-pie">
+            ${curso.registro_previo_requerido && curso.liga_convocatoria ? `<div class="cc-externo-tag">${ICON_EXTERNO} Registro en plataforma externa</div>` : ''}
+            ${agotado ? `<div class="cc-no-disponible">Ya no hay lugares disponibles</div>` : ''}
+            <span class="cc-cta" style="color:${style.solid};" aria-hidden="true">
+              <span class="cc-cta-elegir">${agotado ? 'Ya estoy inscrito · avisar' : 'Elegir este curso'}</span>
+              <span class="cc-cta-elegido">${ICON_CHECK_SM} Elegido</span>
+            </span>
+          </div>`}
         </div>
       `;
 
       // Texto vía textContent (evita inyección desde datos de la hoja)
+      card.querySelector('.cc-estado-txt').textContent = chip.texto;
       card.querySelector('.cc-categoria').textContent = curso.categoria || '';
       card.querySelector('.curso-nombre').textContent = curso.nombre || '';
       if (curso.descripcion) card.querySelector('.cc-desc').textContent = curso.descripcion;
-      if (rango) card.querySelector('.cc-fecha-txt').textContent = rango;
+      if (inscripcion) {
+        card.querySelector('.cc-fecha-insc-lbl').textContent = inscripcion.lbl;
+        card.querySelector('.cc-fecha-insc').textContent = inscripcion.val;
+      }
+      if (periodo) card.querySelector('.cc-fecha-curso').textContent = cerrado ? 'En desarrollo · ' + periodo : periodo;
       if (curso.modalidad) card.querySelector('.cc-modalidad-txt').textContent = curso.modalidad;
       if (curso.dirigido_a) card.querySelector('.cc-dirigido-txt').textContent = curso.dirigido_a;
 
@@ -1413,9 +1565,63 @@
       }
     });
 
+    // Cursos que ya estaban elegidos antes de volver a pintar (cierre en vivo).
+    cursosSeleccionados.forEach(c => {
+      const card = grid.querySelector('.curso-card[data-id="' + CSS.escape(c.id) + '"]');
+      if (card) { card.classList.add('selected'); card.setAttribute('aria-pressed', 'true'); }
+    });
+
+    grid.classList.toggle('modo-aviso', soloAviso);
+    firmaEstados = firmaDeEstados();
     document.getElementById('solo-aviso').hidden = !cursos.some(c =>
-      c.registro_previo_requerido && c.liga_convocatoria && c.estado_inscripcion !== 'cerrada');
+      c.registro_previo_requerido && c.liga_convocatoria && estadoEfectivo(c) !== 'cerrada');
   }
+
+  // ── Cierre en vivo: si la hora de cierre de algún curso se cumple con la
+  // página abierta, se vuelve a pintar el catálogo (el chip pasa a
+  // "Inscripciones cerradas", "Cierra hoy" se actualiza) y se quita de la
+  // selección. El servidor igual rechaza el registro — esto solo evita que
+  // el docente llene todo el formulario para nada. ──
+  let firmaEstados = '';
+  function firmaDeEstados() {
+    return catalogoActual.map(c => c.id + ':' + estadoEfectivo(c) + ':' + chipEstado(c, estadoEfectivo(c)).texto).join('|');
+  }
+
+  function vigilarCierres() {
+    if (!catalogoActual.length) return;
+    const firma = firmaDeEstados();
+    if (firma === firmaEstados) return;
+    firmaEstados = firma;
+    // Ya registrado: no se toca la selección de la pantalla de confirmación.
+    const vencidos = registroCompletado ? [] : quitarCursosVencidos();
+    renderCursos(catalogoActual);
+    if (!vencidos.length) return;
+    pintarListaSeleccion();
+    if (!cursosSeleccionados.length) regresarPaso1();
+    avisarCursosVencidos(vencidos, 'aviso-enlace');
+  }
+
+  // Quita de la selección los cursos cuyo cierre ya pasó; regresa sus nombres.
+  function quitarCursosVencidos() {
+    const vencidos = cursosSeleccionados.filter(c => {
+      const curso = catalogoActual.find(k => k.id === c.id);
+      return curso && estadoEfectivo(curso) === 'cerrada';
+    });
+    vencidos.forEach(c => quitarCurso(c.id));
+    return vencidos.map(c => c.nombre);
+  }
+
+  function avisarCursosVencidos(nombres, idAviso) {
+    const el = document.getElementById(idAviso);
+    el.textContent = (nombres.length === 1
+      ? 'Las inscripciones de «' + nombres[0] + '» acaban de cerrar'
+      : 'Las inscripciones de ' + nombres.map(n => '«' + n + '»').join(', ') + ' acaban de cerrar') +
+      ' — lo quitamos de tu selección.';
+    if (idAviso === 'aviso-enlace') el.style.display = 'flex';
+    else el.classList.add('visible');
+  }
+
+  setInterval(vigilarCierres, 30000);
 
   // ── Historial "Cursos anteriores": versión de solo lectura de las
   // tarjetas — sin selección, sin CTA de registro externo, sin "Leer más".
@@ -1432,25 +1638,23 @@
       const card = document.createElement('div');
       card.className = 'curso-card curso-card-historial';
 
-      const rango = curso.fecha_inicio
-        ? (curso.fecha_fin && curso.fecha_fin !== curso.fecha_inicio ? curso.fecha_inicio + ' – ' + curso.fecha_fin : curso.fecha_inicio)
-        : '';
-
-      let validaLabel = '';
-      if (curso.valida_usicamm && curso.valida_proeeb) validaLabel = 'USICAMM · PROEEB';
-      else if (curso.valida_usicamm) validaLabel = 'USICAMM';
-      else if (curso.valida_proeeb) validaLabel = 'PROEEB';
+      const periodo = textoPeriodoCurso(curso);
+      const validaLabel = etiquetaValidez(curso);
 
       card.innerHTML = `
         <div class="cc-header" style="background:${style.tint};">
           <div class="cc-icon-wrap" style="color:${style.solid};">${style.icon}</div>
           ${validaLabel ? `<span class="cc-valida-badge">${ICON_SEAL} ${validaLabel}</span>` : ''}
+          <span class="cc-estado cerrada">${ICON_CHECK_SM}<span>Concluido</span></span>
         </div>
         <div class="cc-body">
           <div class="cc-categoria" style="color:${style.solid};"></div>
           <div class="curso-nombre"></div>
+          ${periodo ? `
+          <div class="cc-fechas">
+            <span class="cc-fecha-lbl">Curso</span><span class="cc-fecha-val pasada cc-fecha-curso"></span>
+          </div>` : ''}
           <div class="cc-info">
-            ${rango ? `<span class="cc-pill">${ICON_CALENDAR} <span class="cc-fecha-txt"></span></span>` : ''}
             ${curso.modalidad ? `<span class="cc-pill">${ICON_MODALIDAD} <span class="cc-modalidad-txt"></span></span>` : ''}
             ${curso.dirigido_a ? `<span class="cc-pill">${ICON_AUDIENCE} <span class="cc-dirigido-txt"></span></span>` : ''}
           </div>
@@ -1460,7 +1664,7 @@
       // Texto vía textContent (evita inyección desde datos de la hoja)
       card.querySelector('.cc-categoria').textContent = curso.categoria || '';
       card.querySelector('.curso-nombre').textContent = curso.nombre || '';
-      if (rango) card.querySelector('.cc-fecha-txt').textContent = rango;
+      if (periodo) card.querySelector('.cc-fecha-curso').textContent = periodo;
       if (curso.modalidad) card.querySelector('.cc-modalidad-txt').textContent = curso.modalidad;
       if (curso.dirigido_a) card.querySelector('.cc-dirigido-txt').textContent = curso.dirigido_a;
 
@@ -1470,6 +1674,8 @@
 
   // ── PASO 1: seleccionar / deseleccionar curso (multi-select) ──
   function seleccionarCurso(card) {
+    // Cupo agotado: solo elegible para quien ya se inscribió en la plataforma.
+    if (card.classList.contains('agotado') && !soloAviso) return;
     const idx = cursosSeleccionados.findIndex(c => c.id === card.dataset.id);
     if (idx >= 0) {
       cursosSeleccionados.splice(idx, 1);
@@ -1677,8 +1883,15 @@
 
   // ── PASO 2: FORMULARIO OTDE (datos personales) ──
   function mostrarFormularioOtde(opciones) {
-    const n = cursosSeleccionados.length;
     document.getElementById('aviso-legal').style.display = cursosSeleccionados.some(c => c.registroPrevio && c.liga) ? 'flex' : 'none';
+    pintarListaSeleccion();
+    mostrarPaso(2, opciones);
+  }
+
+  // Lista "Curso(s) seleccionado(s)" del paso 2 — también se repinta si un
+  // curso elegido cierra inscripciones con el formulario abierto.
+  function pintarListaSeleccion() {
+    const n = cursosSeleccionados.length;
     document.getElementById('rc-titulo').textContent = n === 1 ? 'Curso seleccionado' : n + ' cursos seleccionados';
     const lista = document.getElementById('rc-lista');
     lista.innerHTML = '';
@@ -1690,7 +1903,6 @@
       li.appendChild(span);
       lista.appendChild(li);
     });
-    mostrarPaso(2, opciones);
   }
 
   function regresarPaso1() { mostrarPaso(1); }
@@ -1784,6 +1996,19 @@
     soloAviso = activo;
     document.getElementById('solo-aviso-btn').hidden = activo;
     document.getElementById('solo-aviso-activo').hidden = !activo;
+    // Las tarjetas con cupo agotado se vuelven elegibles solo en este modo
+    // (esa persona ya tiene lugar). Al cancelar, se sueltan si estaban elegidas.
+    document.getElementById('cursos-grid').classList.toggle('modo-aviso', activo);
+    document.querySelectorAll('#cursos-grid .curso-card.agotado').forEach(card => {
+      if (activo) {
+        card.tabIndex = 0;
+        card.removeAttribute('aria-disabled');
+      } else {
+        if (card.classList.contains('selected')) quitarCurso(card.dataset.id);
+        card.removeAttribute('tabindex');
+        card.setAttribute('aria-disabled', 'true');
+      }
+    });
   }
 
   // ── Liga directa por curso, para oficios/WhatsApp/QR:
@@ -1802,7 +2027,7 @@
     let encontrados = 0;
     ids.forEach(id => {
       const card = document.querySelector('#cursos-grid .curso-card[data-id="' + CSS.escape(id) + '"]');
-      if (!card || card.classList.contains('cerrado')) return;
+      if (!card || card.classList.contains('cerrado') || card.classList.contains('agotado')) return;
       if (!card.classList.contains('selected')) seleccionarCurso(card);
       encontrados++;
     });
@@ -1973,6 +2198,24 @@
     e.preventDefault();
     if (!validarFormulario()) return;
 
+    // Cierre con hora: si la inscripción de algún curso elegido cerró
+    // mientras se llenaba el formulario, se quita antes de enviar.
+    const vencidos = quitarCursosVencidos();
+    if (vencidos.length) {
+      renderCursos(catalogoActual);
+      if (!cursosSeleccionados.length) {
+        regresarPaso1();
+        avisarCursosVencidos(vencidos, 'aviso-enlace');
+        return;
+      }
+      pintarListaSeleccion();
+      avisarCursosVencidos(vencidos, 'error-global');
+      const eg = document.getElementById('error-global');
+      eg.textContent += ' Revisa tu selección y vuelve a tocar el botón para registrar el resto.';
+      eg.scrollIntoView({ behavior: 'instant', block: 'center' });
+      return;
+    }
+
     const btn = document.getElementById('btn-submit');
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Enviando…';
@@ -2009,7 +2252,9 @@
       const eg = document.getElementById('error-global');
       eg.textContent = err.name === 'AbortError'
         ? 'El servidor tardó demasiado en responder. Tu registro pudo haberse guardado igual — el sistema no duplica folios, así que puedes intentar de nuevo con confianza.'
-        : 'Ocurrió un error al enviar: ' + err.message + '. Intenta de nuevo.';
+        : /^(Cupo agotado|Las inscripciones)/.test(err.message)
+          ? err.message + '. Regresa al catálogo para elegir otro curso.' // cierre/cupo: reintentar no sirve
+          : 'Ocurrió un error al enviar: ' + err.message + '. Intenta de nuevo.';
       eg.classList.add('visible');
       eg.scrollIntoView({ behavior: 'instant', block: 'center' });
     } finally {
