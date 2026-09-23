@@ -763,8 +763,12 @@ docente completa un trámite en su propio sitio — a diferencia del resto de Fo
   `Liga_tutorial_constancia` está llena) — no es un correo aparte.
 - **Recordatorio post-conferencia** (`enviarRecordatoriosConstancia_()`, llamado desde
   `enviarRecordatoriosWebinar()` — reusa esa cadencia de 15 min en vez de instalar un disparador
-  nuevo): recordatorio 1 en cuanto `ahora >= finConferencia_()`; recordatorio 2 al día siguiente
-  de terminada la conferencia, si aún no llega la constancia. Columnas nuevas en `Inscripciones`
+  nuevo): recordatorio 1 en cuanto `ahora >= finConferencia_()`; recordatorio 2 desde el día
+  siguiente de terminada la conferencia, si aún no llega la constancia **y nunca el mismo día
+  calendario que el recordatorio 1** (`Fecha_ultimo_recordatorio_constancia` < hoy). Si el 1 salió
+  tarde por falta de cuota, el 2 espera al día siguiente de ese envío (`docs/QA-NOTES.md #41`).
+  Un correo individual por folio. Cuando la cuota llega a `RESERVA_CUOTA_CORREO`, el recorrido ya
+  no la vuelve a consultar y solo cuenta los pospuestos. Columnas nuevas en `Inscripciones`
   (`Constancia_recordatorios_enviados`, `Fecha_ultimo_recordatorio_constancia`), mismo patrón de
   conteo con tope (`MAX_RECORDATORIOS_CONSTANCIA=2`) que `Recordatorios_pendiente` del doble
   registro.

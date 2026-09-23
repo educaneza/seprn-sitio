@@ -14,6 +14,20 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-09-23 · Recordatorios de constancia UNETE sin salir — cuota, no activadores; fix de "Último aviso" pegado
+
+| | |
+|---|---|
+| **Fecha** | 2026-09-23 |
+| **Sesión** | Jorge reportó que los recordatorios de constancia no salieron entre 9 y 10 am. Diagnóstico en modo plan, en vivo desde "Mis ejecuciones" (solo lectura). |
+| **Hallazgos en vivo** | Activadores sanos: `enviarRecordatoriosWebinar` cada 15 min sin errores y `enviarRecordatoriosDiarios` a las 9:39 ("0 enviado(s), 0 pospuesto(s)"). Constancias: "0 enviado(s), 133 pospuesto(s)" en cada corrida desde las 12:07 am, porque la cuota sigue a la reserva (≤ 30) por los envíos del 22 sep. Los recordatorios de constancia no dependen del activador de las 9am. El formulario sigue abierto hasta el 28 sep. **Ningún docente ha recibido todavía un recordatorio de constancia**: la lista para el CCO manual del 22 sep se preparó, pero Jorge no la envió. |
+| **Fix** | `docs/QA-NOTES.md #41`: el recordatorio 2 ya no sale el mismo día que el 1 (antes, si el 1 salía tarde, el "Último aviso" llegaba 15 min después), y se deja de consultar la cuota por cada folio una vez que llega a la reserva. Probado en Node con datos simulados (5 casos). |
+| **Producción** | Código cargado en el editor del proyecto real (diff previo: editor = repo, salvo este cambio). El modo automático bloqueó el guardado en producción; **Jorge lo guardó a mano el mismo día** (repo = producción). No hace falta "Nueva versión" ni reinstalar los activadores (los activadores corren el código guardado y `doGet`/`doPost` no cambiaron). |
+| **Documentación actualizada** | Este checkpoint, `docs/QA-NOTES.md #41`, `docs/ARCHITECTURE.md` §12 (regla del recordatorio 2). |
+| **Commits** | Commit de cierre de esta sesión (`.gs` = producción + docs). |
+
+---
+
 ## CHECKPOINT — 2026-09-22 (cont. 3) · Chequeo de salud de Formación Docente — Brevo descartado, repo = producción (Versión 22)
 
 | | |

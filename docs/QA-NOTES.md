@@ -1093,6 +1093,29 @@ con reserva, sin duplicados, completa al tercer día; lote con error se reintent
 un llamador que marque una bandera irreversible con ese resultado. Si se agrega un aviso masivo
 nuevo, pasarle una `claveSeguimiento` propia.
 
+## 41. Si el recordatorio 1 de constancia salía tarde, el "Último aviso" salía 15 minutos después
+
+**Síntoma:** 23 sep 2026, Jorge esperaba los recordatorios de constancia de `CNF-2627-001` entre
+9 y 10 am y no salieron. El registro de ejecuciones mostraba en cada corrida desde la medianoche
+"Recordatorios de constancia: 0 enviado(s), 133 pospuesto(s)". Los activadores estaban sanos. La
+causa era la cuota de `MailApp`, que seguía a la reserva (≤ 30) por los envíos del 22 sep (24 h
+corridas). Eso no es un bug: la reserva hizo su trabajo. Tampoco dependen del activador de las
+9am: los recordatorios de constancia corren en el activador de cada 15 min.
+
+**Bug real encontrado al revisarlo:** `decidirRecordatorioConstancia_()` mandaba el recordatorio 2
+si `Constancia_recordatorios_enviados=1` y ya era el día ≥ 1 después de la conferencia. Cuando el
+recordatorio 1 sale tarde (el día siguiente o después, justo el caso de la cuota agotada), la
+siguiente corrida, 15 min después, cumple las dos condiciones. Resultado: dos correos casi
+seguidos al mismo docente y el doble de cuota.
+
+**Fix (23 sep 2026):** el recordatorio 2 exige además que `Fecha_ultimo_recordatorio_constancia`
+sea de un día anterior a hoy. De paso, `enviarRecordatoriosConstancia_()` deja de consultar
+`getRemainingDailyQuota()` en cuanto llega a la reserva (antes: una llamada por folio, ~75 s por
+corrida), y sigue contando los pospuestos para el registro.
+
+**Dónde puede volver a pasar:** cualquier secuencia de avisos "N y luego N+1 al día siguiente"
+que calcule el segundo desde la fecha del evento y no desde cuándo salió el anterior.
+
 ## Regla general al corregir cualquiera de estos patrones
 
 Cuando se encuentra uno de estos bugs en un archivo, **revisar si el mismo

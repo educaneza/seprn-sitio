@@ -2167,6 +2167,11 @@ function decidirRecordatorioConstancia_(row, cols, filaCurso, ahora, hoy) {
   if (enviados === 0) {
     return ahora >= finConferencia_(filaCurso) ? 1 : 0;
   }
+  // Nunca el mismo día que el recordatorio 1: si ese salió tarde (ej. cuota
+  // agotada hasta el día siguiente), sin este chequeo el "Último aviso" salía
+  // 15 min después — ver docs/QA-NOTES.md #41.
+  const ultimo = row[cols.Fecha_ultimo_recordatorio_constancia];
+  if (ultimo instanceof Date && !isNaN(ultimo) && soloFecha(ultimo) >= hoy) return 0;
   const fin = parseFechaSegura_(filaCurso[6]);
   return (fin && Math.round((hoy - fin) / 86400000) >= 1) ? 2 : 0;
 }
@@ -2218,7 +2223,7 @@ function enviarRecordatoriosConstancia_() {
   const datos = hoja.getDataRange().getValues();
   const cols = indicesPorEncabezado_(datos[0]);
 
-  let enviados = 0, pospuestos = 0;
+  let enviados = 0, pospuestos = 0, sinCuota = false;
   for (let i = 1; i < datos.length; i++) {
     const row = datos[i];
     const filaCurso = cursosPorId[String(row[cols.ID_Curso]).trim().toUpperCase()];
@@ -2231,7 +2236,12 @@ function enviarRecordatoriosConstancia_() {
     const docente = docentesPorRfc[rfc];
     const correo = docente ? String(docente[2]).trim() : '';
     if (!correo) continue;
-    if (MailApp.getRemainingDailyQuota() <= RESERVA_CUOTA_CORREO) { pospuestos++; continue; }
+    // Una vez que la cuota llega a la reserva ya no se vuelve a consultar
+    // (antes: una llamada por folio, ~75 s por corrida) — solo se cuentan
+    // los pendientes para el registro.
+    if (sinCuota || MailApp.getRemainingDailyQuota() <= RESERVA_CUOTA_CORREO) {
+      sinCuota = true; pospuestos++; continue;
+    }
 
     const folio = String(row[cols.Folio]).trim();
     const mensaje = construirCorreoConstancia_(filaCurso, folio, nuevoConteo);
