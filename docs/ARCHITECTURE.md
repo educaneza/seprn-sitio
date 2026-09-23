@@ -689,7 +689,7 @@ individual (agrupado por docente si tiene varios cursos pendientes, `MAX_RECORDA
 = 2` por inscripción, nunca el mismo día del registro) sale al día siguiente del registro y de
 nuevo a `DIAS_ANTES_CIERRE_RECORDATORIO` (2) días o menos del cierre de inscripción
 (`decidirRecordatorioPendiente_()`), solo para cursos `Activo=TRUE` con inscripción abierta, con
-`RESERVA_CUOTA_CORREO=20` de margen para el resto de los Apps Script de la cuenta. El correo trae
+`RESERVA_CUOTA_CORREO=30` de margen para el resto de los Apps Script de la cuenta (subió de 20 a 30 el 22 sep 2026, a pedido de Jorge). El correo trae
 dos botones por curso: "Ir a inscribirme" (la `Liga_convocatoria`) y "Sí, ya me llegó", firmado
 con `HMAC-SHA256` del folio (`tokenConfirmacion_()`, secreto propio del proyecto en Script
 Properties, generado solo — la firma es lo único que impide confirmar el folio de otra persona
@@ -719,7 +719,7 @@ Tres avisos calculados a partir de las propias fechas del curso, sin marcar nada
 | "Vas a la mitad" | Al cruzar el punto medio `Fecha_inicio`/`Fecha_fin`, solo cursos de 30+ días | — |
 | "Empieza en 30 minutos" | Entre 20 y 40 minutos antes del inicio exacto, cualquier curso (de uno o varios días) | `Hora_inicio` capturada |
 
-Un curso de varios días con `Hora_inicio` capturada recibe el primero y el tercero — son avisos independientes, uno no sustituye al otro (aviso temprano + empujón el mismo día). Un curso de un solo día con `Hora_inicio` recibe **solo** el tercero (el primero se salta para no duplicar con un aviso tan cercano). Cada aviso se manda como **un solo correo por curso, con BCC a todos los inscritos** (no uno por persona), con una plantilla HTML propia (`construirCorreoHtml()`, con la paleta institucional — ver ejemplo en `docs/DESIGN_SYSTEM.md`), y se revisa `MailApp.getRemainingDailyQuota()` antes de enviar — la cuota diaria la comparten TODOS los Apps Script de la cuenta de Google, no es exclusiva de este proyecto; si no alcanza, el aviso se salta ese día y se reintenta el siguiente (la bandera `Recordatorio_*_enviado` no se marca hasta que el correo sale de verdad; el aviso de "1 día antes" usa un rango, no una igualdad exacta, para poder reintentar al día siguiente sin perderse en silencio).
+Un curso de varios días con `Hora_inicio` capturada recibe el primero y el tercero — son avisos independientes, uno no sustituye al otro (aviso temprano + empujón el mismo día). Un curso de un solo día con `Hora_inicio` recibe **solo** el tercero (el primero se salta para no duplicar con un aviso tan cercano). Cada aviso se manda **en BCC a todos los inscritos, troceado en lotes de `MAX_DESTINATARIOS_POR_CORREO=45`** (límite de destinatarios por mensaje de Gmail), con una plantilla HTML propia (`construirCorreoHtml()`, con la paleta institucional — ver ejemplo en `docs/DESIGN_SYSTEM.md`). La cuota diaria de `MailApp` se cuenta **por destinatario** y la comparten TODOS los Apps Script de la cuenta de Google: antes de cada lote `enviarCorreoLote()` revisa que, tras mandarlo (`lote.length + 1`, por el `to` a la propia cuenta), sigan libres `RESERVA_CUOTA_CORREO` destinatarios; si no, ese lote se salta. **Envío parcial sin duplicar** (sep 2026): cada aviso lleva una `claveSeguimiento` (`<idCurso>_INICIO`/`_MEDIO`/`_WEBINAR`) y los destinatarios que ya lo recibieron se anotan en la Script Property `LOTE_ENVIADOS_<clave>` (huella MD5 corta por correo, `huellaCorreo_()`); las corridas siguientes solo mandan a los que faltan, y la bandera `Recordatorio_*_enviado` se marca únicamente cuando llegó a todos. Tope ~630 destinatarios por aviso (`MAX_BYTES_SEGUIMIENTO_LOTE`): si no cabe, se detiene sin mandar lotes que no pueda anotar, se da por concluido y avisa a Jorge (`avisarSeguimientoLleno_()`). La propiedad se borra al completar o al resignarse (`limpiarSeguimientoLote_()`). El aviso de "1 día antes" usa un rango, no una igualdad exacta, para poder reintentar al día siguiente sin perderse en silencio; el de "30 minutos / ya comenzó" deja de reintentarse al terminar el evento (`finConferencia_()`, con `Hora_fin` si está capturada). `esEmailValido_()` descarta antes de trocear direcciones con formato inválido (incluido un dominio con punto final). Detalle en `docs/QA-NOTES.md #38`-`#40`.
 
 El aviso de "30 minutos" necesita precisión de minutos, así que su disparador corre **cada 15 minutos** (no cada hora como antes) — requiere volver a correr el menú "OTDE Formación → Instalar recordatorios automáticos" después de desplegar una nueva versión, porque `instalarRecordatoriosAutomaticos()` borra y recrea ambos activadores en cada corrida (antes solo los creaba si faltaban, así que un cambio de intervalo no se aplicaba solo). `enviarRecordatoriosDiarios()` además llama a `verificarActivadoresInstalados()` al inicio, que manda un correo de alerta a Jorge (máximo una vez al día, vía `PropertiesService`) si alguno de los dos activadores desapareció.
 
@@ -768,8 +768,10 @@ docente completa un trámite en su propio sitio — a diferencia del resto de Fo
   (`Constancia_recordatorios_enviados`, `Fecha_ultimo_recordatorio_constancia`), mismo patrón de
   conteo con tope (`MAX_RECORDATORIOS_CONSTANCIA=2`) que `Recordatorios_pendiente` del doble
   registro.
-- **Ventana de carga**: abierta los días 0 y 1 desde `Fecha_fin`, cerrada a partir del día 2
-  (`ventanaConstanciaAbierta_()`, `DIAS_LIMITE_CONSTANCIA=2`) — se revalida tanto al mostrar el
+- **Ventana de carga**: abierta los días 0 a 6 desde `Fecha_fin`, cerrada a partir del día 7
+  (`ventanaConstanciaAbierta_()`, `DIAS_LIMITE_CONSTANCIA=7` — era 2 hasta el 22 sep 2026; se
+  amplió porque con la cuota compartida de `MailApp` los recordatorios de una conferencia grande
+  tardan más de un día en salir completos) — se revalida tanto al mostrar el
   formulario (`constanciaInfo_()`) como al recibir el archivo (`subirConstancia_()`), nunca solo
   del lado del cliente.
 - **Liga firmada distinta a la del doble registro**: `tokenConstancia_()`/`ligaConstancia_()`

@@ -1058,6 +1058,41 @@ mientras use `MailApp.sendEmail()` — Mantenimiento/Asesorías/Soporte/Correo m
 solicitud individual hoy, pero si algún día agregan un aviso masivo, considerar el mismo patrón
 de Brevo desde el diseño, no después de un incidente en producción.
 
+## 40. Un aviso en lote que salía a medias se marcaba como enviado, y el filtro de correos inválidos no atrapaba el caso real
+
+**Síntoma:** 22 sep 2026, con los fixes de #38/#39 ya en producción, el registro de ejecuciones
+mostraba cada 15 min los mismos 3 lotes fallando (2 por cuota agotada, 1 por `Invalid email`)
+con la ejecución marcada "Completada" — y el código tenía tres huecos más:
+
+1. `esEmailValido_()` (`/^[^\s@]+@[^\s@]+\.[^\s@]+$/`) aceptaba `vero_130171@hotmail.com.` — el
+   punto final cae dentro de `[^\s@]+`. El lote de 45 donde caía seguía reventando.
+2. `enviarCorreoLote()` devolvía `true` si **al menos un** lote salía, y el llamador marcaba
+   `Recordatorio_*_enviado=TRUE` — los destinatarios de los lotes fallidos nunca recibían el
+   aviso y nadie se enteraba.
+3. La cuota se revisaba contra el **número de lotes** (`getRemainingDailyQuota() < lotes.length`),
+   no contra destinatarios, y los avisos en lote ignoraban `RESERVA_CUOTA_CORREO` — un aviso grande
+   podía dejar sin cuota a Mantenimiento/Correo/etc.
+
+**Fix (Versiones 21 y 22, 22 sep 2026, verificado en el registro de ejecuciones):**
+- Regex nueva: el dominio no puede empezar/terminar en punto ni tener `..`, TLD de 2+ letras.
+- Revisión de cuota **por lote**, con reserva (`RESERVA_CUOTA_CORREO=30`, costo `lote.length+1`).
+- Seguimiento por destinatario (`claveSeguimiento`, Script Property `LOTE_ENVIADOS_*` con huellas
+  MD5 cortas): solo devuelve `true` cuando llegó a todos; las corridas siguientes mandan solo a
+  los que faltan. Se limpia la propiedad al completar o al resignarse. Tope ~630 destinatarios
+  por aviso (9 KB por Script Property): antes de mandar cada lote se revisa que su anotación
+  quepa — si no, se detiene ahí, se da por concluido y avisa a Jorge (Versión 23). Mandar un
+  lote sin poder anotarlo haría que se reenviara en cada corrida.
+- Como ahora un aviso a medias sí se reintenta, el "ya comenzó — conéctate ahora" se corta al
+  terminar el evento (`finConferencia_()`, con `Hora_fin`) en vez de a medianoche — si no, podía
+  salir de noche para un evento ya concluido.
+
+Simulado en Node con mocks de `MailApp`/`PropertiesService` (133 inscritos + 1 inválido: 45/día
+con reserva, sin duplicados, completa al tercer día; lote con error se reintenta solo).
+
+**Dónde puede volver a pasar:** cualquier función que devuelva "éxito" por un envío parcial y
+un llamador que marque una bandera irreversible con ese resultado. Si se agrega un aviso masivo
+nuevo, pasarle una `claveSeguimiento` propia.
+
 ## Regla general al corregir cualquiera de estos patrones
 
 Cuando se encuentra uno de estos bugs en un archivo, **revisar si el mismo

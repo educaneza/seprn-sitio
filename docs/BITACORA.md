@@ -14,6 +14,23 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-09-22 (cont. 3) · Chequeo de salud de Formación Docente — Brevo descartado, repo = producción (Versión 22)
+
+| | |
+|---|---|
+| **Fecha** | 2026-09-22 |
+| **Sesión** | Jorge pidió revisar la salud de Formación Docente tras el incidente del día (perdió el hilo entre Brevo, Workspace y los fixes). Revisión en vivo vía Chrome, solo lectura primero. |
+| **Hallazgos en vivo** | Activadores bien; modo de prueba apagado; funciones temporales borradas. Cada 15 min los 3 lotes de `CNF-2627-001` fallaban (cuota + `Invalid email`) con la ejecución "Completada". Constancias: 0/133 recibidas, 115 recordatorios pospuestos, formulario cerraba el 23 sep. Catálogo público vacío por datos (CNF y `ACF-2627-003` con Activo=FALSE, a propósito; `ACF-2627-002` cerró el 16 sep), no un bug. Workspace en prueba (cobro desde el 6 oct), pero la doc oficial dice que las cuentas de prueba tienen límites extra hasta USD $100 pagados + 60 días. Repo ≠ producción (repo tenía Brevo sin desplegar). |
+| **Versión 21** | Editado directo en el editor (a pedido de Jorge): `DIAS_LIMITE_CONSTANCIA` 2→7, `RESERVA_CUOTA_CORREO` 20→30 (Jorge: 25-30 libres para los demás sistemas) y revisión de cuota+reserva por lote, activador diario 8am→9am (reinstalado desde el menú, verificado 9-10am GMT-6). |
+| **Versión 22** | Brevo retirado por completo del código; regex estricta; envío parcial sin duplicar (`claveSeguimiento`); corte del "ya comenzó" al terminar el evento. Cargado al editor desde el archivo del repo y verificado con un diff línea por línea contra la V21 (solo cambios previstos) — **repo y producción idénticos**. Ver `docs/QA-NOTES.md #40`. |
+| **Versión 23** | Tope del seguimiento de envío parcial (~630 destinatarios por aviso): si la lista ya no cabe en la Script Property, se detiene sin mandar lotes que no pueda anotar, se da por concluido y avisa a Jorge — antes, pasar ese tope habría reenviado el mismo lote en cada corrida. `BREVO_API_KEY` borrada de Script Properties. Jorge corrigió a mano `vero_130171@hotmail.com` en `Docentes`. |
+| **Pendiente** | Decidir Workspace antes del 6 oct (ROADMAP 26). |
+| **Verificación** | Simulación en Node con mocks de `MailApp`/`PropertiesService` (17 casos: regex, 133 inscritos con reserva → 45/día sin duplicados, lote con error, modo de prueba, curso de 800 → se detiene en 630 sin duplicar y alerta). En vivo: diff línea por línea editor vs. repo antes de cada versión; corridas de `enviarRecordatoriosWebinar` de 22:37, 23:07 y 23:37 sin errores; `CNF-2627-001` quedó con `Recordatorio_webinar_enviado=TRUE` al pasar su `Hora_fin`; `doGet` responde igual. |
+| **Documentación actualizada** | Este checkpoint, `docs/QA-NOTES.md #40`, `docs/ROADMAP.md` 25/26, `docs/ARCHITECTURE.md` §12 (envío en lote, reserva 30, ventana de constancia 7 días), `CLAUDE.md`. |
+| **Commits** | Commit de cierre de esta sesión (`.gs` = Versión 23 de producción + docs). |
+
+---
+
 ## CHECKPOINT — 2026-09-22 (cont. 2) · Brevo tiene un bloqueador real con Hotmail/Outlook — se optó por probar Google Workspace en su lugar
 
 | | |

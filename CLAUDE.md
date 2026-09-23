@@ -516,21 +516,25 @@ ya esté expandido).
   **Segundo bug, encontrado al verificar el fix, ya desplegado (Versión 20, mismo día)**: una
   dirección con formato inválido tumbaba el lote completo donde caía — `esEmailValido_()`
   (filtra antes de trocear) + cada lote aislado en su propio `try/catch` ya están en producción.
-- **Envío migrado de `MailApp` a Brevo — escrito en el repo, sin pegar/redesplegar todavía** (22
-  sep 2026, ver `docs/QA-NOTES.md #39` y `docs/ROADMAP.md` ítem 25): la corrida de verificación
-  del fix anterior reveló la causa de fondo — con 119 inscritos, `MailApp.sendEmail()` choca
-  contra la cuota de ~100 destinatarios/día que comparten **todas** las automatizaciones de OTDE
-  en `otde.nezahualcoyotl@gmail.com` (se cuenta por destinatario individual, no por envío — un
-  supuesto equivocado que tenía el propio código). Workspace for Education no es viable a corto
-  plazo (`dee.edu.mx` ya está en Microsoft 365, decisión a nivel SEIEM/estatal). Se migró a la
-  API de Brevo (300 destinatarios/día gratis, sin dominio propio): `enviarPorBrevo_()` nueva
-  (`UrlFetchApp.fetch()` a `https://api.brevo.com/v3/smtp/email`, llave en la Script Property
-  `BREVO_API_KEY`, ya generada y guardada); `enviarCorreoLote()`/`enviarCorreoIndividual_()`
-  reescritas para usarla; se quitó el chequeo de `MailApp.getRemainingDailyQuota()`/
-  `RESERVA_CUOTA_CORREO` (ya no aplica). `verificarActivadoresInstalados()` se dejó a propósito
-  en `MailApp` (alerta interna a Jorge, no debe depender del mismo servicio que avisa fallas).
-  **Nunca probado contra la API real de Brevo** — falta confirmar el remitente verificado en
-  Brevo, pegar + redesplegar, y probar con modo de prueba activo antes de dar esto por bueno.
+- **Brevo descartado; envío sigue en `MailApp` con reserva de cuota y envío parcial sin duplicar
+  (22 sep 2026, Versiones 21 y 22 en producción, repo = producción)**: la migración a Brevo
+  (`docs/QA-NOTES.md #39`) nunca se desplegó y se retiró del código por decisión de Jorge (no
+  entrega bien a Hotmail/Outlook sin dominio propio). `RESERVA_CUOTA_CORREO = 30` deja libres
+  30 destinatarios/día para Mantenimiento/Correo/etc. — ahora la respetan también los avisos en
+  lote (`enviarCorreoLote()` revisa cuota + reserva antes de cada lote; cada lote cuesta
+  `lote.length + 1` por el `to` a la propia cuenta). **Envío parcial**: `enviarCorreoLote(...,
+  claveSeguimiento)` anota en Script Properties (`LOTE_ENVIADOS_<idCurso>_<INICIO|MEDIO|WEBINAR>`,
+  huella MD5 corta por correo, no el correo en claro) a quién ya le llegó cada aviso, y solo
+  devuelve `true` — y por lo tanto solo se marca `Recordatorio_*_enviado` — cuando llegó a
+  **todos**; las corridas siguientes mandan solo a los que faltan, sin duplicar. Aguanta ~630
+  destinatarios por aviso (límite de 9 KB por propiedad): si un aviso no cabe, se detiene sin
+  mandar lotes que no pueda anotar (evita reenviar), se da por concluido y avisa a Jorge por
+  correo (`avisarSeguimientoLleno_()`). El aviso "empieza en 30 min / ya
+  comenzó" deja de reintentarse al terminar el evento (`finConferencia_()`, usa `Hora_fin` si
+  está capturada), no a medianoche. `esEmailValido_()` ahora rechaza dominios con punto final o
+  `..` (caso real `vero_130171@hotmail.com.`). Constancias UNETE: el formulario de carga cierra
+  a los 7 días de la conferencia (`DIAS_LIMITE_CONSTANCIA`, antes 2). Activador diario movido a
+  las **9am** (antes 8am). Ver `docs/QA-NOTES.md #40`.
 - Para cambios: copiar el `.gs` completo en Apps Script y re-desplegar como aplicación web (Cualquier usuario) — recordar **Administrar implementaciones → Nueva versión**, no solo "Guardar" en el editor, o el sitio sigue sirviendo la versión anterior
 
 ### `apps-script/panel-otde.gs` (nuevo, ago 2026)
@@ -1080,13 +1084,11 @@ de la sesión realmente volvió obsoletos.
 ## Pendientes vigentes
 Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/Identidad) y
 `docs/BITACORA.md` para el historial de qué ya se hizo. Resumen de lo genuinamente abierto:
-- **Formación Docente — migración de `MailApp` a Brevo, en pausa** (22 sep 2026): código listo en
-  el working tree local (`enviarPorBrevo_()`, `BREVO_API_KEY` ya generada), pero se encontró que
-  Brevo sin dominio propio no entrega bien a Hotmail/Outlook (DKIM/DMARC) — ver `docs/QA-NOTES.md
-  #39` y `docs/ROADMAP.md` ítem 25. En su lugar se activó una prueba de 14 días de Google
-  Workspace Business Starter sobre la misma cuenta (sin dominio), pendiente de confirmar si ya
-  subió la cuota de `MailApp` a 1,500/día — si se confirma, la migración a Brevo ya no haría
-  falta. Ver `docs/ROADMAP.md` ítem 26 y `docs/BITACORA.md` checkpoint "22 sep 2026 (cont. 2)".
+- **Formación Docente — cuota de correo, decidir antes del 6 oct 2026**: Brevo quedó descartado.
+  Se activó una prueba de Google Workspace Business Starter, pero la documentación oficial de
+  cuotas de Apps Script dice que las cuentas de prueba tienen límites extra y el 1,500/día solo
+  llega tras USD $100 pagados acumulados + 60 días — probablemente no resuelve la cuota pronto.
+  Decidir si se mantiene (cobro desde el 6 oct) o se cancela. Ver `docs/ROADMAP.md` ítem 26.
 - **Formación Docente — doble registro, seguimiento pendiente**: decidir si se renumera una de
   las dos filas del folio duplicado `OTDE-CAP-0089` (datos sin tocar); Paso 5 (reconciliar
   `Registro_externo` contra la lista real de Aula Digital cuando CoEEE la tenga disponible);
