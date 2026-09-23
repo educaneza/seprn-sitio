@@ -14,6 +14,21 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-09-23 (cont. 2) · Plan de operación interna OTDE: bitácora única, oficios, padrón de programas, agenda y tablero (solo planeación, sin código)
+
+| | |
+|---|---|
+| **Fecha** | 2026-09-23 |
+| **Sesión** | Jorge planteó que la operación interna de la oficina (oficios que llegan al Outlook institucional y se turnan; recordatorios de reuniones que hoy se hacen a mano por WhatsApp; padrones de Cuantrix, Internet en una caja, MIED, Internet CFE, UNETE y Red Digital IEEM en Excel sueltos; planeación institucional, agenda mensual en Outlook y reporte mensual en Word) sigue manual, y pidió un análisis y un plan. Sesión en modo plan, sin código. |
+| **Diagnóstico** | Planeación, agenda, reporte mensual y seguimiento de oficios describen lo mismo: **actividades**, capturadas 3 o 4 veces. Propuesta: capturar cada actividad una sola vez y generar los documentos a partir de esa captura. Prioridad elegida por Jorge: el **reporte mensual**. |
+| **Plan acordado** | 5 fases en `docs/PLAN-OPERACION-INTERNA.md`: (1) Bitácora única + reporte mensual automático, ligada a los N.P. de la planeación; (2) Control de oficios con recordatorios por Telegram y el texto de WhatsApp ya redactado; (3) Padrón de programas por CCT + consulta móvil; (4) `.ics` mensual para Outlook; (5) Tablero. Límites anotados: Apps Script no lee el buzón de Outlook (hay que verificar si hay Power Automate en la licencia M365), WhatsApp no tiene envío automático gratuito y la cuota de MailApp es compartida. |
+| **Arquitectura** | Jorge preguntó si todo puede ser un solo sistema. Respuesta: uno solo para quien lo usa y separado por dentro. Se unifican el catálogo por CCT (`js/cct-db.js`), la bitácora y el tablero; cada trámite conserva su propio Sheet y su propio script. Coherente con la decisión del 5 ago. **Corrección durante el cierre**: el plan hablaba de un "Panel OTDE nuevo", pero ya existe `apps-script/panel-otde.gs` (`docs/ARCHITECTURE.md §20`); el plan se ajustó para ampliarlo con el mismo patrón de endpoint con token, sin crear un panel nuevo. |
+| **Siguiente paso** | Jorge trae el Word de la planeación institucional 2026-2027 y el del reporte mensual (uno en blanco y uno ya entregado) para diseñar la estructura de `Actividades` y la plantilla del reporte antes de escribir código. |
+| **Documentación actualizada** | Este checkpoint, `docs/PLAN-OPERACION-INTERNA.md` (nuevo), `docs/ROADMAP.md` ítem 27, `CLAUDE.md` §"Pendientes vigentes". |
+| **Commits** | El commit de cierre de esta sesión (solo documentación). |
+
+---
+
 ## CHECKPOINT — 2026-09-23 (cont.) · Formación Docente: fechas con etiqueta, cierre con hora, "Cupo agotado", historial sin `Activo` y rediseño de tarjetas
 
 | | |

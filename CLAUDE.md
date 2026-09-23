@@ -1085,6 +1085,10 @@ de la sesión realmente volvió obsoletos.
 ## Pendientes vigentes
 Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/Identidad) y
 `docs/BITACORA.md` para el historial de qué ya se hizo. Resumen de lo genuinamente abierto:
+- **Operación interna OTDE — plan de 5 fases listo, sin iniciar** (bitácora + reporte mensual,
+  oficios, padrón de programas, agenda y tablero sobre el Panel OTDE existente). Arranca con la
+  Fase 1 cuando Jorge traiga los Word de planeación y reporte mensual. Ver
+  `docs/PLAN-OPERACION-INTERNA.md` y `docs/ROADMAP.md` ítem 27.
 - **Formación Docente — cuota de correo, decidir antes del 6 oct 2026**: Brevo quedó descartado.
   Se activó una prueba de Google Workspace Business Starter, pero la documentación oficial de
   cuotas de Apps Script dice que las cuentas de prueba tienen límites extra y el 1,500/día solo
