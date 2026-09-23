@@ -1536,7 +1536,10 @@
         card.querySelector('.cc-fecha-insc-lbl').textContent = inscripcion.lbl;
         card.querySelector('.cc-fecha-insc').textContent = inscripcion.val;
       }
-      if (periodo) card.querySelector('.cc-fecha-curso').textContent = cerrado ? 'En desarrollo · ' + periodo : periodo;
+      // "En desarrollo" solo si ya empezó: una inscripción puede cerrar días antes del inicio.
+      const inicio = parseFechaDMA(curso.fecha_inicio);
+      const yaEmpezo = inicio && inicio <= new Date();
+      if (periodo) card.querySelector('.cc-fecha-curso').textContent = cerrado && yaEmpezo ? 'En desarrollo · ' + periodo : periodo;
       if (curso.modalidad) card.querySelector('.cc-modalidad-txt').textContent = curso.modalidad;
       if (curso.dirigido_a) card.querySelector('.cc-dirigido-txt').textContent = curso.dirigido_a;
 
