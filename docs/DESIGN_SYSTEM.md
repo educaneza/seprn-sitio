@@ -162,8 +162,9 @@ descartes por antigua, es la que está en producción:
 1. Fondo **pastel plano** por categoría (`tint` en `CATEGORIA_STYLE`), sin
    gradiente ni capas decorativas — `background: ${style.tint}`.
 2. Un solo `::before` con un glow radial blanco sutil arriba, nada más.
-3. El ícono va en un contenedor blanco (`.cc-icon-wrap`, 84×84px, radio 22px)
-   con el ícono grande (42px) coloreado con `style.solid` vía `color:` +
+3. El ícono va en un contenedor blanco (`.cc-icon-wrap`, 52×52px, radio 15px
+   desde el 23 sep 2026 — antes 84px en una cabecera de 148px que era solo
+   decoración) con el ícono (26px) coloreado con `style.solid` vía `color:` +
    `stroke="currentColor"` en el SVG — no ícono blanco sobre fondo de color,
    es ícono de color sobre fondo blanco. Este contrato importa: si agregas
    una categoría nueva, su SVG debe usar `stroke="currentColor"`, no un color
@@ -173,6 +174,21 @@ descartes por antigua, es la que está en producción:
    nuevo.
 
 Ver `.cc-header`, `.cc-icon-wrap` en `formacion-docente.html`.
+
+**Rediseño del 23 sep 2026 (feedback de producción)**: la cabecera bajó de
+148px a ~110px y dejó de ser solo decorativa — ícono a la izquierda y,
+debajo, el chip de estado de la inscripción (`.cc-estado`, fondo blanco,
+color por estado: `--ok` abierta con punto, `--warn` "Cierra hoy · 14:00 h"/
+"Cierra mañana", `--danger` "Cupo agotado", `--ink-soft` "Inscripciones
+cerradas"/"Concluido"). La palomita de selección (`.cc-sel-badge`, 22px)
+vive ahora en la esquina del ícono, no de la tarjeta. En el cuerpo, las
+fechas van en un bloque con etiqueta arriba del valor (`.cc-fechas`:
+"Inscríbete hasta · lun 28 sep · 14:00 h" / "Curso · 29 sep – 10 oct",
+formateadas en el cliente con `textoPeriodoCurso()`/`textoInscripcion()`) —
+antes era un solo rango sin etiqueta que los docentes leían como periodo de
+inscripción. Al pie, un botón visual `.cc-cta` "Elegir este curso" →
+"✓ Elegido" (verde): es un `<span aria-hidden>`, la tarjeta entera sigue
+siendo el `role=button` real — así no hay un interactivo anidado.
 
 ## Patrón: categoría como texto, no pill
 
@@ -364,7 +380,16 @@ mismo badge se reutiliza tal cual en las tarjetas del historial "Cursos
 anteriores" (ver patrón siguiente): la validez de un curso sigue siendo
 información útil aunque ya haya pasado.
 
-## Patrón: 3 estados de inscripción + historial "Cursos anteriores"
+## Patrón: estados de inscripción + historial "Cursos anteriores"
+
+> **Actualización 23 sep 2026**: ahora son 4 estados — se agregó **Cupo
+> agotado** (`.curso-card.agotado`: visible, sin botón, "Ya no hay lugares
+> disponibles"; elegible solo en modo "¿Ya te inscribiste? Avísanos aquí",
+> que agrega `.modo-aviso` a `#cursos-grid` y muestra el botón "Ya estoy
+> inscrito · avisar"). `.cc-cerrado-tag` se retiró: el estado va en el chip
+> `.cc-estado` de la cabecera (ver "Encabezado de tarjeta" arriba). El
+> historial ya no depende de `Activo`. Lo de abajo describe la versión de 3
+> estados; la lógica de fechas vigente está en `docs/ARCHITECTURE.md §12`.
 
 Antes un curso solo tenía dos estados implícitos: visible (`Activo=TRUE` +
 dentro de `Visible_desde`/`Visible_hasta`) o invisible. Jorge pidió un

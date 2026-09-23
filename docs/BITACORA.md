@@ -14,6 +14,22 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-09-23 (cont.) · Formación Docente: fechas con etiqueta, cierre con hora, "Cupo agotado", historial sin `Activo` y rediseño de tarjetas
+
+| | |
+|---|---|
+| **Fecha** | 2026-09-23 |
+| **Sesión** | Feedback de producción de Jorge (catálogo vacío en ese momento): la tarjeta no mostraba cuándo se imparte el curso; hacía falta cerrar por cupo sin quitar el curso; cerrar la inscripción a una hora exacta; mejorar el diseño de las tarjetas. En el camino pidió que "Cursos anteriores" muestre los 6 más recientes. Plan en modo plan, por pasos. |
+| **Hallazgos** | (1) La tarjeta mostraba `Fecha_inicio`–`Fecha_fin` sin etiqueta y `Fecha_limite_inscripcion` nunca llegaba al frontend. (2) `doPost` no rechazaba registros después de la fecha límite (solo cursos pasados). (3) El historial ya ordenaba por `Fecha_fin` descendente, pero filtraba `Activo=TRUE` antes, así que apagar un curso al terminar lo sacaba del historial. Ver `docs/QA-NOTES.md #42`. Descartado en la sesión: al principio se pensó que F/G se capturaban como fechas de inscripción; Jorge aclaró que son de desarrollo (coincide con el código). |
+| **Backend** | Columnas nuevas en `Cursos`: AA `Hora_limite_inscripcion`, AB `Cupo_agotado`, AC `Ocultar_historial` (se autocompletan, con dropdown y notas en los encabezados vía "Aplicar validación en Cursos"). `momentoCierreInscripcion_()` + `horaYMinutos_()`; `evaluarEstadoCurso_(row, ahora)` con 4 estados. `doPost` rechaza registros nuevos en cerrada/agotada (excepción: agotada + registro externo confirmado), antes de escribir. Historial sin `Activo`. Recordatorio a pendientes solo en `abierta`, con la hora de cierre en el correo. |
+| **Frontend** | Tarjetas con la cabecera de color (opción elegida por Jorge entre dos mockups) pero más baja, con chip de estado; fechas con etiqueta ("Inscríbete hasta" / "Curso"); botón visual "Elegir este curso" → "✓ Elegido"; tarjeta agotada elegible solo en modo "ya me inscribí"; cierre en vivo cada 30 s y revisión justo antes de enviar. Ajuste posterior: "En desarrollo" solo si el curso ya empezó (`8b2fb23`). |
+| **Verificación** | Node con stubs de Apps Script: 9 casos de estado (hora como celda y como texto, hora ilegible → fail-open, agotada vs. cerrada, sin fecha límite, "Por definir"). Chrome contra un mock local: 5 tarjetas + historial, selección, agotado en modo aviso, cierre en vivo en catálogo y en formulario, sin errores de consola, sin desborde a 375px. Producción (Jorge pegó el `.gs` y creó la versión): `doGet` con los campos nuevos; historial ahora con `CNF-2627-001` (133 inscritos, `Activo=FALSE`); fila de prueba `PRUEBA-QA-002` → hora leída como 12:25 CDMX (18:25Z), `agotada` + POST rechazado, cierre a las 12:00 → `cerrada` + POST rechazado; tarjeta real en GitHub Pages con "Inscripción cerró mié 23 sep · 12:00 h". La fila de prueba quedó con `Activo=FALSE`/`Ocultar_historial=TRUE`, sin borrar (Jorge la borra). |
+| **Duda de `ACF-2627-001` resuelta** | Leída la hoja real: las 3 Acciones Formativas tienen `Visible_hasta` vencido (se usaba como cierre de inscripción) y `ACF-2627-001` no tiene `Fecha_fin`. Recomendación a Jorge: cerrar con `Fecha_limite_inscripcion` (+ hora) y llenar `Fecha_fin`. |
+| **Documentación actualizada** | Este checkpoint, `docs/ARCHITECTURE.md` §12, `docs/DESIGN_SYSTEM.md`, `docs/QA-NOTES.md #42`, `docs/ROADMAP.md` ítem 18, `docs/manual-formacion-docente.html` (columnas de `Cursos`), `CLAUDE.md`. |
+| **Commits** | `ece90e3` (backend + frontend, 2 archivos, +432/−93 junto con el siguiente), `8b2fb23` (texto "En desarrollo"), y el commit de cierre de esta sesión. |
+
+---
+
 ## CHECKPOINT — 2026-09-23 · Recordatorios de constancia UNETE sin salir — cuota, no activadores; fix de "Último aviso" pegado
 
 | | |

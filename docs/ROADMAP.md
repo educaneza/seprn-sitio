@@ -633,7 +633,12 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     Artificial") ya no aparece ni en vigentes ni en el historial de esta respuesta — sin
     diagnosticar si Jorge lo dio de baja a propósito (`Activo=FALSE`) o si hay algo que revisar;
     confirmar con él antes de asumir cualquiera de las dos. Ver `docs/BITACORA.md`, checkpoint
-    17 sep 2026.
+    17 sep 2026. **Resuelto 23 sep 2026 (leído en la hoja real)**: `ACF-2627-001` sigue con
+    `Activo=TRUE`, pero `Visible_hasta` = 11/09/2026 lo esconde del catálogo y, sin `Fecha_fin`,
+    nunca cuenta como pasado. Lo mismo con `ACF-2627-002`/`003` (`Visible_hasta` 16 y 28 sep,
+    terminan 3 y 4 nov): `Visible_hasta` se estaba usando como cierre de inscripción. Se le
+    recomendó a Jorge cerrar con `Fecha_limite_inscripcion` (+ `Hora_limite_inscripcion`) y dejar
+    `Visible_hasta` vacía, y llenar el `Fecha_fin` de `ACF-2627-001`.
 
 19. **Doble registro OTDE + plataforma externa en Formación Docente** (construido, desplegado y
     verificado en producción 16 sep 2026 — ver `docs/ARCHITECTURE.md` §"Doble registro" y

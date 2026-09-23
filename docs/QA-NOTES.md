@@ -1116,6 +1116,29 @@ corrida), y sigue contando los pospuestos para el registro.
 **Dónde puede volver a pasar:** cualquier secuencia de avisos "N y luego N+1 al día siguiente"
 que calcule el segundo desde la fecha del evento y no desde cuándo salió el anterior.
 
+## 42. `doPost` aceptaba registros después de la fecha límite de inscripción, y apagar un curso lo borraba del historial
+
+**Síntoma:** 23 sep 2026, al planear el cierre con hora y "Cupo agotado" (feedback de producción
+de Jorge). Dos huecos reales, encontrados leyendo el código, no reportados por usuarios:
+
+1. `doPost()` solo rechazaba cursos **pasados** (`hoy > Fecha_fin`). Con la inscripción ya
+   cerrada (curso en desarrollo), la UI escondía el botón, pero una página abierta desde antes, la
+   caché de `sessionStorage` o una llamada directa sí podían registrar.
+2. `doGet()` filtraba `Activo=TRUE` **antes** de separar vigentes de pasados, así que apagar un
+   curso al terminar (la costumbre real) lo sacaba también de "Cursos anteriores". Por eso la
+   sección mostraba los 6 primeros cursos de agosto y no los más recientes (la conferencia UNETE
+   `CNF-2627-001`, 133 inscritos, con `Activo=FALSE`, no aparecía).
+
+**Fix (23 sep 2026):** `doPost()` evalúa el estado con la hora real y rechaza registros nuevos en
+`cerrada`/`agotada` (excepción: agotada + registro externo confirmado), antes de escribir nada.
+El historial toma los pasados sin importar `Activo`, con `Ocultar_historial=TRUE` como salida.
+Verificado en producción con una fila de prueba (`PRUEBA-QA-002`): estado y rechazo correctos
+para cupo agotado y para cierre con hora ya pasada.
+
+**Dónde puede volver a pasar:** cualquier regla que la UI aplique ocultando un botón — si no está
+también en el servidor, no existe. Y cualquier filtro de "visible" aplicado antes de separar
+casos que tienen reglas de visibilidad distintas.
+
 ## Regla general al corregir cualquiera de estos patrones
 
 Cuando se encuentra uno de estos bugs en un archivo, **revisar si el mismo
