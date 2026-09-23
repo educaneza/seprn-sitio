@@ -506,6 +506,31 @@ ya esté expandido).
   el `.html` no estaba publicado en GitHub Pages pese al `.gs` ya redesplegado (`docs/QA-NOTES.md
   #35`), y al proyecto le faltaba autorizar el permiso de `DriveApp` por ser la primera vez que
   este `.gs` toca Drive (`docs/QA-NOTES.md #36`) — ya resuelto, no requiere acción.
+- **`enviarCorreoLote()` troceado por límite de destinatarios por mensaje (22 sep 2026,
+  desplegado en producción)**: bug real encontrado en vivo — con 119 inscritos en la conferencia
+  UNETE `CNF-2627-001`, un solo `bcc` con todos revienta `MailApp.sendEmail`
+  ("Límite Excedido: Destinatarios de correo electrónico por mensaje") y tumbaba toda la
+  ejecución de `enviarRecordatoriosWebinar()`, incluido el recordatorio de constancia que corre
+  después. Fix: trocea en lotes de `MAX_DESTINATARIOS_POR_CORREO=45` + cada curso aislado en su
+  propio `try/catch` dentro de los dos bucles de recordatorio. Ver `docs/QA-NOTES.md #38`.
+  **Segundo bug, encontrado al verificar el fix, ya desplegado (Versión 20, mismo día)**: una
+  dirección con formato inválido tumbaba el lote completo donde caía — `esEmailValido_()`
+  (filtra antes de trocear) + cada lote aislado en su propio `try/catch` ya están en producción.
+- **Envío migrado de `MailApp` a Brevo — escrito en el repo, sin pegar/redesplegar todavía** (22
+  sep 2026, ver `docs/QA-NOTES.md #39` y `docs/ROADMAP.md` ítem 25): la corrida de verificación
+  del fix anterior reveló la causa de fondo — con 119 inscritos, `MailApp.sendEmail()` choca
+  contra la cuota de ~100 destinatarios/día que comparten **todas** las automatizaciones de OTDE
+  en `otde.nezahualcoyotl@gmail.com` (se cuenta por destinatario individual, no por envío — un
+  supuesto equivocado que tenía el propio código). Workspace for Education no es viable a corto
+  plazo (`dee.edu.mx` ya está en Microsoft 365, decisión a nivel SEIEM/estatal). Se migró a la
+  API de Brevo (300 destinatarios/día gratis, sin dominio propio): `enviarPorBrevo_()` nueva
+  (`UrlFetchApp.fetch()` a `https://api.brevo.com/v3/smtp/email`, llave en la Script Property
+  `BREVO_API_KEY`, ya generada y guardada); `enviarCorreoLote()`/`enviarCorreoIndividual_()`
+  reescritas para usarla; se quitó el chequeo de `MailApp.getRemainingDailyQuota()`/
+  `RESERVA_CUOTA_CORREO` (ya no aplica). `verificarActivadoresInstalados()` se dejó a propósito
+  en `MailApp` (alerta interna a Jorge, no debe depender del mismo servicio que avisa fallas).
+  **Nunca probado contra la API real de Brevo** — falta confirmar el remitente verificado en
+  Brevo, pegar + redesplegar, y probar con modo de prueba activo antes de dar esto por bueno.
 - Para cambios: copiar el `.gs` completo en Apps Script y re-desplegar como aplicación web (Cualquier usuario) — recordar **Administrar implementaciones → Nueva versión**, no solo "Guardar" en el editor, o el sitio sigue sirviendo la versión anterior
 
 ### `apps-script/panel-otde.gs` (nuevo, ago 2026)
@@ -1055,6 +1080,13 @@ de la sesión realmente volvió obsoletos.
 ## Pendientes vigentes
 Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/Identidad) y
 `docs/BITACORA.md` para el historial de qué ya se hizo. Resumen de lo genuinamente abierto:
+- **Formación Docente — migración de `MailApp` a Brevo, en pausa** (22 sep 2026): código listo en
+  el working tree local (`enviarPorBrevo_()`, `BREVO_API_KEY` ya generada), pero se encontró que
+  Brevo sin dominio propio no entrega bien a Hotmail/Outlook (DKIM/DMARC) — ver `docs/QA-NOTES.md
+  #39` y `docs/ROADMAP.md` ítem 25. En su lugar se activó una prueba de 14 días de Google
+  Workspace Business Starter sobre la misma cuenta (sin dominio), pendiente de confirmar si ya
+  subió la cuota de `MailApp` a 1,500/día — si se confirma, la migración a Brevo ya no haría
+  falta. Ver `docs/ROADMAP.md` ítem 26 y `docs/BITACORA.md` checkpoint "22 sep 2026 (cont. 2)".
 - **Formación Docente — doble registro, seguimiento pendiente**: decidir si se renumera una de
   las dos filas del folio duplicado `OTDE-CAP-0089` (datos sin tocar); Paso 5 (reconciliar
   `Registro_externo` contra la lista real de Aula Digital cuando CoEEE la tenga disponible);

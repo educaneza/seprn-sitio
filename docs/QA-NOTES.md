@@ -974,6 +974,90 @@ registro en esa plataforma sea realmente obligatorio — confirmar que
 `Registro_previo_requerido=FALSE` en la hoja `Cursos` para esos casos, y que ninguna señal nueva
 de "plataforma externa" se agregue mirando solo si existe una liga.
 
+## 38. `enviarCorreoLote()` mandaba TODOS los destinatarios en un solo BCC — con 119 inscritos, Gmail rechazaba el correo entero y ningún recordatorio salía
+
+**Síntoma:** 22 sep 2026, el recordatorio "empieza en 30 minutos"/"ya comenzó" de la conferencia
+UNETE `CNF-2627-001` ("Hablemos de IA: IA ubicua en la educación", 119 inscritos, evento el mismo
+día) nunca llegó, pese a que `Hora_inicio` estaba bien capturada y los activadores de tiempo
+(8am + cada 15 min) estaban instalados y corriendo sin problema. El registro de ejecuciones
+mostraba `enviarRecordatoriosWebinar` como "Fallida" en cada corrida desde que el curso entró a
+la ventana de 40 min antes del inicio.
+
+**Causa raíz:** `enviarCorreoLote()` mandaba un único `MailApp.sendEmail()` con los 119 correos
+juntos en `bcc` (más el `to` de la propia cuenta = 120 destinatarios). Gmail limita los
+destinatarios por mensaje (~50 para una cuenta normal, no de Workspace) y `MailApp.sendEmail`
+revienta con `Exception: Límite Excedido: Destinatarios de correo electrónico por mensaje.` —
+sin ningún `try/catch` alrededor de esa llamada dentro del bucle de cada curso, la excepción
+tumbaba **toda** la ejecución de `enviarRecordatoriosWebinar()`, incluido el recordatorio de
+constancia (`enviarRecordatoriosConstancia_()`, aislado en su propio `try/catch` pero llamado
+justo *después* del bucle — nunca llegaba a ejecutarse esa corrida). Ningún otro curso de esa
+misma ejecución se procesaba tampoco, aunque no tuviera nada que ver con el error.
+
+**Fix (desplegado en producción la misma tarde, verificado con "Ejecutar" manual y en el registro
+de ejecuciones):**
+1. `enviarCorreoLote()` trocea los destinatarios en lotes de `MAX_DESTINATARIOS_POR_CORREO=45`
+   (margen bajo el límite real de 50) y manda un `MailApp.sendEmail()` por lote en vez de uno
+   solo con todos.
+2. Cada curso dentro de `enviarRecordatoriosDiarios()`/`enviarRecordatoriosWebinar()` quedó
+   aislado en su propio `try/catch` — un curso que truene ya no bloquea el resto del recorrido
+   ni los bloques aislados que corren después (pendientes de registro externo / constancia).
+
+**Segundo bug encontrado al verificar el fix (desplegado el mismo día, Versión 20 — ver
+`docs/BITACORA.md`):** con el troceo y el aislamiento por curso activos, la ejecución de prueba
+sí completó, pero reveló que uno de los 119 correos (`vero_130171@hotmail.com`, dato tal cual
+está capturado en `Docentes`) hacía que `MailApp.sendEmail` rechazara **el lote completo** donde
+caía (`Invalid email`) — los demás lotes de ese mismo curso tampoco se mandaban, porque la
+excepción salía sin capturarse de `enviarCorreoLote()`. Fix: `esEmailValido_()` filtra
+direcciones con formato inválido antes de trocear (se loguean, no bloquean), y cada lote se manda
+dentro de su propio `try/catch` interno a `enviarCorreoLote()`, devolviendo éxito si al menos un
+lote se mandó. Verificado en vivo con una corrida manual tras el redeploy.
+
+**Dónde puede volver a pasar:** cualquier `MailApp.sendEmail()`/`GmailApp.sendEmail()` de este
+repo que arme el `bcc`/`to`/`cc` a partir de una lista que puede crecer sin límite fijo (un curso
+muy popular, una convocatoria masiva) — verificar que trocea por el límite real de destinatarios
+por mensaje en vez de asumir que "nunca van a ser tantos". Los demás backends de trámite
+(`mantenimiento.gs`, `asesorias.gs`, `soporte-remoto.gs`, `apps-script/correo/`) mandan un correo
+por solicitud individual, no en lote — no están expuestos a este mismo patrón, pero vale la pena
+tenerlo presente si algún día agregan un aviso masivo.
+
+## 39. La causa de fondo del #38 no era el troceo — era la cuota diaria de `MailApp`, compartida entre todo OTDE
+
+**Síntoma:** ya con el fix de #38 desplegado (troceo + aislamiento por lote), una corrida manual
+de verificación seguía sin mandar ningún correo real — los 3 lotes de `CNF-2627-001` fallaban:
+2 con `Service invoked too many times for one day: email.` y 1 con el `Invalid email` ya conocido.
+
+**Causa raíz:** `MailApp.getRemainingDailyQuota()` reportó **20** de cuota restante — no 0 — y
+aun así un solo lote de 45 destinatarios en `bcc` reventó de inmediato. Esto reveló que la cuota
+diaria de Apps Script (~100 para una cuenta no-Workspace) se cuenta **por destinatario
+individual**, no por llamada a `sendEmail()` — un supuesto que el propio código llevaba implícito
+(`MailApp.getRemainingDailyQuota() < lotes.length`, comparando contra el número de lotes en vez
+de destinatarios) y que Jorge también tenía asumido ("CCO se contabiliza como un solo envío").
+Esa cuota además la comparten **todas** las automatizaciones de OTDE en
+`otde.nezahualcoyotl@gmail.com` (Mantenimiento, Correo, Soporte, etc.), no solo Formación
+Docente. Verificado agregando temporalmente una función `chequeoTemporalCuota()` que llamaba a
+`MailApp.getRemainingDailyQuota()` y se corrió una vez desde el editor — eliminada después de
+confirmar el número (mismo patrón de función temporal que `docs/QA-NOTES.md` #36).
+
+**Fix:** en vez de perseguir un ajuste fino de la cuota de Gmail, se migró el envío completo a la
+API de Brevo (300 destinatarios/día gratis, sin dominio propio — Workspace for Education no era
+viable a corto plazo porque `dee.edu.mx` ya está en Microsoft 365, decisión fuera del alcance de
+OTDE). `enviarPorBrevo_()` nueva (llama `UrlFetchApp.fetch()` a
+`https://api.brevo.com/v3/smtp/email`, llave en la Script Property `BREVO_API_KEY`);
+`enviarCorreoLote()` y `enviarCorreoIndividual_()` reescritas para usarla; se quitó el chequeo de
+`MailApp.getRemainingDailyQuota()`/`RESERVA_CUOTA_CORREO` en `enviarRecordatoriosPendientes_()`/
+`enviarRecordatoriosConstancia_()` (ya no aplica — un rechazo de Brevo se cuenta como "pospuesto"
+igual que antes, sin necesitar consultar cuota por adelantado). `verificarActivadoresInstalados()`
+se dejó a propósito en `MailApp` (correo interno a Jorge, volumen mínimo, y no debe depender del
+mismo servicio que está avisando que algo se rompió). **Escrito en el repo, sin pegar/redesplegar
+todavía** — ver `docs/ROADMAP.md` ítem 25 para el checklist antes de llevarlo a producción
+(remitente verificado en Brevo, redeploy, prueba con modo de prueba activo).
+
+**Dónde puede volver a pasar:** cualquier automatización futura de OTDE que mande correos
+masivos (no solo Formación Docente) sigue compartiendo la misma cuota de `MailApp` de esta cuenta
+mientras use `MailApp.sendEmail()` — Mantenimiento/Asesorías/Soporte/Correo mandan uno por
+solicitud individual hoy, pero si algún día agregan un aviso masivo, considerar el mismo patrón
+de Brevo desde el diseño, no después de un incidente en producción.
+
 ## Regla general al corregir cualquiera de estos patrones
 
 Cuando se encuentra uno de estos bugs en un archivo, **revisar si el mismo

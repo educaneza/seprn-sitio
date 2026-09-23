@@ -702,6 +702,81 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
       completo con datos reales (fila nueva en "Cambio y Eliminar Autenticación", correo
       combinado de entrega, aviso a Marcos) — ver `docs/ARCHITECTURE.md` §16 para el detalle de
       las pruebas ya corridas.
+24. ~~**Fix de correos inválidos en `enviarCorreoLote()`**~~ — resuelto 22 sep 2026, mismo día:
+    pegado y redesplegado en Apps Script (Versión 20), verificado en vivo con una corrida manual
+    de `enviarRecordatoriosWebinar()` (el aislamiento por lote sí funcionó — un lote con
+    `vero_130171@hotmail.com` falló sin tumbar los otros dos). Detalle completo en
+    `docs/QA-NOTES.md` #38. Dato pendiente de revisar a mano: `vero_130171@hotmail.com` en la
+    hoja `Docentes` sigue sin corregirse — confirmado después (mismo día, ver ítem 25) que tiene
+    un punto extra al final (`...hotmail.com.`), no un carácter invisible.
+25. **Migración de `MailApp` a Brevo — escrita en el repo, sin pegar/redesplegar** (22 sep 2026,
+    ver `docs/QA-NOTES.md` #39): la corrida manual de verificación del ítem 24 reveló la causa de
+    fondo — con 119 inscritos, `MailApp.sendEmail()` choca contra la cuota de ~100
+    destinatarios/día que **todas** las automatizaciones de OTDE comparten en
+    `otde.nezahualcoyotl@gmail.com` (confirmado en vivo: cuota restante = 20 tras el incidente).
+    Como Workspace for Education no es viable a corto plazo (`dee.edu.mx` ya está en Microsoft
+    365, controlado a nivel SEIEM/estatal, fuera del alcance de OTDE), se migró el envío a la API
+    de Brevo (300 destinatarios/día gratis, sin dominio propio, remitente verificado por correo).
+    Cambios en `apps-script/formacion-docente.gs`: nueva `enviarPorBrevo_()` (llama
+    `UrlFetchApp.fetch()` a `https://api.brevo.com/v3/smtp/email`), `enviarCorreoLote()` y
+    `enviarCorreoIndividual_()` reescritas para usarla, quitado el chequeo de
+    `MailApp.getRemainingDailyQuota()`/`RESERVA_CUOTA_CORREO` (ya no aplica — Brevo maneja su
+    propio rechazo, que ya se cuenta como "pospuesto" igual que antes). `verificarActivadoresInstalados()`
+    se dejó a propósito en `MailApp` (correo interno a Jorge, volumen mínimo, no depende del mismo
+    servicio que avisa que algo se rompió). **Pendiente antes de pegar en producción**:
+    - Confirmar en Brevo que el remitente `otde.nezahualcoyotl@gmail.com` ya quedó verificado
+      (clic al enlace de confirmación que Brevo mandó).
+    - Pegar el `.gs` completo en el editor real y crear una nueva versión (`Implementar → Administrar
+      las implementaciones`).
+    - Probar con un envío real (`fdActivarModoPrueba('tu@correo.com')` primero, para no avisar a
+      docentes reales) y revisar en el panel de Brevo (Estadísticas → Transaccional) que el envío
+      aparece y no rebota.
+    - Nunca antes probado contra la API real de Brevo desde este proyecto — verificar con calma,
+      no bajo presión de un evento en curso como el de hoy.
+    - **Bloqueador real encontrado al revisar el panel de Brevo (22 sep 2026, mismo día)**: sin
+      dominio propio autenticado con DKIM/DMARC, Brevo advierte explícitamente que los correos a
+      destinatarios de Microsoft (@outlook.com, @hotmail.com, @live.com) "se marcarán como spam o
+      se rechazarán", y que sustituye el remitente por uno propio si se manda desde una dirección
+      gratuita como `@gmail.com`. Con dos direcciones `@hotmail.com` solo en los 119 inscritos de
+      hoy, esto no es un detalle menor — antes de dar la migración por lista, probar en vivo qué
+      tan grave es en la práctica, o resolverlo de raíz con un dominio propio (ver más abajo).
+      Explorado y descartado usar `aulia.mx` (dominio personal de Jorge, proyecto independiente
+      sin relación con el trabajo) — mezclar correo institucional con un dominio personal crea
+      riesgos reales de reputación compartida, continuidad institucional y optics, que van en
+      contra de la separación que Jorge mantiene a propósito entre ambos. **Alternativa
+      recomendada, pendiente de decisión**: comprar un dominio nuevo y dedicado solo a esto
+      (~$150-250 MXN/año, ej. Namecheap/GoDaddy) — bajo control total de Jorge, sin mezclar con
+      nada personal ni depender de aprobación institucional (SEIEM/DEE).
+    - **Salida manual mientras se decide lo del dominio**: para necesidades puntuales (ej. avisar
+      a los pendientes de subir constancia de una conferencia ya pasada), Jorge puede mandar un
+      correo normal desde su bandeja de Gmail con los destinatarios en CCO — eso usa el límite de
+      envío normal de una cuenta de Gmail (~500 destinatarios/día), no la cuota de `MailApp` de
+      Apps Script (~100/día) que causó el incidente de hoy, y tampoco tiene el problema de
+      DKIM/DMARC de Brevo porque sale directo del propio dominio de Google, ya autenticado.
+      **Usado en vivo el mismo día**: 133 correos de `CNF-2627-001` pendientes de constancia,
+      entregados a Jorge listos para pegar en CCO. De paso se encontró que
+      `vero_130171@hotmail.com` tiene un punto extra al final (`...hotmail.com.`) — esa es la
+      causa real de su rechazo, no un carácter invisible; pendiente corregirlo a mano en
+      `Docentes`.
+26. **Google Workspace Business Starter — prueba de 14 días activada, resultado de cuota sin
+    confirmar** (22 sep 2026, mismo día que el ítem 25, ver `docs/BITACORA.md` checkpoint "cont.
+    2"): en vez de perseguir el dominio dedicado para Brevo, se evaluó y activó la prueba
+    gratuita de Google Workspace Business Starter directamente sobre
+    `otde.nezahualcoyotl@gmail.com`, sin comprar dominio (camino "Actualizar esta cuenta", no
+    "Obtener un nuevo dominio" — se ignoró a propósito el paso opcional de correo personalizado
+    que sí pide dominio). Confirmado activo en la Consola del administrador ("Tu servicio pagado
+    comienza el 6 oct 2026"). Registrado como "Persona física" con el RFC de Jorge, no el de
+    SEIEM — pagado con tarjeta personal, así que mezclar el RFC institucional habría sido
+    incorrecto sin autorización formal (mismo principio que descartó `aulia.mx` en el ítem 25).
+    **Pendiente de verificar**: una corrida de prueba de `MailApp.getRemainingDailyQuota()`
+    después de activar el plan siguió reportando 20 (el mismo número de antes), no el 1,500/día
+    documentado para cuentas Workspace — falta repetir la prueba después del reinicio de cuota
+    de mañana (~1am hora de México) para confirmar si ya aplicó. **Si se confirma el salto a
+    1,500/día**, la migración a Brevo del ítem 25 dejaría de ser necesaria — el envío podría
+    seguir usando `MailApp`/`GmailApp` directo, sin tercero de por medio, y sin el problema de
+    DKIM/DMARC con Hotmail/Outlook (el correo ya sale autenticado por Google mismo). Queda
+    pendiente también decidir si mantener la prueba más allá de los 14 días (~$151.20 MXN/mes
+    con el plan flexible) o cancelarla antes del 6 oct 2026 para evitar el cobro.
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue

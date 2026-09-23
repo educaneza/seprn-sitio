@@ -14,6 +14,39 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-09-22 (cont. 2) · Brevo tiene un bloqueador real con Hotmail/Outlook — se optó por probar Google Workspace en su lugar
+
+| | |
+|---|---|
+| **Fecha** | 2026-09-22 |
+| **Sesión** | Continuación del incidente de la conferencia UNETE. Con la migración a Brevo ya escrita (checkpoint anterior), Jorge pidió una salida inmediata para avisar a los pendientes de constancia mientras se decidía el resto — y al revisar el panel de Brevo apareció un problema que no se había visto antes. |
+| **Salida manual para constancias (resuelto)** | Se generó en vivo (función temporal `chequeoTemporalListaConstancia()`, eliminada después) la lista de docentes de `CNF-2627-001` con `Constancia_recibida` aún vacío: **133 correos** (subió de 119 porque las inscripciones seguían abiertas). Se le entregó a Jorge lista para pegar en CCO de un correo manual desde Gmail — ese envío usa el límite normal de Gmail (~500/día), no la cuota de `MailApp` de Apps Script, y no toca nada del sistema automático. Hallazgo de paso: `vero_130171@hotmail.com` tiene un **punto extra al final** (`...hotmail.com.`) — esa es la causa real de su rechazo, no un carácter invisible como se pensó antes; pendiente corregirlo a mano en `Docentes`. |
+| **Bloqueador real encontrado en Brevo** | El panel de Brevo (Remitentes, dominio, IP) advierte en su propio texto: sin dominio propio autenticado con DKIM/DMARC, **"todos los emails enviados a destinatarios de Microsoft (@outlook.com, @hotmail.com, @live.com) se marcarán como spam o se rechazarán"**, y Brevo puede sustituir el remitente sin avisar. Con `@gmail.com` como remitente (sin dominio propio), esto compromete justo a la mitad de los destinatarios reales de OTDE (varios `@hotmail.com`/`@outlook.com` ya vistos en los 133 de arriba). |
+| **`aulia.mx` (dominio personal de Jorge) evaluado y descartado** | Jorge preguntó si podía usar su dominio personal independiente para resolver el DKIM/DMARC de Brevo. Se recomendó explícitamente que no: mezclaría reputación de envío entre un proyecto personal y correo institucional, expondría a Jorge a preguntas de auditoría si algún día se descubre, y rompe la separación que él mismo mantiene a propósito entre `aulia.mx` y su trabajo — mismo principio que ya se había aplicado antes para descartar `aulia.mx` como remitente de Brevo. |
+| **Alternativa elegida: Google Workspace Business Starter (prueba de 14 días)** | Investigado: cuota de `MailApp`/`GmailApp` para cuentas Workspace es **1,500/día** (vs. 100/día en una cuenta gratuita) — documentación oficial de cuotas de Apps Script. Precio real confirmado en la página de Google: MXN $151.20/mes (10% descuento, primeros 12 meses). La prueba de 14 días sí requiere tarjeta pero no cobra nada si se cancela antes de que termine. Jorge decidió **no comprar RFC de SEIEM** para el registro (perfil "Organización") por el mismo motivo que `aulia.mx` — pagándolo con tarjeta personal, lo correcto es registrar "Persona física" con su propio RFC, no mezclar la identidad fiscal de SEIEM con una transacción personal sin autorización institucional. |
+| **Prueba activada, sin dominio** | Se usó el camino "Actualizar esta cuenta" (no "Obtener un nuevo dominio"), lo que permitió activar Business Starter sobre `otde.nezahualcoyotl@gmail.com` tal cual, sin comprar ni configurar ningún dominio. Confirmado en la Consola del administrador: "Tu servicio pagado comienza el 6 oct 2026" (coincide con 14 días desde hoy). Se ignoró a propósito el paso opcional de "Configurar correo electrónico personalizado" (pide dominio) navegando directo a `admin.google.com` en vez de completarlo. |
+| **Verificación de cuota, resultado pendiente** | Corrida manual de `MailApp.getRemainingDailyQuota()` (función temporal `chequeoTemporalCuota2()`, eliminada después) **sigue reportando 20**, igual que antes de activar Workspace — no se ve todavía el salto a 1,500. Posibles causas sin confirmar: el contador de hoy pudo quedar atado al límite viejo (100/día) desde antes del upgrade, o la licencia nueva tarda en propagarse. **Pendiente: volver a correr la misma prueba después del reinicio de cuota de mañana (~1am hora de México) para confirmar si ya subió a 1,500.** |
+| **Documentación actualizada** | Este checkpoint, `docs/ROADMAP.md` ítem 25 (actualizado con el estado de la prueba de Workspace). |
+| **Commits** | Sin commit todavía — cambios en `apps-script/formacion-docente.gs` (migración a Brevo, sin desplegar) siguen en el working tree local; la prueba de Workspace es un cambio de cuenta/facturación, no de código. |
+
+---
+
+## CHECKPOINT — 2026-09-22 (cont.) · Causa de fondo era la cuota compartida de MailApp — migración a Brevo preparada, sin desplegar
+
+| | |
+|---|---|
+| **Fecha** | 2026-09-22 |
+| **Sesión** | Continuación del incidente de la conferencia UNETE (checkpoint anterior). Jorge volvió, se desplegó el segundo fix (`esEmailValido_()`), y al verificarlo con una corrida manual se descubrió que la causa de fondo no era ninguno de los dos bugs ya corregidos. |
+| **Verificación en vivo del segundo fix** | Se pegó y redesplegó (Versión 20, descripción "Filtra correos inválidos y aisla cada lote"). Corrida manual de `enviarRecordatoriosWebinar()`: completó sin tronar, con los 3 lotes intentados de forma aislada — confirma que el aislamiento por lote funciona. |
+| **Causa de fondo descubierta** | Los 3 lotes fallaron igual: 2 con `Service invoked too many times for one day: email.`, 1 con `Invalid email`. Se agregó temporalmente `chequeoTemporalCuota()` (eliminada después) para consultar `MailApp.getRemainingDailyQuota()` en vivo: **20**, no 0. Con 20 de cuota restante, un lote de 45 revienta de inmediato — confirma que la cuota de Apps Script se cuenta por **destinatario individual**, no por llamada a `sendEmail()` (un supuesto equivocado, tanto del código como de Jorge, "CCO = un solo envío"). Esa cuota (~100/día para una cuenta no-Workspace) la comparten **todas** las automatizaciones de OTDE en `otde.nezahualcoyotl@gmail.com`. |
+| **Camino descartado: Google Workspace for Education** | Es gratis para instituciones acreditadas, pero requiere dominio propio verificado — `dee.edu.mx` ya está en Microsoft 365 (SIGEE, Microsoft Authenticator), controlado a nivel SEIEM/estatal, fuera del alcance de OTDE. |
+| **Fix preparado: migración a Brevo** | 300 destinatarios/día gratis, sin dominio propio (remitente verificado por correo). Jorge se registró, generó una API key en Brevo y se guardó como Script Property `BREVO_API_KEY` (nunca pasó por el chat). Cambios en `apps-script/formacion-docente.gs`: `enviarPorBrevo_()` nueva (`UrlFetchApp.fetch()` a la API de Brevo), `enviarCorreoLote()`/`enviarCorreoIndividual_()` reescritas para usarla, quitado el chequeo de `MailApp.getRemainingDailyQuota()`/`RESERVA_CUOTA_CORREO`. `verificarActivadoresInstalados()` se dejó a propósito en `MailApp`. Detalle completo en `docs/QA-NOTES.md #39`. |
+| **Estado** | **Escrito en el repo local, sin pegar/redesplegar y sin probar contra la API real de Brevo todavía** — pendiente confirmar remitente verificado en Brevo, redeploy, y prueba con modo de prueba activo. Ver `docs/ROADMAP.md` ítem 25 para el checklist. |
+| **Documentación actualizada** | `docs/QA-NOTES.md #39`, `docs/ROADMAP.md` ítems 24 (resuelto) y 25 (nuevo), `CLAUDE.md` (sección del `.gs` y Pendientes vigentes), este checkpoint. |
+| **Commits** | Sin commit todavía — cambios en `apps-script/formacion-docente.gs` en el working tree local, no comiteados. |
+
+---
+
 ## CHECKPOINT — 2026-09-21 (cont. 5) · Tamaño del repo: cifras reales actualizadas, Git LFS descartado, umbrales de aviso proactivo
 
 | | |
