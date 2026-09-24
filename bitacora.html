@@ -357,6 +357,7 @@
 // URL de despliegue de apps-script/bitacora.gs (ver instrucciones al inicio de ese archivo).
 const BITACORA_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzjWhSUllX0vjy7L5codWnYJwXlJiHay3caZ6oNjB7WPY0lxdDb52eV5BY7psVKqiyd/exec';
 
+const BITACORA_TIMEOUT_ENVIO_MS = 60000;
 const LS_CLAVE = 'otdeBitacoraClave';
 const LS_CAPTURO = 'otdeBitacoraCapturo';
 const MSG_CLAVE_INCORRECTA = 'Clave incorrecta. Revisa mayúsculas, minúsculas y que no falte ningún carácter.';
@@ -728,14 +729,17 @@ $('form-actividad').addEventListener('submit', async function (ev) {
   };
 
   try {
+    // 60s en vez de los 30s por defecto: en la primera prueba real (24 sep) dos guardados
+    // tardaron más de 30s en regresar aunque Apps Script terminó en ~1s. Como el envío es
+    // idempotente, esperar más no tiene riesgo y evita un "falló" que sí se guardó.
     const d = await fetchJsonConTimeout(BITACORA_APPS_SCRIPT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(payload)
-    });
+    }, BITACORA_TIMEOUT_ENVIO_MS);
     if (d.status === 'ok') {
       const mesNum = Number(String(d.mes || '').split('-')[1]);
-      $('ok-detalle').textContent = 'META ' + d.meta + ' · ' + (d.fechaTexto || '') +
+      $('ok-detalle').textContent = (d.meta ? 'META ' + d.meta + ' · ' : '') + (d.fechaTexto || '') +
         (mesNum ? ' · entra en el reporte de ' + MESES[mesNum - 1] : '');
       $('ok-id').textContent = d.id;
       idEnvioActual = null;

@@ -290,7 +290,15 @@ function doPost(e) {
 
     if (d.idEnvio) {
       const previa = filas.find(function (r) { return String(r[idx['ID de envío']]) === d.idEnvio; });
-      if (previa) return bitRespuesta_({ status: 'ok', id: previa[idx['ID']], duplicado: true });
+      // Mismos datos que la respuesta normal: el navegador muestra la confirmación completa
+      // aunque la primera respuesta se haya perdido por un timeout.
+      if (previa) {
+        return bitRespuesta_({
+          status: 'ok', id: previa[idx['ID']], duplicado: true,
+          mes: bitMesDeFila_(previa[idx['Mes']]), meta: String(previa[idx['Meta']]),
+          fechaTexto: previa[idx['Fecha (texto)']]
+        });
+      }
     }
 
     const id = bitSiguienteId_(filas, idx['ID']);
@@ -441,12 +449,7 @@ function bitGenerarReporteMensual() {
   const filas = hojaAct.getLastRow() > 1
     ? hojaAct.getRange(2, 1, hojaAct.getLastRow() - 1, hojaAct.getLastColumn()).getValues()
     : [];
-  // Si alguien retecleó "2026-09" a mano, Sheets pudo convertirlo en fecha.
-  const mesDeFila = function (f) {
-    const v = f[idx['Mes']];
-    return v instanceof Date ? Utilities.formatDate(v, 'America/Mexico_City', 'yyyy-MM') : String(v).trim();
-  };
-  const delMes = filas.filter(function (f) { return mesDeFila(f) === mes; });
+  const delMes = filas.filter(function (f) { return bitMesDeFila_(f[idx['Mes']]) === mes; });
   delMes.sort(function (a, b) {
     return new Date(a[idx['Fecha inicio']]).getTime() - new Date(b[idx['Fecha inicio']]).getTime();
   });
@@ -536,6 +539,11 @@ function bitGenerarReporteMensual() {
     resumenMetas.join(' · ') + (avisos.length ? '\n\nAviso:\n' + avisos.join('\n') : '') +
     '\n\nPara pasarlo al Excel: selecciona las filas de actividades de cada bloque (de la columna A a la L), ' +
     'cópialas y pégalas en la fila 14 de la pestaña META correspondiente.');
+}
+
+// Si alguien retecleó "2026-09" a mano, Sheets pudo convertirlo en fecha.
+function bitMesDeFila_(v) {
+  return v instanceof Date ? Utilities.formatDate(v, 'America/Mexico_City', 'yyyy-MM') : String(v).trim();
 }
 
 function bitCombinarFila_(hoja, fila) {
