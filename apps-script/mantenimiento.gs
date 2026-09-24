@@ -175,7 +175,7 @@ const ENCABEZADOS_MAN_REPORTES = [
   'Atención sin solicitud previa', 'Modelo/marca del equipo',
   '¿Se atendieron equipos administrativos?', '¿Se instaló Toolwiz Time Freeze?',
   '¿Requiere segunda visita?', 'Descripción de la atención realizada',
-  'Fotografías de evidencia'
+  'Fotografías de evidencia', 'Docentes de la escuela', 'Alumnos de la escuela'
 ];
 const COL_MAN_REP_FOLIO = 1;
 const COL_MAN_REP_RESPONSABLE = 2;
@@ -204,6 +204,11 @@ const COL_MAN_REP_TOOLWIZ = 24;
 const COL_MAN_REP_SEGUNDA_VISITA = 25;
 const COL_MAN_REP_DESCRIPCION_ATENCION = 26;
 const COL_MAN_REP_FOTOS_EVIDENCIA = 27;
+// Docentes y alumnos de la escuela (24 sep 2026) — al final, mismo criterio.
+// Alimentan "Beneficiarios" de la actividad que la Bitácora OTDE arma con
+// cada visita (?action=reportesMes, ver manListarReportesMes_).
+const COL_MAN_REP_DOCENTES = 28;
+const COL_MAN_REP_ALUMNOS = 29;
 // Nombre → correo, para el "cc" del correo del reporte y el selector de la
 // hoja. Mismo criterio de "no inventar" que el resto del sitio — confirmado
 // por Jorge, no copiado de v8.5 (ese proyecto no expuso los correos reales
@@ -296,6 +301,9 @@ function doGet(e) {
   if (accion === 'pendientes') {
     return manListarPendientes(e.parameter.token);
   }
+  if (accion === 'reportesMes') {
+    return manListarReportesMes_(e.parameter.token, e.parameter.mes);
+  }
   return manTextResponse(JSON.stringify({ status: 'ok', servicio: 'OTDE Solicitudes de Mantenimiento' }));
 }
 
@@ -335,6 +343,68 @@ function manListarPendientes(tokenRecibido) {
     });
 
   return manTextResponse(JSON.stringify({ status: 'ok', tramite: 'Mantenimiento', items: items }));
+}
+
+// ── Reportes de visita de un mes para la Bitácora OTDE (?action=reportesMes) ──
+// La bitácora (apps-script/bitacora.gs) los jala para crear sus actividades de
+// META 23 / N.P. 7 sin que nadie las vuelva a capturar. Mismo PANEL_TOKEN que
+// ?action=pendientes. Solo lectura: getSheetByName() directo, sin auto-heal
+// (mismo criterio que manConsultarFolio). Solicitudes se lee una vez y se
+// indexa por folio para cruzar la escuela de cada reporte.
+function manListarReportesMes_(tokenRecibido, mes) {
+  const tokenEsperado = PropertiesService.getScriptProperties().getProperty('PANEL_TOKEN');
+  if (!tokenEsperado || tokenRecibido !== tokenEsperado) {
+    return manTextResponse(JSON.stringify({ status: 'no_autorizado' }));
+  }
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(String(mes || ''))) {
+    return manTextResponse(JSON.stringify({ status: 'error', mensaje: 'Mes no válido (AAAA-MM).' }));
+  }
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const hojaRep = ss.getSheetByName(HOJA_MAN_REPORTES);
+  const hojaSol = ss.getSheetByName(HOJA_MAN_SOLICITUDES);
+  if (!hojaRep || !hojaSol) return manTextResponse(JSON.stringify({ status: 'ok', items: [] }));
+
+  const solicitudes = {};
+  hojaSol.getDataRange().getValues().slice(1).forEach(function (r) {
+    const folio = String(r[1]).trim().toUpperCase();
+    if (folio) solicitudes[folio] = r;
+  });
+
+  const tz = 'America/Mexico_City';
+  const txt = function (v) { return String(v == null ? '' : v).trim(); };
+  const items = [];
+  hojaRep.getDataRange().getValues().slice(1).forEach(function (r) {
+    const fecha = r[COL_MAN_REP_FECHA_ATENCION - 1];
+    if (!(fecha instanceof Date)) return;
+    if (Utilities.formatDate(fecha, tz, 'yyyy-MM') !== mes) return;
+    const folio = txt(r[COL_MAN_REP_FOLIO - 1]).toUpperCase();
+    const s = solicitudes[folio];
+    if (!s) return; // reporte huérfano: sin escuela no hay actividad que armar
+    items.push({
+      folio: folio,
+      fechaAtencion: Utilities.formatDate(fecha, tz, 'yyyy-MM-dd'),
+      cct: txt(s[4]),
+      sector: txt(s[5]),
+      zona: txt(s[6]),
+      escuela: txt(s[7]),
+      turno: txt(s[8]),
+      tipoEquipo: txt(s[16]),
+      tipoSolicitante: txt(s[COL_MAN_TIPO_SOLICITANTE_IDX]),
+      equiposAtendidos: txt(r[COL_MAN_REP_EQUIPOS_ATENDIDOS - 1]),
+      modeloEquipo: txt(r[COL_MAN_REP_MODELO_EQUIPO - 1]),
+      actividadesPreventivas: txt(r[COL_MAN_REP_ACTIVIDADES_PREVENTIVAS - 1]),
+      actividadesCorrectivas: txt(r[COL_MAN_REP_ACTIVIDADES_CORRECTIVAS - 1]),
+      instalacionRealizada: txt(r[COL_MAN_REP_INSTALACION_REALIZADA - 1]),
+      equiposAdministrativosSiNo: txt(r[COL_MAN_REP_EQUIPOS_ADMIN_SI_NO - 1]),
+      equiposAdministrativos: txt(r[COL_MAN_REP_EQUIPOS_ADMIN - 1]),
+      descripcionAtencion: txt(r[COL_MAN_REP_DESCRIPCION_ATENCION - 1]),
+      docentes: txt(r[COL_MAN_REP_DOCENTES - 1]),
+      alumnos: txt(r[COL_MAN_REP_ALUMNOS - 1])
+    });
+  });
+
+  return manTextResponse(JSON.stringify({ status: 'ok', items: items }));
 }
 
 // ── Consulta de estatus por folio + correo (Oficina Virtual OTDE) ──
@@ -1397,7 +1467,22 @@ function manValidarDatosReporte_(datos) {
   requerido(COL_MAN_REP_SEGUNDA_VISITA, '¿Requiere segunda visita?');
   requerido(COL_MAN_REP_DESCRIPCION_ATENCION, 'Descripción de la atención realizada');
   requerido(COL_MAN_REP_FOTOS_EVIDENCIA, 'Fotografías de evidencia');
+  // Numéricos: 0 es válido (visita solo administrativa), así que no sirve el
+  // "|| ''" de requerido(), que trataría el 0 como vacío.
+  [[COL_MAN_REP_DOCENTES, 'Docentes de la escuela'], [COL_MAN_REP_ALUMNOS, 'Alumnos de la escuela']]
+    .forEach(function (par) {
+      const v = datos[par[0] - 1];
+      if (v === '' || v == null || isNaN(Number(v))) faltantes.push(par[1]);
+    });
   return faltantes;
+}
+
+// "12" → 12; vacío, negativo o no numérico → '' (y manValidarDatosReporte_ lo
+// reporta como faltante).
+function manEnteroNoNegativo_(v) {
+  const s = String(v == null ? '' : v).trim();
+  if (!/^\d+$/.test(s)) return '';
+  return Number(s);
 }
 
 // ── Obtener o crear la carpeta de Drive para los reportes de visita ──
@@ -1778,7 +1863,9 @@ function manDoPostReporteVisita_(datos) {
     String(datos.toolwizTimeFreeze || '').trim(),
     String(datos.segundaVisitaRequerida || '').trim(),
     String(datos.descripcionAtencion || '').trim(),
-    urlsFotos.join('\n')
+    urlsFotos.join('\n'),
+    manEnteroNoNegativo_(datos.docentes),
+    manEnteroNoNegativo_(datos.alumnos)
   ];
 
   const faltantes = manValidarDatosReporte_(filaValores);

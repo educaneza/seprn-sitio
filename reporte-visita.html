@@ -552,6 +552,19 @@
           <div class="select-help" id="ayuda-mobiliario"></div>
           <div class="error-msg" id="err-mobiliario">Selecciona la condición del mobiliario.</div>
         </div>
+        <div class="fila-2">
+          <div class="campo">
+            <label for="docentes-escuela">Docentes de la escuela <span class="req">*</span></label>
+            <input type="number" id="docentes-escuela" min="0" step="1" inputmode="numeric">
+            <div class="error-msg" id="err-docentes-escuela">Indica cuántos docentes tiene la escuela.</div>
+          </div>
+          <div class="campo">
+            <label for="alumnos-escuela">Alumnos de la escuela <span class="req">*</span></label>
+            <input type="number" id="alumnos-escuela" min="0" step="1" inputmode="numeric">
+            <div class="error-msg" id="err-alumnos-escuela">Indica cuántos alumnos tiene la escuela.</div>
+          </div>
+        </div>
+        <div class="hint">Pregúntalo a la dirección. Son los beneficiarios que se reportan a Planeación; si la visita fue solo a equipos administrativos, puede ser 0.</div>
       </fieldset>
 
       <fieldset>
@@ -817,7 +830,7 @@ function marcarError(id) {
 // ser un grupo de checkboxes (ver más abajo) — ninguno de los dos va en esta lista genérica.
 const CAMPOS_SIMPLES = [
   'responsable', 'fecha-atencion', 'inicio-visita', 'fin-visita', 'sin-solicitud',
-  'aula-en-uso', 'mobiliario', 'equipos-atendidos', 'equipos-funcionales', 'equipos-no-funcionales',
+  'aula-en-uso', 'mobiliario', 'docentes-escuela', 'alumnos-escuela', 'equipos-atendidos', 'equipos-funcionales', 'equipos-no-funcionales',
   'modelo-equipo', 'conectividad', 'equipos-admin-si-no', 'toolwiz',
   'estado-aula', 'segunda-visita', 'seguimiento', 'descripcion-atencion', 'observaciones'
 ];
@@ -1121,6 +1134,12 @@ function validarFormulario() {
     if (!el.value || !String(el.value).trim()) { marcarError(id); valido = false; }
   });
 
+  // Entero >= 0: el backend rechaza "-3" o "12.5" (manEnteroNoNegativo_), mejor avisarlo aquí.
+  ['docentes-escuela', 'alumnos-escuela'].forEach(id => {
+    const v = document.getElementById(id).value.trim();
+    if (v && !/^\d+$/.test(v)) { marcarError(id); valido = false; }
+  });
+
   if (document.getElementById('responsable').value === 'Otro' &&
       !document.getElementById('otro-responsable').value.trim()) {
     marcarError('otro-responsable'); valido = false;
@@ -1298,6 +1317,8 @@ document.getElementById('form-reporte').addEventListener('submit', async (e) => 
       seguimientoRequerido: document.getElementById('seguimiento').value.trim(),
       descripcionAtencion: document.getElementById('descripcion-atencion').value.trim(),
       observaciones: document.getElementById('observaciones').value.trim(),
+      docentes: document.getElementById('docentes-escuela').value,
+      alumnos: document.getElementById('alumnos-escuela').value,
       fotos: fotos
     };
 
