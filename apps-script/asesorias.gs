@@ -111,7 +111,8 @@ const ENCABEZADOS_ASE_SOLICITUDES = [
   'Observaciones', 'Oficio (link Drive)', 'Estatus', 'Notas de revisión',
   'Confirmó Mantenimiento Previo', 'Notificación de cierre enviada',
   'Tipo de solicitante', 'Fecha programada de visita',
-  'Notificación de fecha programada enviada', 'Temas de Excel'
+  'Notificación de fecha programada enviada', 'Temas de Excel',
+  'Fecha de realización', 'Asistentes'
 ];
 // Índice (0-based) de 'Tipo de solicitante' dentro de una fila leída con getValues() —
 // ya no es la última columna (se agregaron 2 más después, misma lógica de no correr
@@ -123,6 +124,12 @@ const COL_ASE_NOTIFICACION_CIERRE = 19;
 // mismo criterio, para no correr ninguna columna existente.
 const COL_ASE_FECHA_PROGRAMADA = 21;
 const COL_ASE_NOTIFICACION_PROGRAMADA = 22;
+// Fecha de realización y Asistentes (24 sep 2026): las llena Nancy a mano al
+// marcar Resuelto, para que la Bitácora OTDE registre la asesoría con la fecha
+// y el número de personas reales (?action=asesoriasMes). Al final, mismo
+// criterio de no correr columnas existentes.
+const COL_ASE_FECHA_REALIZACION = 24;
+const COL_ASE_ASISTENTES = 25;
 const ESTADOS_ASE_VALIDOS = ['Pendiente de validar', 'Validado', 'En atención', 'Resuelto', 'Rechazado'];
 
 // ── Modo de prueba: redirige TODOS los correos salientes (Zona/Sector +
@@ -197,6 +204,9 @@ function doGet(e) {
   if (accion === 'pendientes') {
     return aseListarPendientes(e.parameter.token);
   }
+  if (accion === 'asesoriasMes') {
+    return aseListarResueltasMes_(e.parameter.token, e.parameter.mes);
+  }
   return aseTextResponse(JSON.stringify({ status: 'ok', servicio: 'OTDE Solicitudes de Asesoría' }));
 }
 
@@ -235,6 +245,50 @@ function aseListarPendientes(tokenRecibido) {
     });
 
   return aseTextResponse(JSON.stringify({ status: 'ok', tramite: 'Asesorías', items: items }));
+}
+
+// ── Asesorías resueltas de un mes para la Bitácora OTDE (?action=asesoriasMes) ──
+// La bitácora (apps-script/bitacora.gs) las jala para crear sus actividades de
+// META 25 / N.P. 8. Mismo PANEL_TOKEN que ?action=pendientes, solo lectura. La
+// fecha es "Fecha de realización"; si Nancy no la llenó, "Fecha programada de
+// visita" (fechaFuente lo dice, para que la bitácora avise).
+function aseListarResueltasMes_(tokenRecibido, mes) {
+  const tokenEsperado = PropertiesService.getScriptProperties().getProperty('PANEL_TOKEN');
+  if (!tokenEsperado || tokenRecibido !== tokenEsperado) {
+    return aseTextResponse(JSON.stringify({ status: 'no_autorizado' }));
+  }
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(String(mes || ''))) {
+    return aseTextResponse(JSON.stringify({ status: 'error', mensaje: 'Mes no válido (AAAA-MM).' }));
+  }
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_ASE_SOLICITUDES);
+  if (!hoja) return aseTextResponse(JSON.stringify({ status: 'ok', items: [] }));
+
+  const tz = 'America/Mexico_City';
+  const txt = function (v) { return String(v == null ? '' : v).trim(); };
+  const items = [];
+  hoja.getDataRange().getValues().slice(1).forEach(function (r) {
+    if (!txt(r[1]) || txt(r[COL_ASE_ESTATUS - 1]) !== 'Resuelto') return;
+    const realizada = r[COL_ASE_FECHA_REALIZACION - 1];
+    const programada = r[COL_ASE_FECHA_PROGRAMADA - 1];
+    const fecha = realizada instanceof Date ? realizada : (programada instanceof Date ? programada : null);
+    if (!fecha || Utilities.formatDate(fecha, tz, 'yyyy-MM') !== mes) return;
+    items.push({
+      folio: txt(r[1]).toUpperCase(),
+      fecha: Utilities.formatDate(fecha, tz, 'yyyy-MM-dd'),
+      fechaFuente: realizada instanceof Date ? 'realizacion' : 'programada',
+      tipoAsesoria: txt(r[COL_ASE_TIPO_ASESORIA - 1]),
+      cct: txt(r[5]),
+      sector: txt(r[6]),
+      zona: txt(r[7]),
+      escuela: txt(r[8]),
+      turno: txt(r[9]),
+      tipoSolicitante: txt(r[COL_ASE_TIPO_SOLICITANTE_IDX]),
+      numeroSolicitado: txt(r[10]),
+      asistentes: txt(r[COL_ASE_ASISTENTES - 1]),
+      temasExcel: txt(r[22])
+    });
+  });
+  return aseTextResponse(JSON.stringify({ status: 'ok', items: items }));
 }
 
 // ── Consulta de estatus por folio + correo (Oficina Virtual OTDE) ──
@@ -376,9 +430,16 @@ const COL_ASE_TURNO = 10;
 const COL_ASE_CONFIRMO_MANTENIMIENTO = 18;
 
 function aseConfigurarValidacionYSemaforo() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const solicitudes = ss.getSheetByName(HOJA_ASE_SOLICITUDES);
+  // aseObtenerHojaSolicitudes() también completa encabezados faltantes
+  // (Fecha de realización / Asistentes en una hoja ya creada).
+  const solicitudes = aseObtenerHojaSolicitudes();
   if (solicitudes) {
+    solicitudes.getRange(2, COL_ASE_FECHA_REALIZACION, 1000, 1).setDataValidation(
+      SpreadsheetApp.newDataValidation().requireDate().setAllowInvalid(true)
+        .setHelpText('Día en que se dio la asesoría. Llénala al marcar Resuelto.').build());
+    solicitudes.getRange(2, COL_ASE_ASISTENTES, 1000, 1).setDataValidation(
+      SpreadsheetApp.newDataValidation().requireNumberGreaterThanOrEqualTo(0).setAllowInvalid(true)
+        .setHelpText('Personas que asistieron (según la lista de asistencia).').build());
     aseAplicarValidacionListaSuave_(solicitudes, COL_ASE_TIPO_ASESORIA, ASE_TIPOS_ASESORIA_VALIDOS);
     aseAplicarValidacionListaSuave_(solicitudes, COL_ASE_TURNO, ASE_TURNOS_VALIDOS);
     aseAplicarValidacionListaSuave_(solicitudes, COL_ASE_CONFIRMO_MANTENIMIENTO, ASE_CONFIRMO_MANTENIMIENTO_VALIDOS);

@@ -53,6 +53,10 @@
 // trae solo antes de armar el reporte. Una actividad por folio y mes (dos
 // días de visita = un rango de fechas), con "ID de envío" MAN:<folio>:<mes>:
 // si la fila ya existe no se toca, así lo corregido a mano no se pisa.
+// ASESORÍAS (24 sep 2026, mismo patrón): las solicitudes con Estatus
+// "Resuelto" de asesorias.gs (?action=asesoriasMes) se vuelven actividades de
+// META 25 / N.P. 8, con la "Fecha de realización" y los "Asistentes" que Nancy
+// llena al cerrarlas. ID de envío ASE:<folio>.
 //
 // "Fecha (texto)" es lo que va al reporte ("Los días 13 y 14 de enero
 // de 2026"): se genera sola al capturar, pero se puede corregir a mano
@@ -123,6 +127,12 @@ const BIT_TIPO_MAN_AULA = 'Rehabilitación del Aula de Medios mediante mantenimi
 const BIT_TIPO_MAN_ADMIN = 'Mantenimiento preventivo y correctivo a equipos de cómputo de uso administrativo.';
 const BIT_CAPTURO_MAN = 'Mantenimiento (auto)';
 
+// Asesorías (N.P. 8). Los dos tipos del formulario de asesorias.html.
+const BIT_NP_ASESORIAS = '8';
+const BIT_TIPO_ASE_BANCO = 'Asesoría sobre el Banco de Materiales Digitales y Chuka: Rompe el Silencio.';
+const BIT_TIPO_ASE_EXCEL = 'Asesoría de Excel básico para personal administrativo.';
+const BIT_CAPTURO_ASE = 'Asesorías (auto)';
+
 const BIT_MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
   'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
@@ -147,10 +157,12 @@ function onOpen() {
     .createMenu('OTDE Bitácora')
     .addItem('Generar reporte del mes', 'bitGenerarReporteMensual')
     .addItem('Traer visitas de Mantenimiento', 'bitTraerMantenimiento')
+    .addItem('Traer asesorías resueltas', 'bitTraerAsesorias')
     .addSeparator()
     .addItem('Preparar hojas y cargar planeación 2026-2027', 'bitPrepararHojas')
     .addItem('Configurar clave de captura', 'bitConfigurarClave')
     .addItem('Configurar conexión con Mantenimiento', 'bitConfigurarConexionMantenimiento')
+    .addItem('Configurar conexión con Asesorías', 'bitConfigurarConexionAsesorias')
     .addToUi();
 }
 
@@ -509,16 +521,19 @@ function bitGenerarReporteMensual() {
     return;
   }
 
-  // Antes de armar el reporte, trae las visitas de Mantenimiento del mes. Si
-  // falla (sin conexión configurada, red), el reporte se genera igual.
-  let avisoMantenimiento;
-  try {
-    const r = bitImportarMantenimiento_(mes);
-    avisoMantenimiento = 'Mantenimiento: ' + r.nuevas + ' visita' + (r.nuevas === 1 ? '' : 's') +
-      ' nueva' + (r.nuevas === 1 ? '' : 's') + ' agregada' + (r.nuevas === 1 ? '' : 's') + ' a Actividades.';
-  } catch (err) {
-    avisoMantenimiento = 'No se pudieron traer las visitas de Mantenimiento: ' + err.message;
-  }
+  // Antes de armar el reporte, trae las visitas de Mantenimiento y las
+  // asesorías resueltas del mes. Si alguna falla (sin conexión configurada,
+  // red), el reporte se genera igual y el aviso final lo dice.
+  const avisosFuentes = [
+    ['Mantenimiento', bitImportarMantenimiento_],
+    ['Asesorías', bitImportarAsesorias_]
+  ].map(function (f) {
+    try {
+      return f[0] + ': ' + bitResumenImportacion_(f[1](mes));
+    } catch (err) {
+      return f[0] + ': no se pudo traer (' + err.message + ')';
+    }
+  });
 
   const hojaAct = bitObtenerHojaActividades_();
   const idx = bitIndices_(hojaAct);
@@ -612,7 +627,7 @@ function bitGenerarReporteMensual() {
 
   ss.setActiveSheet(hoja);
   ui.alert('Reporte ' + nombreMes + ' ' + anio + ' listo en la pestaña "' + nombre + '".\n\n' +
-    resumenMetas.join(' · ') + '\n' + avisoMantenimiento +
+    resumenMetas.join(' · ') + '\n' + avisosFuentes.join('\n') +
     (avisos.length ? '\n\nAviso:\n' + avisos.join('\n') : '') +
     '\n\nPara pasarlo al Excel: selecciona las filas de actividades de cada bloque (de la columna A a la L), ' +
     'cópialas y pégalas en la fila 14 de la pestaña META correspondiente.');
@@ -629,14 +644,19 @@ function bitCombinarFila_(hoja, fila) {
   hoja.getRange(fila, 10, 1, 2).merge();  // J:K Propósito
 }
 
-// ── Alimentación automática desde Mantenimiento ──
+// ── Alimentación automática desde Mantenimiento y Asesorías ──
 
-// URL de despliegue de mantenimiento.gs + PANEL_TOKEN, con cuadros de diálogo
-// (no argumentos ni código): QA-NOTES #14/#25, igual que bitConfigurarClave.
-function bitConfigurarConexionMantenimiento() {
+// URL de despliegue de cada backend + PANEL_TOKEN, con cuadros de diálogo (no
+// argumentos ni código): QA-NOTES #14/#25, igual que bitConfigurarClave. El
+// token es el mismo para los dos (el del Panel OTDE); solo se pide si falta.
+function bitConfigurarConexionMantenimiento() { bitConfigurarConexion_('Mantenimiento', 'MAN_URL', 'MANTENIMIENTO_APPS_SCRIPT_URL'); }
+function bitConfigurarConexionAsesorias() { bitConfigurarConexion_('Asesorías', 'ASE_URL', 'ASESORIAS_APPS_SCRIPT_URL'); }
+
+function bitConfigurarConexion_(nombre, propUrl, constanteSitio) {
   const ui = SpreadsheetApp.getUi();
-  const rUrl = ui.prompt('Conexión con Mantenimiento (1 de 2)',
-    'Pega la URL de la aplicación web de Mantenimiento (la misma de MANTENIMIENTO_APPS_SCRIPT_URL, termina en /exec).',
+  const props = PropertiesService.getScriptProperties();
+  const rUrl = ui.prompt('Conexión con ' + nombre,
+    'Pega la URL de la aplicación web de ' + nombre + ' (la misma de ' + constanteSitio + ', termina en /exec).',
     ui.ButtonSet.OK_CANCEL);
   if (rUrl.getSelectedButton() !== ui.Button.OK) return;
   const url = rUrl.getResponseText().trim();
@@ -644,20 +664,28 @@ function bitConfigurarConexionMantenimiento() {
     ui.alert('La URL debe empezar con https://script.google.com/ y terminar en /exec. No se guardó nada.');
     return;
   }
-  const rTok = ui.prompt('Conexión con Mantenimiento (2 de 2)',
-    'Escribe el PANEL_TOKEN (el mismo que usa el Panel OTDE).', ui.ButtonSet.OK_CANCEL);
-  if (rTok.getSelectedButton() !== ui.Button.OK) return;
-  const token = rTok.getResponseText().trim();
-  if (!token) { ui.alert('El token está vacío. No se guardó nada.'); return; }
-  PropertiesService.getScriptProperties().setProperties({ MAN_URL: url, PANEL_TOKEN: token });
-  ui.alert('Conexión guardada. Prueba con "Traer visitas de Mantenimiento".');
+  let token = props.getProperty('PANEL_TOKEN');
+  const pedirToken = !token || ui.alert('PANEL_TOKEN',
+    'Ya hay un PANEL_TOKEN guardado. ¿Quieres reemplazarlo?', ui.ButtonSet.YES_NO) === ui.Button.YES;
+  if (pedirToken) {
+    const rTok = ui.prompt('PANEL_TOKEN', 'Escribe el PANEL_TOKEN (el mismo que usa el Panel OTDE).', ui.ButtonSet.OK_CANCEL);
+    if (rTok.getSelectedButton() !== ui.Button.OK) return;
+    token = rTok.getResponseText().trim();
+    if (!token) { ui.alert('El token está vacío. No se guardó nada.'); return; }
+  }
+  const nuevas = { PANEL_TOKEN: token };
+  nuevas[propUrl] = url;
+  props.setProperties(nuevas);
+  ui.alert('Conexión con ' + nombre + ' guardada.');
 }
 
-function bitTraerMantenimiento() {
+function bitTraerMantenimiento() { bitTraerDesdeMenu_('Traer visitas de Mantenimiento', bitImportarMantenimiento_); }
+function bitTraerAsesorias() { bitTraerDesdeMenu_('Traer asesorías resueltas', bitImportarAsesorias_); }
+
+function bitTraerDesdeMenu_(titulo, importar) {
   const ui = SpreadsheetApp.getUi();
   const sugerido = Utilities.formatDate(new Date(), 'America/Mexico_City', 'yyyy-MM');
-  const r = ui.prompt('Traer visitas de Mantenimiento',
-    '¿De qué mes? Escríbelo como AAAA-MM (ejemplo: ' + sugerido + ').', ui.ButtonSet.OK_CANCEL);
+  const r = ui.prompt(titulo, '¿De qué mes? Escríbelo como AAAA-MM (ejemplo: ' + sugerido + ').', ui.ButtonSet.OK_CANCEL);
   if (r.getSelectedButton() !== ui.Button.OK) return;
   const mes = r.getResponseText().trim() || sugerido;
   if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(mes)) {
@@ -665,61 +693,96 @@ function bitTraerMantenimiento() {
     return;
   }
   try {
-    const res = bitImportarMantenimiento_(mes);
-    ui.alert('Visitas de Mantenimiento de ' + mes + ':\n\n' +
-      res.nuevas + ' nueva' + (res.nuevas === 1 ? '' : 's') + ' agregada' + (res.nuevas === 1 ? '' : 's') +
-      ' a Actividades · ' + res.existentes + ' ya estaba' + (res.existentes === 1 ? '' : 'n') + ' (no se tocaron).');
+    ui.alert(titulo + ' · ' + mes + ':\n\n' + bitResumenImportacion_(importar(mes)));
   } catch (err) {
-    ui.alert('No se pudieron traer las visitas: ' + err.message);
+    ui.alert('No se pudo: ' + err.message);
   }
 }
 
-// Trae los reportes de visita del mes y agrega a Actividades los que falten.
-// Regresa {nuevas, existentes}; lanza Error con un mensaje para mostrar.
-function bitImportarMantenimiento_(mes) {
-  const props = PropertiesService.getScriptProperties();
-  const url = props.getProperty('MAN_URL');
-  const token = props.getProperty('PANEL_TOKEN');
-  if (!url || !token) throw new Error('falta configurar la conexión (menú "Configurar conexión con Mantenimiento").');
+function bitResumenImportacion_(res) {
+  let texto = res.nuevas + ' nueva' + (res.nuevas === 1 ? '' : 's') + ' agregada' + (res.nuevas === 1 ? '' : 's') +
+    ' a Actividades · ' + res.existentes + ' ya estaba' + (res.existentes === 1 ? '' : 'n') + ' (no se tocaron).';
+  if (res.avisos && res.avisos.length) texto += '\nRevisar: ' + res.avisos.join('; ');
+  return texto;
+}
 
-  const resp = UrlFetchApp.fetch(url + '?action=reportesMes&mes=' + encodeURIComponent(mes) +
+// GET ?action=<accion>&mes=…&token=… al backend guardado en propUrl. Regresa
+// los items; lanza Error con un mensaje para mostrar.
+function bitConsultarBackend_(propUrl, nombre, accion, mes) {
+  const props = PropertiesService.getScriptProperties();
+  const url = props.getProperty(propUrl);
+  const token = props.getProperty('PANEL_TOKEN');
+  if (!url || !token) throw new Error('falta configurar la conexión (menú "Configurar conexión con ' + nombre + '").');
+  const resp = UrlFetchApp.fetch(url + '?action=' + accion + '&mes=' + encodeURIComponent(mes) +
     '&token=' + encodeURIComponent(token), { muteHttpExceptions: true, followRedirects: true });
   let datos;
   try {
     datos = JSON.parse(resp.getContentText());
   } catch (err) {
-    throw new Error('Mantenimiento no respondió como se esperaba (HTTP ' + resp.getResponseCode() +
-      '). ¿Ya se desplegó la versión con ?action=reportesMes?');
+    throw new Error(nombre + ' no respondió como se esperaba (HTTP ' + resp.getResponseCode() +
+      '). ¿Ya se desplegó la versión con ?action=' + accion + '?');
   }
-  if (datos.status === 'no_autorizado') throw new Error('el PANEL_TOKEN no coincide con el de Mantenimiento.');
-  if (datos.status !== 'ok') throw new Error(datos.mensaje || 'respuesta con error de Mantenimiento.');
+  if (datos.status === 'no_autorizado') throw new Error('el PANEL_TOKEN no coincide con el de ' + nombre + '.');
+  if (datos.status !== 'ok') throw new Error(datos.mensaje || 'respuesta con error de ' + nombre + '.');
+  return datos.items || [];
+}
 
-  const accion = bitLeerPlaneacion_().find(function (a) { return a.np === BIT_NP_MANTENIMIENTO; });
-  if (!accion) throw new Error('la acción N.P. ' + BIT_NP_MANTENIMIENTO + ' no existe en Planeacion.');
+function bitAccionPlaneacion_(np) {
+  const accion = bitLeerPlaneacion_().find(function (a) { return a.np === np; });
+  if (!accion) throw new Error('la acción N.P. ' + np + ' no existe en Planeacion.');
+  return accion;
+}
 
-  const grupos = bitAgruparVisitasMan_(datos.items || [], mes);
-  if (!grupos.length) return { nuevas: 0, existentes: 0 };
-
+// Agrega a Actividades las filas cuyo "ID de envío" todavía no existe; las que
+// ya existen no se tocan (la hoja manda). filas: [{idEnvio, valores}] con
+// valores por nombre de encabezado, sin 'Registrado' ni 'ID'.
+function bitAgregarActividades_(filas) {
+  if (!filas.length) return { nuevas: 0, existentes: 0 };
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
   try {
     const hoja = bitObtenerHojaActividades_();
     const idx = bitIndices_(hoja);
-    const filas = hoja.getLastRow() > 1
+    const actuales = hoja.getLastRow() > 1
       ? hoja.getRange(2, 1, hoja.getLastRow() - 1, hoja.getLastColumn()).getValues()
       : [];
     const yaEstan = {};
-    filas.forEach(function (r) { yaEstan[String(r[idx['ID de envío']])] = true; });
-    let siguiente = Number(bitSiguienteId_(filas, idx['ID']).slice(4));
+    actuales.forEach(function (r) { yaEstan[String(r[idx['ID de envío']])] = true; });
+    let siguiente = Number(bitSiguienteId_(actuales, idx['ID']).slice(4));
 
     const nuevas = [];
-    grupos.forEach(function (g) {
-      if (yaEstan[g.idEnvio]) return;
-      const inicio = bitParsearFecha_(g.fechas[0]);
-      const fin = g.fechas.length > 1 ? bitParsearFecha_(g.fechas[g.fechas.length - 1]) : null;
-      const valores = {
+    filas.forEach(function (f) {
+      if (yaEstan[f.idEnvio]) return;
+      const valores = Object.assign({
         'Registrado': new Date(),
         'ID': 'BIT-' + ('000' + siguiente++).slice(-4),
+        'ID de envío': f.idEnvio
+      }, f.valores);
+      const fila = new Array(hoja.getLastColumn()).fill('');
+      Object.keys(valores).forEach(function (h) {
+        if (idx[h] !== undefined) fila[idx[h]] = valores[h];
+      });
+      nuevas.push(fila);
+    });
+    if (nuevas.length) {
+      hoja.getRange(hoja.getLastRow() + 1, 1, nuevas.length, nuevas[0].length).setValues(nuevas);
+    }
+    return { nuevas: nuevas.length, existentes: filas.length - nuevas.length };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// Trae los reportes de visita del mes y agrega a Actividades los que falten.
+function bitImportarMantenimiento_(mes) {
+  const items = bitConsultarBackend_('MAN_URL', 'Mantenimiento', 'reportesMes', mes);
+  const accion = bitAccionPlaneacion_(BIT_NP_MANTENIMIENTO);
+  return bitAgregarActividades_(bitAgruparVisitasMan_(items, mes).map(function (g) {
+    const inicio = bitParsearFecha_(g.fechas[0]);
+    const fin = g.fechas.length > 1 ? bitParsearFecha_(g.fechas[g.fechas.length - 1]) : null;
+    return {
+      idEnvio: g.idEnvio,
+      valores: {
         'Mes': mes,
         'Meta': accion.meta,
         'N.P.': accion.np,
@@ -735,22 +798,93 @@ function bitImportarMantenimiento_(mes) {
         'Descripción': bitManDescripcion_(g),
         'Propósito': accion.resultados,
         'Beneficiarios': bitManBeneficiarios_(g, accion.beneficiarios),
-        'Capturó': BIT_CAPTURO_MAN,
-        'ID de envío': g.idEnvio
-      };
-      const fila = new Array(hoja.getLastColumn()).fill('');
-      Object.keys(valores).forEach(function (h) {
-        if (idx[h] !== undefined) fila[idx[h]] = valores[h];
-      });
-      nuevas.push(fila);
-    });
-    if (nuevas.length) {
-      hoja.getRange(hoja.getLastRow() + 1, 1, nuevas.length, nuevas[0].length).setValues(nuevas);
-    }
-    return { nuevas: nuevas.length, existentes: grupos.length - nuevas.length };
-  } finally {
-    lock.releaseLock();
+        'Capturó': BIT_CAPTURO_MAN
+      }
+    };
+  }));
+}
+
+// Trae las asesorías resueltas del mes (META 25 / N.P. 8). Si alguna no tiene
+// "Fecha de realización" o "Asistentes", se usa la fecha programada o el
+// número solicitado y se avisa, para corregirlo en Asesorías y en la hoja.
+function bitImportarAsesorias_(mes) {
+  const items = bitConsultarBackend_('ASE_URL', 'Asesorías', 'asesoriasMes', mes);
+  const accion = bitAccionPlaneacion_(BIT_NP_ASESORIAS);
+  const avisos = [];
+  const res = bitAgregarActividades_(items.map(function (a) {
+    const g = bitPrepararAsesoria_(a);
+    const faltan = [];
+    if (a.fechaFuente !== 'realizacion') faltan.push('fecha de realización');
+    if (g.personas === null || String(a.asistentes || '').trim() === '') faltan.push('asistentes');
+    if (faltan.length) avisos.push(a.folio + ' sin ' + faltan.join(' ni '));
+    const fecha = bitParsearFecha_(a.fecha);
+    return {
+      idEnvio: 'ASE:' + a.folio,
+      valores: {
+        'Mes': mes,
+        'Meta': accion.meta,
+        'N.P.': accion.np,
+        'Origen': '',
+        'Tipo y nombre': g.excel ? BIT_TIPO_ASE_EXCEL : BIT_TIPO_ASE_BANCO,
+        'Fecha inicio': fecha,
+        'Fecha fin': '',
+        'Fecha (texto)': bitFechaTexto_(fecha, null),
+        'Responsable': 'OTDE',
+        'Modalidad': 'Presencial',
+        'Lugar': 'Presencial en ' + bitManSede_(g) + '.',
+        'CCT': g.cct,
+        'Descripción': bitAseDescripcion_(g),
+        'Propósito': accion.resultados,
+        'Beneficiarios': bitAseBeneficiarios_(g),
+        'Capturó': BIT_CAPTURO_ASE
+      }
+    };
+  }));
+  res.avisos = avisos;
+  return res;
+}
+
+// Mismos campos que usa bitManSede_ (cct, escuela, zona, sector, tipoCct).
+function bitPrepararAsesoria_(a) {
+  const g = {};
+  ['cct', 'escuela', 'sector', 'zona', 'turno', 'tipoSolicitante', 'temasExcel'].forEach(function (k) {
+    g[k] = String(a[k] || '').trim();
+  });
+  g.tipoCct = bitManTipoCct_(g.tipoSolicitante, g.cct);
+  g.excel = /excel/i.test(String(a.tipoAsesoria || ''));
+  const n = function (v) { const t = String(v == null ? '' : v).trim(); return /^\d+$/.test(t) ? Number(t) : null; };
+  g.personas = n(a.asistentes) !== null ? n(a.asistentes) : n(a.numeroSolicitado);
+  return g;
+}
+
+function bitAseDescripcion_(g) {
+  const sede = bitManSede_(g) + (g.turno && g.tipoCct === 'escuela' ? ', Turno ' + g.turno : '');
+  const quienes = function (singular, plural) {
+    return g.personas === null ? plural : g.personas + ' ' + (g.personas === 1 ? singular : plural);
+  };
+  if (g.excel) {
+    let texto = 'Brindar asesoría de Excel básico a ' + quienes('integrante', 'integrantes') +
+      ' del personal directivo y administrativo de ' + sede +
+      ', para fortalecer sus prácticas administrativas mediante el uso pertinente de la hoja de cálculo';
+    if (g.temasExcel) texto += ', con los temas: ' + g.temasExcel.split(/;\s*/).join('; ');
+    return texto + '.';
   }
+  return 'Brindar asesoría a ' + quienes('docente', 'docentes') + ' de ' + sede +
+    ', sobre el uso pedagógico del Banco de Materiales Digitales de apoyo docente y del juego Chuka: ' +
+    'Rompe el Silencio para la detección y prevención del acoso escolar, vinculando los recursos con ' +
+    'los Procesos de Desarrollo de Aprendizaje (PDA) de la Nueva Escuela Mexicana.';
+}
+
+// "1 Director Escolar\n14 docentes" (mismo estilo que Mantenimiento). Excel:
+// personal directivo y administrativo.
+function bitAseBeneficiarios_(g) {
+  if (g.excel) {
+    return g.personas === null ? 'Personal directivo y administrativo.'
+      : g.personas + ' integrante' + (g.personas === 1 ? '' : 's') + ' del personal directivo y administrativo';
+  }
+  const titular = g.tipoCct === 'escuela' ? '1 Director Escolar' : 'Directivos';
+  if (g.personas === null) return 'Directivos y docentes.';
+  return titular + '\n' + g.personas + ' docente' + (g.personas === 1 ? '' : 's');
 }
 
 // Una actividad por folio en el mes: si el técnico fue dos días a la misma
