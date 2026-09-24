@@ -134,9 +134,16 @@ function bitConfigurarClave() {
   ui.alert('Clave guardada. En bitacora.html se escribe una vez por dispositivo.');
 }
 
-function bitClaveValida_(clave) {
+// Devuelve null si la clave es correcta, o la respuesta de error a enviar.
+// "sin_clave" (el backend aún no tiene CLAVE_CAPTURA) se distingue de
+// "no_autorizado" (clave distinta) para que la página diga qué corregir:
+// configurarla en el menú del Sheet, o revisar lo que se escribió. Revelar
+// que falta configurarla no da acceso a nada.
+function bitErrorDeClave_(clave) {
   const esperada = PropertiesService.getScriptProperties().getProperty('CLAVE_CAPTURA');
-  return !!esperada && String(clave || '') === esperada;
+  if (!esperada) return bitRespuesta_({ status: 'sin_clave' });
+  if (String(clave || '').trim() !== esperada) return bitRespuesta_({ status: 'no_autorizado' });
+  return null;
 }
 
 // ── Preparación única: crea las 3 hojas y siembra la planeación ──
@@ -215,7 +222,8 @@ function bitIndices_(hoja) {
 function doGet(e) {
   const p = (e && e.parameter) || {};
   if (p.action === 'planeacion') {
-    if (!bitClaveValida_(p.clave)) return bitRespuesta_({ status: 'no_autorizado' });
+    const errorClave = bitErrorDeClave_(p.clave);
+    if (errorClave) return errorClave;
     return bitRespuesta_({
       status: 'ok',
       acciones: bitLeerPlaneacion_(),
@@ -263,7 +271,8 @@ function doPost(e) {
   } catch (err) {
     return bitRespuesta_({ status: 'error', mensaje: 'Solicitud no válida.' });
   }
-  if (!bitClaveValida_(datos.clave)) return bitRespuesta_({ status: 'no_autorizado' });
+  const errorClave = bitErrorDeClave_(datos.clave);
+  if (errorClave) return errorClave;
 
   const lock = LockService.getScriptLock();
   try {

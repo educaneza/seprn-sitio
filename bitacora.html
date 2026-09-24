@@ -359,6 +359,9 @@ const BITACORA_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzjWhS
 
 const LS_CLAVE = 'otdeBitacoraClave';
 const LS_CAPTURO = 'otdeBitacoraCapturo';
+const MSG_CLAVE_INCORRECTA = 'Clave incorrecta. Revisa mayúsculas, minúsculas y que no falte ningún carácter.';
+const MSG_SIN_CLAVE = 'El sistema todavía no tiene clave de captura. En la hoja de la bitácora, ' +
+  'usa el menú "OTDE Bitácora → Configurar clave de captura" (8 caracteres o más) y vuelve a intentar.';
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
   'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
@@ -434,7 +437,8 @@ function poblarFormulario(datos) {
 
 async function entrar(clave, capturo) {
   const d = await cargarPlaneacion(clave);
-  if (d.status === 'no_autorizado') throw new Error('Clave incorrecta.');
+  if (d.status === 'sin_clave') throw new Error(MSG_SIN_CLAVE);
+  if (d.status === 'no_autorizado') throw new Error(MSG_CLAVE_INCORRECTA);
   if (d.status !== 'ok') throw new Error('No se pudo cargar la planeación.');
   poblarFormulario(d);
   $('lbl-capturo').textContent = capturo;
@@ -736,6 +740,9 @@ $('form-actividad').addEventListener('submit', async function (ev) {
       $('ok-id').textContent = d.id;
       idEnvioActual = null;
       mostrar('screen-ok');
+    } else if (d.status === 'sin_clave') {
+      errorBox.textContent = MSG_SIN_CLAVE;
+      errorBox.classList.add('visible');
     } else if (d.status === 'no_autorizado') {
       errorBox.textContent = 'La clave de captura ya no es válida. Toca "cambiar" arriba y escribe la nueva.';
       errorBox.classList.add('visible');
@@ -784,7 +791,7 @@ $('btn-otra').addEventListener('click', function () {
   try {
     await entrar(clave, capturo);
   } catch (e) {
-    if (e.message === 'Clave incorrecta.') { borrarLS(LS_CLAVE); }
+    if (e.message === MSG_CLAVE_INCORRECTA) { borrarLS(LS_CLAVE); }
     $('capturo').value = capturo;
     $('clave-error').textContent = e.name === 'AbortError'
       ? 'El servidor tardó demasiado en responder. Intenta de nuevo.'
