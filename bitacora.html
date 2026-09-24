@@ -227,6 +227,7 @@
             <option value="">Selecciona…</option>
           </select>
           <span class="meta-chip campo-oculto" id="meta-chip"></span>
+          <div class="hint campo-oculto" id="accion-completa"></div>
           <div class="error-msg" id="err-np">Elige una acción o "No planeada".</div>
         </div>
         <div class="campo campo-oculto" id="wrap-no-planeada">
@@ -418,13 +419,14 @@ function poblarFormulario(datos) {
   acciones.forEach(function (a) {
     const o = document.createElement('option');
     o.value = a.np;
-    const corta = a.accion.length > 70 ? a.accion.slice(0, 70) + '…' : a.accion;
-    o.textContent = 'N.P. ' + a.np + ' — ' + corta;
+    // Nombre corto de la hoja Planeacion; si aún no existe, un recorte del texto completo.
+    const corta = a.corto || (a.accion.length > 28 ? a.accion.slice(0, 28) + '…' : a.accion);
+    o.textContent = a.np + ' · ' + corta;
     np.appendChild(o);
   });
   const o = document.createElement('option');
   o.value = 'NP';
-  o.textContent = 'No planeada (oficio, convocatoria, solicitud)';
+  o.textContent = 'No planeada (oficio, convocatoria)';
   np.appendChild(o);
 
   const resp = $('responsable');
@@ -501,6 +503,9 @@ $('np').addEventListener('change', function () {
   $('wrap-no-planeada').classList.toggle('campo-oculto', !noPlaneada);
 
   const a = acciones.find(function (x) { return x.np === valor; });
+  const completa = $('accion-completa');
+  completa.textContent = a ? a.accion : '';
+  completa.classList.toggle('campo-oculto', !a);
   if (a) {
     chip.textContent = 'Se reporta en META ' + a.meta;
     chip.classList.remove('campo-oculto');
@@ -769,7 +774,7 @@ function reiniciarFormulario() {
   $('form-actividad').reset();
   document.querySelectorAll('#form-actividad .campo-error').forEach(function (el) { el.classList.remove('campo-error'); });
   document.querySelectorAll('#form-actividad .error-msg, #form-actividad .borrador-aviso').forEach(function (el) { el.classList.remove('visible'); });
-  ['wrap-no-planeada', 'wrap-cct', 'wrap-medio', 'meta-chip', 'responsable-otro'].forEach(function (id) {
+  ['wrap-no-planeada', 'wrap-cct', 'wrap-medio', 'meta-chip', 'accion-completa', 'responsable-otro'].forEach(function (id) {
     $(id).classList.add('campo-oculto');
   });
   $('envio-error').classList.remove('visible');

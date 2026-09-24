@@ -63,6 +63,22 @@ const ENCABEZADOS_PLANEACION = [
   'Instrumento de evaluación', 'Beneficiarios', 'Responsables', 'Meta', 'Eje PDI'
 ];
 
+// Nombre corto de cada acción para la lista del formulario (el texto completo no
+// cabe en un <select> de celular). Columna agregada al final de Planeacion el
+// 24 sep 2026; "Preparar hojas" la crea y la llena si falta, y se puede editar.
+const BIT_COL_NOMBRE_CORTO = 'Nombre corto';
+const BIT_NOMBRES_CORTOS_2627 = {
+  '1': 'MIED · visitas de seguimiento',
+  '2': 'Certificación Google (UNETE)',
+  '3': 'Liderazgo UNETE (directivos)',
+  '4': 'CUANTRIX · capacitación docente',
+  '5': 'Taller de IA (CoEEE)',
+  '6': 'Internet en una Caja (Chicos.net)',
+  '7': 'Mantenimiento de equipos',
+  '8': 'Asesorías Banco/Chuka/Excel',
+  '9': 'Asesoría de IA a docentes'
+};
+
 const ENCABEZADOS_ACTIVIDADES = [
   'Registrado', 'ID', 'Mes', 'Meta', 'N.P.', 'Origen', 'Tipo y nombre',
   'Fecha inicio', 'Fecha fin', 'Fecha (texto)', 'Responsable', 'Modalidad',
@@ -159,6 +175,7 @@ function bitPrepararHojas() {
     plan.setColumnWidth(2, 360);
     plan.setColumnWidth(5, 320);
   }
+  bitAsegurarNombresCortos_(plan);
 
   bitObtenerHojaActividades_();
 
@@ -234,14 +251,40 @@ function doGet(e) {
   return bitRespuesta_({ status: 'ok', servicio: 'OTDE Bitácora de actividades' });
 }
 
+// Agrega la columna "Nombre corto" al final de Planeacion si falta y llena las
+// celdas vacías con BIT_NOMBRES_CORTOS_2627. Nunca sobrescribe lo que ya se editó.
+function bitAsegurarNombresCortos_(plan) {
+  const ancho = Math.max(plan.getLastColumn(), ENCABEZADOS_PLANEACION.length);
+  const enc = plan.getRange(1, 1, 1, ancho).getValues()[0].map(function (h) { return String(h).trim(); });
+  let col = enc.indexOf(BIT_COL_NOMBRE_CORTO) + 1;
+  if (!col) {
+    col = ancho + 1;
+    plan.getRange(1, col).setValue(BIT_COL_NOMBRE_CORTO)
+      .setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
+    plan.setColumnWidth(col, 240);
+  }
+  if (plan.getLastRow() < 2) return;
+  const filas = plan.getRange(2, 1, plan.getLastRow() - 1, 1).getValues();
+  const cortos = plan.getRange(2, col, filas.length, 1).getValues();
+  const nuevos = filas.map(function (f, i) {
+    const actual = String(cortos[i][0]).trim();
+    return [actual || BIT_NOMBRES_CORTOS_2627[String(f[0]).trim()] || ''];
+  });
+  plan.getRange(2, col, nuevos.length, 1).setValues(nuevos);
+}
+
 function bitLeerPlaneacion_() {
   const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_BIT_PLANEACION);
   if (!hoja || hoja.getLastRow() < 2) return [];
-  return hoja.getRange(2, 1, hoja.getLastRow() - 1, ENCABEZADOS_PLANEACION.length).getValues()
+  const ancho = Math.max(hoja.getLastColumn(), ENCABEZADOS_PLANEACION.length);
+  const colCorto = hoja.getRange(1, 1, 1, ancho).getValues()[0]
+    .map(function (h) { return String(h).trim(); }).indexOf(BIT_COL_NOMBRE_CORTO);
+  return hoja.getRange(2, 1, hoja.getLastRow() - 1, ancho).getValues()
     .filter(function (r) { return String(r[0]).trim(); })
     .map(function (r) {
       return {
         np: String(r[0]).trim(),
+        corto: colCorto === -1 ? '' : String(r[colCorto]).trim(),
         accion: String(r[1]).trim(),
         mes: String(r[2]).trim(),
         resultados: String(r[4]).trim(),
