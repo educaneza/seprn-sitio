@@ -546,6 +546,21 @@ ya esté expandido).
 - Menú "Panel OTDE": Actualizar ahora · Instalar/Desinstalar actualización automática (cada 30 min)
 - Detalle completo de la arquitectura en `docs/ARCHITECTURE.md §20`
 
+### `apps-script/bitacora.gs` (nuevo, sep 2026)
+- **No es un trámite:** es la bitácora interna de OTDE (Jorge y Nancy) para el reporte mensual de
+  Planeación. Sheet "Bitácora OTDE 2026-2027" con hojas `Planeacion` (9 acciones + "Nombre
+  corto"), `Actividades` y `Config` (responsables). Frontend `bitacora.html`
+  (`BITACORA_APPS_SCRIPT_URL`)
+- Clave de captura en Script Properties (`CLAVE_CAPTURA`), configurada desde el menú "OTDE
+  Bitácora → Configurar clave de captura". Estados `sin_clave`/`no_autorizado`. Sin correo ni
+  Telegram
+- Menú "OTDE Bitácora": Generar reporte del mes (pestaña "Reporte AAAA-MM", bloques META 23/25
+  con las celdas combinadas del Excel de Planeación) · Preparar hojas y cargar planeación
+  (idempotente; también agrega y llena "Nombre corto" si falta) · Configurar clave de captura
+- Para cambios: pegar el `.gs` completo y **Administrar implementaciones → Editar → Nueva
+  versión** (misma URL). Si el cambio toca hojas, correr "Preparar hojas" después
+- Detalle completo en `docs/ARCHITECTURE.md §26`
+
 ### `apps-script/visitas-jefes.gs` (nuevo, ago 2026)
 - **No es un backend de OTDE** — lo usan jefes de toda la Subdirección (~20 jefes de área +
   docentes que se sumen) para reservar y reportar sus visitas de inicio de ciclo/ceremonias
@@ -1088,8 +1103,11 @@ Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/I
 `docs/BITACORA.md` para el historial de qué ya se hizo. Resumen de lo genuinamente abierto:
 - **Operación interna OTDE — Fase 1 en producción y validada (24 sep 2026)**: bitácora +
   reporte mensual (`apps-script/bitacora.gs` + `bitacora.html`), probada con las 5 actividades
-  reales de septiembre y pegada en el Excel real de Planeación. Sigue la Fase 2 (oficios y
-  recordatorios); después padrón, agenda y tablero sobre el Panel OTDE existente. Ver `docs/PLAN-OPERACION-INTERNA.md` y `docs/ROADMAP.md` ítem 27.
+  reales de septiembre y pegada en el Excel real de Planeación. **Siguiente, recomendado:
+  alimentación automática** (los reportes de visita de Mantenimiento crean su actividad en
+  META 23, N.P. 7; después Asesorías resueltas → N.P. 8), porque hoy esas actividades se
+  capturan dos veces. Luego la Fase 2 (oficios y recordatorios; antes verificar Power Automate
+  en M365 y conseguir 1-2 oficios reales). Ver `docs/ROADMAP.md` ítem 27. Ver `docs/PLAN-OPERACION-INTERNA.md` y `docs/ROADMAP.md` ítem 27.
 - **Formación Docente — cuota de correo, decidir antes del 6 oct 2026**: Brevo quedó descartado.
   Se activó una prueba de Google Workspace Business Starter, pero la documentación oficial de
   cuotas de Apps Script dice que las cuentas de prueba tienen límites extra y el 1,500/día solo

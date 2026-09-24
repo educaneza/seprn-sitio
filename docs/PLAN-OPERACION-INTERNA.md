@@ -123,7 +123,11 @@ Así lo que ya queda registrado no se vuelve a capturar.
 - Evoluciona el Panel OTDE existente, no se construye aparte. Lee la Bitácora, los oficios, el padrón y los trámites existentes: pendientes, oficios por vencer, avance de la planeación y actividades por programa o zona.
 
 ## Siguiente paso concreto
-Fase 1 construida (24 sep): `apps-script/bitacora.gs` y `bitacora.html`, probados localmente. Desplegada, publicada y **validada** el mismo día: las 5 actividades reales de septiembre (BIT-0001 a 0005) generaron un reporte que Jorge pegó en el Excel real de SharePoint sin problemas con las celdas combinadas. Siguiente: Fase 2.
+Fase 1 construida (24 sep): `apps-script/bitacora.gs` y `bitacora.html`, probados localmente. Desplegada, publicada y **validada** el mismo día: las 5 actividades reales de septiembre (BIT-0001 a 0005) generaron un reporte que Jorge pegó en el Excel real de SharePoint sin problemas con las celdas combinadas. Mismo día: nombres cortos para las acciones en el formulario.
+
+**Próxima sesión, en este orden:**
+1. **Alimentación automática** (la segunda iteración de la Fase 1 descrita arriba). Empezar por Mantenimiento: al guardar un reporte de visita, `mantenimiento.gs` crea su actividad en `Actividades` (META 23, N.P. 7), con fecha, escuela/CCT y la descripción de la atención. Decidir el mecanismo: que `mantenimiento.gs` llame por `UrlFetchApp` al `doPost` de la bitácora (con la clave), o que la bitácora lea los reportes, como el Panel OTDE. Después, Asesorías resueltas → N.P. 8. Soporte y Correo no tienen acción en la planeación: preguntar a Jorge si se reportan.
+2. **Fase 2 (oficios):** antes, que Jorge verifique Power Automate en su cuenta M365 (make.powerautomate.com) y comparta 1-2 oficios reales.
 
 **Decisiones de construcción (24 sep):**
 - **Clave de captura** (`CLAVE_CAPTURA`, se configura desde el menú con un cuadro de diálogo): la URL del backend es visible en el sitio público, así que sin clave cualquiera podría leer la planeación o meter actividades. Se escribe una vez por dispositivo.

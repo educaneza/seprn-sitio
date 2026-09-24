@@ -755,7 +755,12 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     `BITACORA_APPS_SCRIPT_URL`; `doGet` verificado con `curl`, rechaza clave inválida). **Validada el mismo
     día:** las 5 actividades reales de septiembre (BIT-0001 a 0005) se capturaron, el reporte se
     generó y Jorge lo pegó en el Excel real de SharePoint sin problemas con las celdas combinadas.
-    **Siguiente:** Fase 2 (oficios y recordatorios). Pendiente de verificar en la Fase 2: si la licencia M365 de `@dee.edu.mx`
+    Mismo día: nombres cortos para las acciones en el formulario (columna "Nombre corto" en
+    `Planeacion`). **Siguiente, en este orden:** (a) **alimentación automática**, para quitar la
+    doble captura: `reporte-visita.html`/`mantenimiento.gs` crea la actividad en META 23, N.P. 7;
+    después Asesorías con Estatus "Resuelto" → N.P. 8; decidir con Jorge qué hacer con Soporte
+    remoto y Correo, que no tienen acción en la planeación (¿cada caso, un resumen mensual o
+    nada?). (b) Fase 2 (oficios y recordatorios). Pendiente de verificar en la Fase 2: si la licencia M365 de `@dee.edu.mx`
     incluye Power Automate para capturar oficios automáticamente desde Outlook.
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver

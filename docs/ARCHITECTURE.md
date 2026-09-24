@@ -2416,3 +2416,54 @@ falsos positivos habituales de `<header>`/`<nav>`/`<svg>` no reconocidos por esa
 `<div>` balanceado, e IDs únicos. Publicado a pedido explícito de Jorge sin esperar esa
 verificación visual — **queda pendiente que él mismo confirme en producción** que el lightbox
 (flechas, teclado, cierre) funciona como se espera.
+
+
+## 26. Bitácora única de actividades y reporte mensual de Planeación (sep 2026)
+
+Fase 1 de `docs/PLAN-OPERACION-INTERNA.md`. Es un sistema interno de OTDE, no un trámite: Jorge y
+Nancy capturan cada actividad una sola vez y el reporte mensual para la Oficina de Planeación sale
+de esa captura. Backend `apps-script/bitacora.gs`, ligado al Sheet "Bitácora OTDE 2026-2027";
+frontend `bitacora.html`.
+
+**Formato de destino (verificado contra el Excel real, no supuesto).** El reporte es un Excel en
+SharePoint, un archivo por mes, con una pestaña por meta. OTDE solo reporta en META 23 y META 25.
+Cada pestaña tiene filas de actividad de la 14 a la 30 (`BIT_MAX_FILAS_POR_META = 17`) con celdas
+combinadas A:B (tipo y nombre), C (fecha), D (responsable), E (lugar), F:I (descripción), J:K
+(propósito) y L (beneficiarios). Apps Script no puede escribir en SharePoint, así que la salida es
+una pestaña de Sheets, "Reporte AAAA-MM" (`bitGenerarReporteMensual`), que replica las mismas
+columnas y combinaciones (`bitCombinarFila_`). Se copia desde Sheets y se pega en la fila 14 de
+cada pestaña. Copiar desde Sheets, y no desde un cuadro de texto con TSV, conserva los saltos de
+línea dentro de las celdas. Jorge lo validó pegándolo en el Excel real.
+
+**Hojas.** `Planeacion` (las 9 acciones del Word más la columna "Nombre corto" al final,
+`BIT_COL_NOMBRE_CORTO`), `Actividades` (`ENCABEZADOS_ACTIVIDADES`, se lee y escribe por nombre de
+encabezado, con auto-heal de columnas faltantes) y `Config` (catálogo de responsables). La hoja
+manda: el reporte copia lo que diga `Actividades`, y un texto corregido a mano ahí sale corregido
+en el reporte.
+
+**Decisiones de diseño:**
+- **Clave de captura** (`CLAVE_CAPTURA`): la URL del backend es visible en el código del sitio
+  público, así que `doGet ?action=planeacion` y `doPost` la exigen. Se configura desde el menú con
+  un cuadro de diálogo (`bitConfigurarClave`), no como argumento de función (`docs/QA-NOTES.md`
+  #14/#25). `bitErrorDeClave_` distingue `sin_clave` (falta configurarla) de `no_autorizado`
+  (clave distinta), para que la página diga qué corregir. La página guarda la clave en
+  `localStorage`, una vez por dispositivo.
+- **La meta la decide la planeación:** si la actividad trae N.P., `bitValidarActividad_` toma la
+  meta de la hoja `Planeacion` e ignora la que mande el navegador. Las no planeadas eligen meta
+  (23/25) y anotan su origen. No existe un rubro aparte de "no planeadas" porque el Excel no lo
+  tiene.
+- **Idempotencia:** cada envío lleva un `ID de envío` generado en el navegador, y `doPost` corre
+  con `LockService`. Un reintento después de un timeout devuelve el mismo `BIT-NNNN` con la
+  confirmación completa, en vez de duplicar (`docs/QA-NOTES.md` #26/#31). El formulario espera
+  60 s (`BITACORA_TIMEOUT_ENVIO_MS`): en la primera captura real, dos respuestas tardaron más de
+  30 s en llegar al navegador aunque Apps Script terminó en ~1 s.
+- **Textos autogenerados pero editables:** la fecha sale al estilo del reporte (`bitFechaTexto_`,
+  con la misma regla duplicada en la página para la vista previa); el lugar se arma desde la CCT
+  o el medio virtual; propósito, beneficiarios y responsable se proponen como borrador desde la
+  planeación y nunca pisan un texto que el usuario ya editó.
+- **Fuera de alcance por ahora:** evidencia fotográfica (sigue un PDF por mes armado a mano) y el
+  encabezado de cada pestaña del Excel (mes y fecha, a mano).
+
+**Pendiente (alimentación automática):** los sistemas que ya registran actividades (reportes de
+visita de `mantenimiento.gs`, asesorías resueltas) todavía no escriben en `Actividades`, así que
+hoy esas actividades se capturan dos veces. Ver `docs/ROADMAP.md` ítem 27.
