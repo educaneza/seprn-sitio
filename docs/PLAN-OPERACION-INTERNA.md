@@ -46,26 +46,34 @@ Esto es coherente con la decisión del 5 de agosto (una hoja por dominio y el ta
 
 ### Fase 1 — Bitácora única y reporte mensual automático ⬅ se planea a detalle ahora
 
-**Qué es:** un Sheet "Bitácora OTDE 2026-2027" con tres pestañas:
-1. **`Planeacion`**: las acciones del Word de planeación institucional, una fila por N.P., con los campos Acción, Mes, Recursos, Resultados esperados, Instrumento, Beneficiarios, Responsables y Vinculación SSII/PDI. Se captura una vez por ciclo.
-2. **`Actividades`**: una fila por cada cosa que se hizo, planeada o no. Campos:
-   - fecha y hora
-   - tipo (reunión, visita, oficio atendido, capacitación, etc.)
-   - descripción breve
-   - **N.P. de la planeación** o **"No planeada — solicitud de estructura ascendente"**, con el origen (oficio, núm. de oficio)
-   - CCT(s) / beneficiarios
-   - responsable (Jorge / Nancy / técnico)
-   - resultado
-   - evidencia (foto o PDF a Drive)
-3. **`Config`**: catálogos de tipos, responsables y ejes SSII/PDI.
+**Formato real verificado (24 sep 2026)** con los insumos en `docs/insumos/` (locales, no se publican):
+- **El reporte mensual no es un Word.** Es un **Excel compartido con la Oficina de Planeación en SharePoint M365**. Cada mes se usa un archivo nuevo a partir de la plantilla.
+- El Excel tiene **una pestaña por meta**. OTDE solo reporta en **META 23** (Educación primaria: mantenimiento de equipos) y **META 25** (mejora de aprendizajes: todo lo demás). Las pestañas 24, 81 y 83 no son de OTDE.
+- Cada pestaña tiene un encabezado (periodo, fecha, proyecto, meta, indicador) y **filas de actividad de la 14 a la 30** (máximo 17 por meta), cada una con 7 campos: **Tipo y nombre de la actividad** (A:B) · **Fecha o periodo** (C) · **Responsable** (D) · **Lugar: sede, presencial o virtual** (E) · **Descripción** (F:I) · **Propósito u objetivo** (J:K) · **Número y tipo de beneficiarios** (L).
+- La evidencia es **un PDF por mes** con todas las evidencias; en el Excel solo se anota su nombre (columna M de la primera fila).
+- **No hay apartado de "no planeadas".** Toda actividad entra en META 23 o 25; por ejemplo, la reunión con CoEEE de septiembre quedó en META 25.
+- **Planeación 2026-2027:** son 9 acciones (N.P. 1-9) y cada una dice su meta (N.P. 7 mantenimiento → 23; las demás → 25). Esa columna es la que conecta la planeación con la pestaña del reporte.
 
-**Captura (menos de 1 minuto):**
-- **Webform móvil** para Jorge en territorio: dice qué hice, con qué escuela y adjunta la foto. Al elegir el N.P., la vinculación SSII/PDI, los recursos y el instrumento se heredan de la planeación, así no se escriben dos veces.
-- Nancy captura desde la oficina en el mismo formulario lo que Jorge le dicte o reenvíe.
+**Qué es:** un Sheet "Bitácora OTDE 2026-2027" con tres pestañas:
+1. **`Planeacion`**: las 9 acciones del Word, con N.P., Acción, Mes, Recursos, Resultados esperados, Instrumento, Beneficiarios, Responsables, **Meta** (23/25) y Eje PDI. Se captura una vez por ciclo.
+2. **`Actividades`**: una fila por cada cosa que se hizo. Las columnas calcan el Excel, más las que sirven para organizar:
+   - **Meta** (23/25): se hereda del N.P.; si la actividad no está planeada, se elige.
+   - **N.P.** de la planeación, o "No planeada" con su origen (oficio o convocatoria).
+   - Tipo y nombre · Fecha (día o periodo; el texto "Los días 13 y 14 de enero" se genera solo) · Responsable (OTDE, UNETE, CoEEE, CUANTRIX, etc.) · Modalidad (presencial, virtual o híbrida) y sede o CCT (con autocompletado de `cct-db`) · Descripción · Propósito · Beneficiarios.
+   - Capturó (Jorge o Nancy) y marca de tiempo.
+3. **`Config`**: catálogos de responsables y modalidades, más el encabezado de cada meta (proyecto e indicador).
+
+**Captura:**
+- **Webform móvil** para Jorge en territorio y el mismo formulario para Nancy en la oficina.
+- Al elegir el N.P., se proponen como borrador el **Propósito** (a partir de "Resultados esperados") y los **Beneficiarios** de la planeación. Se editan antes de guardar, para no redactar desde cero en el celular.
+- La **Descripción** se redacta en el formulario. El lugar (sede) se arma sola a partir del CCT: "Presencial en la Escuela Primaria …, C.C.T. …, Zona …, Sector …".
 
 **Salida:**
-- Menú **"OTDE → Generar reporte mensual"**. Copia una plantilla de Google Docs idéntica al formato oficial, llena la tabla con las actividades del mes y agrupa las no planeadas bajo su propio rubro. El resultado se descarga como Word.
-- Incluye también un **resumen de avance de la planeación**: qué N.P. del mes se cumplieron y cuáles no. Hoy nadie lo lleva.
+- Menú **"OTDE → Reporte del mes"**: se elige el mes y aparece un diálogo con **un bloque por meta (23 y 25)**. Cada bloque trae las filas en orden de fecha, **con celdas vacías en B, G, H, I y K** para respetar las celdas combinadas. Se copia y se pega en la fila 14 de la pestaña correspondiente en SharePoint.
+- Avisa si una meta pasa de 17 actividades (el formato solo tiene de la fila 14 a la 30).
+- Muestra los datos del encabezado (mes, año, fecha) para llenarlos a mano.
+- Incluye un **resumen de avance de la planeación** (qué N.P. tuvieron actividad en el mes). Este resumen es solo para OTDE; no va en el Excel.
+- **El PDF de evidencia** sigue armándose a mano por ahora. Una mejora posterior podría juntar las fotos de las actividades del mes en un solo PDF.
 
 **Alimentación automática (segunda iteración de la misma fase):** los sistemas que ya existen escriben su propia fila en `Actividades`:
 - visitas de mantenimiento (v8.5 / flujo nuevo)
@@ -75,22 +83,16 @@ Esto es coherente con la decisión del 5 de agosto (una hoja por dominio y el ta
 
 Así lo que ya queda registrado no se vuelve a capturar.
 
-**Qué necesito de Jorge antes de construir** (verificar con el material real, no suponer):
-1. El Word de la **planeación institucional** 2026-2027 (aunque esté incompleto).
-2. El Word del **reporte mensual** en blanco y uno ya entregado (por ejemplo, agosto o septiembre), para calcar las columnas exactas.
-3. Saber si el reporte lo recibe alguien en Word editable o en PDF firmado.
-
 **Archivos previstos:**
-- Nuevo `seprn-sitio/apps-script/bitacora.gs` (patrón de `mantenimiento.gs`: webform + Sheet + Drive + Telegram), con su propio `?action=` protegido con token para que el Panel OTDE lo lea.
-- Para la alimentación automática, evaluar primero el patrón `UrlFetchApp` del Panel (la bitácora lee de los trámites) antes que modificar cada backend para que escriba en la bitácora.
-- Nueva página de captura móvil con el mismo estilo del sitio (probablemente privada o sin enlace, no en `otde.html` público).
-- Plantilla de reporte en Google Docs.
+- `seprn-sitio/apps-script/bitacora.gs` (patrón de `mantenimiento.gs`: webform + Sheet). El `?action=` para el Panel OTDE se deja para la Fase 5.
+- `bitacora.html`: página de captura móvil con el estilo de `reporte-visita.html` (sin enlace, `noindex`).
 - Reutilizar `js/cct-db.js` para el autocompletado de CCT.
+- ~~Plantilla de reporte en Google Docs~~: se descartó, porque el reporte es Excel en SharePoint.
 
 **Verificación:**
-- Capturar 5 actividades reales de esta semana (2 planeadas, 3 no planeadas, una con foto) desde el celular.
+- Capturar las 5 actividades de septiembre que ya están en el Excel entregado (META 25, filas 14-18).
 - Generar el reporte de septiembre con el menú.
-- Compararlo lado a lado con el reporte hecho a mano.
+- Pegarlo en una copia de la plantilla en blanco y compararlo celda por celda con el entregado.
 - Lo da por bueno Jorge; Nancy lo prueba en la oficina.
 
 ### Fase 2 — Control de oficios y recordatorios (siguiente, se planea después)
@@ -121,4 +123,11 @@ Así lo que ya queda registrado no se vuelve a capturar.
 - Evoluciona el Panel OTDE existente, no se construye aparte. Lee la Bitácora, los oficios, el padrón y los trámites existentes: pendientes, oficios por vencer, avance de la planeación y actividades por programa o zona.
 
 ## Siguiente paso concreto
-Jorge comparte los Word de **planeación** y **reporte mensual** (en blanco y uno lleno). Con eso se diseñan la estructura exacta de `Actividades` y la plantilla del reporte, y se confirma antes de escribir código.
+Fase 1 construida (24 sep): `apps-script/bitacora.gs` y `bitacora.html`, probados localmente. Desplegada y publicada el mismo día (URL en `BITACORA_APPS_SCRIPT_URL`). Falta la verificación de abajo con las actividades reales de septiembre.
+
+**Decisiones de construcción (24 sep):**
+- **Clave de captura** (`CLAVE_CAPTURA`, se configura desde el menú con un cuadro de diálogo): la URL del backend es visible en el sitio público, así que sin clave cualquiera podría leer la planeación o meter actividades. Se escribe una vez por dispositivo.
+- **La meta de una actividad planeada la decide la hoja `Planeacion`**, no el navegador. Las no planeadas eligen meta y anotan su origen.
+- **Sin fotos ni evidencia en esta primera versión:** la evidencia sigue siendo un PDF por mes armado a mano.
+- **`ID de envío` + `LockService`**: un reintento después de un timeout no duplica la actividad (`docs/QA-NOTES.md` #26/#31).
+- **El reporte es una pestaña de Google Sheets, no un cuadro de texto para copiar:** copiar desde Sheets conserva los saltos de línea dentro de las celdas al pegar en Excel, y replica las combinaciones A:B, F:I y J:K.

@@ -149,6 +149,7 @@ ya esté expandido).
 | `juridico.html` | Oficina Jurídica |
 | `asistencia.html` | Check-in de asistencia (eventos) |
 | `reporte-visita.html` | Formulario de captura del técnico tras una visita de Mantenimiento — reemplaza el llenado a mano de "Reportes de visita" en el Sheet, ver `apps-script/mantenimiento.gs` abajo. Sin entrada en nav/footer, se comparte por link directo |
+| `bitacora.html` | Bitácora de actividades de OTDE (uso interno, Jorge y Nancy) — captura cada actividad una vez para armar el reporte mensual de Planeación. Protegida con clave de captura (`CLAVE_CAPTURA`), `noindex`, sin entrada en nav/footer. Backend `apps-script/bitacora.gs`; ver `docs/PLAN-OPERACION-INTERNA.md` Fase 1 |
 | `charla-ia.html` | Página del evento IA jun 2026 (sin formulario) |
 | `formacion-docente.html` | Centro de Formación Docente — catálogo dinámico (webinars, seminarios, diplomados, cursos autogestivos, acciones formativas, proyectos didácticos) + registro. Diseño premium propio (ver `docs/DESIGN_SYSTEM.md`) |
 | `instructivo-formacion-docente.html` | Guía imprimible del Centro de Formación Docente, mismo sistema tipográfico que la página anterior |
@@ -1085,10 +1086,10 @@ de la sesión realmente volvió obsoletos.
 ## Pendientes vigentes
 Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/Identidad) y
 `docs/BITACORA.md` para el historial de qué ya se hizo. Resumen de lo genuinamente abierto:
-- **Operación interna OTDE — plan de 5 fases listo, sin iniciar** (bitácora + reporte mensual,
-  oficios, padrón de programas, agenda y tablero sobre el Panel OTDE existente). Arranca con la
-  Fase 1 cuando Jorge traiga los Word de planeación y reporte mensual. Ver
-  `docs/PLAN-OPERACION-INTERNA.md` y `docs/ROADMAP.md` ítem 27.
+- **Operación interna OTDE — Fase 1 desplegada (24 sep 2026), falta validarla con datos reales** (bitácora + reporte mensual;
+  después oficios, padrón, agenda y tablero sobre el Panel OTDE existente).
+  `apps-script/bitacora.gs` + `bitacora.html` en producción; falta capturar las actividades de
+  septiembre y confirmar el pegado en el Excel real. Ver `docs/PLAN-OPERACION-INTERNA.md` y `docs/ROADMAP.md` ítem 27.
 - **Formación Docente — cuota de correo, decidir antes del 6 oct 2026**: Brevo quedó descartado.
   Se activó una prueba de Google Workspace Business Starter, pero la documentación oficial de
   cuotas de Apps Script dice que las cuentas de prueba tienen límites extra y el 1,500/día solo

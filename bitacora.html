@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Bitácora de actividades | SEPRN · OTDE</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --guinda:     #56212f;
+      --guinda-ac:  #9F2241;
+      --arena:      #d6d1ca;
+      --caramelo:   #977e5b;
+      --midnight:   #0C1A2E;
+      --off-white:  #F9F8F5;
+      --text:       #1a1a2e;
+      --muted:      #6b7280;
+      --border:     #d1d5db;
+    }
+
+    body {
+      background: var(--midnight);
+      color: var(--off-white);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+    }
+
+    .hdr {
+      background: var(--midnight);
+      border-bottom: 2px solid var(--guinda-ac);
+      padding: .85rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .hdr .brand { font-size: 1rem; font-weight: 700; letter-spacing: .05em; }
+    .hdr .brand span { color: var(--guinda-ac); }
+    .hdr .tag {
+      margin-left: auto;
+      font-size: .72rem;
+      color: var(--guinda-ac);
+      border: 1px solid var(--guinda-ac);
+      padding: .2rem .6rem;
+      border-radius: 999px;
+      letter-spacing: .06em;
+    }
+
+    main { max-width: 560px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+
+    .intro { margin-bottom: 1.25rem; }
+    .intro h1 { font-size: 1.3rem; margin-bottom: .35rem; }
+    .intro p { font-size: .85rem; color: var(--arena); }
+    .intro .sesion { margin-top: .5rem; font-size: .78rem; color: var(--arena); }
+    .intro .sesion button {
+      background: none; border: none; color: #f3b6c4; text-decoration: underline;
+      font-size: .78rem; cursor: pointer; font-family: inherit;
+    }
+
+    .card {
+      background: var(--off-white);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 1.5rem 1.25rem;
+      box-shadow: 0 6px 32px rgba(0,0,0,.4);
+    }
+
+    fieldset { border: none; margin-bottom: 1.5rem; }
+    fieldset:last-of-type { margin-bottom: 0; }
+    legend {
+      font-size: .78rem; font-weight: 700; color: var(--guinda);
+      text-transform: uppercase; letter-spacing: .07em;
+      margin-bottom: .75rem; padding-bottom: .4rem;
+      border-bottom: 1px solid var(--arena); width: 100%;
+    }
+
+    .campo { margin-bottom: 1rem; }
+    .campo:last-child { margin-bottom: 0; }
+    .campo label { display: block; font-size: .82rem; font-weight: 600; margin-bottom: .35rem; }
+    .campo label .req { color: var(--guinda-ac); }
+    .campo label .opcional { font-weight: 400; color: var(--muted); }
+
+    .fila-2 { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+
+    input[type="text"], input[type="date"], input[type="password"], select, textarea {
+      width: 100%;
+      padding: .7rem .85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: .95rem;
+      color: var(--text);
+      background: #fff;
+      font-family: inherit;
+      transition: border-color .15s;
+      -webkit-appearance: none;
+    }
+    textarea { resize: vertical; min-height: 5.5rem; line-height: 1.4; }
+    input:focus, select:focus, textarea:focus {
+      outline: none; border-color: var(--guinda-ac);
+      box-shadow: 0 0 0 3px rgba(159,34,65,.15);
+    }
+    .campo-error { border-color: #dc2626 !important; }
+    .error-msg { font-size: .78rem; color: #dc2626; margin-top: .3rem; display: none; }
+    .error-msg.visible { display: block; }
+    .hint { font-size: .78rem; color: var(--muted); margin-top: .35rem; }
+    .campo-oculto { display: none; }
+
+    .meta-chip {
+      display: inline-block; margin-top: .45rem; font-size: .75rem; font-weight: 700;
+      color: var(--guinda); background: #f5e9ec; border-radius: 999px; padding: .2rem .65rem;
+    }
+    .borrador-aviso {
+      font-size: .75rem; color: #92400e; background: #fffbeb; border: 1px solid #fde68a;
+      border-radius: 6px; padding: .35rem .6rem; margin-top: .35rem; display: none;
+    }
+    .borrador-aviso.visible { display: block; }
+
+    .cct-wrapper { position: relative; }
+    .cct-wrapper ul {
+      list-style: none; position: absolute; top: 100%; left: 0; right: 0;
+      background: #fff; border: 1.5px solid var(--border); border-top: none;
+      border-radius: 0 0 8px 8px; max-height: 220px; overflow-y: auto; z-index: 20; display: none;
+    }
+    .cct-wrapper ul li { padding: .5rem .75rem; font-size: .82rem; cursor: pointer; border-bottom: 1px solid #f0f0f0; }
+    .cct-wrapper ul li:last-child { border-bottom: none; }
+    .cct-wrapper ul li:hover { background: #fdf2f4; }
+    .cct-wrapper ul li .sg-code { font-weight: 700; color: var(--guinda); margin-right: .4rem; }
+    .cct-wrapper ul li .sg-name { color: var(--muted); }
+
+    .btn {
+      width: 100%; padding: .85rem; background: var(--guinda-ac); color: #fff; border: none;
+      border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer;
+      transition: background .15s; margin-top: .5rem; font-family: inherit;
+    }
+    .btn:hover:not(:disabled) { background: var(--guinda); }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-sec {
+      background: #fff; color: var(--guinda-ac); border: 1.5px solid var(--guinda-ac);
+    }
+    .btn-sec:hover:not(:disabled) { background: #fdf2f4; }
+
+    .spinner {
+      display: inline-block; width: 16px; height: 16px;
+      border: 2.5px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%;
+      animation: spin .7s linear infinite; vertical-align: middle; margin-right: .4rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .envio-error {
+      background: #fee2e2; border: 1.5px solid #fca5a5; color: #7f1d1d;
+      border-radius: 8px; padding: .8rem 1rem; font-size: .85rem; margin-top: 1rem; display: none;
+    }
+    .envio-error.visible { display: block; }
+
+    .screen.hidden { display: none; }
+
+    .ok-card {
+      background: var(--off-white); color: var(--text); border-radius: 14px;
+      padding: 2rem 1.5rem; text-align: center; box-shadow: 0 6px 32px rgba(0,0,0,.4);
+    }
+    .ok-card h2 { color: var(--guinda); font-size: 1.15rem; margin-bottom: .5rem; }
+    .ok-card p { font-size: .9rem; color: var(--muted); margin-bottom: .3rem; }
+    .ok-card .id-final {
+      font-family: 'Courier New', monospace; font-weight: 700; color: var(--guinda-ac);
+      font-size: 1.1rem; margin: .75rem 0 1.25rem;
+    }
+
+    @media (max-width: 420px) {
+      .fila-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="brand">SEPRN <span>·</span> OTDE</div>
+  <span class="tag">BITÁCORA</span>
+</header>
+
+<main>
+  <!-- Pantalla 1: clave de captura (una vez por dispositivo) -->
+  <div class="screen hidden" id="screen-clave">
+    <div class="intro">
+      <h1>Bitácora de actividades</h1>
+      <p>Uso interno de OTDE. Escribe la clave de captura una sola vez; este dispositivo la recuerda.</p>
+    </div>
+    <form class="card" id="form-clave" novalidate>
+      <div class="campo">
+        <label for="clave">Clave de captura <span class="req">*</span></label>
+        <input type="password" id="clave" autocomplete="current-password">
+        <div class="error-msg" id="err-clave">Escribe la clave.</div>
+      </div>
+      <div class="campo">
+        <label for="capturo">¿Quién captura en este dispositivo? <span class="req">*</span></label>
+        <select id="capturo">
+          <option value="">Selecciona…</option>
+          <option value="Jorge">Jorge</option>
+          <option value="Nancy">Nancy</option>
+        </select>
+        <div class="error-msg" id="err-capturo">Selecciona quién captura.</div>
+      </div>
+      <button type="submit" class="btn" id="btn-clave">Entrar</button>
+      <div class="envio-error" id="clave-error"></div>
+    </form>
+  </div>
+
+  <!-- Pantalla 2: captura de actividad -->
+  <div class="screen hidden" id="screen-form">
+    <div class="intro">
+      <h1>Nueva actividad</h1>
+      <p>Captúrala el mismo día. Con esto se arma solo el reporte mensual de Planeación.</p>
+      <p class="sesion">Capturando como <strong id="lbl-capturo"></strong> · <button type="button" id="btn-salir">cambiar</button></p>
+    </div>
+
+    <form class="card" id="form-actividad" novalidate>
+      <fieldset>
+        <legend>Planeación</legend>
+        <div class="campo">
+          <label for="np">¿A qué acción de la planeación corresponde? <span class="req">*</span></label>
+          <select id="np">
+            <option value="">Selecciona…</option>
+          </select>
+          <span class="meta-chip campo-oculto" id="meta-chip"></span>
+          <div class="error-msg" id="err-np">Elige una acción o "No planeada".</div>
+        </div>
+        <div class="campo campo-oculto" id="wrap-no-planeada">
+          <div class="campo">
+            <label for="meta">¿En qué meta se reporta? <span class="req">*</span></label>
+            <select id="meta">
+              <option value="">Selecciona…</option>
+              <option value="23">META 23 — Mantenimiento de equipos de cómputo</option>
+              <option value="25">META 25 — Todo lo demás (programas, reuniones, asesorías)</option>
+            </select>
+            <div class="error-msg" id="err-meta">Elige la meta.</div>
+          </div>
+          <div class="campo">
+            <label for="origen">¿De dónde surgió? <span class="req">*</span></label>
+            <input type="text" id="origen" placeholder="Ej. Oficio 205/2026 de CoEEE, convocatoria por correo…">
+            <div class="error-msg" id="err-origen">Escribe el origen (oficio, convocatoria, solicitud).</div>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Actividad</legend>
+        <div class="campo">
+          <label for="tipo-nombre">Tipo y nombre de la actividad <span class="req">*</span></label>
+          <input type="text" id="tipo-nombre" placeholder="Ej. Reunión CUANTRIX · Presentación del Programa">
+          <div class="error-msg" id="err-tipo-nombre">Escribe el tipo y nombre de la actividad.</div>
+        </div>
+        <div class="fila-2">
+          <div class="campo">
+            <label for="fecha-inicio">Fecha <span class="req">*</span></label>
+            <input type="date" id="fecha-inicio">
+            <div class="error-msg" id="err-fecha-inicio">Indica la fecha.</div>
+          </div>
+          <div class="campo">
+            <label for="fecha-fin">Hasta <span class="opcional">(si duró varios días)</span></label>
+            <input type="date" id="fecha-fin">
+            <div class="error-msg" id="err-fecha-fin">No puede ser anterior a la fecha de inicio.</div>
+          </div>
+        </div>
+        <div class="hint" id="fecha-preview"></div>
+        <div class="campo" style="margin-top:1rem;">
+          <label for="responsable">Responsable de la actividad <span class="req">*</span></label>
+          <select id="responsable">
+            <option value="">Selecciona…</option>
+          </select>
+          <input type="text" id="responsable-otro" class="campo-oculto" placeholder="Escribe el responsable" style="margin-top:.5rem;">
+          <div class="error-msg" id="err-responsable">Indica el responsable.</div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Lugar</legend>
+        <div class="campo">
+          <label for="modalidad">Modalidad <span class="req">*</span></label>
+          <select id="modalidad">
+            <option value="">Selecciona…</option>
+            <option value="Presencial">Presencial</option>
+            <option value="Virtual">Virtual</option>
+            <option value="Híbrida">Híbrida</option>
+          </select>
+          <div class="error-msg" id="err-modalidad">Elige la modalidad.</div>
+        </div>
+        <div class="campo campo-oculto" id="wrap-cct">
+          <label for="cct">Sede: escuela, zona o sector <span class="opcional">(CCT o nombre)</span></label>
+          <div class="cct-wrapper">
+            <input type="text" id="cct" placeholder="15DPR0000A o nombre de la escuela" autocomplete="off" autocorrect="off" spellcheck="false">
+            <ul id="cct-suggestions"></ul>
+          </div>
+          <div class="hint">Si la sede no tiene CCT (por ejemplo, un auditorio), escríbela directo en "Lugar".</div>
+        </div>
+        <div class="campo campo-oculto" id="wrap-medio">
+          <label for="medio">Medio</label>
+          <select id="medio">
+            <option value="Microsoft Teams">Microsoft Teams</option>
+            <option value="Google Meet">Google Meet</option>
+            <option value="Zoom">Zoom</option>
+            <option value="el correo institucional">Correo institucional</option>
+            <option value="WhatsApp">WhatsApp</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label for="lugar">Lugar (como va en el reporte) <span class="req">*</span></label>
+          <textarea id="lugar" rows="2" placeholder="Se llena solo al elegir modalidad y sede; puedes corregirlo."></textarea>
+          <div class="error-msg" id="err-lugar">Escribe el lugar de realización.</div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Para el reporte</legend>
+        <div class="campo">
+          <label for="descripcion">Descripción <span class="req">*</span></label>
+          <textarea id="descripcion" rows="5" placeholder="Qué se hizo, con quién y qué resultó."></textarea>
+          <div class="error-msg" id="err-descripcion">Escribe la descripción.</div>
+        </div>
+        <div class="campo">
+          <label for="proposito">Propósito / Objetivo <span class="req">*</span></label>
+          <textarea id="proposito" rows="4"></textarea>
+          <div class="borrador-aviso" id="aviso-proposito">Borrador tomado de "Resultados esperados" de la planeación. Ajústalo a lo que pasó.</div>
+          <div class="error-msg" id="err-proposito">Escribe el propósito.</div>
+        </div>
+        <div class="campo">
+          <label for="beneficiarios">No. y tipo de beneficiarios <span class="req">*</span></label>
+          <textarea id="beneficiarios" rows="3" placeholder="Ej. 1 Director Escolar, 12 docentes, 292 alumnos"></textarea>
+          <div class="borrador-aviso" id="aviso-beneficiarios">Borrador tomado de la planeación. Agrega números reales si los tienes.</div>
+          <div class="error-msg" id="err-beneficiarios">Escribe los beneficiarios.</div>
+        </div>
+      </fieldset>
+
+      <button type="submit" class="btn" id="btn-enviar">Guardar actividad</button>
+      <div class="envio-error" id="envio-error"></div>
+    </form>
+  </div>
+
+  <!-- Pantalla 3: confirmación -->
+  <div class="screen hidden" id="screen-ok">
+    <div class="ok-card">
+      <h2>Actividad guardada</h2>
+      <p id="ok-detalle"></p>
+      <div class="id-final" id="ok-id"></div>
+      <button type="button" class="btn" id="btn-otra">Capturar otra actividad</button>
+    </div>
+  </div>
+</main>
+
+<script src="js/cct-db.js"></script>
+<script src="js/tramites-shared.js"></script>
+<script>
+// URL de despliegue de apps-script/bitacora.gs (ver instrucciones al inicio de ese archivo).
+const BITACORA_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzjWhSUllX0vjy7L5codWnYJwXlJiHay3caZ6oNjB7WPY0lxdDb52eV5BY7psVKqiyd/exec';
+
+const LS_CLAVE = 'otdeBitacoraClave';
+const LS_CAPTURO = 'otdeBitacoraCapturo';
+const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
+  'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+let acciones = [];
+let idEnvioActual = null;
+// Último texto que el formulario puso solo en cada campo: si el usuario no lo
+// tocó, al cambiar de acción se reemplaza; si ya lo editó, se respeta.
+const ultimoBorrador = { proposito: '', beneficiarios: '' };
+let cctSeleccionada = null;
+let ultimoResponsableAuto = '';
+
+const $ = function (id) { return document.getElementById(id); };
+
+function leerLS(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
+function guardarLS(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+function borrarLS(k) { try { localStorage.removeItem(k); } catch (e) {} }
+
+function mostrar(pantalla) {
+  ['screen-clave', 'screen-form', 'screen-ok'].forEach(function (id) {
+    $(id).classList.toggle('hidden', id !== pantalla);
+  });
+  window.scrollTo(0, 0);
+}
+
+function marcarError(id, visible) {
+  const campo = $(id);
+  const msg = $('err-' + id);
+  if (campo) campo.classList.toggle('campo-error', visible);
+  if (msg) msg.classList.toggle('visible', visible);
+}
+
+function nuevoIdEnvio() {
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
+function hoyISO() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+// ── Carga de planeación (valida la clave de paso) ──
+async function cargarPlaneacion(clave) {
+  const url = BITACORA_APPS_SCRIPT_URL + '?action=planeacion&clave=' + encodeURIComponent(clave);
+  return fetchJsonConTimeout(url);
+}
+
+function poblarFormulario(datos) {
+  acciones = datos.acciones || [];
+  const np = $('np');
+  np.innerHTML = '<option value="">Selecciona…</option>';
+  acciones.forEach(function (a) {
+    const o = document.createElement('option');
+    o.value = a.np;
+    const corta = a.accion.length > 70 ? a.accion.slice(0, 70) + '…' : a.accion;
+    o.textContent = 'N.P. ' + a.np + ' — ' + corta;
+    np.appendChild(o);
+  });
+  const o = document.createElement('option');
+  o.value = 'NP';
+  o.textContent = 'No planeada (oficio, convocatoria, solicitud)';
+  np.appendChild(o);
+
+  const resp = $('responsable');
+  resp.innerHTML = '<option value="">Selecciona…</option>';
+  (datos.responsables || []).concat(['Otro']).forEach(function (r) {
+    const op = document.createElement('option');
+    op.value = r;
+    op.textContent = r;
+    resp.appendChild(op);
+  });
+}
+
+async function entrar(clave, capturo) {
+  const d = await cargarPlaneacion(clave);
+  if (d.status === 'no_autorizado') throw new Error('Clave incorrecta.');
+  if (d.status !== 'ok') throw new Error('No se pudo cargar la planeación.');
+  poblarFormulario(d);
+  $('lbl-capturo').textContent = capturo;
+  reiniciarFormulario();
+  mostrar('screen-form');
+}
+
+$('form-clave').addEventListener('submit', async function (ev) {
+  ev.preventDefault();
+  const clave = $('clave').value.trim();
+  const capturo = $('capturo').value;
+  marcarError('clave', !clave);
+  marcarError('capturo', !capturo);
+  if (!clave || !capturo) return;
+
+  const btn = $('btn-clave');
+  const err = $('clave-error');
+  err.classList.remove('visible');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Verificando…';
+  try {
+    await entrar(clave, capturo);
+    guardarLS(LS_CLAVE, clave);
+    guardarLS(LS_CAPTURO, capturo);
+  } catch (e) {
+    err.textContent = e.name === 'AbortError'
+      ? 'El servidor tardó demasiado en responder. Intenta de nuevo.'
+      : (e instanceof TypeError ? 'Error de conexión. Verifica tu internet.' : e.message);
+    err.classList.add('visible');
+  }
+  btn.disabled = false;
+  btn.textContent = 'Entrar';
+});
+
+$('btn-salir').addEventListener('click', function () {
+  borrarLS(LS_CLAVE);
+  borrarLS(LS_CAPTURO);
+  $('clave').value = '';
+  $('capturo').value = '';
+  mostrar('screen-clave');
+});
+
+// ── Planeación → meta, borradores de propósito/beneficiarios/responsable ──
+function aplicarBorrador(campo, texto) {
+  const el = $(campo);
+  if (!el.value.trim() || el.value === ultimoBorrador[campo]) {
+    el.value = texto;
+    ultimoBorrador[campo] = texto;
+    $('aviso-' + campo).classList.toggle('visible', !!texto);
+  }
+}
+
+$('np').addEventListener('change', function () {
+  const valor = this.value;
+  marcarError('np', false);
+  const chip = $('meta-chip');
+  const noPlaneada = valor === 'NP';
+  $('wrap-no-planeada').classList.toggle('campo-oculto', !noPlaneada);
+
+  const a = acciones.find(function (x) { return x.np === valor; });
+  if (a) {
+    chip.textContent = 'Se reporta en META ' + a.meta;
+    chip.classList.remove('campo-oculto');
+    aplicarBorrador('proposito', a.resultados);
+    aplicarBorrador('beneficiarios', a.beneficiarios);
+    // Preselecciona el responsable solo si la planeación nombra exactamente uno del catálogo.
+    const opciones = Array.from($('responsable').options).map(function (o) { return o.value; })
+      .filter(function (v) { return v && v !== 'Otro'; });
+    const coinciden = opciones.filter(function (r) {
+      return a.responsables.toLowerCase().indexOf(r.toLowerCase()) !== -1;
+    });
+    const sel = $('responsable');
+    if (!sel.value || sel.value === ultimoResponsableAuto) {
+      sel.value = coinciden.length === 1 ? coinciden[0] : '';
+      ultimoResponsableAuto = sel.value;
+      if (sel.value) marcarError('responsable', false);
+    }
+  } else {
+    chip.classList.add('campo-oculto');
+    aplicarBorrador('proposito', '');
+    aplicarBorrador('beneficiarios', '');
+  }
+});
+
+['proposito', 'beneficiarios'].forEach(function (campo) {
+  $(campo).addEventListener('input', function () {
+    $('aviso-' + campo).classList.remove('visible');
+    marcarError(campo, false);
+  });
+});
+
+$('responsable').addEventListener('change', function () {
+  $('responsable-otro').classList.toggle('campo-oculto', this.value !== 'Otro');
+  marcarError('responsable', false);
+});
+
+// ── Fecha: vista previa del texto que irá al reporte (misma regla que bitFechaTexto_) ──
+function fechaDesdeISO(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+  return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : null;
+}
+
+function fechaTexto(inicio, fin) {
+  const dia = function (f) { return f.getDate(); };
+  const mes = function (f) { return MESES[f.getMonth()]; };
+  const anio = function (f) { return f.getFullYear(); };
+  if (!fin || fin.getTime() === inicio.getTime()) return dia(inicio) + ' de ' + mes(inicio) + ' de ' + anio(inicio);
+  const mismoMes = inicio.getMonth() === fin.getMonth() && anio(inicio) === anio(fin);
+  if (mismoMes && dia(fin) - dia(inicio) === 1) return 'Los días ' + dia(inicio) + ' y ' + dia(fin) + ' de ' + mes(fin) + ' de ' + anio(fin);
+  if (mismoMes) return 'Del ' + dia(inicio) + ' al ' + dia(fin) + ' de ' + mes(fin) + ' de ' + anio(fin);
+  const anioInicio = anio(inicio) === anio(fin) ? '' : ' de ' + anio(inicio);
+  return 'Del ' + dia(inicio) + ' de ' + mes(inicio) + anioInicio + ' al ' + dia(fin) + ' de ' + mes(fin) + ' de ' + anio(fin);
+}
+
+function actualizarFechaPreview() {
+  const ini = fechaDesdeISO($('fecha-inicio').value);
+  const fin = fechaDesdeISO($('fecha-fin').value);
+  const prev = $('fecha-preview');
+  if (!ini) { prev.textContent = ''; return; }
+  if (fin && fin < ini) { prev.textContent = ''; return; }
+  prev.textContent = 'En el reporte: "' + fechaTexto(ini, fin) + '" · se cuenta en el reporte de ' + MESES[ini.getMonth()] + '.';
+}
+['fecha-inicio', 'fecha-fin'].forEach(function (id) {
+  $(id).addEventListener('change', function () {
+    marcarError('fecha-inicio', false);
+    marcarError('fecha-fin', false);
+    actualizarFechaPreview();
+  });
+});
+
+// ── Lugar: se arma solo a partir de modalidad + sede/medio, y queda editable ──
+let ultimoLugarAuto = '';
+
+function describirSede(m) {
+  if (!m) return '';
+  switch (m.tipo) {
+    case 'escuela':
+      return 'la Escuela Primaria "' + m.nombre + '", C.C.T. ' + m.cct + ', Zona ' + m.zona + ', Sector ' + m.sector;
+    case 'supervision':
+      return 'la ' + m.nombre + ', Sector ' + m.sector + ', C.C.T. ' + m.cct;
+    case 'jefatura':
+      return 'la ' + m.nombre + ', C.C.T. ' + m.cct;
+    default:
+      return 'la ' + m.nombre;
+  }
+}
+
+function componerLugar() {
+  const modalidad = $('modalidad').value;
+  const sede = describirSede(cctSeleccionada);
+  const medio = $('medio').value;
+  if (modalidad === 'Presencial') return sede ? 'Presencial en ' + sede + '.' : '';
+  if (modalidad === 'Virtual') return 'Virtual, a través de ' + medio + '.';
+  if (modalidad === 'Híbrida') return 'Híbrida: ' + (sede ? 'en ' + sede + ' y ' : '') + 'a través de ' + medio + '.';
+  return '';
+}
+
+function actualizarLugar() {
+  const lugar = $('lugar');
+  const nuevo = componerLugar();
+  if (!lugar.value.trim() || lugar.value === ultimoLugarAuto) {
+    lugar.value = nuevo;
+    ultimoLugarAuto = nuevo;
+  }
+  if (lugar.value.trim()) marcarError('lugar', false);
+}
+
+$('modalidad').addEventListener('change', function () {
+  const m = this.value;
+  $('wrap-cct').classList.toggle('campo-oculto', m !== 'Presencial' && m !== 'Híbrida');
+  $('wrap-medio').classList.toggle('campo-oculto', m !== 'Virtual' && m !== 'Híbrida');
+  marcarError('modalidad', false);
+  actualizarLugar();
+});
+$('medio').addEventListener('change', actualizarLugar);
+$('lugar').addEventListener('input', function () { marcarError('lugar', false); });
+
+// Autocompletado de sede por CCT o nombre (CCT_DB de js/cct-db.js).
+(function initCct() {
+  const input = $('cct');
+  const lista = $('cct-suggestions');
+  input.addEventListener('input', function () {
+    cctSeleccionada = null;
+    const q = input.value.trim().toUpperCase();
+    lista.innerHTML = '';
+    if (q.length < 3) { lista.style.display = 'none'; actualizarLugar(); return; }
+    const matches = CCT_DB.filter(function (e) {
+      return e.cct.indexOf(q) !== -1 || e.nombre.toUpperCase().indexOf(q) !== -1;
+    }).slice(0, 8);
+    matches.forEach(function (m) {
+      const li = document.createElement('li');
+      const codigo = document.createElement('span');
+      codigo.className = 'sg-code';
+      codigo.textContent = m.cct;
+      const nombre = document.createElement('span');
+      nombre.className = 'sg-name';
+      nombre.textContent = m.nombre + (m.zona ? ' · Z' + m.zona : '') + ' · S' + m.sector;
+      li.appendChild(codigo);
+      li.appendChild(nombre);
+      li.addEventListener('mousedown', function () {
+        cctSeleccionada = m;
+        input.value = m.cct;
+        lista.style.display = 'none';
+        actualizarLugar();
+      });
+      lista.appendChild(li);
+    });
+    lista.style.display = matches.length ? 'block' : 'none';
+    actualizarLugar();
+  });
+  input.addEventListener('blur', function () {
+    setTimeout(function () { lista.style.display = 'none'; }, 150);
+    if (!cctSeleccionada) {
+      const exacto = buscarCCT(input.value);
+      if (exacto) { cctSeleccionada = exacto; actualizarLugar(); }
+    }
+  });
+})();
+
+['tipo-nombre', 'descripcion', 'origen', 'meta'].forEach(function (id) {
+  $(id).addEventListener(id === 'meta' ? 'change' : 'input', function () { marcarError(id, false); });
+});
+
+// ── Validación y envío ──
+function validar() {
+  let ok = true;
+  const req = function (id, valido) { marcarError(id, !valido); if (!valido) ok = false; };
+  const np = $('np').value;
+  req('np', !!np);
+  if (np === 'NP') {
+    req('meta', !!$('meta').value);
+    req('origen', !!$('origen').value.trim());
+  }
+  req('tipo-nombre', !!$('tipo-nombre').value.trim());
+  const ini = fechaDesdeISO($('fecha-inicio').value);
+  const fin = fechaDesdeISO($('fecha-fin').value);
+  req('fecha-inicio', !!ini);
+  if (ini && fin) req('fecha-fin', fin >= ini);
+  const resp = $('responsable').value;
+  req('responsable', !!resp && (resp !== 'Otro' || !!$('responsable-otro').value.trim()));
+  req('modalidad', !!$('modalidad').value);
+  req('lugar', !!$('lugar').value.trim());
+  req('descripcion', !!$('descripcion').value.trim());
+  req('proposito', !!$('proposito').value.trim());
+  req('beneficiarios', !!$('beneficiarios').value.trim());
+  if (!ok) {
+    const primero = document.querySelector('.campo-error');
+    if (primero) primero.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  return ok;
+}
+
+$('form-actividad').addEventListener('submit', async function (ev) {
+  ev.preventDefault();
+  if (!validar()) return;
+
+  const btn = $('btn-enviar');
+  const errorBox = $('envio-error');
+  errorBox.classList.remove('visible');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Guardando…';
+
+  const np = $('np').value;
+  const accion = acciones.find(function (a) { return a.np === np; });
+  const resp = $('responsable').value;
+  // El mismo idEnvio se conserva en reintentos: si el primer intento sí llegó
+  // al servidor, el segundo no duplica la fila.
+  if (!idEnvioActual) idEnvioActual = nuevoIdEnvio();
+
+  const payload = {
+    clave: leerLS(LS_CLAVE) || $('clave').value.trim(),
+    capturo: leerLS(LS_CAPTURO) || $('capturo').value,
+    idEnvio: idEnvioActual,
+    np: np === 'NP' ? '' : np,
+    meta: np === 'NP' ? $('meta').value : (accion ? accion.meta : ''),
+    origen: np === 'NP' ? $('origen').value.trim() : '',
+    tipoNombre: $('tipo-nombre').value.trim(),
+    fechaInicio: $('fecha-inicio').value,
+    fechaFin: $('fecha-fin').value,
+    responsable: resp === 'Otro' ? $('responsable-otro').value.trim() : resp,
+    modalidad: $('modalidad').value,
+    lugar: $('lugar').value.trim(),
+    cct: cctSeleccionada ? cctSeleccionada.cct : '',
+    descripcion: $('descripcion').value.trim(),
+    proposito: $('proposito').value.trim(),
+    beneficiarios: $('beneficiarios').value.trim()
+  };
+
+  try {
+    const d = await fetchJsonConTimeout(BITACORA_APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
+    if (d.status === 'ok') {
+      const mesNum = Number(String(d.mes || '').split('-')[1]);
+      $('ok-detalle').textContent = 'META ' + d.meta + ' · ' + (d.fechaTexto || '') +
+        (mesNum ? ' · entra en el reporte de ' + MESES[mesNum - 1] : '');
+      $('ok-id').textContent = d.id;
+      idEnvioActual = null;
+      mostrar('screen-ok');
+    } else if (d.status === 'no_autorizado') {
+      errorBox.textContent = 'La clave de captura ya no es válida. Toca "cambiar" arriba y escribe la nueva.';
+      errorBox.classList.add('visible');
+    } else {
+      errorBox.textContent = d.mensaje || 'No se pudo guardar. Intenta de nuevo.';
+      errorBox.classList.add('visible');
+    }
+  } catch (e) {
+    errorBox.textContent = e.name === 'AbortError'
+      ? 'El servidor tardó demasiado en responder. Toca "Guardar" otra vez: no se duplicará.'
+      : 'Error de conexión. Verifica tu internet e intenta de nuevo.';
+    errorBox.classList.add('visible');
+  }
+  btn.disabled = false;
+  btn.textContent = 'Guardar actividad';
+});
+
+function reiniciarFormulario() {
+  $('form-actividad').reset();
+  document.querySelectorAll('#form-actividad .campo-error').forEach(function (el) { el.classList.remove('campo-error'); });
+  document.querySelectorAll('#form-actividad .error-msg, #form-actividad .borrador-aviso').forEach(function (el) { el.classList.remove('visible'); });
+  ['wrap-no-planeada', 'wrap-cct', 'wrap-medio', 'meta-chip', 'responsable-otro'].forEach(function (id) {
+    $(id).classList.add('campo-oculto');
+  });
+  $('envio-error').classList.remove('visible');
+  $('fecha-inicio').value = hoyISO();
+  ultimoBorrador.proposito = '';
+  ultimoBorrador.beneficiarios = '';
+  ultimoLugarAuto = '';
+  ultimoResponsableAuto = '';
+  cctSeleccionada = null;
+  idEnvioActual = null;
+  actualizarFechaPreview();
+}
+
+$('btn-otra').addEventListener('click', function () {
+  reiniciarFormulario();
+  mostrar('screen-form');
+});
+
+// ── Arranque: si el dispositivo ya tiene clave, entra directo ──
+(async function iniciar() {
+  const clave = leerLS(LS_CLAVE);
+  const capturo = leerLS(LS_CAPTURO);
+  if (!clave || !capturo) { mostrar('screen-clave'); return; }
+  try {
+    await entrar(clave, capturo);
+  } catch (e) {
+    if (e.message === 'Clave incorrecta.') { borrarLS(LS_CLAVE); }
+    $('capturo').value = capturo;
+    $('clave-error').textContent = e.name === 'AbortError'
+      ? 'El servidor tardó demasiado en responder. Intenta de nuevo.'
+      : (e instanceof TypeError ? 'Error de conexión. Verifica tu internet.' : e.message);
+    $('clave-error').classList.add('visible');
+    mostrar('screen-clave');
+  }
+})();
+</script>
+
+</body>
+</html>

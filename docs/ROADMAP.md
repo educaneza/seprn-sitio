@@ -743,14 +743,19 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     pendiente también decidir si mantener la prueba más allá de los 14 días (~$151.20 MXN/mes
     con el plan flexible) o cancelarla antes del 6 oct 2026 para evitar el cobro.
 
-27. **Operación interna OTDE — plan de 5 fases, no iniciado** (23 sep 2026, ver
+27. **Operación interna OTDE — Fase 1 desplegada, falta validarla con datos reales** (23-24 sep 2026, ver
     `docs/PLAN-OPERACION-INTERNA.md` y `docs/BITACORA.md` checkpoint "cont. 2"): bitácora única
     con reporte mensual automático, control de oficios con recordatorios, padrón de programas por
     CCT con consulta móvil, `.ics` mensual para Outlook y tablero, este último ampliando el
-    `apps-script/panel-otde.gs` existente. **Para arrancar la Fase 1** Jorge debe traer el Word de
-    la planeación institucional 2026-2027 y el del reporte mensual (uno en blanco y uno ya
-    entregado). Pendiente de verificar en la Fase 2: si la licencia M365 de `@dee.edu.mx` incluye
-    Power Automate para capturar oficios automáticamente desde Outlook.
+    `apps-script/panel-otde.gs` existente. **Fase 1 (24 sep 2026):** `apps-script/bitacora.gs` +
+    `bitacora.html` escritos y probados localmente (Node con hoja simulada + Playwright con backend
+    interceptado). El reporte resultó ser un Excel en SharePoint (no Word), una pestaña por meta
+    (OTDE solo usa 23 y 25): la salida es una pestaña "Reporte AAAA-MM" con las mismas celdas
+    combinadas, para copiar y pegar. **Desplegada el 24 sep 2026** (Jorge creó el Sheet y desplegó; URL ya en
+    `BITACORA_APPS_SCRIPT_URL`; `doGet` verificado con `curl`, rechaza clave inválida). **Falta:** capturar
+    las 5 actividades reales de septiembre y confirmar que el pegado en el Excel real respeta las
+    celdas combinadas. Pendiente de verificar en la Fase 2: si la licencia M365 de `@dee.edu.mx`
+    incluye Power Automate para capturar oficios automáticamente desde Outlook.
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue
