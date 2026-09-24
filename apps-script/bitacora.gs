@@ -830,7 +830,7 @@ function bitManDescripcion_(g) {
     ? 'Implementar acciones de mantenimiento preventivo y correctivo en los equipos de cómputo de uso administrativo de ' + bitManSede_(g)
     : 'Rehabilitar el Aula de Medios de ' + bitManSede_(g) + (g.turno ? ', Turno ' + g.turno : '') +
       ', mediante acciones de mantenimiento preventivo y correctivo en sus equipos de cómputo';
-  texto += ', donde se atendieron ' + atendidos + ' equipo' + (atendidos === 1 ? '' : 's') +
+  texto += (atendidos === 1 ? ', donde se atendió 1 equipo' : ', donde se atendieron ' + atendidos + ' equipos') +
     (modelos.length ? ' (' + modelos.join(', ') + ')' : '');
   // Solo la inicial en minúscula: "Actualización de Windows" → "actualización de Windows".
   if (trabajos.length) texto += ', en los que se realizó: ' + trabajos.map(function (t) {
@@ -838,7 +838,9 @@ function bitManDescripcion_(g) {
   }).join('; ');
   texto += '.';
   if (instalado.length) texto += ' Se instaló: ' + instalado.join(', ') + '.';
-  if (!g.admin && admin) texto += ' Además se atendieron ' + admin + ' equipo' + (admin === 1 ? '' : 's') + ' de uso administrativo.';
+  if (!g.admin && admin) texto += admin === 1
+    ? ' Además se atendió 1 equipo de uso administrativo.'
+    : ' Además se atendieron ' + admin + ' equipos de uso administrativo.';
   if (notas.length) texto += ' ' + notas.map(function (n) { return /[.!?]$/.test(n) ? n : n + '.'; }).join(' ');
   texto += ' Equipos totales: ' + (atendidos + (g.admin ? 0 : admin)) + '.';
   return texto;
