@@ -1337,6 +1337,13 @@ que el contenido sea más útil para OTDE, y que la captura siga siendo fácil y
   (`manListarReportesMes_`) devuelve los reportes del mes cruzados con `Solicitudes`, con el mismo
   `PANEL_TOKEN` de `?action=pendientes`. Es solo lectura. Lo consume `apps-script/bitacora.gs`,
   ver §26.
+- **Asesorías: Fecha de realización y Asistentes + lectura para la Bitácora OTDE (24 sep 2026).**
+  `Solicitudes` de `asesorias.gs` tiene 2 columnas al final (X/Y,
+  `COL_ASE_FECHA_REALIZACION`/`COL_ASE_ASISTENTES`) que Nancy llena al marcar "Resuelto". Tienen
+  validación suave y las crea `aseConfigurarValidacionYSemaforo()`, que ahora pasa por
+  `aseObtenerHojaSolicitudes()` para completar encabezados. `doGet ?action=asesoriasMes&mes=…&token=…`
+  (`aseListarResueltasMes_`) devuelve las resueltas del mes. Si falta la fecha de realización,
+  usa la programada y lo marca con `fechaFuente`.
 
 ## 16. Webform de Correo Institucional en paralelo al Google Form (agosto 2026)
 
@@ -2493,5 +2500,15 @@ una actividad de META 23 / N.P. 7 sin recapturarla:
   quedan como "1 Director Escolar\n12 docentes\n292 alumnos"; si el reporte no trae cifras, se
   usa el texto de la planeación. Capturó = `BIT_CAPTURO_MAN`.
 
-**Pendiente:** Asesorías con Estatus "Resuelto" → N.P. 8, mismo patrón. Ver `docs/ROADMAP.md`
-ítem 27.
+**Asesorías resueltas (24 sep 2026), mismo patrón.** `bitImportarAsesorias_` pide
+`?action=asesoriasMes` (§15) al backend guardado en `ASE_URL` y crea una actividad de META 25 /
+N.P. 8 por folio (`ID de envío` `ASE:<folio>`). Tipo `BIT_TIPO_ASE_BANCO` o `BIT_TIPO_ASE_EXCEL`;
+lugar con el mismo `bitManSede_`; descripción `bitAseDescripcion_` (Excel incluye los temas
+elegidos); beneficiarios `bitAseBeneficiarios_` con los *Asistentes* o, si faltan, el número
+solicitado. Si falta la fecha de realización o los asistentes, el aviso lista los folios que hay
+que revisar. Las dos importaciones comparten `bitConfigurarConexion_` (el `PANEL_TOKEN` se pide una
+sola vez), `bitConsultarBackend_` y `bitAgregarActividades_` (alta con `LockService`, sin tocar
+filas existentes).
+
+**Sigue a mano:** la asesoría de IA (N.P. 9; el formulario de Asesorías no tiene ese tipo), Soporte
+y Correo (sin acción en la planeación). Ver `docs/ROADMAP.md` ítem 27.

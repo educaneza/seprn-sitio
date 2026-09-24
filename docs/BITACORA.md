@@ -14,6 +14,21 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-09-24 (cont. 2) · Bitácora OTDE: las asesorías resueltas llegan solas (META 25, N.P. 8), desplegado; falta el primer caso real
+
+| | |
+|---|---|
+| **Fecha** | 2026-09-24 |
+| **Sesión** | Segundo paso de la alimentación automática, con el mismo patrón que Mantenimiento: las asesorías con Estatus "Resuelto" de `asesorias.gs` se vuelven actividades de la bitácora. |
+| **Hallazgo** | Asesorías no tiene nada equivalente al reporte de visita: al marcar "Resuelto" no quedaba registrado cuándo se dio la asesoría ni cuántas personas asistieron (solo "Fecha programada de visita" y el "Número de Docentes" solicitado). Revisada en vivo, la hoja real tiene una sola solicitud (`OTDE-ASE-0001`) en "Pendiente de validar". Tampoco hay ejemplo de asesoría en el Excel entregado, así que el texto se armó a partir de la acción N.P. 8 de la planeación. |
+| **Decisiones de Jorge** | (1) **Dos columnas que llena Nancy** al marcar "Resuelto": *Fecha de realización* y *Asistentes*. Si faltan, se usa la fecha programada y el número solicitado, y la bitácora avisa. Se descartó un formulario post-asesoría por ser más trabajo. (2) **La asesoría de IA (N.P. 9) no entra por ahora:** el formulario solo tiene Banco de Materiales y Chuka y Excel básico, que corresponden al N.P. 8. |
+| **Construido** | `asesorias.gs`: columnas X/Y (`COL_ASE_FECHA_REALIZACION`/`COL_ASE_ASISTENTES`) con validación suave de fecha y número, creadas por "Aplicar validación y semáforo"; endpoint de solo lectura `?action=asesoriasMes` (`aseListarResueltasMes_`, `PANEL_TOKEN`). `bitacora.gs`: menús "Traer asesorías resueltas" y "Configurar conexión con Asesorías" (`ASE_URL`; reutiliza el `PANEL_TOKEN` guardado). `bitImportarAsesorias_` crea una actividad por folio (`ASE:<folio>`) con `BIT_TIPO_ASE_BANCO`/`BIT_TIPO_ASE_EXCEL`, descripción (`bitAseDescripcion_`, incluye los temas de Excel) y beneficiarios (`bitAseBeneficiarios_`). "Generar reporte del mes" trae Mantenimiento y Asesorías. La importación de Mantenimiento se reorganizó para compartir conexión, consulta y alta de filas (`bitConfigurarConexion_`, `bitConsultarBackend_`, `bitAgregarActividades_`) sin cambiar su comportamiento. |
+| **Verificación** | Local: `node --check` de los dos archivos y prueba con hoja simulada en Node (1 visita + 2 asesorías en la primera corrida, 0 nuevas en la segunda; aviso "sin fecha de realización ni asistentes" cuando faltan). Producción: Jorge desplegó los dos proyectos; "Traer asesorías resueltas" devuelve 0 nuevas sin error, y las columnas X/Y aparecen en la hoja real. **Falta** importar un caso real, cuando haya una asesoría en "Resuelto". |
+| **Documentación actualizada** | Este checkpoint, `docs/ARCHITECTURE.md` §15 y §26, `docs/ROADMAP.md` ítem 27, `docs/PLAN-OPERACION-INTERNA.md`, `CLAUDE.md` (secciones de `asesorias.gs` y `bitacora.gs`, pendientes). |
+| **Commits** | `4bc68b7` y el commit de cierre. |
+
+---
+
 ## CHECKPOINT — 2026-09-24 (cont.) · Bitácora OTDE: las visitas de Mantenimiento llegan solas (META 23, N.P. 7), en producción y verificada
 
 | | |

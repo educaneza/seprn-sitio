@@ -447,6 +447,10 @@ ya esté expandido).
   Asesoría`/`Turno`/`Confirmó Mantenimiento Previo`/`Tipo de solicitante`, semáforo de color en
   `Estatus`, aviso de "columna automática" en `Fecha`/`Folio`/`Oficio`/las 2 columnas de
   Notificación. No toca la validación de `Estatus` ya existente. Ver `docs/ARCHITECTURE.md §24`.
+- **Fecha de realización + Asistentes y `?action=asesoriasMes` para la Bitácora OTDE (24 sep 2026,
+  desplegado)**: columnas X/Y en `Solicitudes`, que Nancy llena al marcar "Resuelto" (las crea
+  "Aplicar validación y semáforo"). `aseListarResueltasMes_` devuelve las resueltas del mes con el
+  mismo `PANEL_TOKEN`; lo consume `apps-script/bitacora.gs`. Ver `docs/ARCHITECTURE.md §15`.
 
 ### `apps-script/formacion-docente.gs`
 **Desplegado en producción desde jul 2026** (Spreadsheet real `Formacion_Docente_2026_2027`, URL real ya pegada en `APPS_SCRIPT_URL` de `formacion-docente.html`; la extinta `jornada-verano-2026.html` compartió este mismo backend hasta su eliminación el 13 jul 2026).
@@ -572,6 +576,10 @@ ya esté expandido).
   también las trae antes de armar el reporte. Crea una actividad por folio y mes en META 23 /
   N.P. 7, con `ID de envío` `MAN:<folio>:<mes>`, y nunca pisa una fila existente. En el reporte
   se presenta como rehabilitación del Aula de Medios (`BIT_TIPO_MAN_AULA`, decisión de Jorge).
+- **Asesorías resueltas (24 sep 2026, desplegado)**: menús "Traer asesorías resueltas" y
+  "Configurar conexión con Asesorías" (`ASE_URL`; reutiliza el `PANEL_TOKEN`). Una actividad por
+  folio en META 25 / N.P. 8 (`ASE:<folio>`); avisa si falta la fecha de realización o los
+  asistentes. "Generar reporte del mes" trae Mantenimiento y Asesorías.
 - Detalle completo en `docs/ARCHITECTURE.md §26`
 
 ### `apps-script/visitas-jefes.gs` (nuevo, ago 2026)
@@ -1118,9 +1126,10 @@ Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/I
   reporte mensual (`apps-script/bitacora.gs` + `bitacora.html`), probada con las 5 actividades
   reales de septiembre y pegada en el Excel real de Planeación. **Alimentación desde Mantenimiento
   en producción (24 sep 2026, cont.)**: las visitas llegan solas a META 23, N.P. 7. Pendiente
-  de Jorge: cifras de Beneficiarios en BIT-0006 a 0009, confirmar los folios `OTDE-MAN-0001`/`0002`
-  y pegar `bitacora.gs` con el arreglo del singular. **Siguiente:** Asesorías resueltas → N.P. 8,
-  mismo patrón. Luego la Fase 2 (oficios y recordatorios; antes verificar Power Automate
+  de Jorge: cifras de Beneficiarios en BIT-0006 a 0009 y confirmar los folios `OTDE-MAN-0001`/`0002`
+  (el arreglo del singular ya está desplegado, llegó con la versión de Asesorías). **Asesorías resueltas → N.P. 8 desplegado
+  (cont. 2)**: falta importar el primer caso real, y que Nancy llene *Fecha de realización* y
+  *Asistentes* al cerrar. La asesoría de IA (N.P. 9), Soporte y Correo siguen a mano. Luego la Fase 2 (oficios y recordatorios; antes verificar Power Automate
   en M365 y conseguir 1-2 oficios reales). Ver `docs/ROADMAP.md` ítem 27. Ver `docs/PLAN-OPERACION-INTERNA.md` y `docs/ROADMAP.md` ítem 27.
 - **Formación Docente — cuota de correo, decidir antes del 6 oct 2026**: Brevo quedó descartado.
   Se activó una prueba de Google Workspace Business Starter, pero la documentación oficial de
