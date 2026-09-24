@@ -358,6 +358,13 @@ ya esté expandido).
   `OTDE-MAN-0016` con `Estatus=Resuelto` desde el alta y nota automática correcta, y se confirmó
   que **no** se dispara el correo de "solicitud recibida" (solo el del reporte) — comportamiento
   esperado. Sin bugs encontrados en esta ronda.
+- **Docentes/alumnos + `?action=reportesMes` para la Bitácora OTDE (24 sep 2026, desplegado y
+  verificado en vivo)**: columnas AB/AC `Docentes de la escuela`/`Alumnos de la escuela` en
+  "Reportes de visita" (obligatorias, aceptan 0), capturadas en `reporte-visita.html`.
+  `manListarReportesMes_` devuelve los reportes de un mes cruzados con `Solicitudes`, con el
+  mismo `PANEL_TOKEN` de `?action=pendientes`; lo consume `apps-script/bitacora.gs`. **Orden de
+  despliegue** si vuelven a cambiar campos obligatorios: publicar primero `reporte-visita.html` y
+  después el `.gs`, o el formulario viejo quedaría rechazado. Ver `docs/ARCHITECTURE.md §15`.
 
 ### `apps-script/asesorias.gs`
 - **Nuevo (ago 2026)**: mismo patrón que `mantenimiento.gs` (Sheet propio con hojas
@@ -559,6 +566,12 @@ ya esté expandido).
   (idempotente; también agrega y llena "Nombre corto" si falta) · Configurar clave de captura
 - Para cambios: pegar el `.gs` completo y **Administrar implementaciones → Editar → Nueva
   versión** (misma URL). Si el cambio toca hojas, correr "Preparar hojas" después
+- **Alimentación automática desde Mantenimiento (24 sep 2026, en producción)**: menús "Traer
+  visitas de Mantenimiento" y "Configurar conexión con Mantenimiento" (Script Properties
+  `MAN_URL` + `PANEL_TOKEN`, capturadas en cuadros de diálogo). "Generar reporte del mes"
+  también las trae antes de armar el reporte. Crea una actividad por folio y mes en META 23 /
+  N.P. 7, con `ID de envío` `MAN:<folio>:<mes>`, y nunca pisa una fila existente. En el reporte
+  se presenta como rehabilitación del Aula de Medios (`BIT_TIPO_MAN_AULA`, decisión de Jorge).
 - Detalle completo en `docs/ARCHITECTURE.md §26`
 
 ### `apps-script/visitas-jefes.gs` (nuevo, ago 2026)
@@ -1103,10 +1116,11 @@ Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/I
 `docs/BITACORA.md` para el historial de qué ya se hizo. Resumen de lo genuinamente abierto:
 - **Operación interna OTDE — Fase 1 en producción y validada (24 sep 2026)**: bitácora +
   reporte mensual (`apps-script/bitacora.gs` + `bitacora.html`), probada con las 5 actividades
-  reales de septiembre y pegada en el Excel real de Planeación. **Siguiente, recomendado:
-  alimentación automática** (los reportes de visita de Mantenimiento crean su actividad en
-  META 23, N.P. 7; después Asesorías resueltas → N.P. 8), porque hoy esas actividades se
-  capturan dos veces. Luego la Fase 2 (oficios y recordatorios; antes verificar Power Automate
+  reales de septiembre y pegada en el Excel real de Planeación. **Alimentación desde Mantenimiento
+  en producción (24 sep 2026, cont.)**: las visitas llegan solas a META 23, N.P. 7. Pendiente
+  de Jorge: cifras de Beneficiarios en BIT-0006 a 0009, confirmar los folios `OTDE-MAN-0001`/`0002`
+  y pegar `bitacora.gs` con el arreglo del singular. **Siguiente:** Asesorías resueltas → N.P. 8,
+  mismo patrón. Luego la Fase 2 (oficios y recordatorios; antes verificar Power Automate
   en M365 y conseguir 1-2 oficios reales). Ver `docs/ROADMAP.md` ítem 27. Ver `docs/PLAN-OPERACION-INTERNA.md` y `docs/ROADMAP.md` ítem 27.
 - **Formación Docente — cuota de correo, decidir antes del 6 oct 2026**: Brevo quedó descartado.
   Se activó una prueba de Google Workspace Business Starter, pero la documentación oficial de

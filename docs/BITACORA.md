@@ -14,6 +14,23 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-09-24 (cont.) · Bitácora OTDE: las visitas de Mantenimiento llegan solas (META 23, N.P. 7), en producción y verificada
+
+| | |
+|---|---|
+| **Fecha** | 2026-09-24 |
+| **Sesión** | Primer paso de la alimentación automática recomendada en el checkpoint anterior: quitar la doble captura de las visitas de Mantenimiento, que el técnico ya registra en `reporte-visita.html` y que Jorge o Nancy volvían a teclear en `bitacora.html`. |
+| **Referencia** | La pestaña META 23 del Excel entregado reporta **una fila por escuela visitada**, con la descripción de equipos, software y "Equipos totales: N" y Beneficiarios en la forma "1 Director Escolar / 12 docentes / 292 alumnos". Ningún sistema guardaba docentes ni alumnos. |
+| **Decisiones de Jorge** | (1) **La bitácora jala los datos** (pull), no Mantenimiento los empuja: el envío del técnico, que ya es lento (PDF, fotos, correo), no se toca, y se traen también las visitas anteriores. (2) El técnico captura **docentes y alumnos de la escuela**. (3) En el reporte, la acción se presenta como **rehabilitación del Aula de Medios**; la ejecución sigue siendo el mantenimiento. Se conserva "mantenimiento preventivo y correctivo" porque es lo que dice el N.P. 7, y las visitas solo administrativas mantienen el texto de mantenimiento. |
+| **Construido** | `mantenimiento.gs`: endpoint de solo lectura `?action=reportesMes&mes=AAAA-MM&token=…` (`manListarReportesMes_`, mismo `PANEL_TOKEN` del Panel OTDE) que cruza "Reportes de visita" con `Solicitudes`; columnas nuevas AB/AC "Docentes de la escuela"/"Alumnos de la escuela" (`COL_MAN_REP_DOCENTES`/`COL_MAN_REP_ALUMNOS`), obligatorias y que aceptan 0 (`manEnteroNoNegativo_`). `reporte-visita.html`: los 2 campos numéricos en "Aula al llegar". `bitacora.gs`: menús "Traer visitas de Mantenimiento" (`bitTraerMantenimiento`) y "Configurar conexión con Mantenimiento" (`MAN_URL` + `PANEL_TOKEN` en cuadros de diálogo); `bitImportarMantenimiento_` agrupa por folio y mes (dos días = rango de fechas), usa `ID de envío` `MAN:<folio>:<mes>` y no toca filas que ya existen; textos en `bitManSede_`/`bitManDescripcion_`/`bitManBeneficiarios_`; "Generar reporte del mes" trae las visitas antes de armar el reporte y, si falla, genera el reporte igual y avisa. |
+| **Despliegue** | Primero `reporte-visita.html` (GitHub Pages lo sirvió en ~150 s), después `mantenimiento.gs` y `bitacora.gs`: al revés, el formulario viejo no manda docentes ni alumnos y el backend nuevo rechazaría los reportes. Jorge desplegó y configuró la conexión. |
+| **Verificación** | Local: `node --check` de los 3 archivos; funciones de texto probadas en Node (dos visitas del mismo folio en días seguidos → "Los días 21 y 22…", visita a una jefatura → texto administrativo); campos nuevos probados en Playwright (vacío marca error; 12 y 0 pasan). Producción: la primera corrida trajo **4 visitas** de septiembre (BIT-0006 a 0009: `OTDE-MAN-0015`, `0023`, `0001`, `0002`) y **la segunda, 0 nuevas · 4 ya estaban**. Filas revisadas en Chrome: lugar, descripción y propósito salen con el formato esperado. Se corrigió el singular ("se atendió 1 equipo"), que salió mal en BIT-0006. Los reportes de prueba (`OTDE-MAN-0014`/`0016`) no llegaron. |
+| **Queda para Jorge** | Confirmar que `OTDE-MAN-0001`/`0002` son visitas reales; poner a mano las cifras de Beneficiarios de las 4 filas (son anteriores a los campos nuevos); corregir BIT-0006 y quitar la frase repetida de equipos administrativos en BIT-0008; pegar el `bitacora.gs` con el arreglo del singular (Nueva versión). |
+| **Documentación actualizada** | Este checkpoint, `docs/ARCHITECTURE.md` §15 y §26, `docs/ROADMAP.md` ítem 27, `docs/PLAN-OPERACION-INTERNA.md`, `CLAUDE.md` (secciones de `mantenimiento.gs` y `bitacora.gs`, pendientes). |
+| **Commits** | `8634c50` (alimentación desde Mantenimiento), `8408e8c` (singular) y el commit de cierre. |
+
+---
+
 ## CHECKPOINT — 2026-09-24 · Operación interna OTDE, Fase 1: bitácora única y reporte mensual (construida, desplegada y validada con datos reales)
 
 | | |

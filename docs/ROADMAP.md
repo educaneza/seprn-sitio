@@ -743,7 +743,7 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     pendiente también decidir si mantener la prueba más allá de los 14 días (~$151.20 MXN/mes
     con el plan flexible) o cancelarla antes del 6 oct 2026 para evitar el cobro.
 
-27. **Operación interna OTDE — Fase 1 en producción y validada; sigue la Fase 2** (23-24 sep 2026, ver
+27. **Operación interna OTDE — Fase 1 en producción y validada; alimentación desde Mantenimiento en producción; siguen Asesorías y la Fase 2** (23-24 sep 2026, ver
     `docs/PLAN-OPERACION-INTERNA.md` y `docs/BITACORA.md` checkpoint "cont. 2"): bitácora única
     con reporte mensual automático, control de oficios con recordatorios, padrón de programas por
     CCT con consulta móvil, `.ics` mensual para Outlook y tablero, este último ampliando el
@@ -756,9 +756,11 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     día:** las 5 actividades reales de septiembre (BIT-0001 a 0005) se capturaron, el reporte se
     generó y Jorge lo pegó en el Excel real de SharePoint sin problemas con las celdas combinadas.
     Mismo día: nombres cortos para las acciones en el formulario (columna "Nombre corto" en
-    `Planeacion`). **Siguiente, en este orden:** (a) **alimentación automática**, para quitar la
-    doble captura: `reporte-visita.html`/`mantenimiento.gs` crea la actividad en META 23, N.P. 7;
-    después Asesorías con Estatus "Resuelto" → N.P. 8; decidir con Jorge qué hacer con Soporte
+    `Planeacion`). **Alimentación desde Mantenimiento en producción (24 sep 2026, cont.):** la
+    bitácora trae los reportes de visita como actividades de META 23, N.P. 7 (menú "Traer visitas
+    de Mantenimiento", y también al generar el reporte). Verificado: 4 visitas de septiembre y 0
+    duplicados en la segunda corrida. Ver `docs/ARCHITECTURE.md §26`. **Siguiente, en este orden:**
+    (a) Asesorías con Estatus "Resuelto" → N.P. 8, mismo patrón; decidir con Jorge qué hacer con Soporte
     remoto y Correo, que no tienen acción en la planeación (¿cada caso, un resumen mensual o
     nada?). (b) Fase 2 (oficios y recordatorios). Pendiente de verificar en la Fase 2: si la licencia M365 de `@dee.edu.mx`
     incluye Power Automate para capturar oficios automáticamente desde Outlook.

@@ -1330,6 +1330,13 @@ que el contenido sea más útil para OTDE, y que la captura siga siendo fácil y
   correr `manActivarModoPrueba('correo')` contra producción real antes de confiar el flujo con
   datos reales. Bug real encontrado y corregido en la prueba: mensajes de error del fallback
   manual quedaban pegados en rojo al alternar la respuesta — ver `docs/QA-NOTES.md #32`.
+- **Docentes y alumnos + lectura para la Bitácora OTDE (24 sep 2026).** "Reportes de visita" tiene
+  2 columnas más al final (AB/AC, `COL_MAN_REP_DOCENTES`/`COL_MAN_REP_ALUMNOS`), obligatorias en
+  `reporte-visita.html` y en `manValidarDatosReporte_()`. Aceptan 0, por eso no usan el
+  `requerido()` genérico, que trataría el 0 como vacío. `doGet ?action=reportesMes&mes=AAAA-MM&token=…`
+  (`manListarReportesMes_`) devuelve los reportes del mes cruzados con `Solicitudes`, con el mismo
+  `PANEL_TOKEN` de `?action=pendientes`. Es solo lectura. Lo consume `apps-script/bitacora.gs`,
+  ver §26.
 
 ## 16. Webform de Correo Institucional en paralelo al Google Form (agosto 2026)
 
@@ -2464,6 +2471,27 @@ en el reporte.
 - **Fuera de alcance por ahora:** evidencia fotográfica (sigue un PDF por mes armado a mano) y el
   encabezado de cada pestaña del Excel (mes y fecha, a mano).
 
-**Pendiente (alimentación automática):** los sistemas que ya registran actividades (reportes de
-visita de `mantenimiento.gs`, asesorías resueltas) todavía no escriben en `Actividades`, así que
-hoy esas actividades se capturan dos veces. Ver `docs/ROADMAP.md` ítem 27.
+**Alimentación automática desde Mantenimiento (24 sep 2026).** Cada reporte de visita se vuelve
+una actividad de META 23 / N.P. 7 sin recapturarla:
+- **Pull, no push:** la bitácora pide los reportes a `mantenimiento.gs ?action=reportesMes` (§15)
+  con `UrlFetchApp` (`bitImportarMantenimiento_`). El envío del técnico no cambia, y si la bitácora
+  falla no se pierde ninguna visita. La URL y el `PANEL_TOKEN` viven en Script Properties
+  (`MAN_URL`, `PANEL_TOKEN`) y se capturan en cuadros de diálogo
+  (`bitConfigurarConexionMantenimiento`).
+- **Cuándo corre:** con el menú "Traer visitas de Mantenimiento" (`bitTraerMantenimiento`) y
+  siempre al inicio de `bitGenerarReporteMensual`. Si falla, el reporte se genera igual y el aviso
+  final lo dice.
+- **Una actividad por folio y mes** (`bitAgruparVisitasMan_`): dos días en la misma escuela
+  quedan como rango de fechas y las cifras se suman. `ID de envío` = `MAN:<folio>:<AAAA-MM>`; si
+  la fila ya existe no se toca, así lo corregido a mano no se pisa al volver a importar.
+- **Textos:** la meta y el N.P. salen de `Planeacion` (`BIT_NP_MANTENIMIENTO`). El tipo es
+  `BIT_TIPO_MAN_AULA` (se presenta como rehabilitación del Aula de Medios, decisión de Jorge) o
+  `BIT_TIPO_MAN_ADMIN` si la visita fue solo administrativa. Qué cuenta como administrativa lo
+  decide `bitManTipoCct_`: tipo de solicitante, o el prefijo de la CCT si viene vacío, más el
+  tipo de equipo. Lugar (`bitManSede_`) y descripción (`bitManDescripcion_`) calcan el Excel real.
+  El propósito es "Resultados esperados" del N.P. 7. Los beneficiarios (`bitManBeneficiarios_`)
+  quedan como "1 Director Escolar\n12 docentes\n292 alumnos"; si el reporte no trae cifras, se
+  usa el texto de la planeación. Capturó = `BIT_CAPTURO_MAN`.
+
+**Pendiente:** Asesorías con Estatus "Resuelto" → N.P. 8, mismo patrón. Ver `docs/ROADMAP.md`
+ítem 27.

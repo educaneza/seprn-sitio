@@ -125,8 +125,11 @@ Así lo que ya queda registrado no se vuelve a capturar.
 ## Siguiente paso concreto
 Fase 1 construida (24 sep): `apps-script/bitacora.gs` y `bitacora.html`, probados localmente. Desplegada, publicada y **validada** el mismo día: las 5 actividades reales de septiembre (BIT-0001 a 0005) generaron un reporte que Jorge pegó en el Excel real de SharePoint sin problemas con las celdas combinadas. Mismo día: nombres cortos para las acciones en el formulario.
 
+**24 sep (cont.): alimentación desde Mantenimiento en producción.** La bitácora jala los reportes de visita (`?action=reportesMes` de `mantenimiento.gs`, con `PANEL_TOKEN`) y crea una actividad por folio y mes en META 23 / N.P. 7. En el reporte se presenta como "Rehabilitación del Aula de Medios mediante mantenimiento preventivo y correctivo…". El técnico ahora captura docentes y alumnos para los Beneficiarios. Verificado con 4 visitas reales de septiembre, sin duplicados al repetir. Detalle en `docs/ARCHITECTURE.md §26`.
+
 **Próxima sesión, en este orden:**
-1. **Alimentación automática** (la segunda iteración de la Fase 1 descrita arriba). Empezar por Mantenimiento: al guardar un reporte de visita, `mantenimiento.gs` crea su actividad en `Actividades` (META 23, N.P. 7), con fecha, escuela/CCT y la descripción de la atención. Decidir el mecanismo: que `mantenimiento.gs` llame por `UrlFetchApp` al `doPost` de la bitácora (con la clave), o que la bitácora lea los reportes, como el Panel OTDE. Después, Asesorías resueltas → N.P. 8. Soporte y Correo no tienen acción en la planeación: preguntar a Jorge si se reportan.
+1. ~~**Alimentación automática** desde Mantenimiento~~ (hecho el 24 sep). Sigue Asesorías resueltas → N.P. 8 con el mismo patrón. Texto original del paso:
+   **Alimentación automática** (la segunda iteración de la Fase 1 descrita arriba). Empezar por Mantenimiento: al guardar un reporte de visita, `mantenimiento.gs` crea su actividad en `Actividades` (META 23, N.P. 7), con fecha, escuela/CCT y la descripción de la atención. Decidir el mecanismo: que `mantenimiento.gs` llame por `UrlFetchApp` al `doPost` de la bitácora (con la clave), o que la bitácora lea los reportes, como el Panel OTDE. Después, Asesorías resueltas → N.P. 8. Soporte y Correo no tienen acción en la planeación: preguntar a Jorge si se reportan.
 2. **Fase 2 (oficios):** antes, que Jorge verifique Power Automate en su cuenta M365 (make.powerautomate.com) y comparta 1-2 oficios reales.
 
 **Decisiones de construcción (24 sep):**
