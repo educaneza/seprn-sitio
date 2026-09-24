@@ -763,9 +763,11 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     (24 sep 2026, cont. 2):** desplegado; Nancy llena *Fecha de realización* y *Asistentes* al
     cerrar. Conexión verificada (0 nuevas, sin error); **falta importar el primer caso real**
     cuando haya una asesoría en "Resuelto". **Siguiente, en este orden:**
-    (a) decidir si la asesoría de IA (N.P. 9) entra como tipo nuevo en `asesorias.html`, y con Jorge qué hacer con Soporte
-    remoto y Correo, que no tienen acción en la planeación (¿cada caso, un resumen mensual o
-    nada?). (b) Fase 2 (oficios y recordatorios). Pendiente de verificar en la Fase 2: si la licencia M365 de `@dee.edu.mx`
+    (a) **alimentación desde Formación Docente, Soporte y Correo** (plan aprobado el 24 sep,
+    `docs/PLAN-OPERACION-INTERNA.md` §"Alimentación desde Formación Docente, Soporte y Correo"):
+    Formación Docente con una fila por curso y mes en META 25 (paso A, sigue este); Soporte en META 23
+    y Correo en META 25, cada uno con una fila de resumen mensual; la asesoría de IA (N.P. 9) sigue a
+    mano por ahora. (b) Fase 2 (oficios y recordatorios). Pendiente de verificar en la Fase 2: si la licencia M365 de `@dee.edu.mx`
     incluye Power Automate para capturar oficios automáticamente desde Outlook.
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver

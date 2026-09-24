@@ -14,6 +14,21 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-09-24 (cont. 3) · Plan aprobado: Formación Docente, Soporte y Correo alimentan la Bitácora OTDE (solo planeación, sin código)
+
+| | |
+|---|---|
+| **Fecha** | 2026-09-24 |
+| **Sesión** | Antes de la Fase 2 (oficios), Jorge pidió una estrategia para que los cursos de Formación Docente, Soporte remoto y las solicitudes de Correo institucional también generen su parte del reporte mensual sin captura manual. |
+| **Revisado en el código** | Formación Docente tiene lo necesario en `Cursos`/`Inscripciones`, pero no tiene endpoint con token ni un vínculo con la planeación. Soporte **no guarda la fecha de resolución** (`sopOnEditCierre` solo anota "Sí"). Correo tiene `Fecha de entrega` en 4 de sus 5 hojas; falta revisar Incidencias. |
+| **Estrategia** | Mismo pull con `PANEL_TOKEN` que Mantenimiento y Asesorías. Por el límite de 17 filas por meta: eventos → **una fila por evento** (Formación Docente); trámites de alto volumen → **una fila de resumen mensual** (Soporte, Correo). |
+| **Decisiones de Jorge** | Aceptó las recomendaciones: Soporte en **META 23** y Correo en **META 25**; un curso de varios meses va **en cada mes** con desarrollo; Soporte y Correo como resumen mensual; todo **antes** de la Fase 2. Orden: A Formación Docente (columna `NP_planeacion` en `Cursos`), B Soporte (columna `Fecha de atención` llenada al cerrar), C Correo. |
+| **Duda resuelta** | Jorge preguntó si puede editar la planeación directo en el Sheet y agregar acciones. Sí: `Planeacion` manda y se lee en cada consulta, y el formulario no la guarda en el navegador. Cuidados: N.P. único y meta 23/25; "Nombre corto" a mano para acciones nuevas; no insertar ni reordenar columnas antes de "Nombre corto" (`bitLeerPlaneacion_` las lee por posición); no renumerar los N.P. 7 y 8 (la alimentación automática los busca por número). |
+| **Documentación actualizada** | Este checkpoint, `docs/PLAN-OPERACION-INTERNA.md` (sección nueva con el plan completo y las reglas para editar la planeación), `docs/ROADMAP.md` ítem 27, `docs/ARCHITECTURE.md §26` (reglas de edición de `Planeacion`), `CLAUDE.md` (sección de `bitacora.gs` y pendientes). |
+| **Commits** | Solo el commit de cierre. |
+
+---
+
 ## CHECKPOINT — 2026-09-24 (cont. 2) · Bitácora OTDE: las asesorías resueltas llegan solas (META 25, N.P. 8), desplegado; falta el primer caso real
 
 | | |

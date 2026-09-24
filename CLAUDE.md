@@ -580,6 +580,9 @@ ya esté expandido).
   "Configurar conexión con Asesorías" (`ASE_URL`; reutiliza el `PANEL_TOKEN`). Una actividad por
   folio en META 25 / N.P. 8 (`ASE:<folio>`); avisa si falta la fecha de realización o los
   asistentes. "Generar reporte del mes" trae Mantenimiento y Asesorías.
+- **La planeación se edita en el Sheet** (hoja `Planeacion`) y se ve al instante en el formulario.
+  Se pueden agregar filas con N.P. único y meta 23/25, y el "Nombre corto" va a mano. No insertar
+  ni reordenar columnas antes de "Nombre corto" (lectura por posición) ni renumerar los N.P. 7/8.
 - Detalle completo en `docs/ARCHITECTURE.md §26`
 
 ### `apps-script/visitas-jefes.gs` (nuevo, ago 2026)
@@ -1129,7 +1132,10 @@ Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/I
   de Jorge: cifras de Beneficiarios en BIT-0006 a 0009 y confirmar los folios `OTDE-MAN-0001`/`0002`
   (el arreglo del singular ya está desplegado, llegó con la versión de Asesorías). **Asesorías resueltas → N.P. 8 desplegado
   (cont. 2)**: falta importar el primer caso real, y que Nancy llene *Fecha de realización* y
-  *Asistentes* al cerrar. La asesoría de IA (N.P. 9), Soporte y Correo siguen a mano. Luego la Fase 2 (oficios y recordatorios; antes verificar Power Automate
+  *Asistentes* al cerrar. La asesoría de IA (N.P. 9), Soporte y Correo siguen a mano. **Siguiente (plan
+  aprobado 24 sep, cont. 3):** alimentación desde Formación Docente (paso A: `NP_planeacion` en
+  `Cursos` + `?action=cursosMes`, una fila por curso y mes en META 25), después Soporte (META 23)
+  y Correo (META 25) como resumen mensual; ver `docs/PLAN-OPERACION-INTERNA.md`. Luego la Fase 2 (oficios y recordatorios; antes verificar Power Automate
   en M365 y conseguir 1-2 oficios reales). Ver `docs/ROADMAP.md` ítem 27. Ver `docs/PLAN-OPERACION-INTERNA.md` y `docs/ROADMAP.md` ítem 27.
 - **Formación Docente — cuota de correo, decidir antes del 6 oct 2026**: Brevo quedó descartado.
   Se activó una prueba de Google Workspace Business Starter, pero la documentación oficial de

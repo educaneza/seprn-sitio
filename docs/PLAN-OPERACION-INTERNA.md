@@ -130,7 +130,62 @@ Fase 1 construida (24 sep): `apps-script/bitacora.gs` y `bitacora.html`, probado
 **Próxima sesión, en este orden:**
 1. ~~**Alimentación automática** desde Mantenimiento~~ y ~~Asesorías resueltas → N.P. 8~~ (hecho el 24 sep; Asesorías usa las columnas *Fecha de realización* y *Asistentes* que Nancy llena al cerrar, y falta el primer caso real). La asesoría de IA (N.P. 9), Soporte y Correo siguen a mano. Texto original del paso:
    **Alimentación automática** (la segunda iteración de la Fase 1 descrita arriba). Empezar por Mantenimiento: al guardar un reporte de visita, `mantenimiento.gs` crea su actividad en `Actividades` (META 23, N.P. 7), con fecha, escuela/CCT y la descripción de la atención. Decidir el mecanismo: que `mantenimiento.gs` llame por `UrlFetchApp` al `doPost` de la bitácora (con la clave), o que la bitácora lea los reportes, como el Panel OTDE. Después, Asesorías resueltas → N.P. 8. Soporte y Correo no tienen acción en la planeación: preguntar a Jorge si se reportan.
-2. **Fase 2 (oficios):** antes, que Jorge verifique Power Automate en su cuenta M365 (make.powerautomate.com) y comparta 1-2 oficios reales.
+2. **Alimentación desde Formación Docente, Soporte y Correo** (plan aprobado el 24 sep, ver la sección de abajo). Va **antes** de la Fase 2, por decisión de Jorge. Se empieza por el paso A (Formación Docente).
+3. **Fase 2 (oficios):** antes, que Jorge verifique Power Automate en su cuenta M365 (make.powerautomate.com) y comparta 1-2 oficios reales.
+
+## Alimentación desde Formación Docente, Soporte y Correo (plan aprobado el 24 sep 2026)
+
+**Estrategia.** Es el mismo mecanismo que Mantenimiento y Asesorías: cada backend expone un endpoint de solo lectura `?action=<x>Mes&mes=AAAA-MM&token=…` (`PANEL_TOKEN`), la bitácora lo jala con `bitConsultarBackend_` y da de alta las filas con `bitAgregarActividades_` (`ID de envío` único, nunca pisa lo corregido a mano). "Generar reporte del mes" agrega una fuente más a su lista, y cada fuente tiene su menú "Traer…" y "Configurar conexión con…".
+
+**Criterio de detalle (límite de 17 filas por meta):**
+- **Eventos** (pocos al mes): una fila por evento. Aplica a Formación Docente.
+- **Trámites de alto volumen:** una fila de **resumen mensual** con totales y desglose. Aplica a Soporte y Correo; caso por caso, en un mes normal llenarían las 17 filas.
+
+**Decisiones de Jorge (24 sep):**
+- Soporte va en **META 23** (atención a equipos, igual que mantenimiento) y Correo en **META 25**. Los dos entran como no planeados, con origen.
+- Un curso que dura varios meses aparece **en cada mes en que tiene desarrollo** (fechas de inicio y fin que se cruzan con el mes). `ID de envío` = `FD:<ID_Curso>:<AAAA-MM>`.
+- Soporte y Correo, como **resumen mensual**.
+- Todo esto va **antes** de la Fase 2.
+
+**Qué hay hoy (revisado en el código el 24 sep):**
+- **Formación Docente:** `Cursos` tiene fechas de inicio y fin, `Responsable`, `Categoria`, `Descripcion`, `Dirigido_a` y `Modalidad`. `Inscripciones` tiene los inscritos por `ID_Curso` con `Sector`/`Zona` y, en UNETE, `Constancia_recibida`. No tiene endpoint con token ni un vínculo con la planeación.
+- **Soporte (`soporte-remoto.gs`):** fecha de la solicitud, `Tipo de ayuda`, `Urgencia`, CCT, sector, `Función/Cargo` y `Estatus`. **No guarda la fecha de resolución**: `sopOnEditCierre` solo anota "Sí" en `Notificación de cierre enviada`.
+- **Correo (`correo/`):** una hoja por tipo, con `Fecha de entrega` en Alta, Cambio de Contraseña, Reset 2FA y Cambio+Reset, y `Estado general`. Falta confirmar si Incidencias tiene una fecha de cierre equivalente.
+
+**Pasos (uno por sesión, cada uno verificado en vivo antes del siguiente):**
+
+**A. Formación Docente → META 25, una fila por curso y mes** (sigue este)
+- `formacion-docente.gs`:
+  - Columna nueva opcional en `Cursos`: **`NP_planeacion`**, al final, con el auto-heal de `obtenerHojaCursos()`.
+  - `PANEL_TOKEN` (función de configuración con cuadro de diálogo, no argumento: QA-NOTES #14).
+  - Endpoint `?action=cursosMes`: cursos cuyo desarrollo se cruza con el mes, con los inscritos totales y por sector, y las constancias recibidas si aplica.
+- `bitacora.gs`: fuente "Formación Docente" (`FD_URL`).
+  - N.P. = `NP_planeacion`; la meta sale de `Planeacion`. Si está vacía, queda como no planeada en META 25, con origen "Convocatoria de <Responsable>".
+  - Tipo: "<Categoría>: <Nombre>". Fecha: la parte del curso que cae en el mes. Responsable: `Responsable`. Lugar: "Virtual, a través de …" según `Modalidad`.
+  - Descripción: `Descripcion` más la difusión y el registro por OTDE. Propósito: "Resultados esperados" del N.P., o `Descripcion` si no tiene N.P.
+  - Beneficiarios: "N docentes inscritos" con desglose por sector, más "N constancias recibidas" en UNETE.
+- Verificación: `ACF-2627-001` (IA) y la conferencia UNETE `CNF-2627-001` (119 inscritos) en su mes; la segunda corrida debe dar 0 nuevas.
+
+**B. Soporte → META 23, resumen mensual**
+- `soporte-remoto.gs`: columna `Fecha de atención`, que `sopOnEditCierre` llena sola al marcar Resuelto, y endpoint `?action=soporteMes`.
+- `bitacora.gs`: una fila por mes (`ID de envío` `SOP:<AAAA-MM>`).
+  - Descripción: "Se atendieron N solicitudes: por tipo de ayuda…, en los sectores…".
+  - Beneficiarios: por función (docentes, directores, administrativos).
+- Las resueltas antes de este cambio no tienen fecha de atención. Se usa la fecha de la solicitud y se avisa.
+
+**C. Correo → META 25, resumen mensual**
+- `correo/WebApp.gs`: endpoint `?action=correoMes` que junta las 5 hojas por `Fecha de entrega`. Antes, revisar la fecha de cierre de Incidencias.
+- `bitacora.gs`: una fila por mes (`CORREO:<AAAA-MM>`).
+  - Descripción: "Gestión de cuentas de correo institucional ante SIGEE: N altas, N cambios de contraseña, N eliminaciones de método de autenticación, N combinados, N incidencias resueltas".
+  - Beneficiarios: el total.
+
+**D. Fuera de este plan:** si Mantenimiento se acerca a 17 visitas en un mes (el reporte ya avisa), decidir si se agrupan. La asesoría de IA (N.P. 9) sigue a mano hasta que haya solicitudes reales.
+
+**Editar la planeación en el Sheet (respuesta a Jorge, 24 sep):** sí se puede. La hoja `Planeacion` manda y se lee en cada consulta; el formulario de la bitácora no la guarda en el navegador. Hay 4 cuidados:
+- Una acción nueva lleva `N.P.` único y `Meta` 23 o 25. Su "Nombre corto" se escribe a mano (el automático solo existe para las 9 originales).
+- No insertar ni reordenar columnas antes de "Nombre corto": `bitLeerPlaneacion_` las lee por posición. Agregar filas o editar textos sí se puede.
+- No cambiar el número de los N.P. 7 y 8: la alimentación automática de Mantenimiento y Asesorías los busca por número (`BIT_NP_MANTENIMIENTO`, `BIT_NP_ASESORIAS`).
+- Si se cambia la meta de una acción, las actividades ya registradas conservan la que tenían.
 
 **Decisiones de construcción (24 sep):**
 - **Clave de captura** (`CLAVE_CAPTURA`, se configura desde el menú con un cuadro de diálogo): la URL del backend es visible en el sitio público, así que sin clave cualquiera podría leer la planeación o meter actividades. Se escribe una vez por dispositivo.

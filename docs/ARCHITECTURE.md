@@ -2511,4 +2511,12 @@ sola vez), `bitConsultarBackend_` y `bitAgregarActividades_` (alta con `LockServ
 filas existentes).
 
 **Sigue a mano:** la asesoría de IA (N.P. 9; el formulario de Asesorías no tiene ese tipo), Soporte
-y Correo (sin acción en la planeación). Ver `docs/ROADMAP.md` ítem 27.
+y Correo (sin acción en la planeación). Ya hay plan aprobado para Formación Docente, Soporte y Correo
+(`docs/PLAN-OPERACION-INTERNA.md`). Ver `docs/ROADMAP.md` ítem 27.
+
+**Editar la planeación.** `Planeacion` se puede editar en el Sheet y agregar acciones: se lee en cada
+consulta y el formulario no la guarda en el navegador. `bitLeerPlaneacion_` lee por posición las
+primeras 9 columnas (N.P., Acción, Resultados esperados, Beneficiarios, Responsables, Meta…) y busca
+"Nombre corto" por encabezado. Por eso se pueden agregar filas y editar textos, pero no insertar ni
+reordenar columnas antes. La meta debe ser 23 o 25. Los N.P. 7 y 8 no se renumeran: los buscan
+`BIT_NP_MANTENIMIENTO` y `BIT_NP_ASESORIAS`.
