@@ -1086,10 +1086,10 @@ de la sesión realmente volvió obsoletos.
 ## Pendientes vigentes
 Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/Identidad) y
 `docs/BITACORA.md` para el historial de qué ya se hizo. Resumen de lo genuinamente abierto:
-- **Operación interna OTDE — Fase 1 desplegada (24 sep 2026), falta validarla con datos reales** (bitácora + reporte mensual;
-  después oficios, padrón, agenda y tablero sobre el Panel OTDE existente).
-  `apps-script/bitacora.gs` + `bitacora.html` en producción; falta capturar las actividades de
-  septiembre y confirmar el pegado en el Excel real. Ver `docs/PLAN-OPERACION-INTERNA.md` y `docs/ROADMAP.md` ítem 27.
+- **Operación interna OTDE — Fase 1 en producción y validada (24 sep 2026)**: bitácora +
+  reporte mensual (`apps-script/bitacora.gs` + `bitacora.html`), probada con las 5 actividades
+  reales de septiembre y pegada en el Excel real de Planeación. Sigue la Fase 2 (oficios y
+  recordatorios); después padrón, agenda y tablero sobre el Panel OTDE existente. Ver `docs/PLAN-OPERACION-INTERNA.md` y `docs/ROADMAP.md` ítem 27.
 - **Formación Docente — cuota de correo, decidir antes del 6 oct 2026**: Brevo quedó descartado.
   Se activó una prueba de Google Workspace Business Starter, pero la documentación oficial de
   cuotas de Apps Script dice que las cuentas de prueba tienen límites extra y el 1,500/día solo

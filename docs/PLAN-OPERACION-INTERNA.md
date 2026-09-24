@@ -123,7 +123,7 @@ Así lo que ya queda registrado no se vuelve a capturar.
 - Evoluciona el Panel OTDE existente, no se construye aparte. Lee la Bitácora, los oficios, el padrón y los trámites existentes: pendientes, oficios por vencer, avance de la planeación y actividades por programa o zona.
 
 ## Siguiente paso concreto
-Fase 1 construida (24 sep): `apps-script/bitacora.gs` y `bitacora.html`, probados localmente. Desplegada y publicada el mismo día (URL en `BITACORA_APPS_SCRIPT_URL`). Falta la verificación de abajo con las actividades reales de septiembre.
+Fase 1 construida (24 sep): `apps-script/bitacora.gs` y `bitacora.html`, probados localmente. Desplegada, publicada y **validada** el mismo día: las 5 actividades reales de septiembre (BIT-0001 a 0005) generaron un reporte que Jorge pegó en el Excel real de SharePoint sin problemas con las celdas combinadas. Siguiente: Fase 2.
 
 **Decisiones de construcción (24 sep):**
 - **Clave de captura** (`CLAVE_CAPTURA`, se configura desde el menú con un cuadro de diálogo): la URL del backend es visible en el sitio público, así que sin clave cualquiera podría leer la planeación o meter actividades. Se escribe una vez por dispositivo.

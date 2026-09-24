@@ -743,7 +743,7 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     pendiente también decidir si mantener la prueba más allá de los 14 días (~$151.20 MXN/mes
     con el plan flexible) o cancelarla antes del 6 oct 2026 para evitar el cobro.
 
-27. **Operación interna OTDE — Fase 1 desplegada, falta validarla con datos reales** (23-24 sep 2026, ver
+27. **Operación interna OTDE — Fase 1 en producción y validada; sigue la Fase 2** (23-24 sep 2026, ver
     `docs/PLAN-OPERACION-INTERNA.md` y `docs/BITACORA.md` checkpoint "cont. 2"): bitácora única
     con reporte mensual automático, control de oficios con recordatorios, padrón de programas por
     CCT con consulta móvil, `.ics` mensual para Outlook y tablero, este último ampliando el
@@ -752,9 +752,10 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     interceptado). El reporte resultó ser un Excel en SharePoint (no Word), una pestaña por meta
     (OTDE solo usa 23 y 25): la salida es una pestaña "Reporte AAAA-MM" con las mismas celdas
     combinadas, para copiar y pegar. **Desplegada el 24 sep 2026** (Jorge creó el Sheet y desplegó; URL ya en
-    `BITACORA_APPS_SCRIPT_URL`; `doGet` verificado con `curl`, rechaza clave inválida). **Falta:** capturar
-    las 5 actividades reales de septiembre y confirmar que el pegado en el Excel real respeta las
-    celdas combinadas. Pendiente de verificar en la Fase 2: si la licencia M365 de `@dee.edu.mx`
+    `BITACORA_APPS_SCRIPT_URL`; `doGet` verificado con `curl`, rechaza clave inválida). **Validada el mismo
+    día:** las 5 actividades reales de septiembre (BIT-0001 a 0005) se capturaron, el reporte se
+    generó y Jorge lo pegó en el Excel real de SharePoint sin problemas con las celdas combinadas.
+    **Siguiente:** Fase 2 (oficios y recordatorios). Pendiente de verificar en la Fase 2: si la licencia M365 de `@dee.edu.mx`
     incluye Power Automate para capturar oficios automáticamente desde Outlook.
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver

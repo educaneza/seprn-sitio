@@ -1139,6 +1139,21 @@ para cupo agotado y para cierre con hora ya pasada.
 también en el servidor, no existe. Y cualquier filtro de "visible" aplicado antes de separar
 casos que tienen reglas de visibilidad distintas.
 
+## 43. `<input type="text">` quitaba los saltos de línea de "Tipo y nombre" en la bitácora
+
+**Síntoma:** 24 sep 2026, al capturar las actividades reales de septiembre en `bitacora.html`, el
+reporte mostró "CUANTRIXCronograma de capacitaciones…" en vez de dos renglones como en el Excel de
+Planeación ("CUANTRIX" + salto + "Cronograma…").
+
+**Causa raíz:** un `<input type="text">` elimina los `\n` de su `value`, aunque se asigne por
+código. El formato real del Excel usa dos renglones en esa columna (programa + actividad).
+
+**Fix:** el campo pasó a `<textarea rows="2">`. Las 3 celdas afectadas se corrigieron a mano en la
+hoja `Actividades` y el reporte se regeneró.
+
+**Regla:** si el destino de un texto admite varios renglones (celdas del reporte), el campo de
+captura debe ser `<textarea>`, aunque normalmente se llene con una sola línea.
+
 ## Regla general al corregir cualquiera de estos patrones
 
 Cuando se encuentra uno de estos bugs en un archivo, **revisar si el mismo

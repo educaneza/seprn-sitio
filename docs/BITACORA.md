@@ -14,6 +14,16 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-09-24 · Operación interna OTDE, Fase 1: bitácora y reporte mensual (construida, desplegada y validada)
+
+- **Insumos revisados** (`docs/insumos/`, en `.gitignore`: son documentos internos): el reporte mensual es un **Excel en SharePoint** compartido con Planeación, no un Word. Tiene una pestaña por meta y OTDE solo usa la 23 (mantenimiento) y la 25 (lo demás), con filas de actividad de la 14 a la 30. No hay rubro de "no planeadas" y la evidencia es un PDF por mes. La planeación 2026-2027 tiene 9 acciones con su meta.
+- **Construido:** `apps-script/bitacora.gs` (hojas Planeacion/Actividades/Config, clave de captura, meta tomada de la planeación, `ID de envío` + `LockService`, menú "Generar reporte del mes" con pestaña "Reporte AAAA-MM" que replica las celdas combinadas del Excel) y `bitacora.html` (formulario móvil `noindex` con borradores desde la planeación y lugar/fecha autogenerados).
+- **Despliegue** (Jorge): Sheet "Bitácora OTDE 2026-2027". Primer intento de entrada fallido: se agregó el estado `sin_clave` para distinguir "sin clave configurada" de "clave incorrecta" (commit `64b8c98`).
+- **Validación con datos reales:** se capturaron desde Chrome las 5 actividades de septiembre (BIT-0001 a 0005, texto exacto del Excel entregado). Salieron dos cosas:
+  - Dos guardados tardaron más de 30s en regresar al navegador, aunque Apps Script terminó en ~1s. No se duplicaron. El formulario ahora espera 60s y el reintento devuelve la confirmación completa (`ebe9657`).
+  - "Tipo y nombre" perdía los saltos de línea; ahora es un textarea (`a41a796`, `docs/QA-NOTES.md` #43).
+  - Reporte generado y **pegado por Jorge en el Excel real sin problemas**.
+
 ## CHECKPOINT — 2026-09-23 (cont. 2) · Plan de operación interna OTDE: bitácora única, oficios, padrón de programas, agenda y tablero (solo planeación, sin código)
 
 | | |
