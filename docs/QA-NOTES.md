@@ -1213,7 +1213,17 @@ envío cortado a 1.5 s (`OTDE-ASE-0002`, 7.9 s en el servidor) y dos reintentos,
 par de correos `[PRUEBA]`. La fila de prueba quedó `Rechazado`; el modo de prueba ya está
 desactivado.
 
-**Dónde puede volver a pasar:** `soporte-remoto.gs`/`soporte.html` todavía tiene el mismo
-`doPost` sin candado ni llave de idempotencia. En general, cualquier formulario cuyo mensaje de error invite a reintentar debe
+**Extendido a Soporte (25 sep 2026, mismo día, en producción y verificado en vivo):** mismo
+patrón en `soporte-remoto.gs`/`soporte.html` (`sopBuscarEnvioPrevio_()`, `ID de envío` en la
+columna Q; el respaldo sin `idEnvio` compara CCT + correo + descripción). Soporte no sube oficio,
+así que un duplicado ahí solo repetía la fila y los avisos. Misma prueba: envío cortado a 1.5 s
+(`OTDE-SOP-0004`, 4.2 s en el servidor) y dos reintentos, con y sin `idEnvio`, en 1.7 s y 3.4 s →
+mismo folio, una fila y un solo par de correos `[PRUEBA]`. La fila de prueba quedó `Rechazado`;
+el modo de prueba ya está desactivado.
+
+**Dónde puede volver a pasar:** los 3 trámites con `doPost` de alta (Mantenimiento, Asesorías,
+Soporte) ya están cubiertos. Queda revisar Correo (`apps-script/correo/WebApp.gs`, 5 tipos) con el
+mismo criterio. Para cualquier `doPost` nuevo: si el mensaje de error del formulario invita a
+reintentar, el backend tiene que reconocer el reintento. En general, cualquier formulario cuyo mensaje de error invite a reintentar debe
 tener un backend que reconozca el reintento: que el navegador "no recibió respuesta" no significa
 que el servidor no guardó.
