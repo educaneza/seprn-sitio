@@ -48,8 +48,11 @@ const HOJA_SOPORTE = 'Solicitudes_Soporte_2026';
 const ENCABEZADOS_SOPORTE = [
   'Fecha', 'Folio', 'Nombre', 'CCT', 'Sector', 'Zona',
   'Escuela/Unidad', 'Función/Cargo', 'WhatsApp', 'Correo', 'Descripción', 'Urgencia', 'Tipo de ayuda',
-  'Estatus', 'Notas de revisión', 'Notificación de cierre enviada'
+  'Estatus', 'Notas de revisión', 'Notificación de cierre enviada', 'ID de envío'
 ];
+// Ventana del respaldo anti-duplicados para envíos sin idEnvio (páginas viejas en caché):
+// misma CCT + correo + descripción dentro de estos minutos = mismo envío.
+const SOP_VENTANA_DUPLICADO_MIN = 10;
 const COL_SOP_ESTATUS = 14;
 const COL_SOP_NOTIFICACION_CIERRE = 16;
 const ESTADOS_SOP_VALIDOS = ['Pendiente de validar', 'Validado', 'En atención', 'Resuelto', 'Rechazado'];
@@ -203,29 +206,51 @@ function doPost(e) {
     const datos = JSON.parse(e.postData.contents);
     validarCampos(datos);
 
-    const hoja  = obtenerHojaSoporte();
-    const folio = generarFolioSoporte(hoja);
-    const ahora = new Date();
+    // LockService + "ID de envío" generado en el navegador: si la confirmación se pierde
+    // en el camino (el servidor sí guardó) y la persona vuelve a presionar Enviar, el
+    // reintento devuelve el mismo folio en vez de crear otro (QA-NOTES #44, mismo
+    // patrón que mantenimiento.gs/asesorias.gs).
+    const lock = LockService.getScriptLock();
+    try {
+      lock.waitLock(20000);
+    } catch (errLock) {
+      return textResponse(JSON.stringify({ status: 'error', mensaje: 'El sistema está ocupado, intenta de nuevo en unos segundos.' }));
+    }
 
-    hoja.appendRow([
-      ahora,
-      folio,
-      datos.nombre.trim(),
-      datos.cct.trim().toUpperCase(),
-      (datos.sector || '').trim(),
-      (datos.zona || '').toString().trim(),
-      (datos.escuela || '').trim(),
-      datos.funcion.trim(),
-      datos.whatsapp.trim(),
-      (datos.correo || '').trim(),
-      datos.descripcion.trim(),
-      datos.urgencia.trim(),
-      (datos.tipoAyuda || '').trim(),
-      'Pendiente de validar',
-      '',
-      ''
-    ]);
+    let folio;
+    try {
+      const hoja = obtenerHojaSoporte();
+      const folioPrevio = sopBuscarEnvioPrevio_(hoja, datos);
+      if (folioPrevio) {
+        return textResponse(JSON.stringify({ status: 'ok', folio: folioPrevio, duplicado: true }));
+      }
 
+      folio = generarFolioSoporte(hoja);
+      hoja.appendRow([
+        new Date(),
+        folio,
+        datos.nombre.trim(),
+        datos.cct.trim().toUpperCase(),
+        (datos.sector || '').trim(),
+        (datos.zona || '').toString().trim(),
+        (datos.escuela || '').trim(),
+        datos.funcion.trim(),
+        datos.whatsapp.trim(),
+        (datos.correo || '').trim(),
+        datos.descripcion.trim(),
+        datos.urgencia.trim(),
+        (datos.tipoAyuda || '').trim(),
+        'Pendiente de validar',
+        '',
+        '',
+        String(datos.idEnvio || '').trim()
+      ]);
+      SpreadsheetApp.flush();
+    } finally {
+      lock.releaseLock();
+    }
+
+    // Notificaciones fuera del candado — no bloquean a otro envío mientras salen.
     notificarTelegram(folio, datos);
     sopNotificarEquipoPorCorreo(folio, datos);
     sopNotificarSolicitudRecibida(folio, datos);
@@ -235,6 +260,43 @@ function doPost(e) {
   } catch (err) {
     return textResponse(JSON.stringify({ status: 'error', mensaje: err.message }));
   }
+}
+
+// ── Busca si este envío ya se registró: primero por ID de envío (lo manda
+// soporte.html desde sep 2026); si no viene, por CCT + correo + descripción dentro de
+// SOP_VENTANA_DUPLICADO_MIN minutos. Devuelve el folio o null. ──
+function sopBuscarEnvioPrevio_(hoja, datos) {
+  if (hoja.getLastRow() < 2) return null;
+  const filas = hoja.getRange(2, 1, hoja.getLastRow() - 1, hoja.getLastColumn()).getValues();
+  const iFolio = ENCABEZADOS_SOPORTE.indexOf('Folio');
+  const iId = ENCABEZADOS_SOPORTE.indexOf('ID de envío');
+  const idEnvio = String(datos.idEnvio || '').trim();
+
+  if (idEnvio) {
+    const previa = filas.find(r => String(r[iId] || '') === idEnvio);
+    if (previa) return String(previa[iFolio]);
+  }
+
+  const iFecha = ENCABEZADOS_SOPORTE.indexOf('Fecha');
+  const iCct = ENCABEZADOS_SOPORTE.indexOf('CCT');
+  const iCorreo = ENCABEZADOS_SOPORTE.indexOf('Correo');
+  const iDesc = ENCABEZADOS_SOPORTE.indexOf('Descripción');
+  const cct = String(datos.cct || '').trim().toUpperCase();
+  const correo = String(datos.correo || '').trim().toLowerCase();
+  const desc = String(datos.descripcion || '').trim();
+  const limite = Date.now() - SOP_VENTANA_DUPLICADO_MIN * 60 * 1000;
+
+  for (let i = filas.length - 1; i >= 0; i--) {
+    const r = filas[i];
+    const fecha = r[iFecha] instanceof Date ? r[iFecha].getTime() : 0;
+    if (fecha < limite) continue;
+    if (String(r[iCct]).trim().toUpperCase() === cct &&
+        String(r[iCorreo]).trim().toLowerCase() === correo &&
+        String(r[iDesc]).trim() === desc) {
+      return String(r[iFolio]);
+    }
+  }
+  return null;
 }
 
 // ── Obtener o crear la hoja ──
