@@ -1195,6 +1195,15 @@ nuevo, generaba un folio nuevo y volvía a notificar por Telegram y correo.
 
 Los datos ya duplicados no se tocaron (decisión de Jorge).
 
+**Verificado en vivo (25 sep 2026, versión 24 del backend + `mantenimiento.html` `e821e42`, con
+modo de prueba):** desde la página publicada, un primer envío abortado a propósito a los 1.5 s
+(el servidor sí guardó `OTDE-MAN-0030` en 7.0 s), seguido de un reintento con el mismo
+`idEnvio` y de otro sin `idEnvio` (simula una página vieja): los dos respondieron
+`{status:'ok', folio:'OTDE-MAN-0030', duplicado:true}` en 1.8 s, sin subir el oficio. Resultado:
+una sola fila (con `ID de envío` en AA, creada por el auto-heal), un solo PDF en "Oficios de
+Mantenimiento" y un solo par de correos `[PRUEBA]`. La fila de prueba quedó `Rechazado` con una
+nota; el modo de prueba ya está desactivado.
+
 **Dónde puede volver a pasar:** `asesorias.gs`/`asesorias.html` y
 `soporte-remoto.gs`/`soporte.html` tienen el mismo `doPost` sin candado ni llave de
 idempotencia. En general, cualquier formulario cuyo mensaje de error invite a reintentar debe
