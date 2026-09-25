@@ -219,6 +219,9 @@ ya esté expandido).
   dropdown real de `Estatus` (5 valores) con semáforo verde sobre una fila ya resuelta, y
   dropdowns visibles en `Urgencia`/`Tipo de ayuda`. Sin probar el diálogo de protección de solo
   aviso en esta ronda. Ver `docs/ARCHITECTURE.md §24`.
+- **Alta a prueba de reintentos (25 sep 2026, en producción y verificado en vivo)**: mismo patrón
+  que Mantenimiento/Asesorías (`sopBuscarEnvioPrevio_`, `ID de envío` en la columna Q; el
+  respaldo sin ID compara CCT + correo + descripción). Ver `docs/ARCHITECTURE.md §27`.
 
 ### `apps-script/mantenimiento.gs`
 - **Nuevo (ago 2026)**: conectado a un Google Sheet propio (hojas `Solicitudes` y
@@ -365,6 +368,13 @@ ya esté expandido).
   mismo `PANEL_TOKEN` de `?action=pendientes`; lo consume `apps-script/bitacora.gs`. **Orden de
   despliegue** si vuelven a cambiar campos obligatorios: publicar primero `reporte-visita.html` y
   después el `.gs`, o el formulario viejo quedaría rechazado. Ver `docs/ARCHITECTURE.md §15`.
+- **Alta a prueba de reintentos (25 sep 2026, en producción y verificado en vivo)**: `doPost`
+  toma `LockService` y, antes de subir el oficio, busca el envío previo
+  (`manBuscarEnvioPrevio_`: columna nueva AA `ID de envío`, o CCT + correo + "Equipos con falla"
+  en 10 min). Un reintento devuelve el mismo folio sin repetir oficio ni avisos. Nació de
+  duplicados reales (`OTDE-MAN-0025`/`0026`, `0028`/`0029`). `manCrearSolicitudUrgente_()`
+  también genera su folio bajo el candado. Ver `docs/ARCHITECTURE.md §27` y
+  `docs/QA-NOTES.md #44`.
 
 ### `apps-script/asesorias.gs`
 - **Nuevo (ago 2026)**: mismo patrón que `mantenimiento.gs` (Sheet propio con hojas
@@ -451,6 +461,9 @@ ya esté expandido).
   desplegado)**: columnas X/Y en `Solicitudes`, que Nancy llena al marcar "Resuelto" (las crea
   "Aplicar validación y semáforo"). `aseListarResueltasMes_` devuelve las resueltas del mes con el
   mismo `PANEL_TOKEN`; lo consume `apps-script/bitacora.gs`. Ver `docs/ARCHITECTURE.md §15`.
+- **Alta a prueba de reintentos (25 sep 2026, en producción y verificado en vivo)**: mismo patrón
+  que Mantenimiento (`aseBuscarEnvioPrevio_`, `ID de envío` en la columna Z; el respaldo sin ID
+  compara CCT + correo + tipo de asesoría + observaciones). Ver `docs/ARCHITECTURE.md §27`.
 
 ### `apps-script/formacion-docente.gs`
 **Desplegado en producción desde jul 2026** (Spreadsheet real `Formacion_Docente_2026_2027`, URL real ya pegada en `APPS_SCRIPT_URL` de `formacion-docente.html`; la extinta `jornada-verano-2026.html` compartió este mismo backend hasta su eliminación el 13 jul 2026).
@@ -682,7 +695,9 @@ en `docs/ARCHITECTURE.md §21`.
 
 Patrón compartido por las 4: validación 100% en JS con `novalidate` en el `<form>` (los
 `type="email"`/`required` nativos interceptan el `submit` antes de correr el JS si no se
-desactiva la validación del navegador), `fetchJsonConTimeout()` para evitar el freeze de
+desactiva la validación del navegador), un `idEnvio` que se conserva en los reintentos (el
+backend devuelve el mismo folio en vez de crear otro, `docs/ARCHITECTURE.md §27`),
+`fetchJsonConTimeout()` para evitar el freeze de
 `fetch()` sin timeout documentado en `docs/QA-NOTES.md #1`, CCT con autocomplete + fallback
 manual de Sector/Zona/Escuela (`js/cct-db.js`, detalle del patrón en `docs/ARCHITECTURE.md
 §11`; cada campo del fallback valida y muestra su propio error — no agrupar todo bajo el
@@ -845,6 +860,15 @@ arquitectura completo en `docs/ARCHITECTURE.md §16`. Resumen operativo:
   a petición de Jorge para que la información llegue "muy digerida" a docentes, cubre el caso
   de quien ya tenía la app configurada pero perdió el dispositivo — los dirige directo al botón
   "Eliminar Método de Autenticación" ya existente en vez de repetir el video.
+- **Alta a prueba de reintentos (25 sep 2026, en producción y verificado en vivo con Cambio de
+  Contraseña)**: los 5 `manejar*()` registran con `registrarSolicitudSinDuplicar_()`
+  (`apps-script/correo/WebApp.gs`): `LockService` + `ID de envío` (o todas las columnas
+  capturadas idénticas en 10 min). Un reintento devuelve el mismo folio sin volver a mandar correo
+  ni Telegram. Casos reales previos: `OTDE-CAM-0008`/`0009`, `OTDE-2FA-0012`/`0013`. Como estas
+  hojas no tienen auto-heal, `asegurarColumnaIdEnvio_()` agrega "ID de envío" después de la
+  última columna con datos. En `Cambio de Contraseña` quedó en S porque Marcos usa la R, sin
+  encabezado, para notas a mano. Al redesplegar hay que pegar **los 6** (`WebApp.gs` + los 5 tipos)
+  y hacer una sola "Nueva versión". Ver `docs/ARCHITECTURE.md §27`.
 
 ### Mantenimiento (página propia desde el 27 ago 2026, ver `mantenimiento.html`)
 Ya no es solo texto ("solicita por oficio y vía estructura") — formulario "Solicitar

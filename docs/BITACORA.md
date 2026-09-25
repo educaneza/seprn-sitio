@@ -14,6 +14,24 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-09-25 · Solicitudes duplicadas con folio distinto: corregido y verificado en vivo en Mantenimiento, Asesorías, Soporte y Correo
+
+| | |
+|---|---|
+| **Fecha** | 2026-09-25 |
+| **Sesión** | Jorge notó solicitudes de Mantenimiento enviadas 2 o más veces con distinto folio, mismos datos y segundos de diferencia, y preguntó si era problema del usuario o del sistema. |
+| **Diagnóstico (en vivo)** | **Del sistema.** En la hoja real: `OTDE-MAN-0025`/`0026` (47 s) y `0028`/`0029` (27 s) idénticos, más 3 pares reescritos a mano minutos después. En "Ejecuciones", el primer `doPost` del 24 sep terminó bien en 12.2 s (bajo el timeout de 30 s) y el segundo llegó 18 s después: el formulario no se había limpiado porque el navegador nunca recibió la confirmación (302 a `googleusercontent.com` fallido), mostró "intenta de nuevo" y `doPost` no tenía cómo reconocer el reintento. Detalle en `docs/QA-NOTES.md #44`. |
+| **Arreglo** | `LockService` + "ID de envío" generado en el navegador, con respaldo por datos idénticos en 10 min para páginas viejas en caché. Mismo patrón que `bitacora.gs`, aplicado uno por uno a Mantenimiento (`manBuscarEnvioPrevio_`), Asesorías (`aseBuscarEnvioPrevio_`), Soporte (`sopBuscarEnvioPrevio_`) y Correo (`registrarSolicitudSinDuplicar_`, compartida por los 5 tipos). El mensaje de error de las páginas ahora dice que reenviar no duplica. Ver `docs/ARCHITECTURE.md §27`. |
+| **Correo: revisión previa** | Antes de tocar código se buscaron duplicados reales en las 4 hojas existentes (93 solicitudes): `OTDE-CAM-0008`/`0009` idénticos a 40 s (Marcos ya había marcado 0009 "REPETIDA"), `OTDE-2FA-0012`/`0013` reescrito a los 3 min y `OTDE-ALT-0056`/`0057` con el correo corregido. La hoja "Cambio y Eliminar Autenticación" aún no existe (sin solicitudes). |
+| **Verificación** | Local: `node --check` y pruebas con hoja simulada en Node por trámite (mismo ID, mismos datos sin ID, datos distintos, más de 10 min; en Correo, el caso real CAM-0008 con teléfono/zona guardados como número). En vivo, con modo de prueba de correo y desde la página publicada, primer envío abortado a 1.5 s y dos reintentos (con y sin `idEnvio`): `OTDE-MAN-0030`, `OTDE-ASE-0002`, `OTDE-SOP-0004` y `OTDE-CAM-0012` recibieron el mismo folio las tres veces; una sola fila, un solo oficio (donde aplica) y un solo par de correos `[PRUEBA]`. Los reintentos no subieron oficio (p. ej., Mantenimiento 7.0 s el primero contra 1.8 s los reintentos). |
+| **Gotchas** | (1) El modo de prueba **no redirige Telegram**: Alejandro, Nancy y Marcos recibieron 1 aviso de "PRUEBA QA — ignorar" cada uno. Activarlo es más fácil agregando la Script Property `MODO_PRUEBA_CORREO` en Configuración del proyecto que con una función envoltorio. (2) En `Cambio de Contraseña`, Marcos anota a mano en la columna R sin encabezado; el ID quedó en S sin pisarlas. |
+| **Limpieza** | Filas de prueba MAN-0030, ASE-0002 y SOP-0004 en "Rechazado" con nota; CAM-0012 marcada en la columna R con la convención de Marcos. Modo de prueba desactivado en los 4 proyectos. Datos reales sin tocar. |
+| **Queda para Jorge** | Decidir `OTDE-MAN-0029` (duplicado de 0028, "Pendiente de validar"; al rechazarlo sale el correo real a la escuela) y `OTDE-2FA-0012`/`0013` (misma solicitud, atender una); avisar a Alejandro, Nancy y Marcos que ignoren los Telegram de prueba. |
+| **Documentación actualizada** | Este checkpoint, `docs/QA-NOTES.md #44`, `docs/ARCHITECTURE.md §27`, `CLAUDE.md` (secciones de los 4 backends y patrón compartido de las páginas de trámite). |
+| **Commits** | `e821e42`, `25b1911` (Mantenimiento), `da59118`, `b012bb1` (Asesorías), `3b6b926`, `6d560e6` (Soporte), `e2269da`, `08b2de1` (Correo) y el commit de cierre. |
+
+---
+
 ## CHECKPOINT — 2026-09-24 (cont. 3) · Plan aprobado: Formación Docente, Soporte y Correo alimentan la Bitácora OTDE (solo planeación, sin código)
 
 | | |

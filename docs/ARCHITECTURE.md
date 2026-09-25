@@ -2520,3 +2520,53 @@ primeras 9 columnas (N.P., Acción, Resultados esperados, Beneficiarios, Respons
 "Nombre corto" por encabezado. Por eso se pueden agregar filas y editar textos, pero no insertar ni
 reordenar columnas antes. La meta debe ser 23 o 25. Los N.P. 7 y 8 no se renumeran: los buscan
 `BIT_NP_MANTENIMIENTO` y `BIT_NP_ASESORIAS`.
+
+## 27. Altas de trámite a prueba de reintentos: `LockService` + "ID de envío" (sep 2026)
+
+**Problema:** Apps Script contesta el POST con un 302 a `script.googleusercontent.com`. Si esa
+segunda petición falla (señal débil, datos móviles, filtro de red escolar), el navegador muestra
+error aunque `doPost` ya guardó la solicitud, y la persona vuelve a presionar Enviar. Sin forma de
+reconocer el reintento, cada envío creaba otro folio con los mismos datos y repetía oficio,
+Telegram y correos. Casos reales: `OTDE-MAN-0028`/`0029`, `OTDE-CAM-0008`/`0009`. Causa raíz y
+evidencia en `docs/QA-NOTES.md #44`.
+
+**Patrón**, igual en los 4 trámites con alta por `doPost` (Mantenimiento, Asesorías, Soporte,
+Correo) y el mismo que ya usaba `bitacora.gs`:
+
+1. **Navegador:** cada formulario genera un `idEnvio` (`crypto.randomUUID()`, con respaldo) la
+   primera vez que se envía, lo conserva en los reintentos y lo descarta solo tras `status:'ok'`.
+   `idEnvioMan`/`idEnvioAse`/`idEnvioSop` + `nuevoIdEnvio()` en cada página; en `correo.html`,
+   `idEnvioCorreo_(tipo)` guarda uno por tipo. El mensaje de error ya no dice "intenta de nuevo"
+   a secas: avisa que la solicitud pudo registrarse y que reenviar no duplica
+   (`MSG_REINTENTO_SEGURO` en `correo.html`).
+2. **Servidor:** `LockService.getScriptLock()` alrededor de *buscar envío previo → subir oficio
+   (si aplica) → generar folio → `appendRow`*. Las notificaciones salen **fuera** del candado.
+   Si el envío ya existe, se responde `{status:'ok', folio:<existente>, duplicado:true}` sin subir
+   ni notificar nada; el navegador lo trata como éxito normal.
+3. **Búsqueda del envío previo:** primero por la columna "ID de envío"; si no llega `idEnvio`
+   (página vieja en caché), por los datos capturados, idénticos dentro de 10 minutos:
+   - Mantenimiento (`manBuscarEnvioPrevio_`, `MAN_VENTANA_DUPLICADO_MIN`): CCT + correo +
+     "Equipos con falla".
+   - Asesorías (`aseBuscarEnvioPrevio_`, `ASE_VENTANA_DUPLICADO_MIN`): CCT + correo + tipo de
+     asesoría + observaciones (dos tipos distintos de la misma escuela no se confunden).
+   - Soporte (`sopBuscarEnvioPrevio_`, `SOP_VENTANA_DUPLICADO_MIN`): CCT + correo + descripción.
+   - Correo (`registrarSolicitudSinDuplicar_` en `apps-script/correo/WebApp.gs`, compartida por
+     los 5 tipos): todas las columnas que llena el solicitante, de CCT a Observaciones/Qué
+     problema presentas; cada `manejar*()` le pasa cuántas son.
+
+**Columna "ID de envío":** siempre al final, para no mover columnas que leen los triggers.
+Mantenimiento (AA), Asesorías (Z) y Soporte (Q) la crean con el auto-heal de encabezados. Las
+hojas de Correo no tienen auto-heal, así que `asegurarColumnaIdEnvio_()` la busca por encabezado
+y, si no existe, la agrega después de la **última columna con datos**. En `Cambio de Contraseña`
+quedó en S porque Marcos usa la R, sin encabezado, para notas a mano ("REPETIDA"). Si se quiere
+una columna de notas en otra hoja de Correo, hay que ponerle encabezado **antes** de que llegue la
+primera solicitud, para que el ID quede después.
+
+**Folio sin carreras:** el candado también cierra el caso de dos altas simultáneas con el mismo
+folio (`QA-NOTES #31`). En Mantenimiento cubre además `manCrearSolicitudUrgente_()`, el otro
+camino que genera folios.
+
+**Despliegue:** primero el `.gs` (compatible con la página vieja gracias al respaldo por datos),
+después la página, que es la que promete "reenviar no duplica". Verificado en vivo en los 4
+trámites cortando la primera respuesta a 1.5 s y reintentando con y sin `idEnvio`: mismo folio,
+una sola fila, un solo oficio y un solo par de correos.
