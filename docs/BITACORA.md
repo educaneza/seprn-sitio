@@ -14,6 +14,20 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-09-25 (cont.) · Oficina Virtual: folios `OTDE-CYR-` consultables y estatus vacío como "Pendiente de validar"
+
+| | |
+|---|---|
+| **Fecha** | 2026-09-25 |
+| **Sesión** | Jorge pidió ver los textos que ve una persona al consultar el estatus de su folio en `oficina-virtual.html`. Al revisarlos contra los 4 backends salieron dos fallas. |
+| **Folios `OTDE-CYR-` rechazados** | Quien consultaba un folio de "Cambio de contraseña + eliminar autenticación" veía "No reconocemos el formato de ese folio". El quinto tipo de Correo (sep 2026) se agregó a `manejarConsultaCorreo()` en `apps-script/correo/WebApp.gs`, pero no a `OV_TIPOS_DE_TRAMITE` de `oficina-virtual.html`, que rutea por prefijo antes de llamar al backend. Se agregó el prefijo con la URL compartida de Correo. Ver `docs/QA-NOTES.md #45`. |
+| **Estatus vacío** | Mantenimiento y Asesorías devuelven `''` si la celda `Estatus` está vacía (Soporte ya devolvía "Pendiente de validar"), y la página mostraba "Sin estatus registrado". Nuevo campo `estatusInicial: 'Pendiente de validar'` en las entradas MAN/ASE/SOP de `OV_TIPOS_DE_TRAMITE`, que `ovRenderEstatus()` usa como respaldo. Los tipos de Correo no cambian. Se corrigió en la página, no en los `.gs`, para no requerir redespliegue en Apps Script. |
+| **Verificación** | `ovResolverTramite()`/`ovRenderEstatus()` probados en Node con los casos CYR en minúsculas y con espacios, estatus vacío en MAN/ASE, estatus asignado y Correo. `curl` al backend real de Correo con un folio `OTDE-CYR-` inventado respondió `{"status":"no_encontrado"}` (ruta viva). Publicado en GitHub Pages y confirmado en la página en vivo unos 2 min después del push. Falta una consulta real con un folio CYR existente. |
+| **Documentación actualizada** | Este checkpoint, `docs/QA-NOTES.md #45`, `CLAUDE.md` (sección `oficina-virtual.html`). |
+| **Commits** | `b35a557` (fix, 1 archivo, +11/−6) y el commit de cierre. |
+
+---
+
 ## CHECKPOINT — 2026-09-25 · Solicitudes duplicadas con folio distinto: corregido y verificado en vivo en Mantenimiento, Asesorías, Soporte y Correo
 
 | | |

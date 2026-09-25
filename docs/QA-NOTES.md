@@ -1244,3 +1244,24 @@ Soporte, Correo) ya están cubiertos. Para cualquier `doPost` nuevo: si el mensa
 formulario invita a reintentar, el backend tiene que reconocer el reintento. En general, cualquier formulario cuyo mensaje de error invite a reintentar debe
 tener un backend que reconozca el reintento: que el navegador "no recibió respuesta" no significa
 que el servidor no guardó.
+
+## 45. Oficina Virtual rechazaba los folios `OTDE-CYR-` como "formato no reconocido"
+
+**Síntoma:** 25 sep 2026, al revisar los textos del buscador de `oficina-virtual.html`: un folio
+de "Cambio de contraseña + eliminar autenticación" (`OTDE-CYR-NNNN`) mostraba "No reconocemos el
+formato de ese folio", aunque el folio fuera válido.
+
+**Causa raíz:** el ruteo por prefijo vive en **dos** lugares: `OV_TIPOS_DE_TRAMITE` en
+`oficina-virtual.html` (elige a qué backend llamar) y `mapaPrefijoHoja` dentro de
+`manejarConsultaCorreo()` en `apps-script/correo/WebApp.gs` (elige la hoja). Cuando se agregó el
+quinto tipo de Correo (sep 2026) solo se actualizó el segundo, así que la página cortaba la
+consulta antes de llegar al backend. El backend sí la resolvía (`curl` con un folio CYR inventado
+responde `no_encontrado`, no un error).
+
+**Fix:** entrada `'OTDE-CYR-'` en `OV_TIPOS_DE_TRAMITE` con la misma URL de Correo (commit
+`b35a557`). En el mismo commit, `estatusInicial: 'Pendiente de validar'` en MAN/ASE/SOP para que
+un `Estatus` vacío no se lea "Sin estatus registrado" (Mantenimiento y Asesorías devuelven `''`
+en ese caso; Soporte ya lo resolvía en el backend).
+
+**Regla:** al crear un prefijo de folio nuevo, agregarlo también a `OV_TIPOS_DE_TRAMITE` y
+probar una consulta desde la página publicada, no solo con `curl` al backend.

@@ -1030,9 +1030,10 @@ Formación Docente — es una utilidad de una sola pantalla que continúa un tr�
     `manObtenerHojaSolicitudes()`/`aseObtenerHojaSolicitudes()` (esas funciones escriben).
   - `soporte-remoto.gs`: mismo patrón (`sopConsultarFolio()`), habilitado por el `Estatus` nuevo
     documentado arriba.
-  - `Correos-institucionales/webform-2026-2027/WebApp.gs` (**repo git distinto**, no
-    `seprn-sitio`): `manejarConsultaCorreo()` resuelve la hoja correcta por el prefijo del folio
-    (`Alta`/`Cambio de Contraseña`/`Reset 2FA`/`Incidencias`, columnas distintas entre sí) y
+  - `apps-script/correo/WebApp.gs` (en este repo desde el 31 ago 2026; antes vivía en el repo
+    `Correos-institucionales`): `manejarConsultaCorreo()` resuelve la hoja correcta por el prefijo
+    del folio (`Alta`/`Cambio de Contraseña`/`Reset 2FA`/`Cambio y Eliminar Autenticación`/
+    `Incidencias`, columnas distintas entre sí) y
     expone `Estado general` tal cual — texto libre, sin vocabulario cerrado, a propósito no
     migrado a dropdown en esta ronda. Acepta Correo Personal o Institucional como llave
     indistintamente.
@@ -1042,7 +1043,11 @@ Formación Docente — es una utilidad de una sola pantalla que continúa un tr�
   cara al usuario dice "consulta rápida", nunca "portal seguro".
 - **Badges de estatus** (`ovRenderEstatus()`): los 5 valores fijos de Mantenimiento/Asesorías/
   Soporte se pintan con color (`OV_BADGES`); el "Estado general" de Correo, al ser texto libre,
-  se muestra plano — no se intenta mapear a un vocabulario cerrado que no existe.
+  se muestra plano — no se intenta mapear a un vocabulario cerrado que no existe. Si
+  `Estatus` llega vacío, MAN/ASE/SOP muestran "Pendiente de validar" (`estatusInicial` en
+  `OV_TIPOS_DE_TRAMITE`, 25 sep 2026). **Prefijos:** `OV_TIPOS_DE_TRAMITE` tiene 8 (3 sueltos +
+  5 de Correo, incluido `OTDE-CYR-` desde el 25 sep 2026). Un prefijo nuevo va aquí **y** en el
+  backend, ver `docs/QA-NOTES.md #45`.
 - **Redesplegado a producción (10 ago 2026)**: los 4 backends — `mantenimiento.gs` (v6),
   `asesorias.gs` (v6), `soporte-remoto.gs` (v5), `WebApp.gs` de
   `Correos-institucionales/webform-2026-2027/` (v4) — mismos IDs de implementación de siempre.
