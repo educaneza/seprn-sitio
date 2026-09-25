@@ -1098,6 +1098,21 @@
         return ok;
     }
 
+    // ID de envío por tipo de trámite: se genera una vez por solicitud y se conserva en los
+    // reintentos. Si la confirmación se pierde en el camino (el servidor sí guardó), volver a
+    // presionar Enviar devuelve el mismo folio en vez de crear otro (docs/QA-NOTES.md #44).
+    var idsEnvioCorreo = {};
+    function idEnvioCorreo_(tipo) {
+        if (!idsEnvioCorreo[tipo]) {
+            idsEnvioCorreo[tipo] = (window.crypto && crypto.randomUUID)
+                ? crypto.randomUUID()
+                : Date.now().toString(36) + Math.random().toString(36).slice(2);
+        }
+        return idsEnvioCorreo[tipo];
+    }
+    var MSG_REINTENTO_SEGURO = 'No recibimos la confirmación del servidor, pero es posible que tu solicitud sí se haya registrado. '
+        + 'Puedes presionar Enviar de nuevo sin riesgo de duplicarla: si ya existe, te mostraremos el mismo folio.';
+
     async function enviarSolicitudAlta(evt) {
         evt.preventDefault();
         var msg = document.getElementById('alta-msg');
@@ -1148,6 +1163,7 @@
 
         btnSubmit.disabled = true;
         btnSubmit.style.opacity = '0.6';
+        datos.idEnvio = idEnvioCorreo_('alta');
 
         try {
             const data = await fetchJsonConTimeout(ALTA_CORREO_APPS_SCRIPT_URL, {
@@ -1157,6 +1173,7 @@
             });
 
             if (data.status === 'ok') {
+                idsEnvioCorreo.alta = null;
                 msg.classList.add('ok');
                 msg.textContent = 'Solicitud registrada (folio ' + data.folio + '). Te avisaremos a tu correo personal en cuanto tu cuenta esté lista.';
                 document.getElementById('alta-form').reset();
@@ -1173,9 +1190,7 @@
             }
         } catch (err) {
             msg.classList.add('error');
-            msg.textContent = err.name === 'AbortError'
-                ? 'El servidor tardó demasiado en responder. Tu solicitud pudo haberse guardado igual; si no recibes contacto de la OTDE, intenta de nuevo.'
-                : 'No se pudo enviar la solicitud. Verifica tu conexión e intenta de nuevo.';
+            msg.textContent = MSG_REINTENTO_SEGURO;
         } finally {
             btnSubmit.disabled = false;
             btnSubmit.style.opacity = '1';
@@ -1461,9 +1476,11 @@
         });
 
         btnSubmit.disabled = true; btnSubmit.style.opacity = '0.6';
+        datos.idEnvio = idEnvioCorreo_('cam');
         try {
             const data = await fetchJsonConTimeout(CAMBIO_APPS_SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(datos) });
             if (data.status === 'ok') {
+                idsEnvioCorreo.cam = null;
                 msg.classList.add('ok');
                 msg.textContent = 'Solicitud registrada (folio ' + data.folio + '). Te avisaremos a tu correo personal en cuanto tengamos tu nueva contraseña.';
                 document.getElementById('cam-form').reset();
@@ -1473,7 +1490,7 @@
             }
         } catch (err) {
             msg.classList.add('error');
-            msg.textContent = err.name === 'AbortError' ? 'El servidor tardó demasiado en responder. Tu solicitud pudo haberse guardado igual; si no recibes contacto de la OTDE, intenta de nuevo.' : 'No se pudo enviar la solicitud. Verifica tu conexión e intenta de nuevo.';
+            msg.textContent = MSG_REINTENTO_SEGURO;
         } finally {
             btnSubmit.disabled = false; btnSubmit.style.opacity = '1';
         }
@@ -1528,9 +1545,11 @@
         });
 
         btnSubmit.disabled = true; btnSubmit.style.opacity = '0.6';
+        datos.idEnvio = idEnvioCorreo_('rst');
         try {
             const data = await fetchJsonConTimeout(RESET_APPS_SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(datos) });
             if (data.status === 'ok') {
+                idsEnvioCorreo.rst = null;
                 msg.classList.add('ok');
                 msg.textContent = 'Solicitud registrada (folio ' + data.folio + '). Te avisaremos a tu correo personal en cuanto el reset esté listo.';
                 document.getElementById('rst-form').reset();
@@ -1540,7 +1559,7 @@
             }
         } catch (err) {
             msg.classList.add('error');
-            msg.textContent = err.name === 'AbortError' ? 'El servidor tardó demasiado en responder. Tu solicitud pudo haberse guardado igual; si no recibes contacto de la OTDE, intenta de nuevo.' : 'No se pudo enviar la solicitud. Verifica tu conexión e intenta de nuevo.';
+            msg.textContent = MSG_REINTENTO_SEGURO;
         } finally {
             btnSubmit.disabled = false; btnSubmit.style.opacity = '1';
         }
@@ -1596,9 +1615,11 @@
         });
 
         btnSubmit.disabled = true; btnSubmit.style.opacity = '0.6';
+        datos.idEnvio = idEnvioCorreo_('cyr');
         try {
             const data = await fetchJsonConTimeout(CAMBIO_APPS_SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(datos) });
             if (data.status === 'ok') {
+                idsEnvioCorreo.cyr = null;
                 msg.classList.add('ok');
                 msg.textContent = 'Solicitud registrada (folio ' + data.folio + '). Te avisaremos a tu correo personal en cuanto tengamos tu nueva contraseña.';
                 document.getElementById('cyr-form').reset();
@@ -1608,7 +1629,7 @@
             }
         } catch (err) {
             msg.classList.add('error');
-            msg.textContent = err.name === 'AbortError' ? 'El servidor tardó demasiado en responder. Tu solicitud pudo haberse guardado igual; si no recibes contacto de la OTDE, intenta de nuevo.' : 'No se pudo enviar la solicitud. Verifica tu conexión e intenta de nuevo.';
+            msg.textContent = MSG_REINTENTO_SEGURO;
         } finally {
             btnSubmit.disabled = false; btnSubmit.style.opacity = '1';
         }
@@ -1664,9 +1685,11 @@
         });
 
         btnSubmit.disabled = true; btnSubmit.style.opacity = '0.6';
+        datos.idEnvio = idEnvioCorreo_('inc');
         try {
             const data = await fetchJsonConTimeout(INCIDENCIA_APPS_SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(datos) });
             if (data.status === 'ok') {
+                idsEnvioCorreo.inc = null;
                 msg.classList.add('ok');
                 msg.textContent = 'Reporte registrado (folio ' + data.folio + '). Te enviaremos tus nuevos datos de acceso a tu correo personal en cuanto esté resuelto.';
                 document.getElementById('inc-form').reset();
@@ -1676,7 +1699,7 @@
             }
         } catch (err) {
             msg.classList.add('error');
-            msg.textContent = err.name === 'AbortError' ? 'El servidor tardó demasiado en responder. Tu reporte pudo haberse guardado igual; si no recibes contacto de la OTDE, intenta de nuevo.' : 'No se pudo enviar el reporte. Verifica tu conexión e intenta de nuevo.';
+            msg.textContent = MSG_REINTENTO_SEGURO;
         } finally {
             btnSubmit.disabled = false; btnSubmit.style.opacity = '1';
         }

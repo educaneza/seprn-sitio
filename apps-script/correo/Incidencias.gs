@@ -21,12 +21,9 @@ function manejarIncidencia(datos) {
   incidenciaValidarCampos(datos);
 
   const hoja = incidenciaObtenerHoja();
-  const folio = incidenciaGenerarFolio(hoja);
-  const ahora = new Date();
-
-  hoja.appendRow([
-    ahora,
-    folio,
+  const fila = [
+    '',  // Fecha — la llena registrarSolicitudSinDuplicar_() (WebApp.gs)
+    '',  // Folio — ídem
     datos.cct.trim().toUpperCase(),
     (datos.sector || '').trim(),
     (datos.zona || '').toString().trim(),
@@ -38,7 +35,13 @@ function manejarIncidencia(datos) {
     datos.queProblema.trim(),
     '', '', '', '', '',
     'Solicitud recibida'
-  ]);
+  ];
+
+  // Candado + "ID de envío": un reintento devuelve el mismo folio sin volver a notificar
+  // (QA-NOTES #44). Columnas capturadas por el solicitante: A-K: de Fecha a Qué problema presentas.
+  const registro = registrarSolicitudSinDuplicar_(hoja, fila, 11, incidenciaGenerarFolio, datos.idEnvio);
+  if (registro.duplicado) return respuestaDuplicado_(registro.folio);
+  const folio = registro.folio;
 
   incidenciaEnviarConfirmacion(folio, datos);
 

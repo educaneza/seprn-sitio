@@ -35,12 +35,9 @@ function manejarAlta(datos) {
   altaValidarCampos(datos);
 
   const hoja = altaObtenerHoja();
-  const folio = altaGenerarFolio(hoja);
-  const ahora = new Date();
-
-  hoja.appendRow([
-    ahora,
-    folio,
+  const fila = [
+    '',  // Fecha — la llena registrarSolicitudSinDuplicar_() (WebApp.gs)
+    '',  // Folio — ídem
     datos.cct.trim().toUpperCase(),
     (datos.sector || '').trim(),
     (datos.zona || '').toString().trim(),
@@ -59,7 +56,13 @@ function manejarAlta(datos) {
     '',   // NP SIGEE — Marcos la llena a mano
     '', '', '', '', '',
     'Solicitud recibida'
-  ]);
+  ];
+
+  // Candado + "ID de envío": un reintento devuelve el mismo folio sin volver a notificar
+  // (QA-NOTES #44). Columnas capturadas por el solicitante: A-Q: de Fecha a Observaciones.
+  const registro = registrarSolicitudSinDuplicar_(hoja, fila, 17, altaGenerarFolio, datos.idEnvio);
+  if (registro.duplicado) return respuestaDuplicado_(registro.folio);
+  const folio = registro.folio;
 
   altaEnviarConfirmacion(folio, datos);
 

@@ -18,12 +18,9 @@ function manejarReset2FA(datos) {
   resetValidarCampos(datos);
 
   const hoja = resetObtenerHoja();
-  const folio = resetGenerarFolio(hoja);
-  const ahora = new Date();
-
-  hoja.appendRow([
-    ahora,
-    folio,
+  const fila = [
+    '',  // Fecha — la llena registrarSolicitudSinDuplicar_() (WebApp.gs)
+    '',  // Folio — ídem
     datos.cct.trim().toUpperCase(),
     (datos.sector || '').trim(),
     (datos.zona || '').toString().trim(),
@@ -35,7 +32,13 @@ function manejarReset2FA(datos) {
     (datos.observaciones || '').trim(),
     '', '', '',
     'Solicitud recibida'
-  ]);
+  ];
+
+  // Candado + "ID de envío": un reintento devuelve el mismo folio sin volver a notificar
+  // (QA-NOTES #44). Columnas capturadas por el solicitante: A-K: de Fecha a Observaciones.
+  const registro = registrarSolicitudSinDuplicar_(hoja, fila, 11, resetGenerarFolio, datos.idEnvio);
+  if (registro.duplicado) return respuestaDuplicado_(registro.folio);
+  const folio = registro.folio;
 
   resetEnviarConfirmacion(folio, datos);
   resetNotificarEquipo(folio, datos);

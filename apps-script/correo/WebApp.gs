@@ -182,3 +182,78 @@ function doPost(e) {
     return textResponse(JSON.stringify({ status: 'error', mensaje: err.message }));
   }
 }
+
+// ── Registro de una solicitud nueva, a prueba de reintentos (sep 2026, QA-NOTES #44) ──
+// Si la confirmación se pierde en el camino (el servidor sí guardó) y la persona vuelve a
+// presionar Enviar, el reintento debe devolver el mismo folio en vez de crear otro —
+// caso real: OTDE-CAM-0008/0009, idénticos con 40 s de diferencia. Mismo patrón que
+// mantenimiento.gs/asesorias.gs/soporte-remoto.gs, pero compartido por los 5 tipos de
+// este proyecto:
+//   - LockService alrededor de buscar duplicado + generar folio + agregar fila.
+//   - Busca primero por "ID de envío" (lo manda correo.html); si no viene (página vieja en
+//     caché), por las columnas que llena el solicitante — de CCT en adelante, las primeras
+//     `nCapturadas` — idénticas dentro de los últimos 10 minutos.
+//   - La columna "ID de envío" se agrega sola al final de la hoja si no existe (estas hojas
+//     no tienen auto-heal de encabezados), sin mover ninguna columna existente.
+// `fila` es la fila completa con Fecha/Folio en blanco; los llena esta función.
+// Devuelve { folio, duplicado }. Quien llama solo notifica si duplicado === false.
+function registrarSolicitudSinDuplicar_(hoja, fila, nCapturadas, generarFolio, idEnvio) {
+  const VENTANA_DUPLICADO_MIN = 10;
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(20000);
+  } catch (errLock) {
+    throw new Error('El sistema está ocupado, intenta de nuevo en unos segundos.');
+  }
+  try {
+    const colId = asegurarColumnaIdEnvio_(hoja);
+    const id = String(idEnvio || '').trim();
+    const ultimaFila = hoja.getLastRow();
+    const filas = ultimaFila > 1 ? hoja.getRange(2, 1, ultimaFila - 1, colId).getValues() : [];
+
+    if (id) {
+      const previa = filas.find(function (r) { return String(r[colId - 1] || '') === id; });
+      if (previa) return { folio: String(previa[1]), duplicado: true };
+    }
+
+    const norm = function (v) { return String(v == null ? '' : v).trim().toLowerCase(); };
+    const limite = Date.now() - VENTANA_DUPLICADO_MIN * 60 * 1000;
+    for (let i = filas.length - 1; i >= 0; i--) {
+      const r = filas[i];
+      const fecha = r[0] instanceof Date ? r[0].getTime() : 0;
+      if (fecha < limite) continue;
+      let iguales = true;
+      for (let c = 2; c < nCapturadas; c++) {
+        if (norm(r[c]) !== norm(fila[c])) { iguales = false; break; }
+      }
+      if (iguales) return { folio: String(r[1]), duplicado: true };
+    }
+
+    const folio = generarFolio(hoja);
+    fila[0] = new Date();
+    fila[1] = folio;
+    while (fila.length < colId - 1) fila.push('');
+    fila[colId - 1] = id;
+    hoja.appendRow(fila);
+    SpreadsheetApp.flush();
+    return { folio: folio, duplicado: false };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// ── Columna "ID de envío": la busca por encabezado; si no existe, la agrega al final. ──
+function asegurarColumnaIdEnvio_(hoja) {
+  const ultimaCol = hoja.getLastColumn();
+  const encabezados = hoja.getRange(1, 1, 1, ultimaCol).getValues()[0];
+  const idx = encabezados.indexOf('ID de envío');
+  if (idx !== -1) return idx + 1;
+  hoja.getRange(1, ultimaCol + 1).setValue('ID de envío')
+    .setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
+  return ultimaCol + 1;
+}
+
+// ── Respuesta estándar para un reintento ya registrado (sin volver a notificar). ──
+function respuestaDuplicado_(folio) {
+  return textResponse(JSON.stringify({ status: 'ok', folio: folio, duplicado: true }));
+}
