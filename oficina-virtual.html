@@ -233,15 +233,19 @@
 
     // Ruteo por prefijo de folio → backend correspondiente. Mismas URLs de
     // deployment ya usadas en otde.html (MANTENIMIENTO_/ASESORIAS_/SOPORTE_/
-    // ALTA_CORREO_APPS_SCRIPT_URL) — los 4 subtipos de Correo comparten un
+    // ALTA_CORREO_APPS_SCRIPT_URL) — los 5 subtipos de Correo comparten un
     // único deployment (WebApp.gs enruta por el prefijo del folio).
+    // estatusInicial: lo que se muestra si la celda Estatus sigue vacía (solicitud
+    // recién llegada). Soporte ya lo manda desde el backend; Mantenimiento y
+    // Asesorías mandan '' y sin esto se leía "Sin estatus registrado".
     const OV_TIPOS_DE_TRAMITE = {
-        'OTDE-MAN-': { nombre: 'Mantenimiento', url: 'https://script.google.com/macros/s/AKfycbxxhyMUI8VuuxC29fWgkMWULwLdB7OhNJ-XawgtdseZY5hgV9P6I9uHFfiCMbAJzZb1/exec' },
-        'OTDE-ASE-': { nombre: 'Asesorías', url: 'https://script.google.com/macros/s/AKfycbxwJFE7d9P4b2e7lVYvBx7FK9bBws53T9V6Q3yU7W-NboeecvnZCvWdkJG0nL8Pmz8q/exec' },
-        'OTDE-SOP-': { nombre: 'Soporte Técnico Remoto', url: 'https://script.google.com/macros/s/AKfycbynU6hEtN7W-Q2MsTEbRZJeGH946n3YcQptGiW6w6fMzgZ98J6mu33bEqSoK_1Oxtk/exec' },
+        'OTDE-MAN-': { nombre: 'Mantenimiento', estatusInicial: 'Pendiente de validar', url: 'https://script.google.com/macros/s/AKfycbxxhyMUI8VuuxC29fWgkMWULwLdB7OhNJ-XawgtdseZY5hgV9P6I9uHFfiCMbAJzZb1/exec' },
+        'OTDE-ASE-': { nombre: 'Asesorías', estatusInicial: 'Pendiente de validar', url: 'https://script.google.com/macros/s/AKfycbxwJFE7d9P4b2e7lVYvBx7FK9bBws53T9V6Q3yU7W-NboeecvnZCvWdkJG0nL8Pmz8q/exec' },
+        'OTDE-SOP-': { nombre: 'Soporte Técnico Remoto', estatusInicial: 'Pendiente de validar', url: 'https://script.google.com/macros/s/AKfycbynU6hEtN7W-Q2MsTEbRZJeGH946n3YcQptGiW6w6fMzgZ98J6mu33bEqSoK_1Oxtk/exec' },
         'OTDE-ALT-': { nombre: 'Alta de correo institucional', url: 'https://script.google.com/macros/s/AKfycbwjy-jx1J0riVAlcAkuwAqKq9LMQVIxs4R_ikBIRPXXntO3FwMkGTPBf90W5A8FPAD7/exec' },
         'OTDE-CAM-': { nombre: 'Cambio de contraseña', url: 'https://script.google.com/macros/s/AKfycbwjy-jx1J0riVAlcAkuwAqKq9LMQVIxs4R_ikBIRPXXntO3FwMkGTPBf90W5A8FPAD7/exec' },
         'OTDE-2FA-': { nombre: 'Eliminar método de autenticación', url: 'https://script.google.com/macros/s/AKfycbwjy-jx1J0riVAlcAkuwAqKq9LMQVIxs4R_ikBIRPXXntO3FwMkGTPBf90W5A8FPAD7/exec' },
+        'OTDE-CYR-': { nombre: 'Cambio de contraseña + eliminar autenticación', url: 'https://script.google.com/macros/s/AKfycbwjy-jx1J0riVAlcAkuwAqKq9LMQVIxs4R_ikBIRPXXntO3FwMkGTPBf90W5A8FPAD7/exec' },
         'OTDE-INC-': { nombre: 'Incidencia de acceso', url: 'https://script.google.com/macros/s/AKfycbwjy-jx1J0riVAlcAkuwAqKq9LMQVIxs4R_ikBIRPXXntO3FwMkGTPBf90W5A8FPAD7/exec' }
     };
 
@@ -260,7 +264,8 @@
         'Rechazado': 'b-rechazado'
     };
 
-    function ovRenderEstatus(estatus) {
+    function ovRenderEstatus(estatus, estatusInicial) {
+        estatus = String(estatus || '').trim() || estatusInicial || '';
         const clase = OV_BADGES[estatus];
         if (clase) return '<span class="ov-badge ' + clase + '">' + estatus + '</span>';
         // Estatus en texto libre (ej. "Estado general" de Correo): sin badge de color,
@@ -304,7 +309,7 @@
                 ovMostrarResultado(
                     '<div class="ov-resultado-fila"><strong>Trámite:</strong> ' + tramite.nombre + '</div>' +
                     '<div class="ov-resultado-fila"><strong>Folio:</strong> ' + data.folio + '</div>' +
-                    '<div class="ov-resultado-fila"><strong>Estatus:</strong> ' + ovRenderEstatus(data.estatus) + '</div>' +
+                    '<div class="ov-resultado-fila"><strong>Estatus:</strong> ' + ovRenderEstatus(data.estatus, tramite.estatusInicial) + '</div>' +
                     (data.notas ? '<div class="ov-resultado-fila"><strong>Notas:</strong> ' + data.notas + '</div>' : ''),
                     'ok'
                 );
