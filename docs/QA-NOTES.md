@@ -1221,9 +1221,26 @@ así que un duplicado ahí solo repetía la fila y los avisos. Misma prueba: env
 mismo folio, una fila y un solo par de correos `[PRUEBA]`. La fila de prueba quedó `Rechazado`;
 el modo de prueba ya está desactivado.
 
-**Dónde puede volver a pasar:** los 3 trámites con `doPost` de alta (Mantenimiento, Asesorías,
-Soporte) ya están cubiertos. Queda revisar Correo (`apps-script/correo/WebApp.gs`, 5 tipos) con el
-mismo criterio. Para cualquier `doPost` nuevo: si el mensaje de error del formulario invita a
-reintentar, el backend tiene que reconocer el reintento. En general, cualquier formulario cuyo mensaje de error invite a reintentar debe
+**Extendido a Correo Institucional (25 sep 2026, mismo día, en producción y verificado en
+vivo):** ahí también había casos reales: `OTDE-CAM-0008`/`0009` (idénticos, 40 s; Marcos ya
+había marcado 0009 como "REPETIDA") y `OTDE-2FA-0012`/`0013` (reescrito a los 3 min). Como es un
+solo proyecto con 5 tipos, el arreglo es una función compartida,
+`registrarSolicitudSinDuplicar_()` en `apps-script/correo/WebApp.gs`, que usan
+`Alta`/`CambioContrasena`/`Reset2FA`/`CambioYReset`/`Incidencias`. Sin `idEnvio`, el respaldo
+compara todas las columnas capturadas por el solicitante (de CCT a Observaciones/Qué problema).
+Estas hojas no tienen auto-heal de encabezados, así que `asegurarColumnaIdEnvio_()` busca "ID de
+envío" por encabezado y, si no existe, la agrega después de la última columna con datos.
+**Gotcha encontrado en la prueba:** en `Cambio de Contraseña`, Marcos lleva notas a mano en la
+columna R, sin encabezado ("REPETIDA", "en proceso nueva"…). Por eso el ID quedó en S y no pisó
+esas notas; en las demás hojas quedará justo después de "Estado general". `correo.html` manda un
+ID por tipo (`idEnvioCorreo_('alta'|'cam'|'rst'|'cyr'|'inc')`). Prueba con Cambio de Contraseña:
+envío cortado a 1.5 s (`OTDE-CAM-0012`, 5.6 s en el servidor) y dos reintentos, con y sin
+`idEnvio`, en 2.6 s y 3.7 s en el servidor → mismo folio, una fila y un solo par de correos
+`[PRUEBA]`. La fila de prueba quedó marcada en R, con la convención de Marcos; el modo de prueba
+ya está desactivado.
+
+**Dónde puede volver a pasar:** los 4 trámites con alta por `doPost` (Mantenimiento, Asesorías,
+Soporte, Correo) ya están cubiertos. Para cualquier `doPost` nuevo: si el mensaje de error del
+formulario invita a reintentar, el backend tiene que reconocer el reintento. En general, cualquier formulario cuyo mensaje de error invite a reintentar debe
 tener un backend que reconozca el reintento: que el navegador "no recibió respuesta" no significa
 que el servidor no guardó.
