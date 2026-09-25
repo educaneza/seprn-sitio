@@ -1204,8 +1204,16 @@ una sola fila (con `ID de envío` en AA, creada por el auto-heal), un solo PDF e
 Mantenimiento" y un solo par de correos `[PRUEBA]`. La fila de prueba quedó `Rechazado` con una
 nota; el modo de prueba ya está desactivado.
 
-**Dónde puede volver a pasar:** `asesorias.gs`/`asesorias.html` y
-`soporte-remoto.gs`/`soporte.html` tienen el mismo `doPost` sin candado ni llave de
-idempotencia. En general, cualquier formulario cuyo mensaje de error invite a reintentar debe
+**Extendido a Asesorías (25 sep 2026, mismo día, en producción y verificado en vivo):** mismo
+patrón en `asesorias.gs`/`asesorias.html` (`aseBuscarEnvioPrevio_()`, `ID de envío` en la
+columna Z). El respaldo sin `idEnvio` además compara el tipo de asesoría y las observaciones, para
+que dos solicitudes de tipos distintos de la misma escuela no se confundan. Misma prueba: un
+envío cortado a 1.5 s (`OTDE-ASE-0002`, 7.9 s en el servidor) y dos reintentos, con y sin
+`idEnvio`, en 3.3 s y 2.4 s → mismo folio, una fila, un oficio en "Oficios de Asesorías" y un solo
+par de correos `[PRUEBA]`. La fila de prueba quedó `Rechazado`; el modo de prueba ya está
+desactivado.
+
+**Dónde puede volver a pasar:** `soporte-remoto.gs`/`soporte.html` todavía tiene el mismo
+`doPost` sin candado ni llave de idempotencia. En general, cualquier formulario cuyo mensaje de error invite a reintentar debe
 tener un backend que reconozca el reintento: que el navegador "no recibió respuesta" no significa
 que el servidor no guardó.
