@@ -135,8 +135,11 @@ const ENCABEZADOS_MAN_SOLICITUDES = [
   'Cantidad (Administrativas)', 'Marca/Modelo', 'Estado de instalación',
   'Tipo de solicitante', 'Fecha programada de visita',
   'Notificación de fecha programada enviada', 'Técnico asignado',
-  'Notificación a técnico enviada'
+  'Notificación a técnico enviada', 'ID de envío'
 ];
+// Ventana del respaldo anti-duplicados para envíos sin idEnvio (páginas viejas en caché):
+// misma CCT + correo + "Equipos con falla" dentro de estos minutos = mismo envío.
+const MAN_VENTANA_DUPLICADO_MIN = 10;
 // Índice (0-based) de 'Tipo de solicitante' dentro de una fila leída con getValues() —
 // ya no es la última columna (se agregaron 2 más después, misma lógica de no correr
 // columnas existentes), así que queda fijo en vez de derivarse de .length - 1.
@@ -451,37 +454,35 @@ function doPost(e) {
 
     manValidarCampos(datos);
 
-    const oficioUrl = manSubirOficio(datos);
+    // LockService + "ID de envío" generado en el navegador: si la confirmación se pierde
+    // en el camino (el servidor sí guardó) y la persona vuelve a presionar Enviar, el
+    // reintento devuelve el mismo folio en vez de crear otro (QA-NOTES #44, mismo
+    // patrón que bitacora.gs). El chequeo va antes de subir el oficio para no dejar
+    // copias en Drive.
+    const lock = LockService.getScriptLock();
+    try {
+      lock.waitLock(20000);
+    } catch (errLock) {
+      return manTextResponse(JSON.stringify({ status: 'error', mensaje: 'El sistema está ocupado, intenta de nuevo en unos segundos.' }));
+    }
 
-    const hoja = manObtenerHojaSolicitudes();
-    const folio = manGenerarFolio(hoja);
-    const ahora = new Date();
+    let folio, oficioUrl;
+    try {
+      const hoja = manObtenerHojaSolicitudes();
+      const folioPrevio = manBuscarEnvioPrevio_(hoja, datos);
+      if (folioPrevio) {
+        return manTextResponse(JSON.stringify({ status: 'ok', folio: folioPrevio, duplicado: true }));
+      }
 
-    hoja.appendRow([
-      ahora,
-      folio,
-      datos.nombre.trim(),
-      datos.funcion.trim(),
-      datos.cct.trim().toUpperCase(),
-      (datos.sector || '').trim(),
-      (datos.zona || '').toString().trim(),
-      (datos.escuela || '').trim(),
-      datos.turno.trim(),
-      datos.whatsapp.trim(),
-      (datos.correo || '').trim(),
-      datos.equipos.trim(),
-      oficioUrl,
-      'Pendiente de validar',
-      '',
-      '',
-      (datos.tipoEquipo || '').trim(),
-      (datos.cantidadAula || '').trim(),
-      (datos.cantidadAdmin || '').trim(),
-      (datos.marcaModelo || '').trim(),
-      (datos.estadoEquipo || '').trim(),
-      (datos.tipoCct || '').trim()
-    ]);
+      oficioUrl = manSubirOficio(datos);
+      folio = manGenerarFolio(hoja);
+      manAgregarSolicitud_(hoja, datos, folio, oficioUrl);
+      SpreadsheetApp.flush();
+    } finally {
+      lock.releaseLock();
+    }
 
+    // Notificaciones fuera del candado — no bloquean a otro envío mientras salen.
     manNotificarTelegram(folio, datos, oficioUrl);
     manNotificarEquipoPorCorreo(folio, datos, oficioUrl);
     manNotificarSolicitudRecibida(folio, datos);
@@ -491,6 +492,75 @@ function doPost(e) {
   } catch (err) {
     return manTextResponse(JSON.stringify({ status: 'error', mensaje: err.message }));
   }
+}
+
+// ── Busca si este envío ya se registró: primero por ID de envío (lo manda
+// mantenimiento.html desde sep 2026); si no viene, por CCT + correo + "Equipos con
+// falla" dentro de MAN_VENTANA_DUPLICADO_MIN minutos. Devuelve el folio o null. ──
+function manBuscarEnvioPrevio_(hoja, datos) {
+  if (hoja.getLastRow() < 2) return null;
+  const filas = hoja.getRange(2, 1, hoja.getLastRow() - 1, hoja.getLastColumn()).getValues();
+  const iFolio = ENCABEZADOS_MAN_SOLICITUDES.indexOf('Folio');
+  const iId = ENCABEZADOS_MAN_SOLICITUDES.indexOf('ID de envío');
+  const idEnvio = String(datos.idEnvio || '').trim();
+
+  if (idEnvio) {
+    const previa = filas.find(r => String(r[iId] || '') === idEnvio);
+    if (previa) return String(previa[iFolio]);
+  }
+
+  const iFecha = ENCABEZADOS_MAN_SOLICITUDES.indexOf('Fecha');
+  const iCct = ENCABEZADOS_MAN_SOLICITUDES.indexOf('CCT');
+  const iCorreo = ENCABEZADOS_MAN_SOLICITUDES.indexOf('Correo');
+  const iEquipos = ENCABEZADOS_MAN_SOLICITUDES.indexOf('Equipos con falla');
+  const cct = String(datos.cct || '').trim().toUpperCase();
+  const correo = String(datos.correo || '').trim().toLowerCase();
+  const equipos = String(datos.equipos || '').trim();
+  const limite = Date.now() - MAN_VENTANA_DUPLICADO_MIN * 60 * 1000;
+
+  for (let i = filas.length - 1; i >= 0; i--) {
+    const r = filas[i];
+    const fecha = r[iFecha] instanceof Date ? r[iFecha].getTime() : 0;
+    if (fecha < limite) continue;
+    if (String(r[iCct]).trim().toUpperCase() === cct &&
+        String(r[iCorreo]).trim().toLowerCase() === correo &&
+        String(r[iEquipos]).trim() === equipos) {
+      return String(r[iFolio]);
+    }
+  }
+  return null;
+}
+
+// ── Agrega la fila de una solicitud nueva (llamar dentro del candado) ──
+function manAgregarSolicitud_(hoja, datos, folio, oficioUrl) {
+  const fila = [
+    new Date(),
+    folio,
+    datos.nombre.trim(),
+    datos.funcion.trim(),
+    datos.cct.trim().toUpperCase(),
+    (datos.sector || '').trim(),
+    (datos.zona || '').toString().trim(),
+    (datos.escuela || '').trim(),
+    datos.turno.trim(),
+    datos.whatsapp.trim(),
+    (datos.correo || '').trim(),
+    datos.equipos.trim(),
+    oficioUrl,
+    'Pendiente de validar',
+    '',
+    '',
+    (datos.tipoEquipo || '').trim(),
+    (datos.cantidadAula || '').trim(),
+    (datos.cantidadAdmin || '').trim(),
+    (datos.marcaModelo || '').trim(),
+    (datos.estadoEquipo || '').trim(),
+    (datos.tipoCct || '').trim()
+  ];
+  // Las columnas de programación/técnico quedan en blanco; 'ID de envío' va al final.
+  while (fila.length < ENCABEZADOS_MAN_SOLICITUDES.length - 1) fila.push('');
+  fila.push(String(datos.idEnvio || '').trim());
+  hoja.appendRow(fila);
 }
 
 // ── Obtener o crear la hoja de solicitudes ──
@@ -786,7 +856,6 @@ function manCrearSolicitudUrgente_(datos) {
   }
 
   const hoja = manObtenerHojaSolicitudes();
-  const folio = manGenerarFolio(hoja);
   const nombre = String(datos.urgNombre).trim();
   const cct = String(datos.urgCct).trim().toUpperCase();
   const sector = String(datos.urgSector || '').trim();
@@ -795,34 +864,45 @@ function manCrearSolicitudUrgente_(datos) {
 
   // Mismo orden que ENCABEZADOS_MAN_SOLICITUDES — las columnas que no aplican a una visita
   // ya realizada (WhatsApp, Equipos con falla, Oficio, Tipo de equipo, etc.) quedan en blanco.
-  hoja.appendRow([
-    new Date(),
-    folio,
-    nombre,
-    String(datos.urgFuncion).trim(),
-    cct,
-    sector,
-    zona,
-    escuela,
-    String(datos.urgTurno).trim(),
-    '',
-    correo,
-    '',
-    '',
-    'Resuelto',
-    'Generada automáticamente desde reporte de visita urgente (sin solicitud previa registrada).',
-    '',
-    '',
-    '',
-    '',
-    '',
-    '',
-    '',
-    '',
-    '',
-    '',
-    ''
-  ]);
+  // Folio + alta bajo el mismo candado que el doPost de solicitudes, para que dos altas
+  // simultáneas no calculen el mismo folio (QA-NOTES #31).
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  let folio;
+  try {
+    folio = manGenerarFolio(hoja);
+    hoja.appendRow([
+      new Date(),
+      folio,
+      nombre,
+      String(datos.urgFuncion).trim(),
+      cct,
+      sector,
+      zona,
+      escuela,
+      String(datos.urgTurno).trim(),
+      '',
+      correo,
+      '',
+      '',
+      'Resuelto',
+      'Generada automáticamente desde reporte de visita urgente (sin solicitud previa registrada).',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      ''
+    ]);
+    SpreadsheetApp.flush();
+  } finally {
+    lock.releaseLock();
+  }
 
   return { folio: folio, nombre: nombre, cct: cct, sector: sector, zona: zona, escuela: escuela, correo: correo };
 }

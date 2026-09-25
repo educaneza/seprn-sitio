@@ -756,6 +756,16 @@
         return ok;
     }
 
+    // ID de envío: se genera una vez por solicitud y se conserva en los reintentos. Si la
+    // confirmación se pierde en el camino (el servidor sí guardó), volver a presionar
+    // Enviar devuelve el mismo folio en vez de crear otro (docs/QA-NOTES.md #44).
+    var idEnvioMan = null;
+
+    function nuevoIdEnvio() {
+        if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+        return Date.now().toString(36) + Math.random().toString(36).slice(2);
+    }
+
     async function enviarSolicitudMantenimiento(evt) {
         evt.preventDefault();
         var msg = document.getElementById('mantenimiento-msg');
@@ -775,6 +785,7 @@
 
         btnSubmit.disabled = true;
         btnSubmit.style.opacity = '0.6';
+        if (!idEnvioMan) idEnvioMan = nuevoIdEnvio();
 
         try {
             var oficioBase64 = await leerArchivoBase64(oficioFile);
@@ -804,7 +815,8 @@
                 estadoEquipo: document.getElementById('man-estado-equipo').value,
                 oficioBase64: oficioBase64,
                 oficioNombre: oficioFile.name,
-                oficioTipo: oficioFile.type
+                oficioTipo: oficioFile.type,
+                idEnvio: idEnvioMan
             };
 
             const data = await fetchJsonConTimeout(MANTENIMIENTO_APPS_SCRIPT_URL, {
@@ -814,6 +826,7 @@
             });
 
             if (data.status === 'ok') {
+                idEnvioMan = null;
                 msg.classList.add('ok');
                 msg.textContent = 'Solicitud registrada (folio ' + data.folio + '). Un integrante de la OTDE te contactará en breve.';
                 document.getElementById('mantenimiento-form').reset();
@@ -832,9 +845,8 @@
             }
         } catch (err) {
             msg.classList.add('error');
-            msg.textContent = err.name === 'AbortError'
-                ? 'El servidor tardó demasiado en responder. Tu solicitud pudo haberse guardado igual; si no recibes contacto de la OTDE, intenta de nuevo.'
-                : 'No se pudo enviar la solicitud. Verifica tu conexión e intenta de nuevo.';
+            msg.textContent = 'No recibimos la confirmación del servidor, pero es posible que tu solicitud sí se haya registrado. '
+                + 'Puedes presionar Enviar de nuevo sin riesgo de duplicarla: si ya existe, te mostraremos el mismo folio.';
         } finally {
             btnSubmit.disabled = false;
             btnSubmit.style.opacity = '1';

@@ -1161,3 +1161,42 @@ patrón se copió a otros archivos del sitio** antes de dar la corrección por
 terminada — ya pasó dos veces (el freeze de fetch en 4 archivos, el
 `appendRow([])` en 2 archivos) que un bug "corregido" seguía vivo en un
 archivo hermano que nadie revisó.
+
+## 44. Solicitudes de Mantenimiento duplicadas con folio distinto — la confirmación se perdía y el reintento no se reconocía
+
+**Síntoma:** en `Solicitudes_Mantenimiento_2026` aparecieron pares de solicitudes idénticas con
+folio distinto y segundos de diferencia: `OTDE-MAN-0025`/`0026` (22 sep, 47 s) y
+`OTDE-MAN-0028`/`0029` (24 sep, 27 s). Además, otros tres pares (0002/0003, 0012/0013,
+0022/0023) volvieron a capturarse a mano minutos después, con el texto reescrito.
+
+**Causa raíz:** no era lentitud del servidor. En "Ejecuciones" del proyecto, el primer `doPost`
+del 24 sep (16:30:23) **terminó bien en 12.2 s**, muy por debajo del timeout de 30 s de
+`fetchJsonConTimeout()`, y el segundo llegó 18 s después. En 18 s nadie vuelve a capturar el
+formulario y a adjuntar el oficio, así que el formulario no se había limpiado: el navegador nunca
+recibió la confirmación. Apps Script contesta el POST con un 302 a
+`script.googleusercontent.com`; si esa segunda petición falla (señal débil, datos móviles o un
+filtro de red escolar), `fetch()`/`r.json()` truena aunque el servidor ya guardó. Entonces
+`mantenimiento.html` mostraba "No se pudo enviar… intenta de nuevo" y reactivaba el botón.
+`doPost` no tenía `LockService` ni forma de reconocer un reintento: cada envío subía el oficio de
+nuevo, generaba un folio nuevo y volvía a notificar por Telegram y correo.
+
+**Fix:** el mismo patrón de `bitacora.gs`.
+- `mantenimiento.html` genera un `idEnvio` (`crypto.randomUUID()`) por solicitud, lo conserva en
+  los reintentos y solo lo descarta tras `status:'ok'`.
+- `doPost` toma `LockService.getScriptLock()` y, **antes de subir el oficio**, busca el envío
+  previo con `manBuscarEnvioPrevio_()`: primero por `ID de envío` (columna AA nueva, creada por el
+  auto-heal de encabezados). Como respaldo, para páginas viejas en caché sin `idEnvio`, busca
+  misma CCT + correo + "Equipos con falla" dentro de `MAN_VENTANA_DUPLICADO_MIN` (10 min). Si lo
+  encuentra, responde `{status:'ok', folio:<existente>, duplicado:true}` sin subir ni notificar
+  nada.
+- Las notificaciones salen fuera del candado.
+- `manCrearSolicitudUrgente_()` también genera su folio bajo el mismo candado (carrera de #31).
+- El mensaje de error del formulario ahora dice que se puede reenviar sin duplicar.
+
+Los datos ya duplicados no se tocaron (decisión de Jorge).
+
+**Dónde puede volver a pasar:** `asesorias.gs`/`asesorias.html` y
+`soporte-remoto.gs`/`soporte.html` tienen el mismo `doPost` sin candado ni llave de
+idempotencia. En general, cualquier formulario cuyo mensaje de error invite a reintentar debe
+tener un backend que reconozca el reintento: que el navegador "no recibió respuesta" no significa
+que el servidor no guardó.
