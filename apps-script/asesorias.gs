@@ -112,8 +112,11 @@ const ENCABEZADOS_ASE_SOLICITUDES = [
   'Confirmó Mantenimiento Previo', 'Notificación de cierre enviada',
   'Tipo de solicitante', 'Fecha programada de visita',
   'Notificación de fecha programada enviada', 'Temas de Excel',
-  'Fecha de realización', 'Asistentes'
+  'Fecha de realización', 'Asistentes', 'ID de envío'
 ];
+// Ventana del respaldo anti-duplicados para envíos sin idEnvio (páginas viejas en caché):
+// misma CCT + correo + tipo de asesoría + observaciones dentro de estos minutos = mismo envío.
+const ASE_VENTANA_DUPLICADO_MIN = 10;
 // Índice (0-based) de 'Tipo de solicitante' dentro de una fila leída con getValues() —
 // ya no es la última columna (se agregaron 2 más después, misma lógica de no correr
 // columnas existentes), así que queda fijo en vez de derivarse de .length - 1.
@@ -328,38 +331,35 @@ function doPost(e) {
     const datos = JSON.parse(e.postData.contents);
     aseValidarCampos(datos);
 
-    const oficioUrl = aseSubirOficio(datos);
+    // LockService + "ID de envío" generado en el navegador: si la confirmación se pierde
+    // en el camino (el servidor sí guardó) y la persona vuelve a presionar Enviar, el
+    // reintento devuelve el mismo folio en vez de crear otro (QA-NOTES #44, mismo
+    // patrón que mantenimiento.gs). El chequeo va antes de subir el oficio para no dejar
+    // copias en Drive.
+    const lock = LockService.getScriptLock();
+    try {
+      lock.waitLock(20000);
+    } catch (errLock) {
+      return aseTextResponse(JSON.stringify({ status: 'error', mensaje: 'El sistema está ocupado, intenta de nuevo en unos segundos.' }));
+    }
 
-    const hoja = aseObtenerHojaSolicitudes();
-    const folio = aseGenerarFolio(hoja);
-    const ahora = new Date();
+    let folio, oficioUrl;
+    try {
+      const hoja = aseObtenerHojaSolicitudes();
+      const folioPrevio = aseBuscarEnvioPrevio_(hoja, datos);
+      if (folioPrevio) {
+        return aseTextResponse(JSON.stringify({ status: 'ok', folio: folioPrevio, duplicado: true }));
+      }
 
-    hoja.appendRow([
-      ahora,
-      folio,
-      datos.tipoAsesoria.trim(),
-      datos.nombre.trim(),
-      datos.funcion.trim(),
-      datos.cct.trim().toUpperCase(),
-      (datos.sector || '').trim(),
-      (datos.zona || '').toString().trim(),
-      (datos.escuela || '').trim(),
-      datos.turno.trim(),
-      datos.numDocentes.toString().trim(),
-      datos.whatsapp.trim(),
-      (datos.correo || '').trim(),
-      (datos.observaciones || '').trim(),
-      oficioUrl,
-      'Pendiente de validar',
-      '',
-      datos.tipoAsesoria.trim() === 'Banco de Materiales y Chuka' ? (datos.confirmaMantenimiento ? 'Sí' : 'No') : 'N/A',
-      '',
-      (datos.tipoCct || '').trim(),
-      '',  // Fecha programada de visita — la llena aseOnEditProgramacion()
-      '',  // Notificación de fecha programada enviada — la llena aseOnEditProgramacion()
-      (datos.temasExcel || '').trim()
-    ]);
+      oficioUrl = aseSubirOficio(datos);
+      folio = aseGenerarFolio(hoja);
+      aseAgregarSolicitud_(hoja, datos, folio, oficioUrl);
+      SpreadsheetApp.flush();
+    } finally {
+      lock.releaseLock();
+    }
 
+    // Notificaciones fuera del candado — no bloquean a otro envío mientras salen.
     aseNotificarTelegram(folio, datos, oficioUrl);
     aseNotificarEquipoPorCorreo(folio, datos, oficioUrl);
     aseNotificarSolicitudRecibida(folio, datos);
@@ -369,6 +369,79 @@ function doPost(e) {
   } catch (err) {
     return aseTextResponse(JSON.stringify({ status: 'error', mensaje: err.message }));
   }
+}
+
+// ── Busca si este envío ya se registró: primero por ID de envío (lo manda
+// asesorias.html desde sep 2026); si no viene, por CCT + correo + tipo de asesoría +
+// observaciones dentro de ASE_VENTANA_DUPLICADO_MIN minutos. Devuelve el folio o null. ──
+function aseBuscarEnvioPrevio_(hoja, datos) {
+  if (hoja.getLastRow() < 2) return null;
+  const filas = hoja.getRange(2, 1, hoja.getLastRow() - 1, hoja.getLastColumn()).getValues();
+  const iFolio = ENCABEZADOS_ASE_SOLICITUDES.indexOf('Folio');
+  const iId = ENCABEZADOS_ASE_SOLICITUDES.indexOf('ID de envío');
+  const idEnvio = String(datos.idEnvio || '').trim();
+
+  if (idEnvio) {
+    const previa = filas.find(r => String(r[iId] || '') === idEnvio);
+    if (previa) return String(previa[iFolio]);
+  }
+
+  const iFecha = ENCABEZADOS_ASE_SOLICITUDES.indexOf('Fecha');
+  const iTipo = ENCABEZADOS_ASE_SOLICITUDES.indexOf('Tipo de Asesoría');
+  const iCct = ENCABEZADOS_ASE_SOLICITUDES.indexOf('CCT');
+  const iCorreo = ENCABEZADOS_ASE_SOLICITUDES.indexOf('Correo');
+  const iObs = ENCABEZADOS_ASE_SOLICITUDES.indexOf('Observaciones');
+  const tipo = String(datos.tipoAsesoria || '').trim();
+  const cct = String(datos.cct || '').trim().toUpperCase();
+  const correo = String(datos.correo || '').trim().toLowerCase();
+  const obs = String(datos.observaciones || '').trim();
+  const limite = Date.now() - ASE_VENTANA_DUPLICADO_MIN * 60 * 1000;
+
+  for (let i = filas.length - 1; i >= 0; i--) {
+    const r = filas[i];
+    const fecha = r[iFecha] instanceof Date ? r[iFecha].getTime() : 0;
+    if (fecha < limite) continue;
+    if (String(r[iTipo]).trim() === tipo &&
+        String(r[iCct]).trim().toUpperCase() === cct &&
+        String(r[iCorreo]).trim().toLowerCase() === correo &&
+        String(r[iObs]).trim() === obs) {
+      return String(r[iFolio]);
+    }
+  }
+  return null;
+}
+
+// ── Agrega la fila de una solicitud nueva (llamar dentro del candado) ──
+function aseAgregarSolicitud_(hoja, datos, folio, oficioUrl) {
+  const fila = [
+    new Date(),
+    folio,
+    datos.tipoAsesoria.trim(),
+    datos.nombre.trim(),
+    datos.funcion.trim(),
+    datos.cct.trim().toUpperCase(),
+    (datos.sector || '').trim(),
+    (datos.zona || '').toString().trim(),
+    (datos.escuela || '').trim(),
+    datos.turno.trim(),
+    datos.numDocentes.toString().trim(),
+    datos.whatsapp.trim(),
+    (datos.correo || '').trim(),
+    (datos.observaciones || '').trim(),
+    oficioUrl,
+    'Pendiente de validar',
+    '',
+    datos.tipoAsesoria.trim() === 'Banco de Materiales y Chuka' ? (datos.confirmaMantenimiento ? 'Sí' : 'No') : 'N/A',
+    '',
+    (datos.tipoCct || '').trim(),
+    '',  // Fecha programada de visita — la llena aseOnEditProgramacion()
+    '',  // Notificación de fecha programada enviada — la llena aseOnEditProgramacion()
+    (datos.temasExcel || '').trim()
+  ];
+  // Fecha de realización / Asistentes quedan en blanco (las llena Nancy); 'ID de envío' va al final.
+  while (fila.length < ENCABEZADOS_ASE_SOLICITUDES.length - 1) fila.push('');
+  fila.push(String(datos.idEnvio || '').trim());
+  hoja.appendRow(fila);
 }
 
 // ── Obtener o crear la hoja de solicitudes ──
