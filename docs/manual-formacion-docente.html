@@ -238,7 +238,7 @@
 
     <section id="cursos">
       <h2><span class="h2-num">02</span>Dar de alta un curso nuevo</h2>
-      <p>Agrega una fila al final de la pestaña <code>Cursos</code> con estos datos. No escribas el <code>ID_Curso</code> tú mismo: déjalo vacío y usa el menú (ver sección 05).</p>
+      <p>Agrega una fila al final de la pestaña <code>Cursos</code> y llénala de izquierda a derecha: <strong>desde el 28 sep 2026 las columnas van en el orden en que se llena un curso</strong>, por bloques. No escribas el <code>ID_Curso</code> tú mismo: déjalo vacío y usa el menú (ver sección 05). En el sitio, el curso más nuevo con inscripción abierta aparece primero.</p>
 
       <div class="table-wrap">
         <table>
@@ -246,24 +246,36 @@
             <tr><th>Columna</th><th>Qué va ahí</th></tr>
           </thead>
           <tbody>
+            <tr><td colspan="2"><strong>1. El curso</strong></td></tr>
             <tr><td class="col-name">ID_Curso</td><td>Vacío — se autocompleta con el menú "Generar ID de cursos faltantes".</td></tr>
             <tr><td class="col-name">Categoria</td><td>Una de: Webinar, Seminario, Conferencia, Curso autogestivo, Acción formativa, Diplomado, Proyecto didáctico. Debe coincidir exacto (define el prefijo del ID y el ícono en el sitio).</td></tr>
             <tr><td class="col-name">Nombre</td><td>El nombre visible del curso. Este es el texto que ven los docentes.</td></tr>
             <tr><td class="col-name">Responsable</td><td>Quién lo imparte (ej. "CoEEE", "OTDE NEZA").</td></tr>
-            <tr><td class="col-name">Modalidad</td><td>Ej. "En línea", "Presencial", "Híbrido".</td></tr>
+            <tr><td class="col-name">Modalidad</td><td>Ej. "Virtual", "Presencial", "Híbrido".</td></tr>
+            <tr><td class="col-name">Dirigido_a<br>Descripcion</td><td>Opcionales. Público y propósito del curso, se muestran en la tarjeta. Si escribes ligas en la descripción (ej. Facebook o YouTube), el sitio las muestra cortas y se pueden tocar.</td></tr>
+            <tr><td class="col-name">Liga_convocatoria</td><td>El link donde el docente se inscribe, consulta la convocatoria o entra a la transmisión. <strong>Una sola liga, sin texto</strong>: va en los botones de la página, de los correos y del calendario. Si hay más ligas, ponlas en <code>Descripcion</code>.</td></tr>
+            <tr><td colspan="2"><strong>2. Cuándo se imparte</strong></td></tr>
             <tr><td class="col-name">Fecha_inicio / Fecha_fin</td><td>Fechas en que <strong>se imparte</strong> el curso (desarrollo, no inscripción). Al día siguiente de <code>Fecha_fin</code> el curso pasa solo a "Cursos anteriores". Escríbelas directo en Sheets (no las pegues como texto plano de otra fuente).</td></tr>
-            <tr><td class="col-name">Liga_convocatoria</td><td>El link donde el docente se inscribe oficialmente o consulta la convocatoria, si existe.</td></tr>
-            <tr><td class="col-name">Activo</td><td><span class="chip true"><span class="chip-dot"></span>TRUE</span> = aparece en el catálogo del sitio ahora mismo. <span class="chip false"><span class="chip-dot"></span>FALSE</span> = oculto del catálogo vigente, pero sigue existiendo para quien ya se inscribió. Siempre gana sobre las fechas de abajo. <strong>Ya no lo saca de "Cursos anteriores"</strong> — para eso está <code>Ocultar_historial</code>.</td></tr>
+            <tr><td class="col-name">Hora_inicio<br>Hora_fin</td><td>Opcionales, pero recomendadas. Con <code>Hora_inicio</code> (ej. 16:00) sale el aviso de "empieza en 30 minutos" y el calendario del docente agenda la hora exacta. Sin <code>Hora_fin</code>, el calendario agenda 1 h 30 min.</td></tr>
+            <tr><td class="col-name">Fechas_sesion</td><td>Opcional. Para cursos en línea con varias sesiones: los días separados por coma, ej. <code class="mono">7/10, 14/10, 21/10</code>. Sirve para días fijos o sueltos. El calendario del docente agenda cada sesión con su aviso de 30 minutos.</td></tr>
+            <tr><td colspan="2"><strong>3. Inscripción</strong></td></tr>
+            <tr><td class="col-name">Visible_desde</td><td>Opcional. Día en que el curso aparece solo en el catálogo, sin que tengas que cambiar Activo a mano. Vacía = aparece en cuanto <code>Activo=TRUE</code>.</td></tr>
+            <tr><td class="col-name">Fecha_limite_inscripcion<br>Hora_limite_inscripcion</td><td>Cuándo <strong>cierra la inscripción</strong>. Vacía la fecha = se usa <code>Fecha_inicio</code>. La hora es opcional (ej. 14:00); vacía = cierra a las 23:59 de ese día. Al cerrar, el curso sigue visible con "Inscripciones cerradas" y ya no acepta registros — la página se cierra sola a la hora exacta aunque alguien la tenga abierta.</td></tr>
             <tr><td class="col-name">Registro_previo_requerido</td><td>Ver el ayudante de decisión abajo.</td></tr>
-            <tr><td class="col-name">Notas</td><td>Libre, para tu propio control interno — no se muestra a los docentes.</td></tr>
-            <tr><td class="col-name">Visible_desde<br>Visible_hasta</td><td>Opcionales. Programan que el curso aparezca/desaparezca del catálogo solo, en esas fechas — sin que tengas que entrar a cambiar Activo a mano. Vacías las dos = sin restricción, como hasta ahora.</td></tr>
-            <tr><td class="col-name">Hora_inicio</td><td>Opcional. Solo aplica a eventos de un solo día (ej. webinars): la hora en que empiezan (ej. 16:00). La usa el recordatorio de "faltan unas horas" — ver sección 06.</td></tr>
-            <tr><td class="col-name">Fecha_limite_inscripcion<br>Hora_limite_inscripcion</td><td>Cuándo <strong>cierra la inscripción</strong>. Vacía la fecha = se usa <code>Fecha_inicio</code>. La hora es opcional (ej. 14:00); vacía = cierra a las 23:59 de ese día. Al cerrar, el curso sigue visible con "Inscripciones cerradas" y ya no acepta registros — la página se cierra sola a la hora exacta aunque alguien la tenga abierta. <strong>Usa esta columna para cerrar inscripciones, no <code>Visible_hasta</code></strong> (esa esconde el curso por completo).</td></tr>
             <tr><td class="col-name">Cupo_agotado</td><td><span class="chip true"><span class="chip-dot"></span>TRUE</span> = ya no hay lugares aunque la inscripción siga en fecha. El curso sigue visible con "Cupo agotado" y no acepta registros nuevos, salvo quien ya se inscribió en la plataforma externa y usa "¿Ya te inscribiste en la plataforma? Avísanos aquí".</td></tr>
+            <tr><td colspan="2"><strong>4. Validez y constancia</strong></td></tr>
+            <tr><td class="col-name">Valida_USICAMM<br>Valida_PROEEB</td><td>TRUE/FALSE. Muestran la etiqueta de validez oficial en la tarjeta.</td></tr>
+            <tr><td class="col-name">Liga_tutorial_constancia</td><td>Solo conferencias UNETE: activa los recordatorios y la carga de constancia (sección 06).</td></tr>
+            <tr><td colspan="2"><strong>5. Control</strong></td></tr>
+            <tr><td class="col-name">Activo</td><td><span class="chip true"><span class="chip-dot"></span>TRUE</span> = aparece en el catálogo del sitio ahora mismo. <span class="chip false"><span class="chip-dot"></span>FALSE</span> = oculto del catálogo vigente, pero sigue existiendo para quien ya se inscribió. <strong>No lo saca de "Cursos anteriores"</strong> — para eso está <code>Ocultar_historial</code>.</td></tr>
             <tr><td class="col-name">Ocultar_historial</td><td><span class="chip true"><span class="chip-dot"></span>TRUE</span> = no mostrar el curso en "Cursos anteriores" (cursos de prueba o cancelados). El historial muestra los 6 cursos terminados más recientes, tengan o no <code>Activo=TRUE</code>.</td></tr>
+            <tr><td class="col-name">Notas</td><td>Libre, para tu propio control interno — no se muestra a los docentes.</td></tr>
+            <tr><td colspan="2"><strong>6. Automáticas (encabezado gris) — no se llenan</strong></td></tr>
+            <tr><td class="col-name">Recordatorio_*_enviado</td><td>El sistema las marca solo para no repetir un aviso. No editarlas salvo para forzar un reenvío.</td></tr>
           </tbody>
         </table>
       </div>
+      <p>Si mueves o insertas columnas en <code>Cursos</code>, no pasa nada: el sistema las lee por nombre de encabezado. Lo que no debes hacer es <strong>cambiar el nombre</strong> de un encabezado.</p>
 
       <div class="decision">
         <div class="decision-q">¿Cuándo poner Registro_previo_requerido en TRUE?</div>
@@ -292,9 +304,8 @@
     <section id="inscripciones">
       <h2><span class="h2-num">04</span>Inscripciones</h2>
       <p>Una fila por cada combinación docente + curso. El <code>Folio</code> tiene formato <code class="mono">OTDE-CAP-0001</code>, secuencial.</p>
-      <p><strong>Desde sep 2026 las columnas van agrupadas por bloques</strong> (no A–O fijas como antes): Registro (<code>Folio</code>, <code>Fecha_registro</code>) → Participante (<code>RFC_Docente</code>, <code>Nombre_Docente</code>, <code>Correo</code>, <code>Telefono</code>, <code>Funcion</code>) → Centro de trabajo (<code>CCT</code>, <code>Escuela</code>, <code>Sector</code>, <code>Zona</code>) → Curso (<code>ID_Curso</code>, <code>Nombre_Curso</code>) → Seguimiento (<code>Registro_externo</code>, <code>Fecha_confirmacion_externa</code>, <code>Recordatorios_pendiente</code>, <code>Fecha_ultimo_recordatorio</code>, <code>Estado</code>, <code>Codigo_asistencia_capturado</code>, <code>Fecha_actualizacion_estado</code>, <code>Notas</code>). El sistema ya no depende de que estén en un orden fijo — lee cada columna por su nombre de encabezado, así que si algún día se reordenan a mano nada se rompe.</p>
+      <p><strong>Desde sep 2026 las columnas van agrupadas por bloques</strong> (no A–O fijas como antes): Registro (<code>Folio</code>, <code>Fecha_registro</code>) → Participante (<code>RFC_Docente</code>, <code>Nombre_Docente</code>, <code>Correo</code>, <code>Telefono</code>, <code>Funcion</code>) → Centro de trabajo (<code>CCT</code>, <code>Escuela</code>, <code>Sector</code>, <code>Zona</code>) → Curso (<code>ID_Curso</code>, <code>Nombre_Curso</code>) → Plataforma externa (<code>Registro_externo</code>, <code>Fecha_confirmacion_externa</code>, <code>Recordatorios_pendiente</code>, <code>Fecha_ultimo_recordatorio</code>) → Constancia (solo UNETE: <code>Constancia_recordatorios_enviados</code>, <code>Fecha_ultimo_recordatorio_constancia</code>, <code>Constancia_recibida</code>, <code>Fecha_recepcion_constancia</code>, <code>Liga_constancia_drive</code>) → <code>Notas</code>. El sistema no depende de que estén en un orden fijo — lee cada columna por su nombre de encabezado, así que si algún día se reordenan a mano nada se rompe. (El 28 sep 2026 se quitaron <code>Estado</code>, que siempre decía "Registrado", y dos columnas vacías de una validación de asistencia que nunca se construyó.)</p>
       <ul>
-        <li><strong>Estado</strong> — hoy solo se usa "Registrado". Las fases siguientes del proyecto (validar asistencia, marcar "Participó") escribirán aquí.</li>
         <li><strong>Nombre_Docente, Correo, Telefono, Funcion, CCT, Escuela, Sector, Zona, Nombre_Curso</strong> — son fórmulas <code>VLOOKUP</code>, no datos capturados. Se actualizan solas si cambias algo en Docentes o Cursos; no las edites a mano, edítalas ahí.</li>
         <li><strong>Registro_externo</strong> — "No aplica" (el curso no tiene liga externa), "Pendiente" (el docente dijo que todavía no le llega el correo de bienvenida de la plataforma) o "Confirmado por docente" (dijo que sí, o confirmó después desde el correo de recordatorio). El sistema nunca hace retroceder este valor de Confirmado a Pendiente.</li>
         <li><strong>Recordatorios_pendiente / Fecha_ultimo_recordatorio</strong> — llevan la cuenta de cuántos correos de recordatorio ya recibió esa inscripción (máximo 2) para no reenviar de más. No editar a mano salvo para corregir un error puntual.</li>
@@ -332,6 +343,13 @@
           </div>
         </div>
         <div class="menu-item">
+          <span class="mi-name">Reordenar columnas de Cursos</span>
+          <div class="mi-body">
+            <p>Acomoda <code>Cursos</code> en el orden por bloques de la sección 02, dentro de la misma hoja (conserva formatos y listas desplegables). Antes deja una copia <code>Cursos_respaldo_AAAAMMDD</code> y al final verifica curso por curso que ningún dato cambió.</p>
+            <p class="mi-when">Cuándo: ya se corrió el 28 sep 2026. Solo si el orden vuelve a desordenarse.</p>
+          </div>
+        </div>
+        <div class="menu-item">
           <span class="mi-name">Reordenar columnas de Inscripciones</span>
           <div class="mi-body">
             <p>Copia la hoja a un orden por bloques (Registro → Participante → Centro de trabajo → Curso → Seguimiento) y deja un respaldo de la hoja anterior con fecha en el nombre.</p>
@@ -360,17 +378,10 @@
           </div>
         </div>
         <div class="menu-item">
-          <span class="mi-name">Migrar Jornada Verano 2026</span>
-          <div class="mi-body">
-            <p>Trae los registros del Spreadsheet viejo de Jornada de Verano y da de alta sus 5 cursos si no existen.</p>
-            <p class="mi-when">Cuándo: en teoría ya no hace falta correrlo de nuevo — quedó como respaldo por si aparece algún registro tardío en la hoja vieja.</p>
-          </div>
-        </div>
-        <div class="menu-item">
           <span class="mi-name">Instalar recordatorios automáticos</span>
           <div class="mi-body">
-            <p>Da de alta los dos disparadores que mandan los correos de la sección 06 (uno diario, uno cada hora). Sin esto, el código existe pero nadie lo llama.</p>
-            <p class="mi-when">Cuándo: una sola vez, al activar el sistema. Correrlo de nuevo no duplica nada.</p>
+            <p>Da de alta los dos disparadores que mandan los correos de la sección 06 (uno diario a las 9 am, uno cada 15 minutos). Sin esto, el código existe pero nadie lo llama.</p>
+            <p class="mi-when">Cuándo: después de cada "Nueva versión" del código. Córrelo desde este menú de la hoja, no con ▶️ desde el editor (ahí se queda esperando y termina "En tiempo de espera"). Correrlo de nuevo no duplica nada.</p>
           </div>
         </div>
         <div class="menu-item">
@@ -385,27 +396,29 @@
 
     <section id="recordatorios">
       <h2><span class="h2-num">06</span>Recordatorios automáticos por correo</h2>
-      <p>Tres avisos que se mandan solos, calculados a partir de las fechas de cada curso — no hay que marcar nada a mano. Requieren haber corrido <span class="mi-name" style="font-size:.78rem;">Instalar recordatorios automáticos</span> una vez (ver sección 05).</p>
+      <p><strong>El aviso principal es el calendario del docente</strong>: al terminar su registro, la página le ofrece agregar el curso a Google Calendar o a Outlook/celular (con aviso 1 día y 30 minutos antes de cada sesión), guardar un comprobante con su folio y mandárselo por WhatsApp. Para quien se inscribió antes de que existieran esos botones, comparte la liga <code class="mono">formacion-docente.html?calendario=ID_DEL_CURSO</code>.</p>
+      <p>Los correos son un <strong>respaldo "a quien alcance"</strong>. Se mandan solos, calculados a partir de las fechas de cada curso, y requieren haber corrido <span class="mi-name" style="font-size:.78rem;">Instalar recordatorios automáticos</span> (ver sección 05).</p>
 
       <div class="table-wrap">
         <table>
           <thead><tr><th>Aviso</th><th>Cuándo se dispara</th><th>Requiere</th></tr></thead>
           <tbody>
-            <tr><td class="col-name">Empieza en 2 días</td><td>2 días antes de <code>Fecha_inicio</code>, en cualquier curso.</td><td>—</td></tr>
-            <tr><td class="col-name">Vas a la mitad</td><td>Al cruzar el punto medio entre <code>Fecha_inicio</code> y <code>Fecha_fin</code>, solo si el curso dura 30 días o más.</td><td>—</td></tr>
-            <tr><td class="col-name">Faltan unas horas</td><td>Entre 2 y 4 horas antes del inicio, solo en eventos de un solo día (<code>Fecha_inicio</code> = <code>Fecha_fin</code>).</td><td><code>Hora_inicio</code> capturada</td></tr>
+            <tr><td class="col-name">Empieza mañana</td><td>El día anterior a <code>Fecha_inicio</code>; a quien no alcanzó, el día de inicio como "empieza hoy". Después ya no se manda. No aplica a eventos de un solo día con hora (esos reciben solo el de 30 minutos).</td><td>—</td></tr>
+            <tr><td class="col-name">Vas a la mitad</td><td>Solo el día del punto medio entre <code>Fecha_inicio</code> y <code>Fecha_fin</code>, si el curso dura 30 días o más.</td><td>—</td></tr>
+            <tr><td class="col-name">Empieza en 30 minutos</td><td>Unos 30–40 minutos antes del inicio (el disparador corre cada 15 min). Si alguien no alcanzó, recibe "ya comenzó" durante ese mismo día. En cursos de varios días, solo la primera sesión; las demás las avisa el calendario.</td><td><code>Hora_inicio</code> capturada</td></tr>
           </tbody>
         </table>
       </div>
 
-      <div class="callout ok">
-        <div class="callout-title">Un webinar puede recibir los dos primeros y el tercero</div>
-        <p>No son excluyentes a propósito: si un webinar se cataloga con varios días de anticipación, recibe el aviso de "empieza en 2 días" y, el mismo día, el de "faltan unas horas" con el link de transmisión. Es intencional — un aviso temprano más un empujón el mismo día.</p>
-      </div>
-
       <div class="callout warn">
-        <div class="callout-title">Cuidado con la cuota de correo</div>
-        <p>El límite diario de <code>MailApp</code> (100 correos en cuentas normales de Gmail) lo comparten <strong>todos</strong> los Apps Script de tu cuenta de Google, no es exclusivo de este proyecto. Por eso cada aviso se manda como <strong>un solo correo por curso, con todos los inscritos en copia oculta (BCC)</strong> — no uno por persona — y antes de mandar se revisa cuánta cuota queda. Si no alcanza, ese aviso se salta ese día y se reintenta solo, al día siguiente (nunca se pierde, solo se retrasa).</p>
+        <div class="callout-title">La cuota de correo no alcanza para todos</div>
+        <p>La cuenta puede mandar unos <strong>100 correos al día</strong>, contados por persona que recibe, y los comparten <strong>todos</strong> los sistemas de OTDE. Por eso:</p>
+        <ul>
+          <li>Siempre quedan <strong>50 libres</strong> para Mantenimiento, Asesorías, Correo y Soporte. Formación Docente usa como máximo unos 50 al día.</li>
+          <li>Los días que hay un aviso de 30 minutos pendiente, 20 de esos 50 se guardan para él.</li>
+          <li>Cada vez se sortea a quién le toca, y el aviso de 30 minutos va primero a quien no recibió "empieza mañana". Así no reciben siempre los mismos.</li>
+          <li>Lo que no alcanza ya no se manda días después. Quien no recibió correo depende de su calendario.</li>
+        </ul>
       </div>
 
       <p>Cada aviso tiene su propia bandera en <code>Cursos</code> (<code>Recordatorio_inicio_enviado</code>, <code>Recordatorio_medio_enviado</code>, <code>Recordatorio_webinar_enviado</code>) para no reenviarse dos veces. Si necesitas forzar un reenvío para un curso puntual, borra el <code>TRUE</code> de esa celda y se vuelve a evaluar en la siguiente corrida.</p>
@@ -415,10 +428,10 @@
       <h2><span class="h2-num">07</span>Solución de problemas</h2>
 
       <h3>El catálogo aparece vacío en el sitio</h3>
-      <p>Revisa que al menos un curso en <code>Cursos</code> tenga <code>Activo=TRUE</code>. Si además usaste <code>Visible_desde</code>/<code>Visible_hasta</code>, confirma que la fecha de hoy caiga dentro de esa ventana — fuera de rango, el curso se oculta aunque Activo esté en TRUE.</p>
+      <p>Revisa que al menos un curso en <code>Cursos</code> tenga <code>Activo=TRUE</code>. Si además usaste <code>Visible_desde</code>, confirma que esa fecha ya llegó — antes de ese día el curso se oculta aunque Activo esté en TRUE.</p>
 
       <h3>No están llegando los recordatorios</h3>
-      <p>Confirma que corriste <span class="mi-name" style="font-size:.78rem;">Instalar recordatorios automáticos</span> al menos una vez. Si sí, revisa las banderas <code>Recordatorio_*_enviado</code> del curso en cuestión — si ya están en TRUE, ya se mandó (o se marcó como ya no aplicable). Si el problema es que nunca llega, puede ser que se haya agotado la cuota diaria de correo ese día — se reintenta solo al siguiente.</p>
+      <p>Confirma que corriste <span class="mi-name" style="font-size:.78rem;">Instalar recordatorios automáticos</span> al menos una vez. Si sí, revisa las banderas <code>Recordatorio_*_enviado</code> del curso en cuestión — si ya están en TRUE, ya se mandó (o se marcó como ya no aplicable). Si a algunos inscritos no les llegó, es lo esperado cuando son muchos: la cuota diaria solo alcanza para una parte (ver sección 06). En "Ejecuciones" del proyecto de Apps Script, el registro de cada corrida dice cuántos se enviaron y cuántos se pospusieron.</p>
 
       <h3>Modifiqué el código (.gs) y no veo el cambio</h3>
       <p>Editar y guardar el script <strong>no actualiza</strong> la URL pública por sí solo. Hace falta: <strong>Implementar → Administrar implementaciones → editar (lápiz) → Versión: Nueva versión → Implementar</strong>. Si solo le das "Guardar" en el editor, el sitio sigue sirviendo la versión anterior.</p>
@@ -438,10 +451,13 @@
           <tbody>
             <tr><td>Abrir un curso nuevo al público</td><td>Fila nueva en <code class="mono">Cursos</code> + <span class="mi-name" style="font-size:.78rem;">Generar ID de cursos faltantes</span></td></tr>
             <tr><td>Cerrar temporalmente un curso</td><td><code class="mono">Activo</code> → <span class="chip false"><span class="chip-dot"></span>FALSE</span> en su fila de <code class="mono">Cursos</code></td></tr>
-            <tr><td>Programar que aparezca/desaparezca solo</td><td>Llenar <code class="mono">Visible_desde</code> / <code class="mono">Visible_hasta</code> en su fila de <code class="mono">Cursos</code></td></tr>
+            <tr><td>Programar que aparezca solo</td><td>Llenar <code class="mono">Visible_desde</code> en su fila de <code class="mono">Cursos</code></td></tr>
+            <tr><td>Cerrar la inscripción en una fecha y hora</td><td>Llenar <code class="mono">Fecha_limite_inscripcion</code> (+ <code class="mono">Hora_limite_inscripcion</code>)</td></tr>
+            <tr><td>Que el calendario avise cada sesión</td><td>Llenar <code class="mono">Fechas_sesion</code> (ej. 7/10, 14/10, 21/10) + <code class="mono">Hora_inicio</code></td></tr>
+            <tr><td>Que quienes ya se inscribieron agreguen el curso a su calendario</td><td>Compartir <code class="mono">formacion-docente.html?calendario=ID_DEL_CURSO</code></td></tr>
             <tr><td>Forzar que se registren primero en CoEEE</td><td><code class="mono">Registro_previo_requerido</code> → <span class="chip true"><span class="chip-dot"></span>TRUE</span> + llenar <code class="mono">Liga_convocatoria</code></td></tr>
             <tr><td>Activar recordatorios por correo (primera vez)</td><td>Menú → <span class="mi-name" style="font-size:.78rem;">Instalar recordatorios automáticos</span></td></tr>
-            <tr><td>Que un webinar avise "faltan X horas"</td><td>Llenar <code class="mono">Hora_inicio</code> en su fila de <code class="mono">Cursos</code></td></tr>
+            <tr><td>Que un webinar avise "empieza en 30 minutos"</td><td>Llenar <code class="mono">Hora_inicio</code> en su fila de <code class="mono">Cursos</code></td></tr>
             <tr><td>Ver cuántos se inscribieron a qué curso</td><td>Menú → <span class="mi-name" style="font-size:.78rem;">Generar estadísticas</span></td></tr>
             <tr><td>Buscar un registro puntual</td><td><code class="mono">Inscripciones</code>, filtrar por <code class="mono">RFC_Docente</code> o <code class="mono">Folio</code></td></tr>
           </tbody>

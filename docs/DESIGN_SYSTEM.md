@@ -273,6 +273,32 @@ propósito (es el patrón esperado en catálogos con texto de longitud
 variable, más simple que un modal o tooltip aparte). El botón usa
 `ev.stopPropagation()` para no disparar `seleccionarCurso()` de la tarjeta.
 
+**Ligas dentro de la descripción (28 sep 2026):** `pintarTextoConLigas()` pinta
+las URLs como `<a>` cortas (sin `https://www.` ni `/` final, ej.
+"facebook.com/unetecomunidad"), con el mismo `stopPropagation()`. Y
+`.cc-desc` lleva `overflow-wrap: anywhere`: una URL no tiene espacios, así que
+sin eso se salía de la tarjeta (caso real, `docs/QA-NOTES.md #47`).
+
+## Patrón: confirmación con calendario y comprobante (28 sep 2026)
+
+La cuota de correo no alcanza para avisar a todos los inscritos, así que la
+confirmación le entrega al docente su propio recordatorio. Por curso
+(`.folio-item`):
+- El folio va con un botón pill "Copiar" (`.fi-copiar`).
+- Debajo, la fecha y la hora (`.fi-cuando`).
+- Un bloque `.fi-cal`: "Agrégalo a tu calendario", más una línea que dice
+  cuándo avisará el celular, y dos botones de contorno midnight
+  (`.fi-cal-btn`, Google Calendar y "Outlook / celular").
+- Con varias sesiones, un botón ancho "Todas las sesiones (Outlook / celular)"
+  y una rejilla de botones de Google por fecha (`.fi-cal-btns.sesiones`).
+
+Al pie, antes del tip de folio, van dos botones anchos (`.conf-guardar` /
+`.cg-btn`): "Guardar comprobante (imagen)" en acento guinda y "Enviármelo
+por WhatsApp" en verde. El comprobante es un PNG de 1080 px de ancho
+dibujado en canvas: encabezado midnight con barra guinda, una tarjeta blanca
+por curso con el folio en monoespaciado acento, y pie con la fecha de
+registro. Todo es texto del propio registro; sin emojis ni imágenes externas.
+
 ## Patrón: aviso de registro externo (dinámico, por curso y no solo global)
 
 Antes el aviso "Este formulario no es tu inscripción oficial al curso"

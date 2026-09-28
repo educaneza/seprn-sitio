@@ -618,35 +618,32 @@ Nace de sistematizar el flujo real de convocatorias CoEEE (webinars, seminarios,
 ### Modelo de datos — 3 hojas relacionales en un solo Spreadsheet (no una hoja por curso)
 
 ```
-Docentes                    Cursos                              Inscripciones (21 cols, por bloques — sep 2026)
-─────────                   ──────                              ────────────────────────────────────────────
-RFC (llave, upsert)          ID_Curso (llave)                     Registro:     Folio (OTDE-CAP-NNNN) | Fecha_registro
-Nombre_completo              Categoria                             Participante: RFC_Docente ──┐FK | Nombre_Docente* | Correo* | Telefono* | Funcion*
-Correo                       Nombre                                Centro:       CCT* | Escuela* | Sector* | Zona*
-Telefono                     Responsable                           Curso:        ID_Curso ──┤FK | Nombre_Curso*
-CCT                          Modalidad                             Seguimiento:  Registro_externo | Fecha_confirmacion_externa
-Escuela                      Fecha_inicio / Fecha_fin                            Recordatorios_pendiente | Fecha_ultimo_recordatorio
-Sector / Zona / Municipio    Liga_convocatoria                                   Estado | Codigo_asistencia_capturado
-Funcion                      Requiere_codigo_asistencia                         Fecha_actualizacion_estado | Notas
-Fecha_primer_registro        Codigo_asistencia                     * columnas de vista VLOOKUP contra Docentes/Cursos —
-Fecha_ultima_actualizacion   Activo (controla el catálogo)           en vivo, nunca se escriben como valor fijo
-                             Notas
-                             Registro_previo_requerido
-                             Visible_desde / Visible_hasta
-                             Hora_inicio
-                             Recordatorio_inicio_enviado
-                             Recordatorio_medio_enviado
-                             Recordatorio_webinar_enviado
-                             Descripcion (opcional, propósito/objetivo)
-                             Dirigido_a (opcional, público objetivo)
-                             Fecha_limite_inscripcion (opcional)
-                             Valida_USICAMM / Valida_PROEEB (TRUE/FALSE)
-                             Liga_tutorial_constancia / Hora_fin
-                             Hora_limite_inscripcion (opcional)
-                             Cupo_agotado / Ocultar_historial (TRUE/FALSE)
+Docentes                    Cursos (27 cols, por bloques — 28 sep 2026)       Inscripciones (23 cols, por bloques)
+─────────                   ───────────────────────────────────────────       ────────────────────────────────────
+RFC (llave, upsert)          1. El curso:  ID_Curso (llave) | Categoria        Registro:     Folio (OTDE-CAP-NNNN) | Fecha_registro
+Nombre_completo                 | Nombre | Responsable | Modalidad            Participante: RFC_Docente ──┐FK | Nombre_Docente* | Correo* | Telefono* | Funcion*
+Correo                          | Dirigido_a | Descripcion                    Centro:       CCT* | Escuela* | Sector* | Zona*
+Telefono                        | Liga_convocatoria                           Curso:        ID_Curso ──┤FK | Nombre_Curso*
+CCT                          2. Cuándo:    Fecha_inicio | Fecha_fin           Plataforma:   Registro_externo | Fecha_confirmacion_externa
+Escuela                         | Hora_inicio | Hora_fin | Fechas_sesion                    Recordatorios_pendiente | Fecha_ultimo_recordatorio
+Sector / Zona / Municipio    3. Inscripción: Visible_desde                     Constancia:   Constancia_recordatorios_enviados
+Funcion                         | Fecha_limite_inscripcion                                  Fecha_ultimo_recordatorio_constancia | Constancia_recibida
+Fecha_primer_registro           | Hora_limite_inscripcion                                   Fecha_recepcion_constancia | Liga_constancia_drive
+Fecha_ultima_actualizacion      | Registro_previo_requerido | Cupo_agotado    Notas
+                             4. Validez:   Valida_USICAMM | Valida_PROEEB     * columnas de vista VLOOKUP contra Docentes/Cursos —
+                                | Liga_tutorial_constancia                      en vivo, nunca se escriben como valor fijo
+                             5. Control:   Activo | Ocultar_historial | Notas
+                             6. Automáticas (encabezado gris):
+                                Recordatorio_{inicio,medio,webinar}_enviado
 ```
 
-`obtenerHojaCursos()` completa sola cualquier encabezado que falte en una hoja ya creada antes de agregar una columna nueva (compara `ENCABEZADOS_CURSOS` contra `getLastColumn()`) — no hace falta migrar nada a mano cuando el modelo crece. `Inscripciones` sigue el mismo principio pero por nombre en vez de por ancho: el código la lee/escribe **siempre por nombre de encabezado** (`indicesPorEncabezado_()`/`columnasInscripciones_()`), nunca por posición — reordenar sus columnas (menú "Reordenar columnas de Inscripciones", ya corrido en producción) no rompe recordatorios, estadísticas ni conteos.
+**`Cursos` e `Inscripciones` se leen por nombre de encabezado, nunca por posición.** `Inscripciones` desde sep 2026 (`indicesPorEncabezado_()`/`columnasInscripciones_()`); `Cursos` desde el 28 sep 2026: `valoresCursos_(hoja)` devuelve cada fila acomodada en el orden de `ENCABEZADOS_CURSOS` (acceso `row[CUR.Fecha_inicio]`, etc.; las constantes `COL_*` se derivan de `CUR`), y las escrituras (banderas `Recordatorio_*_enviado`, `ID_Curso`) buscan la columna real con `colCursos_(hoja, nombre)`. Mover o insertar columnas ya no rompe catálogo, registros ni recordatorios. `obtenerHojaCursos()` agrega al final, por nombre, cualquier encabezado que falte. (`Docentes` sigue leyéndose por posición: no se reordenó.)
+
+Menús de reordenamiento, ambos corridos en producción el 28 sep 2026:
+- **"Reordenar columnas de Cursos"** (`reordenarColumnasCursos_()`): mueve columnas completas **en la misma hoja** (`moveColumns`), para conservar formatos, dropdowns y notas, y para que `Cursos!A:C` de las fórmulas de `Inscripciones` siga apuntando bien (renombrar la hoja las habría redirigido al respaldo). Deja antes una copia `Cursos_respaldo_AAAAMMDD` y al final verifica columna por columna.
+- **"Reordenar columnas de Inscripciones"**: arma una hoja nueva y la intercambia; la anterior queda como `Inscripciones_respaldo_AAAAMMDD`.
+
+Columnas retiradas el 28 sep 2026 por no tener uso real: `Requiere_codigo_asistencia`, `Codigo_asistencia` y `Visible_hasta` en Cursos (`COLUMNAS_CURSOS_RETIRADAS`); `Estado`, `Codigo_asistencia_capturado` y `Fecha_actualizacion_estado` en Inscripciones. La validación de asistencia con código nunca se construyó. `fdAplicarValidacionCursos_()` pone dropdowns, notas de encabezado y protecciones por nombre de columna.
 
 - **Estados de inscripción por curso (sep 2026, 4 estados desde el 23 sep)**: `evaluarEstadoCurso_(row, ahora)` distingue el periodo de **inscripción** del periodo de **desarrollo** (`Fecha_inicio`/`Fecha_fin`) — un curso puede seguir en marcha con la inscripción ya cerrada. El cierre es un instante, no un día: `momentoCierreInscripcion_()` combina `Fecha_limite_inscripcion` (o `Fecha_inicio` si está vacía) con `Hora_limite_inscripcion` (`horaYMinutos_()` acepta celda de hora de Sheets o texto "14:00"; vacía o ilegible → 23:59, fail-open), y se compara contra la hora real. Estado **abierta** (normal). Estado **agotada**: `Cupo_agotado=TRUE` y aún no llega el cierre — sigue en el catálogo con chip "Cupo agotado", sin registros nuevos. Estado **cerrada**: ya pasó el cierre (gana sobre agotada) pero no `Fecha_fin` — sigue en el catálogo con "Inscripciones cerradas" y sin CTA. Estado **pasado** (`hoy > Fecha_fin`, por día): sale del catálogo vigente y entra al historial (ver abajo). **Del lado servidor**, `doPost()` rechaza un registro **nuevo** a un curso cerrado o agotado (antes solo rechazaba pasados, `docs/QA-NOTES.md #42`); la excepción es agotada + `Registro_externo=Confirmado por docente` (flujo "solo vengo a avisar": esa persona ya tiene lugar en la plataforma). Quien ya tiene folio sí puede volver a avisar. El rechazo ocurre antes de `upsertDocente()` — no escribe nada. El recordatorio a `Pendiente` solo sale en cursos con estado `abierta`. `doGet()` manda además `fecha_limite_inscripcion`, `hora_limite_inscripcion` y `cierre_inscripcion_iso` (instante exacto en UTC) para que la página muestre "Inscríbete hasta" y cierre sola la tarjeta si la hora llega con la página abierta (`estadoEfectivo()`/`vigilarCierres()` en el frontend, cada 30 s; también se revisa justo antes de enviar). `parseFechaSegura_()` hace el parseo fail-open (mismo criterio que `formatearFecha()` con `isNaN` — un dato incompleto o texto libre como "Por definir" nunca oculta ni bloquea un curso por error).
 - **Historial "Cursos anteriores" (sep 2026)**: `doGet()` regresa además `cursos_pasados` — hasta `MAX_CURSOS_PASADOS` (6) cursos en estado "pasado", ordenados por `Fecha_fin` descendente. **No depende de `Activo`** (desde el 23 sep 2026): era costumbre apagar un curso al terminar y eso lo borraba también del historial; para excluir uno (prueba, cancelado) está `Ocultar_historial=TRUE`. El tope y el orden se calculan en el backend (no en el frontend) porque `fecha_fin` llega ya formateada como texto `dd/MM/yyyy` (no ordenable) — el backend todavía tiene el `Date` real antes de formatear. A diferencia del catálogo vigente, `cursos_pasados` **no** pasa por `dentroDeVentanaVisible()`: esa ventana controla la aparición/desaparición de cursos vigentes, no aplica a un curso que ya cerró su periodo de desarrollo. En el frontend, `renderCursosPasados()` pinta las mismas tarjetas de `CATEGORIA_STYLE` pero de solo lectura (`.curso-card-historial`, `filter: grayscale(85%)` + `pointer-events: none`, sin CTA ni "Leer más") en `#cursos-pasados-wrap`, que se muestra siempre que haya al menos un curso pasado — **coexiste** con `#catalogo-vacio` (no lo reemplaza) y aparece tanto si hay cursos vigentes como si no, a propósito, para que el docente vea qué se ha ofrecido antes.
@@ -654,7 +651,8 @@ Fecha_ultima_actualizacion   Activo (controla el catálogo)           en vivo, n
 - **Rechazo server-side de registros a cursos pasados (sep 2026)**: la UI ya deja de ofrecer el clic en un curso pasado, pero eso no protege contra una llamada directa al endpoint. `doPost()` ahora busca la fila del curso con `obtenerFilaCurso_()` (antes `existeCurso()`, que solo regresaba un booleano) y, si `evaluarEstadoCurso_()` marca `esPasado`, rechaza el registro con un error explícito antes de tocar `Docentes`/`Inscripciones`.
 
 - **Upsert en `Docentes`**: si el RFC ya existe, se actualizan sus datos y `Fecha_ultima_actualizacion`; si no existe, se agrega. **Un valor nuevo vacío nunca sobrescribe uno bueno que ya hubiera** (`valorOMantener()`) — importante para migraciones históricas incompletas (ej. la de Jornada Verano, que no capturaba Teléfono).
-- **Catálogo dinámico + ventanas de fecha**: `Cursos` la administra OTDE a mano. El `doGet` regresa las filas con `Activo=TRUE` **y**, si `Visible_desde`/`Visible_hasta` están llenas, dentro de esa ventana (comparación por año/mes/día vía `soloFecha()`, sin depender de un trigger que pueda fallar en silencio — se evalúa en cada visita al sitio). `Activo=FALSE` siempre gana sobre las fechas.
+- **Catálogo dinámico + aparición programada**: `Cursos` la administra OTDE a mano. El `doGet` regresa las filas con `Activo=TRUE` **y**, si `Visible_desde` está llena, a partir de ese día (`dentroDeVentanaVisible()`, por año/mes/día vía `soloFecha()`, evaluado en cada visita, sin trigger). `Activo=FALSE` siempre gana. `Visible_hasta` se retiró el 28 sep 2026: escondía el curso por completo y se estaba usando por error para cerrar inscripciones (eso es `Fecha_limite_inscripcion`).
+- **Orden del catálogo en la página (28 sep 2026)**: `ordenarCatalogo()` en `formacion-docente.html` pinta primero lo que acepta registro (abierta), luego cupo agotado y al final cerrada; dentro de cada grupo, el curso agregado más recientemente a la hoja va primero (el API entrega el orden de la hoja). Las ligas http(s) escritas en `Descripcion` se vuelven clicables y cortas (`pintarTextoConLigas()`), y `.cc-desc` usa `overflow-wrap: anywhere` para que una liga larga no se salga de la tarjeta.
 - **Prueba social real**: `doGet` también manda `inscritos` (conteo de `Inscripciones` por `ID_Curso`, `contarInscritosPorCurso()`) — el frontend solo lo muestra si es mayor a 0, nunca un número inventado.
 - **`Descripcion`/`Dirigido_a` (sep 2026, opcionales)**: propósito/objetivo del curso y público objetivo, texto libre, se muestran en la tarjeta del catálogo (`.cc-desc` y una pill con ícono de audiencia) solo si están llenas. `Fecha_inicio`/`Fecha_fin` admiten además texto libre (ej. "Por definir") para cursos sin fecha confirmada — `formatearFecha()` detecta con `isNaN` cuando el valor no es una fecha real y devuelve el texto tal cual en vez de una fecha falsa (ver `docs/QA-NOTES.md #27`).
 - **Sin gestión de constancias**: los webinars/seminarios no las emiten (salvo conferencias UNETE) y en los demás programas la emite la plataforma de CoEEE. OTDE solo registra participación para estadística propia.
@@ -692,7 +690,7 @@ individual (agrupado por docente si tiene varios cursos pendientes, `MAX_RECORDA
 = 2` por inscripción, nunca el mismo día del registro) sale al día siguiente del registro y de
 nuevo a `DIAS_ANTES_CIERRE_RECORDATORIO` (2) días o menos del cierre de inscripción
 (`decidirRecordatorioPendiente_()`), solo para cursos `Activo=TRUE` con inscripción abierta, con
-`RESERVA_CUOTA_CORREO=30` de margen para el resto de los Apps Script de la cuenta (subió de 20 a 30 el 22 sep 2026, a pedido de Jorge). El correo trae
+la misma reserva de cuota que los avisos en lote (`reservaCuota_()`, ver "Recordatorios automáticos por correo" abajo). El correo trae
 dos botones por curso: "Ir a inscribirme" (la `Liga_convocatoria`) y "Sí, ya me llegó", firmado
 con `HMAC-SHA256` del folio (`tokenConfirmacion_()`, secreto propio del proyecto en Script
 Properties, generado solo — la firma es lo único que impide confirmar el folio de otra persona
@@ -722,7 +720,12 @@ Tres avisos calculados a partir de las propias fechas del curso, sin marcar nada
 | "Vas a la mitad" | Al cruzar el punto medio `Fecha_inicio`/`Fecha_fin`, solo cursos de 30+ días | — |
 | "Empieza en 30 minutos" | Entre 20 y 40 minutos antes del inicio exacto, cualquier curso (de uno o varios días) | `Hora_inicio` capturada |
 
-Un curso de varios días con `Hora_inicio` capturada recibe el primero y el tercero — son avisos independientes, uno no sustituye al otro (aviso temprano + empujón el mismo día). Un curso de un solo día con `Hora_inicio` recibe **solo** el tercero (el primero se salta para no duplicar con un aviso tan cercano). Cada aviso se manda **en BCC a todos los inscritos, troceado en lotes de `MAX_DESTINATARIOS_POR_CORREO=45`** (límite de destinatarios por mensaje de Gmail), con una plantilla HTML propia (`construirCorreoHtml()`, con la paleta institucional — ver ejemplo en `docs/DESIGN_SYSTEM.md`). La cuota diaria de `MailApp` se cuenta **por destinatario** y la comparten TODOS los Apps Script de la cuenta de Google: antes de cada lote `enviarCorreoLote()` revisa que, tras mandarlo (`lote.length + 1`, por el `to` a la propia cuenta), sigan libres `RESERVA_CUOTA_CORREO` destinatarios; si no, ese lote se salta. **Envío parcial sin duplicar** (sep 2026): cada aviso lleva una `claveSeguimiento` (`<idCurso>_INICIO`/`_MEDIO`/`_WEBINAR`) y los destinatarios que ya lo recibieron se anotan en la Script Property `LOTE_ENVIADOS_<clave>` (huella MD5 corta por correo, `huellaCorreo_()`); las corridas siguientes solo mandan a los que faltan, y la bandera `Recordatorio_*_enviado` se marca únicamente cuando llegó a todos. Tope ~630 destinatarios por aviso (`MAX_BYTES_SEGUIMIENTO_LOTE`): si no cabe, se detiene sin mandar lotes que no pueda anotar, se da por concluido y avisa a Jorge (`avisarSeguimientoLleno_()`). La propiedad se borra al completar o al resignarse (`limpiarSeguimientoLote_()`). El aviso de "1 día antes" usa un rango, no una igualdad exacta, para poder reintentar al día siguiente sin perderse en silencio; el de "30 minutos / ya comenzó" deja de reintentarse al terminar el evento (`finConferencia_()`, con `Hora_fin` si está capturada). `esEmailValido_()` descarta antes de trocear direcciones con formato inválido (incluido un dominio con punto final). Detalle en `docs/QA-NOTES.md #38`-`#40`.
+Un curso de varios días con `Hora_inicio` capturada recibe el primero y el tercero — son avisos independientes, uno no sustituye al otro (aviso temprano + empujón el mismo día). Un curso de un solo día con `Hora_inicio` recibe **solo** el tercero (el primero se salta para no duplicar con un aviso tan cercano). Cada aviso se manda **en BCC a todos los inscritos, troceado en lotes de `MAX_DESTINATARIOS_POR_CORREO=45`** (límite de destinatarios por mensaje de Gmail), con una plantilla HTML propia (`construirCorreoHtml()`, con la paleta institucional — ver ejemplo en `docs/DESIGN_SYSTEM.md`). La cuota diaria de `MailApp` se cuenta **por destinatario** y la comparten TODOS los Apps Script de la cuenta de Google: antes de cada lote `enviarCorreoLote()` revisa que, tras mandarlo (`lote.length + 1`, por el `to` a la propia cuenta), siga libre la reserva de `reservaCuota_()`; si no cabe el lote completo, lo recorta a lo que quede (desde el 28 sep 2026; antes lo saltaba y desperdiciaba el sobrante). **Envío parcial sin duplicar** (sep 2026): cada aviso lleva una `claveSeguimiento` (`<idCurso>_INICIO`/`_MEDIO`/`_WEBINAR`) y los destinatarios que ya lo recibieron se anotan en la Script Property `LOTE_ENVIADOS_<clave>` (huella MD5 corta por correo, `huellaCorreo_()`); las corridas siguientes solo mandan a los que faltan, y la bandera `Recordatorio_*_enviado` se marca únicamente cuando llegó a todos. Tope ~630 destinatarios por aviso (`MAX_BYTES_SEGUIMIENTO_LOTE`): si no cabe, se detiene sin mandar lotes que no pueda anotar, se da por concluido y avisa a Jorge (`avisarSeguimientoLleno_()`). La propiedad se borra al completar o al resignarse (`limpiarSeguimientoLote_()`). `esEmailValido_()` descarta antes de trocear direcciones con formato inválido (incluido un dominio con punto final). Detalle en `docs/QA-NOTES.md #38`-`#40`.
+
+**"A quien alcance" (decisión de Jorge, 28 sep 2026).** La cuota (~100 destinatarios/día) no alcanza para eventos grandes; el aviso seguro es el calendario del docente (ver "Calendario y comprobante" abajo) y el correo es respaldo:
+- **Reserva**: `RESERVA_CUOTA_CORREO = 50` libres para Mantenimiento/Asesorías/Correo/Soporte (antes 30), así que Formación Docente usa como máximo ~50/día. Los días con un aviso de 30 min pendiente (`hayAvisoUrgentePendienteHoy_()`: curso con `Hora_inicio` que empieza hoy y aún sin enviar), todo lo demás de Formación Docente deja además `RESERVA_AVISO_30MIN = 20` para él (`reservaCuota_(esAvisoUrgente)`); el aviso de 30 min se manda con `esAvisoUrgente=true`. Aplica también a los envíos individuales (pendientes de registro externo, constancia).
+- **Sin reintentos días después**: "empieza mañana" sale el día anterior y, a quien no alcanzó, el día de inicio como "empieza hoy"; después se da por cerrado (se quitó el "ya inició"). "Vas a la mitad" solo sale ese día. El de 30 min reintenta cada 15 min solo durante el día de inicio: en cursos de varios días se cierra al terminar ese día (antes, sin `Hora_fin`, seguía mandando "ya comenzó" diario hasta `Fecha_fin`, `docs/QA-NOTES.md #47`).
+- **Sorteo + prioridad** (`ordenarParaEnvio_()`): los pendientes se revuelven en cada corrida (antes, orden de la hoja: siempre los mismos primeros inscritos) y el aviso de 30 min va primero a quien no recibió "empieza mañana" (`clavePrioridad = <idCurso>_INICIO`).
 
 El aviso de "30 minutos" necesita precisión de minutos, así que su disparador corre **cada 15 minutos** (no cada hora como antes) — requiere volver a correr el menú "OTDE Formación → Instalar recordatorios automáticos" después de desplegar una nueva versión, porque `instalarRecordatoriosAutomaticos()` borra y recrea ambos activadores en cada corrida (antes solo los creaba si faltaban, así que un cambio de intervalo no se aplicaba solo). `enviarRecordatoriosDiarios()` además llama a `verificarActivadoresInstalados()` al inicio, que manda un correo de alerta a Jorge (máximo una vez al día, vía `PropertiesService`) si alguno de los dos activadores desapareció.
 
@@ -744,8 +747,21 @@ Docente
 
                                     Disparadores de tiempo (independientes de doGet/doPost)
                                     ├── enviarRecordatoriosDiarios() — 1x/día
-                                    └── enviarRecordatoriosWebinar() — 1x/hora
+                                    └── enviarRecordatoriosWebinar() — cada 15 min
 ```
+
+### Calendario y comprobante en la confirmación (28 sep 2026)
+
+Como la cuota de correo no alcanza para todos, la pantalla final del registro (`mostrarConfirmacion()` en `formacion-docente.html`) le da al docente su propio aviso, generado en el navegador y sin tocar la cuota:
+- **Agregar a mi calendario**: liga de Google Calendar (`action=TEMPLATE`, un evento por liga) y un `.ics` (`construirIcs()`) con alarmas `VALARM` 1 día y 30 min antes, que respetan Outlook (`@dee.edu.mx`) y los calendarios de iPhone/Android. Hora en UTC con `ZONA_MX = -06:00` (sin horario de verano). `eventosCalendario()`:
+  - Con `Hora_inicio`: un evento con hora; dura hasta `Hora_fin` o `DURACION_DEFAULT_MIN` (90) si no está capturada.
+  - Sin hora: evento de día completo con aviso a las 9:00 del día anterior.
+  - Con `Fechas_sesion` (`fechasSesion_()` en el `.gs` convierte "7/10, 14/10, 21/10" en fechas ISO, con cruce de año; el API las manda en `fechas_sesion`): un evento por sesión, un `.ics` con todas y un botón de Google por fecha.
+  - Si `Fecha_fin` cae después de la última sesión (o no hay sesiones), se agrega un evento "Último día" con aviso una semana y un día antes.
+- **Folio** con botón "Copiar", fecha y hora (`textoCuandoCurso()`), **comprobante PNG** dibujado en canvas (`guardarComprobante()`; en celular abre "Compartir", en computadora se descarga) y **"Enviármelo por WhatsApp"** (`wa.me/?text=`).
+- **Liga para quien ya se inscribió**: `formacion-docente.html?calendario=ID[,ID2]` (`mostrarSoloCalendario()`) muestra solo los botones de calendario del curso, sin folio ni registro. Pensada para compartirse por WhatsApp/oficio cuando se capturan sesiones después de que la gente se inscribió.
+
+El API expone `hora_inicio`, `hora_fin` y `fechas_sesion` en `construirCursoApi_()`. Sin esos campos, la página agenda solo el día de inicio, como evento de día completo.
 
 ### Recordatorio y carga de constancia (conferencias UNETE, sep 2026)
 

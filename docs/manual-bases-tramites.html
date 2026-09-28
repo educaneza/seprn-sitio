@@ -500,14 +500,13 @@
       <tbody>
         <tr class="fila-roja"><td class="col-color">🔴</td><td class="col-nombre">ID_Curso</td><td>Se genera solo en cuanto escribes la Categoría de una fila nueva &mdash; no editar.</td></tr>
         <tr class="fila-verde"><td class="col-color">🟢</td><td class="col-nombre">Categoria</td><td>Ya tiene lista desplegable (Webinar / Seminario / Conferencia / Curso autogestivo / Acción formativa / Diplomado / Proyecto didáctico) &mdash; determina el prefijo del ID.</td></tr>
-        <tr class="fila-verde"><td class="col-color">🟢</td><td class="col-nombre">Nombre / Responsable / Fecha_inicio / Fecha_fin / Liga_convocatoria / Notas</td><td>Captura libre de OTDE al dar de alta el curso.</td></tr>
+        <tr class="fila-verde"><td class="col-color">🟢</td><td class="col-nombre">Nombre / Responsable / Dirigido_a / Descripcion / Notas</td><td>Captura libre de OTDE al dar de alta el curso.</td></tr>
         <tr class="fila-verde"><td class="col-color">🟢</td><td class="col-nombre">Modalidad</td><td>Ya tiene lista desplegable (Virtual / Presencial / Híbrido).</td></tr>
-        <tr class="fila-verde"><td class="col-color">🟢</td><td class="col-nombre">Requiere_codigo_asistencia</td><td>Ya tiene lista desplegable (TRUE/FALSE) &mdash; actívalo solo si el curso pedirá código de asistencia.</td></tr>
-        <tr class="fila-verde"><td class="col-color">🟢</td><td class="col-nombre">Codigo_asistencia</td><td>Lo asigna OTDE a mano antes del evento, si aplica &mdash; no es automático.</td></tr>
-        <tr class="fila-verde"><td class="col-color">🟢</td><td class="col-nombre">Activo</td><td>Ya tiene lista desplegable (TRUE/FALSE) &mdash; apaga el curso del catálogo público sin importar las fechas de visibilidad.</td></tr>
-        <tr class="fila-verde"><td class="col-color">🟢</td><td class="col-nombre">Registro_previo_requerido</td><td>Ya tiene lista desplegable (TRUE/FALSE) &mdash; fuerza pasar por una liga externa antes del formulario OTDE.</td></tr>
-        <tr class="fila-verde"><td class="col-color">🟢</td><td class="col-nombre">Visible_desde / Visible_hasta / Hora_inicio</td><td>Fechas/hora opcionales de OTDE para controlar la ventana de visibilidad y los recordatorios.</td></tr>
-        <tr class="fila-roja"><td class="col-color">🔴</td><td class="col-nombre">Recordatorio_inicio_enviado / Recordatorio_medio_enviado / Recordatorio_webinar_enviado</td><td>Banderas que el sistema marca solo para no repetir un recordatorio &mdash; no editar salvo para forzar un reenvío manual.</td></tr>
+        <tr class="fila-amarilla"><td class="col-color">🟡</td><td class="col-nombre">Liga_convocatoria</td><td><strong>Una sola liga, sin texto</strong> &mdash; va en los botones de la página, de los correos y del calendario. Ligas extra van en <code>Descripcion</code>.</td></tr>
+        <tr class="fila-verde"><td class="col-color">🟢</td><td class="col-nombre">Fecha_inicio / Fecha_fin / Hora_inicio / Hora_fin / Fechas_sesion</td><td>Cuándo se imparte. <code>Fechas_sesion</code> (opcional) son los días de sesión separados por coma, ej. 7/10, 14/10, 21/10 &mdash; el calendario del docente agenda cada una.</td></tr>
+        <tr class="fila-verde"><td class="col-color">🟢</td><td class="col-nombre">Visible_desde / Fecha_limite_inscripcion / Hora_limite_inscripcion</td><td>Cuándo aparece el curso y cuándo cierra la inscripción.</td></tr>
+        <tr class="fila-verde"><td class="col-color">🟢</td><td class="col-nombre">Registro_previo_requerido / Cupo_agotado / Valida_USICAMM / Valida_PROEEB / Activo / Ocultar_historial</td><td>Ya tienen lista desplegable (TRUE/FALSE).</td></tr>
+        <tr class="fila-roja"><td class="col-color">🔴</td><td class="col-nombre">Recordatorio_inicio_enviado / Recordatorio_medio_enviado / Recordatorio_webinar_enviado</td><td>Al final, con encabezado gris. Banderas que el sistema marca solo para no repetir un recordatorio &mdash; no editar salvo para forzar un reenvío manual.</td></tr>
       </tbody>
     </table>
 

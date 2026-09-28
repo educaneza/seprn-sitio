@@ -647,8 +647,11 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     confirmación de un toque. Pendiente, en orden: (a) decidir si se renumera una de las dos
     filas del folio duplicado `OTDE-CAP-0089` (datos sin tocar, ver `docs/QA-NOTES.md #31`); (b)
     Paso 5 — reconciliar `Registro_externo` con la lista real de inscritos de Aula Digital cuando
-    CoEEE la tenga disponible (hoy esa lista solo es obtenible *a veces*); (c) borrar las 2 hojas
-    de respaldo `Inscripciones_respaldo_20260916`/`..._2318` cuando ya no se necesiten.
+    CoEEE la tenga disponible (hoy esa lista solo es obtenible *a veces*); (c) borrar las hojas
+    de respaldo cuando ya no se necesiten: `Inscripciones_respaldo_20260916`/`..._2318` y, del
+    reordenamiento por bloques del 28 sep 2026, `Cursos_respaldo_20260928` e
+    `Inscripciones_respaldo_20260928` (esos dos ya se compararon celda por celda contra las hojas
+    nuevas, sin diferencias de datos).
 
 20. **Ceremonias Cívicas — 4 etapas + rediseño de reporte, desplegadas 20 sep 2026, falta
     verificación en vivo contra datos reales** (ver `docs/ARCHITECTURE.md` §22 para el detalle
@@ -716,8 +719,9 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     un punto extra al final (`...hotmail.com.`), no un carácter invisible.
 25. ~~**Migración de `MailApp` a Brevo**~~ — descartada por completo (22 sep 2026, decisión de
     Jorge): nunca se desplegó, y sin dominio propio Brevo no entrega bien a Hotmail/Outlook. El
-    código se retiró del repo (commit de esta sesión); el envío sigue en `MailApp` con reserva
-    de cuota de 30 y envío parcial sin duplicar (ver `docs/QA-NOTES.md #40`). `BREVO_API_KEY` ya se
+    código se retiró del repo (commit de esta sesión); el envío sigue en `MailApp` con envío
+    parcial sin duplicar (ver `docs/QA-NOTES.md #40`); la reserva de cuota pasó de 30 a 50 (+20
+    para el aviso de 30 min) el 28 sep 2026, ver ítem 26. `BREVO_API_KEY` ya se
     borró de Script Properties; si se quiere, queda cerrar la cuenta de Brevo.
 26. **Google Workspace Business Starter — prueba de 14 días activada, resultado de cuota sin
     confirmar** (22 sep 2026, mismo día que el ítem 25, ver `docs/BITACORA.md` checkpoint "cont.
@@ -742,6 +746,14 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     DKIM/DMARC con Hotmail/Outlook (el correo ya sale autenticado por Google mismo). Queda
     pendiente también decidir si mantener la prueba más allá de los 14 días (~$151.20 MXN/mes
     con el plan flexible) o cancelarla antes del 6 oct 2026 para evitar el cobro.
+    **Actualización 28 sep 2026 — la cuota ya no depende de Workspace:** Jorge decidió dejar los
+    recordatorios masivos como respaldo "a quien alcance" (reserva 50 + 20, sorteo y prioridad,
+    sin reintentos días después) y poner el aviso principal en el calendario del propio docente
+    (botones de calendario y comprobante en la confirmación, ver `docs/ARCHITECTURE.md §12`).
+    Además, los Apps Script corren en la cuenta personal de Gmail: la prueba de Workspace no les
+    sube la cuota salvo que se muevan todos los proyectos y activadores a la cuenta Workspace.
+    **Recomendación: cancelar la prueba antes del 6 oct** si no hay otro motivo para conservarla.
+    Decisión de Jorge pendiente.
 
 27. **Operación interna OTDE — Fase 1 en producción; alimentación desde Mantenimiento y Asesorías en producción; sigue la Fase 2** (23-24 sep 2026, ver
     `docs/PLAN-OPERACION-INTERNA.md` y `docs/BITACORA.md` checkpoint "cont. 2"): bitácora única
@@ -769,6 +781,21 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     y Correo en META 25, cada uno con una fila de resumen mensual; la asesoría de IA (N.P. 9) sigue a
     mano por ahora. (b) Fase 2 (oficios y recordatorios). Pendiente de verificar en la Fase 2: si la licencia M365 de `@dee.edu.mx`
     incluye Power Automate para capturar oficios automáticamente desde Outlook.
+
+28. **Formación Docente — calendario y cuota "a quien alcance": verificación en uso real**
+    (construido, desplegado y verificado en vivo el 28 sep 2026, ver `docs/ARCHITECTURE.md §12` y
+    `docs/BITACORA.md`). Falta:
+    (a) Importar un `.ics` real en Outlook (`@dee.edu.mx`), iPhone y Android y confirmar que la
+    alarma de 30 min suena (probado solo en Chrome headless).
+    (b) Revisar en "Ejecuciones" los primeros días con cuota real: 6 y 7 oct (inicio de
+    `ACF-2627-001`/`003`) y 1 oct (`CNF-2627-002`), incluidos los logs "N enviado(s), M
+    pospuesto(s)".
+    (c) Que Jorge comparta la liga `formacion-docente.html?calendario=ACF-2627-001` con los
+    inscritos previos.
+    (d) Opcional: página "Mi inscripción" con liga firmada por folio, para que un cambio de liga
+    u hora llegue aunque el `.ics` ya se haya descargado, y para subir la constancia desde ahí.
+    (e) Opcional: aviso de 30 min por correo para cada sesión (hoy solo la primera; las demás las
+    avisa el calendario).
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue

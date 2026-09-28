@@ -1292,3 +1292,34 @@ simulada (4 casos).
 **Regla:** si un disparador depende de varias celdas que se llenan a mano, tiene que escuchar
 todas ellas. Y si se salta una fila o falla un envío, tiene que quedar visible en la hoja, no
 solo en el Logger.
+
+## 47. Formación Docente: "ya comenzó" diario en cursos de varios días, y una liga larga desbordaba la tarjeta
+
+**Síntoma 1 (encontrado al revisar el código, 28 sep 2026, antes de que ocurriera):** en un
+curso de varios días con `Hora_inicio` y sin `Hora_fin` (caso real: `ACF-2627-001`, del 7 al
+21 oct, 16:00, 192 inscritos), quien no alcanzaba el aviso de 30 min por cuota iba a recibir
+"ya comenzó — conéctate ahora" cada día hasta el 21 oct, gastando el cupo diario.
+
+**Causa raíz:** `enviarRecordatoriosWebinar()` cerraba el aviso con
+`ahora > finConferencia_(row)`, y sin `Hora_fin` eso es las 23:59 de `Fecha_fin`, no el final
+del primer día.
+
+**Fix:** también se cierra cuando `hoy > Fecha_inicio`: el aviso es solo de la primera sesión.
+Mismo criterio que los otros cambios del día ("a quien alcance", sin reintentos días después,
+ver `docs/ARCHITECTURE.md §12`).
+
+**Síntoma 2 (reportado por Jorge, 28 sep 2026):** la descripción de `CNF-2627-002` se salía de
+la tarjeta del catálogo.
+
+**Causa raíz:** Jorge pasó las ligas de Facebook y YouTube de `Liga_convocatoria` a
+`Descripcion`. Una URL no tiene espacios, así que el navegador no la puede partir: medía 277 px
+en una columna de 212. De paso, `Liga_convocatoria` con dos ligas y texto rompía el botón de la
+página, el del correo y el `.ics`. Jorge lo corrigió en la hoja, dejando una sola liga.
+
+**Fix (`formacion-docente.html`):** `.cc-desc { overflow-wrap: anywhere; }`, y
+`pintarTextoConLigas()` convierte las ligas de la descripción en `<a>` cortas y clicables
+(tocarlas no selecciona la tarjeta).
+
+**Regla:** `Liga_convocatoria` lleva una sola URL, sin texto. Cualquier texto libre que venga de
+la hoja y se pinte en un espacio angosto necesita `overflow-wrap`. Y todo aviso que se reintente
+necesita un corte explícito ligado a la fecha que le da sentido, no a la de fin del curso.
