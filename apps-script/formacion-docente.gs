@@ -1529,7 +1529,25 @@ function avisarSeguimientoLleno_(asunto, clave, enviados, total) {
   }
 }
 
-function enviarCorreoLote(destinatarios, asunto, cuerpoHtml, claveSeguimiento) {
+// ── Orden de envío (28 sep 2026): como la cuota solo alcanza para una parte,
+// el orden decide a quién le llega. Antes era el orden de la hoja, así que
+// siempre recibían los mismos (los primeros inscritos) y los últimos nunca.
+// Ahora: sorteo en cada corrida y, primero, quienes NO recibieron el aviso
+// anterior del mismo curso (`huellasYaAvisados`, p. ej. el 30 min prioriza a
+// quien no recibió "empieza mañana"). Si sobra cupo, sigue con los demás. ──
+function ordenarParaEnvio_(correos, huellasYaAvisados) {
+  const revueltos = correos.slice();
+  for (let i = revueltos.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const t = revueltos[i]; revueltos[i] = revueltos[j]; revueltos[j] = t;
+  }
+  if (!huellasYaAvisados.length) return revueltos;
+  const avisados = revueltos.filter(function(c) { return huellasYaAvisados.indexOf(huellaCorreo_(c)) !== -1; });
+  return revueltos.filter(function(c) { return huellasYaAvisados.indexOf(huellaCorreo_(c)) === -1; }).concat(avisados);
+}
+
+function enviarCorreoLote(destinatarios, asunto, cuerpoHtml, claveSeguimiento, esAvisoUrgente, clavePrioridad) {
+  const reserva = reservaCuota_(!!esAvisoUrgente);
   const correoPrueba = PropertiesService.getScriptProperties().getProperty('MODO_PRUEBA_CORREO');
   const enModoPrueba = !!correoPrueba;
 
@@ -1544,9 +1562,9 @@ function enviarCorreoLote(destinatarios, asunto, cuerpoHtml, claveSeguimiento) {
   // que trocear ni que anotar en el seguimiento (nadie real lo recibió).
   const usaSeguimiento = !!claveSeguimiento && !enModoPrueba;
   const yaEnviados = usaSeguimiento ? leerSeguimientoLote_(claveSeguimiento) : [];
-  const pendientes = usaSeguimiento
+  const pendientes = ordenarParaEnvio_(usaSeguimiento
     ? validos.filter(function(c) { return yaEnviados.indexOf(huellaCorreo_(c)) === -1; })
-    : validos;
+    : validos, clavePrioridad ? leerSeguimientoLote_(clavePrioridad) : []);
   if (!pendientes.length) {
     limpiarSeguimientoLote_(claveSeguimiento);
     return true;
@@ -1557,21 +1575,24 @@ function enviarCorreoLote(destinatarios, asunto, cuerpoHtml, claveSeguimiento) {
   // formato pero el servidor igual rechaza), los demás lotes no se pierden.
   let fallidos = 0;
   let seguimientoLleno = false;
-  lotes.forEach(function(lote) {
+  lotes.forEach(function(loteCompleto) {
     if (seguimientoLleno) return;
+    // Reserva para los demás sistemas de OTDE (la cuota diaria de MailApp es
+    // compartida y se cuenta por destinatario): cada lote cuesta lote.length + 1
+    // (el "to" a la propia cuenta). Si no alcanza el lote completo, se recorta
+    // a lo que quede (28 sep 2026: antes se saltaba y se desperdiciaba el
+    // sobrante); si no alcanza ni para un destinatario, se salta.
+    const disponible = MailApp.getRemainingDailyQuota() - reserva - 1;
+    const lote = enModoPrueba ? loteCompleto : loteCompleto.slice(0, Math.max(0, disponible));
+    if (disponible < 1 || lote.length < loteCompleto.length) fallidos++;
+    if (disponible < 1) {
+      console.log('Cuota insuficiente (reserva ' + reserva + ') para un lote de ' + loteCompleto.length + ': ' + asunto);
+      return;
+    }
     const huellasLote = usaSeguimiento ? lote.map(huellaCorreo_) : [];
     if (usaSeguimiento &&
         JSON.stringify(yaEnviados.concat(huellasLote)).length > MAX_BYTES_SEGUIMIENTO_LOTE) {
       seguimientoLleno = true;
-      return;
-    }
-    // Reserva para los demás sistemas de OTDE (la cuota diaria de MailApp es
-    // compartida y se cuenta por destinatario): cada lote cuesta lote.length + 1
-    // (el "to" a la propia cuenta). Si no alcanza, este lote se salta.
-    const costo = enModoPrueba ? 2 : lote.length + 1;
-    if (MailApp.getRemainingDailyQuota() - RESERVA_CUOTA_CORREO < costo) {
-      console.log('Cuota insuficiente (reserva ' + RESERVA_CUOTA_CORREO + ') para un lote de ' + lote.length + ' — se reintenta después: ' + asunto);
-      fallidos++;
       return;
     }
     try {
@@ -1760,29 +1781,26 @@ function enviarRecordatoriosDiarios() {
     const aplicaUnDiaAntes = !esDeUnDia || !tieneHora;
     if (aplicaUnDiaAntes && String(row[COL_RECORDATORIO_INICIO] || '').trim().toUpperCase() !== 'TRUE') {
       const diasParaInicio = Math.round((inicio - hoy) / 86400000);
-      if (hoy > fin) {
-        // El curso ya terminó por completo y nunca se mandó ningún aviso —
-        // ya no hay nada útil que decir, se marca enviado para dejar de
-        // reevaluarlo.
+      if (hoy > fin || diasParaInicio < 0) {
+        // Ya pasó el día de inicio: lo que no alcanzó a salir por cuota ya
+        // no se manda (28 sep 2026, decisión de Jorge: "a quien alcance" —
+        // antes seguía goteando "ya inició" durante días y se comía la cuota
+        // de los demás avisos; el calendario de la confirmación cubre al
+        // resto). Se marca enviado para dejar de reevaluarlo.
         hoja.getRange(fila, COL_RECORDATORIO_INICIO + 1).setValue('TRUE');
         limpiarSeguimientoLote_(idCurso + '_INICIO');
       } else if (diasParaInicio <= DIAS_ANTES_RECORDATORIO_INICIO) {
-        // Sin piso en diasParaInicio: si la evaluación de hoy llega tarde
-        // (curso ya iniciado, hoy <= fin) reintenta con mensaje ajustado en
-        // vez de resignarse la primera vez que se evalúa tarde — ver
-        // docs/QA-NOTES.md #8.
-        const yaEmpezo = diasParaInicio < 0;
-        const cuando = yaEmpezo ? 'ya inició' : (diasParaInicio === 0 ? 'hoy' : 'mañana');
+        // Ventana: el día anterior y el día de inicio (lo que no cupo ayer
+        // sale hoy como "empieza hoy", sin duplicar).
+        const cuando = diasParaInicio === 0 ? 'hoy' : 'mañana';
         const correos = obtenerCorreosInscritos(idCurso);
         const enviado = enviarCorreoLote(correos,
-          'Tu curso "' + row[2] + '" ' + (yaEmpezo ? 'ya inició' : 'empieza ' + cuando),
+          'Tu curso "' + row[2] + '" empieza ' + cuando,
           construirCorreoHtml({
-            chip: yaEmpezo ? 'TU CURSO YA COMENZÓ' : 'TU CURSO EMPIEZA PRONTO',
-            titulo: 'Tu curso "' + row[2] + '" ' + (yaEmpezo ? 'ya inició' : 'empieza ' + cuando),
-            cuerpo: yaEmpezo
-              ? 'Hola, tu curso <strong>' + row[2] + '</strong> ya comenzó el <strong>' + formatearFecha(row[5]) + '</strong>. Aún puedes sumarte.'
-              : 'Hola, te recordamos que tu curso <strong>' + row[2] + '</strong> comienza el <strong>' +
-                formatearFecha(row[5]) + '</strong>. Prepárate con anticipación para sacarle el máximo provecho.',
+            chip: 'TU CURSO EMPIEZA PRONTO',
+            titulo: 'Tu curso "' + row[2] + '" empieza ' + cuando,
+            cuerpo: 'Hola, te recordamos que tu curso <strong>' + row[2] + '</strong> comienza el <strong>' +
+              formatearFecha(row[5]) + '</strong>. Prepárate con anticipación para sacarle el máximo provecho.',
             detalle: 'Curso: ' + row[2] + '<br>Inicio: ' + formatearFecha(row[5]) +
               (esDeUnDia ? '' : '<br>Término: ' + formatearFecha(row[6])) +
               lineaTutorialConstancia_(row[COL_LIGA_TUTORIAL_CONSTANCIA]),
@@ -1799,10 +1817,12 @@ function enviarRecordatoriosDiarios() {
     if (duracionDias >= DIAS_MINIMOS_CURSO_LARGO &&
         String(row[COL_RECORDATORIO_MEDIO] || '').trim().toUpperCase() !== 'TRUE') {
       const medio = new Date(inicio.getTime() + (fin - inicio) / 2);
-      if (hoy > fin) {
-        hoja.getRange(fila, COL_RECORDATORIO_MEDIO + 1).setValue('TRUE'); // ya terminó, no aplica
+      if (hoy > fin || hoy > soloFecha(medio)) {
+        // Ya terminó, o ya pasó el día de la mitad: lo que no alcanzó a salir
+        // por cuota ya no se manda (28 sep 2026, mismo criterio que arriba).
+        hoja.getRange(fila, COL_RECORDATORIO_MEDIO + 1).setValue('TRUE');
         limpiarSeguimientoLote_(idCurso + '_MEDIO');
-      } else if (hoy >= soloFecha(medio)) {
+      } else if (hoy.getTime() === soloFecha(medio).getTime()) {
         const correos = obtenerCorreosInscritos(idCurso);
         const enviado = enviarCorreoLote(correos,
           'Vas a la mitad de "' + row[2] + '" — ¡sigue avanzando!',
@@ -1860,7 +1880,35 @@ const SITIO_FORMACION_URL = 'https://educaneza.github.io/seprn-sitio/formacion-d
 const MAX_RECORDATORIOS_PENDIENTE = 2;
 const DIAS_ANTES_CIERRE_RECORDATORIO = 2;
 const DIAS_ENTRE_RECORDATORIOS_PENDIENTE = 2;
-const RESERVA_CUOTA_CORREO = 30; // correos libres para Mantenimiento, Correo, etc. (cuota compartida)
+const RESERVA_CUOTA_CORREO = 50; // correos libres para Mantenimiento, Correo, etc. (cuota compartida; 28 sep 2026: antes 30)
+
+// ── Apartado para el aviso de "empieza en 30 minutos" (28 sep 2026) ──
+// Con ~100 destinatarios/día y 50 reservados para los demás sistemas, los
+// avisos de las 9 am se comían todo y el de 30 min de la tarde salía en
+// cero. Los días en que hay un aviso de 30 min pendiente, todo lo demás de
+// Formación Docente deja además RESERVA_AVISO_30MIN libres para él. Los
+// días sin ese aviso no se aparta nada. Decisión de Jorge: los correos son
+// respaldo del calendario de la confirmación — llegan "a quien alcance".
+const RESERVA_AVISO_30MIN = 20;
+let avisoUrgenteHoyCache_ = null;
+
+function hayAvisoUrgentePendienteHoy_() {
+  if (avisoUrgenteHoyCache_ !== null) return avisoUrgenteHoyCache_;
+  const hoy = soloFecha(new Date());
+  const ahora = new Date();
+  avisoUrgenteHoyCache_ = obtenerHojaCursos().getDataRange().getValues().slice(1).some(function(row) {
+    if (!row[0] || !row[COL_HORA_INICIO] || !row[6]) return false;
+    if (String(row[COL_RECORDATORIO_WEBINAR] || '').trim().toUpperCase() === 'TRUE') return false;
+    const inicio = parseFechaSegura_(row[5]);
+    return !!inicio && inicio.getTime() === hoy.getTime() && ahora <= finConferencia_(row);
+  });
+  return avisoUrgenteHoyCache_;
+}
+
+// Cuánta cuota debe quedar libre después de un envío de Formación Docente.
+function reservaCuota_(esAvisoUrgente) {
+  return RESERVA_CUOTA_CORREO + (!esAvisoUrgente && hayAvisoUrgentePendienteHoy_() ? RESERVA_AVISO_30MIN : 0);
+}
 
 // ── Firma del botón "Sí, ya me llegó": HMAC-SHA256 del folio con un secreto
 // propio del proyecto (Script Properties, se genera solo la primera vez).
@@ -1982,7 +2030,7 @@ function enviarRecordatoriosPendientes_() {
     const docente = docentesPorRfc[rfc];
     const correo = docente ? String(docente[2]).trim() : '';
     if (!correo) return;
-    if (MailApp.getRemainingDailyQuota() <= RESERVA_CUOTA_CORREO) { pospuestos++; return; }
+    if (MailApp.getRemainingDailyQuota() <= reservaCuota_(false)) { pospuestos++; return; }
 
     const items = porDocente[rfc];
     const mensaje = construirCorreoPendiente_(items);
@@ -2146,7 +2194,10 @@ function enviarRecordatoriosWebinar() {
     const minutosFaltantes = (inicio - ahora) / 60000;
     const fila = i + 1;
 
-    if (hoy > fin || ahora > finConferencia_(row)) {
+    // Cursos de varios días con hora: el aviso es solo de la primera sesión —
+    // al terminar el día de inicio se cierra (28 sep 2026; antes, sin
+    // Hora_fin, seguía mandando "ya comenzó" diario hasta Fecha_fin).
+    if (hoy > fin || ahora > finConferencia_(row) || hoy > soloFecha(row[5])) {
       // El curso/evento ya terminó y el aviso no alcanzó a salir (completo) —
       // ya no hay nada útil que avisar, se marca enviado para dejar de
       // reevaluarlo — ver docs/QA-NOTES.md #8. Con Hora_fin capturada se corta
@@ -2178,7 +2229,7 @@ function enviarRecordatoriosWebinar() {
           liga: row[7] || '',
           textoLiga: 'Ir a la transmisión / acceso'
         }),
-        idCurso + '_WEBINAR');
+        idCurso + '_WEBINAR', true, idCurso + '_INICIO'); // urgente (apartado de 30 min); primero quien no recibió "empieza mañana"
       if (enviado) hoja.getRange(fila, COL_RECORDATORIO_WEBINAR + 1).setValue('TRUE');
     }
     } catch (err) {
@@ -2337,7 +2388,7 @@ function enviarRecordatoriosConstancia_() {
     // Una vez que la cuota llega a la reserva ya no se vuelve a consultar
     // (antes: una llamada por folio, ~75 s por corrida) — solo se cuentan
     // los pendientes para el registro.
-    if (sinCuota || MailApp.getRemainingDailyQuota() <= RESERVA_CUOTA_CORREO) {
+    if (sinCuota || MailApp.getRemainingDailyQuota() <= reservaCuota_(false)) {
       sinCuota = true; pospuestos++; continue;
     }
 
