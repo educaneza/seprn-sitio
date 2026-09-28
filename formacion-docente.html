@@ -702,6 +702,41 @@
     .folio-item .fi-liga { display: inline-flex; align-items: center; gap: .3rem; margin-top: .85rem; font-size: .85rem; color: var(--midnight); font-weight: 700; text-decoration: none; }
     .folio-item .fi-liga:hover { color: var(--acento); }
 
+    /* ── CONFIRMACIÓN: calendario, copiar folio y comprobante (sep 2026) ──
+       El aviso de "empieza en 30 min" lo da el calendario del docente, no un
+       correo: la cuota diaria de correo no alcanza para eventos grandes. */
+    .fi-folio-row { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+    .fi-copiar {
+      display: inline-flex; align-items: center; gap: .35rem; background: var(--canvas); color: var(--midnight);
+      border: 1px solid var(--hairline); border-radius: 999px; padding: .3rem .75rem; font: inherit; font-size: .76rem; font-weight: 700; cursor: pointer;
+    }
+    .fi-copiar:hover { border-color: var(--acento); color: var(--acento); }
+    .fi-copiar svg { width: 13px; height: 13px; }
+    .fi-cuando { font-size: .85rem; color: var(--ink-soft); margin-top: .45rem; font-weight: 500; }
+    .fi-cal { margin-top: 1rem; padding-top: .9rem; border-top: 1px solid var(--hairline); }
+    .fi-cal-titulo { font-size: .88rem; font-weight: 700; color: var(--ink); margin: 0 0 .15rem; }
+    .fi-cal-sub { font-size: .78rem; color: var(--ink-soft); margin: 0 0 .7rem; line-height: 1.45; }
+    .fi-cal-btns { display: grid; grid-template-columns: 1fr 1fr; gap: .55rem; }
+    .fi-cal-btn {
+      display: flex; align-items: center; justify-content: center; gap: .45rem; padding: .75rem .6rem;
+      border-radius: var(--radius-sm); font-size: .84rem; font-weight: 700; text-decoration: none; text-align: center; line-height: 1.2;
+      border: 1.5px solid var(--midnight); color: var(--midnight); background: var(--paper); transition: background .2s var(--ease), color .2s var(--ease);
+    }
+    .fi-cal-btn:hover { background: var(--midnight); color: #fff; }
+    .fi-cal-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .conf-guardar { max-width: 42ch; margin: .5rem auto 1.25rem; display: grid; gap: .6rem; }
+    .cg-btn {
+      display: flex; align-items: center; justify-content: center; gap: .55rem; width: 100%; padding: .95rem 1rem;
+      border: none; border-radius: var(--radius-md); font-family: var(--font-display); font-size: .95rem; font-weight: 700;
+      cursor: pointer; text-decoration: none; color: #fff; box-shadow: var(--shadow-1); transition: filter .2s var(--ease), transform .12s var(--ease);
+    }
+    .cg-btn:hover { filter: brightness(1.12); }
+    .cg-btn:active { transform: scale(.985); }
+    .cg-btn svg { width: 18px; height: 18px; }
+    .cg-btn.comprobante { background: var(--acento); }
+    .cg-btn.whatsapp { background: #1a7f4b; }
+    @media (max-width: 380px) { .fi-cal-btns { grid-template-columns: 1fr; } }
+
     .conf-folio-tip {
       max-width: 42ch; margin: 0 auto 1.5rem; padding: .85rem 1.1rem; text-align: left;
       background: var(--canvas); border: 1px solid var(--hairline); border-radius: var(--radius-sm);
@@ -1146,7 +1181,9 @@
     <div id="pendientes-aviso"></div>
     <div id="folios-lista"></div>
 
-    <p class="conf-folio-tip"><strong>Guarda tu folio:</strong> tómale una captura de pantalla o anótalo. Tu folio te servirá para cualquier aclaración o para subir tu constancia cuando aplique.</p>
+    <div class="conf-guardar" id="conf-guardar"></div>
+
+    <p class="conf-folio-tip"><strong>Guarda tu folio:</strong> descarga tu comprobante o envíatelo por WhatsApp. Tu folio te servirá para cualquier aclaración o para subir tu constancia cuando aplique.</p>
 
     <a href="otde.html" class="btn-primary" style="display:inline-flex;width:auto;padding:.9rem 2.25rem;margin-top:.75rem;">
       ← Volver a la OTDE
@@ -2435,10 +2472,22 @@
       nombre.textContent = r.curso.nombre;
       item.appendChild(nombre);
 
+      const folioRow = document.createElement('div');
+      folioRow.className = 'fi-folio-row';
       const folio = document.createElement('div');
       folio.className = 'fi-folio';
       folio.textContent = r.folio;
-      item.appendChild(folio);
+      folioRow.appendChild(folio);
+      folioRow.appendChild(crearBotonCopiar(r.folio));
+      item.appendChild(folioRow);
+
+      const cuando = textoCuandoCurso(r.curso);
+      if (cuando) {
+        const cuandoEl = document.createElement('div');
+        cuandoEl.className = 'fi-cuando';
+        cuandoEl.textContent = cuando;
+        item.appendChild(cuandoEl);
+      }
 
       if (r.duplicado) {
         const dup = document.createElement('div');
@@ -2480,8 +2529,13 @@
         item.appendChild(liga);
       }
 
+      const cal = crearBloqueCalendario(r);
+      if (cal) item.appendChild(cal);
+
       cont.appendChild(item);
     });
+
+    pintarGuardarRegistro(resultados);
 
     registroCompletado = !registroParcial;
     mostrarPaso('confirmacion');
@@ -2507,6 +2561,335 @@
     }
     li.appendChild(txt);
     return li;
+  }
+
+  // ============================================================
+  // CALENDARIO + COMPROBANTE (sep 2026)
+  //
+  // La cuota diaria de correo (~100 destinatarios, compartida por todos los
+  // Apps Script de OTDE) no alcanza para avisar a eventos con más de ~70
+  // inscritos. El aviso lo da el calendario del propio docente: el .ics lleva
+  // alarmas (1 día y 30 min antes) que respetan Outlook y los calendarios de
+  // iPhone/Android. Todo se genera en el navegador, sin tocar el servidor.
+  // ============================================================
+  const ICON_CALENDARIO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+  const ICON_CELULAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>';
+  const ICON_COPIAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>';
+  const ICON_IMAGEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+  const ICON_MENSAJE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 01-12.3 7.4L3 21l2.1-5.6A8.4 8.4 0 1121 11.5z"/></svg>';
+
+  const ZONA_MX = '-06:00';          // centro de México, sin horario de verano desde 2022
+  const DURACION_DEFAULT_MIN = 90;   // si no hay Hora_fin capturada
+  const SITIO_FORMACION = 'https://educaneza.github.io/seprn-sitio/formacion-docente.html';
+
+  function cursoDelCatalogo(sel) {
+    return catalogoActual.find(c => c.id === sel.id) || {};
+  }
+
+  function isoDesdeDMA(txt) {
+    const d = parseFechaDMA(txt);
+    return d ? d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2) : '';
+  }
+
+  // "jue 2 oct · 17:00 – 18:30 h" / "7 – 21 oct"
+  function textoCuandoCurso(sel) {
+    const c = cursoDelCatalogo(sel);
+    const periodo = textoPeriodoCurso(c);
+    if (!periodo) return '';
+    const hora = c.hora_inicio ? c.hora_inicio + (c.hora_fin ? ' – ' + c.hora_fin : '') + ' h' : '';
+    return periodo + (hora ? ' · ' + hora : '');
+  }
+
+  // Eventos del curso. Con Hora_inicio: uno con hora exacta el primer día
+  // (alarmas 1 día y 30 min antes). Sin hora: de día completo (aviso a las
+  // 9:00 del día anterior). Cursos de varios días suman un "Último día" con
+  // aviso una semana y un día antes — reemplaza al correo de "vas a la mitad".
+  function eventosCalendario(r) {
+    const c = cursoDelCatalogo(r.curso);
+    const ini = isoDesdeDMA(c.fecha_inicio);
+    if (!ini) return []; // "Por definir" u otro texto: nada que agendar
+    const fin = isoDesdeDMA(c.fecha_fin) || ini;
+    const liga = r.curso.liga || '';
+    const desc = 'Folio OTDE: ' + r.folio + (liga ? '\nAcceso / convocatoria: ' + liga : '') +
+      '\nCentro de Formación Docente · OTDE NEZA\n' + SITIO_FORMACION;
+    const eventos = [];
+    if (c.hora_inicio) {
+      const inicio = new Date(ini + 'T' + c.hora_inicio + ':00' + ZONA_MX);
+      let termino = c.hora_fin ? new Date(ini + 'T' + c.hora_fin + ':00' + ZONA_MX) : null;
+      if (!termino || termino <= inicio) termino = new Date(inicio.getTime() + DURACION_DEFAULT_MIN * 60000);
+      eventos.push({ uid: r.folio + '-inicio', titulo: r.curso.nombre, inicio, termino, desc, liga, alarmas: ['-P1D', '-PT30M'] });
+    } else {
+      eventos.push({ uid: r.folio + '-inicio', titulo: 'Inicia: ' + r.curso.nombre, dia: ini, desc, liga, alarmas: ['-PT15H'] });
+    }
+    if (fin !== ini) {
+      eventos.push({ uid: r.folio + '-fin', titulo: 'Último día: ' + r.curso.nombre, dia: fin, desc, liga, alarmas: ['-P6DT15H', '-PT15H'] });
+    }
+    return eventos;
+  }
+
+  function fechaUtcIcs(d) { return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, ''); }
+  function diaIcs(iso) { return iso.replace(/-/g, ''); }
+  function diaSiguienteIcs(iso) {
+    const d = new Date(iso + 'T12:00:00Z');
+    d.setUTCDate(d.getUTCDate() + 1);
+    return d.toISOString().slice(0, 10).replace(/-/g, '');
+  }
+  function escaparIcs(t) { return String(t).replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/([,;])/g, '\\$1'); }
+  // Líneas de máximo 75 octetos (RFC 5545); cortar a 60 caracteres deja
+  // margen para acentos (2 bytes en UTF-8).
+  function plegarIcs(linea) {
+    const partes = [];
+    for (let i = 0; i < linea.length; i += 60) partes.push((i ? ' ' : '') + linea.slice(i, i + 60));
+    return partes.join('\r\n');
+  }
+
+  function construirIcs(eventos) {
+    const sello = fechaUtcIcs(new Date());
+    const l = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//OTDE NEZA//Formacion Docente//ES', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH'];
+    eventos.forEach(ev => {
+      l.push('BEGIN:VEVENT', 'UID:' + ev.uid + '@otde-neza', 'DTSTAMP:' + sello);
+      if (ev.dia) {
+        l.push('DTSTART;VALUE=DATE:' + diaIcs(ev.dia), 'DTEND;VALUE=DATE:' + diaSiguienteIcs(ev.dia));
+      } else {
+        l.push('DTSTART:' + fechaUtcIcs(ev.inicio), 'DTEND:' + fechaUtcIcs(ev.termino));
+      }
+      l.push('SUMMARY:' + escaparIcs(ev.titulo), 'DESCRIPTION:' + escaparIcs(ev.desc));
+      if (ev.liga) l.push('LOCATION:' + escaparIcs(ev.liga), 'URL:' + ev.liga);
+      ev.alarmas.forEach(t => l.push('BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + escaparIcs(ev.titulo), 'TRIGGER:' + t, 'END:VALARM'));
+      l.push('END:VEVENT');
+    });
+    l.push('END:VCALENDAR');
+    return l.map(plegarIcs).join('\r\n') + '\r\n';
+  }
+
+  // Google Calendar solo acepta un evento por liga: el de inicio.
+  function ligaGoogleCalendar(ev) {
+    const fechas = ev.dia
+      ? diaIcs(ev.dia) + '/' + diaSiguienteIcs(ev.dia)
+      : fechaUtcIcs(ev.inicio) + '/' + fechaUtcIcs(ev.termino);
+    const p = new URLSearchParams({ action: 'TEMPLATE', text: ev.titulo, dates: fechas, details: ev.desc, ctz: 'America/Mexico_City' });
+    if (ev.liga) p.set('location', ev.liga);
+    return 'https://calendar.google.com/calendar/render?' + p.toString();
+  }
+
+  function crearBloqueCalendario(r) {
+    const eventos = eventosCalendario(r);
+    if (!eventos.length) return null;
+    const bloque = document.createElement('div');
+    bloque.className = 'fi-cal';
+    const titulo = document.createElement('p');
+    titulo.className = 'fi-cal-titulo';
+    titulo.textContent = 'Agrégalo a tu calendario';
+    const sub = document.createElement('p');
+    sub.className = 'fi-cal-sub';
+    sub.textContent = eventos[0].dia
+      ? 'Tu celular te avisará un día antes de que inicie.'
+      : 'Tu celular te avisará un día antes y 30 minutos antes de empezar.';
+    bloque.appendChild(titulo);
+    bloque.appendChild(sub);
+
+    const btns = document.createElement('div');
+    btns.className = 'fi-cal-btns';
+    const google = document.createElement('a');
+    google.className = 'fi-cal-btn';
+    google.href = ligaGoogleCalendar(eventos[0]);
+    google.target = '_blank';
+    google.rel = 'noopener noreferrer';
+    google.innerHTML = ICON_CALENDARIO + ' Google Calendar';
+    const ics = document.createElement('a');
+    ics.className = 'fi-cal-btn';
+    ics.href = URL.createObjectURL(new Blob([construirIcs(eventos)], { type: 'text/calendar;charset=utf-8' }));
+    ics.download = 'curso-' + r.folio + '.ics';
+    ics.innerHTML = ICON_CELULAR + ' Outlook / celular';
+    btns.appendChild(google);
+    btns.appendChild(ics);
+    bloque.appendChild(btns);
+    return bloque;
+  }
+
+  function crearBotonCopiar(folio) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'fi-copiar';
+    btn.innerHTML = ICON_COPIAR + ' Copiar';
+    btn.onclick = () => {
+      const listo = () => { btn.innerHTML = ICON_CHECK_SM + ' Copiado'; setTimeout(() => { btn.innerHTML = ICON_COPIAR + ' Copiar'; }, 2000); };
+      if (navigator.clipboard) navigator.clipboard.writeText(folio).then(listo).catch(() => {});
+    };
+    return btn;
+  }
+
+  // Botones al pie de la confirmación: comprobante (imagen) y WhatsApp,
+  // para todos los cursos del registro a la vez.
+  function pintarGuardarRegistro(resultados) {
+    const cont = document.getElementById('conf-guardar');
+    cont.innerHTML = '';
+    if (!resultados.length) return;
+    const nombre = recopilarDatos().nombre;
+
+    const comp = document.createElement('button');
+    comp.type = 'button';
+    comp.className = 'cg-btn comprobante';
+    comp.innerHTML = ICON_IMAGEN + ' Guardar comprobante (imagen)';
+    comp.onclick = () => guardarComprobante(resultados, nombre).catch(err => console.error('Comprobante:', err));
+    cont.appendChild(comp);
+
+    const wa = document.createElement('a');
+    wa.className = 'cg-btn whatsapp';
+    wa.href = 'https://wa.me/?text=' + encodeURIComponent(textoWhatsApp(resultados));
+    wa.target = '_blank';
+    wa.rel = 'noopener noreferrer';
+    wa.innerHTML = ICON_MENSAJE + ' Enviármelo por WhatsApp';
+    cont.appendChild(wa);
+  }
+
+  function textoWhatsApp(resultados) {
+    const lineas = ['*Mi registro — Centro de Formación Docente · OTDE NEZA*', ''];
+    resultados.forEach(r => {
+      lineas.push('*' + r.curso.nombre + '*', 'Folio: ' + r.folio);
+      const cuando = textoCuandoCurso(r.curso);
+      if (cuando) lineas.push('Fecha: ' + cuando);
+      if (r.curso.liga) lineas.push('Acceso: ' + r.curso.liga);
+      lineas.push('');
+    });
+    lineas.push(SITIO_FORMACION);
+    return lineas.join('\n');
+  }
+
+  // Parte un texto en renglones que quepan en `ancho` px con la fuente actual.
+  function renglones(ctx, texto, ancho) {
+    const palabras = String(texto).split(/\s+/);
+    const out = [];
+    let linea = '';
+    palabras.forEach(p => {
+      const prueba = linea ? linea + ' ' + p : p;
+      if (ctx.measureText(prueba).width > ancho && linea) { out.push(linea); linea = p; }
+      else linea = prueba;
+    });
+    if (linea) out.push(linea);
+    // Palabras sin espacios más anchas que el renglón (ligas largas): cortar por caracteres.
+    return out.flatMap(l => {
+      if (ctx.measureText(l).width <= ancho) return [l];
+      const trozos = [];
+      let t = '';
+      for (const ch of l) {
+        if (ctx.measureText(t + ch).width > ancho) { trozos.push(t); t = ch; } else t += ch;
+      }
+      if (t) trozos.push(t);
+      return trozos;
+    });
+  }
+
+  async function guardarComprobante(resultados, nombre) {
+    if (document.fonts && document.fonts.ready) await document.fonts.ready;
+    const W = 1080, M = 80, ANCHO = W - M * 2;
+    const DISPLAY = "'Inter Tight', 'Inter', sans-serif";
+    const MONO = "ui-monospace, 'SF Mono', Menlo, monospace";
+    const medir = document.createElement('canvas').getContext('2d');
+
+    // Primero se mide cada bloque para saber la altura total del lienzo.
+    const bloques = resultados.map(r => {
+      medir.font = '700 38px ' + DISPLAY;
+      const titulo = renglones(medir, r.curso.nombre, ANCHO - 60);
+      medir.font = '500 26px ' + DISPLAY;
+      const liga = r.curso.liga ? renglones(medir, r.curso.liga, ANCHO - 60) : [];
+      const cuando = textoCuandoCurso(r.curso);
+      const alto = 50 + titulo.length * 48 + 90 + (cuando ? 44 : 0) + (liga.length ? 16 + liga.length * 34 : 0) + 40;
+      return { r, titulo, liga, cuando, alto };
+    });
+    const ENCABEZADO = 300;
+    const PIE = 190;
+    const H = ENCABEZADO + bloques.reduce((s, b) => s + b.alto + 30, 0) + PIE;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#F9F8F5';
+    ctx.fillRect(0, 0, W, H);
+
+    // Encabezado
+    ctx.fillStyle = '#0C1A2E';
+    ctx.fillRect(0, 0, W, 230);
+    ctx.fillStyle = '#9F2241';
+    ctx.fillRect(0, 230, W, 10);
+    ctx.fillStyle = '#d6d1ca';
+    ctx.font = '700 24px ' + DISPLAY;
+    ctx.fillText('CENTRO DE FORMACIÓN DOCENTE · OTDE NEZA', M, 88);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '800 56px ' + DISPLAY;
+    ctx.fillText('Comprobante de registro', M, 160);
+    ctx.fillStyle = '#c9cfd8';
+    ctx.font = '500 26px ' + DISPLAY;
+    ctx.fillText(nombre || '', M, 205);
+
+    let y = ENCABEZADO;
+    bloques.forEach(b => {
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeStyle = '#EAE2DC';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(M, y, ANCHO, b.alto, 22); else ctx.rect(M, y, ANCHO, b.alto);
+      ctx.fill();
+      ctx.stroke();
+      let yy = y + 70;
+      ctx.fillStyle = '#56212f';
+      ctx.font = '700 38px ' + DISPLAY;
+      b.titulo.forEach(t => { ctx.fillText(t, M + 30, yy); yy += 48; });
+      yy += 22;
+      ctx.fillStyle = '#6b6b6b';
+      ctx.font = '600 22px ' + DISPLAY;
+      ctx.fillText('FOLIO', M + 30, yy);
+      yy += 52;
+      ctx.fillStyle = '#9F2241';
+      ctx.font = '700 50px ' + MONO;
+      ctx.fillText(b.r.folio, M + 30, yy);
+      if (b.cuando) {
+        yy += 50;
+        ctx.fillStyle = '#0C1A2E';
+        ctx.font = '600 30px ' + DISPLAY;
+        ctx.fillText(b.cuando, M + 30, yy);
+      }
+      if (b.liga.length) {
+        yy += 16;
+        ctx.fillStyle = '#3a4a63';
+        ctx.font = '500 26px ' + DISPLAY;
+        b.liga.forEach(t => { yy += 34; ctx.fillText(t, M + 30, yy); });
+      }
+      y += b.alto + 30;
+    });
+
+    // Pie
+    ctx.fillStyle = '#56212f';
+    ctx.font = '600 24px ' + DISPLAY;
+    const hoy = new Date();
+    ctx.fillText('Registrado el ' + hoy.getDate() + '/' + (hoy.getMonth() + 1) + '/' + hoy.getFullYear(), M, H - 120);
+    ctx.fillStyle = '#6b6b6b';
+    ctx.font = '500 22px ' + DISPLAY;
+    ctx.fillText('Oficina de Tecnología para el Desarrollo Educativo · SEPRN', M, H - 80);
+    ctx.fillText('educaneza.github.io/seprn-sitio/formacion-docente.html', M, H - 48);
+
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+    const nombreArchivo = 'comprobante-' + resultados[0].folio + '.png';
+    const archivo = new File([blob], nombreArchivo, { type: 'image/png' });
+    // En celular: menú "Compartir" (Guardar en Fotos / WhatsApp). En
+    // computadora, o si el navegador no lo soporta: descarga directa.
+    const esMovil = matchMedia('(pointer: coarse)').matches;
+    if (esMovil && navigator.canShare && navigator.canShare({ files: [archivo] })) {
+      try {
+        await navigator.share({ files: [archivo], title: 'Comprobante de registro' });
+        return;
+      } catch (err) {
+        if (err && err.name === 'AbortError') return; // el docente cerró el menú
+      }
+    }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = nombreArchivo;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
   }
 
   // ── Normalizar mayúsculas/minúsculas de Nombre y Escuela manual ──

@@ -249,6 +249,9 @@ function evaluarEstadoCurso_(row, ahora) {
 function construirCursoApi_(row, estadoInscripcion, inscritosPorCurso) {
   const cierre = momentoCierreInscripcion_(row);
   const hora = row[COL_HORA_LIMITE_INSCRIPCION] ? horaYMinutos_(row[COL_HORA_LIMITE_INSCRIPCION]) : null;
+  const horaInicio = row[COL_HORA_INICIO] ? horaYMinutos_(row[COL_HORA_INICIO]) : null;
+  const horaFin = row[COL_HORA_FIN] ? horaYMinutos_(row[COL_HORA_FIN]) : null;
+  const hhmm = h => h ? ('0' + h.h).slice(-2) + ':' + ('0' + h.m).slice(-2) : '';
   return {
     id:                        row[0].toString().trim(),
     categoria:                 row[1],
@@ -268,7 +271,11 @@ function construirCursoApi_(row, estadoInscripcion, inscritosPorCurso) {
     // …") + instante exacto para que la página cierre sola si se queda
     // abierta. Vacíos si no hay fecha límite real (fail-open).
     fecha_limite_inscripcion:  cierre ? formatearFecha(cierre) : '',
-    hora_limite_inscripcion:   hora ? ('0' + hora.h).slice(-2) + ':' + ('0' + hora.m).slice(-2) : '',
+    hora_limite_inscripcion:   hhmm(hora),
+    // Hora del evento (HH:MM, hora del centro de México) para los botones
+    // "Agregar a mi calendario" y el comprobante de la confirmación (sep 2026).
+    hora_inicio:               hhmm(horaInicio),
+    hora_fin:                  hhmm(horaFin),
     cierre_inscripcion_iso:    cierre ? cierre.toISOString() : '',
     inscritos:                inscritosPorCurso[row[0].toString().trim().toUpperCase()] || 0
   };
