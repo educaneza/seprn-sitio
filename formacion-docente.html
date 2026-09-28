@@ -303,6 +303,11 @@
       display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
     }
     .cc-desc.expanded { -webkit-line-clamp: unset; overflow: visible; }
+    /* Ligas escritas en la Descripcion: clicables y cortas; overflow-wrap
+       parte una liga larga en vez de salirse de la tarjeta (sep 2026). */
+    .cc-desc { overflow-wrap: anywhere; }
+    .cc-desc a { color: var(--midnight); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+    .cc-desc a:hover { color: var(--acento); }
     .cc-desc-toggle {
       background: none; border: none; padding: .35rem 0; margin-top: -.6rem;
       font-size: .78rem; font-weight: 700; cursor: pointer; text-align: left;
@@ -1482,12 +1487,42 @@
   // se cumple con la página abierta (vigilarCierres()).
   let catalogoActual = [];
 
+  // Orden del catálogo (sep 2026): primero lo que acepta registro (abierta,
+  // "cierra pronto"), luego cupo agotado y al final inscripción cerrada.
+  // Dentro de cada grupo, el curso agregado más recientemente a la hoja
+  // Cursos va primero (el API los entrega en el orden de la hoja).
+  const ORDEN_ESTADO = { abierta: 0, agotada: 1, cerrada: 2 };
+  function ordenarCatalogo(cursos) {
+    return cursos
+      .map((curso, i) => ({ curso, i, g: ORDEN_ESTADO[estadoEfectivo(curso)] ?? 0 }))
+      .sort((a, b) => a.g - b.g || b.i - a.i)
+      .map(x => x.curso);
+  }
+
+  // Texto con ligas http(s) convertidas en <a> cortas ("facebook.com/unete…"),
+  // sin innerHTML: el texto viene de la hoja y se pinta como texto.
+  function pintarTextoConLigas(el, texto) {
+    el.textContent = '';
+    String(texto).split(/(https?:\/\/[^\s]+)/g).forEach((parte, i) => {
+      if (i % 2 === 0) { if (parte) el.appendChild(document.createTextNode(parte)); return; }
+      const url = parte.replace(/[).,;:]+$/, '');
+      const a = document.createElement('a');
+      a.href = url;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.textContent = url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+      a.addEventListener('click', ev => ev.stopPropagation()); // no selecciona la tarjeta
+      el.appendChild(a);
+      if (url.length < parte.length) el.appendChild(document.createTextNode(parte.slice(url.length)));
+    });
+  }
+
   function renderCursos(cursos) {
     catalogoActual = cursos;
     const grid = document.getElementById('cursos-grid');
     grid.innerHTML = '';
 
-    cursos.forEach(curso => {
+    ordenarCatalogo(cursos).forEach(curso => {
       const style = CATEGORIA_STYLE[curso.categoria] || CATEGORIA_STYLE._default;
       const estado = estadoEfectivo(curso);
       const cerrado = estado === 'cerrada';
@@ -1571,7 +1606,7 @@
       card.querySelector('.cc-estado-txt').textContent = chip.texto;
       card.querySelector('.cc-categoria').textContent = curso.categoria || '';
       card.querySelector('.curso-nombre').textContent = curso.nombre || '';
-      if (curso.descripcion) card.querySelector('.cc-desc').textContent = curso.descripcion;
+      if (curso.descripcion) pintarTextoConLigas(card.querySelector('.cc-desc'), curso.descripcion);
       if (inscripcion) {
         card.querySelector('.cc-fecha-insc-lbl').textContent = inscripcion.lbl;
         card.querySelector('.cc-fecha-insc').textContent = inscripcion.val;
