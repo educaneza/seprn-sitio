@@ -14,6 +14,20 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-09-28 · Correo/Incidencias: el correo de credenciales no salía al atender
+
+| | |
+|---|---|
+| **Fecha** | 2026-09-28 |
+| **Sesión** | Jorge reportó que, al atender incidencias ("No puedo acceder a mi cuenta") en `Solicitudes_Correo_2026_2027`, no salía el correo automático al usuario. |
+| **Diagnóstico en vivo (Chrome)** | Ejecuciones del proyecto "Webform Correo 2026-2027 - Backend": `onEditWebform` corre en cada edición, todas "Completada" y sin registros de error. Script Properties sin `MODO_PRUEBA_CORREO`. Así se descartaron cuota y modo de prueba. En la hoja `Incidencias`, `OTDE-INC-0002` a `0005` tenían contraseña y `¿Cuenta lista? = Sí`, pero en 0003-0005 `Usuario asignado` estaba vacío: la cuenta ya existe y no se vuelve a escribir. En 0002 estaban las dos, pero el disparo solo escuchaba la columna de contraseña. Las otras hojas de Correo no tenían filas en este estado. |
+| **Fix** | `incidenciaRevisarEdicion()` en `apps-script/correo/Incidencias.gs`: usa `Correo Institucional Afectado` si `Usuario asignado` está vacío (también en `incidenciaEnviarCredenciales()`), dispara al editar Contraseña **o** Usuario, y si el envío falla escribe `Error: …` en `Usuario enviado` y avisa por Telegram (reintento: volver a escribir la contraseña). Ver `docs/QA-NOTES.md #46`. |
+| **Verificación** | Probado en Node con una hoja simulada (4 casos: contraseña antes que usuario, usuario vacío, error + reintento, sin duplicar). Chrome perdió el permiso de lectura de `script.google.com` antes de desplegar, así que Jorge pegó el `.gs` en el proyecto real ("ya quedó"). No se verificó en vivo desde esta sesión si ya se reenviaron las 4 incidencias pendientes (se reenvían volviendo a escribir su contraseña). |
+| **Documentación actualizada** | Este checkpoint, `docs/QA-NOTES.md #46`, `docs/manual-bases-tramites.html` (fila de Incidencias). |
+| **Commits** | El commit de cierre (fix + docs). |
+
+---
+
 ## CHECKPOINT — 2026-09-25 (cont.) · Oficina Virtual: folios `OTDE-CYR-` consultables y estatus vacío como "Pendiente de validar"
 
 | | |

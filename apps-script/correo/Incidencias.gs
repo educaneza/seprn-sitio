@@ -197,13 +197,18 @@ function incidenciaRevisarEdicion(e) {
   const idxEnviado  = indexOfHeader(headers, 'Usuario enviado');
   const idxFecha    = indexOfHeader(headers, 'Fecha de entrega');
   const idxEstado   = indexOfHeader(headers, 'Estado general');
+  const idxCorreoInst = indexOfHeader(headers, 'Correo Institucional Afectado');
+  const idxFolio    = indexOfHeader(headers, 'Folio');
 
   if ([idxPassword, idxUsuario, idxEnviado, idxFecha, idxEstado].includes(-1)) return;
 
-  const colDisparoAbs = idxPassword + 1;
+  // Dispara con Contraseña O Usuario asignado (sep 2026): antes solo con
+  // Contraseña, así que si se capturaba la contraseña antes que el usuario,
+  // ninguna de las dos ediciones enviaba nada (caso real OTDE-INC-0002).
   const colInicio = e.range.getColumn();
   const colFin = colInicio + e.range.getNumColumns() - 1;
-  if (colDisparoAbs < colInicio || colDisparoAbs > colFin) return;
+  const tocaColumna = (idx) => idx + 1 >= colInicio && idx + 1 <= colFin;
+  if (!tocaColumna(idxPassword) && !tocaColumna(idxUsuario)) return;
 
   const filaInicio = e.range.getRow();
   const numFilas = e.range.getNumRows();
@@ -211,7 +216,11 @@ function incidenciaRevisarEdicion(e) {
   for (let f = filaInicio; f < filaInicio + numFilas; f++) {
     if (f === 1) continue;
 
-    const usuario  = (hoja.getRange(f, idxUsuario + 1).getValue() || '').toString().trim();
+    // En una incidencia la cuenta ya existe: si "Usuario asignado" queda vacío
+    // se usa el Correo Institucional Afectado (así se atendieron 0003-0005 y
+    // el correo nunca salió, sin ningún aviso).
+    const usuario  = (hoja.getRange(f, idxUsuario + 1).getValue() || '').toString().trim() ||
+      (idxCorreoInst === -1 ? '' : (hoja.getRange(f, idxCorreoInst + 1).getValue() || '').toString().trim());
     const password = (hoja.getRange(f, idxPassword + 1).getValue() || '').toString().trim();
     const yaEnviado = esAfirmativo(hoja.getRange(f, idxEnviado + 1).getValue());
     if (!usuario || !password || yaEnviado) continue;
@@ -224,6 +233,13 @@ function incidenciaRevisarEdicion(e) {
       SpreadsheetApp.flush();
     } catch (err) {
       Logger.log('❌ Error enviando credenciales fila ' + f + ': ' + err.message);
+      // Antes el error solo quedaba en el Logger. "Error: …" no es afirmativo,
+      // así que volver a editar la contraseña reintenta el envío.
+      hoja.getRange(f, idxEnviado + 1).setValue('Error: ' + String(err.message).slice(0, 80));
+      const folio = idxFolio === -1 ? 'fila ' + f : hoja.getRange(f, idxFolio + 1).getValue();
+      notificarTelegram('⚠️ *No salió el correo de una incidencia atendida*\n' +
+        'Folio: ' + folio + '\nError: ' + escapeMarkdown_(err.message) + '\n' +
+        'Vuelve a escribir la contraseña para reintentar.');
     }
   }
 }
@@ -237,7 +253,7 @@ function incidenciaEnviarCredenciales(fila) {
 
   const nombreCompleto = escapeHtml_(leer('Nombre'));
   const correoPersonal = leer('Correo Personal');
-  const usuario = leer('Usuario asignado');
+  const usuario = leer('Usuario asignado') || leer('Correo Institucional Afectado');
   const password = leer('Contraseña asignada');
 
   const asunto = 'Actualización de acceso — Cuenta Institucional';

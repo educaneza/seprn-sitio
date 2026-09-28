@@ -1265,3 +1265,30 @@ en ese caso; Soporte ya lo resolvía en el backend).
 
 **Regla:** al crear un prefijo de folio nuevo, agregarlo también a `OV_TIPOS_DE_TRAMITE` y
 probar una consulta desde la página publicada, no solo con `curl` al backend.
+
+## 46. Incidencias de Correo atendidas sin correo al usuario — "Usuario asignado" vacío, sin ningún aviso
+
+**Síntoma:** 28 sep 2026: al atender incidencias ("No puedo acceder a mi cuenta") en
+`Solicitudes_Correo_2026_2027`, el usuario no recibía el correo "Actualización de acceso".
+
+**Diagnóstico en vivo:** activador `onEditWebform` sano (corre en cada edición, todas
+"Completada", sin logs de error), sin `MODO_PRUEBA_CORREO`, así que no era cuota ni modo de
+prueba. En la hoja, `OTDE-INC-0003`/`0004`/`0005` tenían `Contraseña asignada` y
+`¿Cuenta lista? = Sí`, pero **`Usuario asignado` vacío**. En una incidencia la cuenta ya existe
+(es la de `Correo Institucional Afectado`) y no se vuelve a escribir. `OTDE-INC-0002` tenía las
+dos columnas, pero la contraseña se capturó antes que el usuario.
+
+**Causa raíz:** `incidenciaRevisarEdicion()` (a) exigía `Usuario asignado` y se saltaba la fila
+en silencio si estaba vacío, y (b) solo disparaba si la celda editada era `Contraseña asignada`.
+Si se capturaba primero la contraseña y después el usuario, ninguna de las dos ediciones enviaba
+nada. Además, un error de envío solo quedaba en `Logger.log`.
+
+**Fix (`apps-script/correo/Incidencias.gs`):** si `Usuario asignado` está vacío se usa
+`Correo Institucional Afectado` (también en `incidenciaEnviarCredenciales`). El envío se dispara
+al editar Contraseña **o** Usuario. Si falla, se escribe `Error: …` en `Usuario enviado` y se
+avisa por Telegram; volver a escribir la contraseña lo reintenta. Probado en Node con una hoja
+simulada (4 casos).
+
+**Regla:** si un disparador depende de varias celdas que se llenan a mano, tiene que escuchar
+todas ellas. Y si se salta una fila o falla un envío, tiene que quedar visible en la hoja, no
+solo en el Logger.
