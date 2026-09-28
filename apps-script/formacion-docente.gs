@@ -28,56 +28,49 @@
 //     F Escuela | G Sector | H Zona | I Municipio | J Funcion
 //     K Fecha_primer_registro | L Fecha_ultima_actualizacion
 //
-//   Cursos — catálogo, administrado a mano por OTDE
-//     A ID_Curso | B Categoria | C Nombre | D Responsable
-//     E Modalidad | F Fecha_inicio | G Fecha_fin | H Liga_convocatoria
-//     I Requiere_codigo_asistencia | J Codigo_asistencia
-//     K Activo | L Notas | M Registro_previo_requerido
-//     N Visible_desde | O Visible_hasta
-//     ... V Fecha_limite_inscripcion | W Valida_USICAMM | X Valida_PROEEB
-//     ... Y Liga_tutorial_constancia | Z Hora_fin
-//     AA Hora_limite_inscripcion | AB Cupo_agotado | AC Ocultar_historial
-//     (ver detalle de estas columnas más abajo, junto a ENCABEZADOS_CURSOS)
+//   Cursos — catálogo, administrado a mano por OTDE. Columnas por bloques
+//   en el orden en que se llena un curso (28 sep 2026):
+//     1. El curso:        A ID_Curso (auto) | B Categoria | C Nombre | D Responsable
+//                         E Modalidad | F Dirigido_a | G Descripcion | H Liga_convocatoria
+//     2. Cuándo:          I Fecha_inicio | J Fecha_fin | K Hora_inicio | L Hora_fin
+//                         M Fechas_sesion
+//     3. Inscripción:     N Visible_desde | O Fecha_limite_inscripcion
+//                         P Hora_limite_inscripcion | Q Registro_previo_requerido
+//                         R Cupo_agotado
+//     4. Validez:         S Valida_USICAMM | T Valida_PROEEB | U Liga_tutorial_constancia
+//     5. Control:         V Activo | W Ocultar_historial | X Notas
+//     6. Automáticas:     Y-AA Recordatorio_{inicio,medio,webinar}_enviado
+//     El código lee esta hoja SIEMPRE por nombre de encabezado
+//     (valoresCursos_/colCursos_): mover columnas no rompe nada. Detalle de
+//     cada columna más abajo, junto a ENCABEZADOS_CURSOS.
 //
 //   Registro_previo_requerido (TRUE/FALSE, tú lo decides por curso): si es
 //   TRUE y hay Liga_convocatoria, el formulario OBLIGA a pasar por esa liga
-//   externa antes de llenar los datos con OTDE (mismo patrón que
-//   jornada-verano-2026.html) — úsalo solo en cursos con cupo real y
-//   limitado en la plataforma externa (diplomados, cursos autogestivos).
-//   Si es FALSE, la liga solo se muestra como referencia al final, sin
-//   forzar el paso — para categorías sin cupo real (la mayoría de webinars).
+//   externa antes de llenar los datos con OTDE — úsalo solo en cursos con
+//   cupo real y limitado en la plataforma externa (diplomados, cursos
+//   autogestivos). Si es FALSE, la liga solo se muestra como referencia al
+//   final, sin forzar el paso — para categorías sin cupo real (la mayoría de
+//   webinars).
 //
-//   Visible_desde / Visible_hasta (fechas, AMBAS OPCIONALES): programan la
-//   aparición/desaparición del curso en el catálogo sin que tengas que
-//   tocar Activo a mano. Se evalúan en doGet() cada vez que alguien visita
-//   el sitio (comparando solo año/mes/día) — no dependen de un disparador
-//   programado que pueda fallar en silencio. Reglas:
-//     - Vacías las dos → el curso se rige solo por Activo, como hasta ahora.
-//     - Visible_desde llena → el curso aparece automáticamente ese día.
-//     - Visible_hasta llena → el curso se oculta automáticamente al día
-//       siguiente de esa fecha (ese día todavía es visible).
-//     - Activo=FALSE siempre gana — apaga el curso sin importar las fechas.
+//   Visible_desde (fecha, opcional): el curso aparece en el catálogo ese día
+//   sin tener que tocar Activo. Se evalúa en doGet() en cada visita. Vacía →
+//   se rige solo por Activo. Activo=FALSE siempre gana.
 //
 //   Inscripciones — una fila por registro (transaccional), columnas en
-//   bloques (sep 2026, ver ENCABEZADOS_INSCRIPCIONES):
-//     Registro:          A Folio | B Fecha_registro
-//     Participante:      C RFC_Docente | D Nombre_Docente* | E Correo* | F Telefono* | G Funcion*
-//     Centro de trabajo: H CCT* | I Escuela* | J Sector* | K Zona*
-//     Curso:             L ID_Curso | M Nombre_Curso*
-//     Seguimiento:       N Registro_externo | O Fecha_confirmacion_externa
-//                        P Recordatorios_pendiente | Q Fecha_ultimo_recordatorio | R Estado
-//                        S Codigo_asistencia_capturado | T Fecha_actualizacion_estado | U Notas
-//                        V Constancia_recordatorios_enviados | W Fecha_ultimo_recordatorio_constancia
-//                        X Constancia_recibida | Y Fecha_recepcion_constancia | Z Liga_constancia_drive
-//     (las últimas 5, sep 2026 — ver "RECORDATORIO Y CARGA DE CONSTANCIA")
+//   bloques (ver ENCABEZADOS_INSCRIPCIONES):
+//     Registro:          Folio | Fecha_registro
+//     Participante:      RFC_Docente | Nombre_Docente* | Correo* | Telefono* | Funcion*
+//     Centro de trabajo: CCT* | Escuela* | Sector* | Zona*
+//     Curso:             ID_Curso | Nombre_Curso*
+//     Plataforma ext.:   Registro_externo | Fecha_confirmacion_externa
+//                        Recordatorios_pendiente | Fecha_ultimo_recordatorio
+//     Constancia:        Constancia_recordatorios_enviados | Fecha_ultimo_recordatorio_constancia
+//                        Constancia_recibida | Fecha_recepcion_constancia | Liga_constancia_drive
+//     Notas
 //     * Fórmula VLOOKUP en vivo contra Docentes/Cursos — se recalculan solas
 //     si cambian los datos del docente o del curso. Ver VISTA_INSCRIPCIONES.
 //     El código lee esta hoja SIEMPRE por nombre de encabezado, nunca por
 //     posición: reordenar columnas no rompe recordatorios ni estadísticas.
-//
-// NOTA: el campo Codigo_asistencia_capturado y el flujo de cierre
-// de webinars (validar asistencia) se implementan en una fase
-// posterior — este endpoint solo cubre catálogo + registro.
 // ============================================================
 
 const CICLO_ESCOLAR = '2627'; // 2026-2027 — actualizar cada ciclo
@@ -97,16 +90,19 @@ const ENCABEZADOS_INSCRIPCIONES = [
   'RFC_Docente', 'Nombre_Docente', 'Correo', 'Telefono', 'Funcion',
   'CCT', 'Escuela', 'Sector', 'Zona',
   'ID_Curso', 'Nombre_Curso',
+  // Seguimiento de la plataforma externa (doble registro)
   'Registro_externo', 'Fecha_confirmacion_externa',
-  'Recordatorios_pendiente', 'Fecha_ultimo_recordatorio', 'Estado',
-  'Codigo_asistencia_capturado', 'Fecha_actualizacion_estado', 'Notas',
-  // Recolección de constancia (sep 2026, ver "RECORDATORIO Y CARGA DE
-  // CONSTANCIA" más abajo) — solo aplica a cursos con Liga_tutorial_constancia
-  // llena en Cursos (ej. conferencias UNETE). Agregadas al final a propósito,
-  // mismo criterio de auto-heal por nombre que el resto de esta hoja.
+  'Recordatorios_pendiente', 'Fecha_ultimo_recordatorio',
+  // Recolección de constancia — solo cursos con Liga_tutorial_constancia
+  // (ej. conferencias UNETE), ver "RECORDATORIO Y CARGA DE CONSTANCIA".
   'Constancia_recordatorios_enviados', 'Fecha_ultimo_recordatorio_constancia',
-  'Constancia_recibida', 'Fecha_recepcion_constancia', 'Liga_constancia_drive'
+  'Constancia_recibida', 'Fecha_recepcion_constancia', 'Liga_constancia_drive',
+  'Notas'
 ];
+// Retiradas el 28 sep 2026 (sin uso real; "Reordenar columnas de
+// Inscripciones" no las copia, quedan en el respaldo): Estado (siempre
+// "Registrado"), Codigo_asistencia_capturado y Fecha_actualizacion_estado
+// (la validación de asistencia con código nunca se construyó).
 
 // Columnas calculadas con VLOOKUP en vivo: [rango, índice de columna, llave].
 // Docentes!A:J = RFC, Nombre, Correo, Telefono, CCT, Escuela, Sector, Zona,
@@ -182,13 +178,12 @@ function soloFecha(valor) {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
-// ── ¿Este curso debe verse hoy, según Visible_desde/Visible_hasta? ──
-// Ambas vacías: sin restricción de fecha (comportamiento de siempre).
-function dentroDeVentanaVisible(visibleDesde, visibleHasta) {
+// ── ¿Este curso ya debe verse, según Visible_desde? Vacía: sin restricción.
+// (Visible_hasta se retiró el 28 sep 2026: para cerrar inscripciones se usa
+// Fecha_limite_inscripcion; para quitar un curso, Activo=FALSE.) ──
+function dentroDeVentanaVisible(visibleDesde) {
   const hoy = soloFecha(new Date());
-  if (visibleDesde && hoy < soloFecha(visibleDesde)) return false;
-  if (visibleHasta && hoy > soloFecha(visibleHasta)) return false;
-  return true;
+  return !(visibleDesde && hoy < soloFecha(visibleDesde));
 }
 
 // ── Parseo seguro de fecha: null si el valor no es una fecha real (vacío,
@@ -216,7 +211,7 @@ function horaYMinutos_(valor) {
 // (o con una que no se entiende) → cierra al terminar ese día, como siempre.
 // null si no hay fecha límite real. ──
 function momentoCierreInscripcion_(row) {
-  const fecha = row[21] ? parseFechaSegura_(row[21]) : parseFechaSegura_(row[5]);
+  const fecha = row[CUR.Fecha_limite_inscripcion] ? parseFechaSegura_(row[CUR.Fecha_limite_inscripcion]) : parseFechaSegura_(row[CUR.Fecha_inicio]);
   if (!fecha) return null;
   const hora = row[COL_HORA_LIMITE_INSCRIPCION] ? horaYMinutos_(row[COL_HORA_LIMITE_INSCRIPCION]) : null;
   return hora
@@ -232,7 +227,7 @@ function momentoCierreInscripcion_(row) {
 // catálogo vigente, entra al historial). `ahora` lleva hora real: el cierre
 // se evalúa al minuto; esPasado sigue siendo por día. ──
 function evaluarEstadoCurso_(row, ahora) {
-  const fechaFin = parseFechaSegura_(row[6]);
+  const fechaFin = parseFechaSegura_(row[CUR.Fecha_fin]);
   const cierre = momentoCierreInscripcion_(row);
   let estadoInscripcion = 'abierta';
   if (cierre !== null && ahora > cierre) estadoInscripcion = 'cerrada';
@@ -246,6 +241,28 @@ function evaluarEstadoCurso_(row, ahora) {
 
 // ── Construye el objeto de curso que viaja al catálogo — compartido por
 // los cursos vigentes y los del historial ("cursos_pasados"). ──
+// ── Fechas_sesion (AD) → ["2026-10-07", ...] ordenadas y sin repetir.
+// "d/m" toma el año de Fecha_inicio; si el mes queda antes que el de
+// Fecha_inicio, es del año siguiente (ciclo escolar que cruza diciembre).
+// Si Sheets convirtió una sola fecha en Date, también se acepta. Lo que no
+// se entienda se ignora (fail-open). ──
+function fechasSesion_(valor, fechaInicio) {
+  if (!valor) return [];
+  const inicio = parseFechaSegura_(fechaInicio);
+  const iso = d => Utilities.formatDate(d, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  if (Object.prototype.toString.call(valor) === '[object Date]') return isNaN(valor) ? [] : [iso(valor)];
+  const fechas = String(valor).split(/[,;\n]+/).map(function(t) {
+    const m = t.trim().match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?$/);
+    if (!m) return null;
+    const dia = Number(m[1]), mes = Number(m[2]) - 1;
+    let anio = m[3] ? Number(m[3].length === 2 ? '20' + m[3] : m[3]) : (inicio ? inicio.getFullYear() : new Date().getFullYear());
+    if (!m[3] && inicio && mes < inicio.getMonth()) anio++;
+    const d = new Date(anio, mes, dia);
+    return d.getMonth() === mes ? iso(d) : null;
+  }).filter(Boolean);
+  return fechas.filter(function(f, i) { return fechas.indexOf(f) === i; }).sort();
+}
+
 function construirCursoApi_(row, estadoInscripcion, inscritosPorCurso) {
   const cierre = momentoCierreInscripcion_(row);
   const hora = row[COL_HORA_LIMITE_INSCRIPCION] ? horaYMinutos_(row[COL_HORA_LIMITE_INSCRIPCION]) : null;
@@ -253,19 +270,19 @@ function construirCursoApi_(row, estadoInscripcion, inscritosPorCurso) {
   const horaFin = row[COL_HORA_FIN] ? horaYMinutos_(row[COL_HORA_FIN]) : null;
   const hhmm = h => h ? ('0' + h.h).slice(-2) + ':' + ('0' + h.m).slice(-2) : '';
   return {
-    id:                        row[0].toString().trim(),
-    categoria:                 row[1],
-    nombre:                    row[2],
-    responsable:               row[3],
-    modalidad:                 row[4],
-    fecha_inicio:              formatearFecha(row[5]),
-    fecha_fin:                 formatearFecha(row[6]),
-    liga_convocatoria:         row[7] || '',
-    registro_previo_requerido: String(row[12]).trim().toUpperCase() === 'TRUE',
-    descripcion:               row[19] || '',
-    dirigido_a:                row[20] || '',
-    valida_usicamm:            String(row[22]).trim().toUpperCase() === 'TRUE',
-    valida_proeeb:             String(row[23]).trim().toUpperCase() === 'TRUE',
+    id:                        row[CUR.ID_Curso].toString().trim(),
+    categoria:                 row[CUR.Categoria],
+    nombre:                    row[CUR.Nombre],
+    responsable:               row[CUR.Responsable],
+    modalidad:                 row[CUR.Modalidad],
+    fecha_inicio:              formatearFecha(row[CUR.Fecha_inicio]),
+    fecha_fin:                 formatearFecha(row[CUR.Fecha_fin]),
+    liga_convocatoria:         row[CUR.Liga_convocatoria] || '',
+    registro_previo_requerido: String(row[CUR.Registro_previo_requerido]).trim().toUpperCase() === 'TRUE',
+    descripcion:               row[CUR.Descripcion] || '',
+    dirigido_a:                row[CUR.Dirigido_a] || '',
+    valida_usicamm:            String(row[CUR.Valida_USICAMM]).trim().toUpperCase() === 'TRUE',
+    valida_proeeb:             String(row[CUR.Valida_PROEEB]).trim().toUpperCase() === 'TRUE',
     estado_inscripcion:        estadoInscripcion,
     // Cierre de inscripción: fecha y hora para mostrar ("Inscríbete hasta
     // …") + instante exacto para que la página cierre sola si se queda
@@ -276,8 +293,9 @@ function construirCursoApi_(row, estadoInscripcion, inscritosPorCurso) {
     // "Agregar a mi calendario" y el comprobante de la confirmación (sep 2026).
     hora_inicio:               hhmm(horaInicio),
     hora_fin:                  hhmm(horaFin),
+    fechas_sesion:             fechasSesion_(row[COL_FECHAS_SESION], row[CUR.Fecha_inicio]),
     cierre_inscripcion_iso:    cierre ? cierre.toISOString() : '',
-    inscritos:                inscritosPorCurso[row[0].toString().trim().toUpperCase()] || 0
+    inscritos:                inscritosPorCurso[row[CUR.ID_Curso].toString().trim().toUpperCase()] || 0
   };
 }
 
@@ -297,7 +315,7 @@ function doGet(e) {
   }
   try {
     const hoja  = obtenerHojaCursos();
-    const datos = hoja.getDataRange().getValues().slice(1);
+    const datos = valoresCursos_(hoja).slice(1);
     const inscritosPorCurso = contarInscritosPorCurso();
     const ahora = new Date();
 
@@ -305,9 +323,9 @@ function doGet(e) {
     const pasadosCandidatos = [];
 
     datos
-      .filter(row => String(row[0]).trim())
+      .filter(row => String(row[CUR.ID_Curso]).trim())
       .forEach(row => {
-        const activo = String(row[10]).trim().toUpperCase() === 'TRUE';
+        const activo = String(row[CUR.Activo]).trim().toUpperCase() === 'TRUE';
         const { esPasado, fechaFinOrden, estadoInscripcion } = evaluarEstadoCurso_(row, ahora);
 
         if (esPasado) {
@@ -319,7 +337,7 @@ function doGet(e) {
           // desaparición de cursos vigentes, no la de un curso ya terminado.
           if (String(row[COL_OCULTAR_HISTORIAL]).trim().toUpperCase() === 'TRUE') return;
           pasadosCandidatos.push({ cursoApi: construirCursoApi_(row, estadoInscripcion, inscritosPorCurso), fechaFinOrden });
-        } else if (activo && dentroDeVentanaVisible(row[13], row[14])) {
+        } else if (activo && dentroDeVentanaVisible(row[CUR.Visible_desde])) {
           cursos.push(construirCursoApi_(row, estadoInscripcion, inscritosPorCurso));
         }
       });
@@ -403,10 +421,10 @@ function doPost(e) {
     // persona sí tiene lugar y OTDE necesita su registro.
     if (!existente) {
       if (estadoCurso.estadoInscripcion === 'cerrada') {
-        throw new Error('Las inscripciones de este curso ya cerraron: ' + filaCurso[2]);
+        throw new Error('Las inscripciones de este curso ya cerraron: ' + filaCurso[CUR.Nombre]);
       }
       if (estadoCurso.estadoInscripcion === 'agotada' && registroExterno !== REGISTRO_EXTERNO.CONFIRMADO) {
-        throw new Error('Cupo agotado — ya no hay lugares disponibles en: ' + filaCurso[2]);
+        throw new Error('Cupo agotado — ya no hay lugares disponibles en: ' + filaCurso[CUR.Nombre]);
       }
     }
 
@@ -421,7 +439,7 @@ function doPost(e) {
     }
 
     const folio = generarFolio(hojaInscripciones);
-    agregarInscripcion(hojaInscripciones, folio, ahora, rfc, idCurso, 'Registrado', '', registroExterno);
+    agregarInscripcion(hojaInscripciones, folio, ahora, rfc, idCurso, '', registroExterno);
 
     return textResponse(JSON.stringify({ status: 'ok', folio: folio, duplicado: false }));
 
@@ -436,8 +454,8 @@ function doPost(e) {
 // "No aplica" lo decide el servidor con la hoja Cursos, no el cliente: mismo
 // criterio que el formulario (Registro_previo_requerido=TRUE y con liga).
 function resolverRegistroExterno_(filaCurso, valorCliente) {
-  const exigePrevio = String(filaCurso[12]).trim().toUpperCase() === 'TRUE' &&
-                      String(filaCurso[7] || '').trim() !== '';
+  const exigePrevio = String(filaCurso[CUR.Registro_previo_requerido]).trim().toUpperCase() === 'TRUE' &&
+                      String(filaCurso[CUR.Liga_convocatoria] || '').trim() !== '';
   if (!exigePrevio) return REGISTRO_EXTERNO.NO_APLICA;
   const valor = String(valorCliente || '').trim().toLowerCase();
   if (valor === 'confirmado') return REGISTRO_EXTERNO.CONFIRMADO;
@@ -534,8 +552,8 @@ function buscarInscripcionExistente(hoja, rfc, idCurso) {
 
 // ── Busca la fila de este ID_Curso en el catálogo. null si no existe. ──
 function obtenerFilaCurso_(hoja, idCurso) {
-  const datos = hoja.getDataRange().getValues();
-  const fila = datos.slice(1).find(row => String(row[0]).trim().toUpperCase() === idCurso);
+  const datos = valoresCursos_(hoja);
+  const fila = datos.slice(1).find(row => String(row[CUR.ID_Curso]).trim().toUpperCase() === idCurso);
   return fila || null;
 }
 
@@ -563,66 +581,90 @@ function obtenerHojaDocentes() {
 // encabezado que falte en hojas ya existentes, sin tocar las columnas
 // previas ni sus datos.
 const ENCABEZADOS_CURSOS = [
+  // 1. El curso
   'ID_Curso', 'Categoria', 'Nombre', 'Responsable', 'Modalidad',
-  'Fecha_inicio', 'Fecha_fin', 'Liga_convocatoria',
-  'Requiere_codigo_asistencia', 'Codigo_asistencia', 'Activo', 'Notas',
-  'Registro_previo_requerido', 'Visible_desde', 'Visible_hasta',
-  'Hora_inicio', 'Recordatorio_inicio_enviado', 'Recordatorio_medio_enviado',
-  'Recordatorio_webinar_enviado', 'Descripcion', 'Dirigido_a',
-  'Fecha_limite_inscripcion', 'Valida_USICAMM', 'Valida_PROEEB',
-  'Liga_tutorial_constancia', 'Hora_fin',
-  'Hora_limite_inscripcion', 'Cupo_agotado', 'Ocultar_historial'
+  'Dirigido_a', 'Descripcion', 'Liga_convocatoria',
+  // 2. Cuándo se imparte
+  'Fecha_inicio', 'Fecha_fin', 'Hora_inicio', 'Hora_fin', 'Fechas_sesion',
+  // 3. Inscripción
+  'Visible_desde', 'Fecha_limite_inscripcion', 'Hora_limite_inscripcion',
+  'Registro_previo_requerido', 'Cupo_agotado',
+  // 4. Validez y constancia
+  'Valida_USICAMM', 'Valida_PROEEB', 'Liga_tutorial_constancia',
+  // 5. Control
+  'Activo', 'Ocultar_historial', 'Notas',
+  // 6. Automáticas — las marca el sistema, no se llenan a mano
+  'Recordatorio_inicio_enviado', 'Recordatorio_medio_enviado', 'Recordatorio_webinar_enviado'
 ];
-// P Hora_inicio (opcional, solo relevante en eventos de un solo día como
-// webinars): hora de inicio, ej. 16:00. Sin esto no se puede mandar el
+
+// Columnas retiradas el 28 sep 2026 (sin uso real): "Reordenar columnas de
+// Cursos" no las copia a la hoja nueva (quedan en el respaldo).
+//   Requiere_codigo_asistencia / Codigo_asistencia — la validación de
+//   asistencia con código nunca se construyó.
+//   Visible_hasta — escondía el curso por completo; para cerrar
+//   inscripciones se usa Fecha_limite_inscripcion (+ hora).
+
+// Índice 0-based de cada columna de Cursos EN EL ORDEN DE ENCABEZADOS_CURSOS.
+// Las filas que devuelve valoresCursos_() vienen siempre en este orden, sin
+// importar cómo esté acomodada la hoja real (se leen por nombre de
+// encabezado, 28 sep 2026) — mover o insertar columnas ya no rompe nada.
+const CUR = indicesPorEncabezado_(ENCABEZADOS_CURSOS);
+// Hora_inicio (opcional): hora de inicio, ej. 16:00. Sin esto no se puede mandar el
 // recordatorio de "faltan X horas" — no hay forma de saber la hora exacta
 // solo con Fecha_inicio/Fecha_fin.
-// Q-S: banderas TRUE/FALSE que el propio sistema marca solo para no
+// Recordatorio_*_enviado: banderas TRUE/FALSE que el propio sistema marca solo para no
 // mandar el mismo recordatorio dos veces — no las edites a mano salvo
 // para forzar un reenvío (bórralas y se vuelve a evaluar en la próxima
 // corrida del disparador).
-// T Descripcion (opcional): propósito/objetivo/de qué trata el curso,
+// Descripcion (opcional): propósito/objetivo/de qué trata el curso,
 // texto libre — se muestra en la tarjeta del catálogo.
-// U Dirigido_a (opcional): público objetivo (ej. "Docentes de primaria",
+// Dirigido_a (opcional): público objetivo (ej. "Docentes de primaria",
 // "Personal administrativo") — texto libre, se muestra como pill en la
 // tarjeta junto a la modalidad.
-// V Fecha_limite_inscripcion (opcional): último día para inscribirse —
+// Fecha_limite_inscripcion (opcional): último día para inscribirse —
 // distinto de Fecha_inicio/Fecha_fin, que son el periodo de DESARROLLO del
 // curso. Vacía → se usa Fecha_inicio como límite. Pasada esta fecha (pero
 // con Fecha_fin todavía en el futuro), el curso sigue visible en el
 // catálogo con la leyenda "Inscripciones cerradas · Curso en desarrollo" y
 // sin botón de registro — solo desaparece del catálogo vigente (pasa al
 // historial "Cursos anteriores") cuando también termina Fecha_fin.
-// W Valida_USICAMM / X Valida_PROEEB (TRUE/FALSE, independientes entre
+// Valida_USICAMM / Valida_PROEEB (TRUE/FALSE, independientes entre
 // sí — un curso puede tener una, otra, ambas o ninguna): validez oficial
 // del curso para esos procesos. Se muestran como etiqueta destacada en la
 // tarjeta ("USICAMM", "PROEEB" o "USICAMM · PROEEB" si aplican las dos).
-// Y Liga_tutorial_constancia (opcional, sep 2026): liga al tutorial de la
+// Liga_tutorial_constancia (opcional, sep 2026): liga al tutorial de la
 // plataforma externa (ej. UNETE) para tramitar la constancia de
 // participación. Su sola presencia es la señal que activa el recordatorio
 // + carga de constancia de este curso — ver "RECORDATORIO Y CARGA DE
 // CONSTANCIA" más abajo. Se agrega también al correo de aviso del curso
 // (lineaTutorialConstancia_()), igual que Descripcion/Dirigido_a: solo se
 // muestra si está llena.
-// Z Hora_fin (opcional, sep 2026): hora en que termina la conferencia/
+// Hora_fin (opcional, sep 2026): hora en que termina la conferencia/
 // webinar (ej. 18:00), para calcular el momento exacto en que debe salir
 // el primer recordatorio de constancia. Vacía → se asume que termina a las
 // 23:59 de Fecha_fin (fail-open, igual criterio que el resto de fechas/
 // horas opcionales de esta hoja: nunca bloquea el recordatorio, solo lo
 // vuelve menos preciso).
-// AA Hora_limite_inscripcion (opcional, sep 2026): hora exacta en que
+// Hora_limite_inscripcion (opcional, sep 2026): hora exacta en que
 // cierra la inscripción el día de Fecha_limite_inscripcion (ej. 14:00).
 // Vacía → cierra al terminar ese día (23:59), como siempre. Se evalúa al
 // minuto en doGet/doPost, y la página se cierra sola si queda abierta.
-// AB Cupo_agotado (TRUE/FALSE, sep 2026): márcalo a mano cuando ya no hay
+// Cupo_agotado (TRUE/FALSE, sep 2026): márcalo a mano cuando ya no hay
 // lugares aunque la inscripción siga en fecha. El curso sigue visible con
 // la leyenda "Cupo agotado", sin registros nuevos — salvo quien ya se
 // inscribió en la plataforma externa y viene a "solo avisar". Si ya pasó
 // el cierre, gana "Inscripciones cerradas".
-// AC Ocultar_historial (TRUE/FALSE, sep 2026): "Cursos anteriores" ya no
+// Ocultar_historial (TRUE/FALSE, sep 2026): "Cursos anteriores" ya no
 // depende de Activo (apagar un curso al terminar lo borraba del
 // historial); usa esta columna para sacar de ahí un curso de prueba o
 // cancelado.
+// Fechas_sesion (opcional, sep 2026): días de sesión de un curso
+// sincrónico de varios días, separados por coma — ej. "7/10, 14/10, 21/10"
+// (también acepta "7/10/2026"). Sirve igual para días fijos (se listan) o
+// sueltos. Todas las sesiones usan Hora_inicio/Hora_fin. Solo alimenta los
+// botones "Agregar a mi calendario" de la página (un evento con aviso por
+// sesión, sin gastar cuota de correo) — los correos no cambian. Vacía → el
+// calendario agenda solo el día de inicio, como siempre.
 
 function obtenerHojaCursos() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -634,17 +676,42 @@ function obtenerHojaCursos() {
     hoja.setColumnWidth(3, 280); // Nombre
     hoja.setColumnWidth(8, 220); // Liga_convocatoria
   } else {
-    // Hoja creada antes de agregar alguna de estas columnas: se completa el
-    // encabezado faltante sin tocar las columnas ni los datos existentes.
-    const colsActuales = hoja.getLastColumn();
-    if (colsActuales < ENCABEZADOS_CURSOS.length) {
-      const faltantes = ENCABEZADOS_CURSOS.slice(colsActuales);
-      hoja.getRange(1, colsActuales + 1, 1, faltantes.length)
+    // Encabezado faltante (columna nueva en el código): se agrega al final,
+    // por NOMBRE — sin tocar las columnas ni los datos existentes.
+    const actuales = hoja.getRange(1, 1, 1, Math.max(hoja.getLastColumn(), 1)).getValues()[0].map(h => String(h).trim());
+    const faltantes = ENCABEZADOS_CURSOS.filter(h => actuales.indexOf(h) === -1);
+    if (faltantes.length) {
+      const desde = hoja.getLastColumn() + 1;
+      if (hoja.getMaxColumns() < desde + faltantes.length - 1) {
+        hoja.insertColumnsAfter(hoja.getMaxColumns(), desde + faltantes.length - 1 - hoja.getMaxColumns());
+      }
+      hoja.getRange(1, desde, 1, faltantes.length)
         .setValues([faltantes])
         .setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
     }
   }
   return hoja;
+}
+
+// ── Valores de Cursos con cada fila en el orden de ENCABEZADOS_CURSOS
+// (row[CUR.Fecha_inicio], etc.), leídos por nombre de encabezado. La fila 0
+// es el encabezado; el índice de fila no cambia (fila real = i + 1). Una
+// columna que no exista en la hoja real llega vacía. ──
+function valoresCursos_(hoja) {
+  const datos = hoja.getDataRange().getValues();
+  if (!datos.length) return [ENCABEZADOS_CURSOS.slice()];
+  const real = indicesPorEncabezado_(datos[0].map(h => String(h).trim()));
+  const mapa = ENCABEZADOS_CURSOS.map(h => (h in real ? real[h] : -1));
+  return datos.map((fila, i) => i === 0 ? ENCABEZADOS_CURSOS.slice() : mapa.map(j => (j === -1 ? '' : fila[j])));
+}
+
+// ── Número de columna (1-based) REAL de un encabezado de Cursos, para
+// escribir en la hoja. ──
+function colCursos_(hoja, nombre) {
+  const enc = hoja.getRange(1, 1, 1, Math.max(hoja.getLastColumn(), 1)).getValues()[0].map(h => String(h).trim());
+  const i = enc.indexOf(nombre);
+  if (i === -1) throw new Error('La hoja Cursos no tiene la columna "' + nombre + '".');
+  return i + 1;
 }
 
 // ── Obtener o crear hoja Inscripciones ──
@@ -689,13 +756,10 @@ function darFormatoHojaInscripciones_(hoja) {
   Object.keys(anchos).forEach(h => { if (h in cols) hoja.setColumnWidth(cols[h] + 1, anchos[h]); });
 
   const filas = Math.max(hoja.getMaxRows() - 1, 1);
-  ['Fecha_registro', 'Fecha_confirmacion_externa', 'Fecha_ultimo_recordatorio', 'Fecha_actualizacion_estado',
+  ['Fecha_registro', 'Fecha_confirmacion_externa', 'Fecha_ultimo_recordatorio',
     'Fecha_ultimo_recordatorio_constancia', 'Fecha_recepcion_constancia'].forEach(h => {
     if (h in cols) hoja.getRange(2, cols[h] + 1, filas, 1).setNumberFormat('d/M/yyyy H:mm:ss');
   });
-  if ('Codigo_asistencia_capturado' in cols) {
-    hoja.getRange(2, cols.Codigo_asistencia_capturado + 1, filas, 1).setNumberFormat('@');
-  }
   if ('Constancia_recibida' in cols) {
     hoja.getRange(2, cols.Constancia_recibida + 1, filas, 1).setDataValidation(
       SpreadsheetApp.newDataValidation().requireValueInList(['Sí', 'No'], true).setAllowInvalid(true).build());
@@ -730,7 +794,7 @@ function darFormatoHojaInscripciones_(hoja) {
 // VISTA_INSCRIPCIONES son VLOOKUP en vivo contra Docentes/Cursos: si el
 // docente actualiza sus datos (otra inscripción) o cambia el nombre del
 // curso, se reflejan solas — no son una copia congelada.
-function agregarInscripcion(hoja, folio, fecha, rfc, idCurso, estado, notas, registroExterno) {
+function agregarInscripcion(hoja, folio, fecha, rfc, idCurso, notas, registroExterno) {
   const cols = columnasInscripciones_(hoja);
   const fila = hoja.getLastRow() + 1;
   const ancho = Math.max(...Object.values(cols)) + 1;
@@ -743,7 +807,6 @@ function agregarInscripcion(hoja, folio, fecha, rfc, idCurso, estado, notas, reg
   poner('Fecha_registro', fecha);
   poner('RFC_Docente', rfc);
   poner('ID_Curso', idCurso);
-  poner('Estado', estado);
   poner('Notas', notas || '');
   poner('Registro_externo', registroExterno || '');
   if (registroExterno === REGISTRO_EXTERNO.CONFIRMADO) poner('Fecha_confirmacion_externa', fecha);
@@ -839,7 +902,6 @@ function reordenarColumnasInscripciones_() {
       ENCABEZADOS_INSCRIPCIONES.forEach(h => {
         if (h in VISTA_INSCRIPCIONES || !(h in colsViejas)) return;
         const destino = nueva.getRange(2, colsNuevas[h] + 1, n, 1);
-        if (h === 'Codigo_asistencia_capturado') destino.setNumberFormat('@');
         destino.setValues(indicesFilas.map(i => [datos[i][colsViejas[h]]]));
       });
       // Fórmulas de vista, regeneradas según las columnas nuevas.
@@ -971,33 +1033,124 @@ function fdProtegerColumnaAutomatica_(hoja, columna) {
 }
 
 function fdConfigurarValidacionYSemaforo() {
-  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Cursos');
-  if (hoja) {
-    fdAplicarValidacionListaSuave_(hoja, 2, FD_CATEGORIAS_VALIDAS);       // Categoria
-    fdAplicarValidacionListaSuave_(hoja, 5, FD_MODALIDADES_VALIDAS);      // Modalidad
-    fdAplicarValidacionListaSuave_(hoja, 9, FD_BOOLEANOS_VALIDOS);        // Requiere_codigo_asistencia
-    fdAplicarValidacionListaSuave_(hoja, 11, FD_BOOLEANOS_VALIDOS);       // Activo
-    fdAplicarValidacionListaSuave_(hoja, 13, FD_BOOLEANOS_VALIDOS);       // Registro_previo_requerido
-    fdAplicarValidacionListaSuave_(hoja, 23, FD_BOOLEANOS_VALIDOS);       // Valida_USICAMM
-    fdAplicarValidacionListaSuave_(hoja, 24, FD_BOOLEANOS_VALIDOS);       // Valida_PROEEB
-    obtenerHojaCursos(); // asegura que existan los encabezados AA-AC
-    fdAplicarValidacionListaSuave_(hoja, 28, FD_BOOLEANOS_VALIDOS);       // Cupo_agotado
-    fdAplicarValidacionListaSuave_(hoja, 29, FD_BOOLEANOS_VALIDOS);       // Ocultar_historial
-    // Nota al pasar el cursor por el encabezado: qué fecha va en cada columna
-    // (inscripción vs. desarrollo del curso) — la confusión más común al capturar.
-    hoja.getRange(1, 6).setNote('Día en que EMPIEZA el curso (desarrollo, no inscripción).');
-    hoja.getRange(1, 7).setNote('Día en que TERMINA el curso. Al día siguiente pasa a "Cursos anteriores".');
-    hoja.getRange(1, 14).setNote('Opcional. Día en que el curso aparece en el catálogo (apertura de inscripción).');
-    hoja.getRange(1, 22).setNote('Último día para inscribirse. Vacía = se usa Fecha_inicio.');
-    hoja.getRange(1, 27).setNote('Opcional. Hora exacta de cierre ese día (ej. 14:00). Vacía = cierra a las 23:59.');
-    hoja.getRange(1, 28).setNote('TRUE = ya no hay lugares: el curso sigue visible con "Cupo agotado" y no acepta registros nuevos (salvo quien ya se inscribió en la plataforma externa y viene a avisar).');
-    hoja.getRange(1, 29).setNote('TRUE = no mostrar en "Cursos anteriores" (cursos de prueba o cancelados). Activo=FALSE ya NO lo quita del historial.');
-    fdProtegerColumnaAutomatica_(hoja, 1);   // ID_Curso
-    fdProtegerColumnaAutomatica_(hoja, 17);  // Recordatorio_inicio_enviado
-    fdProtegerColumnaAutomatica_(hoja, 18);  // Recordatorio_medio_enviado
-    fdProtegerColumnaAutomatica_(hoja, 19);  // Recordatorio_webinar_enviado
-  }
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_CURSOS);
+  if (hoja) fdAplicarValidacionCursos_(hoja);
   try { SpreadsheetApp.getUi().alert('Validación aplicada en Cursos.'); } catch (err) {}
+}
+
+// Dropdowns, notas y protecciones de Cursos, por NOMBRE de columna (28 sep
+// 2026: antes por número fijo — reordenar la hoja los dejaba en otra columna).
+function fdAplicarValidacionCursos_(hoja) {
+  obtenerHojaCursos(); // asegura que existan todos los encabezados
+  const col = nombre => colCursos_(hoja, nombre);
+  fdAplicarValidacionListaSuave_(hoja, col('Categoria'), FD_CATEGORIAS_VALIDAS);
+  fdAplicarValidacionListaSuave_(hoja, col('Modalidad'), FD_MODALIDADES_VALIDAS);
+  ['Registro_previo_requerido', 'Cupo_agotado', 'Valida_USICAMM', 'Valida_PROEEB', 'Activo', 'Ocultar_historial']
+    .forEach(h => fdAplicarValidacionListaSuave_(hoja, col(h), FD_BOOLEANOS_VALIDOS));
+  // Nota al pasar el cursor por el encabezado — sobre todo las fechas
+  // (inscripción vs. desarrollo del curso), la confusión más común al capturar.
+  const notas = {
+    Fecha_inicio: 'Día en que EMPIEZA el curso (desarrollo, no inscripción).',
+    Fecha_fin: 'Día en que TERMINA el curso. Al día siguiente pasa a "Cursos anteriores".',
+    Hora_inicio: 'Hora de inicio (ej. 16:00). Con ella salen el aviso de 30 min y el calendario con hora.',
+    Hora_fin: 'Opcional. Hora de término. Vacía = el calendario agenda 1 h 30 min.',
+    Fechas_sesion: 'Opcional. Días de sesión separados por coma, ej. 7/10, 14/10, 21/10. El calendario agenda cada una con su aviso.',
+    Visible_desde: 'Opcional. Día en que el curso aparece en el catálogo (apertura de inscripción).',
+    Fecha_limite_inscripcion: 'Último día para inscribirse. Vacía = se usa Fecha_inicio.',
+    Hora_limite_inscripcion: 'Opcional. Hora exacta de cierre ese día (ej. 14:00). Vacía = cierra a las 23:59.',
+    Cupo_agotado: 'TRUE = ya no hay lugares: el curso sigue visible con "Cupo agotado" y no acepta registros nuevos (salvo quien ya se inscribió en la plataforma externa y viene a avisar).',
+    Ocultar_historial: 'TRUE = no mostrar en "Cursos anteriores" (cursos de prueba o cancelados). Activo=FALSE ya NO lo quita del historial.'
+  };
+  Object.keys(notas).forEach(h => hoja.getRange(1, col(h)).setNote(notas[h]));
+  ['ID_Curso', 'Recordatorio_inicio_enviado', 'Recordatorio_medio_enviado', 'Recordatorio_webinar_enviado']
+    .forEach(h => fdProtegerColumnaAutomatica_(hoja, col(h)));
+  // Encabezados de las columnas automáticas en gris: "no se llenan a mano".
+  ['Recordatorio_inicio_enviado', 'Recordatorio_medio_enviado', 'Recordatorio_webinar_enviado']
+    .forEach(h => hoja.getRange(1, col(h)).setBackground('#948A8E'));
+}
+
+// ============================================================
+// REORDENAR COLUMNAS DE CURSOS (28 sep 2026, se corre UNA vez)
+//
+// Deja Cursos en el orden por bloques de ENCABEZADOS_CURSOS (el orden en
+// que se llena un curso) y quita las columnas retiradas. A diferencia de
+// Inscripciones, se hace EN LA MISMA HOJA moviendo columnas completas: así
+// se conservan formatos, dropdowns, notas y la hoja sigue siendo la misma
+// (las fórmulas de Inscripciones apuntan a Cursos!A:C, que no se mueve).
+// Antes de tocar nada deja una copia completa "Cursos_respaldo_AAAAMMDD".
+// Columnas desconocidas (agregadas a mano) se quedan, al final.
+// ============================================================
+const COLUMNAS_CURSOS_RETIRADAS = ['Requiere_codigo_asistencia', 'Codigo_asistencia', 'Visible_hasta'];
+
+function reordenarColumnasCursos() {
+  SpreadsheetApp.getUi().alert(reordenarColumnasCursos_().mensaje);
+}
+
+function reordenarColumnasCursos_() {
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(30000)) {
+    return { ok: false, mensaje: 'Hay un registro en curso. Intenta de nuevo en unos segundos.' };
+  }
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const hoja = obtenerHojaCursos(); // agrega encabezados faltantes (ej. Fechas_sesion)
+    SpreadsheetApp.flush();
+    const antes = hoja.getDataRange().getValues();
+    let enc = antes[0].map(h => String(h).trim());
+
+    const yaOrdenada = ENCABEZADOS_CURSOS.every((h, k) => enc[k] === h) &&
+      !COLUMNAS_CURSOS_RETIRADAS.some(h => enc.indexOf(h) !== -1);
+    if (yaOrdenada) return { ok: true, mensaje: 'Cursos ya está en el orden nuevo. No se cambió nada.' };
+
+    // Respaldo completo antes de mover nada.
+    let nombreRespaldo = HOJA_CURSOS + '_respaldo_' + Utilities.formatDate(new Date(), 'America/Mexico_City', 'yyyyMMdd');
+    if (ss.getSheetByName(nombreRespaldo)) nombreRespaldo += '_' + Utilities.formatDate(new Date(), 'America/Mexico_City', 'HHmm');
+    const respaldo = hoja.copyTo(ss).setName(nombreRespaldo);
+    respaldo.setTabColor('#948A8E');
+    ss.setActiveSheet(respaldo);
+    ss.moveActiveSheet(ss.getNumSheets());
+
+    // Mover cada columna a su lugar, de izquierda a derecha.
+    ENCABEZADOS_CURSOS.forEach((h, k) => {
+      const i = enc.indexOf(h);
+      if (i === -1 || i === k) return;
+      hoja.moveColumns(hoja.getRange(1, i + 1), k + 1);
+      enc.splice(k, 0, enc.splice(i, 1)[0]);
+    });
+    // Quitar las retiradas (de derecha a izquierda para no correr índices).
+    COLUMNAS_CURSOS_RETIRADAS.map(h => enc.indexOf(h)).filter(i => i !== -1).sort((a, b) => b - a)
+      .forEach(i => { hoja.deleteColumn(i + 1); enc.splice(i, 1); });
+    SpreadsheetApp.flush();
+
+    // Verificación: mismas filas y, columna por columna, los mismos valores.
+    const despues = hoja.getDataRange().getValues();
+    const idxAntes = indicesPorEncabezado_(antes[0].map(h => String(h).trim()));
+    const idxDespues = indicesPorEncabezado_(despues[0].map(h => String(h).trim()));
+    const valor = v => (v instanceof Date ? v.getTime() : String(v));
+    const diferencias = [];
+    if (despues.length !== antes.length) diferencias.push('filas ' + antes.length + ' → ' + despues.length);
+    ENCABEZADOS_CURSOS.forEach(h => {
+      if (!(h in idxAntes)) return;
+      if (!(h in idxDespues)) { diferencias.push('falta ' + h); return; }
+      for (let r = 1; r < antes.length; r++) {
+        if (valor(antes[r][idxAntes[h]]) !== valor((despues[r] || [])[idxDespues[h]])) { diferencias.push(h + ' fila ' + (r + 1)); break; }
+      }
+    });
+    if (diferencias.length) {
+      return { ok: false, mensaje: 'ATENCIÓN: la verificación encontró diferencias (' + diferencias.slice(0, 5).join('; ') +
+        '). Los datos originales están completos en la hoja "' + nombreRespaldo + '". No captures nada y avisa antes de continuar.' };
+    }
+
+    fdAplicarValidacionCursos_(hoja);
+    ss.setActiveSheet(hoja);
+    const extras = enc.slice(ENCABEZADOS_CURSOS.length).filter(Boolean);
+    return { ok: true, respaldo: nombreRespaldo,
+      mensaje: 'Listo: Cursos quedó en el orden nuevo (' + (antes.length - 1) + ' curso(s) verificados columna por columna). ' +
+        'Se quitaron: ' + COLUMNAS_CURSOS_RETIRADAS.join(', ') + '. Respaldo: "' + nombreRespaldo + '".' +
+        (extras.length ? ' Columnas que no reconocí y dejé al final: ' + extras.join(', ') + '.' : '') };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 // ============================================================
@@ -1010,10 +1163,9 @@ function onOpen() {
     .addItem('Generar ID de cursos faltantes', 'generarIdsCursosFaltantes')
     .addItem('Generar estadísticas', 'generarEstadisticas')
     .addItem('Actualizar vista de Inscripciones', 'actualizarVistaInscripciones')
+    .addItem('Reordenar columnas de Cursos', 'reordenarColumnasCursos')
     .addItem('Reordenar columnas de Inscripciones', 'reordenarColumnasInscripciones')
     .addItem('Aplicar validación en Cursos', 'fdConfigurarValidacionYSemaforo')
-    .addSeparator()
-    .addItem('Migrar Jornada Verano 2026', 'migrarJornadaVerano')
     .addSeparator()
     .addItem('Instalar recordatorios automáticos', 'instalarRecordatoriosAutomaticos')
     .addItem('Desinstalar recordatorios automáticos', 'desinstalarRecordatoriosAutomaticos')
@@ -1041,24 +1193,24 @@ function generarIdsCursosFaltantes() {
 // en cada edición. ──
 function generarIdsCursosFaltantes_() {
   const hoja  = obtenerHojaCursos();
-  const datos = hoja.getDataRange().getValues();
+  const datos = valoresCursos_(hoja);
   let generados = 0;
 
   for (let i = 1; i < datos.length; i++) {
-    const idActual   = String(datos[i][0]).trim();
-    const categoria  = String(datos[i][1]).trim();
+    const idActual   = String(datos[i][CUR.ID_Curso]).trim();
+    const categoria  = String(datos[i][CUR.Categoria]).trim();
     if (idActual || !categoria) continue;
 
     const prefijo = PREFIJOS_CATEGORIA[categoria] || 'GEN';
     const maxNum = datos
-      .map(r => String(r[0]))
+      .map(r => String(r[CUR.ID_Curso]))
       .filter(id => id.startsWith(prefijo + '-' + CICLO_ESCOLAR + '-'))
       .map(id => parseInt(id.split('-').pop(), 10) || 0)
       .reduce((a, b) => Math.max(a, b), 0);
 
     const nuevoId = prefijo + '-' + CICLO_ESCOLAR + '-' + String(maxNum + 1).padStart(3, '0');
-    hoja.getRange(i + 1, 1).setValue(nuevoId);
-    datos[i][0] = nuevoId; // para que el siguiente cálculo de maxNum ya lo considere
+    hoja.getRange(i + 1, colCursos_(hoja, 'ID_Curso')).setValue(nuevoId);
+    datos[i][CUR.ID_Curso] = nuevoId; // para que el siguiente cálculo de maxNum ya lo considere
     generados++;
   }
 
@@ -1079,7 +1231,7 @@ function onEditCursos(e) {
   if (!e || !e.range) return;
   if (e.range.getSheet().getName() !== HOJA_CURSOS) return;
 
-  const colCategoria = 2; // 'Categoria' — ver ENCABEZADOS_CURSOS
+  const colCategoria = colCursos_(e.range.getSheet(), 'Categoria');
   const colInicio = e.range.getColumn();
   const colFin = colInicio + e.range.getNumColumns() - 1;
   if (colCategoria < colInicio || colCategoria > colFin) return;
@@ -1124,29 +1276,27 @@ function generarEstadisticas() {
     docentesPorRfc[String(r[0]).trim().toUpperCase()] = r;
   });
   const cursosPorId = {};
-  obtenerHojaCursos().getDataRange().getValues().slice(1).forEach(r => {
-    cursosPorId[String(r[0]).trim().toUpperCase()] = r;
+  valoresCursos_(obtenerHojaCursos()).slice(1).forEach(r => {
+    cursosPorId[String(r[CUR.ID_Curso]).trim().toUpperCase()] = r;
   });
 
-  const porCurso = {}, porSector = {}, porMunicipio = {}, porEstado = {}, porRegistroExterno = {};
+  const porCurso = {}, porSector = {}, porMunicipio = {}, porRegistroExterno = {};
 
   inscripciones.forEach(row => {
     const rfc     = String(row[colsInsc.RFC_Docente]).trim().toUpperCase();
     const idCurso = String(row[colsInsc.ID_Curso]).trim().toUpperCase();
-    const estado  = String(row[colsInsc.Estado]).trim() || 'Registrado';
     const registroExterno = String(row[colsInsc.Registro_externo] || '').trim() || 'Sin dato (registro anterior)';
     porRegistroExterno[registroExterno] = (porRegistroExterno[registroExterno] || 0) + 1;
     const doc     = docentesPorRfc[rfc];
     const cur     = cursosPorId[idCurso];
 
-    const nombreCurso = cur ? String(cur[2]) : idCurso;
+    const nombreCurso = cur ? String(cur[CUR.Nombre]) : idCurso;
     const sector       = doc ? String(doc[6]) : '';
     const municipio    = doc ? String(doc[8]) : '';
 
     porCurso[nombreCurso] = (porCurso[nombreCurso] || 0) + 1;
     if (sector)    porSector['Sector ' + sector] = (porSector['Sector ' + sector] || 0) + 1;
     if (municipio) porMunicipio[municipio] = (porMunicipio[municipio] || 0) + 1;
-    porEstado[estado] = (porEstado[estado] || 0) + 1;
   });
 
   let resumen = ss.getSheetByName('Estadisticas_Formacion');
@@ -1173,9 +1323,6 @@ function generarEstadisticas() {
   Object.entries(porMunicipio).sort((a, b) => b[1] - a[1])
     .forEach(([k, v]) => resumen.appendRow([k, v]));
 
-  resumen.appendRow(['']);
-  resumen.appendRow(['POR ESTADO', 'Inscripciones']);
-  Object.entries(porEstado).forEach(([k, v]) => resumen.appendRow([k, v]));
 
   resumen.appendRow(['']);
   resumen.appendRow(['POR REGISTRO EN PLATAFORMA EXTERNA', 'Inscripciones']);
@@ -1190,158 +1337,6 @@ function generarEstadisticas() {
   SpreadsheetApp.getUi().alert('Estadísticas generadas en la hoja "Estadisticas_Formacion".');
 }
 
-
-// ============================================================
-// MIGRACIÓN — Jornada de Capacitación Verano 2026
-// (ciclo 25-26, cursos CoEEE vía auladigital.dee.edu.mx)
-//
-// Trae al modelo relacional nuevo (Docentes/Cursos/Inscripciones)
-// los registros que ya existen en el Spreadsheet viejo de la
-// Jornada de Verano (apps-script/cursos-coeee-2026.gs), para que
-// jornada-verano-2026.html pueda apuntar aquí en vez de a su
-// Apps Script propio. Es un import histórico + alta de catálogo,
-// se corre UNA vez desde el menú "OTDE Formación → Migrar Jornada
-// Verano 2026" (usa tu acceso, no el de un tercero).
-// ============================================================
-
-const ID_SPREADSHEET_VERANO_2026 = '1k492VGkXhXAUFmIyYXCQzH0nilgZDzRMmo0NCEwDnK4';
-const HOJA_VERANO_2026 = 'Cursos_OTDE_Verano_2026';
-
-// Catálogo fijo de los 5 cursos de la Jornada de Verano 2026
-// (hardcodeados hoy en jornada-verano-2026.html). El nombre debe
-// coincidir EXACTO con el data-curso de cada tarjeta del wizard.
-//
-// ⚠️ MIENTRAS jornada-verano-2026.html SIGA EN LÍNEA, en la hoja Cursos:
-//   1. NO edites el texto de Nombre de estos 5 cursos (ni un acento) —
-//      el wizard busca el ID_Curso por coincidencia EXACTA de nombre;
-//      si no coincide, el registro falla con "no se encontró en el
-//      catálogo" sin que el HTML dé ninguna pista de por qué.
-//   2. NO pongas Activo=FALSE en estos 5 — aunque el backend (doPost)
-//      no lo exige, el wizard sí depende de que doGet los liste para
-//      resolver su ID_Curso antes de enviar. Espera a retirar la página
-//      del sitio (o su banner en otde.html) antes de desactivarlos.
-const CURSOS_VERANO_2026 = [
-  { nombre: 'Excel esencial para la gestión administrativa', fecha_inicio: '2026-08-10', fecha_fin: '2026-08-14' },
-  { nombre: 'Introducción a la inteligencia artificial en educación', fecha_inicio: '2026-08-10', fecha_fin: '2026-08-14' },
-  { nombre: 'NotebookLM: tu Co-piloto digital en apoyo a la labor educativa', fecha_inicio: '2026-08-10', fecha_fin: '2026-08-14' },
-  { nombre: 'Aventuras en bloques: crea, juega y enseña con Scratch JR.', fecha_inicio: '2026-08-17', fecha_fin: '2026-08-20' },
-  { nombre: 'Canva: potencializando el aprendizaje con creatividad', fecha_inicio: '2026-08-17', fecha_fin: '2026-08-21' }
-];
-
-// CCT → Municipio, generado desde js/cct-db.js (506 registros, jul 2026)
-const CCT_MUNICIPIO_MAP = JSON.parse(`{"15DPR0432N":"Ayapango","15DPR0433M":"Amecameca","15DPR0434L":"Amecameca","15DPR0439G":"Ayapango","15DPR0441V":"Amecameca","15DPR2933V":"Amecameca","15DPR3028Z":"Ayapango","15DPR0866Z":"Tlalmanalco","15DPR0867Z":"Tlalmanalco","15DPR0868Y":"Tlalmanalco","15DPR0873J":"Tlalmanalco","15DPR2237Y":"Tlalmanalco","15DPR0865A":"Tenango del Aire","15DPR0869X":"Tenango del Aire","15DPR0871L":"Tenango del Aire","15DPR0872K":"Tenango del Aire","15DPR0877F":"Temamatla","15DPR2766O":"Temamatla","15DPR2978R":"Temamatla","15DPR3005O":"Tenango del Aire","15DPR0429Z":"Atlautla","15DPR0430P":"Atlautla","15DPR0435K":"Ozumba","15DPR0440W":"Ozumba","15DPR1300C":"Atlautla","15DPR3077H":"Ozumba","15DPR0876G":"Tlalmanalco","15DPR0878E":"Tlalmanalco","15DPR1525J":"Tlalmanalco","15DPR2946Z":"Tlalmanalco","15DPR0436J":"Amecameca","15DPR0438H":"Amecameca","15DPR1256F":"Atlautla","15DPR1760N":"Amecameca","15DPR2444F":"Ayapango","15DPR0431O":"Tepetlixpa","15DPR0437I":"Tepetlixpa","15DPR0442U":"Atlautla","15DPR0864B":"Juchitepec","15DPR0870M":"Juchitepec","15DPR1243B":"Juchitepec","15DPR1436Q":"Tepetlixpa","15DPR2236Z":"Juchitepec","15DPR2979Q":"Tepetlixpa","15DPR0456X":"Ixtapaluca","15DPR0462H":"Ixtapaluca","15DPR0465E":"Ixtapaluca","15DPR1666I":"Ixtapaluca","15DPR2613K":"Ixtapaluca","15DPR2704B":"Ixtapaluca","15DPR2937R":"Ixtapaluca","15DPR0457W":"Ixtapaluca","15DPR0458V":"Ixtapaluca","15DPR1670V":"Ixtapaluca","15DPR2612L":"Ixtapaluca","15DPR2860T":"Ixtapaluca","15DPR1623K":"Valle de Chalco Solidaridad","15DPR1972Q":"Valle de Chalco Solidaridad","15DPR2222W":"Valle de Chalco Solidaridad","15DPR2345F":"Valle de Chalco Solidaridad","15DPR2615I":"Valle de Chalco Solidaridad","15DPR2762S":"Valle de Chalco Solidaridad","15DPR1624J":"Valle de Chalco Solidaridad","15DPR1632S":"Valle de Chalco Solidaridad","15DPR2340K":"Valle de Chalco Solidaridad","15DPR2394O":"Valle de Chalco Solidaridad","15DPR2610N":"Valle de Chalco Solidaridad","15DPR2614J":"Valle de Chalco Solidaridad","15DPR3027Z":"Chalco","15DPR0461I":"Ixtapaluca","15DPR1676P":"Ixtapaluca","15DPR1957Y":"Valle de Chalco Solidaridad","15DPR2611M":"Valle de Chalco Solidaridad","15DPR2749Y":"Valle de Chalco Solidaridad","15DPR0893X":"Texcoco","15DPR0895V":"Texcoco","15DPR0898S":"Texcoco","15DPR1672T":"Texcoco","15DPR1807R":"Texcoco","15DPR2370E":"Texcoco","15DPR0896U":"Texcoco","15DPR0897T":"Texcoco","15DPR0899R":"Texcoco","15DPR0900Q":"Texcoco","15DPR0903N":"Texcoco","15DPR1776O":"Texcoco","15DPR3134I":"Texcoco","15DPR0534K":"Texcoco","15DPR0535J":"Texcoco","15DPR0536I":"Texcoco","15DPR0538G":"Texcoco","15DPR0541U":"Texcoco","15DPR0543S":"Texcoco","15DPR0545Q":"Texcoco","15DPR1413F":"Texcoco","15DPR1857Z":"Texcoco","15DPR2770A":"Texcoco","15DPR0528Z":"Texcoco","15DPR0537H":"Texcoco","15DPR0539F":"Texcoco","15DPR0540V":"Texcoco","15DPR0542T":"Texcoco","15DPR0544R":"Texcoco","15DPR2238X":"Texcoco","15DPR2245G":"Texcoco","15DPR2819C":"Texcoco","15DPR0530O":"Texcoco","15DPR0532M":"Texcoco","15DPR0533L":"Texcoco","15DPR0901P":"Texcoco","15DPR1076V":"Texcoco","15DPR1855A":"Texcoco","15DPR1923H":"Texcoco","15DPR0527A":"Texcoco","15DPR0529Z":"Texcoco","15DPR0531N":"Texcoco","15DPR0546P":"Texcoco","15DPR0550B":"Texcoco","15DPR0551A":"Texcoco","15DPR0560I":"Texcoco","15DPR0561H":"Texcoco","15DPR0793Y":"La Paz","15DPR0794X":"La Paz","15DPR1022R":"La Paz","15DPR1301B":"La Paz","15DPR1532T":"La Paz","15DPR2188F":"La Paz","15DPR2673Z":"La Paz","15DPR0336K":"La Paz","15DPR0795W":"La Paz","15DPR0797U":"La Paz","15DPR1785W":"La Paz","15DPR1885V":"La Paz","15DPR1898Z":"La Paz","15DPR0894W":"Chicoloapan","15DPR1254H":"Chicoloapan","15DPR1673S":"Chicoloapan","15DPR2247E":"Chicoloapan","15DPR3119Q":"Chicoloapan","15DPR0023J":"Chimalhuacán","15DPR0819P":"Chimalhuacán","15DPR1420P":"Chimalhuacán","15DPR1445Y":"Chimalhuacán","15DPR1781Z":"Chimalhuacán","15DPR1966F":"Chimalhuacán","15DPR2810L":"Chimalhuacán","15DPR2905Z":"Chimalhuacán","15DPR0821D":"La Paz","15DPR1583Z":"La Paz","15DPR3000T":"La Paz","15DPR3234H":"La Paz","15DPR0902O":"Chicoloapan","15DPR1667H":"Chicoloapan","15DPR1829C":"Chicoloapan","15DPR1899Y":"Chicoloapan","15DPR2601F":"Chicoloapan","15DPR0471P":"Nezahualcóyotl","15DPR0473N":"Nezahualcóyotl","15DPR0477J":"Nezahualcóyotl","15DPR1612E":"Nezahualcóyotl","15DPR2419G":"Nezahualcóyotl","15DPR0469A":"Nezahualcóyotl","15DPR0474M":"Nezahualcóyotl","15DPR1258D":"Nezahualcóyotl","15DPR1482B":"Nezahualcóyotl","15DPR1487X":"Nezahualcóyotl","15DPR1613D":"Nezahualcóyotl","15DPR0468B":"Nezahualcóyotl","15DPR0476K":"Nezahualcóyotl","15DPR1636O":"Nezahualcóyotl","15DPR2429N":"Nezahualcóyotl","15DPR0467C":"Nezahualcóyotl","15DPR0472O":"Nezahualcóyotl","15DPR1565K":"Nezahualcóyotl","15DPR2519F":"Nezahualcóyotl","15DPR0292D":"Nezahualcóyotl","15DPR0481W":"Nezahualcóyotl","15DPR0483U":"Nezahualcóyotl","15DPR1260S":"Nezahualcóyotl","15DPR0479H":"Nezahualcóyotl","15DPR0482V":"Nezahualcóyotl","15DPR1375T":"Nezahualcóyotl","15DPR2578V":"Nezahualcóyotl","15DPR0485S":"Nezahualcóyotl","15DPR0486R":"Nezahualcóyotl","15DPR2746A":"Nezahualcóyotl","15DPR0484T":"Nezahualcóyotl","15DPR0487Q":"Nezahualcóyotl","15DPR0488P":"Nezahualcóyotl","15DPR1262Q":"Nezahualcóyotl","15DPR1439N":"Nezahualcóyotl","15DPR0522F":"Nezahualcóyotl","15DPR0526B":"Nezahualcóyotl","15DPR1263P":"Nezahualcóyotl","15DPR1264O":"Nezahualcóyotl","15DPR1368J":"Nezahualcóyotl","15DPR1369I":"Nezahualcóyotl","15DPR0504Q":"Nezahualcóyotl","15DPR0507N":"Nezahualcóyotl","15DPR0860F":"Nezahualcóyotl","15DPR0861E":"Nezahualcóyotl","15DPR1253I":"Nezahualcóyotl","15DPR1533S":"Nezahualcóyotl","15DPR0506O":"Nezahualcóyotl","15DPR0859Q":"Nezahualcóyotl","15DPR1531U":"Nezahualcóyotl","15DPR0492B":"Nezahualcóyotl","15DPR0493A":"Nezahualcóyotl","15DPR0495Z":"Nezahualcóyotl","15DPR0497X":"Nezahualcóyotl","15DPR0498W":"Nezahualcóyotl","15DPR0494Z":"Nezahualcóyotl","15DPR0496Y":"Nezahualcóyotl","15DPR0500U":"Nezahualcóyotl","15DPR0503R":"Nezahualcóyotl","15DPR0505P":"Nezahualcóyotl","15DPR0512Z":"Nezahualcóyotl","15DPR0513Y":"Nezahualcóyotl","15DPR0514X":"Nezahualcóyotl","15DPR1650H":"Nezahualcóyotl","15DPR1734P":"Nezahualcóyotl","15DPR0854V":"Nezahualcóyotl","15DPR1117E":"Nezahualcóyotl","15DPR1416C":"Nezahualcóyotl","15DPR1524K":"Nezahualcóyotl","15DPR2298L":"Nezahualcóyotl","15DPR0519S":"Nezahualcóyotl","15DPR0523E":"Nezahualcóyotl","15DPR1827E":"Nezahualcóyotl","15DPR2466R":"Nezahualcóyotl","15DPR0509L":"Nezahualcóyotl","15DPR0510A":"Nezahualcóyotl","15DPR0511Z":"Nezahualcóyotl","15DPR0518T":"Nezahualcóyotl","15DPR0520H":"Nezahualcóyotl","15DPR0524D":"Nezahualcóyotl","15DPR0852X":"Nezahualcóyotl","15DPR0853W":"Nezahualcóyotl","15DPR0857S":"Nezahualcóyotl","15DPR1419Z":"Nezahualcóyotl","15DPR0182Y":"Valle de Chalco Solidaridad","15DPR0222I":"Valle de Chalco Solidaridad","15DPR0444S":"Valle de Chalco Solidaridad","15DPR1435R":"Valle de Chalco Solidaridad","15DPR0445R":"Chalco","15DPR1647U":"Chalco","15DPR1864I":"Chalco","15DPR2598I":"Chalco","15DPR0180Z":"Chalco","15DPR0447P":"Chalco","15DPR0451B":"Chalco","15DPR0455Y":"Chalco","15DPR0874I":"Temamatla","15DPR2240L":"Chalco","15DPR2405D":"Chalco","15DPR0454Z":"Chalco","15DPR0875H":"Chalco","15DPR1242C":"Chalco","15DPR1866G":"Chalco","15DPR3298S":"Chalco","15DPR0449N":"Chalco","15DPR1838K":"Valle de Chalco Solidaridad","15DPR1856Z":"Valle de Chalco Solidaridad","15DPR3256T":"Chalco","15DPR0231Q":"Chalco","15DPR0446Q":"Chalco","15DPR0452A":"Valle de Chalco Solidaridad","15DPR0453Z":"Chalco","15DPR2855H":"Chalco","15DPR2893K":"Valle de Chalco Solidaridad","15DPR2915F":"Chalco","15DPR2943B":"Chalco","15DPR3162E":"Chalco","15DPR3270M":"Chalco","15DPR3289K":"Chalco","15DPR3290Z":"Chalco","15DPR3299R":"Chalco","15DPR3308I":"Chalco","15DPR3317Q":"Chalco","15DPR3318P":"Chalco","15DPR3320D":"Chalco","15DPR0311B":"Nezahualcóyotl","15DPR0842Q":"Nezahualcóyotl","15DPR1070A":"Nezahualcóyotl","15DPR0489O":"Nezahualcóyotl","15DPR1261R":"Nezahualcóyotl","15DPR2748Z":"Nezahualcóyotl","15DPR0846M":"Nezahualcóyotl","15DPR0848K":"Nezahualcóyotl","15DPR1305Y":"Nezahualcóyotl","15DPR0844O":"Nezahualcóyotl","15DPR0847L":"Nezahualcóyotl","15DPR0851Y":"Nezahualcóyotl","15DPR1639L":"Nezahualcóyotl","15DPR0508M":"Nezahualcóyotl","15DPR0845N":"Nezahualcóyotl","15DPR0849J":"Nezahualcóyotl","15DPR1479O":"Nezahualcóyotl","15DPR1534R":"Nezahualcóyotl","15DPR1627G":"Nezahualcóyotl","15DPR1665J":"Nezahualcóyotl","15DPR2542G":"Nezahualcóyotl","15DPR2917D":"Nezahualcóyotl","15DPR0521G":"Nezahualcóyotl","15DPR0525C":"Nezahualcóyotl","15DPR1265N":"Nezahualcóyotl","15DPR1542Z":"Nezahualcóyotl","15DPR0757T":"Nezahualcóyotl","15DPR0760G":"Nezahualcóyotl","15DPR0773K":"Nezahualcóyotl","15DPR1834O":"Nezahualcóyotl","15DPR2299K":"Nezahualcóyotl","15DPR0369B":"Nezahualcóyotl","15DPR1250L":"Nezahualcóyotl","15DPR1463N":"Nezahualcóyotl","15DPR1744W":"Nezahualcóyotl","15DPR0758S":"Nezahualcóyotl","15DPR0761F":"Nezahualcóyotl","15DPR1307W":"Nezahualcóyotl","15DPR1433T":"Nezahualcóyotl","15DPR1740Z":"Nezahualcóyotl","15DPR2451P":"Nezahualcóyotl","15DPR0798T":"Chimalhuacán","15DPR1969C":"Chimalhuacán","15DPR2703C":"Chimalhuacán","15DPR2866N":"Chimalhuacán","15DPR2977S":"Chimalhuacán","15DPR3160G":"Chicoloapan","15DPR3235G":"Chicoloapan","15DPR0170T":"Chimalhuacán","15DPR1867F":"Chimalhuacán","15DPR2865O":"Chimalhuacán","15DPR2878S":"Chimalhuacán","15DPR0822C":"Chimalhuacán","15DPR0823B":"Chimalhuacán","15DPR1535Q":"Chimalhuacán","15DPR2447C":"Chimalhuacán","15DPR3023D":"Chimalhuacán","15DPR0820E":"Chimalhuacán","15DPR1347X":"Chimalhuacán","15DPR1442A":"Chimalhuacán","15DPR1959W":"Chimalhuacán","15DPR1964H":"Chimalhuacán","15DPR2225T":"Chimalhuacán","15DPR1443Z":"Chimalhuacán","15DPR1444Z":"Chimalhuacán","15DPR2420W":"Chimalhuacán","15DPR2932W":"Chimalhuacán","15DPR0022K":"Chimalhuacán","15DPR0818Q":"Chimalhuacán","15DPR2272D":"Chimalhuacán","15DPR2343H":"Chimalhuacán","15DPR2360Y":"Chimalhuacán","15DPR0470Q":"Nezahualcóyotl","15DPR0475L":"Nezahualcóyotl","15DPR1081G":"Nezahualcóyotl","15DPR1560P":"Nezahualcóyotl","15DPR1610G":"Nezahualcóyotl","15DPR1611F":"Nezahualcóyotl","15DPR1696C":"Nezahualcóyotl","15DPR0028E":"Nezahualcóyotl","15DPR0315Y":"Nezahualcóyotl","15DPR0316X":"Nezahualcóyotl","15DPR1259C":"Nezahualcóyotl","15DPR1371X":"Nezahualcóyotl","15DPR1372W":"Nezahualcóyotl","15DPR0480X":"Nezahualcóyotl","15DPR1446X":"Nezahualcóyotl","15DPR1449U":"Nezahualcóyotl","15DPR0843P":"Nezahualcóyotl","15DPR1733Q":"Nezahualcóyotl","15DPR1944U":"Nezahualcóyotl","15DPR2581I":"Nezahualcóyotl","15DPR0077N":"Chalco","15DPR0080A":"Chalco","15DPR0443T":"Chalco","15DPR0448O":"Chalco","15DPR1725H":"Chalco","15DPR3286N":"Chalco","15DPR3287M":"Chalco","15DPR0464F":"Ixtapaluca","15DPR2864P":"Ixtapaluca","15DPR3030N":"Ixtapaluca","15DPR3044Q":"Ixtapaluca","15DPR3045P":"Ixtapaluca","15DPR3063E":"Ixtapaluca","15DPR3076I":"Ixtapaluca","15DPR3166A":"Ixtapaluca","15DPR0450C":"Chalco","15DPR2235Z":"Chalco","15DPR3189L":"Chalco","15DPR3190A":"Ixtapaluca","15DPR3253W":"Chalco","15DPR3274I":"Chalco","15DPR3321C":"Chalco","15DPR0063K":"Ixtapaluca","15DPR0463G":"Ixtapaluca","15DPR0466D":"Ixtapaluca","15DPR1471W":"Ixtapaluca","15DPR2935T":"Ixtapaluca","15DPR3276G":"Chalco","15DPR3288L":"Chalco","15DPR0006T":"Ixtapaluca","15DPR0459U":"Ixtapaluca","15DPR0460J":"Ixtapaluca","15DPR1584Z":"Ixtapaluca","15DPR1675Q":"Ixtapaluca","15DPR2709X":"Ixtapaluca","15DPR3157T":"Ixtapaluca","15DPR3213V":"Ixtapaluca","15DPR3080V":"Ixtapaluca","15DPR3081U":"Ixtapaluca","15DPR3082T":"Ixtapaluca","15DPR3083S":"Ixtapaluca","15DPR3091A":"Ixtapaluca","15DPR3092Z":"Ixtapaluca","15DPR3114V":"Ixtapaluca","15FIZ0042V":"Amecameca","15FIZ0043U":"Tlalmanalco","15FIZ0044T":"Tenango del Aire","15FIZ0045S":"Valle de Chalco Solidaridad","15FIZ0046R":"Chalco","15FIZ0047Q":"Ixtapaluca","15FIZ0048P":"Ixtapaluca","15FIZ0049O":"La Paz","15FIZ0050D":"La Paz","15FIZ0051C":"Chicoloapan","15FIZ0052B":"Chimalhuacán","15FIZ0053A":"Texcoco","15FIZ0054Z":"Texcoco","15FIZ0055Z":"Texcoco","15FIZ0056Y":"Texcoco","15FIZ0057X":"Nezahualcóyotl","15FIZ0058W":"Nezahualcóyotl","15FIZ0059V":"Nezahualcóyotl","15FIZ0060K":"Nezahualcóyotl","15FIZ0061J":"Nezahualcóyotl","15FIZ0062I":"Nezahualcóyotl","15FIZ0063H":"Nezahualcóyotl","15FIZ0064G":"Nezahualcóyotl","15FIZ0065F":"Nezahualcóyotl","15FIZ0066E":"Nezahualcóyotl","15FIZ0067D":"Nezahualcóyotl","15FIZ0068C":"Nezahualcóyotl","15FIZ0069B":"Nezahualcóyotl","15FIZ0070R":"Chalco","15FIZ0071Q":"Nezahualcóyotl","15FIZ0072P":"Nezahualcóyotl","15FIZ0073O":"Nezahualcóyotl","15FIZ0074N":"Nezahualcóyotl","15FIZ0075M":"Nezahualcóyotl","15FIZ0076L":"Nezahualcóyotl","15FIZ0077K":"Nezahualcóyotl","15FIZ0078J":"Nezahualcóyotl","15FIZ0079I":"Nezahualcóyotl","15FIZ0080Y":"Nezahualcóyotl","15FIZ0081X":"Nezahualcóyotl","15FIZ0082W":"Nezahualcóyotl","15FIZ0083V":"Chalco","15FIZ0258U":"Ozumba","15FIZ0219S":"Tlalmanalco","15FIZ0220H":"Chalco","15FIZ0221G":"Chalco","15FIZ0222F":"Ixtapaluca","15FIZ0249M":"Valle de Chalco Solidaridad","15FIZ0250B":"Valle de Chalco Solidaridad","15FIZ0223E":"Ixtapaluca","15FIZ0224D":"Chimalhuacán","15FIZ0225C":"Chimalhuacán","15FIZ0226B":"Chimalhuacán","15FIZ0251A":"Texcoco","15FIZ0252Z":"Texcoco","15FIZ0253Z":"Atlautla","15FIZ0227A":"Nezahualcóyotl","15FIZ0254Y":"Nezahualcóyotl","15FIZ0228Z":"Nezahualcóyotl","15FIZ0229Z":"La Paz","15FIZ0255X":"Nezahualcóyotl","15FIZ0256W":"Chalco","15FIZ0257V":"Nezahualcóyotl","15FIZ0351Z":"Nezahualcóyotl","15FIZ0367A":"Ixtapaluca","15FIZ0368Z":"Chicoloapan","15FIZ0369Z":"Chimalhuacán","15FIZ0370O":"Nezahualcóyotl","15FIZ0371N":"Chalco","15FIZ0372M":"Tepetlixpa","15FIZ0373L":"Chimalhuacán","15FIZ0374K":"Chimalhuacán","15FIZ0412X":"Chalco","15FIZ0413W":"Ixtapaluca","15FIZ0414V":"Ixtapaluca","15FJS0015D":"Amecameca","15FJS0017B":"Ixtapaluca","15FJS0016C":"Texcoco","15FJS0014E":"La Paz","15FJS0018A":"Nezahualcóyotl","15FJS0019Z":"Nezahualcóyotl","15FJS0020P":"Nezahualcóyotl","15FJS0047W":"Chalco","15FJS0037P":"Nezahualcóyotl","15FJS0038O":"Nezahualcóyotl","15FJS0039N":"Chimalhuacán","15FJS0050J":"Nezahualcóyotl","15FJS0051I":"Ixtapaluca","15ADG0086N":"Nezahualcóyotl"}`);
-
-// ── Convierte 'YYYY-MM-DD' a una Date en hora LOCAL (no UTC) ──
-// new Date('YYYY-MM-DD') se interpreta como medianoche UTC; al formatear
-// después con Utilities.formatDate(..., 'America/Mexico_City', ...) el
-// huso (UTC-6) recorre la fecha un día hacia atrás. Construir la Date con
-// año/mes/día explícitos evita el corrimiento.
-function fechaLocal(isoYYYYMMDD) {
-  const [y, m, d] = isoYYYYMMDD.split('-').map(Number);
-  return new Date(y, m - 1, d);
-}
-
-// ── Asegura que los 5 cursos de Verano existan en la hoja Cursos ──
-// Devuelve un mapa { nombreCurso: ID_Curso } para usar en la migración
-// y en el payload nuevo de jornada-verano-2026.html.
-function asegurarCursosVerano() {
-  const hoja  = obtenerHojaCursos();
-  const datos = hoja.getDataRange().getValues();
-  const mapa  = {};
-
-  CURSOS_VERANO_2026.forEach(curso => {
-    const filaExistente = datos.slice(1).find(row => String(row[2]).trim() === curso.nombre);
-    if (filaExistente) {
-      mapa[curso.nombre] = String(filaExistente[0]).trim();
-      // datos[0] es el encabezado (fila 1), así que fila de hoja = índice + 1.
-      const filaSheet = datos.indexOf(filaExistente) + 1;
-
-      // Backfill: si esta fila se creó antes de agregar Registro_previo_requerido,
-      // la marcamos TRUE (CoEEE sí gestiona cupo real en auladigital.dee.edu.mx).
-      if (String(filaExistente[12] || '').trim().toUpperCase() !== 'TRUE') {
-        hoja.getRange(filaSheet, 13).setValue('TRUE');
-      }
-      // Backfill: corrige el corrimiento de -1 día si la fila se creó con el
-      // bug de new Date('YYYY-MM-DD') (ver fechaLocal arriba). Reescribir es
-      // seguro — estas fechas son catálogo fijo, no dato capturado por nadie.
-      hoja.getRange(filaSheet, 6, 1, 2).setValues([[
-        fechaLocal(curso.fecha_inicio), fechaLocal(curso.fecha_fin)
-      ]]);
-      return;
-    }
-
-    const prefijo = PREFIJOS_CATEGORIA['Curso autogestivo'];
-    const maxNum = datos.slice(1)
-      .map(row => String(row[0]))
-      .filter(id => id.startsWith(prefijo + '-' + CICLO_ESCOLAR + '-'))
-      .map(id => parseInt(id.split('-').pop(), 10) || 0)
-      .reduce((a, b) => Math.max(a, b), 0);
-    const idCurso = prefijo + '-' + CICLO_ESCOLAR + '-' + String(maxNum + 1).padStart(3, '0');
-
-    hoja.appendRow([
-      idCurso, 'Curso autogestivo', curso.nombre, 'CoEEE', 'En línea',
-      fechaLocal(curso.fecha_inicio), fechaLocal(curso.fecha_fin),
-      'https://auladigital.dee.edu.mx', 'FALSE', '', 'TRUE',
-      'Jornada de Capacitación Verano 2026', 'TRUE'
-    ]);
-
-    datos.push([idCurso, 'Curso autogestivo', curso.nombre]); // para que maxNum considere el nuevo ID si hay más de uno por generar
-    mapa[curso.nombre] = idCurso;
-  });
-
-  return mapa;
-}
-
-// ── Migración histórica: Cursos_OTDE_Verano_2026 → Docentes/Inscripciones ──
-function migrarJornadaVerano() {
-  const ui = SpreadsheetApp.getUi();
-  const mapaCursos = asegurarCursosVerano();
-
-  const ssVerano = SpreadsheetApp.openById(ID_SPREADSHEET_VERANO_2026);
-  const hojaVerano = ssVerano.getSheetByName(HOJA_VERANO_2026);
-  if (!hojaVerano) {
-    ui.alert('No se encontró la hoja "' + HOJA_VERANO_2026 + '" en el spreadsheet viejo.');
-    return;
-  }
-
-  const filas = hojaVerano.getDataRange().getValues().slice(1);
-  if (!filas.length) {
-    ui.alert('La hoja de Jornada Verano no tiene registros todavía.');
-    return;
-  }
-
-  const hojaDocentes = obtenerHojaDocentes();
-  const hojaInscripciones = obtenerHojaInscripciones();
-  const datosInscripciones = hojaInscripciones.getDataRange().getValues();
-  const colFolio = indicesPorEncabezado_(datosInscripciones[0]).Folio;
-  const foliosExistentes = new Set(datosInscripciones.slice(1).map(r => String(r[colFolio]).trim()));
-
-  let migrados = 0, saltados = 0, sinCurso = 0;
-
-  filas.forEach(fila => {
-    // A Fecha | B Folio | C Nombre | D RFC | E Función | F CCT | G Sector | H Zona | I Escuela/Unidad | J Curso | K Correo
-    const [fecha, folio, nombre, rfcRaw, funcion, cctRaw, sector, zona, escuela, cursoNombre, correo] = fila;
-    const rfc = String(rfcRaw).trim().toUpperCase();
-    const cct = String(cctRaw).trim().toUpperCase();
-    const idCurso = mapaCursos[String(cursoNombre).trim()];
-
-    if (!rfc || !idCurso) { sinCurso++; return; }
-
-    if (foliosExistentes.has(String(folio).trim())) { saltados++; return; }
-
-    upsertDocente(hojaDocentes, {
-      nombre: nombre, correo: correo || '', telefono: '', cct: cct, escuela: escuela,
-      sector: sector, zona: zona, municipio: CCT_MUNICIPIO_MAP[cct] || '', funcion: funcion
-    }, rfc, fecha || new Date());
-
-    agregarInscripcion(hojaInscripciones, folio, fecha, rfc, idCurso, 'Registrado', 'Migrado de Jornada Verano 2026', '');
-    foliosExistentes.add(String(folio).trim());
-    migrados++;
-  });
-
-  ui.alert('Migración completa: ' + migrados + ' registro(s) migrado(s), ' +
-           saltados + ' ya existían, ' + sinCurso + ' sin RFC/curso válido.');
-}
 
 // ============================================================
 // RECORDATORIOS AUTOMÁTICOS POR CORREO
@@ -1403,15 +1398,17 @@ const REDES_SOCIALES = {
   whatsapp: 'https://whatsapp.com/channel/0029VbBDCG572WTz3WCjRS11'
 };
 
-const COL_HORA_INICIO = 15;                    // P (0-indexado: 15)
-const COL_RECORDATORIO_INICIO = 16;            // Q
-const COL_RECORDATORIO_MEDIO = 17;             // R
-const COL_RECORDATORIO_WEBINAR = 18;           // S
-const COL_LIGA_TUTORIAL_CONSTANCIA = 24;       // Y
-const COL_HORA_FIN = 25;                       // Z
-const COL_HORA_LIMITE_INSCRIPCION = 26;        // AA
-const COL_CUPO_AGOTADO = 27;                   // AB
-const COL_OCULTAR_HISTORIAL = 28;              // AC
+// Índices dentro de las filas de valoresCursos_() (orden de ENCABEZADOS_CURSOS).
+const COL_HORA_INICIO = CUR.Hora_inicio;
+const COL_RECORDATORIO_INICIO = CUR.Recordatorio_inicio_enviado;
+const COL_RECORDATORIO_MEDIO = CUR.Recordatorio_medio_enviado;
+const COL_RECORDATORIO_WEBINAR = CUR.Recordatorio_webinar_enviado;
+const COL_LIGA_TUTORIAL_CONSTANCIA = CUR.Liga_tutorial_constancia;
+const COL_HORA_FIN = CUR.Hora_fin;
+const COL_HORA_LIMITE_INSCRIPCION = CUR.Hora_limite_inscripcion;
+const COL_CUPO_AGOTADO = CUR.Cupo_agotado;
+const COL_OCULTAR_HISTORIAL = CUR.Ocultar_historial;
+const COL_FECHAS_SESION = CUR.Fechas_sesion;
 
 // ── Combina la fecha (Y/M/D) de una celda con la hora (H:M) de otra ──
 function combinarFechaHora(fecha, hora) {
@@ -1758,7 +1755,7 @@ function enviarRecordatoriosDiarios() {
   verificarActivadoresInstalados();
 
   const hoja  = obtenerHojaCursos();
-  const datos = hoja.getDataRange().getValues();
+  const datos = valoresCursos_(hoja);
   const hoy   = soloFecha(new Date());
 
   for (let i = 1; i < datos.length; i++) {
@@ -1767,11 +1764,11 @@ function enviarRecordatoriosDiarios() {
     // destinatarios que el límite de Gmail), no debe tumbar el resto del
     // recorrido ni el bloque 3 (pendientes de registro externo) de abajo.
     try {
-    const idCurso = String(row[0]).trim().toUpperCase();
-    if (!idCurso || !row[5] || !row[6]) continue; // sin ID o sin fechas
+    const idCurso = String(row[CUR.ID_Curso]).trim().toUpperCase();
+    if (!idCurso || !row[CUR.Fecha_inicio] || !row[CUR.Fecha_fin]) continue; // sin ID o sin fechas
 
-    const inicio = soloFecha(row[5]);
-    const fin    = soloFecha(row[6]);
+    const inicio = soloFecha(row[CUR.Fecha_inicio]);
+    const fin    = soloFecha(row[CUR.Fecha_fin]);
     const fila   = i + 1;
     const esDeUnDia = inicio.getTime() === fin.getTime();
     const tieneHora = !!row[COL_HORA_INICIO];
@@ -1787,7 +1784,7 @@ function enviarRecordatoriosDiarios() {
         // antes seguía goteando "ya inició" durante días y se comía la cuota
         // de los demás avisos; el calendario de la confirmación cubre al
         // resto). Se marca enviado para dejar de reevaluarlo.
-        hoja.getRange(fila, COL_RECORDATORIO_INICIO + 1).setValue('TRUE');
+        hoja.getRange(fila, colCursos_(hoja, ENCABEZADOS_CURSOS[COL_RECORDATORIO_INICIO])).setValue('TRUE');
         limpiarSeguimientoLote_(idCurso + '_INICIO');
       } else if (diasParaInicio <= DIAS_ANTES_RECORDATORIO_INICIO) {
         // Ventana: el día anterior y el día de inicio (lo que no cupo ayer
@@ -1795,20 +1792,20 @@ function enviarRecordatoriosDiarios() {
         const cuando = diasParaInicio === 0 ? 'hoy' : 'mañana';
         const correos = obtenerCorreosInscritos(idCurso);
         const enviado = enviarCorreoLote(correos,
-          'Tu curso "' + row[2] + '" empieza ' + cuando,
+          'Tu curso "' + row[CUR.Nombre] + '" empieza ' + cuando,
           construirCorreoHtml({
             chip: 'TU CURSO EMPIEZA PRONTO',
-            titulo: 'Tu curso "' + row[2] + '" empieza ' + cuando,
-            cuerpo: 'Hola, te recordamos que tu curso <strong>' + row[2] + '</strong> comienza el <strong>' +
-              formatearFecha(row[5]) + '</strong>. Prepárate con anticipación para sacarle el máximo provecho.',
-            detalle: 'Curso: ' + row[2] + '<br>Inicio: ' + formatearFecha(row[5]) +
-              (esDeUnDia ? '' : '<br>Término: ' + formatearFecha(row[6])) +
+            titulo: 'Tu curso "' + row[CUR.Nombre] + '" empieza ' + cuando,
+            cuerpo: 'Hola, te recordamos que tu curso <strong>' + row[CUR.Nombre] + '</strong> comienza el <strong>' +
+              formatearFecha(row[CUR.Fecha_inicio]) + '</strong>. Prepárate con anticipación para sacarle el máximo provecho.',
+            detalle: 'Curso: ' + row[CUR.Nombre] + '<br>Inicio: ' + formatearFecha(row[CUR.Fecha_inicio]) +
+              (esDeUnDia ? '' : '<br>Término: ' + formatearFecha(row[CUR.Fecha_fin])) +
               lineaTutorialConstancia_(row[COL_LIGA_TUTORIAL_CONSTANCIA]),
-            liga: row[7] || '',
+            liga: row[CUR.Liga_convocatoria] || '',
             textoLiga: 'Ver convocatoria / acceso'
           }),
           idCurso + '_INICIO');
-        if (enviado) hoja.getRange(fila, COL_RECORDATORIO_INICIO + 1).setValue('TRUE');
+        if (enviado) hoja.getRange(fila, colCursos_(hoja, ENCABEZADOS_CURSOS[COL_RECORDATORIO_INICIO])).setValue('TRUE');
       }
     }
 
@@ -1820,27 +1817,27 @@ function enviarRecordatoriosDiarios() {
       if (hoy > fin || hoy > soloFecha(medio)) {
         // Ya terminó, o ya pasó el día de la mitad: lo que no alcanzó a salir
         // por cuota ya no se manda (28 sep 2026, mismo criterio que arriba).
-        hoja.getRange(fila, COL_RECORDATORIO_MEDIO + 1).setValue('TRUE');
+        hoja.getRange(fila, colCursos_(hoja, ENCABEZADOS_CURSOS[COL_RECORDATORIO_MEDIO])).setValue('TRUE');
         limpiarSeguimientoLote_(idCurso + '_MEDIO');
       } else if (hoy.getTime() === soloFecha(medio).getTime()) {
         const correos = obtenerCorreosInscritos(idCurso);
         const enviado = enviarCorreoLote(correos,
-          'Vas a la mitad de "' + row[2] + '" — ¡sigue avanzando!',
+          'Vas a la mitad de "' + row[CUR.Nombre] + '" — ¡sigue avanzando!',
           construirCorreoHtml({
             chip: 'SIGUE ASÍ',
-            titulo: 'Vas a la mitad de "' + row[2] + '"',
-            cuerpo: 'Ya vas a la mitad de tu curso <strong>' + row[2] + '</strong>. Este es un recordatorio ' +
-              'para que no lo dejes a medias — termina antes del <strong>' + formatearFecha(row[6]) + '</strong>.',
-            detalle: 'Curso: ' + row[2] + '<br>Fecha límite: ' + formatearFecha(row[6]),
-            liga: row[7] || '',
+            titulo: 'Vas a la mitad de "' + row[CUR.Nombre] + '"',
+            cuerpo: 'Ya vas a la mitad de tu curso <strong>' + row[CUR.Nombre] + '</strong>. Este es un recordatorio ' +
+              'para que no lo dejes a medias — termina antes del <strong>' + formatearFecha(row[CUR.Fecha_fin]) + '</strong>.',
+            detalle: 'Curso: ' + row[CUR.Nombre] + '<br>Fecha límite: ' + formatearFecha(row[CUR.Fecha_fin]),
+            liga: row[CUR.Liga_convocatoria] || '',
             textoLiga: 'Continuar curso'
           }),
           idCurso + '_MEDIO');
-        if (enviado) hoja.getRange(fila, COL_RECORDATORIO_MEDIO + 1).setValue('TRUE');
+        if (enviado) hoja.getRange(fila, colCursos_(hoja, ENCABEZADOS_CURSOS[COL_RECORDATORIO_MEDIO])).setValue('TRUE');
       }
     }
     } catch (err) {
-      console.error('enviarRecordatoriosDiarios: error en curso ' + row[0] + ': ' + err.message);
+      console.error('enviarRecordatoriosDiarios: error en curso ' + row[CUR.ID_Curso] + ': ' + err.message);
     }
   }
 
@@ -1896,10 +1893,10 @@ function hayAvisoUrgentePendienteHoy_() {
   if (avisoUrgenteHoyCache_ !== null) return avisoUrgenteHoyCache_;
   const hoy = soloFecha(new Date());
   const ahora = new Date();
-  avisoUrgenteHoyCache_ = obtenerHojaCursos().getDataRange().getValues().slice(1).some(function(row) {
-    if (!row[0] || !row[COL_HORA_INICIO] || !row[6]) return false;
+  avisoUrgenteHoyCache_ = valoresCursos_(obtenerHojaCursos()).slice(1).some(function(row) {
+    if (!row[CUR.ID_Curso] || !row[COL_HORA_INICIO] || !row[CUR.Fecha_fin]) return false;
     if (String(row[COL_RECORDATORIO_WEBINAR] || '').trim().toUpperCase() === 'TRUE') return false;
-    const inicio = parseFechaSegura_(row[5]);
+    const inicio = parseFechaSegura_(row[CUR.Fecha_inicio]);
     return !!inicio && inicio.getTime() === hoy.getTime() && ahora <= finConferencia_(row);
   });
   return avisoUrgenteHoyCache_;
@@ -1977,7 +1974,7 @@ function decidirRecordatorioPendiente_(row, cols, filaCurso, hoy) {
   if (dias(hoy, fechaRegistro) < 1) return 0; // nunca el mismo día del registro
 
   const ultimo = parseFechaSegura_(row[cols.Fecha_ultimo_recordatorio]);
-  const limite = filaCurso[21] ? parseFechaSegura_(filaCurso[21]) : parseFechaSegura_(filaCurso[5]);
+  const limite = filaCurso[CUR.Fecha_limite_inscripcion] ? parseFechaSegura_(filaCurso[CUR.Fecha_limite_inscripcion]) : parseFechaSegura_(filaCurso[CUR.Fecha_inicio]);
 
   const tocaPorCierre = limite !== null &&
     dias(limite, hoy) <= DIAS_ANTES_CIERRE_RECORDATORIO &&
@@ -1994,7 +1991,7 @@ function enviarRecordatoriosPendientes_() {
   const modoPrueba = !!PropertiesService.getScriptProperties().getProperty('MODO_PRUEBA_CORREO');
 
   const cursosPorId = {};
-  obtenerHojaCursos().getDataRange().getValues().slice(1).forEach(r => {
+  valoresCursos_(obtenerHojaCursos()).slice(1).forEach(r => {
     const id = String(r[0]).trim().toUpperCase();
     if (id) cursosPorId[id] = r;
   });
@@ -2012,7 +2009,7 @@ function enviarRecordatoriosPendientes_() {
     const row = datos[i];
     if (String(row[cols.Registro_externo]).trim() !== REGISTRO_EXTERNO.PENDIENTE) continue;
     const filaCurso = cursosPorId[String(row[cols.ID_Curso]).trim().toUpperCase()];
-    if (!filaCurso || String(filaCurso[10]).trim().toUpperCase() !== 'TRUE') continue;
+    if (!filaCurso || String(filaCurso[CUR.Activo]).trim().toUpperCase() !== 'TRUE') continue;
     const estado = evaluarEstadoCurso_(filaCurso, ahora);
     if (estado.esPasado || estado.estadoInscripcion !== 'abierta') continue;
 
@@ -2068,10 +2065,10 @@ function construirCorreoPendiente_(items) {
       ? formatearFecha(cierre) + (hora ? ' a las ' + ('0' + hora.h).slice(-2) + ':' + ('0' + hora.m).slice(-2) + ' h' : '')
       : '';
     return '<div style="padding:4px 0 16px 0;border-bottom:1px solid #e6e2da;margin-bottom:14px;">' +
-      '<div style="font:bold 16px/1.4 Arial,Helvetica,sans-serif;color:#1a1a1a;">' + escaparHtml_(c[2]) + '</div>' +
+      '<div style="font:bold 16px/1.4 Arial,Helvetica,sans-serif;color:#1a1a1a;">' + escaparHtml_(c[CUR.Nombre]) + '</div>' +
       (limite ? '<div style="font:13px/1.5 Arial,Helvetica,sans-serif;color:#8A5A16;margin-top:2px;">Cierre de inscripciones: <strong>' + escaparHtml_(limite) + '</strong></div>' : '') +
       '<div style="font:13px/1.5 Arial,Helvetica,sans-serif;color:#555555;margin-top:10px;">1. Inscríbete en la plataforma del curso:</div>' +
-      boton(c[7], 'Ir a inscribirme &rarr;', '#9F2241') +
+      boton(c[CUR.Liga_convocatoria], 'Ir a inscribirme &rarr;', '#9F2241') +
       '<div style="font:13px/1.5 Arial,Helvetica,sans-serif;color:#555555;margin-top:12px;">2. Cuando te llegue el correo de bienvenida del curso, avísanos con un toque:</div>' +
       boton(ligaConfirmacion_(it.folio), '&#10003; Sí, ya me llegó', '#146C43') +
     '</div>';
@@ -2080,7 +2077,7 @@ function construirCorreoPendiente_(items) {
   const unCurso = items.length === 1;
   return {
     asunto: unCurso
-      ? 'Te falta un paso para apartar tu lugar en "' + items[0].filaCurso[2] + '"'
+      ? 'Te falta un paso para apartar tu lugar en "' + items[0].filaCurso[CUR.Nombre] + '"'
       : 'Te falta un paso para apartar tu lugar en ' + items.length + ' cursos',
     html: construirCorreoHtml({
       chip: 'TE FALTA UN PASO',
@@ -2175,7 +2172,7 @@ function fdMenuEnviarPendientesAhora() {
 // varios) — ya no es exclusivo de webinars de un solo día.
 function enviarRecordatoriosWebinar() {
   const hoja  = obtenerHojaCursos();
-  const datos = hoja.getDataRange().getValues();
+  const datos = valoresCursos_(hoja);
   const ahora = new Date();
   const hoy   = soloFecha(ahora);
 
@@ -2185,26 +2182,26 @@ function enviarRecordatoriosWebinar() {
     // destinatarios que el límite de Gmail), no debe tumbar el resto del
     // recorrido ni el recordatorio de constancia de abajo.
     try {
-    const idCurso = String(row[0]).trim().toUpperCase();
-    if (!idCurso || !row[5] || !row[6] || !row[COL_HORA_INICIO]) continue;
+    const idCurso = String(row[CUR.ID_Curso]).trim().toUpperCase();
+    if (!idCurso || !row[CUR.Fecha_inicio] || !row[CUR.Fecha_fin] || !row[COL_HORA_INICIO]) continue;
     if (String(row[COL_RECORDATORIO_WEBINAR] || '').trim().toUpperCase() === 'TRUE') continue;
 
-    const inicio = combinarFechaHora(row[5], row[COL_HORA_INICIO]);
-    const fin = soloFecha(row[6]);
+    const inicio = combinarFechaHora(row[CUR.Fecha_inicio], row[COL_HORA_INICIO]);
+    const fin = soloFecha(row[CUR.Fecha_fin]);
     const minutosFaltantes = (inicio - ahora) / 60000;
     const fila = i + 1;
 
     // Cursos de varios días con hora: el aviso es solo de la primera sesión —
     // al terminar el día de inicio se cierra (28 sep 2026; antes, sin
     // Hora_fin, seguía mandando "ya comenzó" diario hasta Fecha_fin).
-    if (hoy > fin || ahora > finConferencia_(row) || hoy > soloFecha(row[5])) {
+    if (hoy > fin || ahora > finConferencia_(row) || hoy > soloFecha(row[CUR.Fecha_inicio])) {
       // El curso/evento ya terminó y el aviso no alcanzó a salir (completo) —
       // ya no hay nada útil que avisar, se marca enviado para dejar de
       // reevaluarlo — ver docs/QA-NOTES.md #8. Con Hora_fin capturada se corta
       // al terminar el evento, no a medianoche: sin esto, un envío parcial
       // retomado de noche mandaría "ya comenzó — conéctate ahora" a un evento
       // ya concluido (docs/QA-NOTES.md #40).
-      hoja.getRange(fila, COL_RECORDATORIO_WEBINAR + 1).setValue('TRUE');
+      hoja.getRange(fila, colCursos_(hoja, ENCABEZADOS_CURSOS[COL_RECORDATORIO_WEBINAR])).setValue('TRUE');
       limpiarSeguimientoLote_(idCurso + '_WEBINAR');
       continue;
     }
@@ -2216,24 +2213,24 @@ function enviarRecordatoriosWebinar() {
       const horaTexto = Utilities.formatDate(new Date(row[COL_HORA_INICIO]), 'America/Mexico_City', 'HH:mm');
       const correos = obtenerCorreosInscritos(idCurso);
       const enviado = enviarCorreoLote(correos,
-        yaEmpezo ? '"' + row[2] + '" ya comenzó — conéctate ahora' : '"' + row[2] + '" empieza en 30 minutos',
+        yaEmpezo ? '"' + row[CUR.Nombre] + '" ya comenzó — conéctate ahora' : '"' + row[CUR.Nombre] + '" empieza en 30 minutos',
         construirCorreoHtml({
           chip: yaEmpezo ? 'YA COMENZÓ' : 'EMPIEZA EN 30 MINUTOS',
-          titulo: yaEmpezo ? '"' + row[2] + '" ya comenzó' : '"' + row[2] + '" empieza en media hora',
+          titulo: yaEmpezo ? '"' + row[CUR.Nombre] + '" ya comenzó' : '"' + row[CUR.Nombre] + '" empieza en media hora',
           cuerpo: yaEmpezo
-            ? 'Tu curso/webinar <strong>' + row[2] + '</strong> ya comenzó hoy a las <strong>' + horaTexto + ' hrs</strong>. Conéctate ahora.'
-            : 'Tu curso/webinar <strong>' + row[2] + '</strong> empieza hoy a las <strong>' + horaTexto +
+            ? 'Tu curso/webinar <strong>' + row[CUR.Nombre] + '</strong> ya comenzó hoy a las <strong>' + horaTexto + ' hrs</strong>. Conéctate ahora.'
+            : 'Tu curso/webinar <strong>' + row[CUR.Nombre] + '</strong> empieza hoy a las <strong>' + horaTexto +
               ' hrs</strong>. Ten a la mano tu conexión y materiales.',
-          detalle: 'Curso: ' + row[2] + '<br>Hoy a las: ' + horaTexto + ' hrs' +
+          detalle: 'Curso: ' + row[CUR.Nombre] + '<br>Hoy a las: ' + horaTexto + ' hrs' +
             lineaTutorialConstancia_(row[COL_LIGA_TUTORIAL_CONSTANCIA]),
-          liga: row[7] || '',
+          liga: row[CUR.Liga_convocatoria] || '',
           textoLiga: 'Ir a la transmisión / acceso'
         }),
         idCurso + '_WEBINAR', true, idCurso + '_INICIO'); // urgente (apartado de 30 min); primero quien no recibió "empieza mañana"
-      if (enviado) hoja.getRange(fila, COL_RECORDATORIO_WEBINAR + 1).setValue('TRUE');
+      if (enviado) hoja.getRange(fila, colCursos_(hoja, ENCABEZADOS_CURSOS[COL_RECORDATORIO_WEBINAR])).setValue('TRUE');
     }
     } catch (err) {
-      console.error('enviarRecordatoriosWebinar: error en curso ' + row[0] + ': ' + err.message);
+      console.error('enviarRecordatoriosWebinar: error en curso ' + row[CUR.ID_Curso] + ': ' + err.message);
     }
   }
 
@@ -2290,7 +2287,7 @@ function ligaConstancia_(folio) {
 // ── ¿Sigue abierto el formulario de carga para este curso, hoy? ──
 // Días 0 y 1 desde Fecha_fin: abierto. Día 2 en adelante: cerrado.
 function ventanaConstanciaAbierta_(filaCurso, hoy) {
-  const fin = parseFechaSegura_(filaCurso[6]);
+  const fin = parseFechaSegura_(filaCurso[CUR.Fecha_fin]);
   if (!fin) return false;
   const dias = Math.round((hoy - fin) / 86400000);
   return dias >= 0 && dias < DIAS_LIMITE_CONSTANCIA;
@@ -2300,8 +2297,8 @@ function ventanaConstanciaAbierta_(filaCurso, hoy) {
 // inmediato. Sin Hora_fin capturada, se asume que termina a las 23:59 de
 // Fecha_fin (fail-open: nunca bloquea el recordatorio, solo lo retrasa). ──
 function finConferencia_(filaCurso) {
-  if (filaCurso[COL_HORA_FIN]) return combinarFechaHora(filaCurso[6], filaCurso[COL_HORA_FIN]);
-  const f = soloFecha(filaCurso[6]);
+  if (filaCurso[COL_HORA_FIN]) return combinarFechaHora(filaCurso[CUR.Fecha_fin], filaCurso[COL_HORA_FIN]);
+  const f = soloFecha(filaCurso[CUR.Fecha_fin]);
   return new Date(f.getFullYear(), f.getMonth(), f.getDate(), 23, 59, 59);
 }
 
@@ -2321,13 +2318,13 @@ function decidirRecordatorioConstancia_(row, cols, filaCurso, ahora, hoy) {
   // 15 min después — ver docs/QA-NOTES.md #41.
   const ultimo = row[cols.Fecha_ultimo_recordatorio_constancia];
   if (ultimo instanceof Date && !isNaN(ultimo) && soloFecha(ultimo) >= hoy) return 0;
-  const fin = parseFechaSegura_(filaCurso[6]);
+  const fin = parseFechaSegura_(filaCurso[CUR.Fecha_fin]);
   return (fin && Math.round((hoy - fin) / 86400000) >= 1) ? 2 : 0;
 }
 
 // ── Correo del recordatorio de constancia (uno u otro según "numero") ──
 function construirCorreoConstancia_(filaCurso, folio, numero) {
-  const nombreCurso = filaCurso[2];
+  const nombreCurso = filaCurso[CUR.Nombre];
   const ligaTutorial = filaCurso[COL_LIGA_TUTORIAL_CONSTANCIA];
   const esUltimo = numero === MAX_RECORDATORIOS_CONSTANCIA;
   const pasoTutorial = ligaTutorial
@@ -2357,7 +2354,7 @@ function enviarRecordatoriosConstancia_() {
   const modoPrueba = !!PropertiesService.getScriptProperties().getProperty('MODO_PRUEBA_CORREO');
 
   const cursosPorId = {};
-  obtenerHojaCursos().getDataRange().getValues().slice(1).forEach(r => {
+  valoresCursos_(obtenerHojaCursos()).slice(1).forEach(r => {
     const id = String(r[0]).trim().toUpperCase();
     if (id && String(r[COL_LIGA_TUTORIAL_CONSTANCIA] || '').trim()) cursosPorId[id] = r;
   });
