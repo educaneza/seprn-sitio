@@ -724,6 +724,9 @@
     }
     .fi-cal-btn:hover { background: var(--midnight); color: #fff; }
     .fi-cal-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .fi-cal > .fi-cal-btn { width: 100%; }
+    .fi-cal-nota { margin: .8rem 0 .5rem; }
+    .fi-cal-btns.sesiones { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
     .conf-guardar { max-width: 42ch; margin: .5rem auto 1.25rem; display: grid; gap: .6rem; }
     .cg-btn {
       display: flex; align-items: center; justify-content: center; gap: .55rem; width: 100%; padding: .95rem 1rem;
@@ -2060,6 +2063,9 @@
     if (cursoDesdeUrlAplicado) return;
     cursoDesdeUrlAplicado = true;
 
+    const paramCal = new URLSearchParams(location.search).get('calendario');
+    if (paramCal && mostrarSoloCalendario(paramCal.split(',').map(s => s.trim().toUpperCase()).filter(Boolean))) return;
+
     const param = new URLSearchParams(location.search).get('curso');
     if (!param) return;
     const ids = param.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
@@ -2412,6 +2418,8 @@
     const subtituloEl = document.getElementById('confirmacion-subtitulo');
     const avisoEl = document.getElementById('pendientes-aviso');
     avisoEl.innerHTML = '';
+    document.getElementById('conf-guardar').style.display = '';
+    document.querySelector('.conf-folio-tip').style.display = '';
 
     const registroParcial = !!(fallo && fallo.pendientes && fallo.pendientes.length);
     const externoFaltante = resultados.some(r => externoPendiente(r.curso));
@@ -2541,6 +2549,46 @@
     mostrarPaso('confirmacion');
   }
 
+  // ── Liga para quien YA se inscribió: formacion-docente.html?calendario=ID
+  //    (varios: ID1,ID2). Muestra solo los botones de calendario del curso,
+  //    sin folio ni registro — para compartir por WhatsApp/oficio cuando se
+  //    capturan sesiones después de que la gente se inscribió (sep 2026). ──
+  function mostrarSoloCalendario(ids) {
+    const cursos = ids.map(id => catalogoActual.find(c => c.id.toUpperCase() === id)).filter(Boolean);
+    if (!cursos.length) return false;
+    const cont = document.getElementById('folios-lista');
+    cont.innerHTML = '';
+    document.getElementById('pendientes-aviso').innerHTML = '';
+    document.getElementById('conf-guardar').style.display = 'none';
+    document.querySelector('.conf-folio-tip').style.display = 'none';
+    const checkIcon = document.getElementById('check-icon');
+    checkIcon.classList.remove('pendiente');
+    checkIcon.innerHTML = ICON_CALENDARIO.replace('stroke="currentColor"', 'stroke="white"');
+    document.getElementById('confirmacion-titulo').textContent = 'Agrega tu curso a tu calendario';
+    document.getElementById('confirmacion-subtitulo').textContent = 'Si ya te inscribiste, agrégalo aquí y tu celular te recordará cada sesión.';
+    cursos.forEach(c => {
+      const sel = { id: c.id, nombre: c.nombre, categoria: c.categoria, liga: c.liga_convocatoria || '', registroPrevio: false };
+      const item = document.createElement('div');
+      item.className = 'folio-item';
+      const nombre = document.createElement('div');
+      nombre.className = 'fi-curso';
+      nombre.textContent = c.nombre;
+      item.appendChild(nombre);
+      const cuando = textoCuandoCurso(sel);
+      if (cuando) {
+        const cuandoEl = document.createElement('div');
+        cuandoEl.className = 'fi-cuando';
+        cuandoEl.textContent = cuando;
+        item.appendChild(cuandoEl);
+      }
+      const cal = crearBloqueCalendario({ folio: '', curso: sel });
+      if (cal) item.appendChild(cal);
+      cont.appendChild(item);
+    });
+    mostrarPaso('confirmacion');
+    return true;
+  }
+
   function externoPendiente(curso) {
     return !!(curso.registroPrevio && curso.liga) && confirmoExterno !== 'si';
   }
@@ -2591,38 +2639,54 @@
     return d ? d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2) : '';
   }
 
-  // "jue 2 oct · 17:00 – 18:30 h" / "7 – 21 oct"
+  // Sesiones capturadas en Fechas_sesion (["2026-10-07", ...]), como Date local.
+  function sesionesCurso(c) {
+    return (c.fechas_sesion || []).map(f => new Date(f + 'T12:00:00')).filter(d => !isNaN(d));
+  }
+
+  function listaEnTexto(items) {
+    return items.length > 1 ? items.slice(0, -1).join(', ') + ' y ' + items[items.length - 1] : (items[0] || '');
+  }
+
+  // "jue 2 oct · 17:00 – 18:30 h" / "7 – 21 oct" / "Sesiones: 7 oct, 14 oct y 21 oct · 16:00 h"
   function textoCuandoCurso(sel) {
     const c = cursoDelCatalogo(sel);
-    const periodo = textoPeriodoCurso(c);
+    const sesiones = sesionesCurso(c);
+    const periodo = sesiones.length > 1
+      ? 'Sesiones: ' + listaEnTexto(sesiones.map(d => fechaCorta(d, false)))
+      : textoPeriodoCurso(c);
     if (!periodo) return '';
     const hora = c.hora_inicio ? c.hora_inicio + (c.hora_fin ? ' – ' + c.hora_fin : '') + ' h' : '';
     return periodo + (hora ? ' · ' + hora : '');
   }
 
-  // Eventos del curso. Con Hora_inicio: uno con hora exacta el primer día
-  // (alarmas 1 día y 30 min antes). Sin hora: de día completo (aviso a las
-  // 9:00 del día anterior). Cursos de varios días suman un "Último día" con
-  // aviso una semana y un día antes — reemplaza al correo de "vas a la mitad".
+  // Eventos del curso. Con Hora_inicio: uno con hora exacta por sesión
+  // (Fechas_sesion) o, sin sesiones capturadas, solo el primer día — con
+  // alarmas 1 día y 30 min antes. Sin hora: de día completo (aviso a las
+  // 9:00 del día anterior). Si Fecha_fin cae después de la última sesión (o
+  // no hay sesiones), se suma un "Último día" con aviso una semana y un día
+  // antes — reemplaza al correo de "vas a la mitad".
   function eventosCalendario(r) {
     const c = cursoDelCatalogo(r.curso);
     const ini = isoDesdeDMA(c.fecha_inicio);
     if (!ini) return []; // "Por definir" u otro texto: nada que agendar
     const fin = isoDesdeDMA(c.fecha_fin) || ini;
     const liga = r.curso.liga || '';
-    const desc = 'Folio OTDE: ' + r.folio + (liga ? '\nAcceso / convocatoria: ' + liga : '') +
-      '\nCentro de Formación Docente · OTDE NEZA\n' + SITIO_FORMACION;
-    const eventos = [];
-    if (c.hora_inicio) {
-      const inicio = new Date(ini + 'T' + c.hora_inicio + ':00' + ZONA_MX);
-      let termino = c.hora_fin ? new Date(ini + 'T' + c.hora_fin + ':00' + ZONA_MX) : null;
+    const base = r.folio || r.curso.id;
+    const desc = (r.folio ? 'Folio OTDE: ' + r.folio + '\n' : '') + (liga ? 'Acceso / convocatoria: ' + liga + '\n' : '') +
+      'Centro de Formación Docente · OTDE NEZA\n' + SITIO_FORMACION;
+    const dias = (c.fechas_sesion && c.fechas_sesion.length) ? c.fechas_sesion : [ini];
+    const eventos = dias.map((dia, i) => {
+      const titulo = (dias.length > 1 ? 'Sesión ' + (i + 1) + ' de ' + dias.length + ': ' : (c.hora_inicio ? '' : 'Inicia: ')) + r.curso.nombre;
+      const uid = base + '-' + (dias.length > 1 ? 's' + (i + 1) : 'inicio');
+      if (!c.hora_inicio) return { uid, titulo, dia, desc, liga, alarmas: ['-PT15H'] };
+      const inicio = new Date(dia + 'T' + c.hora_inicio + ':00' + ZONA_MX);
+      let termino = c.hora_fin ? new Date(dia + 'T' + c.hora_fin + ':00' + ZONA_MX) : null;
       if (!termino || termino <= inicio) termino = new Date(inicio.getTime() + DURACION_DEFAULT_MIN * 60000);
-      eventos.push({ uid: r.folio + '-inicio', titulo: r.curso.nombre, inicio, termino, desc, liga, alarmas: ['-P1D', '-PT30M'] });
-    } else {
-      eventos.push({ uid: r.folio + '-inicio', titulo: 'Inicia: ' + r.curso.nombre, dia: ini, desc, liga, alarmas: ['-PT15H'] });
-    }
-    if (fin !== ini) {
-      eventos.push({ uid: r.folio + '-fin', titulo: 'Último día: ' + r.curso.nombre, dia: fin, desc, liga, alarmas: ['-P6DT15H', '-PT15H'] });
+      return { uid, titulo, inicio, termino, dia: null, desc, liga, alarmas: ['-P1D', '-PT30M'] };
+    });
+    if (fin > dias[dias.length - 1]) {
+      eventos.push({ uid: base + '-fin', titulo: 'Último día: ' + r.curso.nombre, dia: fin, desc, liga, alarmas: ['-P6DT15H', '-PT15H'] });
     }
     return eventos;
   }
@@ -2672,37 +2736,57 @@
     return 'https://calendar.google.com/calendar/render?' + p.toString();
   }
 
+  function crearBotonGoogle(ev, texto) {
+    const a = document.createElement('a');
+    a.className = 'fi-cal-btn';
+    a.href = ligaGoogleCalendar(ev);
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.innerHTML = ICON_CALENDARIO + ' ' + texto;
+    return a;
+  }
+
   function crearBloqueCalendario(r) {
     const eventos = eventosCalendario(r);
     if (!eventos.length) return null;
+    const sesiones = eventos.filter(ev => /^Sesión /.test(ev.titulo));
     const bloque = document.createElement('div');
     bloque.className = 'fi-cal';
     const titulo = document.createElement('p');
     titulo.className = 'fi-cal-titulo';
-    titulo.textContent = 'Agrégalo a tu calendario';
+    titulo.textContent = sesiones.length ? 'Agrega las ' + sesiones.length + ' sesiones a tu calendario' : 'Agrégalo a tu calendario';
     const sub = document.createElement('p');
     sub.className = 'fi-cal-sub';
     sub.textContent = eventos[0].dia
       ? 'Tu celular te avisará un día antes de que inicie.'
-      : 'Tu celular te avisará un día antes y 30 minutos antes de empezar.';
+      : 'Tu celular te avisará un día antes y 30 minutos antes de ' + (sesiones.length ? 'cada sesión.' : 'empezar.');
     bloque.appendChild(titulo);
     bloque.appendChild(sub);
 
-    const btns = document.createElement('div');
-    btns.className = 'fi-cal-btns';
-    const google = document.createElement('a');
-    google.className = 'fi-cal-btn';
-    google.href = ligaGoogleCalendar(eventos[0]);
-    google.target = '_blank';
-    google.rel = 'noopener noreferrer';
-    google.innerHTML = ICON_CALENDARIO + ' Google Calendar';
     const ics = document.createElement('a');
     ics.className = 'fi-cal-btn';
     ics.href = URL.createObjectURL(new Blob([construirIcs(eventos)], { type: 'text/calendar;charset=utf-8' }));
-    ics.download = 'curso-' + r.folio + '.ics';
-    ics.innerHTML = ICON_CELULAR + ' Outlook / celular';
-    btns.appendChild(google);
-    btns.appendChild(ics);
+    ics.download = 'curso-' + (r.folio || r.curso.id) + '.ics';
+    ics.innerHTML = ICON_CELULAR + (sesiones.length ? ' Todas las sesiones (Outlook / celular)' : ' Outlook / celular');
+
+    const btns = document.createElement('div');
+    btns.className = 'fi-cal-btns';
+    if (sesiones.length) {
+      // Google Calendar solo acepta un evento por liga: un botón por sesión.
+      btns.classList.add('sesiones');
+      bloque.appendChild(ics);
+      const nota = document.createElement('p');
+      nota.className = 'fi-cal-sub fi-cal-nota';
+      nota.textContent = 'O en Google Calendar, una por una:';
+      bloque.appendChild(nota);
+      sesiones.forEach(ev => {
+        const d = ev.inicio || new Date(ev.dia + 'T12:00:00');
+        btns.appendChild(crearBotonGoogle(ev, fechaCorta(d, false)));
+      });
+    } else {
+      btns.appendChild(crearBotonGoogle(eventos[0], 'Google Calendar'));
+      btns.appendChild(ics);
+    }
     bloque.appendChild(btns);
     return bloque;
   }
@@ -2793,8 +2877,9 @@
       const titulo = renglones(medir, r.curso.nombre, ANCHO - 60);
       medir.font = '500 26px ' + DISPLAY;
       const liga = r.curso.liga ? renglones(medir, r.curso.liga, ANCHO - 60) : [];
-      const cuando = textoCuandoCurso(r.curso);
-      const alto = 50 + titulo.length * 48 + 90 + (cuando ? 44 : 0) + (liga.length ? 16 + liga.length * 34 : 0) + 40;
+      medir.font = '600 30px ' + DISPLAY;
+      const cuando = renglones(medir, textoCuandoCurso(r.curso), ANCHO - 60).filter(Boolean);
+      const alto = 50 + titulo.length * 48 + 90 + cuando.length * 44 + (liga.length ? 16 + liga.length * 34 : 0) + 40;
       return { r, titulo, liga, cuando, alto };
     });
     const ENCABEZADO = 300;
@@ -2844,12 +2929,9 @@
       ctx.fillStyle = '#9F2241';
       ctx.font = '700 50px ' + MONO;
       ctx.fillText(b.r.folio, M + 30, yy);
-      if (b.cuando) {
-        yy += 50;
-        ctx.fillStyle = '#0C1A2E';
-        ctx.font = '600 30px ' + DISPLAY;
-        ctx.fillText(b.cuando, M + 30, yy);
-      }
+      ctx.fillStyle = '#0C1A2E';
+      ctx.font = '600 30px ' + DISPLAY;
+      b.cuando.forEach((t, i) => { yy += i ? 40 : 50; ctx.fillText(t, M + 30, yy); });
       if (b.liga.length) {
         yy += 16;
         ctx.fillStyle = '#3a4a63';
