@@ -2630,3 +2630,55 @@ camino que genera folios.
 después la página, que es la que promete "reenviar no duplica". Verificado en vivo en los 4
 trámites cortando la primera respuesta a 1.5 s y reintentando con y sin `idEnvio`: mismo folio,
 una sola fila, un solo oficio y un solo par de correos.
+
+---
+
+## 28. Estrategias Nacionales — selección de escuelas con bloqueo por ciclo (sep 2026)
+
+**Qué resuelve:** la Oficina de Programas Educativos (Subjefatura Académica) coordina 4
+estrategias nacionales, y cada mes varios responsables eligen escuelas para trabajarlas. Regla
+de negocio: **una escuela trabaja una sola estrategia en todo el ciclo**. Al quedar
+seleccionada, se congela para todas las estrategias y todos los meses.
+
+**Piezas:**
+- `apps-script/estrategias-nacionales.gs`: proyecto y Sheet propios
+  (`Estrategias_Nacionales_26-27`, hoja `Selecciones`, 12 columnas A-L: Fecha de registro |
+  Folio | Responsable | Estrategia | Mes | CCT | Escuela | Sector | Zona | Municipio | Estatus |
+  Historial de cambios). Folio `SEPRN-EN-NNNN` **por escuela**, no por envío.
+- `estrategias-nacionales.html`: header/nav/footer institucional (reusa `styles.css`; las clases
+  `vis-*` de Ceremonias Cívicas van copiadas en su `<style>` inline), carga `js/cct-db.js` (solo `tipo === 'escuela'`),
+  `js/escuelas-direcciones.js` (turno y domicilio) y `js/tramites-shared.js`
+  (`fetchJsonConTimeout()`). Constante `ESTRATEGIAS_APPS_SCRIPT_URL`.
+- Enlace desde la tarjeta de la oficina en `academica.html` (`.oficina-tramite-link`); sin
+  entrada en nav/footer.
+
+**Bloqueo duro en el servidor, no aviso.** A diferencia de Ceremonias Cívicas (§22), donde
+revisitar una escuela puede ser legítimo y solo se avisa, aquí no hay caso válido para repetir.
+`enDoPostSeleccionar_()` toma `LockService.getScriptLock()`, arma `enMapaOcupadas_()` (CCT →
+selección con `Estatus = Seleccionada`, cualquier estrategia y mes) y recorre el lote: registra
+las libres y devuelve las ocupadas en `rechazadas` con el motivo (estrategia, mes y quién la
+eligió). Si dos responsables chocan, solo se pierde la escuela en conflicto, no el lote completo.
+Un CCT repetido dentro del mismo envío también se rechaza. Tope `EN_MAX_LOTE = 60` por envío.
+
+**El "por ciclo" sale de la Sheet, no del código.** No hay columna de ciclo: el congelado dura lo
+que dura la Sheet. El ciclo siguiente usa una Sheet nueva (y `MESES_EN_CICLO` actualizado), y
+todas las escuelas vuelven a quedar libres.
+
+**Liberar una escuela:** solo cancelando su folio (`accion: 'cancelar'`, motivo obligatorio,
+queda en `Historial de cambios`). Cancelar dos veces responde `status: 'ya_cancelada'`.
+
+**Contrato:**
+- `GET ?action=disponibilidad` → `{status:'ok', items:[{folio, responsable, estrategia, mes, cct,
+  escuela, sector, zona, municipio, estatus, fechaRegistro}]}`. Es público y no incluye datos
+  de contacto, porque el formulario no los pide.
+- `POST {accion:'seleccionar', responsable, estrategia, mes:'yyyy-MM', escuelas:[{cct, escuela,
+  sector, zona, municipio}]}` → `{status:'ok', registradas:[{cct, escuela, folio}],
+  rechazadas:[{cct, escuela, motivo}]}`.
+- `POST {accion:'cancelar', folio, motivo}` → `{status:'ok'|'ya_cancelada'|'error', ...}`.
+- `Content-Type: text/plain` para evitar el preflight CORS, igual que el resto del sitio.
+
+**Detalles:** el mes se escribe con formato de texto (`@`), porque si no Sheets convierte
+"2026-10" en fecha; `enMesTexto_()` normaliza si alguien lo edita a mano. Sin correo ni Telegram
+("solo registrar", decisión de Jorge). La hoja `Resumen` (estrategia × mes) se arma desde el
+menú "SEPRN Estrategias" y no requiere redeploy.
+

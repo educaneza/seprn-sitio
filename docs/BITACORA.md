@@ -14,6 +14,21 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-09-29 (cont. 3) · Estrategias Nacionales: selección de escuelas por estrategia y mes
+
+| | |
+|---|---|
+| **Fecha** | 2026-09-29 |
+| **Sesión** | Petición de la Oficina de Programas Educativos (Subjefatura Académica): cada mes varios responsables eligen escuelas para trabajar una de las 4 estrategias nacionales (Lectura, Escuela libre de violencia, Jornada por la Paz y contra las adicciones, Vive saludable Vive feliz). Regla confirmada por Jorge: una escuela trabaja **una sola** estrategia en todo el ciclo. Al final de la sesión Jorge preguntó si las de Jornada por la Paz quedan congeladas todo el ciclo: sí, igual que las otras 3, sin cambio de código. |
+| **Construido** | `apps-script/estrategias-nacionales.gs` (Sheet propia `Estrategias_Nacionales_26-27`, hoja `Selecciones`, folio `SEPRN-EN-NNNN` por escuela). `enDoPostSeleccionar_()` registra un lote bajo `LockService`: guarda las escuelas libres y rechaza, con motivo, las que ya tienen estrategia vigente (`enMapaOcupadas_()`). `enDoPostCancelar_()` cancela por folio y libera la escuela. Menú "SEPRN Estrategias" → `enActualizarResumen()` (hoja `Resumen`, estrategia × mes). `estrategias-nacionales.html`: matriz de avance, lista de escuelas libres con casillas y filtros, registro y cancelación. Enlace en la tarjeta de la oficina en `academica.html` (`.oficina-tramite-link`). Ver `docs/ARCHITECTURE.md §28`. |
+| **Despliegue** | La primera prueba en vivo devolvió la página HTML "Acceso denegado" en vez de JSON: la implementación no tenía acceso "Cualquier usuario". Jorge lo cambió; la URL no cambió. El enlace que pegó era de una *biblioteca* de Apps Script, no de la aplicación web, y no se usó. Ver `docs/QA-NOTES.md #49`. |
+| **Verificación** | En vivo con curl contra producción: lote de 2 (`SEPRN-EN-0001`/`0002`); rechazo de la misma escuela con otra estrategia y otro mes; dos envíos simultáneos con la misma escuela, donde solo uno registró (`0004`) y el otro recibió el motivo; cancelación de los 4 folios, `ya_cancelada` al repetir y error claro con folio inexistente; `?action=disponibilidad` reflejó las cancelaciones. Jorge borró las filas de prueba; la Sheet quedó vacía (verificado). Página publicada y conectada (HTTP 200 con la URL del script). No se revisó en celular ni se corrió el menú de Resumen. |
+| **Detalle menor** | El servidor pasa el CCT a mayúsculas pero no quita espacios internos (`"prueba qa01"` se registró aparte). No se corrigió: la página solo manda CCT del catálogo `js/cct-db.js`, elegidos con casillas. |
+| **Documentación actualizada** | Este checkpoint, `docs/ARCHITECTURE.md §28`, `docs/QA-NOTES.md #49`, `docs/ROADMAP.md` ítem 29, `CLAUDE.md`, `README.md`. |
+| **Commits** | `585e1a6` (3 archivos, +1018, en producción) y el commit de cierre (docs). |
+
+---
+
 ## CHECKPOINT — 2026-09-29 (cont. 2) · Planeación Institucional 2026-2027 revisada y bitácora con metas 21/23
 
 | | |

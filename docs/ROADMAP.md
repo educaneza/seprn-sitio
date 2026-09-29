@@ -801,6 +801,14 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     u hora llegue aunque el `.ics` ya se haya descargado, y para subir la constancia desde ahí.
     (e) Opcional: aviso de 30 min por correo para cada sesión (hoy solo la primera; las demás las
     avisa el calendario).
+29. **Estrategias Nacionales — pendientes tras el despliegue** (en producción desde el 29 sep
+    2026, ver `docs/ARCHITECTURE.md §28` y `docs/BITACORA.md`). Falta:
+    (a) Revisar `estrategias-nacionales.html` en celular (lista con casillas, carrito, matriz).
+    (b) Correr una vez el menú "SEPRN Estrategias → Actualizar resumen por estrategia y mes" con
+    datos reales; no se
+    probó.
+    (c) Al arrancar el ciclo 2027-2028: Sheet nueva (`Estrategias_Nacionales_27-28`) y
+    `MESES_EN_CICLO` actualizado; con eso todas las escuelas vuelven a quedar libres.
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue

@@ -157,6 +157,7 @@ ya esté expandido).
 | `protocolos.html` | Protocolos de Actuación — hub con 3 protocolos oficiales del Estado de México/SEIEM (ver sección propia abajo) |
 | `ceremonias-civicas.html` | Ceremonias Cívicas — reserva de visitas de jefes/docentes SEPRN-wide (no un trámite de OTDE), histórico, cobertura y panel por clave (ver sección propia abajo) |
 | `ficha-ceremonias-civicas.html` | Ficha post-visita de Ceremonias Cívicas, localizada por folio — sin entrada en nav/footer, se comparte por link directo (ver sección propia abajo) |
+| `estrategias-nacionales.html` | Estrategias Nacionales — selección mensual de escuelas por estrategia (Oficina de Programas Educativos, Subjefatura Académica). Se llega desde la tarjeta de la oficina en `academica.html`, sin entrada en nav/footer. Backend `apps-script/estrategias-nacionales.gs` (ver abajo) |
 
 **Documentación interna adicional en `docs/`:** `ARCHITECTURE.md` (arquitectura técnica), `ROADMAP.md` (scores UX/UI + pendientes por feature), `DESIGN_SYSTEM.md` (tokens/patrones del rediseño premium de Formación Docente), `QA-NOTES.md` (bugs reales ya cazados, con causa raíz — consultar antes de escribir un `fetch()` o un `appendRow()` nuevo), `manual-formacion-docente.html` / `manual-sistema-registro.html` / `manual-bases-tramites.html` (manuales operativos visuales para quien administra cada Sheet — el último es semáforo de qué llenar/tocar-con-cuidado/no-tocar por columna, un trámite por sección).
 
@@ -647,6 +648,22 @@ ya esté expandido).
   `visConFiltroQuitado_()` (`docs/QA-NOTES.md #48`)
 - Detalle completo de la arquitectura (esquema de columnas, por qué el folio actualiza una fila
   en vez de crear una nueva, decisión de la Fase 2 separada) en `docs/ARCHITECTURE.md §22`
+
+### `apps-script/estrategias-nacionales.gs` (nuevo, sep 2026)
+- **No es un trámite de OTDE**: lo usa la Oficina de Programas Educativos. Sheet
+  `Estrategias_Nacionales_26-27`, hoja `Selecciones` (12 columnas A-L), folio `SEPRN-EN-NNNN`
+  por escuela. Frontend `estrategias-nacionales.html` (`ESTRATEGIAS_APPS_SCRIPT_URL`). En
+  producción y probado en vivo el 29 sep 2026
+- **Regla: 1 escuela = 1 estrategia por ciclo**, con bloqueo duro en el servidor
+  (`enMapaOcupadas_()` bajo `LockService`), no un aviso como en Ceremonias Cívicas. Aplica igual
+  a las 4 estrategias, Jornada por la Paz incluida. Un lote registra las libres y rechaza las
+  ocupadas con motivo. Solo cancelar el folio libera la escuela
+- El ciclo lo define la Sheet: el ciclo siguiente usa una Sheet nueva y se actualiza
+  `MESES_EN_CICLO`. Sin correo ni Telegram. Menú "SEPRN Estrategias" → resumen estrategia × mes
+- Para cambios: pegar el `.gs` completo y **Administrar implementaciones → Editar → Nueva
+  versión**, con acceso "Cualquier usuario" (si no, responde "Acceso denegado", ver
+  `docs/QA-NOTES.md #49`). Probar con curl: el `POST` escribe de verdad; usar CCT ficticios y
+  cancelarlos. Detalle en `docs/ARCHITECTURE.md §28`
 
 ## Reglas de desarrollo
 1. No introducir npm, frameworks ni build steps — stack estático puro

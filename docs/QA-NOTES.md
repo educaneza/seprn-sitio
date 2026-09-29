@@ -1344,3 +1344,25 @@ Verificado en vivo: 4 folios archivados una sola vez y el filtro sigue ("7 de 74
 **Regla:** en cualquier backend, no borrar filas con `deleteRow()` en una hoja que el equipo
 filtra a mano sin quitar antes el filtro, y comprobar después que las filas sí salieron. Toda
 operación que mueva datos entre hojas debe poder correrse dos veces sin duplicar.
+
+## 49. Backend nuevo recién desplegado responde "Acceso denegado" en vez de JSON
+
+**Síntoma (29 sep 2026, primer despliegue de `apps-script/estrategias-nacionales.gs`):** tanto
+el `GET` como el `POST` de prueba devolvieron una página HTML de Google con
+`<title>Acceso denegado</title>`, no la respuesta del script. No se escribió nada en la Sheet.
+
+**Causa raíz:** la implementación no estaba abierta al público. En "Quién tiene acceso" no
+estaba "Cualquier usuario"; "Solo yo" o "Cualquier usuario con Cuenta de Google" dan este mismo
+resultado para peticiones anónimas como las del sitio. Aparte, el enlace que se compartió
+después (`script.google.com/macros/library/d/.../2`) era de una implementación tipo
+*biblioteca*, que no sirve como backend web. La URL correcta es la de la aplicación web
+(`/macros/s/<id>/exec`), y no cambia al editar la implementación.
+
+**Fix:** Implementar → Administrar implementaciones → Editar → Quién tiene acceso: "Cualquier
+usuario" → Nueva versión. Sin cambios de código.
+
+**Regla:** después de cada despliegue nuevo, probar primero un `GET` sin efectos con
+`curl -sL "<url>/exec"` y confirmar que regresa JSON. Si regresa HTML, revisar
+`grep -o "<title>[^<]*</title>"`: "Acceso denegado" significa que la implementación no está
+abierta al público. Hacer esto antes de cualquier `POST` de prueba.
+
