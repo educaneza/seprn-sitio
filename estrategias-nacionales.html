@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-7D68DB8ELW"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-7D68DB8ELW');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="description" content="Selección mensual de escuelas para las Estrategias Nacionales — Oficina de Programas Educativos, Subjefatura Académica, SEPRN.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estrategias Nacionales - SEPRN</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Componentes compartidos con ceremonias-civicas.html (tabla, filtros, tarjetas, paginación) */
+        .vis-tabla-wrap { overflow-x: auto; margin-top: 16px; }
+        .vis-tabla { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .vis-tabla th, .vis-tabla td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #d6d1ca; white-space: nowrap; }
+        .vis-tabla th { background: #56212f; color: #F9F8F5; font-weight: 600; position: sticky; top: 0; }
+        .vis-chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+        .vis-chip { padding: 6px 14px; border: 1.5px solid #d6d1ca; border-radius: 999px; background: white; color: #56212f; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+        .vis-chip:hover { border-color: #9F2241; }
+        .vis-chip-count { font-size: 11px; font-weight: 700; opacity: 0.75; }
+        .vis-filtro-fecha-sublabel { display: block; font-size: 12px; color: #977e5b; margin-bottom: 4px; }
+        .vis-paginacion { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 14px; flex-wrap: wrap; }
+        .vis-pag-btn { padding: 8px 16px; border: 1.5px solid #56212f; border-radius: 8px; background: white; color: #56212f; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .vis-pag-btn:hover:not(:disabled) { background: #56212f; color: white; }
+        .vis-pag-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .vis-pag-info { font-size: 13px; color: #56212f; font-weight: 600; }
+        .vis-cargando { padding: 16px; color: #977e5b; font-size: 13px; }
+        .vis-dashboard-titulo { color: #56212f; font-size: 15px; margin: 22px 0 10px; }
+        .vis-pend-filtros { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 14px; }
+        .vis-pend-filtros > div { flex: 1 1 150px; min-width: 0; }
+        .vis-pend-filtros select, .vis-pend-filtros input { width: 100%; padding: 9px 12px; border: 1px solid #d6d1ca; border-radius: 8px; font-family: inherit; font-size: 14px; background: white; }
+        .vis-pend-contador { margin: 16px 0 4px; font-size: 14px; color: #56212f; }
+        .vis-pend-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-top: 10px; }
+        .vis-pend-card { border: 1px solid #d6d1ca; border-left: 4px solid #9F2241; border-radius: 8px; padding: 12px 14px; background: white; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: #333; }
+        .vis-pend-card h4 { margin: 0; font-size: 14px; color: #56212f; }
+        .vis-pend-meta { font-size: 12px; color: #977e5b; }
+        /* Propios de Estrategias Nacionales */
+        .en-cobertura { font-size: 15px; color: #56212f; margin: 6px 0 0; }
+        .en-matriz td, .en-matriz th { text-align: center; }
+        .en-matriz td:first-child, .en-matriz th:first-child { text-align: left; }
+        .en-celda-con { font-weight: 700; color: #56212f; background: #f6ecef; }
+        .en-celda-vacia { color: #c9c2b8; }
+        .en-fila-total td { font-weight: 700; background: #F0EDE7; }
+        .en-form-fila { display: flex; flex-wrap: wrap; gap: 0 16px; }
+        .en-form-fila > .soporte-form-group { flex: 1 1 220px; min-width: 0; }
+        .en-form-fila > .en-form-ancho { flex: 2 1 280px; }
+        .en-card { cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+        .en-card:hover { border-color: #9F2241; }
+        .en-card.marcada { background: #f6ecef; border-color: #9F2241; }
+        .en-card-top { display: flex; align-items: flex-start; gap: 10px; }
+        .en-card-top input { width: 18px; height: 18px; margin: 1px 0 0; flex-shrink: 0; accent-color: #9F2241; }
+        .en-carrito { margin: 20px 0 8px; padding: 14px 16px; border: 1.5px dashed #d6d1ca; border-radius: 10px; }
+        .en-carrito.con-escuelas { border-style: solid; border-color: #9F2241; background: #fdf8f9; }
+        .en-carrito-titulo { margin: 0 0 8px; font-size: 14px; color: #56212f; }
+        .en-resultado { margin: 0; padding-left: 20px; }
+        .en-resultado li { margin: 2px 0; }
+        .en-btn-secundario { background: white; color: #56212f; border: 1.5px solid #56212f; }
+        .form-button:disabled { opacity: 0.5; cursor: not-allowed; }
+    </style>
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="SEPRN">
+    <meta property="og:title" content="Estrategias Nacionales">
+    <meta property="og:description" content="Selección mensual de escuelas para las Estrategias Nacionales — Oficina de Programas Educativos, SEPRN.">
+    <meta property="og:url" content="https://educaneza.github.io/seprn-sitio/estrategias-nacionales.html">
+    <meta property="og:image" content="https://educaneza.github.io/seprn-sitio/images/og-image.png">
+</head>
+<body>
+<a href="#main-content" class="skip-link">Saltar al contenido principal</a>
+<header>
+    <nav>
+        <div class="logo"><svg class="logo-icon" width="34" height="34" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="12" fill="#56212f"/><text x="32" y="27" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#d6d1ca" letter-spacing="-1">NE</text><text x="32" y="53" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#d6d1ca" letter-spacing="-1">ZA</text></svg><span class="logo-text">SEPRN</span></div>
+        <button class="nav-toggle" aria-label="Abrir menú" aria-expanded="false">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <ul>
+            <li><a href="index.html">Inicio</a></li>
+            <li><a href="nosotros.html">Nosotros</a></li>
+            <li><a href="areas.html">Áreas</a></li>
+            <li><a href="cte.html">CTE</a></li>
+            <li><a href="contacto.html">Contacto</a></li>
+        </ul>
+    </nav>
+</header>
+
+<section class="hero hero-sm">
+    <div class="hero-inner">
+        <span class="hero-badge">Subjefatura Académica</span>
+        <h1>Estrategias Nacionales</h1>
+        <p>Selección mensual de escuelas · Oficina de Programas Educativos</p>
+    </div>
+    <div class="hero-glow"></div>
+</section>
+<section class="content-section" id="main-content" role="main">
+
+    <div class="servicio-header">
+        <h2>Selección de escuelas</h2>
+        <p>Cada mes se eligen escuelas para trabajar una de las cuatro estrategias nacionales. Una escuela trabaja <strong>una sola estrategia en todo el ciclo escolar 2026-2027</strong>: en cuanto queda seleccionada, ya no aparece como disponible para ninguna otra estrategia ni mes.</p>
+    </div>
+
+    <div class="content-block">
+        <h3>Avance del ciclo</h3>
+        <p class="en-cobertura" id="en-cobertura">Cargando…</p>
+        <div class="vis-tabla-wrap">
+            <table class="vis-tabla en-matriz" id="en-matriz"></table>
+        </div>
+    </div>
+
+    <div class="content-block" id="en-seleccionar">
+        <h3>Seleccionar escuelas</h3>
+        <p>Indica tu nombre, la estrategia y el mes, marca las escuelas en la lista de disponibles y registra la selección. Cada escuela recibe su propio folio.</p>
+
+        <div id="en-sin-conexion" class="highlight-box" style="display:none;">
+            <p><strong>Sistema en preparación:</strong> la selección de escuelas todavía no está conectada. Vuelve pronto.</p>
+        </div>
+
+        <form id="en-form" onsubmit="return enEnviarSeleccion(event)" novalidate>
+            <div class="en-form-fila">
+                <div class="soporte-form-group">
+                    <label for="en-responsable">Nombre del responsable<span class="req">*</span></label>
+                    <input type="text" id="en-responsable" required>
+                    <div class="soporte-field-error" id="en-responsable-error">Ingresa tu nombre completo.</div>
+                </div>
+                <div class="soporte-form-group">
+                    <label for="en-estrategia">Estrategia<span class="req">*</span></label>
+                    <select id="en-estrategia" required>
+                        <option value="">— Selecciona la estrategia —</option>
+                    </select>
+                    <div class="soporte-field-error" id="en-estrategia-error">Selecciona una estrategia.</div>
+                </div>
+                <div class="soporte-form-group">
+                    <label for="en-mes">Mes<span class="req">*</span></label>
+                    <select id="en-mes" required>
+                        <option value="">— Selecciona el mes —</option>
+                    </select>
+                    <div class="soporte-field-error" id="en-mes-error">Selecciona el mes.</div>
+                </div>
+            </div>
+
+            <h4 class="vis-dashboard-titulo">Escuelas disponibles</h4>
+            <div class="vis-pend-filtros">
+                <div>
+                    <label for="en-f-sector" class="vis-filtro-fecha-sublabel">Sector</label>
+                    <select id="en-f-sector" onchange="enSectorCambio()"><option value="">Todos</option></select>
+                </div>
+                <div>
+                    <label for="en-f-zona" class="vis-filtro-fecha-sublabel">Zona</label>
+                    <select id="en-f-zona" onchange="enFiltroCambio()"><option value="">Todas</option></select>
+                </div>
+                <div>
+                    <label for="en-f-municipio" class="vis-filtro-fecha-sublabel">Municipio</label>
+                    <select id="en-f-municipio" onchange="enFiltroCambio()"><option value="">Todos</option></select>
+                </div>
+                <div>
+                    <label for="en-f-turno" class="vis-filtro-fecha-sublabel">Turno</label>
+                    <select id="en-f-turno" onchange="enFiltroCambio()"><option value="">Todos</option></select>
+                </div>
+                <div>
+                    <label for="en-f-buscar" class="vis-filtro-fecha-sublabel">Buscar</label>
+                    <input type="text" id="en-f-buscar" placeholder="Nombre, colonia o CCT" oninput="enFiltroCambio()">
+                </div>
+            </div>
+            <p class="vis-pend-contador" id="en-disp-contador">Cargando…</p>
+            <div class="vis-pend-lista" id="en-disp-lista"></div>
+            <div class="vis-paginacion" id="en-disp-paginacion" style="display:none;">
+                <button type="button" class="vis-pag-btn" id="en-disp-anterior" onclick="enPagina(-1)">← Anterior</button>
+                <span class="vis-pag-info" id="en-disp-info"></span>
+                <button type="button" class="vis-pag-btn" id="en-disp-siguiente" onclick="enPagina(1)">Siguiente →</button>
+            </div>
+
+            <div class="en-carrito" id="en-carrito">
+                <p class="en-carrito-titulo" id="en-carrito-titulo">No has marcado ninguna escuela.</p>
+                <div class="vis-chip-row" id="en-carrito-chips"></div>
+                <div class="soporte-field-error" id="en-carrito-error">Marca al menos una escuela en la lista.</div>
+            </div>
+
+            <button type="submit" class="form-button" id="en-btn-enviar">
+                <span>Registrar selección</span>
+            </button>
+            <div id="en-msg" class="soporte-submit-msg"></div>
+        </form>
+    </div>
+
+    <div class="content-block" id="en-registro">
+        <h3>Escuelas con estrategia este ciclo</h3>
+        <div class="vis-pend-filtros">
+            <div>
+                <label for="en-r-estrategia" class="vis-filtro-fecha-sublabel">Estrategia</label>
+                <select id="en-r-estrategia" onchange="enRenderRegistro()"><option value="">Todas</option></select>
+            </div>
+            <div>
+                <label for="en-r-mes" class="vis-filtro-fecha-sublabel">Mes</label>
+                <select id="en-r-mes" onchange="enRenderRegistro()"><option value="">Todos</option></select>
+            </div>
+            <div>
+                <label for="en-r-buscar" class="vis-filtro-fecha-sublabel">Buscar</label>
+                <input type="text" id="en-r-buscar" placeholder="Escuela, CCT, folio o responsable" oninput="enRenderRegistro()">
+            </div>
+        </div>
+        <p class="vis-pend-contador" id="en-r-contador"></p>
+        <div class="vis-tabla-wrap">
+            <table class="vis-tabla" id="en-r-tabla">
+                <thead>
+                    <tr><th>Folio</th><th>Escuela</th><th>CCT</th><th>Sector / Zona</th><th>Estrategia</th><th>Mes</th><th>Responsable</th></tr>
+                </thead>
+                <tbody id="en-r-cuerpo"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="content-block" id="en-cancelar">
+        <h3>Cancelar una selección</h3>
+        <p>Si una escuela se registró por error, cancela su folio: la escuela vuelve a quedar disponible para cualquier estrategia.</p>
+        <form id="en-cancelar-form" onsubmit="return enEnviarCancelacion(event)" novalidate>
+            <div class="en-form-fila">
+                <div class="soporte-form-group">
+                    <label for="en-c-folio">Folio<span class="req">*</span></label>
+                    <input type="text" id="en-c-folio" placeholder="SEPRN-EN-0001" required>
+                    <div class="soporte-field-error" id="en-c-folio-error">Escribe el folio (ej. SEPRN-EN-0001).</div>
+                </div>
+                <div class="soporte-form-group en-form-ancho">
+                    <label for="en-c-motivo">Motivo<span class="req">*</span></label>
+                    <input type="text" id="en-c-motivo" required>
+                    <div class="soporte-field-error" id="en-c-motivo-error">Indica el motivo de la cancelación.</div>
+                </div>
+            </div>
+            <button type="submit" class="form-button en-btn-secundario" id="en-btn-cancelar">
+                <span>Cancelar selección</span>
+            </button>
+            <div id="en-c-msg" class="soporte-submit-msg"></div>
+        </form>
+    </div>
+
+    <div class="tramite-otros-tramites">
+        <p>Relacionado</p>
+        <div class="tramite-otros-links">
+            <a href="academica.html">Subjefatura Académica</a>
+        </div>
+    </div>
+
+</section>
+
+<footer>
+        <div class="footer-grid">
+            <div class="footer-col">
+                <p class="footer-brand"><svg class="logo-icon" width="30" height="30" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="12" fill="#F9F8F5"/><text x="32" y="27" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#56212f" letter-spacing="-1">NE</text><text x="32" y="53" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#56212f" letter-spacing="-1">ZA</text></svg>SEPRN</p>
+                <p class="footer-desc">Subdirección de Educación Primaria<br>en la Región de Nezahualcóyotl</p>
+                <p class="footer-meta">Av. Texcoco #116, Col. Juárez Pantitlán<br>Nezahualcóyotl, Estado de México, C.P. 57460</p>
+                <p class="footer-meta">Lunes a Viernes · 08:30 – 15:30 h</p>
+            </div>
+            <div class="footer-col">
+                <p class="footer-col-title">Sitio</p>
+                <ul class="footer-links">
+                    <li><a href="index.html">Inicio</a></li>
+                    <li><a href="nosotros.html">Nosotros</a></li>
+                    <li><a href="areas.html">Áreas</a></li>
+                    <li><a href="cte.html">CTE</a></li>
+                    <li><a href="contacto.html">Contacto</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <p class="footer-col-title">Áreas</p>
+                <ul class="footer-links">
+                    <li><a href="academica.html">Subjefatura Académica</a></li>
+                    <li><a href="personal.html">Subjefatura de Personal</a></li>
+                    <li><a href="planeacion.html">Subjefatura de Planeación</a></li>
+                    <li><a href="recursos.html">Subjefatura de Recursos</a></li>
+                    <li><a href="otde.html">OTDE</a></li>
+                    <li><a href="oeve.html">OEVE</a></li>
+                    <li><a href="juridico.html">Asuntos Jurídicos</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="social-links">
+                <a href="https://www.facebook.com/SubNeza" target="_blank" rel="noopener noreferrer" title="Facebook">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                </a>
+                <a href="https://www.youtube.com/channel/UCvDb2DPSJxFyhH3bCPd5D2Q" target="_blank" rel="noopener noreferrer" title="YouTube">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                </a>
+            </div>
+            <div class="copyright">
+                © 2026 SEPRN · Subdirección de Educación Primaria en la Región de Nezahualcóyotl<br>
+                Órgano desconcentrado de SEIEM · Gobierno del Estado de México
+            </div>
+        </div>
+    </footer>
+
+<script src="js/cct-db.js"></script>
+<script src="js/escuelas-direcciones.js"></script>
+<script src="js/tramites-shared.js"></script>
+<script>
+    // ── Estrategias Nacionales: selección de escuelas (sep 2026) ──
+    // Backend: apps-script/estrategias-nacionales.gs. Regla: una escuela, una sola
+    // estrategia por ciclo. El servidor la hace cumplir bajo LockService; aquí solo se
+    // oculta lo ya tomado para que nadie lo intente. fetchJsonConTimeout viene de
+    // js/tramites-shared.js.
+    const ESTRATEGIAS_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbysR0hDySFf-dsG3a6fRSEqSeVjz-GH9h5irHmZi7jcD1rohrzyXxcIVJw8gEItnAo/exec';
+
+    var EN_ESTRATEGIAS = [
+        'Estrategia Nacional de Lectura',
+        'Escuela libre de violencia',
+        'Jornada por la Paz y contra las adicciones',
+        'Vive saludable, Vive feliz'
+    ];
+    var EN_MESES = ['2026-09', '2026-10', '2026-11', '2026-12', '2027-01', '2027-02',
+        '2027-03', '2027-04', '2027-05', '2027-06', '2027-07'];
+    var EN_NOMBRES_MES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio',
+        'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    var EN_ROMANOS_ORDEN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII'];
+    var EN_PAGE_SIZE = 20;
+
+    var enSeleccionesCache = [];
+    var enMarcadas = {}; // cct → escuela del catálogo (sobrevive a filtros y paginación)
+    var enPaginaActual = 1;
+    var enEscuelas = (typeof CCT_DB !== 'undefined') ? CCT_DB.filter(function (e) { return e.tipo === 'escuela'; }) : [];
+    var enSectorZonas = {};
+    enEscuelas.forEach(function (e) {
+        if (!e.zona) return;
+        if (!enSectorZonas[e.sector]) enSectorZonas[e.sector] = [];
+        if (enSectorZonas[e.sector].indexOf(e.zona) === -1) enSectorZonas[e.sector].push(e.zona);
+    });
+    Object.keys(enSectorZonas).forEach(function (s) { enSectorZonas[s].sort(function (a, b) { return a - b; }); });
+
+    function enEsc(v) {
+        return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+    function enMesLegible(mes) {
+        var p = String(mes || '').split('-');
+        return p.length === 2 ? EN_NOMBRES_MES[parseInt(p[1], 10) - 1] + ' ' + p[0] : mes;
+    }
+    function enMesCorto(mes) { return enMesLegible(mes).slice(0, 3) + ' ' + String(mes).slice(2, 4); }
+    function enOrdenSector(s) { var i = EN_ROMANOS_ORDEN.indexOf(s); return i === -1 ? 99 : i; }
+    function enDireccion(cct) { return (typeof ESCUELAS_DIRECCIONES !== 'undefined' && ESCUELAS_DIRECCIONES[cct]) || {}; }
+
+    function enVigentes() { return enSeleccionesCache.filter(function (r) { return r.estatus === 'Seleccionada'; }); }
+    function enMapaOcupadas() {
+        var m = {};
+        enVigentes().forEach(function (r) { m[(r.cct || '').toUpperCase()] = r; });
+        return m;
+    }
+
+    // ── Selects fijos ──
+    function enInitSelects() {
+        var llenar = function (id, valores, etiqueta) {
+            var sel = document.getElementById(id);
+            valores.forEach(function (v) {
+                var o = document.createElement('option'); o.value = v; o.textContent = etiqueta ? etiqueta(v) : v;
+                sel.appendChild(o);
+            });
+        };
+        llenar('en-estrategia', EN_ESTRATEGIAS);
+        llenar('en-r-estrategia', EN_ESTRATEGIAS);
+        llenar('en-mes', EN_MESES, enMesLegible);
+        llenar('en-r-mes', EN_MESES, enMesLegible);
+
+        llenar('en-f-sector', EN_ROMANOS_ORDEN.filter(function (s) { return enSectorZonas[s]; }), function (s) { return 'Sector ' + s; });
+        var municipios = {}, turnos = {};
+        enEscuelas.forEach(function (e) {
+            if (e.municipio) municipios[e.municipio] = true;
+            var t = enDireccion(e.cct).t;
+            if (t) turnos[t] = true;
+        });
+        var ordenar = function (o) { return Object.keys(o).sort(function (a, b) { return a.localeCompare(b, 'es'); }); };
+        llenar('en-f-municipio', ordenar(municipios));
+        llenar('en-f-turno', ordenar(turnos));
+    }
+
+    function enSectorCambio() {
+        var sector = document.getElementById('en-f-sector').value;
+        var zonaSel = document.getElementById('en-f-zona');
+        zonaSel.innerHTML = '<option value="">Todas</option>';
+        (enSectorZonas[sector] || []).forEach(function (z) {
+            var o = document.createElement('option'); o.value = z; o.textContent = 'Zona ' + z;
+            zonaSel.appendChild(o);
+        });
+        enFiltroCambio();
+    }
+    function enFiltroCambio() { enPaginaActual = 1; enRenderDisponibles(); }
+    function enPagina(delta) {
+        enPaginaActual += delta;
+        enRenderDisponibles();
+        document.getElementById('en-disp-contador').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // ── Escuelas disponibles (con casillas) ──
+    function enRenderDisponibles() {
+        var lista = document.getElementById('en-disp-lista');
+        var contador = document.getElementById('en-disp-contador');
+        var paginacion = document.getElementById('en-disp-paginacion');
+        var ocupadas = enMapaOcupadas();
+
+        var sector = document.getElementById('en-f-sector').value;
+        var zona = document.getElementById('en-f-zona').value;
+        var municipio = document.getElementById('en-f-municipio').value;
+        var turno = document.getElementById('en-f-turno').value;
+        var q = document.getElementById('en-f-buscar').value.trim().toUpperCase();
+
+        var disponiblesTotal = 0;
+        var filas = enEscuelas.filter(function (e) {
+            if (ocupadas[e.cct]) return false;
+            disponiblesTotal++;
+            var dir = enDireccion(e.cct);
+            if (sector && e.sector !== sector) return false;
+            if (zona && String(e.zona) !== zona) return false;
+            if (municipio && e.municipio !== municipio) return false;
+            if (turno && dir.t !== turno) return false;
+            if (q && !(e.cct.includes(q) || (e.nombre || '').toUpperCase().includes(q) ||
+                (dir.c || '').toUpperCase().includes(q) || (dir.d || '').toUpperCase().includes(q))) return false;
+            return true;
+        }).sort(function (a, b) {
+            return enOrdenSector(a.sector) - enOrdenSector(b.sector) || (a.zona || 0) - (b.zona || 0) ||
+                (a.nombre || '').localeCompare(b.nombre || '', 'es');
+        });
+
+        var txt = function (n) { return '<strong>' + n + '</strong> escuela' + (n === 1 ? '' : 's') + ' disponible' + (n === 1 ? '' : 's'); };
+        contador.innerHTML = (sector || zona || municipio || turno || q)
+            ? txt(filas.length) + ' con estos filtros (de ' + disponiblesTotal + ' en total).'
+            : txt(disponiblesTotal) + ' este ciclo.';
+
+        lista.innerHTML = '';
+        if (!filas.length) {
+            lista.innerHTML = '<p class="vis-cargando">No hay escuelas disponibles con estos filtros.</p>';
+            paginacion.style.display = 'none';
+            return;
+        }
+
+        var totalPaginas = Math.max(1, Math.ceil(filas.length / EN_PAGE_SIZE));
+        enPaginaActual = Math.min(Math.max(enPaginaActual, 1), totalPaginas);
+        var inicio = (enPaginaActual - 1) * EN_PAGE_SIZE;
+
+        filas.slice(inicio, inicio + EN_PAGE_SIZE).forEach(function (e) {
+            var dir = enDireccion(e.cct);
+            var domicilio = [dir.d, dir.c ? 'Col. ' + dir.c : '', e.municipio].filter(Boolean).join(', ');
+            var card = document.createElement('label');
+            card.className = 'vis-pend-card en-card' + (enMarcadas[e.cct] ? ' marcada' : '');
+            card.innerHTML =
+                '<span class="en-card-top"><input type="checkbox"' + (enMarcadas[e.cct] ? ' checked' : '') + '>' +
+                '<h4>' + enEsc(e.nombre) + '</h4></span>' +
+                '<span class="vis-pend-meta">' + e.cct + ' · Sector ' + e.sector + (e.zona ? ' · Zona ' + e.zona : '') + (dir.t ? ' · ' + enEsc(dir.t) : '') + '</span>' +
+                (domicilio ? '<span>' + enEsc(domicilio) + '</span>' : '');
+            card.querySelector('input').addEventListener('change', function (ev) {
+                if (ev.target.checked) enMarcadas[e.cct] = e; else delete enMarcadas[e.cct];
+                card.classList.toggle('marcada', ev.target.checked);
+                document.getElementById('en-msg').className = 'soporte-submit-msg'; // oculta el resultado del lote anterior
+                enRenderCarrito();
+            });
+            lista.appendChild(card);
+        });
+
+        document.getElementById('en-disp-info').textContent = 'Página ' + enPaginaActual + ' de ' + totalPaginas;
+        document.getElementById('en-disp-anterior').disabled = enPaginaActual <= 1;
+        document.getElementById('en-disp-siguiente').disabled = enPaginaActual >= totalPaginas;
+        paginacion.style.display = totalPaginas > 1 ? 'flex' : 'none';
+    }
+
+    // ── Escuelas marcadas (resumen antes de enviar) ──
+    function enRenderCarrito() {
+        var ccts = Object.keys(enMarcadas);
+        document.getElementById('en-carrito').classList.toggle('con-escuelas', ccts.length > 0);
+        document.getElementById('en-carrito-titulo').innerHTML = ccts.length
+            ? '<strong>' + ccts.length + '</strong> escuela' + (ccts.length === 1 ? '' : 's') + ' marcada' + (ccts.length === 1 ? '' : 's') + ':'
+            : 'No has marcado ninguna escuela.';
+        if (ccts.length) document.getElementById('en-carrito-error').style.display = 'none';
+        var chips = document.getElementById('en-carrito-chips');
+        chips.innerHTML = '';
+        ccts.forEach(function (cct) {
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'vis-chip';
+            b.title = 'Quitar';
+            b.innerHTML = enEsc(enMarcadas[cct].nombre) + ' <span class="vis-chip-count">' + cct + ' ✕</span>';
+            b.addEventListener('click', function () {
+                delete enMarcadas[cct];
+                enRenderCarrito();
+                enRenderDisponibles();
+            });
+            chips.appendChild(b);
+        });
+    }
+
+    // ── Avance del ciclo: contador + matriz estrategia × mes ──
+    function enRenderAvance() {
+        var vigentes = enVigentes();
+        var conEstrategia = Object.keys(enMapaOcupadas()).length;
+        document.getElementById('en-cobertura').innerHTML =
+            '<strong>' + conEstrategia + '</strong> de ' + enEscuelas.length + ' escuelas ya tienen estrategia este ciclo · <strong>' +
+            Math.max(0, enEscuelas.length - conEstrategia) + '</strong> disponibles.';
+
+        var conteo = {};
+        vigentes.forEach(function (r) { var k = r.estrategia + '|' + r.mes; conteo[k] = (conteo[k] || 0) + 1; });
+        var html = '<thead><tr><th>Estrategia</th>' + EN_MESES.map(function (m) { return '<th>' + enMesCorto(m) + '</th>'; }).join('') + '<th>Total</th></tr></thead><tbody>';
+        var totalesMes = EN_MESES.map(function () { return 0; });
+        EN_ESTRATEGIAS.forEach(function (est) {
+            var total = 0;
+            html += '<tr><td>' + est + '</td>' + EN_MESES.map(function (m, i) {
+                var n = conteo[est + '|' + m] || 0;
+                total += n; totalesMes[i] += n;
+                return '<td class="' + (n ? 'en-celda-con' : 'en-celda-vacia') + '">' + (n || '·') + '</td>';
+            }).join('') + '<td><strong>' + total + '</strong></td></tr>';
+        });
+        html += '<tr class="en-fila-total"><td>Total</td>' + totalesMes.map(function (n) { return '<td>' + n + '</td>'; }).join('') +
+            '<td>' + vigentes.length + '</td></tr></tbody>';
+        document.getElementById('en-matriz').innerHTML = html;
+    }
+
+    // ── Tabla de escuelas con estrategia ──
+    function enRenderRegistro() {
+        var est = document.getElementById('en-r-estrategia').value;
+        var mes = document.getElementById('en-r-mes').value;
+        var q = document.getElementById('en-r-buscar').value.trim().toUpperCase();
+        var filas = enVigentes().filter(function (r) {
+            if (est && r.estrategia !== est) return false;
+            if (mes && r.mes !== mes) return false;
+            if (q && ![r.folio, r.escuela, r.cct, r.responsable].some(function (v) { return String(v || '').toUpperCase().includes(q); })) return false;
+            return true;
+        }).sort(function (a, b) { return b.mes.localeCompare(a.mes) || String(b.folio).localeCompare(String(a.folio)); });
+
+        document.getElementById('en-r-contador').innerHTML = '<strong>' + filas.length + '</strong> escuela' + (filas.length === 1 ? '' : 's') + '.';
+        document.getElementById('en-r-cuerpo').innerHTML = filas.length ? filas.map(function (r) {
+            return '<tr><td>' + enEsc(r.folio) + '</td><td>' + enEsc(r.escuela) + '</td><td>' + enEsc(r.cct) + '</td><td>' +
+                enEsc(r.sector) + (r.zona ? ' / ' + enEsc(r.zona) : '') + '</td><td>' + enEsc(r.estrategia) + '</td><td>' +
+                enMesLegible(r.mes) + '</td><td>' + enEsc(r.responsable) + '</td></tr>';
+        }).join('') : '<tr><td colspan="7" class="vis-cargando">Sin escuelas registradas todavía.</td></tr>';
+    }
+
+    function enRenderTodo() {
+        enRenderAvance();
+        enRenderDisponibles();
+        enRenderCarrito();
+        enRenderRegistro();
+    }
+
+    async function enCargarSelecciones() {
+        if (!ESTRATEGIAS_APPS_SCRIPT_URL) return false;
+        try {
+            var data = await fetchJsonConTimeout(ESTRATEGIAS_APPS_SCRIPT_URL + '?action=disponibilidad', { method: 'GET' });
+            if (!data || data.status !== 'ok') return false;
+            enSeleccionesCache = data.items || [];
+            return true;
+        } catch (err) {
+            return false;
+        }
+    }
+
+    function enMostrarMsg(id, tipo, html) {
+        var el = document.getElementById(id);
+        el.className = 'soporte-submit-msg ' + tipo;
+        el.innerHTML = html;
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function enCampoRequerido(id) {
+        var ok = !!document.getElementById(id).value.trim();
+        document.getElementById(id + '-error').style.display = ok ? 'none' : 'block';
+        return ok;
+    }
+
+    // ── Enviar lote ──
+    async function enEnviarSeleccion(ev) {
+        ev.preventDefault();
+        var valido = ['en-responsable', 'en-estrategia', 'en-mes'].map(enCampoRequerido).every(Boolean);
+        if (!Object.keys(enMarcadas).length) {
+            document.getElementById('en-carrito-error').style.display = 'block';
+            valido = false;
+        }
+        if (!valido) return false;
+
+        var btn = document.getElementById('en-btn-enviar');
+        btn.disabled = true;
+        btn.querySelector('span').textContent = 'Registrando…';
+        document.getElementById('en-msg').className = 'soporte-submit-msg';
+
+        // Refresca antes de enviar: alguien pudo tomar una escuela mientras esta página estaba abierta.
+        // El servidor igual lo valida bajo candado; esto solo avisa antes.
+        await enCargarSelecciones();
+
+        var payload = {
+            accion: 'seleccionar',
+            responsable: toTitleCase(document.getElementById('en-responsable').value.trim()),
+            estrategia: document.getElementById('en-estrategia').value,
+            mes: document.getElementById('en-mes').value,
+            escuelas: Object.keys(enMarcadas).map(function (cct) {
+                var e = enMarcadas[cct];
+                return { cct: cct, escuela: e.nombre, sector: e.sector, zona: e.zona || '', municipio: e.municipio || '' };
+            })
+        };
+
+        try {
+            var data = await fetchJsonConTimeout(ESTRATEGIAS_APPS_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify(payload)
+            });
+            if (!data || data.status !== 'ok') throw new Error((data && data.mensaje) || 'No se pudo registrar.');
+
+            var html = '';
+            if (data.registradas.length) {
+                html += '<p style="margin:0 0 6px;"><strong>Se registraron ' + data.registradas.length + ' escuela' + (data.registradas.length === 1 ? '' : 's') +
+                    '</strong> en "' + enEsc(payload.estrategia) + '" · ' + enMesLegible(payload.mes) + ':</p><ul class="en-resultado">' +
+                    data.registradas.map(function (r) { return '<li><strong>' + enEsc(r.folio) + '</strong> — ' + enEsc(r.escuela) + ' (' + enEsc(r.cct) + ')</li>'; }).join('') + '</ul>';
+            }
+            if (data.rechazadas.length) {
+                html += '<p style="margin:10px 0 6px;"><strong>No se registraron ' + data.rechazadas.length + '</strong> porque ya tienen estrategia:</p><ul class="en-resultado">' +
+                    data.rechazadas.map(function (r) { return '<li>' + enEsc(r.escuela) + ' (' + enEsc(r.cct) + '): ' + enEsc(r.motivo) + '</li>'; }).join('') + '</ul>';
+            }
+            enMostrarMsg('en-msg', data.registradas.length ? 'ok' : 'error', html);
+            enMarcadas = {};
+            await enCargarSelecciones();
+            enRenderTodo();
+        } catch (err) {
+            enMostrarMsg('en-msg', 'error', 'No se pudo registrar la selección: ' + enEsc(err.name === 'AbortError' ? 'el servidor tardó demasiado, revisa la tabla antes de reintentar.' : err.message));
+        } finally {
+            btn.disabled = false;
+            btn.querySelector('span').textContent = 'Registrar selección';
+        }
+        return false;
+    }
+
+    // ── Cancelar por folio ──
+    async function enEnviarCancelacion(ev) {
+        ev.preventDefault();
+        var valido = ['en-c-folio', 'en-c-motivo'].map(enCampoRequerido).every(Boolean);
+        if (!valido) return false;
+
+        var btn = document.getElementById('en-btn-cancelar');
+        btn.disabled = true;
+        try {
+            var data = await fetchJsonConTimeout(ESTRATEGIAS_APPS_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({
+                    accion: 'cancelar',
+                    folio: document.getElementById('en-c-folio').value.trim().toUpperCase(),
+                    motivo: document.getElementById('en-c-motivo').value.trim()
+                })
+            });
+            if (data && data.status === 'ok') {
+                enMostrarMsg('en-c-msg', 'ok', 'Folio <strong>' + enEsc(data.folio) + '</strong> cancelado. ' + enEsc(data.escuela) + ' vuelve a estar disponible.');
+                document.getElementById('en-cancelar-form').reset();
+                await enCargarSelecciones();
+                enRenderTodo();
+            } else {
+                enMostrarMsg('en-c-msg', data && data.status === 'ya_cancelada' ? 'ok' : 'error', enEsc((data && data.mensaje) || 'No se pudo cancelar.'));
+            }
+        } catch (err) {
+            enMostrarMsg('en-c-msg', 'error', 'No se pudo cancelar. Intenta de nuevo en un momento.');
+        } finally {
+            btn.disabled = false;
+        }
+        return false;
+    }
+
+    (async function enInit() {
+        enInitSelects();
+        if (!ESTRATEGIAS_APPS_SCRIPT_URL) {
+            document.getElementById('en-sin-conexion').style.display = 'block';
+            document.getElementById('en-btn-enviar').disabled = true;
+            document.getElementById('en-btn-cancelar').disabled = true;
+        } else if (!(await enCargarSelecciones())) {
+            enMostrarMsg('en-msg', 'error', 'No se pudo cargar el registro de escuelas. Recarga la página antes de seleccionar.');
+            document.getElementById('en-btn-enviar').disabled = true;
+        }
+        enRenderTodo();
+    })();
+</script>
+    <script src="script.js" defer></script>
+</body>
+</html>
