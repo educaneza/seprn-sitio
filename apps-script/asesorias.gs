@@ -252,7 +252,7 @@ function aseListarPendientes(tokenRecibido) {
 
 // ── Asesorías resueltas de un mes para la Bitácora OTDE (?action=asesoriasMes) ──
 // La bitácora (apps-script/bitacora.gs) las jala para crear sus actividades de
-// META 25 / N.P. 8. Mismo PANEL_TOKEN que ?action=pendientes, solo lectura. La
+// META 23 / N.P. 8 (META 25 antes del 29 sep 2026). Mismo PANEL_TOKEN que ?action=pendientes, solo lectura. La
 // fecha es "Fecha de realización"; si Nancy no la llenó, "Fecha programada de
 // visita" (fechaFuente lo dice, para que la bitácora avise).
 function aseListarResueltasMes_(tokenRecibido, mes) {

@@ -8,12 +8,14 @@
 // FORMATO DEL REPORTE (verificado contra el Excel real, 24 sep 2026):
 // el reporte es un Excel en SharePoint compartido con la Oficina de
 // Planeación, un archivo nuevo por mes, con UNA PESTAÑA POR META. OTDE
-// solo reporta en META 23 (mantenimiento) y META 25 (todo lo demás).
+// solo reporta en META 21 (mantenimiento) y META 23 (todo lo demás).
+// Hasta el 29 sep 2026 eran META 23 y META 25: Planeación renumeró las
+// metas y bitRenumerarMetas_() pasa sola las filas viejas (ver abajo).
 // Cada pestaña tiene filas de actividad de la 14 a la 30 (17 máx.) con
 // 7 campos en columnas combinadas: A:B Tipo y nombre · C Fecha · D
 // Responsable · E Lugar · F:I Descripción · J:K Propósito · L
 // Beneficiarios. No existe rubro de "no planeadas": toda actividad cae
-// en la 23 o la 25. Apps Script no puede escribir en SharePoint, así
+// en la 21 o la 23. Apps Script no puede escribir en SharePoint, así
 // que el menú "Generar reporte del mes" arma una pestaña "Reporte
 // AAAA-MM" con las MISMAS columnas y combinaciones, lista para copiar
 // y pegar en la fila 14 de cada pestaña del Excel.
@@ -23,7 +25,7 @@
 //   2. Extensiones → Apps Script → pega este código completo.
 //   3. Recarga el Sheet → menú "OTDE Bitácora":
 //        · "Preparar hojas y cargar planeación 2026-2027" (una vez):
-//          crea Planeacion (con las 9 acciones del Word), Actividades
+//          crea Planeacion (con las 13 acciones del Word), Actividades
 //          y Config (catálogo de responsables, editable).
 //        · "Configurar clave de captura": pide la clave que Jorge y
 //          Nancy escribirán una vez en bitacora.html. Se pide con un
@@ -45,7 +47,7 @@
 //   Lugar | CCT | Descripción | Propósito | Beneficiarios | Capturó |
 //   ID de envío
 // ALIMENTACIÓN AUTOMÁTICA DESDE MANTENIMIENTO (24 sep 2026): cada reporte
-// de visita de reporte-visita.html se vuelve una actividad de META 23 /
+// de visita de reporte-visita.html se vuelve una actividad de META 21 /
 // N.P. 7 sin recapturarla. La bitácora la JALA (no Mantenimiento la empuja)
 // con ?action=reportesMes de mantenimiento.gs, usando el mismo PANEL_TOKEN
 // del Panel OTDE. Menú "Configurar conexión con Mantenimiento" (una vez) y
@@ -55,7 +57,7 @@
 // si la fila ya existe no se toca, así lo corregido a mano no se pisa.
 // ASESORÍAS (24 sep 2026, mismo patrón): las solicitudes con Estatus
 // "Resuelto" de asesorias.gs (?action=asesoriasMes) se vuelven actividades de
-// META 25 / N.P. 8, con la "Fecha de realización" y los "Asistentes" que Nancy
+// META 23 / N.P. 8, con la "Fecha de realización" y los "Asistentes" que Nancy
 // llena al cerrarlas. ID de envío ASE:<folio>.
 //
 // "Fecha (texto)" es lo que va al reporte ("Los días 13 y 14 de enero
@@ -90,7 +92,11 @@ const BIT_NOMBRES_CORTOS_2627 = {
   '6': 'Internet en una Caja (Chicos.net)',
   '7': 'Mantenimiento de equipos',
   '8': 'Asesorías Banco/Chuka/Excel',
-  '9': 'Asesoría de IA a docentes'
+  '9': 'Asesoría de IA a docentes',
+  '10': 'Formación a distancia (CoEEE)',
+  '11': 'Propuestas didácticas · Aula Digital',
+  '12': 'Correo institucional (SIGEE)',
+  '13': 'Difusión de conferencias y webinars'
 };
 
 const ENCABEZADOS_ACTIVIDADES = [
@@ -101,14 +107,14 @@ const ENCABEZADOS_ACTIVIDADES = [
 ];
 
 const BIT_METAS = {
-  '23': {
+  '21': {
     proyecto: '020501010102 Educación primaria',
-    meta: '23. Atender a niñas y niños de 6 a 11 años con Educación Primaria universal y de excelencia dentro del Sistema Educativo Mexiquense, con el fin de contribuir en su formación integral.',
+    meta: '21. Atender a niñas y niños de 6 a 11 años con Educación Primaria universal y de excelencia dentro del Sistema Educativo Mexiquense, con el fin de contribuir en su formación integral.',
     indicador: 'Porcentaje de alumnos atendidos en escuelas de Educación Primaria general.'
   },
-  '25': {
+  '23': {
     proyecto: '020501010102 Educación primaria',
-    meta: '25. Mejorar el logro de los aprendizajes de todas las alumnas y alumnos, para favorecer el desarrollo integral y de excelencia que permita alcanzar el perfil de egreso de la Educación Básica.',
+    meta: '23. Mejorar el logro de los aprendizajes de todas las alumnas y alumnos, para favorecer el desarrollo integral y de excelencia que permita alcanzar el perfil de egreso de la Educación Básica.',
     indicador: 'Tasa de variación del aprovechamiento escolar en Educación Primaria general.'
   }
 };
@@ -136,19 +142,24 @@ const BIT_CAPTURO_ASE = 'Asesorías (auto)';
 const BIT_MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
   'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
-// Las 9 acciones de PLANEACION-INSTITUCIONAL-OTDE-2627.docx (Comunicado 001,
-// 1 sep 2026), copiadas tal cual. Solo se usan para sembrar la hoja
-// Planeacion la primera vez; de ahí en adelante la hoja manda.
+// Las 13 acciones de la planeación revisada (COMUNICADO 001 ÁREAS-TECNOLOGÍA
+// - REVISADO.docx, 29 sep 2026), con metas 21/23 y ejes del PDI 23-29. Solo se
+// usan para sembrar la hoja Planeacion la primera vez; de ahí en adelante la
+// hoja manda (la hoja real se actualizó a estas 13 el mismo 29 sep).
 const BIT_PLANEACION_2627 = [
-  ['1', 'Realizar visitas de seguimiento y acompañamiento a las escuelas beneficiadas por el Programa MIED, con la finalidad de valorar su implementación y desarrollo.', 'Ciclo Escolar 2026-2027', 'Cuestionarios de evaluación y seguimiento; participación de personal de ProFuturo, ATENEO, Suarsor, OTDE, docentes, alumnado y figuras directivas.', 'Analizar el impacto del Programa MIED mediante la aplicación de instrumentos de evaluación y la comparación de resultados entre escuelas de control y tratamiento.', 'Cuestionarios de evaluación aplicados al alumnado de 3.º grado y a figuras directivas de las escuelas beneficiadas.', 'Alumnado y figuras directivas de las escuelas beneficiadas.', 'Personal de Suarsor y OTDE.', '25', 'Inclusión'],
-  ['2', 'Dar seguimiento al proceso de formación y certificación en herramientas digitales de Google, fortaleciendo el desarrollo de competencias digitales de los participantes.', 'Octubre y noviembre de 2026', 'Computadora, conexión a internet, guías y materiales de formación, acompañamiento del personal de UNETE y OTDE.', 'Concluir el proceso de formación y acreditar la certificación correspondiente en los programas de Google o Canva.', 'Examen en línea y registro de acreditación/certificación.', 'Docentes y personal de OTDE.', 'UNETE', '25', 'Pensamiento crítico'],
-  ['3', 'Fortalecer la formación y el acompañamiento de figuras directivas mediante el programa Liderazgo UNETE, favoreciendo el desarrollo de competencias para la gestión y liderazgo escolar.', 'Septiembre y diciembre del 2026', 'Computadora, conexión a internet, materiales pedagógicos, recursos digitales y acompañamiento de personal de UNETE.', 'Desarrollar y fortalecer competencias de liderazgo directivo para favorecer la gestión escolar y el acompañamiento de las comunidades educativas.', 'Registro de participación, evidencias de trabajo y seguimiento de las actividades de formación.', 'Figuras directivas.', 'UNETE', '25', 'Inclusión'],
-  ['4', 'Brindar acompañamiento y seguimiento al proceso de capacitación docente del Programa CUANTRIX, favoreciendo la incorporación de la Ciencia de la Computación en las prácticas educativas.', 'Septiembre y octubre del 2026', 'Computadora, conexión a internet, guías pedagógicas, lecciones para docentes, materiales del Programa CUANTRIX y acompañamiento del personal responsable.', 'Diseñar e implementar propuestas didácticas mediante la aplicación de las ocho lecciones dirigidas al trabajo con el alumnado.', 'Proyecto de trabajo que integre las ocho lecciones o temáticas abordadas y evidencias de su implementación con el alumnado.', 'Docentes y alumnado', 'Personal de CUANTRIX', '25', 'Pensamiento crítico'],
-  ['5', 'Brindar acompañamiento al Taller de Formación Docente en Inteligencia Artificial, orientado al fortalecimiento de competencias digitales para la práctica educativa.', 'Octubre de 2026', 'Computadora, conexión a internet, recursos tecnológicos, materiales de apoyo y acompañamiento del personal de CoEEE y figuras educativas participantes.', 'Fortalecer el uso pedagógico de la Inteligencia Artificial para optimizar la planeación didáctica y la elaboración de materiales educativos de manera ágil y pertinente.', 'Registro de participación y seguimiento de tres sesiones de formación, con duración de dos horas cada una.', 'Docentes', 'CoEEE', '25', 'Pensamiento crítico'],
-  ['6', 'Dar seguimiento y acompañamiento a docentes de las escuelas beneficiadas por el Programa Internet en una Caja, para favorecer la apropiación y aplicación de recursos digitales en el contexto educativo.', 'septiembre y octubre de 2026 con 2 encuentros virtuales', 'Computadora, conexión a internet, materiales y recursos tecnológicos, así como acompañamiento del personal de Chicos.net.', 'Diseñar e implementar actividades didácticas orientadas al desarrollo de los Procesos de Desarrollo de Aprendizaje (PDA), mediante el uso pertinente de recursos digitales y secuencias didácticas.', 'Implementación de secuencias didácticas diseñadas para el desarrollo de los PDA y entrega de materiales de apoyo durante dos encuentros virtuales.', 'Docentes y alumnado.', 'Chicos.net', '25', 'Pensamiento crítico'],
-  ['7', 'Realizar acciones de mantenimiento preventivo y correctivo a equipos de cómputo de las escuelas, con la finalidad de favorecer su óptimo funcionamiento y disponibilidad para el desarrollo de actividades educativas.', 'Ciclo escolar 2026-2027', 'Discos duros, memorias USB, herramientas para mantenimiento (desarmadores, brochas y sopladores), así como personal de OTDE.', 'Optimizar el funcionamiento de los equipos de cómputo mediante acciones de mantenimiento preventivo y correctivo, favoreciendo su disponibilidad para el trabajo con el alumnado y el acceso a la paquetería básica y al Banco de Materiales Digitales de apoyo docente.', 'Formulario de entrega y recepción con los directivos de las escuelas, acompañado de evidencias fotográficas de las acciones realizadas.', 'Directivos, docentes y alumnado.', 'OTDE', '23', 'Inclusión'],
-  ['8', 'Brindar asesorías sobre el Banco de Materiales y Chuka: Rompe el Silencio, así como Excel básico para personal administrativo, de acuerdo con las necesidades de las figuras educativas y administrativas.', 'Ciclo escolar 2026-2027', 'Computadora, presentación digital, listas de asistencia, organizador gráfico para docentes y personal de OTDE.', 'Fortalecer las prácticas pedagógicas y administrativas mediante el uso pertinente de recursos tecnológicos, vinculados con los Procesos de Desarrollo de Aprendizaje (PDA) de la Nueva Escuela Mexicana.', 'Secuencia didáctica elaborada mediante el uso del organizador gráfico y evidencias de aplicación; seguimiento y acompañamiento por parte de OTDE.', 'Directivos y docentes.', 'OTDE', '25', 'Inclusión'],
-  ['9', 'Brindar asesoría sobre la incorporación de la Inteligencia Artificial en la práctica docente, orientada al aprovechamiento pedagógico y responsable de herramientas digitales.', 'Ciclo escolar 2026-2027', 'Computadora, presentación digital, listas de asistencia, organizador gráfico para docentes y personal de OTDE.', 'Diseñar y fortalecer estrategias didácticas mediante el uso pertinente de herramientas de Inteligencia Artificial, favoreciendo experiencias de aprendizaje inclusivas, significativas y contextualizadas que contribuyan a la mejora de la práctica docente.', 'Entrega de recursos digitales y evidencias de aplicación de herramientas de Inteligencia Artificial en actividades de planeación o práctica docente.', 'Distintas figuras educativas', 'OTDE', '25', 'Pensamiento crítico']
+  ['1', 'Realizar visitas de seguimiento y acompañamiento a las escuelas beneficiadas por el Programa MIED, con la finalidad de valorar su implementación y desarrollo.', 'Septiembre de 2026-julio de 2027', 'Cuestionarios de evaluación y seguimiento; participación de personal de ProFuturo, ATENEO, Suarsor y OTDE, así como de docentes, alumnado y figuras directivas.', 'Informe de impacto del Programa MIED, elaborado a partir de la aplicación de instrumentos de evaluación y de la comparación de resultados entre escuelas de control y de tratamiento.', 'Cuestionarios de evaluación aplicados al alumnado de 3.º grado y a figuras directivas de las escuelas beneficiadas; registro de visitas de seguimiento.', 'Alumnado y figuras directivas de las escuelas beneficiadas.', 'Coordinan y ejecutan: Suarsor y OTDE. Seguimiento: OTDE', '23', '2. Aprendizajes y Resultados Educativos'],
+  ['2', 'Dar seguimiento al proceso de formación y certificación en herramientas digitales de Google y Canva, para fortalecer las competencias digitales de las y los participantes.', 'Octubre-noviembre de 2026', 'Computadora, conexión a internet, guías y materiales de formación; acompañamiento del personal de UNETE y OTDE.', 'Docentes y personal de OTDE concluyen la formación y obtienen la certificación en herramientas de Google o Canva; se reporta el número de participantes certificados.', 'Examen en línea y registro de acreditación o certificación de cada participante.', 'Docentes y personal de OTDE.', 'Coordina y ejecuta: UNETE. Seguimiento: OTDE', '23', '3. Gestión Escolar e Institucional y 4. Temas Transversales'],
+  ['3', 'Fortalecer la formación y el acompañamiento de figuras directivas mediante el programa Liderazgo UNETE, para desarrollar competencias de gestión y liderazgo escolar.', 'Septiembre-diciembre de 2026', 'Computadora, conexión a internet, materiales pedagógicos y recursos digitales; acompañamiento del personal de UNETE.', 'Figuras directivas concluyen el programa y aplican lo aprendido en la gestión escolar y en el acompañamiento a sus comunidades educativas, lo que se comprueba con las evidencias de trabajo entregadas.', 'Registro de participación, evidencias de trabajo y seguimiento de las actividades de formación.', 'Figuras directivas.', 'Coordina y ejecuta: UNETE. Seguimiento: OTDE', '23', '3. Gestión Escolar e Institucional'],
+  ['4', 'Brindar acompañamiento y seguimiento al proceso de capacitación docente del Programa CUANTRIX, para favorecer la incorporación de las ciencias de la computación en las prácticas educativas.', 'Septiembre-octubre de 2026', 'Computadora, conexión a internet, guías pedagógicas, lecciones para docentes y materiales del Programa CUANTRIX; acompañamiento del personal responsable.', 'Docentes diseñan e implementan con su alumnado un proyecto de trabajo que integra las ocho lecciones del programa.', 'Proyecto de trabajo que integra las ocho lecciones o temáticas abordadas y evidencias de su implementación con el alumnado.', 'Docentes y alumnado.', 'Coordina y ejecuta: CUANTRIX. Seguimiento: OTDE', '23', '2. Aprendizajes y Resultados Educativos'],
+  ['5', 'Acompañar el Taller de Formación Docente en Inteligencia Artificial, orientado al fortalecimiento de las competencias digitales para la práctica educativa.', 'Octubre de 2026', 'Computadora, conexión a internet, recursos tecnológicos y materiales de apoyo; acompañamiento del personal de CoEEE y de las figuras educativas participantes.', 'Docentes elaboran al menos una planeación didáctica o un material educativo con apoyo de herramientas de inteligencia artificial, como producto del taller.', 'Lista de asistencia y registro de seguimiento de las tres sesiones de formación (dos horas cada una); productos elaborados por las y los docentes.', 'Docentes.', 'Coordina y ejecuta: CoEEE. Seguimiento: OTDE', '23', '1. NEM-PyP 22 y 4. Temas Transversales'],
+  ['6', 'Dar seguimiento y acompañamiento a docentes de las escuelas beneficiadas por el Programa Internet en una Caja, para favorecer la apropiación y aplicación de recursos digitales en el contexto educativo.', 'Septiembre-octubre de 2026 (dos encuentros virtuales)', 'Computadora, conexión a internet, materiales y recursos tecnológicos; acompañamiento del personal de Chicos.net.', 'Docentes diseñan e implementan secuencias didácticas con uso de recursos digitales, orientadas al logro de los Procesos de Desarrollo de Aprendizaje (PDA).', 'Registro de participación en los dos encuentros virtuales, secuencias didácticas entregadas y evidencias de su implementación.', 'Docentes y alumnado.', 'Coordina y ejecuta: Chicos.net. Seguimiento: OTDE', '23', '1. NEM-PyP 22'],
+  ['7', 'Realizar mantenimiento preventivo y correctivo a los equipos de cómputo de las escuelas, para favorecer su óptimo funcionamiento y su disponibilidad en las actividades educativas.', 'Septiembre de 2026-julio de 2027', 'Discos duros, memorias USB y herramientas de mantenimiento (desarmadores, brochas y sopladores); personal de OTDE.', 'Equipos de cómputo en funcionamiento y disponibles para el trabajo con el alumnado, con acceso a la paquetería básica y al Banco de Materiales Digitales de apoyo docente; se registra el número de equipos atendidos por escuela.', 'Formulario de entrega y recepción con la dirección escolar, acompañado de evidencias fotográficas de las acciones realizadas.', 'Directivos, docentes y alumnado.', 'Coordina, ejecuta y da seguimiento: OTDE', '21', '4. Temas Transversales'],
+  ['8', 'Brindar asesorías sobre el Banco de Materiales Digitales y Chuka: Rompe el Silencio, así como de Excel básico para personal administrativo, de acuerdo con las necesidades de las figuras educativas y administrativas.', 'Septiembre de 2026-julio de 2027', 'Computadora, presentación digital, listas de asistencia y organizador gráfico para docentes; personal de OTDE.', 'Docentes elaboran secuencias didácticas vinculadas con los Procesos de Desarrollo de Aprendizaje (PDA) mediante el organizador gráfico y los recursos del Banco de Materiales Digitales; el personal administrativo aplica Excel básico en sus tareas.', 'Listas de asistencia; secuencias didácticas elaboradas con el organizador gráfico y evidencias de su aplicación; registro de seguimiento de OTDE.', 'Directivos, docentes y personal administrativo.', 'Coordina, ejecuta y da seguimiento: OTDE', '23', '3. Gestión Escolar e Institucional'],
+  ['9', 'Brindar asesoría sobre la incorporación de la inteligencia artificial en la práctica docente, orientada al uso pedagógico y responsable de herramientas digitales.', 'Septiembre de 2026-julio de 2027', 'Computadora, presentación digital, listas de asistencia y organizador gráfico para docentes; personal de OTDE.', 'Docentes y directivos diseñan estrategias didácticas o materiales con apoyo de herramientas de inteligencia artificial, que favorecen experiencias de aprendizaje inclusivas, significativas y contextualizadas.', 'Listas de asistencia, recursos digitales entregados y evidencias de aplicación de herramientas de inteligencia artificial en la planeación o en la práctica docente.', 'Docentes, directivos, supervisores escolares y ATP.', 'Coordina, ejecuta y da seguimiento: OTDE', '23', '3. Gestión Escolar e Institucional'],
+  ['10', 'Implementar acciones formativas a distancia, organizadas por bloques en plataformas digitales, dirigidas a docentes, directivos, supervisores escolares y ATP.', 'Septiembre de 2026-julio de 2027', 'Computadora, conexión a internet, plataforma digital de formación, materiales y recursos tecnológicos.', 'Agentes educativos concluyen los bloques formativos y aplican recursos digitales en sus procesos de enseñanza y aprendizaje; se registra el número de participantes que acreditan cada bloque.', 'Registro de participación y avance por bloque en la plataforma digital; productos de aprendizaje entregados por las y los participantes.', 'Docentes, directivos, supervisores escolares y asesores técnico-pedagógicos (ATP).', 'Coordina y ejecuta: CoEEE. Seguimiento: OTDE', '23', '3. Gestión Escolar e Institucional'],
+  ['11', 'Diseñar e implementar propuestas didácticas mediadas por recursos digitales, con acompañamiento a las y los docentes a través de la Plataforma Aula Digital.', 'Septiembre de 2026-julio de 2027', 'Computadora, conexión a internet, Plataforma Aula Digital, materiales y recursos tecnológicos.', 'Propuestas didácticas mediadas por recursos digitales, diseñadas, implementadas y evaluadas con las y los docentes, que favorecen experiencias de aprendizaje significativas, contextualizadas e inclusivas.', 'Registro de recursos y propuestas didácticas entregados en la Plataforma Aula Digital y evidencias de su implementación en el aula.', 'Docentes.', 'Coordina y ejecuta: CoEEE. Seguimiento: OTDE', '23', '1. NEM-PyP 22'],
+  ['12', 'Gestionar las cuentas de correo institucional de las figuras educativas (altas, cambios de contraseña, restablecimiento de acceso y configuración de seguridad) mediante la Oficina Virtual OTDE y la plataforma SIGEE.', 'Septiembre de 2026-julio de 2027', 'Computadora, conexión a internet, base de datos en Excel y plataforma SIGEE.', 'Solicitudes de cuentas de correo institucional atendidas de manera oportuna, que garantizan el acceso, la seguridad y la comunicación institucional de las figuras educativas; se reporta el número de solicitudes recibidas y atendidas.', 'Registro y seguimiento de solicitudes en la Oficina Virtual OTDE, en coordinación con la plataforma SIGEE.', 'Directores, subdirectores, supervisores escolares, docentes y ATP.', 'Coordina: CoEEE. Ejecuta y da seguimiento: OTDE', '23', '3. Gestión Escolar e Institucional'],
+  ['13', 'Difundir conferencias, seminarios y webinars mediante plataformas educativas y emitir las constancias de participación correspondientes.', 'Septiembre de 2026-julio de 2027', 'Computadora, conexión a internet, convocatorias y canales de difusión de la OTDE.', 'Figuras educativas participan en conferencias, seminarios y webinars que contribuyen a la reflexión, el análisis y la transformación de la práctica educativa; se registra el número de participantes y de constancias emitidas.', 'Registro de inscripción y asistencia, y concentrado de constancias emitidas mediante la Oficina Virtual OTDE.', 'Directores, subdirectores, supervisores escolares, docentes y ATP.', 'Coordina: CoEEE. Ejecuta y da seguimiento: OTDE', '23', '3. Gestión Escolar e Institucional']
 ];
 
 // ── Menú del Sheet ──
@@ -212,6 +223,7 @@ function bitPrepararHojas() {
   bitAsegurarNombresCortos_(plan);
 
   bitObtenerHojaActividades_();
+  bitRenumerarMetas_();
 
   let config = ss.getSheetByName(HOJA_BIT_CONFIG);
   if (!config) config = ss.insertSheet(HOJA_BIT_CONFIG);
@@ -229,7 +241,7 @@ function bitPrepararHojas() {
     if (h && h.getLastRow() === 0 && ss.getSheets().length > 1) ss.deleteSheet(h);
   });
 
-  try { SpreadsheetApp.getUi().alert('Hojas listas: Planeacion (9 acciones), Actividades y Config.'); } catch (err) {}
+  try { SpreadsheetApp.getUi().alert('Hojas listas: Planeacion (' + bitLeerPlaneacion_().length + ' acciones), Actividades y Config.'); } catch (err) {}
 }
 
 function bitEncabezar_(hoja, encabezados) {
@@ -268,6 +280,61 @@ function bitIndices_(hoja) {
   return idx;
 }
 
+// ── Renumeración de metas (29 sep 2026) ──
+// Planeación renumeró las metas: la 23 (mantenimiento) pasó a ser la 21 y la
+// 25 (todo lo demás) pasó a ser la 23. Esta función cambia la columna "Meta"
+// de Planeacion y de Actividades UNA sola vez: las dos equivalencias se
+// aplican en la misma pasada (sin encadenar 25 → 23 → 21) y al terminar queda
+// la Script Property BIT_METAS_RENUMERADAS para no repetirla. Si no hay
+// ningún 25 en las hojas (Sheet nuevo, ya sembrado con 21/23) no cambia nada.
+// Corre sola al primer uso de la versión nueva (formulario, reporte, traer
+// visitas/asesorías o Preparar hojas), antes de leer o escribir metas.
+const BIT_PROP_METAS_RENUMERADAS = 'BIT_METAS_RENUMERADAS';
+const BIT_METAS_ANTERIORES = { '23': 21, '25': 23 };
+// bitacora.html manda este valor con las no planeadas (ver bitValidarActividad_).
+const BIT_ESQUEMA_METAS = '2026-09-29';
+
+function bitRenumerarMetas_() {
+  const props = PropertiesService.getScriptProperties();
+  if (props.getProperty(BIT_PROP_METAS_RENUMERADAS)) return;
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    if (props.getProperty(BIT_PROP_METAS_RENUMERADAS)) return;
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const columnas = [HOJA_BIT_PLANEACION, HOJA_BIT_ACTIVIDADES].map(function (nombre) {
+      const hoja = ss.getSheetByName(nombre);
+      if (!hoja || hoja.getLastRow() < 2) return null;
+      const col = bitIndices_(hoja)['Meta'];
+      if (col === undefined) return null;
+      const rango = hoja.getRange(2, col + 1, hoja.getLastRow() - 1, 1);
+      return { nombre: nombre, rango: rango, valores: rango.getValues() };
+    }).filter(Boolean);
+
+    const esquemaViejo = columnas.some(function (c) {
+      return c.valores.some(function (r) { return String(r[0]).trim() === '25'; });
+    });
+    const cambios = [];
+    if (esquemaViejo) {
+      columnas.forEach(function (c) {
+        let n = 0;
+        const nuevos = c.valores.map(function (r) {
+          const nueva = BIT_METAS_ANTERIORES[String(r[0]).trim()];
+          if (nueva === undefined) return [r[0]];
+          n++;
+          return [nueva];
+        });
+        c.rango.setValues(nuevos);
+        cambios.push(c.nombre + ': ' + n);
+      });
+    }
+    props.setProperty(BIT_PROP_METAS_RENUMERADAS, new Date().toISOString() +
+      (esquemaViejo ? ' · ' + cambios.join(', ') : ' · sin filas viejas'));
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 // ── doGet: ?action=planeacion&clave=... devuelve lo que el formulario
 // necesita para precargar (acciones, responsables, metas). ──
 function doGet(e) {
@@ -275,6 +342,7 @@ function doGet(e) {
   if (p.action === 'planeacion') {
     const errorClave = bitErrorDeClave_(p.clave);
     if (errorClave) return errorClave;
+    bitRenumerarMetas_();
     return bitRespuesta_({
       status: 'ok',
       acciones: bitLeerPlaneacion_(),
@@ -350,6 +418,8 @@ function doPost(e) {
   }
   const errorClave = bitErrorDeClave_(datos.clave);
   if (errorClave) return errorClave;
+  // Antes del candado: bitRenumerarMetas_() toma el suyo.
+  bitRenumerarMetas_();
 
   const lock = LockService.getScriptLock();
   try {
@@ -442,8 +512,12 @@ function bitValidarActividad_(x) {
     d.origen = '';
   } else if (!d.origen) {
     throw new Error('Elige la acción de la planeación o escribe el origen de la actividad no planeada.');
+  } else if (String(x.esquemaMetas || '') !== BIT_ESQUEMA_METAS) {
+    // Una página vieja (en caché) manda 23 queriendo decir mantenimiento, que
+    // ahora es la 21. Mejor pedir que recargue que guardarla en la meta equivocada.
+    throw new Error('Las metas cambiaron a 21 y 23. Recarga la página y vuelve a enviar.');
   }
-  if (!BIT_METAS[d.meta]) throw new Error('Meta no válida (solo 23 o 25).');
+  if (!BIT_METAS[d.meta]) throw new Error('Meta no válida (solo 21 o 23).');
   if (!d.fechaInicio) throw new Error('Fecha de inicio no válida.');
   if (d.fechaFin && d.fechaFin < d.fechaInicio) throw new Error('La fecha de fin es anterior a la de inicio.');
   if (BIT_MODALIDADES.indexOf(d.modalidad) === -1) throw new Error('Modalidad no válida.');
@@ -524,6 +598,7 @@ function bitGenerarReporteMensual() {
   // Antes de armar el reporte, trae las visitas de Mantenimiento y las
   // asesorías resueltas del mes. Si alguna falla (sin conexión configurada,
   // red), el reporte se genera igual y el aviso final lo dice.
+  bitRenumerarMetas_();
   const avisosFuentes = [
     ['Mantenimiento', bitImportarMantenimiento_],
     ['Asesorías', bitImportarAsesorias_]
@@ -728,6 +803,7 @@ function bitConsultarBackend_(propUrl, nombre, accion, mes) {
 }
 
 function bitAccionPlaneacion_(np) {
+  bitRenumerarMetas_();
   const accion = bitLeerPlaneacion_().find(function (a) { return a.np === np; });
   if (!accion) throw new Error('la acción N.P. ' + np + ' no existe en Planeacion.');
   return accion;
@@ -804,7 +880,7 @@ function bitImportarMantenimiento_(mes) {
   }));
 }
 
-// Trae las asesorías resueltas del mes (META 25 / N.P. 8). Si alguna no tiene
+// Trae las asesorías resueltas del mes (META 23 / N.P. 8). Si alguna no tiene
 // "Fecha de realización" o "Asistentes", se usa la fecha programada o el
 // número solicitado y se avisa, para corregirlo en Asesorías y en la hoja.
 function bitImportarAsesorias_(mes) {

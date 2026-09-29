@@ -350,7 +350,7 @@ function manListarPendientes(tokenRecibido) {
 
 // ── Reportes de visita de un mes para la Bitácora OTDE (?action=reportesMes) ──
 // La bitácora (apps-script/bitacora.gs) los jala para crear sus actividades de
-// META 23 / N.P. 7 sin que nadie las vuelva a capturar. Mismo PANEL_TOKEN que
+// META 21 / N.P. 7 (META 23 antes del 29 sep 2026) sin que nadie las vuelva a capturar. Mismo PANEL_TOKEN que
 // ?action=pendientes. Solo lectura: getSheetByName() directo, sin auto-heal
 // (mismo criterio que manConsultarFolio). Solicitudes se lee una vez y se
 // indexa por folio para cruzar la escuela de cada reporte.

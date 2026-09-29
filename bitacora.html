@@ -235,8 +235,8 @@
             <label for="meta">¿En qué meta se reporta? <span class="req">*</span></label>
             <select id="meta">
               <option value="">Selecciona…</option>
-              <option value="23">META 23 — Mantenimiento de equipos de cómputo</option>
-              <option value="25">META 25 — Todo lo demás (programas, reuniones, asesorías)</option>
+              <option value="21">META 21 — Mantenimiento de equipos de cómputo</option>
+              <option value="23">META 23 — Todo lo demás (programas, reuniones, asesorías)</option>
             </select>
             <div class="error-msg" id="err-meta">Elige la meta.</div>
           </div>
@@ -721,6 +721,8 @@ $('form-actividad').addEventListener('submit', async function (ev) {
     idEnvio: idEnvioActual,
     np: np === 'NP' ? '' : np,
     meta: np === 'NP' ? $('meta').value : (accion ? accion.meta : ''),
+    // Metas 21/23 desde el 29 sep 2026; el backend rechaza no planeadas sin esto.
+    esquemaMetas: '2026-09-29',
     origen: np === 'NP' ? $('origen').value.trim() : '',
     tipoNombre: $('tipo-nombre').value.trim(),
     fechaInicio: $('fecha-inicio').value,
