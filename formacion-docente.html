@@ -732,6 +732,14 @@
     .fi-cal > .fi-cal-btn { width: 100%; }
     .fi-cal-nota { margin: .8rem 0 .5rem; }
     .fi-cal-btns.sesiones { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+    /* Botón sugerido según el dispositivo (plataformaCalendario()) */
+    .fi-cal-btn { flex-wrap: wrap; }
+    .fi-cal-txt { display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
+    .fi-cal-txt small { font-size: .7rem; font-weight: 600; opacity: .75; margin-top: .15rem; }
+    .fi-cal-btn.recomendado { background: var(--midnight); color: #fff; }
+    .fi-cal-btn.recomendado:hover { filter: brightness(1.15); }
+    .fi-cal-reco { flex-basis: 100%; text-align: center; font-size: .66rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; opacity: .85; margin-bottom: .1rem; }
+    .fi-cal-nota.reco { color: var(--ink); font-weight: 700; }
     .conf-guardar { max-width: 42ch; margin: .5rem auto 1.25rem; display: grid; gap: .6rem; }
     .cg-btn {
       display: flex; align-items: center; justify-content: center; gap: .55rem; width: 100%; padding: .95rem 1rem;
@@ -2771,19 +2779,37 @@
     return 'https://calendar.google.com/calendar/render?' + p.toString();
   }
 
-  function crearBotonGoogle(ev, texto) {
+  // Qué botón conviene según el dispositivo: en Android el .ics suele
+  // quedarse en Descargas (Google Calendar no lo importa), en iPhone Safari
+  // lo abre directo en Calendario. En computadora depende del correo que use.
+  function plataformaCalendario() {
+    const ua = navigator.userAgent || '';
+    if (/Android/i.test(ua)) return 'android';
+    if (/iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'ios';
+    return 'escritorio';
+  }
+
+  // Botón con texto principal y, abajo, para quién es.
+  function contenidoBotonCal(icono, texto, paraQuien, recomendado) {
+    return (recomendado ? '<span class="fi-cal-reco">Recomendado</span>' : '')
+      + icono + '<span class="fi-cal-txt">' + texto
+      + (paraQuien ? '<small>' + paraQuien + '</small>' : '') + '</span>';
+  }
+
+  function crearBotonGoogle(ev, texto, paraQuien, recomendado) {
     const a = document.createElement('a');
-    a.className = 'fi-cal-btn';
+    a.className = 'fi-cal-btn' + (recomendado ? ' recomendado' : '');
     a.href = ligaGoogleCalendar(ev);
     a.target = '_blank';
     a.rel = 'noopener noreferrer';
-    a.innerHTML = ICON_CALENDARIO + ' ' + texto;
+    a.innerHTML = contenidoBotonCal(ICON_CALENDARIO, texto, paraQuien, recomendado);
     return a;
   }
 
   function crearBloqueCalendario(r) {
     const eventos = eventosCalendario(r);
     if (!eventos.length) return null;
+    const plataforma = plataformaCalendario();
     const sesiones = eventos.filter(ev => /^Sesión /.test(ev.titulo));
     const bloque = document.createElement('div');
     bloque.className = 'fi-cal';
@@ -2793,36 +2819,62 @@
     const sub = document.createElement('p');
     sub.className = 'fi-cal-sub';
     sub.textContent = eventos[0].dia
-      ? 'Tu celular te avisará un día antes de que inicie.'
-      : 'Tu celular te avisará un día antes y 30 minutos antes de ' + (sesiones.length ? 'cada sesión.' : 'empezar.');
+      ? 'Tu calendario te avisará un día antes de que inicie.'
+      : 'Tu calendario te avisará un día antes y 30 minutos antes de ' + (sesiones.length ? 'cada sesión.' : 'empezar.');
+    if (plataforma === 'escritorio') {
+      sub.textContent += ' ¿Usas Gmail? Elige Google Calendar. ¿Usas Outlook o tu correo @dee.edu.mx? Elige Outlook.';
+    }
     bloque.appendChild(titulo);
     bloque.appendChild(sub);
 
     const ics = document.createElement('a');
-    ics.className = 'fi-cal-btn';
+    ics.className = 'fi-cal-btn' + (plataforma === 'ios' ? ' recomendado' : '');
     ics.href = URL.createObjectURL(new Blob([construirIcs(eventos)], { type: 'text/calendar;charset=utf-8' }));
     ics.download = 'curso-' + (r.folio || r.curso.id) + '.ics';
-    ics.innerHTML = ICON_CELULAR + (sesiones.length ? ' Todas las sesiones (Outlook / celular)' : ' Outlook / celular');
+    ics.innerHTML = contenidoBotonCal(ICON_CELULAR,
+      sesiones.length ? 'Todas las sesiones' : 'iPhone / Outlook',
+      sesiones.length ? 'iPhone · Outlook · computadora' : 'También computadora',
+      plataforma === 'ios');
 
     const btns = document.createElement('div');
     btns.className = 'fi-cal-btns';
     if (sesiones.length) {
       // Google Calendar solo acepta un evento por liga: un botón por sesión.
       btns.classList.add('sesiones');
-      bloque.appendChild(ics);
-      const nota = document.createElement('p');
-      nota.className = 'fi-cal-sub fi-cal-nota';
-      nota.textContent = 'O en Google Calendar, una por una:';
-      bloque.appendChild(nota);
       sesiones.forEach(ev => {
         const d = ev.inicio || new Date(ev.dia + 'T12:00:00');
         btns.appendChild(crearBotonGoogle(ev, fechaCorta(d, false)));
       });
+      const nota = document.createElement('p');
+      nota.className = 'fi-cal-sub fi-cal-nota';
+      if (plataforma === 'android') {
+        // En Android van primero las ligas de Google; el .ics queda de respaldo.
+        nota.classList.add('reco');
+        nota.textContent = 'Recomendado en Android: agrégalas en Google Calendar, una por una:';
+        bloque.appendChild(nota);
+        bloque.appendChild(btns);
+        const otra = document.createElement('p');
+        otra.className = 'fi-cal-sub fi-cal-nota';
+        otra.textContent = 'O todas juntas (Outlook, iPhone o computadora):';
+        bloque.appendChild(otra);
+        bloque.appendChild(ics);
+      } else {
+        bloque.appendChild(ics);
+        nota.textContent = 'O en Google Calendar (Android / Gmail), una por una:';
+        bloque.appendChild(nota);
+        bloque.appendChild(btns);
+      }
     } else {
-      btns.appendChild(crearBotonGoogle(eventos[0], 'Google Calendar'));
-      btns.appendChild(ics);
+      const google = crearBotonGoogle(eventos[0], 'Google Calendar', 'Android · Gmail', plataforma === 'android');
+      if (plataforma === 'ios') {
+        btns.appendChild(ics);
+        btns.appendChild(google);
+      } else {
+        btns.appendChild(google);
+        btns.appendChild(ics);
+      }
+      bloque.appendChild(btns);
     }
-    bloque.appendChild(btns);
     return bloque;
   }
 
