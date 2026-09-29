@@ -665,8 +665,10 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     Jorge había pedido desde el mensaje original). Jorge ya pegó y redesplegó `visitas-jefes.gs`
     (confirmado) y probó el reporte resumido. **Pendiente**: probar en vivo, con una reserva real,
     reagendar/cancelar (conflicto de semana al reagendar, liberación del cupo CCT+semana al
-    cancelar, los 4 mensajes según estatus), el reporte de seguimiento con una fecha de referencia
-    pasada, y "Actualizar dashboard (hoja)" contra los datos reales del ciclo.
+    cancelar, los 4 mensajes según estatus) y el reporte de seguimiento con una fecha de
+    referencia pasada. "Actualizar dashboard (hoja)" ya corrió contra los datos reales el 29 sep
+    2026 (junto con el archivo de no realizadas, ver `docs/BITACORA.md`); falta volver a
+    correrlo tras la limpieza de ese día, que dejó conteos dobles.
 
 21. **Mantenimiento — decidir si "¿Requiere segunda visita? = No" debe auto-marcar `Estatus =
     Resuelto`** (planteado 21 sep 2026, explícitamente pospuesto por Jorge para decidir después
@@ -769,7 +771,7 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     generó y Jorge lo pegó en el Excel real de SharePoint sin problemas con las celdas combinadas.
     Mismo día: nombres cortos para las acciones en el formulario (columna "Nombre corto" en
     `Planeacion`). **Alimentación desde Mantenimiento en producción (24 sep 2026, cont.):** la
-    bitácora trae los reportes de visita como actividades de META 23, N.P. 7 (menú "Traer visitas
+    bitácora trae los reportes de visita como actividades de META 21 (antes 23), N.P. 7 (menú "Traer visitas
     de Mantenimiento", y también al generar el reporte). Verificado: 4 visitas de septiembre y 0
     duplicados en la segunda corrida. Ver `docs/ARCHITECTURE.md §26`. **Asesorías resueltas → N.P. 8
     (24 sep 2026, cont. 2):** desplegado; Nancy llena *Fecha de realización* y *Asistentes* al
@@ -777,8 +779,9 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     cuando haya una asesoría en "Resuelto". **Siguiente, en este orden:**
     (a) **alimentación desde Formación Docente, Soporte y Correo** (plan aprobado el 24 sep,
     `docs/PLAN-OPERACION-INTERNA.md` §"Alimentación desde Formación Docente, Soporte y Correo"):
-    Formación Docente con una fila por curso y mes en META 25 (paso A, sigue este); Soporte en META 23
-    y Correo en META 25, cada uno con una fila de resumen mensual; la asesoría de IA (N.P. 9) sigue a
+    Formación Docente con una fila por curso y mes en META 23 (paso A, sigue este); Soporte en META 21
+    y Correo en META 23 (metas renumeradas el 29 sep 2026; revisar el plan: la planeación ya tiene
+    N.P. 10, 12 y 13 para formación a distancia, correo y difusión de conferencias), cada uno con una fila de resumen mensual; la asesoría de IA (N.P. 9) sigue a
     mano por ahora. (b) Fase 2 (oficios y recordatorios). Pendiente de verificar en la Fase 2: si la licencia M365 de `@dee.edu.mx`
     incluye Power Automate para capturar oficios automáticamente desde Outlook.
 

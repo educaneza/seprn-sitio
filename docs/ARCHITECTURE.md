@@ -2191,6 +2191,35 @@ desplegadas por Jorge el mismo día).**
   escuelas-por-sector que hoy solo vive en `js/cct-db.js` (inaccesible desde Apps Script sin
   mantenerlo por partida doble); ese ángulo ya lo cubre el Panel de cobertura del sitio (Etapa 1).
   Presentación tabla-con-colores, no gráficas nativas de Sheets — decisión de Jorge.
+- **Escuelas pendientes de visita (29 sep 2026, 100% frontend).** Sección `#vis-pendientes` en
+  `ceremonias-civicas.html`: escuelas de `CCT_DB` (`tipo==='escuela'`) sin `Realizada` ni
+  `Reservada` vigente en `visReservasCache` (`visEscuelaOcupada()`; una `Reservada` vencida según
+  `visEsVencida()` no aparta). Filtros sector/zona/municipio/turno + buscador, tarjetas de 20 por
+  página (`visPendRender()`), recalculadas al final de `cargarDisponibilidad()` (y por lo tanto
+  tras reservar/reagendar/cancelar). "Elegir esta escuela" → `visElegirPendiente()` →
+  `visSeleccionarCct()`, así que avisos y validaciones son los de siempre. El autocomplete de CCT
+  usa `visCoincidenciasCct()` (libres primero), la misma función en la lista de sugerencias y en
+  la tecla Enter para que el índice resaltado coincida. Turno/domicilio/colonia/localidad/C.P.
+  viven en `js/escuelas-direcciones.js` (`ESCUELAS_DIRECCIONES`, llave CCT), generado desde
+  `Catalogo SEPRN direcciones.xlsx` y cargado solo en esta página — no se agregó a
+  `js/cct-db.js` porque lo cargan otras páginas que no lo necesitan.
+- **Archivo de "No realizada"/"Cancelada" (29 sep 2026).** Pestaña `Archivo — No realizadas`
+  (`HOJA_VIS_ARCHIVO`, mismos encabezados + `Fecha de archivado`, `visObtenerHojaArchivo_()`).
+  `visArchivarNoRealizadas_()` mueve ahí esas filas a los `VIS_DIAS_ARCHIVO` (7) días de la fecha
+  planeada — ~4 días visibles como "No realizada" para poder reagendar —; corre al final de
+  `visMarcarNoRealizadas_()` (mismo trigger diario) y desde el menú
+  (`visArchivarNoRealizadasAhora()`, sin guion bajo por el gotcha del editor; además quita folios
+  repetidos del archivo con `visQuitarRepetidosArchivo_()`). Copia primero y borra después, de
+  abajo hacia arriba, con `LockService`; no recopia un folio ya archivado, quita el filtro básico
+  de la hoja durante el borrado y lo restaura (`visConFiltroQuitado_()`, ver
+  `docs/QA-NOTES.md #48`) y al final comprueba que las filas salieron (error explícito si no).
+  Efectos: `?action=disponibilidad` lee solo `Reservas`, así que lo archivado desaparece del
+  sitio solo; `visGenerarFolio()` toma el máximo también del archivo (`visFilasArchivo_()`), o un
+  folio archivado se reemitiría; `visConsultarFolio_()` busca en el archivo y responde
+  `archivada: true` (el sitio y la ficha ya no ofrecen reagendar/cancelar/ficha); las acciones de
+  `doPost` con un folio archivado responden con `visMensajeFolioNoEncontrado_()`; el reporte de
+  seguimiento y el Dashboard de la hoja cuentan el archivo, y el Dashboard agrega "Reservas no
+  realizadas por persona" — el registro que pidió la maestra de seguimiento.
 
 ---
 
@@ -2458,7 +2487,9 @@ de esa captura. Backend `apps-script/bitacora.gs`, ligado al Sheet "Bitácora OT
 frontend `bitacora.html`.
 
 **Formato de destino (verificado contra el Excel real, no supuesto).** El reporte es un Excel en
-SharePoint, un archivo por mes, con una pestaña por meta. OTDE solo reporta en META 23 y META 25.
+SharePoint, un archivo por mes, con una pestaña por meta. OTDE solo reporta en META 21
+(mantenimiento) y META 23 (todo lo demás); hasta el 29 sep 2026 eran la 23 y la 25 (ver
+"Renumeración de metas" abajo).
 Cada pestaña tiene filas de actividad de la 14 a la 30 (`BIT_MAX_FILAS_POR_META = 17`) con celdas
 combinadas A:B (tipo y nombre), C (fecha), D (responsable), E (lugar), F:I (descripción), J:K
 (propósito) y L (beneficiarios). Apps Script no puede escribir en SharePoint, así que la salida es
@@ -2467,7 +2498,7 @@ columnas y combinaciones (`bitCombinarFila_`). Se copia desde Sheets y se pega e
 cada pestaña. Copiar desde Sheets, y no desde un cuadro de texto con TSV, conserva los saltos de
 línea dentro de las celdas. Jorge lo validó pegándolo en el Excel real.
 
-**Hojas.** `Planeacion` (las 9 acciones del Word más la columna "Nombre corto" al final,
+**Hojas.** `Planeacion` (las 13 acciones de la planeación revisada del 29 sep 2026 más la columna "Nombre corto" al final,
 `BIT_COL_NOMBRE_CORTO`), `Actividades` (`ENCABEZADOS_ACTIVIDADES`, se lee y escribe por nombre de
 encabezado, con auto-heal de columnas faltantes) y `Config` (catálogo de responsables). La hoja
 manda: el reporte copia lo que diga `Actividades`, y un texto corregido a mano ahí sale corregido
@@ -2482,7 +2513,9 @@ en el reporte.
   `localStorage`, una vez por dispositivo.
 - **La meta la decide la planeación:** si la actividad trae N.P., `bitValidarActividad_` toma la
   meta de la hoja `Planeacion` e ignora la que mande el navegador. Las no planeadas eligen meta
-  (23/25) y anotan su origen. No existe un rubro aparte de "no planeadas" porque el Excel no lo
+  (21/23) y anotan su origen. El navegador manda además `esquemaMetas`
+  (`BIT_ESQUEMA_METAS`); sin él, una no planeada se rechaza pidiendo recargar, para que una página en
+  caché que todavía manda "23 = mantenimiento" no la guarde en la meta equivocada. No existe un rubro aparte de "no planeadas" porque el Excel no lo
   tiene.
 - **Idempotencia:** cada envío lleva un `ID de envío` generado en el navegador, y `doPost` corre
   con `LockService`. Un reintento después de un timeout devuelve el mismo `BIT-NNNN` con la
@@ -2497,7 +2530,7 @@ en el reporte.
   encabezado de cada pestaña del Excel (mes y fecha, a mano).
 
 **Alimentación automática desde Mantenimiento (24 sep 2026).** Cada reporte de visita se vuelve
-una actividad de META 23 / N.P. 7 sin recapturarla:
+una actividad de META 21 / N.P. 7 sin recapturarla:
 - **Pull, no push:** la bitácora pide los reportes a `mantenimiento.gs ?action=reportesMes` (§15)
   con `UrlFetchApp` (`bitImportarMantenimiento_`). El envío del técnico no cambia, y si la bitácora
   falla no se pierde ninguna visita. La URL y el `PANEL_TOKEN` viven en Script Properties
@@ -2519,7 +2552,7 @@ una actividad de META 23 / N.P. 7 sin recapturarla:
   usa el texto de la planeación. Capturó = `BIT_CAPTURO_MAN`.
 
 **Asesorías resueltas (24 sep 2026), mismo patrón.** `bitImportarAsesorias_` pide
-`?action=asesoriasMes` (§15) al backend guardado en `ASE_URL` y crea una actividad de META 25 /
+`?action=asesoriasMes` (§15) al backend guardado en `ASE_URL` y crea una actividad de META 23 /
 N.P. 8 por folio (`ID de envío` `ASE:<folio>`). Tipo `BIT_TIPO_ASE_BANCO` o `BIT_TIPO_ASE_EXCEL`;
 lugar con el mismo `bitManSede_`; descripción `bitAseDescripcion_` (Excel incluye los temas
 elegidos); beneficiarios `bitAseBeneficiarios_` con los *Asistentes* o, si faltan, el número
@@ -2536,8 +2569,17 @@ y Correo (sin acción en la planeación). Ya hay plan aprobado para Formación D
 consulta y el formulario no la guarda en el navegador. `bitLeerPlaneacion_` lee por posición las
 primeras 9 columnas (N.P., Acción, Resultados esperados, Beneficiarios, Responsables, Meta…) y busca
 "Nombre corto" por encabezado. Por eso se pueden agregar filas y editar textos, pero no insertar ni
-reordenar columnas antes. La meta debe ser 23 o 25. Los N.P. 7 y 8 no se renumeran: los buscan
+reordenar columnas antes. La meta debe ser 21 o 23. Los N.P. 7 y 8 no se renumeran: los buscan
 `BIT_NP_MANTENIMIENTO` y `BIT_NP_ASESORIAS`.
+
+**Renumeración de metas (29 sep 2026).** Planeación cambió la numeración: la 23 pasó a 21 y la
+25 pasó a 23. Como "23" cambia de significado, no basta con cambiar `BIT_METAS`: una fila vieja
+con 23 (mantenimiento) caería en la nueva META 23. `bitRenumerarMetas_()` cambia la columna
+"Meta" de `Planeacion` y `Actividades` en una sola pasada (`BIT_METAS_ANTERIORES`, sin encadenar
+25 → 23 → 21), con `LockService`, y deja la Script Property `BIT_METAS_RENUMERADAS` para no
+repetirse. Si no encuentra ningún 25 (hoja nueva) no cambia nada. Se llama al inicio de `doGet`,
+`doPost` (antes de su candado), `bitPrepararHojas`, `bitGenerarReporteMensual` y
+`bitAccionPlaneacion_`. Ya corrió en producción; nunca renumerar a mano.
 
 ## 27. Altas de trámite a prueba de reintentos: `LockService` + "ID de envío" (sep 2026)
 

@@ -14,6 +14,38 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-09-29 (cont. 2) · Planeación Institucional 2026-2027 revisada y bitácora con metas 21/23
+
+| | |
+|---|---|
+| **Fecha** | 2026-09-29 |
+| **Sesión** | Jorge iba retrasado con la entrega de su Planeación Institucional a la Subjefatura de Planeación. Agregó acciones y pidió una revisión a fondo contra lo que exige el propio Comunicado 001. Pidió además dos cambios: renumerar las metas (la 25 pasa a 23 y la 23 a 21) y poner el número del eje del PDI. Después pidió llevar las metas nuevas y las 13 acciones a la bitácora. |
+| **Word revisado** | `docs/insumos/COMUNICADO 001 ÁREAS-TECNOLOGÍA - REVISADO.docx` (insumo local, no se publica); el original no se tocó. Solo se editó la tabla de OTDE, con la misma letra Gotam bold 9. Las acciones 10-13 eran sustantivos y ahora llevan verbo observable. Los periodos son concretos, los resultados son verificables y sin cifras inventadas, y los responsables dicen quién coordina, quién ejecuta y quién da seguimiento. También hubo correcciones de ortografía. Los ejes del PDI 23-29 salieron de la imagen que Jorge dejó en insumos, numerados en el sentido de las manecillas del reloj: 1 NEM-PyP 22, 2 Aprendizajes y Resultados Educativos, 3 Gestión Escolar e Institucional y 4 Temas Transversales. «Inclusión» y «Pensamiento crítico» no eran ejes, sino subtemas; cada acción se empató por contenido. |
+| **Bitácora: metas 21/23** | Cambiar `BIT_METAS` no bastaba: una fila vieja con 23 (mantenimiento) habría caído en la nueva META 23. Para eso está `bitRenumerarMetas_()`: renumera una sola vez `Planeacion` y `Actividades`, sin encadenar, con candado y con la marca `BIT_METAS_RENUMERADAS`. `bitacora.html` manda `esquemaMetas`, y el backend rechaza las no planeadas que no lo traen, para que una página en caché no las guarde en la meta equivocada. Se corrigieron comentarios en `mantenimiento.gs` y `asesorias.gs` (sin redeploy). La semilla de `Planeacion` pasó a las 13 acciones. Ver `docs/ARCHITECTURE.md §26`. |
+| **Planeacion con 13 acciones** | Las 13 filas revisadas (metas 21/23, ejes nuevos y nombres cortos para 10-13) se pegaron en la hoja real **después** de la renumeración. Si se pegaban antes, sus 23 se habrían convertido en 21. |
+| **Verificación** | Renumeración simulada en Node: 23 → 21 y 25 → 23; una segunda corrida no cambia nada y una hoja sin 25 queda igual. En vivo, tras el redeploy de Jorge: "Preparar hojas" la disparó. `Actividades` quedó con BIT-0001 a 0005 en 23 y BIT-0006 a 0009 en 21. `Planeacion` se leyó por CSV y su SHA-1 coincide con los datos esperados: 13 filas, metas 12×23 y 1×21. `bitacora.html` se confirmó en línea con curl. No se probó el formulario con la clave de captura. |
+| **Queda para Jorge** | Abrir `bitacora.html` y confirmar que se ven las 13 acciones. Volver a pegar `bitacora.gs` (la semilla y el aviso de "Preparar hojas" son posteriores a su redeploy; no cambian el funcionamiento). Confirmar el nombre de las pestañas de la plantilla nueva de Planeación. Revisar el plan de alimentación automática, porque Correo (N.P. 12) y la difusión de conferencias (N.P. 10 y 13) ya tienen acción propia (`docs/PLAN-OPERACION-INTERNA.md`). |
+| **Documentación actualizada** | Este checkpoint, `docs/ARCHITECTURE.md §26`, `docs/PLAN-OPERACION-INTERNA.md`, `docs/ROADMAP.md` ítem 27, `CLAUDE.md`. |
+| **Commits** | `27bb5b2` (4 archivos, +107/−29, en producción) y el commit de cierre (docs). |
+
+---
+
+## CHECKPOINT — 2026-09-29 (cont.) · Ceremonias Cívicas: escuelas pendientes de visita y archivo de no realizadas
+
+| | |
+|---|---|
+| **Fecha** | 2026-09-29 |
+| **Sesión** | A Jorge le llegaron dos peticiones de quienes usan Ceremonias Cívicas: (1) docentes que eligen escuelas ya visitadas o con visita programada, y (2) reservas que nadie reagenda ni cancela. La segunda se aclaró a media sesión: no era que la escuela quedara bloqueada (el trigger diario ya la pasa a "No realizada" y la libera a los 3 días), sino que esas filas le hacen ruido a la maestra de seguimiento en la hoja y en la tabla del sitio, aunque ella quiere conservar el registro de quién reservó y no fue. |
+| **Escuelas pendientes** | Datos reales al inicio de la sesión: 63 de 417 escuelas visitadas y 345 libres; el problema era de descubrimiento. Sección nueva "Escuelas pendientes de visita" en `ceremonias-civicas.html` (`visPendRender()`): sin `Realizada` ni `Reservada` vigente (una vencida no aparta), filtros sector/zona/municipio/turno + buscador, tarjetas con domicilio y "Elegir esta escuela" (`visElegirPendiente()` → `visSeleccionarCct()`). El autocomplete de CCT pone primero las libres (`visCoincidenciasCct()`, compartida por la lista y la tecla Enter). Turno y domicilio en `js/escuelas-direcciones.js` (`ESCUELAS_DIRECCIONES`, 417 escuelas, generado desde `Catalogo SEPRN direcciones.xlsx`), cargado solo en esta página. |
+| **Archivo de no realizadas** | `visArchivarNoRealizadas_()` mueve "No realizada"/"Cancelada" a la pestaña `Archivo — No realizadas` (+ `Fecha de archivado`) a los `VIS_DIAS_ARCHIVO` = 7 días de la fecha planeada, al final del trigger diario existente, más menú "Archivar no realizadas/canceladas ahora". `visGenerarFolio()` toma el máximo también del archivo; la consulta por folio devuelve `archivada: true` y reagendar/cancelar/ficha lo explican (`visMensajeFolioNoEncontrado_()`); el reporte de seguimiento y el Dashboard leen el archivo, y el Dashboard tiene el bloque "Reservas no realizadas por persona". |
+| **Bug en el primer despliegue** | El menú dijo "4 movidas", pero las filas siguieron en `Reservas` y una segunda corrida las volvió a copiar al archivo: un filtro activo de la maestra las ocultaba y `deleteRow()` no las borró ni dio error. Fix (`507e1c4`): `visConFiltroQuitado_()` quita el filtro durante el borrado y lo restaura con sus criterios; no se recopia un folio ya archivado; revisión final con error explícito; `visQuitarRepetidosArchivo_()` limpió los 4 repetidos. Ver `docs/QA-NOTES.md #48`. |
+| **Verificación** | Pendientes: local contra `?action=disponibilidad` real (solo GET), conteo 345 = 417 − ocupadas, filtros y "Elegir" correctos, sin errores de consola. Backend: simulación en Node de la Sheet (incluido el caso del filtro). En vivo tras el redeploy de Jorge: `disponibilidad` bajó de 78 a 74 filas (sin No realizada/Cancelada); `SEPRN-CC-0055`, `0066`, `0080` y `0081` responden `archivada:true`; en Chrome, archivo con 4 filas sin repetidos y filtro intacto ("7 de 74 filas"). |
+| **Queda para Jorge** | Correr "Actualizar dashboard (hoja)": el de las 09:37 cuenta doble (6 No realizada / 2 Cancelada; son 3 y 1). |
+| **Documentación actualizada** | Este checkpoint, `docs/ARCHITECTURE.md §22`, `docs/QA-NOTES.md #48`, `docs/ROADMAP.md` ítem 20, `CLAUDE.md`. |
+| **Commits** | `33bd467` (4 archivos, +783/−14) y `507e1c4` (1 archivo, +82/−8), ambos en producción, y el commit de cierre (docs). |
+
+---
+
 ## CHECKPOINT — 2026-09-29 · Formación Docente: botón de calendario recomendado según el dispositivo y "Todos mis cursos"
 
 | | |

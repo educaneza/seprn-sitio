@@ -1323,3 +1323,24 @@ página, el del correo y el `.ics`. Jorge lo corrigió en la hoja, dejando una s
 **Regla:** `Liga_convocatoria` lleva una sola URL, sin texto. Cualquier texto libre que venga de
 la hoja y se pinte en un espacio angosto necesita `overflow-wrap`. Y todo aviso que se reintente
 necesita un corte explícito ligado a la fecha que le da sentido, no a la de fin del curso.
+
+## 48. Ceremonias Cívicas: el archivo de no realizadas copiaba las filas pero no las quitaba de `Reservas`
+
+**Síntoma (29 sep 2026, primer despliegue de `visArchivarNoRealizadas_()`):** el menú dijo "4
+reserva(s) movida(s)", pero `?action=disponibilidad` seguía devolviendo las 4 filas, y en la
+pestaña `Archivo — No realizadas` aparecían dos veces (Jorge corrió el menú dos veces).
+
+**Causa raíz:** la maestra de seguimiento tiene un filtro básico activo en `Reservas` que oculta
+justo esas filas. `Sheet.deleteRow()` no borró las filas ocultas por el filtro y tampoco lanzó
+error, así que el código dio por hecho que se movieron. Sin revisar si un folio ya estaba en el
+archivo, cada corrida lo volvía a copiar.
+
+**Fix (`apps-script/visitas-jefes.gs`, commit `507e1c4`):** `visConFiltroQuitado_()` quita el
+filtro durante el borrado y lo vuelve a crear con el mismo rango y criterios; no se copia un
+folio que ya esté en el archivo; al final se comprueba que las filas salieron de `Reservas` y, si
+no, se lanza un error con los folios. `visQuitarRepetidosArchivo_()` (menú) limpió los repetidos.
+Verificado en vivo: 4 folios archivados una sola vez y el filtro sigue ("7 de 74 filas").
+
+**Regla:** en cualquier backend, no borrar filas con `deleteRow()` en una hoja que el equipo
+filtra a mano sin quitar antes el filtro, y comprobar después que las filas sí salieron. Toda
+operación que mueva datos entre hojas debe poder correrse dos veces sin duplicar.

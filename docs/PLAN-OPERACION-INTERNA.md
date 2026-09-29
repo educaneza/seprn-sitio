@@ -48,16 +48,16 @@ Esto es coherente con la decisión del 5 de agosto (una hoja por dominio y el ta
 
 **Formato real verificado (24 sep 2026)** con los insumos en `docs/insumos/` (locales, no se publican):
 - **El reporte mensual no es un Word.** Es un **Excel compartido con la Oficina de Planeación en SharePoint M365**. Cada mes se usa un archivo nuevo a partir de la plantilla.
-- El Excel tiene **una pestaña por meta**. OTDE solo reporta en **META 23** (Educación primaria: mantenimiento de equipos) y **META 25** (mejora de aprendizajes: todo lo demás). Las pestañas 24, 81 y 83 no son de OTDE.
+- El Excel tiene **una pestaña por meta**. OTDE solo reporta en **META 21** (Educación primaria: mantenimiento de equipos) y **META 23** (mejora de aprendizajes: todo lo demás). Hasta el 29 sep 2026 eran la **23** y la **25**: Planeación renumeró las metas y la bitácora ya se ajustó (`docs/ARCHITECTURE.md §26`). La plantilla verificada el 24 sep todavía tiene pestañas 23/24/25/81/83; confirmar los nombres de las pestañas en la plantilla nueva.
 - Cada pestaña tiene un encabezado (periodo, fecha, proyecto, meta, indicador) y **filas de actividad de la 14 a la 30** (máximo 17 por meta), cada una con 7 campos: **Tipo y nombre de la actividad** (A:B) · **Fecha o periodo** (C) · **Responsable** (D) · **Lugar: sede, presencial o virtual** (E) · **Descripción** (F:I) · **Propósito u objetivo** (J:K) · **Número y tipo de beneficiarios** (L).
 - La evidencia es **un PDF por mes** con todas las evidencias; en el Excel solo se anota su nombre (columna M de la primera fila).
-- **No hay apartado de "no planeadas".** Toda actividad entra en META 23 o 25; por ejemplo, la reunión con CoEEE de septiembre quedó en META 25.
-- **Planeación 2026-2027:** son 9 acciones (N.P. 1-9) y cada una dice su meta (N.P. 7 mantenimiento → 23; las demás → 25). Esa columna es la que conecta la planeación con la pestaña del reporte.
+- **No hay apartado de "no planeadas".** Toda actividad entra en META 21 o 23; por ejemplo, la reunión con CoEEE de septiembre (reportada entonces en la META 25) hoy está en la 23.
+- **Planeación 2026-2027:** son 13 acciones (N.P. 1-13; la 10-13 se agregaron el 29 sep) y cada una dice su meta (N.P. 7 mantenimiento → 21; las demás → 23). Esa columna es la que conecta la planeación con la pestaña del reporte.
 
 **Qué es:** un Sheet "Bitácora OTDE 2026-2027" con tres pestañas:
-1. **`Planeacion`**: las 9 acciones del Word, con N.P., Acción, Mes, Recursos, Resultados esperados, Instrumento, Beneficiarios, Responsables, **Meta** (23/25) y Eje PDI. Se captura una vez por ciclo.
+1. **`Planeacion`**: las 13 acciones del Word revisado, con N.P., Acción, Mes, Recursos, Resultados esperados, Instrumento, Beneficiarios, Responsables, **Meta** (21/23) y Eje PDI (ejes del PDI 23-29, con número). Se captura una vez por ciclo.
 2. **`Actividades`**: una fila por cada cosa que se hizo. Las columnas calcan el Excel, más las que sirven para organizar:
-   - **Meta** (23/25): se hereda del N.P.; si la actividad no está planeada, se elige.
+   - **Meta** (21/23): se hereda del N.P.; si la actividad no está planeada, se elige.
    - **N.P.** de la planeación, o "No planeada" con su origen (oficio o convocatoria).
    - Tipo y nombre · Fecha (día o periodo; el texto "Los días 13 y 14 de enero" se genera solo) · Responsable (OTDE, UNETE, CoEEE, CUANTRIX, etc.) · Modalidad (presencial, virtual o híbrida) y sede o CCT (con autocompletado de `cct-db`) · Descripción · Propósito · Beneficiarios.
    - Capturó (Jorge o Nancy) y marca de tiempo.
@@ -142,7 +142,7 @@ Fase 1 construida (24 sep): `apps-script/bitacora.gs` y `bitacora.html`, probado
 - **Trámites de alto volumen:** una fila de **resumen mensual** con totales y desglose. Aplica a Soporte y Correo; caso por caso, en un mes normal llenarían las 17 filas.
 
 **Decisiones de Jorge (24 sep):**
-- Soporte va en **META 23** (atención a equipos, igual que mantenimiento) y Correo en **META 25**. Los dos entran como no planeados, con origen.
+- Soporte va en **META 23** (atención a equipos, igual que mantenimiento) y Correo en **META 25**. Los dos entran como no planeados, con origen. *(Con la renumeración del 29 sep: Soporte → META 21 y Correo → META 23. Además, la planeación revisada ya tiene N.P. 12 para correo institucional, y N.P. 10 y 13 para formación a distancia y difusión de conferencias. Correo y parte de Formación Docente ya no serían "no planeados": revisar con Jorge antes del paso A.)*
 - Un curso que dura varios meses aparece **en cada mes en que tiene desarrollo** (fechas de inicio y fin que se cruzan con el mes). `ID de envío` = `FD:<ID_Curso>:<AAAA-MM>`.
 - Soporte y Correo, como **resumen mensual**.
 - Todo esto va **antes** de la Fase 2.
@@ -154,26 +154,26 @@ Fase 1 construida (24 sep): `apps-script/bitacora.gs` y `bitacora.html`, probado
 
 **Pasos (uno por sesión, cada uno verificado en vivo antes del siguiente):**
 
-**A. Formación Docente → META 25, una fila por curso y mes** (sigue este)
+**A. Formación Docente → META 23, una fila por curso y mes** (sigue este)
 - `formacion-docente.gs`:
   - Columna nueva opcional en `Cursos`: **`NP_planeacion`**, al final, con el auto-heal de `obtenerHojaCursos()`.
   - `PANEL_TOKEN` (función de configuración con cuadro de diálogo, no argumento: QA-NOTES #14).
   - Endpoint `?action=cursosMes`: cursos cuyo desarrollo se cruza con el mes, con los inscritos totales y por sector, y las constancias recibidas si aplica.
 - `bitacora.gs`: fuente "Formación Docente" (`FD_URL`).
-  - N.P. = `NP_planeacion`; la meta sale de `Planeacion`. Si está vacía, queda como no planeada en META 25, con origen "Convocatoria de <Responsable>".
+  - N.P. = `NP_planeacion`; la meta sale de `Planeacion`. Si está vacía, queda como no planeada en META 23, con origen "Convocatoria de <Responsable>".
   - Tipo: "<Categoría>: <Nombre>". Fecha: la parte del curso que cae en el mes. Responsable: `Responsable`. Lugar: "Virtual, a través de …" según `Modalidad`.
   - Descripción: `Descripcion` más la difusión y el registro por OTDE. Propósito: "Resultados esperados" del N.P., o `Descripcion` si no tiene N.P.
   - Beneficiarios: "N docentes inscritos" con desglose por sector, más "N constancias recibidas" en UNETE.
 - Verificación: `ACF-2627-001` (IA) y la conferencia UNETE `CNF-2627-001` (119 inscritos) en su mes; la segunda corrida debe dar 0 nuevas.
 
-**B. Soporte → META 23, resumen mensual**
+**B. Soporte → META 21, resumen mensual**
 - `soporte-remoto.gs`: columna `Fecha de atención`, que `sopOnEditCierre` llena sola al marcar Resuelto, y endpoint `?action=soporteMes`.
 - `bitacora.gs`: una fila por mes (`ID de envío` `SOP:<AAAA-MM>`).
   - Descripción: "Se atendieron N solicitudes: por tipo de ayuda…, en los sectores…".
   - Beneficiarios: por función (docentes, directores, administrativos).
 - Las resueltas antes de este cambio no tienen fecha de atención. Se usa la fecha de la solicitud y se avisa.
 
-**C. Correo → META 25, resumen mensual**
+**C. Correo → META 23 (¿N.P. 12?), resumen mensual**
 - `correo/WebApp.gs`: endpoint `?action=correoMes` que junta las 5 hojas por `Fecha de entrega`. Antes, revisar la fecha de cierre de Incidencias.
 - `bitacora.gs`: una fila por mes (`CORREO:<AAAA-MM>`).
   - Descripción: "Gestión de cuentas de correo institucional ante SIGEE: N altas, N cambios de contraseña, N eliminaciones de método de autenticación, N combinados, N incidencias resueltas".
@@ -182,7 +182,7 @@ Fase 1 construida (24 sep): `apps-script/bitacora.gs` y `bitacora.html`, probado
 **D. Fuera de este plan:** si Mantenimiento se acerca a 17 visitas en un mes (el reporte ya avisa), decidir si se agrupan. La asesoría de IA (N.P. 9) sigue a mano hasta que haya solicitudes reales.
 
 **Editar la planeación en el Sheet (respuesta a Jorge, 24 sep):** sí se puede. La hoja `Planeacion` manda y se lee en cada consulta; el formulario de la bitácora no la guarda en el navegador. Hay 4 cuidados:
-- Una acción nueva lleva `N.P.` único y `Meta` 23 o 25. Su "Nombre corto" se escribe a mano (el automático solo existe para las 9 originales).
+- Una acción nueva lleva `N.P.` único y `Meta` 21 o 23. Su "Nombre corto" se escribe a mano (el automático solo existe para las 13 de la semilla).
 - No insertar ni reordenar columnas antes de "Nombre corto": `bitLeerPlaneacion_` las lee por posición. Agregar filas o editar textos sí se puede.
 - No cambiar el número de los N.P. 7 y 8: la alimentación automática de Mantenimiento y Asesorías los busca por número (`BIT_NP_MANTENIMIENTO`, `BIT_NP_ASESORIAS`).
 - Si se cambia la meta de una acción, las actividades ya registradas conservan la que tenían.

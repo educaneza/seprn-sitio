@@ -575,13 +575,14 @@ ya esté expandido).
 
 ### `apps-script/bitacora.gs` (nuevo, sep 2026)
 - **No es un trámite:** es la bitácora interna de OTDE (Jorge y Nancy) para el reporte mensual de
-  Planeación. Sheet "Bitácora OTDE 2026-2027" con hojas `Planeacion` (9 acciones + "Nombre
+  Planeación. Sheet "Bitácora OTDE 2026-2027" con hojas `Planeacion` (13 acciones + "Nombre
   corto"), `Actividades` y `Config` (responsables). Frontend `bitacora.html`
   (`BITACORA_APPS_SCRIPT_URL`)
 - Clave de captura en Script Properties (`CLAVE_CAPTURA`), configurada desde el menú "OTDE
   Bitácora → Configurar clave de captura". Estados `sin_clave`/`no_autorizado`. Sin correo ni
   Telegram
-- Menú "OTDE Bitácora": Generar reporte del mes (pestaña "Reporte AAAA-MM", bloques META 23/25
+- Menú "OTDE Bitácora": Generar reporte del mes (pestaña "Reporte AAAA-MM", bloques META 21/23 — antes 23/25, renumeradas el 29 sep 2026 por
+  `bitRenumerarMetas_()`, ver `docs/ARCHITECTURE.md §26`
   con las celdas combinadas del Excel de Planeación) · Preparar hojas y cargar planeación
   (idempotente; también agrega y llena "Nombre corto" si falta) · Configurar clave de captura
 - Para cambios: pegar el `.gs` completo y **Administrar implementaciones → Editar → Nueva
@@ -589,15 +590,15 @@ ya esté expandido).
 - **Alimentación automática desde Mantenimiento (24 sep 2026, en producción)**: menús "Traer
   visitas de Mantenimiento" y "Configurar conexión con Mantenimiento" (Script Properties
   `MAN_URL` + `PANEL_TOKEN`, capturadas en cuadros de diálogo). "Generar reporte del mes"
-  también las trae antes de armar el reporte. Crea una actividad por folio y mes en META 23 /
+  también las trae antes de armar el reporte. Crea una actividad por folio y mes en META 21 /
   N.P. 7, con `ID de envío` `MAN:<folio>:<mes>`, y nunca pisa una fila existente. En el reporte
   se presenta como rehabilitación del Aula de Medios (`BIT_TIPO_MAN_AULA`, decisión de Jorge).
 - **Asesorías resueltas (24 sep 2026, desplegado)**: menús "Traer asesorías resueltas" y
   "Configurar conexión con Asesorías" (`ASE_URL`; reutiliza el `PANEL_TOKEN`). Una actividad por
-  folio en META 25 / N.P. 8 (`ASE:<folio>`); avisa si falta la fecha de realización o los
+  folio en META 23 / N.P. 8 (`ASE:<folio>`); avisa si falta la fecha de realización o los
   asistentes. "Generar reporte del mes" trae Mantenimiento y Asesorías.
 - **La planeación se edita en el Sheet** (hoja `Planeacion`) y se ve al instante en el formulario.
-  Se pueden agregar filas con N.P. único y meta 23/25, y el "Nombre corto" va a mano. No insertar
+  Se pueden agregar filas con N.P. único y meta 21/23, y el "Nombre corto" va a mano. No insertar
   ni reordenar columnas antes de "Nombre corto" (lectura por posición) ni renumerar los N.P. 7/8.
 - Detalle completo en `docs/ARCHITECTURE.md §26`
 
@@ -637,6 +638,13 @@ ya esté expandido).
   de 120s (`FICHA_TIMEOUT_ENVIO_MS`) solo para este envío, vía el tercer parámetro opcional
   `timeoutMs` de `fetchJsonConTimeout()` (`js/tramites-shared.js`) — el resto del sitio sigue en
   30s. Ver `docs/QA-NOTES.md #23`.
+- **Archivo de no realizadas (29 sep 2026, en producción y verificado en vivo)**:
+  `visArchivarNoRealizadas_()` mueve "No realizada"/"Cancelada" a la pestaña `Archivo — No
+  realizadas` a los `VIS_DIAS_ARCHIVO` (7) días de la fecha planeada, dentro del trigger diario
+  (menú "Archivar no realizadas/canceladas ahora"). `visGenerarFolio()` cuenta también el archivo;
+  la consulta por folio responde `archivada: true`. **Cuidado:** `Reservas` tiene un filtro de la
+  maestra de seguimiento — `deleteRow()` no borra filas ocultas por un filtro, por eso existe
+  `visConFiltroQuitado_()` (`docs/QA-NOTES.md #48`)
 - Detalle completo de la arquitectura (esquema de columnas, por qué el folio actualiza una fila
   en vez de crear una nueva, decisión de la Fase 2 separada) en `docs/ARCHITECTURE.md §22`
 
@@ -1122,6 +1130,12 @@ sitio, se comparte por link directo (hay un QR institucional, `images/qr-ceremon
   (`visActualizarDashboardHoja_()`, menú "SEPRN Visitas") con mezcla de estatus, visitas por
   persona/sector y tendencia semanal — **este es el dashboard que Jorge había pedido desde antes**,
   no el panel de cobertura del sitio (que resuelve un pedido distinto, sectores sin visitar).
+- **Escuelas pendientes de visita + archivo de no realizadas (29 sep 2026, en producción)**:
+  sección `#vis-pendientes` con las escuelas sin visita realizada ni reserva vigente (filtros
+  sector/zona/municipio/turno, domicilio, "Elegir esta escuela"); turno y domicilio en
+  `js/escuelas-direcciones.js`, cargado solo aquí. Las "No realizada"/"Cancelada" salen de la
+  tabla a los 7 días (pestaña `Archivo — No realizadas`, ver `apps-script/visitas-jefes.gs`
+  arriba). Detalle en `docs/ARCHITECTURE.md §22`.
 - **`ficha-ceremonias-civicas.html`** (renombrado dos veces: `ficha-visita-jefe.html` →
   `ficha-informativa-visita.html` → nombre final; el genérico quedó reservado para una futura
   Fase 2 de reporte general al Community Manager, ver `docs/ROADMAP.md` ítem 13): ficha
@@ -1162,14 +1176,16 @@ Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/I
 - **Operación interna OTDE — Fase 1 en producción y validada (24 sep 2026)**: bitácora +
   reporte mensual (`apps-script/bitacora.gs` + `bitacora.html`), probada con las 5 actividades
   reales de septiembre y pegada en el Excel real de Planeación. **Alimentación desde Mantenimiento
-  en producción (24 sep 2026, cont.)**: las visitas llegan solas a META 23, N.P. 7. Pendiente
+  en producción (24 sep 2026, cont.)**: las visitas llegan solas a META 21 (antes 23), N.P. 7. Pendiente
   de Jorge: cifras de Beneficiarios en BIT-0006 a 0009 y confirmar los folios `OTDE-MAN-0001`/`0002`
   (el arreglo del singular ya está desplegado, llegó con la versión de Asesorías). **Asesorías resueltas → N.P. 8 desplegado
   (cont. 2)**: falta importar el primer caso real, y que Nancy llene *Fecha de realización* y
   *Asistentes* al cerrar. La asesoría de IA (N.P. 9), Soporte y Correo siguen a mano. **Siguiente (plan
   aprobado 24 sep, cont. 3):** alimentación desde Formación Docente (paso A: `NP_planeacion` en
-  `Cursos` + `?action=cursosMes`, una fila por curso y mes en META 25), después Soporte (META 23)
-  y Correo (META 25) como resumen mensual; ver `docs/PLAN-OPERACION-INTERNA.md`. Luego la Fase 2 (oficios y recordatorios; antes verificar Power Automate
+  `Cursos` + `?action=cursosMes`, una fila por curso y mes en META 23), después Soporte (META 21)
+  y Correo (META 23) como resumen mensual — **revisar este plan**: desde el 29 sep la planeación
+  tiene acciones propias para Correo (N.P. 12) y conferencias/difusión (N.P. 10 y 13), así que ya
+  no entrarían como no planeadas; ver `docs/PLAN-OPERACION-INTERNA.md`. Luego la Fase 2 (oficios y recordatorios; antes verificar Power Automate
   en M365 y conseguir 1-2 oficios reales). Ver `docs/ROADMAP.md` ítem 27. Ver `docs/PLAN-OPERACION-INTERNA.md` y `docs/ROADMAP.md` ítem 27.
 - **Formación Docente — Workspace, decidir antes del 6 oct 2026**: desde el 28 sep la cuota ya
   no depende de Workspace (calendario en la confirmación + correos "a quien alcance" con reserva
