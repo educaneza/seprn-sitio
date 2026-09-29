@@ -14,6 +14,20 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-09-29 · Formación Docente: botón de calendario recomendado según el dispositivo y "Todos mis cursos"
+
+| | |
+|---|---|
+| **Fecha** | 2026-09-29 |
+| **Sesión** | Jorge propuso agregar sugerencias o logotipos de sistema operativo a los botones de calendario de la confirmación, porque no queda claro cuál tocar (Google funciona mejor en Android; el `.ics`, en iPhone, Outlook y computadora). Después pidió ver cómo queda la confirmación con 2 o más cursos. |
+| **Recomendado por dispositivo** | Se descartaron los logotipos (Apple no permite el suyo; marcas ajenas en sitio institucional; un logo no dice qué tocar). En su lugar, `plataformaCalendario()` marca un botón "Recomendado" y lo pone primero: Google en Android (el `.ics` ahí casi nunca se importa), `.ics` en iPhone; en computadora ninguno, con la línea "¿Usas Gmail? … ¿Usas Outlook o tu correo @dee.edu.mx? …". Etiquetas de para quién es cada botón (`contenidoBotonCal()`). "Tu celular te avisará" pasó a "Tu calendario te avisará" (también en `mostrarSoloCalendario()`). |
+| **Varios cursos** | Revisión en local con 3 cursos (uno de un día, uno con 3 sesiones, uno con registro externo): una tarjeta por curso con su calendario, y comprobante y WhatsApp al pie, una sola vez para todos. Punto débil: el calendario había que agregarlo curso por curso. `crearBloqueTodosCalendario()` agrega arriba un `.ics` "Todos mis cursos" (no en Android). Ajuste visual: el botón pasó a columna con `.fi-cal-fila`, para que el ícono no quede solo arriba del texto en celular. |
+| **Verificación** | Playwright con emulación de iPhone 13, Pixel 7 y escritorio, backend bloqueado (sin GET ni POST reales): orden, botón marcado y etiquetas correctos en cada caso, sin errores de página; `.ics` combinado de 3 cursos = 6 eventos con UID únicos; comprobante PNG y texto de WhatsApp revisados con 3 cursos. Sin probar en celulares reales (ROADMAP ítem 28). |
+| **Documentación actualizada** | Este checkpoint, `docs/ARCHITECTURE.md §12`, `docs/DESIGN_SYSTEM.md`, `docs/ROADMAP.md` ítem 28, `CLAUDE.md`. |
+| **Commits** | `a2998ae` (1 archivo, +67/−15, en producción) y el commit de cierre (el cambio de "Todos mis cursos" + ajuste visual, +47/−7, y docs). |
+
+---
+
 ## CHECKPOINT — 2026-09-28 (cont.) · Formación Docente: calendario en la confirmación, cuota "a quien alcance" y `Cursos` por bloques
 
 | | |

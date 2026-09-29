@@ -733,13 +733,17 @@
     .fi-cal-nota { margin: .8rem 0 .5rem; }
     .fi-cal-btns.sesiones { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
     /* Botón sugerido según el dispositivo (plataformaCalendario()) */
-    .fi-cal-btn { flex-wrap: wrap; }
-    .fi-cal-txt { display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
+    .fi-cal-btn { flex-direction: column; }
+    .fi-cal-fila { display: flex; align-items: center; justify-content: center; gap: .45rem; min-width: 0; }
+    .fi-cal-txt { display: flex; flex-direction: column; align-items: flex-start; text-align: left; min-width: 0; }
     .fi-cal-txt small { font-size: .7rem; font-weight: 600; opacity: .75; margin-top: .15rem; }
     .fi-cal-btn.recomendado { background: var(--midnight); color: #fff; }
     .fi-cal-btn.recomendado:hover { filter: brightness(1.15); }
     .fi-cal-reco { flex-basis: 100%; text-align: center; font-size: .66rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; opacity: .85; margin-bottom: .1rem; }
     .fi-cal-nota.reco { color: var(--ink); font-weight: 700; }
+    /* Varios cursos: un solo .ics con todos, arriba de las tarjetas */
+    .fi-cal-todos { border-top: none; margin-top: 0; padding-top: 0; }
+    .folio-item.fi-todos { border: 1.5px solid var(--midnight); }
     .conf-guardar { max-width: 42ch; margin: .5rem auto 1.25rem; display: grid; gap: .6rem; }
     .cg-btn {
       display: flex; align-items: center; justify-content: center; gap: .55rem; width: 100%; padding: .95rem 1rem;
@@ -2514,6 +2518,9 @@
       subtituloEl.textContent = 'Tu participación quedó registrada en el Centro de Formación Docente · OTDE NEZA, para seguimiento y estadística.';
     }
 
+    const todos = crearBloqueTodosCalendario(resultados);
+    if (todos) cont.appendChild(todos);
+
     resultados.forEach(r => {
       const item = document.createElement('div');
       item.className = 'folio-item';
@@ -2608,9 +2615,12 @@
     checkIcon.classList.remove('pendiente');
     checkIcon.innerHTML = ICON_CALENDARIO.replace('stroke="currentColor"', 'stroke="white"');
     document.getElementById('confirmacion-titulo').textContent = 'Agrega tu curso a tu calendario';
-    document.getElementById('confirmacion-subtitulo').textContent = 'Si ya te inscribiste, agrégalo aquí y tu celular te recordará cada sesión.';
-    cursos.forEach(c => {
-      const sel = { id: c.id, nombre: c.nombre, categoria: c.categoria, liga: c.liga_convocatoria || '', registroPrevio: false };
+    document.getElementById('confirmacion-subtitulo').textContent = 'Si ya te inscribiste, agrégalo aquí y tu calendario te recordará cada sesión.';
+    const sels = cursos.map(c => ({ id: c.id, nombre: c.nombre, categoria: c.categoria, liga: c.liga_convocatoria || '', registroPrevio: false }));
+    const todos = crearBloqueTodosCalendario(sels.map(sel => ({ folio: '', curso: sel })));
+    if (todos) cont.appendChild(todos);
+    cursos.forEach((c, i) => {
+      const sel = sels[i];
       const item = document.createElement('div');
       item.className = 'folio-item';
       const nombre = document.createElement('div');
@@ -2792,8 +2802,38 @@
   // Botón con texto principal y, abajo, para quién es.
   function contenidoBotonCal(icono, texto, paraQuien, recomendado) {
     return (recomendado ? '<span class="fi-cal-reco">Recomendado</span>' : '')
-      + icono + '<span class="fi-cal-txt">' + texto
-      + (paraQuien ? '<small>' + paraQuien + '</small>' : '') + '</span>';
+      + '<span class="fi-cal-fila">' + icono + '<span class="fi-cal-txt">' + texto
+      + (paraQuien ? '<small>' + paraQuien + '</small>' : '') + '</span></span>';
+  }
+
+  // Con 2+ cursos: un solo .ics con todos, para agregarlos de un toque en
+  // iPhone/Outlook. En Android no se muestra: Google Calendar no importa
+  // .ics desde el celular y solo acepta un evento por liga.
+  function crearBloqueTodosCalendario(resultados) {
+    if (plataformaCalendario() === 'android') return null;
+    const conEventos = resultados.map(r => eventosCalendario(r)).filter(evs => evs.length);
+    if (conEventos.length < 2) return null;
+    const eventos = conEventos.flat();
+    const item = document.createElement('div');
+    item.className = 'folio-item fi-todos';
+    const bloque = document.createElement('div');
+    bloque.className = 'fi-cal fi-cal-todos';
+    const titulo = document.createElement('p');
+    titulo.className = 'fi-cal-titulo';
+    titulo.textContent = 'Agrega tus ' + conEventos.length + ' cursos a tu calendario de una vez';
+    const sub = document.createElement('p');
+    sub.className = 'fi-cal-sub';
+    sub.textContent = 'Un solo archivo con todas las fechas y sus avisos. Si prefieres Google Calendar, usa los botones de cada curso.';
+    const ics = document.createElement('a');
+    ics.className = 'fi-cal-btn' + (plataformaCalendario() === 'ios' ? ' recomendado' : '');
+    ics.href = URL.createObjectURL(new Blob([construirIcs(eventos)], { type: 'text/calendar;charset=utf-8' }));
+    ics.download = 'cursos-' + (resultados[0].folio || resultados[0].curso.id) + '.ics';
+    ics.innerHTML = contenidoBotonCal(ICON_CELULAR, 'Todos mis cursos', 'iPhone · Outlook · computadora', plataformaCalendario() === 'ios');
+    bloque.appendChild(titulo);
+    bloque.appendChild(sub);
+    bloque.appendChild(ics);
+    item.appendChild(bloque);
+    return item;
   }
 
   function crearBotonGoogle(ev, texto, paraQuien, recomendado) {

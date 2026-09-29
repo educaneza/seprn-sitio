@@ -786,7 +786,9 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     (construido, desplegado y verificado en vivo el 28 sep 2026, ver `docs/ARCHITECTURE.md §12` y
     `docs/BITACORA.md`). Falta:
     (a) Importar un `.ics` real en Outlook (`@dee.edu.mx`), iPhone y Android y confirmar que la
-    alarma de 30 min suena (probado solo en Chrome headless).
+    alarma de 30 min suena (probado solo en Chrome headless). Desde el 29 sep, confirmar también
+    que el botón marcado "Recomendado" en cada celular es el que sí agrega el evento (Google en
+    Android, `.ics` en iPhone) y que "Todos mis cursos" importa todos los eventos en iPhone.
     (b) Revisar en "Ejecuciones" los primeros días con cuota real: 6 y 7 oct (inicio de
     `ACF-2627-001`/`003`) y 1 oct (`CNF-2627-002`), incluidos los logs "N enviado(s), M
     pospuesto(s)".

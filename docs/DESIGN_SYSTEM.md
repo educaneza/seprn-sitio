@@ -287,10 +287,19 @@ confirmación le entrega al docente su propio recordatorio. Por curso
 - El folio va con un botón pill "Copiar" (`.fi-copiar`).
 - Debajo, la fecha y la hora (`.fi-cuando`).
 - Un bloque `.fi-cal`: "Agrégalo a tu calendario", más una línea que dice
-  cuándo avisará el celular, y dos botones de contorno midnight
-  (`.fi-cal-btn`, Google Calendar y "Outlook / celular").
-- Con varias sesiones, un botón ancho "Todas las sesiones (Outlook / celular)"
-  y una rejilla de botones de Google por fecha (`.fi-cal-btns.sesiones`).
+  cuándo avisará el calendario, y dos botones de contorno midnight
+  (`.fi-cal-btn`): "Google Calendar · Android · Gmail" e "iPhone / Outlook ·
+  También computadora". El botón es columna: leyenda opcional arriba y una
+  fila `.fi-cal-fila` con ícono + `.fi-cal-txt` (texto y `small` de para
+  quién es), para que el ícono no se parta del texto en celular.
+- El botón que conviene según el dispositivo va primero y relleno midnight
+  (`.fi-cal-btn.recomendado`, leyenda `.fi-cal-reco` "RECOMENDADO"). En
+  computadora no se marca ninguno. Sin logotipos de Apple/Google/Microsoft.
+- Con varias sesiones, un botón ancho "Todas las sesiones" y una rejilla de
+  botones de Google por fecha (`.fi-cal-btns.sesiones`); en Android la
+  rejilla va primero con la nota en negrita (`.fi-cal-nota.reco`).
+- Con 2+ cursos (salvo Android), una tarjeta extra arriba con borde midnight
+  (`.folio-item.fi-todos`) y un solo botón "Todos mis cursos".
 
 Al pie, antes del tip de folio, van dos botones anchos (`.conf-guardar` /
 `.cg-btn`): "Guardar comprobante (imagen)" en acento guinda y "Enviármelo
