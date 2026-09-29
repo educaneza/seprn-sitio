@@ -790,7 +790,15 @@ function visMarcarNoRealizadas_() {
 // planeada tenga más de VIS_DIAS_ARCHIVO días (sep 2026). Corre al final del
 // trigger diario de arriba (sin trigger nuevo). Primero copia al archivo y
 // después borra de "Reservas", de abajo hacia arriba: si algo falla a medias,
-// a lo más queda una fila repetida, nunca una perdida. Regresa cuántas movió. ──
+// a lo más queda una fila repetida, nunca una perdida. Regresa cuántas movió.
+//
+// Bug real del primer despliegue (29 sep 2026): con un filtro activo en
+// "Reservas" que ocultaba esas filas, deleteRow() no las borró y tampoco dio
+// error — el menú dijo "4 movidas", las filas siguieron en "Reservas" y, al
+// correrlo otra vez, se copiaron de nuevo al archivo. Por eso ahora: (1) el
+// filtro se quita solo durante el borrado y se vuelve a poner con los mismos
+// criterios, (2) no se copia al archivo un folio que ya esté ahí, y (3) al
+// final se revisa que las filas sí hayan salido de "Reservas". ──
 function visArchivarNoRealizadas_() {
   const lock = LockService.getScriptLock();
   lock.waitLock(30000);
@@ -800,7 +808,11 @@ function visArchivarNoRealizadas_() {
     const hoy = new Date();
     const numCols = ENCABEZADOS_VIS_RESERVAS.length;
 
-    const aMover = []; // { rowIndex, valores }
+    const archivo = visObtenerHojaArchivo_();
+    const foliosArchivados = {};
+    visFilasArchivo_().forEach(function (r) { foliosArchivados[String(r[1]).trim().toUpperCase()] = true; });
+
+    const aMover = []; // { rowIndex, valores, folio, yaArchivada }
     for (let i = 1; i < datos.length; i++) {
       const fila = datos[i];
       if (!fila[1]) continue;
@@ -816,26 +828,88 @@ function visArchivarNoRealizadas_() {
       const valores = fila.slice(0, numCols);
       while (valores.length < numCols) valores.push('');
       valores.push(hoy);
-      aMover.push({ rowIndex: i + 1, valores: valores });
+      const folio = String(fila[1]).trim().toUpperCase();
+      aMover.push({ rowIndex: i + 1, valores: valores, folio: folio, yaArchivada: !!foliosArchivados[folio] });
     }
     if (!aMover.length) return 0;
 
-    const archivo = visObtenerHojaArchivo_();
-    archivo.getRange(archivo.getLastRow() + 1, 1, aMover.length, numCols + 1)
-      .setValues(aMover.map(function (m) { return m.valores; }));
+    const nuevas = aMover.filter(function (m) { return !m.yaArchivada; });
+    if (nuevas.length) {
+      archivo.getRange(archivo.getLastRow() + 1, 1, nuevas.length, numCols + 1)
+        .setValues(nuevas.map(function (m) { return m.valores; }));
+    }
 
-    aMover.slice().reverse().forEach(function (m) { hoja.deleteRow(m.rowIndex); });
+    visConFiltroQuitado_(hoja, function () {
+      aMover.slice().reverse().forEach(function (m) { hoja.deleteRow(m.rowIndex); });
+    });
+
+    const folioSiguenEnReservas = {};
+    hoja.getDataRange().getValues().slice(1).forEach(function (r) {
+      folioSiguenEnReservas[String(r[1]).trim().toUpperCase()] = true;
+    });
+    const noBorradas = aMover.filter(function (m) { return folioSiguenEnReservas[m.folio]; });
+    if (noBorradas.length) {
+      throw new Error('Se copiaron al archivo pero no se pudieron quitar de "Reservas": ' +
+        noBorradas.map(function (m) { return m.folio; }).join(', '));
+    }
     return aMover.length;
   } finally {
     lock.releaseLock();
   }
 }
 
+// ── Quita el filtro básico de la hoja (si hay) mientras corre `fn` y lo vuelve
+// a crear con el mismo rango y los mismos criterios por columna — para que
+// deleteRow() no tope con filas ocultas por el filtro de quien revisa la hoja. ──
+function visConFiltroQuitado_(hoja, fn) {
+  const filtro = hoja.getFilter();
+  if (!filtro) { fn(); return; }
+  const rango = filtro.getRange();
+  const primeraCol = rango.getColumn();
+  const numFilasPrevias = rango.getNumRows();
+  const criterios = [];
+  for (let c = primeraCol; c < primeraCol + rango.getNumColumns(); c++) {
+    const crit = filtro.getColumnFilterCriteria(c);
+    if (crit) criterios.push({ col: c, crit: crit.copy().build() });
+  }
+  const numCols = rango.getNumColumns();
+  filtro.remove();
+  try {
+    fn();
+  } finally {
+    const filas = Math.max(2, Math.min(numFilasPrevias, hoja.getLastRow() - rango.getRow() + 1));
+    const nuevo = hoja.getRange(rango.getRow(), primeraCol, filas, numCols).createFilter();
+    criterios.forEach(function (k) { nuevo.setColumnFilterCriteria(k.col, k.crit); });
+  }
+}
+
+// ── Quita del archivo las filas con folio repetido (se queda la primera). Solo
+// hace falta para limpiar la corrida doble del 29 sep 2026 — es seguro correrla
+// de nuevo: sin repetidos no hace nada. Regresa cuántas quitó. ──
+function visQuitarRepetidosArchivo_() {
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_VIS_ARCHIVO);
+  if (!hoja || hoja.getLastRow() < 3) return 0;
+  const datos = hoja.getDataRange().getValues();
+  const vistos = {};
+  const repetidas = [];
+  for (let i = 1; i < datos.length; i++) {
+    const folio = String(datos[i][1]).trim().toUpperCase();
+    if (!folio) continue;
+    if (vistos[folio]) repetidas.push(i + 1); else vistos[folio] = true;
+  }
+  repetidas.reverse().forEach(function (rowIndex) { hoja.deleteRow(rowIndex); });
+  return repetidas.length;
+}
+
 // ── Versión de menú (sin guion bajo al final, para que también aparezca en el
 // desplegable "Seleccionar función" del editor). ──
 function visArchivarNoRealizadasAhora() {
+  const repetidas = visQuitarRepetidosArchivo_();
   const n = visArchivarNoRealizadas_();
-  try { SpreadsheetApp.getUi().alert(n + ' reserva(s) movida(s) a "' + HOJA_VIS_ARCHIVO + '".'); } catch (err) {}
+  try {
+    SpreadsheetApp.getUi().alert(n + ' reserva(s) movida(s) a "' + HOJA_VIS_ARCHIVO + '".' +
+      (repetidas ? '\n' + repetidas + ' fila(s) repetida(s) quitada(s) del archivo.' : ''));
+  } catch (err) {}
 }
 
 function visObtenerHojaArchivo_() {
