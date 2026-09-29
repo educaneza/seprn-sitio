@@ -374,6 +374,15 @@
                 document.getElementById('bloque-ficha').classList.add('ficha-oculto');
                 return;
             }
+            if (data.archivada) {
+                // Reserva ya movida al archivo de no realizadas/canceladas (sep 2026) —
+                // el backend ya no acepta ficha para ese folio.
+                msg.classList.add('error');
+                msg.textContent = 'Esta reserva (' + data.folio + ') se archivó como ' + (data.estatus || 'no realizada').toLowerCase() +
+                    '. Si aún quieres visitar la escuela, haz una reserva nueva en la página de Ceremonias Cívicas.';
+                document.getElementById('bloque-ficha').classList.add('ficha-oculto');
+                return;
+            }
             mostrarFicha(data);
         } catch (err2) {
             msg.classList.add('error');

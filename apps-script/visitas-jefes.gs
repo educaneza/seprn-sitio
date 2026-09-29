@@ -83,6 +83,12 @@ const CARPETA_VIS_FOTOS = 'Fotos de Visitas Jefes';
 const VIS_TAMANO_MAX_BYTES = 8 * 1024 * 1024; // techo de seguridad por foto — el cliente ya comprime a unos cientos de KB antes de subir
 const VIS_MAX_FOTOS = 20;
 const VIS_DIAS_LIMITE_VALIDACION = 3; // días tras la fecha planeada sin ficha antes de marcar "No realizada"
+// Archivo de "No realizada"/"Cancelada" (sep 2026): pasados estos días desde la fecha planeada,
+// la fila sale de "Reservas" y se mueve a HOJA_VIS_ARCHIVO — la maestra de seguimiento pidió
+// quitar ese ruido de la base principal (y de la tabla del sitio) sin perder el registro de
+// quién reservó y no fue. Con 7, una "No realizada" queda ~4 días visible para reagendarla.
+const VIS_DIAS_ARCHIVO = 7;
+const HOJA_VIS_ARCHIVO = 'Archivo — No realizadas';
 
 const ENCABEZADOS_VIS_RESERVAS = [
   'Fecha de reserva', 'Folio', 'Nombre', 'Cargo/Área', 'Correo', 'Teléfono',
@@ -110,6 +116,7 @@ const COL_VIS_MOTIVO_REVISITA = 24;
 const COL_VIS_HISTORIAL_CAMBIOS = 25;
 
 const ESTADOS_VIS_VALIDOS = ['Reservada', 'Realizada', 'No realizada', 'Cancelada'];
+const ENCABEZADOS_VIS_ARCHIVO = ENCABEZADOS_VIS_RESERVAS.concat(['Fecha de archivado']);
 const TIPOS_VIS_VALIDOS = ['Inicio de ciclo escolar', 'Ceremonia cívica semanal'];
 
 // ── doGet: disponibilidad (picker + historial) ──
@@ -213,7 +220,15 @@ function visConsultarFolio_(folioBuscado) {
   const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_VIS_RESERVAS);
   if (!hoja) return noEncontrado();
 
-  const fila = visBuscarFilaPorFolio_(hoja, folioBuscado);
+  let fila = visBuscarFilaPorFolio_(hoja, folioBuscado);
+  let archivada = false;
+  if (!fila) {
+    // Folio ya movido al archivo (sep 2026): se sigue pudiendo consultar, pero ya no es
+    // accionable (ni ficha, ni reagendar, ni cancelar) — el sitio lo explica.
+    const hojaArchivo = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_VIS_ARCHIVO);
+    fila = hojaArchivo ? visBuscarFilaPorFolio_(hojaArchivo, folioBuscado) : null;
+    archivada = !!fila;
+  }
   if (!fila) return noEncontrado();
 
   const d = fila.datos;
@@ -229,7 +244,8 @@ function visConsultarFolio_(folioBuscado) {
     tipoVisita: d[10],
     fechaPlaneada: d[COL_VIS_FECHA_PLANEADA - 1] instanceof Date
       ? Utilities.formatDate(d[COL_VIS_FECHA_PLANEADA - 1], 'America/Mexico_City', 'yyyy-MM-dd') : String(d[COL_VIS_FECHA_PLANEADA - 1] || ''),
-    estatus: String(d[COL_VIS_ESTATUS - 1] || '').trim()
+    estatus: String(d[COL_VIS_ESTATUS - 1] || '').trim(),
+    archivada: archivada
   }));
 }
 
@@ -348,7 +364,7 @@ function visDoPostFicha_(datos) {
     const hoja = visObtenerHojaReservas();
     const fila = visBuscarFilaPorFolio_(hoja, folio);
     if (!fila) {
-      return visTextResponse(JSON.stringify({ status: 'error', mensaje: 'No se encontró ninguna reserva con folio "' + folio + '".' }));
+      return visTextResponse(JSON.stringify({ status: 'error', mensaje: visMensajeFolioNoEncontrado_(folio) }));
     }
     const estatusActual = String(fila.datos[COL_VIS_ESTATUS - 1] || '').trim();
     if (estatusActual === 'Cancelada') {
@@ -421,7 +437,7 @@ function visDoPostCancelar_(datos) {
     const hoja = visObtenerHojaReservas();
     const fila = visBuscarFilaPorFolio_(hoja, folio);
     if (!fila) {
-      return visTextResponse(JSON.stringify({ status: 'error', mensaje: 'No se encontró ninguna reserva con folio "' + folio + '".' }));
+      return visTextResponse(JSON.stringify({ status: 'error', mensaje: visMensajeFolioNoEncontrado_(folio) }));
     }
 
     const estatusActual = String(fila.datos[COL_VIS_ESTATUS - 1] || '').trim();
@@ -467,7 +483,7 @@ function visDoPostReagendar_(datos) {
     const hoja = visObtenerHojaReservas();
     const fila = visBuscarFilaPorFolio_(hoja, folio);
     if (!fila) {
-      return visTextResponse(JSON.stringify({ status: 'error', mensaje: 'No se encontró ninguna reserva con folio "' + folio + '".' }));
+      return visTextResponse(JSON.stringify({ status: 'error', mensaje: visMensajeFolioNoEncontrado_(folio) }));
     }
 
     const estatusActual = String(fila.datos[COL_VIS_ESTATUS - 1] || '').trim();
@@ -561,6 +577,24 @@ function visBuscarFilaPorFolio_(hoja, folio) {
   return null;
 }
 
+// ── Mensaje para un folio que no está en "Reservas": distingue uno archivado
+// (sep 2026, ver visArchivarNoRealizadas_) de uno que no existe. ──
+function visMensajeFolioNoEncontrado_(folio) {
+  const hojaArchivo = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_VIS_ARCHIVO);
+  if (hojaArchivo && visBuscarFilaPorFolio_(hojaArchivo, folio)) {
+    return 'La reserva con folio "' + folio + '" se archivó como no realizada o cancelada. ' +
+      'Si aún quieres visitar la escuela, haz una reserva nueva.';
+  }
+  return 'No se encontró ninguna reserva con folio "' + folio + '".';
+}
+
+// ── Filas de datos (sin encabezado) de la hoja de archivo, o [] si no existe todavía ──
+function visFilasArchivo_() {
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_VIS_ARCHIVO);
+  if (!hoja || hoja.getLastRow() < 2) return [];
+  return hoja.getDataRange().getValues().slice(1).filter(function (r) { return r[1]; });
+}
+
 // ── ¿Ya hay una reserva activa (Reservada/Realizada) para esta escuela
 // esta semana? Compara por CCT + lunes de la semana, no por fecha exacta,
 // porque una ceremonia cívica podría moverse de día dentro de la misma
@@ -594,9 +628,11 @@ function visExisteReservaActiva_(hoja, cct, semanaLunesDate, excluirRowIndex) {
 // ── Generar folio único — CC de "Ceremonias Cívicas", mismo nombre que la
 // Sheet real ("Seguimiento_Ceremonias_Cívicas_26-27"). ──
 function visGenerarFolio(hoja) {
+  // Incluye el archivo (sep 2026): si el folio más alto ya se archivó, sin esto se volvería
+  // a emitir el mismo número.
   const datos = hoja.getDataRange().getValues();
   const prefix = 'SEPRN-CC-';
-  const maxNum = datos.slice(1)
+  const maxNum = datos.slice(1).concat(visFilasArchivo_())
     .map(row => String(row[1]))
     .filter(f => f.startsWith(prefix))
     .map(f => parseInt(f.replace(prefix, ''), 10) || 0)
@@ -746,6 +782,75 @@ function visMarcarNoRealizadas_() {
       hoja.getRange(i + 1, COL_VIS_ESTATUS).setValue('No realizada');
     }
   }
+
+  visArchivarNoRealizadas_();
+}
+
+// ── Mueve a HOJA_VIS_ARCHIVO las filas "No realizada"/"Cancelada" cuya fecha
+// planeada tenga más de VIS_DIAS_ARCHIVO días (sep 2026). Corre al final del
+// trigger diario de arriba (sin trigger nuevo). Primero copia al archivo y
+// después borra de "Reservas", de abajo hacia arriba: si algo falla a medias,
+// a lo más queda una fila repetida, nunca una perdida. Regresa cuántas movió. ──
+function visArchivarNoRealizadas_() {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    const hoja = visObtenerHojaReservas();
+    const datos = hoja.getDataRange().getValues();
+    const hoy = new Date();
+    const numCols = ENCABEZADOS_VIS_RESERVAS.length;
+
+    const aMover = []; // { rowIndex, valores }
+    for (let i = 1; i < datos.length; i++) {
+      const fila = datos[i];
+      if (!fila[1]) continue;
+      const estatus = String(fila[COL_VIS_ESTATUS - 1] || '').trim();
+      if (estatus !== 'No realizada' && estatus !== 'Cancelada') continue;
+
+      const fechaPlaneada = fila[COL_VIS_FECHA_PLANEADA - 1];
+      if (!(fechaPlaneada instanceof Date)) continue;
+      const limite = new Date(fechaPlaneada.getTime());
+      limite.setDate(limite.getDate() + VIS_DIAS_ARCHIVO);
+      if (hoy <= limite) continue;
+
+      const valores = fila.slice(0, numCols);
+      while (valores.length < numCols) valores.push('');
+      valores.push(hoy);
+      aMover.push({ rowIndex: i + 1, valores: valores });
+    }
+    if (!aMover.length) return 0;
+
+    const archivo = visObtenerHojaArchivo_();
+    archivo.getRange(archivo.getLastRow() + 1, 1, aMover.length, numCols + 1)
+      .setValues(aMover.map(function (m) { return m.valores; }));
+
+    aMover.slice().reverse().forEach(function (m) { hoja.deleteRow(m.rowIndex); });
+    return aMover.length;
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// ── Versión de menú (sin guion bajo al final, para que también aparezca en el
+// desplegable "Seleccionar función" del editor). ──
+function visArchivarNoRealizadasAhora() {
+  const n = visArchivarNoRealizadas_();
+  try { SpreadsheetApp.getUi().alert(n + ' reserva(s) movida(s) a "' + HOJA_VIS_ARCHIVO + '".'); } catch (err) {}
+}
+
+function visObtenerHojaArchivo_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let hoja = ss.getSheetByName(HOJA_VIS_ARCHIVO);
+  if (!hoja) {
+    hoja = ss.insertSheet(HOJA_VIS_ARCHIVO);
+    hoja.appendRow(ENCABEZADOS_VIS_ARCHIVO);
+    hoja.getRange(1, 1, 1, ENCABEZADOS_VIS_ARCHIVO.length)
+      .setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
+    hoja.setFrozenRows(1);
+    hoja.setColumnWidth(3, 180); // Nombre
+    hoja.setColumnWidth(8, 200); // Escuela
+  }
+  return hoja;
 }
 
 // ── Instala el trigger diario de validación (seguro correrlo de nuevo:
@@ -839,7 +944,7 @@ function visGenerarReporteSeguimiento_() {
     })
     .sort(function (a, b) { return new Date(b[COL_VIS_FECHA_VISITA_REAL - 1]) - new Date(a[COL_VIS_FECHA_VISITA_REAL - 1]); });
 
-  const noRealizadas = filas
+  const noRealizadas = filas.concat(visFilasArchivo_()) // incluye las ya archivadas (sep 2026)
     .filter(function (r) {
       if (String(r[COL_VIS_ESTATUS - 1]).trim() !== 'No realizada') return false;
       const f = r[COL_VIS_FECHA_PLANEADA - 1];
@@ -1063,10 +1168,13 @@ function visActualizarDashboardHoja_() {
   const hojaReservas = visObtenerHojaReservas();
   const filas = hojaReservas.getDataRange().getValues().slice(1).filter(function (r) { return r[1]; });
   const realizadas = filas.filter(function (r) { return String(r[COL_VIS_ESTATUS - 1]).trim() === 'Realizada'; });
-  const total = filas.length;
+  // Las archivadas (sep 2026) siguen contando en la mezcla de estatus y en el bloque de
+  // no realizadas por persona — salieron de "Reservas", no del registro.
+  const todas = filas.concat(visFilasArchivo_());
+  const total = todas.length;
 
   const conteoEstatus = { 'Reservada': 0, 'Realizada': 0, 'No realizada': 0, 'Cancelada': 0 };
-  filas.forEach(function (r) {
+  todas.forEach(function (r) {
     const e = String(r[COL_VIS_ESTATUS - 1]).trim();
     if (conteoEstatus.hasOwnProperty(e)) conteoEstatus[e]++;
   });
@@ -1100,10 +1208,26 @@ function visActualizarDashboardHoja_() {
   });
   const filasSemana = Object.keys(porSemana).sort().map(function (key) { return [key, porSemana[key]]; });
 
+  // Quién reservó y no fue (sep 2026) — lo pidió la maestra de seguimiento al archivar.
+  const noRealizadasPorPersona = {};
+  todas.forEach(function (r) {
+    if (String(r[COL_VIS_ESTATUS - 1]).trim() !== 'No realizada') return;
+    const key = r[2] + '||' + r[3];
+    if (!noRealizadasPorPersona[key]) noRealizadasPorPersona[key] = [];
+    const f = r[COL_VIS_FECHA_PLANEADA - 1];
+    noRealizadasPorPersona[key].push(String(r[7] || '') +
+      (f instanceof Date ? ' (' + Utilities.formatDate(f, 'America/Mexico_City', 'dd/MM') + ')' : ''));
+  });
+  const filasNoRealizadas = Object.keys(noRealizadasPorPersona).map(function (key) {
+    const p = key.split('||');
+    return [p[0], p[1], noRealizadasPorPersona[key].length, noRealizadasPorPersona[key].join('; ')];
+  }).sort(function (a, b) { return b[2] - a[2]; });
+
   const hoja = visObtenerHojaDashboard_();
   if (hoja.getLastRow() > 0) hoja.getRange(1, 1, hoja.getMaxRows(), hoja.getMaxColumns()).breakApart();
   hoja.clear();
   hoja.setColumnWidths(1, 3, 180);
+  hoja.setColumnWidth(4, 360);
 
   let fila = 1;
   hoja.getRange(fila, 1).setValue('Dashboard — Ceremonias Cívicas · actualizado ' +
@@ -1119,6 +1243,9 @@ function visActualizarDashboardHoja_() {
     ['Sector', 'Visitas realizadas'], filasSector);
   fila = visEscribirBloqueDashboard_(hoja, fila, 'TENDENCIA SEMANAL (semana de la visita real)',
     ['Semana (lunes)', 'Visitas realizadas'], filasSemana);
+  fila = visEscribirBloqueDashboard_(hoja, fila, 'RESERVAS NO REALIZADAS POR PERSONA (incluye archivadas)',
+    ['Nombre', 'Cargo/Área', 'No realizadas', 'Escuelas (fecha planeada)'], filasNoRealizadas,
+    function () { return VIS_COLOR_ESTATUS['No realizada']; });
 
   try { SpreadsheetApp.getUi().alert('Dashboard actualizado.'); } catch (err) {}
 }
@@ -1134,6 +1261,7 @@ function onOpen() {
     .addItem('Instalar trigger de validación diaria ("No realizada")', 'visInstalarTriggerValidacion')
     .addItem('Desinstalar trigger de validación diaria', 'visDesinstalarTriggerValidacion')
     .addItem('Marcar "No realizadas" ahora (manual)', 'visMarcarNoRealizadas_')
+    .addItem('Archivar no realizadas/canceladas ahora', 'visArchivarNoRealizadasAhora')
     .addToUi();
 }
 

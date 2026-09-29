@@ -138,6 +138,19 @@
         .vis-bar-row-vacio .vis-bar-track { background: #f8d7da; }
         .vis-bar-row-vacio .vis-bar-value { color: #9F2241; }
         .vis-dashboard-titulo { color: #56212f; font-size: 15px; margin: 22px 0 10px; }
+        /* Escuelas pendientes de visita (sep 2026) — para que quien reserva vea de entrada
+        qué escuelas siguen libres, en vez de descubrirlo después de escribir el CCT. Tarjetas
+        y no tabla: el domicilio es texto largo y la mayoría entra desde el celular. */
+        .vis-pend-filtros { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 14px; }
+        .vis-pend-filtros > div { flex: 1 1 150px; min-width: 0; }
+        .vis-pend-filtros select, .vis-pend-filtros input { width: 100%; padding: 9px 12px; border: 1px solid #d6d1ca; border-radius: 8px; font-family: inherit; font-size: 14px; background: white; }
+        .vis-pend-contador { margin: 16px 0 4px; font-size: 14px; color: #56212f; }
+        .vis-pend-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-top: 10px; }
+        .vis-pend-card { border: 1px solid #d6d1ca; border-left: 4px solid #9F2241; border-radius: 8px; padding: 12px 14px; background: white; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: #333; }
+        .vis-pend-card h4 { margin: 0; font-size: 14px; color: #56212f; }
+        .vis-pend-meta { font-size: 12px; color: #977e5b; }
+        .vis-pend-card .vis-pag-btn { align-self: flex-start; margin-top: 6px; }
+        .vis-pend-link { display: inline-block; margin-top: 6px; font-size: 13px; color: #9F2241; font-weight: 600; }
     </style>
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="SEPRN">
@@ -259,6 +272,7 @@
                     </div>
                     <div class="sop-cct-status" id="vis-cct-status"></div>
                     <div class="soporte-field-error" id="vis-cct-error">Selecciona una escuela válida.</div>
+                    <a href="#vis-pendientes" class="vis-pend-link">¿No sabes cuál elegir? Ver escuelas pendientes de visita ↓</a>
                 </div>
 
                 <div class="sop-manual-fields" id="vis-manual-fields">
@@ -339,9 +353,43 @@
         </div>
     </div>
 
+    <div class="content-block" id="vis-pendientes">
+        <h3>Escuelas pendientes de visita</h3>
+        <p>Escuelas que todavía no han sido visitadas este ciclo y que no tienen una visita programada. Filtra por tu zona o municipio y usa "Elegir esta escuela" para llenarla en el formulario.</p>
+        <div class="vis-pend-filtros">
+            <div>
+                <label for="vis-pend-sector" class="vis-filtro-fecha-sublabel">Sector</label>
+                <select id="vis-pend-sector" onchange="visPendSectorCambio()"><option value="">Todos</option></select>
+            </div>
+            <div>
+                <label for="vis-pend-zona" class="vis-filtro-fecha-sublabel">Zona</label>
+                <select id="vis-pend-zona" onchange="visPendFiltroCambio()"><option value="">Todas</option></select>
+            </div>
+            <div>
+                <label for="vis-pend-municipio" class="vis-filtro-fecha-sublabel">Municipio</label>
+                <select id="vis-pend-municipio" onchange="visPendFiltroCambio()"><option value="">Todos</option></select>
+            </div>
+            <div>
+                <label for="vis-pend-turno" class="vis-filtro-fecha-sublabel">Turno</label>
+                <select id="vis-pend-turno" onchange="visPendFiltroCambio()"><option value="">Todos</option></select>
+            </div>
+            <div style="flex-basis:220px;">
+                <label for="vis-pend-buscar" class="vis-filtro-fecha-sublabel">Buscar</label>
+                <input type="text" id="vis-pend-buscar" placeholder="Nombre, colonia o CCT" oninput="visPendFiltroCambio()">
+            </div>
+        </div>
+        <p class="vis-pend-contador" id="vis-pend-contador">Cargando…</p>
+        <div class="vis-pend-lista" id="vis-pend-lista"></div>
+        <div class="vis-paginacion" id="vis-pend-paginacion" style="display:none;">
+            <button type="button" class="vis-pag-btn" id="vis-pend-anterior" onclick="visPendPagina(-1)">← Anterior</button>
+            <span class="vis-pag-info" id="vis-pend-info"></span>
+            <button type="button" class="vis-pag-btn" id="vis-pend-siguiente" onclick="visPendPagina(1)">Siguiente →</button>
+        </div>
+    </div>
+
     <div class="content-block">
         <h3>Disponibilidad e histórico de visitas</h3>
-        <p>Escuelas ya reservadas o visitadas este ciclo. "Reservada" bloquea esa escuela para la misma semana hasta que se llene la ficha o pase el plazo de validación.</p>
+        <p>Escuelas ya reservadas o visitadas este ciclo. "Reservada" bloquea esa escuela para la misma semana hasta que se llene la ficha o pase el plazo de validación. Las reservas no realizadas o canceladas dejan de mostrarse aquí una semana después de su fecha planeada (quedan registradas en el archivo de seguimiento).</p>
         <div class="highlight-box vis-cobertura" id="vis-cobertura">
             <p style="margin:0;" id="vis-cobertura-texto">Calculando cobertura…</p>
         </div>
@@ -539,6 +587,7 @@
     </footer>
 
 <script src="js/cct-db.js"></script>
+<script src="js/escuelas-direcciones.js"></script>
 <script src="js/tramites-shared.js"></script>
 <script>
     // ── Visitas a Escuelas: reserva + disponibilidad/histórico ──
@@ -601,7 +650,7 @@
             visResetCct();
             if (q.length < 3) { visSuggestions.style.display = 'none'; return; }
 
-            var matches = CCT_DB.filter(function (e) { return e.cct.includes(q) || e.nombre.toUpperCase().includes(q); }).slice(0, 10);
+            var matches = visCoincidenciasCct(q).slice(0, 10);
             if (!matches.length) { visSuggestions.style.display = 'none'; return; }
 
             visSuggestions.innerHTML = '';
@@ -622,7 +671,7 @@
             if (e.key === 'ArrowUp') { visActiveSugg = Math.max(visActiveSugg - 1, 0); visHighlightSugg(items); e.preventDefault(); }
             if (e.key === 'Enter' && visActiveSugg >= 0) {
                 var q = visInputCct.value.trim().toUpperCase();
-                var m = CCT_DB.filter(function (e) { return e.cct.includes(q) || e.nombre.toUpperCase().includes(q); })[visActiveSugg];
+                var m = visCoincidenciasCct(q)[visActiveSugg];
                 if (m) { visSeleccionarCct(m); e.preventDefault(); }
             }
             if (e.key === 'Escape') { visSuggestions.style.display = 'none'; }
@@ -642,6 +691,15 @@
             }
             visRevisarConflicto();
         });
+    }
+
+    // Coincidencias del autocomplete con las escuelas pendientes de visita primero (sep 2026).
+    // La usan tanto la lista de sugerencias como la tecla Enter, para que el índice coincida.
+    function visCoincidenciasCct(q) {
+        return CCT_DB.filter(function (e) { return e.cct.includes(q) || e.nombre.toUpperCase().includes(q); })
+            .map(function (e, i) { return { e: e, i: i, ocupada: visEscuelaOcupada(e.cct) ? 1 : 0 }; })
+            .sort(function (a, b) { return a.ocupada - b.ocupada || a.i - b.i; })
+            .map(function (x) { return x.e; });
     }
 
     function visHighlightSugg(items) { items.forEach(function (li, i) { li.classList.toggle('active', i === visActiveSugg); }); }
@@ -827,6 +885,150 @@
         tabla.style.display = 'table';
         visRenderTabla();
         visActualizarCobertura();
+        visPendRender();
+    }
+
+    // ── Escuelas pendientes de visita (sep 2026) ──
+    // Pendiente = escuela del catálogo sin visita "Realizada" y sin "Reservada" vigente.
+    // Una "Reservada" vencida (visEsVencida) no la aparta: esa visita ya no ocurrió.
+    var VIS_PEND_PAGE_SIZE = 20;
+    var visPendPaginaActual = 1;
+
+    function visEscuelaOcupada(cct) {
+        var cctU = (cct || '').toUpperCase();
+        return visReservasCache.some(function (r) {
+            if ((r.cct || '').toUpperCase() !== cctU) return false;
+            return r.estatus === 'Realizada' || (r.estatus === 'Reservada' && !visEsVencida(r.fechaPlaneada));
+        });
+    }
+
+    function visDireccion(cct) {
+        return (typeof ESCUELAS_DIRECCIONES !== 'undefined' && ESCUELAS_DIRECCIONES[cct]) || {};
+    }
+
+    function visPendInitFiltros() {
+        if (typeof CCT_DB === 'undefined') return;
+        var escuelas = CCT_DB.filter(function (e) { return e.tipo === 'escuela'; });
+        var sectorSel = document.getElementById('vis-pend-sector');
+        VIS_ROMANOS_ORDEN.forEach(function (s) {
+            if (!visSectorZonas[s]) return;
+            var o = document.createElement('option'); o.value = s; o.textContent = 'Sector ' + s;
+            sectorSel.appendChild(o);
+        });
+        var municipios = {}, turnos = {};
+        escuelas.forEach(function (e) {
+            if (e.municipio) municipios[e.municipio] = true;
+            var t = visDireccion(e.cct).t;
+            if (t) turnos[t] = true;
+        });
+        var llenar = function (id, valores) {
+            var sel = document.getElementById(id);
+            Object.keys(valores).sort(function (a, b) { return a.localeCompare(b, 'es'); }).forEach(function (v) {
+                var o = document.createElement('option'); o.value = v; o.textContent = v;
+                sel.appendChild(o);
+            });
+        };
+        llenar('vis-pend-municipio', municipios);
+        llenar('vis-pend-turno', turnos);
+    }
+
+    function visPendSectorCambio() {
+        var sector = document.getElementById('vis-pend-sector').value;
+        var zonaSel = document.getElementById('vis-pend-zona');
+        zonaSel.innerHTML = '<option value="">Todas</option>';
+        (visSectorZonas[sector] || []).forEach(function (z) {
+            var o = document.createElement('option'); o.value = z; o.textContent = 'Zona ' + z;
+            zonaSel.appendChild(o);
+        });
+        visPendFiltroCambio();
+    }
+
+    function visPendFiltroCambio() {
+        visPendPaginaActual = 1;
+        visPendRender();
+    }
+
+    function visPendPagina(delta) {
+        visPendPaginaActual += delta;
+        visPendRender();
+        document.getElementById('vis-pendientes').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function visPendRender() {
+        var lista = document.getElementById('vis-pend-lista');
+        var contador = document.getElementById('vis-pend-contador');
+        var paginacion = document.getElementById('vis-pend-paginacion');
+        if (typeof CCT_DB === 'undefined') { contador.textContent = ''; return; }
+
+        var sector = document.getElementById('vis-pend-sector').value;
+        var zona = document.getElementById('vis-pend-zona').value;
+        var municipio = document.getElementById('vis-pend-municipio').value;
+        var turno = document.getElementById('vis-pend-turno').value;
+        var q = document.getElementById('vis-pend-buscar').value.trim().toUpperCase();
+
+        var pendientesTotal = 0;
+        var filas = CCT_DB.filter(function (e) {
+            if (e.tipo !== 'escuela' || visEscuelaOcupada(e.cct)) return false;
+            pendientesTotal++;
+            var dir = visDireccion(e.cct);
+            if (sector && e.sector !== sector) return false;
+            if (zona && String(e.zona) !== zona) return false;
+            if (municipio && e.municipio !== municipio) return false;
+            if (turno && dir.t !== turno) return false;
+            if (q && !(e.cct.includes(q) || (e.nombre || '').toUpperCase().includes(q) ||
+                (dir.c || '').toUpperCase().includes(q) || (dir.d || '').toUpperCase().includes(q))) return false;
+            return true;
+        }).sort(function (a, b) {
+            return visOrdenSector(a.sector) - visOrdenSector(b.sector) || (a.zona || 0) - (b.zona || 0) ||
+                (a.nombre || '').localeCompare(b.nombre || '', 'es');
+        });
+
+        var hayFiltros = !!(sector || zona || municipio || turno || q);
+        var escuelasTxt = function (n) { return '<strong>' + n + '</strong> escuela' + (n === 1 ? '' : 's') + ' pendiente' + (n === 1 ? '' : 's'); };
+        contador.innerHTML = hayFiltros
+            ? escuelasTxt(filas.length) + ' con estos filtros (de ' + pendientesTotal + ' en total).'
+            : escuelasTxt(pendientesTotal) + ' de visita.';
+
+        lista.innerHTML = '';
+        if (!filas.length) {
+            lista.innerHTML = '<p class="vis-cargando">No hay escuelas pendientes con estos filtros.</p>';
+            paginacion.style.display = 'none';
+            return;
+        }
+
+        var totalPaginas = Math.max(1, Math.ceil(filas.length / VIS_PEND_PAGE_SIZE));
+        visPendPaginaActual = Math.min(Math.max(visPendPaginaActual, 1), totalPaginas);
+        var inicio = (visPendPaginaActual - 1) * VIS_PEND_PAGE_SIZE;
+
+        filas.slice(inicio, inicio + VIS_PEND_PAGE_SIZE).forEach(function (e) {
+            var dir = visDireccion(e.cct);
+            var domicilio = [dir.d, dir.c ? 'Col. ' + dir.c : '', e.municipio].filter(Boolean).join(', ');
+            var card = document.createElement('div');
+            card.className = 'vis-pend-card';
+            card.innerHTML =
+                '<h4>' + e.nombre + '</h4>' +
+                '<span class="vis-pend-meta">' + e.cct + ' · Sector ' + e.sector + (e.zona ? ' · Zona ' + e.zona : '') + (dir.t ? ' · ' + dir.t : '') + '</span>' +
+                (domicilio ? '<span>' + domicilio + (dir.cp ? ' · C.P. ' + dir.cp : '') + '</span>' : '');
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'vis-pag-btn';
+            btn.textContent = 'Elegir esta escuela';
+            btn.addEventListener('click', function () { visElegirPendiente(e); });
+            card.appendChild(btn);
+            lista.appendChild(card);
+        });
+
+        document.getElementById('vis-pend-info').textContent = 'Página ' + visPendPaginaActual + ' de ' + totalPaginas;
+        document.getElementById('vis-pend-anterior').disabled = visPendPaginaActual <= 1;
+        document.getElementById('vis-pend-siguiente').disabled = visPendPaginaActual >= totalPaginas;
+        paginacion.style.display = totalPaginas > 1 ? 'flex' : 'none';
+    }
+
+    function visElegirPendiente(e) {
+        var container = document.getElementById('form-reservar');
+        if (!container.classList.contains('active')) toggleReservarForm(document.getElementById('btn-reservar'));
+        visSeleccionarCct(e);
+        document.getElementById('vis-cct').scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     // ── Contador de cobertura: cuántas escuelas distintas ya tienen al menos
@@ -905,12 +1107,16 @@
         document.getElementById('vis-reagendar-form').style.display = 'none';
         document.getElementById('vis-cancelar-form').style.display = 'none';
 
-        var accionable = reserva.estatus === 'Reservada' || reserva.estatus === 'No realizada';
+        // archivada (sep 2026): la reserva ya salió de "Reservas" hacia el archivo de no
+        // realizadas/canceladas — el backend ya no la reagenda ni la cancela.
+        var accionable = !reserva.archivada && (reserva.estatus === 'Reservada' || reserva.estatus === 'No realizada');
         document.getElementById('vis-gestion-acciones').style.display = accionable ? 'block' : 'none';
 
         var bloqueado = document.getElementById('vis-gestion-bloqueado');
         if (!accionable) {
-            bloqueado.textContent = reserva.estatus === 'Realizada'
+            bloqueado.textContent = reserva.archivada
+                ? 'Esta reserva se archivó como ' + (reserva.estatus || 'no realizada').toLowerCase() + '. Si aún quieres visitar la escuela, haz una reserva nueva con el formulario de arriba.'
+                : reserva.estatus === 'Realizada'
                 ? 'Esta visita ya se realizó y tiene ficha registrada — no se puede reagendar ni cancelar.'
                 : 'Esta reserva ya está cancelada.';
             bloqueado.style.display = 'block';
@@ -1393,6 +1599,7 @@
     }
 
     visInitCctAutocomplete();
+    visPendInitFiltros();
     cargarDisponibilidad();
 </script>
     <script src="script.js" defer></script>
