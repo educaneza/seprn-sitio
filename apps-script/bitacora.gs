@@ -45,7 +45,7 @@
 //   Registrado | ID | Mes | Meta | N.P. | Origen | Tipo y nombre |
 //   Fecha inicio | Fecha fin | Fecha (texto) | Responsable | Modalidad |
 //   Lugar | CCT | Descripción | Propósito | Beneficiarios | Capturó |
-//   ID de envío
+//   ID de envío | Va al reporte (Sí/No, 1 oct 2026)
 // ALIMENTACIÓN AUTOMÁTICA DESDE MANTENIMIENTO (24 sep 2026): cada reporte
 // de visita de reporte-visita.html se vuelve una actividad de META 21 /
 // N.P. 7 sin recapturarla. La bitácora la JALA (no Mantenimiento la empuja)
@@ -83,6 +83,29 @@ const ENCABEZADOS_PLANEACION = [
 // cabe en un <select> de celular). Columna agregada al final de Planeacion el
 // 24 sep 2026; "Preparar hojas" la crea y la llena si falta, y se puede editar.
 const BIT_COL_NOMBRE_CORTO = 'Nombre corto';
+// Propósito sugerido (1 oct 2026): el comunicado de Planeación pide que el
+// propósito inicie con un verbo observable. "Resultados esperados" es un
+// sustantivo ("Solicitudes… atendidas"), así que el borrador del formulario y
+// de las actividades automáticas sale de esta columna (o, si está vacía, del
+// texto de la Acción, que ya empieza con verbo). Se agrega al final de
+// Planeacion con "Preparar hojas" y se puede editar.
+const BIT_COL_PROPOSITO = 'Propósito sugerido';
+const BIT_PROPOSITOS_2627 = {
+  '1': 'Valorar la implementación y el desarrollo del Programa MIED en las escuelas beneficiadas, mediante visitas de seguimiento y la aplicación de instrumentos de evaluación.',
+  '2': 'Fortalecer las competencias digitales de docentes y personal de la OTDE mediante la formación y la certificación en herramientas de Google y Canva.',
+  '3': 'Desarrollar competencias de gestión y liderazgo escolar en las figuras directivas mediante el programa Liderazgo UNETE.',
+  '4': 'Favorecer la incorporación de las ciencias de la computación en la práctica docente mediante el acompañamiento al Programa CUANTRIX.',
+  '5': 'Fortalecer las competencias digitales de las y los docentes para el uso pedagógico de la inteligencia artificial en la planeación didáctica y la elaboración de materiales.',
+  '6': 'Favorecer la apropiación y la aplicación de recursos digitales en el aula, orientadas al logro de los Procesos de Desarrollo de Aprendizaje (PDA).',
+  '7': 'Asegurar el funcionamiento y la disponibilidad de los equipos de cómputo de las escuelas para el trabajo con el alumnado y el acceso al Banco de Materiales Digitales.',
+  '8': 'Fortalecer el uso del Banco de Materiales Digitales en el diseño de secuencias didácticas vinculadas con los PDA, así como el manejo de Excel básico en las tareas administrativas.',
+  '9': 'Orientar el uso pedagógico y responsable de la inteligencia artificial en el diseño de estrategias didácticas y materiales educativos.',
+  '10': 'Fortalecer la formación continua de docentes, directivos, supervisores escolares y ATP mediante acciones formativas a distancia en plataformas digitales.',
+  '11': 'Favorecer experiencias de aprendizaje significativas, contextualizadas e inclusivas mediante propuestas didácticas mediadas por recursos digitales.',
+  '12': 'Garantizar el acceso, la seguridad y la comunicación institucional de las figuras educativas mediante la atención oportuna de sus cuentas de correo institucional.',
+  '13': 'Promover la reflexión, el análisis y la transformación de la práctica educativa mediante la difusión de conferencias, seminarios y webinars.'
+};
+
 const BIT_NOMBRES_CORTOS_2627 = {
   '1': 'MIED · visitas de seguimiento',
   '2': 'Certificación Google (UNETE)',
@@ -103,8 +126,13 @@ const ENCABEZADOS_ACTIVIDADES = [
   'Registrado', 'ID', 'Mes', 'Meta', 'N.P.', 'Origen', 'Tipo y nombre',
   'Fecha inicio', 'Fecha fin', 'Fecha (texto)', 'Responsable', 'Modalidad',
   'Lugar', 'CCT', 'Descripción', 'Propósito', 'Beneficiarios', 'Capturó',
-  'ID de envío'
+  'ID de envío', 'Va al reporte'
 ];
+
+// "Va al reporte" (1 oct 2026): un oficio de solicitud capturado aquí es
+// control, no una acción; la acción (visita, asesoría…) es lo que se reporta.
+// "No" lo deja fuera de "Generar reporte del mes"; vacío o "Sí" lo incluye.
+const BIT_COL_VA_AL_REPORTE = 'Va al reporte';
 
 const BIT_METAS = {
   '21': {
@@ -220,7 +248,8 @@ function bitPrepararHojas() {
     plan.setColumnWidth(2, 360);
     plan.setColumnWidth(5, 320);
   }
-  bitAsegurarNombresCortos_(plan);
+  bitAsegurarColumnaPlan_(plan, BIT_COL_NOMBRE_CORTO, BIT_NOMBRES_CORTOS_2627, 240);
+  bitAsegurarColumnaPlan_(plan, BIT_COL_PROPOSITO, BIT_PROPOSITOS_2627, 360);
 
   bitObtenerHojaActividades_();
   bitRenumerarMetas_();
@@ -259,6 +288,7 @@ function bitObtenerHojaActividades_() {
     hoja = ss.insertSheet(HOJA_BIT_ACTIVIDADES);
     bitEncabezar_(hoja, ENCABEZADOS_ACTIVIDADES);
     hoja.getRange('C:C').setNumberFormat('@'); // Mes "2026-09" como texto, no fecha
+    bitValidarVaAlReporte_(hoja, ENCABEZADOS_ACTIVIDADES.indexOf(BIT_COL_VA_AL_REPORTE) + 1);
     return hoja;
   }
   const actuales = hoja.getRange(1, 1, 1, Math.max(hoja.getLastColumn(), 1)).getValues()[0]
@@ -268,8 +298,18 @@ function bitObtenerHojaActividades_() {
     const desde = actuales.filter(String).length + 1;
     hoja.getRange(1, desde, 1, faltantes.length).setValues([faltantes])
       .setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
+    const i = faltantes.indexOf(BIT_COL_VA_AL_REPORTE);
+    if (i !== -1) bitValidarVaAlReporte_(hoja, desde + i);
   }
   return hoja;
+}
+
+// Lista Sí/No en "Va al reporte"; vacío también vale (equivale a Sí).
+function bitValidarVaAlReporte_(hoja, col) {
+  const regla = SpreadsheetApp.newDataValidation().requireValueInList(['Sí', 'No'], true)
+    .setAllowInvalid(false).setHelpText('"No" deja la fila fuera del reporte mensual (ej. un oficio de solicitud). Vacío = Sí.').build();
+  hoja.getRange(2, col, Math.max(hoja.getMaxRows() - 1, 1), 1).setDataValidation(regla);
+  hoja.setColumnWidth(col, 110);
 }
 
 // Mapa encabezado → índice (0-based) de la fila 1.
@@ -346,6 +386,7 @@ function doGet(e) {
     return bitRespuesta_({
       status: 'ok',
       acciones: bitLeerPlaneacion_(),
+      anteriores: bitDescripcionesAnteriores_(),
       responsables: bitLeerResponsables_(),
       metas: Object.keys(BIT_METAS)
     });
@@ -353,34 +394,36 @@ function doGet(e) {
   return bitRespuesta_({ status: 'ok', servicio: 'OTDE Bitácora de actividades' });
 }
 
-// Agrega la columna "Nombre corto" al final de Planeacion si falta y llena las
-// celdas vacías con BIT_NOMBRES_CORTOS_2627. Nunca sobrescribe lo que ya se editó.
-function bitAsegurarNombresCortos_(plan) {
+// Agrega una columna (Nombre corto, Propósito sugerido) al final de Planeacion
+// si falta y llena las celdas vacías con su semilla por N.P. Nunca sobrescribe
+// lo que ya se editó.
+function bitAsegurarColumnaPlan_(plan, encabezado, semilla, anchoCol) {
   const ancho = Math.max(plan.getLastColumn(), ENCABEZADOS_PLANEACION.length);
   const enc = plan.getRange(1, 1, 1, ancho).getValues()[0].map(function (h) { return String(h).trim(); });
-  let col = enc.indexOf(BIT_COL_NOMBRE_CORTO) + 1;
+  let col = enc.indexOf(encabezado) + 1;
   if (!col) {
     col = ancho + 1;
-    plan.getRange(1, col).setValue(BIT_COL_NOMBRE_CORTO)
+    plan.getRange(1, col).setValue(encabezado)
       .setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
-    plan.setColumnWidth(col, 240);
+    plan.setColumnWidth(col, anchoCol);
   }
   if (plan.getLastRow() < 2) return;
   const filas = plan.getRange(2, 1, plan.getLastRow() - 1, 1).getValues();
   const cortos = plan.getRange(2, col, filas.length, 1).getValues();
   const nuevos = filas.map(function (f, i) {
     const actual = String(cortos[i][0]).trim();
-    return [actual || BIT_NOMBRES_CORTOS_2627[String(f[0]).trim()] || ''];
+    return [actual || semilla[String(f[0]).trim()] || ''];
   });
-  plan.getRange(2, col, nuevos.length, 1).setValues(nuevos);
+  plan.getRange(2, col, nuevos.length, 1).setValues(nuevos).setWrap(true).setVerticalAlignment('top');
 }
 
 function bitLeerPlaneacion_() {
   const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_BIT_PLANEACION);
   if (!hoja || hoja.getLastRow() < 2) return [];
   const ancho = Math.max(hoja.getLastColumn(), ENCABEZADOS_PLANEACION.length);
-  const colCorto = hoja.getRange(1, 1, 1, ancho).getValues()[0]
-    .map(function (h) { return String(h).trim(); }).indexOf(BIT_COL_NOMBRE_CORTO);
+  const enc = hoja.getRange(1, 1, 1, ancho).getValues()[0].map(function (h) { return String(h).trim(); });
+  const colCorto = enc.indexOf(BIT_COL_NOMBRE_CORTO);
+  const colProposito = enc.indexOf(BIT_COL_PROPOSITO);
   return hoja.getRange(2, 1, hoja.getLastRow() - 1, ancho).getValues()
     .filter(function (r) { return String(r[0]).trim(); })
     .map(function (r) {
@@ -390,6 +433,8 @@ function bitLeerPlaneacion_() {
         accion: String(r[1]).trim(),
         mes: String(r[2]).trim(),
         resultados: String(r[4]).trim(),
+        // Borrador de "Propósito / Objetivo": inicia con verbo (ver BIT_COL_PROPOSITO).
+        proposito: (colProposito === -1 ? '' : String(r[colProposito]).trim()) || String(r[1]).trim(),
         beneficiarios: String(r[6]).trim(),
         responsables: String(r[7]).trim(),
         meta: String(r[8]).trim()
@@ -403,6 +448,37 @@ function bitLeerResponsables_() {
   return hoja.getRange(2, 1, hoja.getLastRow() - 1, 1).getValues()
     .map(function (r) { return String(r[0]).trim(); })
     .filter(String);
+}
+
+// Últimas descripciones capturadas a mano (no las "(auto)") por N.P., para
+// que el formulario ofrezca reusarlas. Las no planeadas van bajo "NP".
+const BIT_ANTERIORES_POR_NP = 3;
+function bitDescripcionesAnteriores_() {
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_BIT_ACTIVIDADES);
+  if (!hoja || hoja.getLastRow() < 2) return {};
+  const idx = bitIndices_(hoja);
+  if (idx['Descripción'] === undefined) return {};
+  const filas = hoja.getRange(2, 1, hoja.getLastRow() - 1, hoja.getLastColumn()).getValues();
+  const res = {};
+  for (let i = filas.length - 1; i >= 0; i--) {
+    const f = filas[i];
+    if (/\(auto\)/.test(String(f[idx['Capturó']]))) continue;
+    const desc = String(f[idx['Descripción']]).trim();
+    if (!desc) continue;
+    const np = String(f[idx['N.P.']]).trim() || 'NP';
+    const lista = res[np] || (res[np] = []);
+    if (lista.length >= BIT_ANTERIORES_POR_NP || lista.some(function (a) { return a.descripcion === desc; })) continue;
+    lista.push({ id: String(f[idx['ID']]), tipo: String(f[idx['Tipo y nombre']]).trim(), descripcion: desc });
+  }
+  return res;
+}
+
+// El comunicado de Planeación pide verbos observables al inicio: la primera
+// palabra debe ser un infinitivo (Fortalecer, Dar seguimiento, Atender…).
+function bitIniciaConVerbo_(texto) {
+  const primera = String(texto || '').trim().split(/\s+/)[0] || '';
+  return /^[a-záéíóúüñ]+(ar|er|ir)(se|lo|la|los|las|le|les)?$/i
+    .test(primera.replace(/^[^a-záéíóúüñ]+|[^a-záéíóúüñ]+$/gi, ''));
 }
 
 // ── doPost: registra una actividad ──
@@ -529,6 +605,9 @@ function bitValidarActividad_(x) {
   Object.keys(obligatorios).forEach(function (k) {
     if (!d[k]) throw new Error('Falta un campo obligatorio: ' + obligatorios[k] + '.');
   });
+  if (!bitIniciaConVerbo_(d.proposito)) {
+    throw new Error('El propósito debe iniciar con un verbo, por ejemplo: Fortalecer…, Dar seguimiento…');
+  }
   d.mes = Utilities.formatDate(d.fechaInicio, 'America/Mexico_City', 'yyyy-MM');
   return d;
 }
@@ -615,7 +694,11 @@ function bitGenerarReporteMensual() {
   const filas = hojaAct.getLastRow() > 1
     ? hojaAct.getRange(2, 1, hojaAct.getLastRow() - 1, hojaAct.getLastColumn()).getValues()
     : [];
-  const delMes = filas.filter(function (f) { return bitMesDeFila_(f[idx['Mes']]) === mes; });
+  const colVa = idx[BIT_COL_VA_AL_REPORTE];
+  const esNo = function (f) { return colVa !== undefined && String(f[colVa]).trim().toLowerCase() === 'no'; };
+  const todasDelMes = filas.filter(function (f) { return bitMesDeFila_(f[idx['Mes']]) === mes; });
+  const delMes = todasDelMes.filter(function (f) { return !esNo(f); });
+  const omitidas = todasDelMes.length - delMes.length;
   delMes.sort(function (a, b) {
     return new Date(a[idx['Fecha inicio']]).getTime() - new Date(b[idx['Fecha inicio']]).getTime();
   });
@@ -703,6 +786,8 @@ function bitGenerarReporteMensual() {
   ss.setActiveSheet(hoja);
   ui.alert('Reporte ' + nombreMes + ' ' + anio + ' listo en la pestaña "' + nombre + '".\n\n' +
     resumenMetas.join(' · ') + '\n' + avisosFuentes.join('\n') +
+    (omitidas ? '\n' + omitidas + ' registro' + (omitidas === 1 ? '' : 's') + ' marcado' + (omitidas === 1 ? '' : 's') +
+      ' como "No va al reporte" se omiti' + (omitidas === 1 ? 'ó' : 'eron') + '.' : '') +
     (avisos.length ? '\n\nAviso:\n' + avisos.join('\n') : '') +
     '\n\nPara pasarlo al Excel: selecciona las filas de actividades de cada bloque (de la columna A a la L), ' +
     'cópialas y pégalas en la fila 14 de la pestaña META correspondiente.');
@@ -872,7 +957,7 @@ function bitImportarMantenimiento_(mes) {
         'Lugar': 'Presencial en ' + bitManSede_(g) + '.',
         'CCT': g.cct,
         'Descripción': bitManDescripcion_(g),
-        'Propósito': accion.resultados,
+        'Propósito': accion.proposito,
         'Beneficiarios': bitManBeneficiarios_(g, accion.beneficiarios),
         'Capturó': BIT_CAPTURO_MAN
       }
@@ -910,7 +995,7 @@ function bitImportarAsesorias_(mes) {
         'Lugar': 'Presencial en ' + bitManSede_(g) + '.',
         'CCT': g.cct,
         'Descripción': bitAseDescripcion_(g),
-        'Propósito': accion.resultados,
+        'Propósito': accion.proposito,
         'Beneficiarios': bitAseBeneficiarios_(g),
         'Capturó': BIT_CAPTURO_ASE
       }

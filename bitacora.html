@@ -120,6 +120,25 @@
       border-radius: 6px; padding: .35rem .6rem; margin-top: .35rem; display: none;
     }
     .borrador-aviso.visible { display: block; }
+    .borrador-aviso button {
+      background: none; border: none; padding: 0; margin-left: .35rem; font: inherit;
+      color: var(--guinda-ac); font-weight: 700; text-decoration: underline; cursor: pointer;
+    }
+
+    .verbos { display: flex; flex-wrap: wrap; gap: .35rem; margin: .1rem 0 .5rem; }
+    .verbos button, .btn-mini {
+      font-family: inherit; font-size: .75rem; font-weight: 600; cursor: pointer;
+      color: var(--guinda); background: #f5e9ec; border: 1px solid #ecd3da;
+      border-radius: 999px; padding: .25rem .65rem;
+    }
+    .verbos button:hover, .btn-mini:hover { background: #ecd3da; }
+    .acciones-desc { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .5rem; }
+    .anteriores { display: grid; gap: .4rem; margin-top: .5rem; }
+    .anteriores .ant-card {
+      border: 1px solid var(--border); border-radius: 8px; padding: .5rem .65rem; background: #fafaf9;
+    }
+    .anteriores .ant-tit { font-size: .72rem; font-weight: 700; color: var(--muted); margin-bottom: .2rem; }
+    .anteriores .ant-txt { font-size: .8rem; line-height: 1.35; margin-bottom: .35rem; }
 
     .cct-wrapper { position: relative; }
     .cct-wrapper ul {
@@ -307,7 +326,12 @@
             <option value="Zoom">Zoom</option>
             <option value="el correo institucional">Correo institucional</option>
             <option value="WhatsApp">WhatsApp</option>
+            <option value="YouTube">Canal oficial de YouTube</option>
+            <option value="Facebook">Página oficial de Facebook</option>
+            <option value="Otro">Otro (escribirlo)</option>
           </select>
+          <input type="text" id="medio-detalle" class="campo-oculto" style="margin-top:.5rem;">
+          <div class="error-msg" id="err-medio-detalle">Escribe el medio.</div>
         </div>
         <div class="campo">
           <label for="lugar">Lugar (como va en el reporte) <span class="req">*</span></label>
@@ -320,13 +344,23 @@
         <legend>Para el reporte</legend>
         <div class="campo">
           <label for="descripcion">Descripción <span class="req">*</span></label>
-          <textarea id="descripcion" rows="5" placeholder="Qué se hizo, con quién y qué resultó."></textarea>
+          <div class="acciones-desc">
+            <button type="button" class="btn-mini" id="btn-sugerir-desc">✍️ Sugerir descripción</button>
+          </div>
+          <textarea id="descripcion" rows="5" placeholder="Qué se hizo, con quién y qué resultó. &quot;Sugerir descripción&quot; arma un borrador con lo que ya capturaste."></textarea>
+          <div class="borrador-aviso" id="aviso-descripcion"><span id="aviso-descripcion-txt"></span><button type="button" id="btn-deshacer-desc">Deshacer</button></div>
           <div class="error-msg" id="err-descripcion">Escribe la descripción.</div>
+          <div class="campo-oculto" id="wrap-anteriores">
+            <div class="hint">Descripciones anteriores de esta acción (toca "Usar esta" y cambia fecha, escuela y cifras):</div>
+            <div class="anteriores" id="anteriores"></div>
+          </div>
         </div>
         <div class="campo">
           <label for="proposito">Propósito / Objetivo <span class="req">*</span></label>
-          <textarea id="proposito" rows="4"></textarea>
-          <div class="borrador-aviso" id="aviso-proposito">Borrador tomado de "Resultados esperados" de la planeación. Ajústalo a lo que pasó.</div>
+          <div class="hint" style="margin:0 0 .35rem;">Inicia con un verbo que demuestre acción (regla de la Planeación Institucional). Toca uno para ponerlo al inicio:</div>
+          <div class="verbos" id="verbos"></div>
+          <textarea id="proposito" rows="4" placeholder="Ej. Fortalecer las competencias digitales de las y los docentes mediante…"></textarea>
+          <div class="borrador-aviso" id="aviso-proposito">Borrador tomado de la planeación. Ajústalo a lo que pasó.</div>
           <div class="error-msg" id="err-proposito">Escribe el propósito.</div>
         </div>
         <div class="campo">
@@ -369,10 +403,12 @@ const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
   'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
 let acciones = [];
+let anteriores = {};
 let idEnvioActual = null;
 // Último texto que el formulario puso solo en cada campo: si el usuario no lo
 // tocó, al cambiar de acción se reemplaza; si ya lo editó, se respeta.
-const ultimoBorrador = { proposito: '', beneficiarios: '' };
+const ultimoBorrador = { proposito: '', beneficiarios: '', descripcion: '' };
+let descripcionPrevia = null; // para "Deshacer" al sugerir o reusar una descripción
 let cctSeleccionada = null;
 let ultimoResponsableAuto = '';
 
@@ -414,6 +450,7 @@ async function cargarPlaneacion(clave) {
 
 function poblarFormulario(datos) {
   acciones = datos.acciones || [];
+  anteriores = datos.anteriores || {};
   const np = $('np');
   np.innerHTML = '<option value="">Selecciona…</option>';
   acciones.forEach(function (a) {
@@ -509,7 +546,9 @@ $('np').addEventListener('change', function () {
   if (a) {
     chip.textContent = 'Se reporta en META ' + a.meta;
     chip.classList.remove('campo-oculto');
-    aplicarBorrador('proposito', a.resultados);
+    // "Propósito sugerido" de la planeación (inicia con verbo); páginas viejas del
+    // backend no lo mandan y se usa la Acción, que también empieza con verbo.
+    aplicarBorrador('proposito', a.proposito || a.accion);
     aplicarBorrador('beneficiarios', a.beneficiarios);
     // Preselecciona el responsable solo si la planeación nombra exactamente uno del catálogo.
     const opciones = Array.from($('responsable').options).map(function (o) { return o.value; })
@@ -528,6 +567,7 @@ $('np').addEventListener('change', function () {
     aplicarBorrador('proposito', '');
     aplicarBorrador('beneficiarios', '');
   }
+  mostrarAnteriores(valor);
 });
 
 ['proposito', 'beneficiarios'].forEach(function (campo) {
@@ -593,14 +633,42 @@ function describirSede(m) {
   }
 }
 
+// Texto del medio tal como va después de "a través de". YouTube y Facebook
+// llevan opcionalmente de quién es el canal (varía: UNETE, CoEEE, OTDE…).
+function textoMedio() {
+  const medio = $('medio').value;
+  const detalle = $('medio-detalle').value.trim();
+  if (medio === 'YouTube') return 'el Canal oficial de YouTube' + (detalle ? ' de ' + detalle : '');
+  if (medio === 'Facebook') return 'la Página oficial de Facebook' + (detalle ? ' de ' + detalle : '');
+  if (medio === 'Otro') return detalle;
+  return medio;
+}
+
+function atravesDe(medio) {
+  return medio ? ('a través de ' + medio).replace(/\bde el\b/g, 'del') : '';
+}
+
 function componerLugar() {
   const modalidad = $('modalidad').value;
   const sede = describirSede(cctSeleccionada);
-  const medio = $('medio').value;
+  const via = atravesDe(textoMedio());
   if (modalidad === 'Presencial') return sede ? 'Presencial en ' + sede + '.' : '';
-  if (modalidad === 'Virtual') return 'Virtual, a través de ' + medio + '.';
-  if (modalidad === 'Híbrida') return 'Híbrida: ' + (sede ? 'en ' + sede + ' y ' : '') + 'a través de ' + medio + '.';
+  if (modalidad === 'Virtual') return via ? 'Virtual, ' + via + '.' : '';
+  if (modalidad === 'Híbrida') {
+    const partes = [sede ? 'en ' + sede : '', via].filter(Boolean);
+    return partes.length ? 'Híbrida: ' + partes.join(' y ') + '.' : '';
+  }
   return '';
+}
+
+function actualizarMedioDetalle() {
+  const medio = $('medio').value;
+  const det = $('medio-detalle');
+  const visible = medio === 'YouTube' || medio === 'Facebook' || medio === 'Otro';
+  det.classList.toggle('campo-oculto', !visible);
+  det.placeholder = medio === 'Otro' ? 'Escribe el medio (ej. la plataforma Aula Digital)'
+    : '¿De quién? (opcional, ej. UNETE, CoEEE, la OTDE)';
+  marcarError('medio-detalle', false);
 }
 
 function actualizarLugar() {
@@ -620,7 +688,12 @@ $('modalidad').addEventListener('change', function () {
   marcarError('modalidad', false);
   actualizarLugar();
 });
-$('medio').addEventListener('change', actualizarLugar);
+$('medio').addEventListener('change', function () {
+  $('medio-detalle').value = ''; // "UNETE" de un canal no es un medio "Otro"
+  actualizarMedioDetalle();
+  actualizarLugar();
+});
+$('medio-detalle').addEventListener('input', function () { marcarError('medio-detalle', false); actualizarLugar(); });
 $('lugar').addEventListener('input', function () { marcarError('lugar', false); });
 
 // Autocompletado de sede por CCT o nombre (CCT_DB de js/cct-db.js).
@@ -669,6 +742,137 @@ $('lugar').addEventListener('input', function () { marcarError('lugar', false); 
   $(id).addEventListener(id === 'meta' ? 'change' : 'input', function () { marcarError(id, false); });
 });
 
+// ── Propósito: verbos al inicio (comunicado de Planeación: verbos observables) ──
+const VERBOS = ['Fortalecer', 'Implementar', 'Acompañar', 'Dar seguimiento', 'Sistematizar', 'Evaluar',
+  'Diseñar', 'Difundir', 'Capacitar', 'Atender', 'Gestionar', 'Rehabilitar', 'Favorecer', 'Promover'];
+
+// Misma regla que bitIniciaConVerbo_ del backend: la primera palabra es un infinitivo.
+function iniciaConVerbo(texto) {
+  const primera = String(texto || '').trim().split(/\s+/)[0] || '';
+  return /^[a-záéíóúüñ]+(ar|er|ir)(se|lo|la|los|las|le|les)?$/i
+    .test(primera.replace(/^[^a-záéíóúüñ]+|[^a-záéíóúüñ]+$/gi, ''));
+}
+
+VERBOS.forEach(function (v) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.textContent = v;
+  b.addEventListener('click', function () {
+    const campo = $('proposito');
+    let resto = campo.value.trim();
+    // Si ya inicia con verbo, se cambia ese verbo ("Dar seguimiento" son dos palabras).
+    if (/^dar seguimiento\b/i.test(resto)) resto = resto.replace(/^dar seguimiento\s*/i, '');
+    else if (iniciaConVerbo(resto)) resto = resto.replace(/^\S+\s*/, '');
+    if (resto) resto = resto.charAt(0).toLowerCase() + resto.slice(1);
+    campo.value = v + ' ' + resto;
+    $('aviso-proposito').classList.remove('visible');
+    marcarError('proposito', false);
+    campo.focus();
+    campo.setSelectionRange(campo.value.length, campo.value.length);
+  });
+  $('verbos').appendChild(b);
+});
+
+// ── Descripción: borrador armado con lo capturado, y anteriores para reusar ──
+function lineaUnica(id) { return $(id).value.trim().replace(/\s*\n\s*/g, ' '); }
+
+function fraseLugar() {
+  const modalidad = $('modalidad').value;
+  const sede = describirSede(cctSeleccionada);
+  const via = atravesDe(textoMedio());
+  if (modalidad === 'Presencial') return sede ? 'en ' + sede : '';
+  if (modalidad === 'Virtual') return via;
+  if (modalidad === 'Híbrida') return [sede ? 'en ' + sede : '', via].filter(Boolean).join(' y ');
+  return '';
+}
+
+function fraseResponsable() {
+  const sel = $('responsable').value;
+  const r = sel === 'Otro' ? $('responsable-otro').value.trim() : sel;
+  if (!r) return 'por ___';
+  if (r === 'OTDE') return 'por la OTDE';
+  return 'por ' + r + ', con el acompañamiento de la OTDE';
+}
+
+// Plantillas por tipo de actividad (palabra clave en "Tipo y nombre"). ___ marca
+// lo que solo quien estuvo ahí sabe; el envío no pasa mientras quede alguno.
+const PLANTILLAS_DESC = [
+  [/reuni/i, function (x) { return 'Se llevó a cabo la reunión "' + x.tipo + '"' + x.lugar + ', convocada ' + x.quien + ', con la participación de ' + x.benef + '. Se abordaron los siguientes temas: ___. Como resultado, se acordó ___.'; }],
+  [/visita/i, function (x) { return 'Se realizó la visita "' + x.tipo + '"' + x.lugar + ', ' + x.quien + '. Durante la visita se ___. Se atendió a ' + x.benef + '. Como resultado, ___.'; }],
+  [/curso|taller|capacitaci|formaci|certificaci/i, function (x) { return 'Se desarrolló la actividad formativa "' + x.tipo + '"' + x.lugar + ', impartida ' + x.quien + ' y dirigida a ' + x.benef + '. Se trabajaron los contenidos: ___. Como producto, las y los participantes ___.'; }],
+  [/conferencia|webinar|seminario|transmisi|charla|foro/i, function (x) { return 'Se difundió "' + x.tipo + '"' + x.lugar + ', organizada ' + x.quien + '. Participaron ' + x.benef + '. La OTDE realizó la difusión, el registro de asistencia y ___.'; }],
+  [/asesor/i, function (x) { return 'Se brindó la asesoría "' + x.tipo + '"' + x.lugar + ', ' + x.quien + ', a ' + x.benef + '. Se atendieron los temas: ___. Al término, las y los participantes ___.'; }],
+  [/difusi|convocatoria|oficio|circular/i, function (x) { return 'Se difundió "' + x.tipo + '" entre ' + x.benef + x.lugar + ', ' + x.quien + '. La difusión se realizó mediante ___ y se dio seguimiento a ___.'; }]
+];
+
+function sugerirDescripcion() {
+  const lugar = fraseLugar();
+  const x = {
+    tipo: lineaUnica('tipo-nombre') || '___',
+    lugar: lugar ? ' ' + lugar : '',
+    quien: fraseResponsable(),
+    benef: lineaUnica('beneficiarios').replace(/\.$/, '') || '___'
+  };
+  const p = PLANTILLAS_DESC.find(function (t) { return t[0].test(x.tipo); });
+  return p ? p[1](x) : 'Se realizó la actividad "' + x.tipo + '"' + x.lugar + ', ' + x.quien + ', con la participación de ' + x.benef + '. Se ___. Como resultado, ___.';
+}
+
+// Pone un texto en Descripción guardando lo anterior para "Deshacer".
+function ponerDescripcion(texto, aviso) {
+  const campo = $('descripcion');
+  descripcionPrevia = campo.value;
+  campo.value = texto;
+  ultimoBorrador.descripcion = texto;
+  $('aviso-descripcion-txt').textContent = aviso;
+  $('btn-deshacer-desc').classList.toggle('campo-oculto', !descripcionPrevia.trim());
+  $('aviso-descripcion').classList.add('visible');
+  marcarError('descripcion', false);
+}
+
+$('btn-sugerir-desc').addEventListener('click', function () {
+  ponerDescripcion(sugerirDescripcion(), 'Borrador armado con lo que capturaste: completa los ___ y ajústalo a lo que pasó.');
+});
+
+$('btn-deshacer-desc').addEventListener('click', function () {
+  if (descripcionPrevia === null) return;
+  $('descripcion').value = descripcionPrevia;
+  descripcionPrevia = null;
+  $('aviso-descripcion').classList.remove('visible');
+});
+
+$('descripcion').addEventListener('input', function () {
+  if (this.value.indexOf('___') === -1) $('aviso-descripcion').classList.remove('visible');
+});
+
+function mostrarAnteriores(np) {
+  const lista = (np && anteriores[np]) || [];
+  const cont = $('anteriores');
+  cont.innerHTML = '';
+  lista.forEach(function (a) {
+    const card = document.createElement('div');
+    card.className = 'ant-card';
+    const tit = document.createElement('div');
+    tit.className = 'ant-tit';
+    tit.textContent = a.id + (a.tipo ? ' · ' + a.tipo.replace(/\s*\n\s*/g, ' ') : '');
+    const txt = document.createElement('div');
+    txt.className = 'ant-txt';
+    txt.textContent = a.descripcion.length > 220 ? a.descripcion.slice(0, 220) + '…' : a.descripcion;
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'btn-mini';
+    b.textContent = 'Usar esta';
+    b.addEventListener('click', function () {
+      ponerDescripcion(a.descripcion, 'Copiada de ' + a.id + ': cambia fecha, escuela y cifras.');
+      $('descripcion').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    card.appendChild(tit);
+    card.appendChild(txt);
+    card.appendChild(b);
+    cont.appendChild(card);
+  });
+  $('wrap-anteriores').classList.toggle('campo-oculto', !lista.length);
+}
+
 // ── Validación y envío ──
 function validar() {
   let ok = true;
@@ -686,10 +890,20 @@ function validar() {
   if (ini && fin) req('fecha-fin', fin >= ini);
   const resp = $('responsable').value;
   req('responsable', !!resp && (resp !== 'Otro' || !!$('responsable-otro').value.trim()));
-  req('modalidad', !!$('modalidad').value);
+  const modalidad = $('modalidad').value;
+  req('modalidad', !!modalidad);
+  if ((modalidad === 'Virtual' || modalidad === 'Híbrida') && $('medio').value === 'Otro') {
+    req('medio-detalle', !!$('medio-detalle').value.trim());
+  }
   req('lugar', !!$('lugar').value.trim());
-  req('descripcion', !!$('descripcion').value.trim());
-  req('proposito', !!$('proposito').value.trim());
+  const desc = $('descripcion').value.trim();
+  $('err-descripcion').textContent = desc ? 'Completa los espacios ___ del borrador.' : 'Escribe la descripción.';
+  req('descripcion', !!desc && desc.indexOf('___') === -1);
+  const prop = $('proposito').value.trim();
+  $('err-proposito').textContent = prop
+    ? 'El propósito debe iniciar con un verbo, por ejemplo: Fortalecer…, Dar seguimiento… (toca uno de arriba).'
+    : 'Escribe el propósito.';
+  req('proposito', !!prop && iniciaConVerbo(prop));
   req('beneficiarios', !!$('beneficiarios').value.trim());
   if (!ok) {
     const primero = document.querySelector('.campo-error');
@@ -776,13 +990,16 @@ function reiniciarFormulario() {
   $('form-actividad').reset();
   document.querySelectorAll('#form-actividad .campo-error').forEach(function (el) { el.classList.remove('campo-error'); });
   document.querySelectorAll('#form-actividad .error-msg, #form-actividad .borrador-aviso').forEach(function (el) { el.classList.remove('visible'); });
-  ['wrap-no-planeada', 'wrap-cct', 'wrap-medio', 'meta-chip', 'accion-completa', 'responsable-otro'].forEach(function (id) {
+  ['wrap-no-planeada', 'wrap-cct', 'wrap-medio', 'meta-chip', 'accion-completa', 'responsable-otro',
+    'medio-detalle', 'wrap-anteriores'].forEach(function (id) {
     $(id).classList.add('campo-oculto');
   });
   $('envio-error').classList.remove('visible');
   $('fecha-inicio').value = hoyISO();
   ultimoBorrador.proposito = '';
   ultimoBorrador.beneficiarios = '';
+  ultimoBorrador.descripcion = '';
+  descripcionPrevia = null;
   ultimoLugarAuto = '';
   ultimoResponsableAuto = '';
   cctSeleccionada = null;
