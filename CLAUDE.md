@@ -601,6 +601,13 @@ ya esté expandido).
 - **La planeación se edita en el Sheet** (hoja `Planeacion`) y se ve al instante en el formulario.
   Se pueden agregar filas con N.P. único y meta 21/23, y el "Nombre corto" va a mano. No insertar
   ni reordenar columnas antes de "Nombre corto" (lectura por posición) ni renumerar los N.P. 7/8.
+- **Captura asistida (1 oct 2026, en producción y probada en vivo)**: el Propósito debe iniciar
+  con un verbo en infinitivo (regla del Comunicado 001 de Planeación; la validan la página y
+  `doPost`) y su borrador sale de la columna "Propósito sugerido" de `Planeacion`, no de
+  "Resultados esperados"; medios YouTube/Facebook/Otro; "Sugerir descripción" y descripciones
+  anteriores (`anteriores` en `?action=planeacion`). Columna `Va al reporte` en `Actividades`:
+  "No" saca la fila del reporte (oficios de solicitud, que no son acciones). Las columnas nuevas
+  las crea "Preparar hojas"
 - Detalle completo en `docs/ARCHITECTURE.md §26`
 
 ### `apps-script/visitas-jefes.gs` (nuevo, ago 2026)
@@ -1202,8 +1209,9 @@ Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/I
   `Cursos` + `?action=cursosMes`, una fila por curso y mes en META 23), después Soporte (META 21)
   y Correo (META 23) como resumen mensual — **revisar este plan**: desde el 29 sep la planeación
   tiene acciones propias para Correo (N.P. 12) y conferencias/difusión (N.P. 10 y 13), así que ya
-  no entrarían como no planeadas; ver `docs/PLAN-OPERACION-INTERNA.md`. Luego la Fase 2 (oficios y recordatorios; antes verificar Power Automate
-  en M365 y conseguir 1-2 oficios reales). Ver `docs/ROADMAP.md` ítem 27. Ver `docs/PLAN-OPERACION-INTERNA.md` y `docs/ROADMAP.md` ítem 27.
+  no entrarían como no planeadas; ver `docs/PLAN-OPERACION-INTERNA.md`. Luego la Fase 2, ampliada el 1 oct 2026 a gestor de
+  oficios con una sola puerta (pasos 2A-2E; Jorge decide si se adelanta a Formación Docente; antes verificar Power Automate
+  en M365 y conseguir el Excel de control y 1-2 oficios reales). Ver `docs/ROADMAP.md` ítem 27. Ver `docs/PLAN-OPERACION-INTERNA.md` y `docs/ROADMAP.md` ítem 27.
 - **Formación Docente — Workspace, decidir antes del 6 oct 2026**: desde el 28 sep la cuota ya
   no depende de Workspace (calendario en la confirmación + correos "a quien alcance" con reserva
   50 + 20), y los scripts corren en la cuenta Gmail personal, así que la prueba no les sube la

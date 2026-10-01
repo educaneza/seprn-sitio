@@ -110,6 +110,18 @@ Así lo que ya queda registrado no se vuelve a capturar.
 - Cuando el oficio se marca como "atendido", **crea su fila en la Bitácora** y alimenta el reporte sin captura extra.
 - Pendiente de verificar: si la licencia M365 de @dee.edu.mx incluye Power Automate, podría enviar cada oficio que llega de ciertos remitentes directo al registro. Si no, Nancy lo captura a mano (unos 30 segundos).
 
+**Ampliación acordada con Jorge (1 oct 2026): gestor de oficios con una sola puerta.** Jorge quiere un solo canal de entrada que alimente todo. Hoy captura en la bitácora los oficios de solicitud que llegan por la Oficina Virtual, y salen en el reporte aunque lo que se reporta es la acción (asesoría, mantenimiento…). Decisión:
+- **Una sola puerta:** "Registrar oficio" (página propia con clave) o la Oficina Virtual cuando la solicitud ya llega por ahí, sin capturarla dos veces.
+- **Por dentro, separado y conectado:** Sheet "Control de oficios" aparte de la bitácora, igual que Mantenimiento o Asesorías. **El oficio no va al reporte; la acción sí.** Mientras tanto, la columna "Va al reporte" de `Actividades` deja fuera los oficios ya capturados (`docs/ARCHITECTURE.md §26`).
+- **Dos direcciones:** un oficio que **baja** (de instancias superiores) se atiende redactando oficios a sectores, zonas y escuelas; uno que **sube** (de la estructura) se atiende con una acción (mantenimiento, asesoría…).
+- **Pasos, uno por sesión:**
+  - **2A · Control:** las 10 columnas del Excel actual (N.P., No. de folio recibido de particular, Fecha de recepción, No. de oficio elaboración, Fecha de elaboración, Remitente, Asunto, Tipo de oficio, Quién recibió, Observaciones), más Dirección, Estatus, Forma de atención (oficio de salida / acción / solo conocimiento), Vínculo (folio de la Oficina Virtual o BIT-ID) y PDF en Drive. Se importa el histórico.
+  - **2B · Oficina Virtual → control:** las solicitudes que traen oficio entran solas (patrón `?action=…Mes` + `PANEL_TOKEN`).
+  - **2C · Redacción:** plantilla de Google Docs con membrete y consecutivo automático; borrador del oficio de salida para revisar, firmar y escanear. La firma y el sello siguen a mano.
+  - **2D · Atendido → bitácora + recordatorios** (lo de arriba).
+  - **2E · Archivo digital:** carpetas en Drive por ciclo y mes, búsqueda por remitente, asunto o folio.
+- **Insumos para el 2A:** el Excel de control, 1-2 oficios reales (uno que baja y uno que sube), un oficio de salida con membrete y el formato del consecutivo, y la verificación de Power Automate.
+
 ### Fase 3 — Padrón único de programas y consulta móvil
 - Se consolidan los Excel en un Sheet "Padrón de programas": una fila por CCT × programa, con estatus y datos del programa (por ejemplo, número de servicio de Internet CFE o docentes UNETE).
 - Página de consulta en el celular: se escribe el CCT o el nombre de la escuela y se ve la ficha con datos de `cct-db`, programas activos, últimas visitas y oficios relacionados.
@@ -131,7 +143,7 @@ Fase 1 construida (24 sep): `apps-script/bitacora.gs` y `bitacora.html`, probado
 1. ~~**Alimentación automática** desde Mantenimiento~~ y ~~Asesorías resueltas → N.P. 8~~ (hecho el 24 sep; Asesorías usa las columnas *Fecha de realización* y *Asistentes* que Nancy llena al cerrar, y falta el primer caso real). La asesoría de IA (N.P. 9), Soporte y Correo siguen a mano. Texto original del paso:
    **Alimentación automática** (la segunda iteración de la Fase 1 descrita arriba). Empezar por Mantenimiento: al guardar un reporte de visita, `mantenimiento.gs` crea su actividad en `Actividades` (META 23, N.P. 7), con fecha, escuela/CCT y la descripción de la atención. Decidir el mecanismo: que `mantenimiento.gs` llame por `UrlFetchApp` al `doPost` de la bitácora (con la clave), o que la bitácora lea los reportes, como el Panel OTDE. Después, Asesorías resueltas → N.P. 8. Soporte y Correo no tienen acción en la planeación: preguntar a Jorge si se reportan.
 2. **Alimentación desde Formación Docente, Soporte y Correo** (plan aprobado el 24 sep, ver la sección de abajo). Va **antes** de la Fase 2, por decisión de Jorge. Se empieza por el paso A (Formación Docente).
-3. **Fase 2 (oficios):** antes, que Jorge verifique Power Automate en su cuenta M365 (make.powerautomate.com) y comparta 1-2 oficios reales.
+3. **Fase 2 (oficios):** antes, que Jorge verifique Power Automate en su cuenta M365 (make.powerautomate.com) y comparta 1-2 oficios reales. Desde el 1 oct 2026 es un gestor de oficios con una sola puerta (pasos 2A-2E, ver Fase 2); Jorge decide si va antes que el paso A (Formación Docente).
 
 ## Alimentación desde Formación Docente, Soporte y Correo (plan aprobado el 24 sep 2026)
 

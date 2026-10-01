@@ -776,14 +776,23 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     duplicados en la segunda corrida. Ver `docs/ARCHITECTURE.md §26`. **Asesorías resueltas → N.P. 8
     (24 sep 2026, cont. 2):** desplegado; Nancy llena *Fecha de realización* y *Asistentes* al
     cerrar. Conexión verificada (0 nuevas, sin error); **falta importar el primer caso real**
-    cuando haya una asesoría en "Resuelto". **Siguiente, en este orden:**
+    cuando haya una asesoría en "Resuelto". **Captura asistida (1 oct 2026, en producción y probada en
+    vivo):** medios YouTube/Facebook/Otro, propósito con verbo ("Propósito sugerido"), sugerir y reusar
+    descripciones, y columna "Va al reporte" (ver `docs/ARCHITECTURE.md §26`). Pendiente de Jorge:
+    marcar "No" en los oficios de solicitud ya capturados y revisar los 13 propósitos sugeridos.
+    **Siguiente** (Jorge decide si (b) se adelanta a (a); "Va al reporte" ya resolvió la duda del
+    oficio en el reporte):
     (a) **alimentación desde Formación Docente, Soporte y Correo** (plan aprobado el 24 sep,
     `docs/PLAN-OPERACION-INTERNA.md` §"Alimentación desde Formación Docente, Soporte y Correo"):
     Formación Docente con una fila por curso y mes en META 23 (paso A, sigue este); Soporte en META 21
     y Correo en META 23 (metas renumeradas el 29 sep 2026; revisar el plan: la planeación ya tiene
     N.P. 10, 12 y 13 para formación a distancia, correo y difusión de conferencias), cada uno con una fila de resumen mensual; la asesoría de IA (N.P. 9) sigue a
-    mano por ahora. (b) Fase 2 (oficios y recordatorios). Pendiente de verificar en la Fase 2: si la licencia M365 de `@dee.edu.mx`
-    incluye Power Automate para capturar oficios automáticamente desde Outlook.
+    mano por ahora. (b) Fase 2, ampliada el 1 oct 2026 a **gestor de oficios** con una sola puerta de
+    entrada (control con las 10 columnas del Excel actual, solicitudes de la Oficina Virtual que
+    entran solas, redacción del oficio de salida con consecutivo, acción atendida → bitácora y
+    archivo digital; pasos 2A-2E en `docs/PLAN-OPERACION-INTERNA.md`). Para el 2A faltan: el Excel de
+    control, 1-2 oficios reales, un oficio de salida con membrete y su consecutivo, y verificar si
+    la licencia M365 de `@dee.edu.mx` incluye Power Automate para capturar oficios desde Outlook.
 
 28. **Formación Docente — calendario y cuota "a quien alcance": verificación en uso real**
     (construido, desplegado y verificado en vivo el 28 sep 2026, ver `docs/ARCHITECTURE.md §12` y

@@ -14,6 +14,22 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-10-01 · Bitácora OTDE: captura asistida, propósito con verbo, "Va al reporte" y ruta del gestor de oficios
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-01 |
+| **Sesión** | Jorge retomó la bitácora con cuatro pedidos: (1) que el medio virtual incluya el Canal oficial de YouTube, la Página oficial de Facebook y "Otro"; (2) que el Propósito respete la regla del Comunicado 001 de Planeación (iniciar con un verbo observable); (3) que la Descripción se pueda prellenar o tenga sugerencias; (4) que el oficio de solicitud que captura en la bitácora deje de salir en el reporte mensual (ahí va la acción, no el oficio). Además preguntó si el control de oficios (Excel de 10 columnas) puede sistematizarse y crecer a un gestor de oficios con redacción y archivo digital. |
+| **Hallazgo** | El borrador de Propósito salía de "Resultados esperados", que en las 13 acciones es un sustantivo ("Solicitudes… atendidas"), y las actividades automáticas de Mantenimiento y Asesorías usaban el mismo texto. Ninguno cumplía la regla de iniciar con verbo. |
+| **Construido** | `bitacora.html`: medios YouTube/Facebook (con "¿De quién?", opcional) y Otro (obligatorio), con `textoMedio()`/`atravesDe()` ("de el" → "del"); botones de verbos (`VERBOS`) y validación de infinitivo (`iniciaConVerbo()`); "Sugerir descripción" (`PLANTILLAS_DESC` por palabra clave: reunión, visita, curso/taller, conferencia, asesoría, difusión), con `___` que no dejan guardar, y "Descripciones anteriores" (`mostrarAnteriores()`) con "Usar esta" y "Deshacer". `bitacora.gs`: columna `Propósito sugerido` al final de `Planeacion` (`BIT_COL_PROPOSITO`, semilla `BIT_PROPOSITOS_2627`; `bitAsegurarNombresCortos_` se generalizó en `bitAsegurarColumnaPlan_`), que también usan las importaciones de Mantenimiento y Asesorías; `bitIniciaConVerbo_` en `doPost`; `anteriores` en `doGet ?action=planeacion` (`bitDescripcionesAnteriores_`, 3 por N.P., sin las automáticas); columna `Va al reporte` en `Actividades` (`BIT_COL_VA_AL_REPORTE`, lista Sí/No con `bitValidarVaAlReporte_`), que `bitGenerarReporteMensual` excluye y cuenta en el aviso final. |
+| **Decisión de Jorge (oficios)** | Una sola puerta de entrada: "Registrar oficio", o la Oficina Virtual cuando la solicitud ya llega por ahí. Por dentro, Control de oficios y Bitácora son Sheets separados y conectados (mismo patrón que Mantenimiento y Asesorías). El oficio no va al reporte; la acción sí. Es la Fase 2 del plan, ampliada con redacción del oficio de salida y archivo digital (ruta 2A-2E en `docs/PLAN-OPERACION-INTERNA.md`). |
+| **Verificación** | Local con datos simulados (Lugar, borrador, verbos, anteriores, "Deshacer"); se corrigió el arrastre de "¿De quién?" al pasar a "Otro". En vivo, tras el despliegue del `.gs` por Jorge: el backend devolvió los 13 propósitos y las anteriores (N.P. 4, 5 y no planeadas); rechazó por `POST` directo un propósito sin verbo; se guardó `BIT-0011` (N.P. 13, YouTube de UNETE); se marcó "No" en la columna T; el reporte de octubre salió con META 23 en 0 y el aviso "1 registro marcado como 'No va al reporte' se omitió". La fila de prueba se borró; queda la pestaña vacía "Reporte 2026-10", que se reemplaza al generar el real. La prueba destapó que "Dar seguimiento" dejaba "Dar seguimiento la reflexión…": ahora agrega "a"/"al" (`a61271d`). |
+| **Pendiente de Jorge** | Marcar "No" en los oficios de solicitud ya capturados; revisar los 13 propósitos sugeridos en la hoja; decidir si el gestor de oficios va antes que la alimentación desde Formación Docente; traer los insumos del paso 2A (Excel de control, 1-2 oficios reales, un oficio de salida con membrete y su consecutivo, Power Automate). |
+| **Documentación actualizada** | Este checkpoint, `docs/ARCHITECTURE.md §26`, `docs/PLAN-OPERACION-INTERNA.md` (Fase 2), `docs/ROADMAP.md` ítem 27, `CLAUDE.md`. |
+| **Commits** | `4f090c2` (2 archivos, +331/-29), `a61271d` (+9/-3) y el commit de cierre (docs). |
+
+---
+
 ## CHECKPOINT — 2026-09-29 (cont. 3) · Estrategias Nacionales: selección de escuelas por estrategia y mes
 
 | | |

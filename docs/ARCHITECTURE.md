@@ -2498,8 +2498,9 @@ columnas y combinaciones (`bitCombinarFila_`). Se copia desde Sheets y se pega e
 cada pestaña. Copiar desde Sheets, y no desde un cuadro de texto con TSV, conserva los saltos de
 línea dentro de las celdas. Jorge lo validó pegándolo en el Excel real.
 
-**Hojas.** `Planeacion` (las 13 acciones de la planeación revisada del 29 sep 2026 más la columna "Nombre corto" al final,
-`BIT_COL_NOMBRE_CORTO`), `Actividades` (`ENCABEZADOS_ACTIVIDADES`, se lee y escribe por nombre de
+**Hojas.** `Planeacion` (las 13 acciones de la planeación revisada del 29 sep 2026 más las columnas "Nombre corto"
+(`BIT_COL_NOMBRE_CORTO`) y "Propósito sugerido" (`BIT_COL_PROPOSITO`) al final, creadas y llenadas por
+`bitAsegurarColumnaPlan_` sin pisar lo editado), `Actividades` (`ENCABEZADOS_ACTIVIDADES`, se lee y escribe por nombre de
 encabezado, con auto-heal de columnas faltantes) y `Config` (catálogo de responsables). La hoja
 manda: el reporte copia lo que diga `Actividades`, y un texto corregido a mano ahí sale corregido
 en el reporte.
@@ -2547,7 +2548,7 @@ una actividad de META 21 / N.P. 7 sin recapturarla:
   `BIT_TIPO_MAN_ADMIN` si la visita fue solo administrativa. Qué cuenta como administrativa lo
   decide `bitManTipoCct_`: tipo de solicitante, o el prefijo de la CCT si viene vacío, más el
   tipo de equipo. Lugar (`bitManSede_`) y descripción (`bitManDescripcion_`) calcan el Excel real.
-  El propósito es "Resultados esperados" del N.P. 7. Los beneficiarios (`bitManBeneficiarios_`)
+  El propósito es el "Propósito sugerido" del N.P. 7 (antes "Resultados esperados", ver abajo). Los beneficiarios (`bitManBeneficiarios_`)
   quedan como "1 Director Escolar\n12 docentes\n292 alumnos"; si el reporte no trae cifras, se
   usa el texto de la planeación. Capturó = `BIT_CAPTURO_MAN`.
 
@@ -2571,6 +2572,30 @@ primeras 9 columnas (N.P., Acción, Resultados esperados, Beneficiarios, Respons
 "Nombre corto" por encabezado. Por eso se pueden agregar filas y editar textos, pero no insertar ni
 reordenar columnas antes. La meta debe ser 21 o 23. Los N.P. 7 y 8 no se renumeran: los buscan
 `BIT_NP_MANTENIMIENTO` y `BIT_NP_ASESORIAS`.
+
+**Captura asistida y "Va al reporte" (1 oct 2026).**
+- **Propósito con verbo.** El Comunicado 001 de Planeación pide verbos observables. "Resultados
+  esperados" es un sustantivo, así que el borrador del formulario y el de las importaciones salen
+  de "Propósito sugerido" (`proposito` en `bitLeerPlaneacion_`; si está vacío, el texto de la
+  Acción, que ya empieza con verbo). La página ofrece botones de verbos (`VERBOS`; "Dar
+  seguimiento" agrega "a"/"al") y valida que la primera palabra sea un infinitivo
+  (`iniciaConVerbo()`); `doPost` repite la regla (`bitIniciaConVerbo_`). Las importaciones no la
+  validan: usan el texto de la hoja.
+- **Medio virtual.** Además de Teams, Meet, Zoom, correo y WhatsApp: Canal oficial de YouTube y
+  Página oficial de Facebook, con "¿De quién?" opcional (el dueño varía por actividad), y Otro,
+  escrito a mano (`textoMedio()`, `atravesDe()` corrige "de el" → "del"). Solo cambia el texto de
+  Lugar; el backend no guarda el medio.
+- **Descripción.** "Sugerir descripción" arma un borrador con lo ya capturado según una palabra
+  clave de "Tipo y nombre" (`PLANTILLAS_DESC`); deja `___` donde falta un dato y la página no
+  guarda mientras quede alguno. `doGet ?action=planeacion` manda `anteriores`
+  (`bitDescripcionesAnteriores_`): las últimas `BIT_ANTERIORES_POR_NP` descripciones distintas por
+  N.P. (las no planeadas bajo `NP`), excluyendo las de Capturó "(auto)", para reusarlas con "Usar
+  esta"; "Deshacer" regresa el texto previo.
+- **"Va al reporte"** (`BIT_COL_VA_AL_REPORTE`, última columna de `Actividades`, lista Sí/No de
+  `bitValidarVaAlReporte_`; vacío = Sí). `bitGenerarReporteMensual` omite las filas con "No" (ni
+  bloque de meta ni avance de la planeación) y lo dice en el aviso final. Sirve para lo que se
+  registró como control y no es una acción, como un oficio de solicitud. Cuando exista el control
+  de oficios (Fase 2), el oficio vivirá allá y solo su acción llegará aquí.
 
 **Renumeración de metas (29 sep 2026).** Planeación cambió la numeración: la 23 pasó a 21 y la
 25 pasó a 23. Como "23" cambia de significado, no basta con cambiar `BIT_METAS`: una fila vieja
