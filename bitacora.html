@@ -760,11 +760,17 @@ VERBOS.forEach(function (v) {
   b.addEventListener('click', function () {
     const campo = $('proposito');
     let resto = campo.value.trim();
-    // Si ya inicia con verbo, se cambia ese verbo ("Dar seguimiento" son dos palabras).
-    if (/^dar seguimiento\b/i.test(resto)) resto = resto.replace(/^dar seguimiento\s*/i, '');
+    // Si ya inicia con verbo, se cambia ese verbo. "Dar seguimiento" son dos
+    // palabras y lleva "a"/"al": "Dar seguimiento al proceso…" ↔ "Fortalecer el proceso…".
+    const ds = /^dar seguimiento(\s+(al|a))?\b\s*/i.exec(resto);
+    if (ds) resto = (ds[2] && ds[2].toLowerCase() === 'al' ? 'el ' : '') + resto.slice(ds[0].length);
     else if (iniciaConVerbo(resto)) resto = resto.replace(/^\S+\s*/, '');
     if (resto) resto = resto.charAt(0).toLowerCase() + resto.slice(1);
-    campo.value = v + ' ' + resto;
+    if (v === 'Dar seguimiento') {
+      campo.value = /^el\s/.test(resto) ? 'Dar seguimiento al ' + resto.slice(3) : 'Dar seguimiento a ' + resto;
+    } else {
+      campo.value = v + ' ' + resto;
+    }
     $('aviso-proposito').classList.remove('visible');
     marcarError('proposito', false);
     campo.focus();
