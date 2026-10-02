@@ -832,6 +832,15 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     probó.
     (c) Al arrancar el ciclo 2027-2028: Sheet nueva (`Estrategias_Nacionales_27-28`) y
     `MESES_EN_CICLO` actualizado; con eso todas las escuelas vuelven a quedar libres.
+30. **Instalador de Office v4 — publicarlo en el sitio cuando se libere.** El instalador vive
+    fuera de este repo (`~/Proyectos/Instalador-Office-2019-OTDE/`, sin git, docs en su
+    `docs/ROADMAP.md`). Hoy `otde.html` (pestaña Licencias Office) ofrece
+    `descargas/Instalador_Office_2019_OTDE.exe` (v3.0, 4.3 MB). La v4 (un solo EXE de ~15 MB
+    para 2016 y 2019, Office 2016 descargado de Drive, Windows 7 sin soporte) está en código
+    desde el 2 oct 2026; falta recompilarla en el equipo Windows y probarla. Al liberarla:
+    reemplazar el `.exe` en `descargas/`, actualizar el texto y el tamaño de la tarjeta de
+    descarga y la guía paso a paso (aparece el selector 2016/2019 y la descarga de ~830 MB), y
+    avisar que Windows 7 ya no está soportado.
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue

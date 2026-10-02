@@ -14,6 +14,23 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-10-02 · Instalador de Office v4: EXE ligero, Office 2016 desde Drive y sin curl (proyecto externo)
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-02 |
+| **Sesión** | Jorge pidió el estatus del instalador de Office. Es un proyecto aparte, `~/Proyectos/Instalador-Office-2019-OTDE/` (sin git); este sitio solo lo distribuye desde `otde.html`. Estaba parado desde el 9 jul. Además planteó dos problemas: el EXE v4 pesaba ~850 MB por llevar Office 2016 aunque en Win 10/11 casi siempre se instala 2019, y en campo aparece "Lo sentimos, algo ha ido mal y Word no se pudo iniciar. (2)" después de instalar 2019. |
+| **EXE ligero** | Las carpetas MSI de 2016 salieron del EXE a `Office2016_OTDE.7z` (872 MB, sin la clave MAK), alojado en Google Drive. El BAT lo descarga solo si se instala 2016, antes de desinstalar el Office previo, y verifica el SHA-256 antes de descomprimir. Si la descarga falla, el Office del equipo queda intacto. El enlace y el hash se pueden cambiar desde el JSON del kill switch sin recompilar. Se mantiene la elección 2016/2019 en Win 10/11 (decisión de Jorge). |
+| **Sin curl** | El plan original era empaquetar `curl.exe`, pero la build oficial para Windows ya no existe en 32 bits y la de 64 bits necesita UCRT en Win 7/8. Se reemplazó por `http_otde.ps1` (PowerShell + TLS 1.2). Windows 7 queda sin soporte porque trae PowerShell 2.0 (decisión de Jorge: quedan muy pocos equipos). |
+| **MAK** | La auto-destrucción de `%LOCALAPPDATA%\OTDE\Instalador_v4` ahora corre siempre. Antes solo corría con 2016, así que con 2019 se quedaba `Office2019Plus.xml` con la clave. |
+| **Error "(2)" de Word** | Sin diagnosticar. Se dejó una lista de 7 pruebas en el `docs/ERROR_CODES.md` del instalador para el próximo equipo afectado. |
+| **Verificación** | Desde la Mac: el enlace directo de Drive (`confirm=t`) devolvió HTTP 200 `application/octet-stream`, 872,023,263 bytes, con el mismo SHA-256 que el paquete local. El EXE **no se ha recompilado ni probado en Windows**; eso solo se puede hacer en el equipo de compilación de Jorge. |
+| **Pendiente** | Recompilar en Windows y probar en Win 8/10/11, incluido un corte de red a media descarga. Al liberar, actualizar `otde.html` y `descargas/` (ver `docs/ROADMAP.md` ítem 30). |
+| **Documentación actualizada** | En el proyecto del instalador: `ROADMAP.md`, `README.md`, `DEPLOYMENT.md`, `ERROR_CODES.md`, `APPS_SCRIPT.md` y `ARCHITECTURE.md`. Aquí: este checkpoint y `docs/ROADMAP.md` ítem 30. |
+| **Commits** | Solo el commit de cierre (docs). El proyecto del instalador no usa git; se respaldó con `*_2026-07-09.bak`. |
+
+---
+
 ## CHECKPOINT — 2026-10-02 · CNF-2627-002: revisión en vivo de avisos y constancias; plan de recordatorio de constancia en el calendario
 
 | | |
