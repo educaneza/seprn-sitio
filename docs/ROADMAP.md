@@ -802,14 +802,28 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     que el botón marcado "Recomendado" en cada celular es el que sí agrega el evento (Google en
     Android, `.ics` en iPhone) y que "Todos mis cursos" importa todos los eventos en iPhone.
     (b) Revisar en "Ejecuciones" los primeros días con cuota real: 6 y 7 oct (inicio de
-    `ACF-2627-001`/`003`) y 1 oct (`CNF-2627-002`), incluidos los logs "N enviado(s), M
-    pospuesto(s)".
+    `ACF-2627-001`/`003`), incluidos los logs "N enviado(s), M pospuesto(s)". `CNF-2627-002`
+    (1 oct) ya se revisó el 2 oct: aviso de 30 min a ~46 de 130, recordatorio de constancia a 50,
+    0 constancias (ver `docs/BITACORA.md`).
     (c) Que Jorge comparta la liga `formacion-docente.html?calendario=ACF-2627-001` con los
     inscritos previos.
     (d) Opcional: página "Mi inscripción" con liga firmada por folio, para que un cambio de liga
     u hora llegue aunque el `.ics` ya se haya descargado, y para subir la constancia desde ahí.
     (e) Opcional: aviso de 30 min por correo para cada sesión (hoy solo la primera; las demás las
     avisa el calendario).
+    (f) **Recordatorio de constancia en el calendario** (plan del 2 oct 2026, sin código aún,
+    `~/.claude/plans/en-formacion-docente-recuerdame-frolicking-dragon.md`): para cursos con
+    `Liga_tutorial_constancia`, `construirCursoApi_()` expone `liga_tutorial_constancia` y
+    `cierre_constancia`; `doPost()` devuelve `ligaConstancia_(folio)` solo en registros nuevos
+    (no en duplicados, para que conocer un RFC no baste para obtener la liga); `eventosCalendario()`
+    agrega "Sube tu constancia" al terminar y "Último día para subir tu constancia"; botón de
+    Google extra y la liga en `textoWhatsApp()`. Los correos de constancia siguen como respaldo.
+    Hacerlo antes de la próxima conferencia UNETE.
+    (g) **Urgente, antes del 7 oct:** mensaje de WhatsApp de difusión para los inscritos de
+    `CNF-2627-002` (prometido a Jorge el 2 oct). La liga de carga es personal; decidir entre
+    mensaje general con tutorial, lista folio → liga para envío individual, u otra vía.
+    (h) `enviarRecordatoriosConstancia_()` recorre en orden de hoja: con cuota corta, las últimas
+    filas siempre quedan al final. Valorar usar `ordenarParaEnvio_()` como en los avisos por lote.
 29. **Estrategias Nacionales — pendientes tras el despliegue** (en producción desde el 29 sep
     2026, ver `docs/ARCHITECTURE.md §28` y `docs/BITACORA.md`). Falta:
     (a) Revisar `estrategias-nacionales.html` en celular (lista con casillas, carrito, matriz).

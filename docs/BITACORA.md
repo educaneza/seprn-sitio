@@ -14,6 +14,23 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-10-02 · CNF-2627-002: revisión en vivo de avisos y constancias; plan de recordatorio de constancia en el calendario
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-02 |
+| **Sesión** | Jorge pidió recordar cómo quedaron configurados los recordatorios y la recepción de constancias de `CNF-2627-002` (conferencia UNETE del 1 oct, 17:00-19:00) y revisarlo en vivo. Después preguntó si el calendario de la confirmación también recuerda la constancia. No se cambió código. |
+| **Configuración en `Cursos`** | `Hora_inicio` 17:00, `Hora_fin` 19:00, `Liga_tutorial_constancia` llena, `Activo` TRUE, sin `Fechas_sesion`. 130 inscritos. |
+| **Aviso de 30 min** | 4:30 pm: "2 de 3 lote(s) pendientes" (salió 1 lote); 4:45 pm: "Cuota insuficiente (reserva 50)" para los 2 restantes. Llegó a ~46 de 130 y `Recordatorio_webinar_enviado` quedó TRUE, sin reintento. |
+| **Constancias** | De 7:00 pm del 1 oct a 9:00 am del 2 oct, cada corrida: "0 enviado(s), 130 pospuesto(s)". 2 oct 9:15 am: "50 enviado(s), 80 pospuesto(s)" (recordatorio 1); después, 0 enviados. 0 de 130 constancias recibidas. La ventana cierra al terminar el 7 oct. Faltan ~210 correos (80 recordatorios 1 + 130 "Último aviso") con ~50/día, compitiendo con los avisos de `ACF-2627-001`/`002`/`003` (4-7 oct). `enviarRecordatoriosConstancia_()` recorre en orden de hoja, sin `ordenarParaEnvio_()`. |
+| **Calendario** | `eventosCalendario()` solo agenda el evento y sus alarmas previas: no recuerda la constancia ni lleva la liga de carga. Esa liga va firmada (`ligaConstancia_()`), así que el navegador no la puede generar. Plan guardado para otra sesión: el API expone `liga_tutorial_constancia`/`cierre_constancia`, `doPost` devuelve la liga firmada solo en registros nuevos, y la página agrega los eventos "Sube tu constancia" (al terminar) y "Último día para subir tu constancia". Ver `docs/ROADMAP.md` ítem 28 (f). |
+| **Verificación** | En vivo, solo lectura: `Cursos` e `Inscripciones` leídas por exportación CSV desde Chrome; registros de "Mis ejecuciones" de Apps Script del 1 y 2 oct. |
+| **Pendiente** | Mensaje de WhatsApp para los inscritos de `CNF-2627-002` (prometido a Jorge, primero en la siguiente sesión, antes del 7 oct). Implementar el plan del calendario antes de la próxima conferencia UNETE. |
+| **Documentación actualizada** | Este checkpoint y `docs/ROADMAP.md` ítem 28. |
+| **Commits** | Solo el commit de cierre (docs). |
+
+---
+
 ## CHECKPOINT — 2026-10-01 · Bitácora OTDE: captura asistida, propósito con verbo, "Va al reporte" y ruta del gestor de oficios
 
 | | |
