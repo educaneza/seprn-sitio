@@ -171,6 +171,13 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* Pantalla de carga al abrir con la clave ya guardada (oct 2026): antes todas las
+       pantallas quedaban ocultas mientras respondía el servidor y se veía en blanco. */
+    .cargando-inicial { text-align: center; padding: 4rem 1rem; color: var(--off-white); }
+    .cargando-inicial .spinner { width: 34px; height: 34px; border-width: 3.5px; margin: 0 0 1rem; }
+    .cargando-inicial p { margin: 0; font-size: .95rem; font-weight: 600; }
+    .cargando-inicial small { display: block; margin-top: .4rem; font-size: .8rem; opacity: .7; }
+
     .envio-error {
       background: #fee2e2; border: 1.5px solid #fca5a5; color: #7f1d1d;
       border-radius: 8px; padding: .8rem 1rem; font-size: .85rem; margin-top: 1rem; display: none;
@@ -203,6 +210,15 @@
 </header>
 
 <main>
+  <!-- Pantalla 0: cargando la planeación (solo si el dispositivo ya tiene clave) -->
+  <div class="screen hidden" id="screen-cargando" role="status" aria-live="polite">
+    <div class="cargando-inicial">
+      <span class="spinner" aria-hidden="true"></span>
+      <p>Cargando tu planeación…</p>
+      <small id="cargando-detalle">Suele tardar unos segundos.</small>
+    </div>
+  </div>
+
   <!-- Pantalla 1: clave de captura (una vez por dispositivo) -->
   <div class="screen hidden" id="screen-clave">
     <div class="intro">
@@ -419,10 +435,25 @@ function guardarLS(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 function borrarLS(k) { try { localStorage.removeItem(k); } catch (e) {} }
 
 function mostrar(pantalla) {
-  ['screen-clave', 'screen-form', 'screen-ok'].forEach(function (id) {
+  ['screen-cargando', 'screen-clave', 'screen-form', 'screen-ok'].forEach(function (id) {
     $(id).classList.toggle('hidden', id !== pantalla);
   });
   window.scrollTo(0, 0);
+}
+
+// Contador en el botón mientras espera al servidor (oct 2026, "que se note que sigue
+// trabajando"): el guardado ha llegado a tardar más de 30 s aunque Apps Script termine
+// en ~1 s. Devuelve la función que lo detiene.
+function contadorEnBoton(btn, texto) {
+  const inicio = Date.now();
+  btn.innerHTML = '<span class="spinner"></span>' + texto;
+  const reloj = setInterval(function () {
+    const seg = Math.round((Date.now() - inicio) / 1000);
+    if (seg < 3) return;
+    btn.innerHTML = '<span class="spinner"></span>' + texto + ' ' + seg + '\u00a0s' +
+      (seg >= 15 ? ' · seguimos esperando, no cierres' : '');
+  }, 1000);
+  return function () { clearInterval(reloj); };
 }
 
 function marcarError(id, visible) {
@@ -499,7 +530,7 @@ $('form-clave').addEventListener('submit', async function (ev) {
   const err = $('clave-error');
   err.classList.remove('visible');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>Verificando…';
+  const pararContador = contadorEnBoton(btn, 'Verificando…');
   try {
     await entrar(clave, capturo);
     guardarLS(LS_CLAVE, clave);
@@ -510,6 +541,7 @@ $('form-clave').addEventListener('submit', async function (ev) {
       : (e instanceof TypeError ? 'Error de conexión. Verifica tu internet.' : e.message);
     err.classList.add('visible');
   }
+  pararContador();
   btn.disabled = false;
   btn.textContent = 'Entrar';
 });
@@ -926,7 +958,7 @@ $('form-actividad').addEventListener('submit', async function (ev) {
   const errorBox = $('envio-error');
   errorBox.classList.remove('visible');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>Guardando…';
+  const pararContador = contadorEnBoton(btn, 'Guardando…');
 
   const np = $('np').value;
   const accion = acciones.find(function (a) { return a.np === np; });
@@ -988,6 +1020,7 @@ $('form-actividad').addEventListener('submit', async function (ev) {
       : 'Error de conexión. Verifica tu internet e intenta de nuevo.';
     errorBox.classList.add('visible');
   }
+  pararContador();
   btn.disabled = false;
   btn.textContent = 'Guardar actividad';
 });
@@ -1023,6 +1056,14 @@ $('btn-otra').addEventListener('click', function () {
   const clave = leerLS(LS_CLAVE);
   const capturo = leerLS(LS_CAPTURO);
   if (!clave || !capturo) { mostrar('screen-clave'); return; }
+  mostrar('screen-cargando');
+  const inicioCarga = Date.now();
+  const relojCarga = setInterval(function () {
+    const seg = Math.round((Date.now() - inicioCarga) / 1000);
+    if (seg >= 3) $('cargando-detalle').textContent = (seg >= 15
+      ? 'Está tardando más de lo usual; seguimos esperando al servidor.'
+      : 'Suele tardar unos segundos.') + ' (' + seg + '\u00a0s)';
+  }, 1000);
   try {
     await entrar(clave, capturo);
   } catch (e) {
@@ -1033,6 +1074,8 @@ $('btn-otra').addEventListener('click', function () {
       : (e instanceof TypeError ? 'Error de conexión. Verifica tu internet.' : e.message);
     $('clave-error').classList.add('visible');
     mostrar('screen-clave');
+  } finally {
+    clearInterval(relojCarga);
   }
 })();
 </script>

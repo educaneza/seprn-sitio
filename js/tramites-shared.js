@@ -144,3 +144,41 @@ function ocultarProgreso(el, claseBase) {
     el.removeAttribute('aria-live');
     el.innerHTML = '';
 }
+
+// Atajo para un envío completo (oct 2026, al extender esto a los trámites de OTDE):
+// botón ocupado + caja de progreso + contador de segundos + avisos si tarda.
+//   var espera = esperaConProgreso(btn, msg, { boton: 'Enviando…', texto: 'Enviando tu solicitud…' });
+//   espera.etapa('Subiendo tu oficio…');      // cambia el texto principal
+//   ... await fetch ...
+//   espera.fin();   // llamarlo ANTES de escribir el ok/error en `msg` (lo limpia);
+//                   // es idempotente: volver a llamarlo en un finally no borra el resultado.
+function esperaConProgreso(btn, msg, opciones) {
+    var o = opciones || {};
+    var base = o.detalle || 'Suele tardar unos segundos. No cierres esta página.';
+    var inicio = Date.now();
+    var terminado = false;
+    botonOcupado(btn, o.boton || 'Enviando…');
+    mostrarProgreso(msg, { texto: o.texto || 'Enviando…', detalle: base });
+    var reloj = setInterval(function () {
+        var s = Math.round((Date.now() - inicio) / 1000);
+        var texto = base;
+        if (s >= 25) texto = 'Está tardando más de lo usual; seguimos esperando la respuesta del servidor. No cierres esta página ni vuelvas a enviar.';
+        else if (s >= 10) texto = 'Seguimos trabajando, ya casi. No cierres esta página.';
+        if (s >= 3) detalleProgreso(msg, texto + ' (' + s + ' s)');
+    }, 1000);
+    return {
+        etapa: function (texto) {
+            if (terminado) return;
+            var t = msg && msg.querySelector('.ep-texto');
+            if (t) t.textContent = texto;
+        },
+        fin: function () {
+            clearInterval(reloj);
+            if (!terminado) {
+                terminado = true;
+                ocultarProgreso(msg, o.claseBase);
+            }
+            botonLibre(btn);
+        }
+    };
+}

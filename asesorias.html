@@ -744,12 +744,12 @@
         var temasExcelVal = Array.from(document.querySelectorAll('.ase-excel-tema:checked'))
             .map(function(cb) { return cb.value; }).join('; ');
 
-        btnSubmit.disabled = true;
-        btnSubmit.style.opacity = '0.6';
+        var espera = esperaConProgreso(btnSubmit, msg, { boton: 'Enviando…', texto: 'Preparando tu oficio…', detalle: 'Leemos tu PDF y lo subimos junto con la solicitud. Puede tardar unos segundos.' });
         if (!idEnvioAse) idEnvioAse = nuevoIdEnvio();
 
         try {
             var oficioBase64 = await leerArchivoBase64(oficioFile);
+            espera.etapa('Enviando tu solicitud…');
 
             var datos = {
                 tipoAsesoria: document.getElementById('ase-tipo').value,
@@ -779,6 +779,8 @@
                 body: JSON.stringify(datos)
             });
 
+            espera.fin();
+
             if (data.status === 'ok') {
                 idEnvioAse = null;
                 msg.classList.add('ok');
@@ -796,12 +798,12 @@
                 msg.textContent = 'No se pudo registrar la solicitud: ' + data.mensaje;
             }
         } catch (err) {
+            espera.fin();
             msg.classList.add('error');
             msg.textContent = 'No recibimos la confirmación del servidor, pero es posible que tu solicitud sí se haya registrado. '
                 + 'Puedes presionar Enviar de nuevo sin riesgo de duplicarla: si ya existe, te mostraremos el mismo folio.';
         } finally {
-            btnSubmit.disabled = false;
-            btnSubmit.style.opacity = '1';
+            espera.fin();
         }
 
         return false;

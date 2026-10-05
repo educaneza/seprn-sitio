@@ -1161,8 +1161,7 @@
             observaciones: document.getElementById('alt-observaciones').value
         };
 
-        btnSubmit.disabled = true;
-        btnSubmit.style.opacity = '0.6';
+        var espera = esperaConProgreso(btnSubmit, msg, { boton: 'Enviando…', texto: 'Enviando tu solicitud…' });
         datos.idEnvio = idEnvioCorreo_('alta');
 
         try {
@@ -1171,6 +1170,8 @@
                 headers: { 'Content-Type': 'text/plain' },
                 body: JSON.stringify(datos)
             });
+
+            espera.fin();
 
             if (data.status === 'ok') {
                 idsEnvioCorreo.alta = null;
@@ -1189,11 +1190,11 @@
                 msg.textContent = 'No se pudo registrar la solicitud: ' + data.mensaje;
             }
         } catch (err) {
+            espera.fin();
             msg.classList.add('error');
             msg.textContent = MSG_REINTENTO_SEGURO;
         } finally {
-            btnSubmit.disabled = false;
-            btnSubmit.style.opacity = '1';
+            espera.fin();
         }
 
         return false;
@@ -1475,10 +1476,11 @@
             observaciones: document.getElementById('cam-observaciones').value
         });
 
-        btnSubmit.disabled = true; btnSubmit.style.opacity = '0.6';
+        var espera = esperaConProgreso(btnSubmit, msg, { boton: 'Enviando…', texto: 'Enviando tu solicitud…' });
         datos.idEnvio = idEnvioCorreo_('cam');
         try {
             const data = await fetchJsonConTimeout(CAMBIO_APPS_SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(datos) });
+            espera.fin();
             if (data.status === 'ok') {
                 idsEnvioCorreo.cam = null;
                 msg.classList.add('ok');
@@ -1489,10 +1491,11 @@
                 msg.classList.add('error'); msg.textContent = 'No se pudo registrar la solicitud: ' + data.mensaje;
             }
         } catch (err) {
+            espera.fin();
             msg.classList.add('error');
             msg.textContent = MSG_REINTENTO_SEGURO;
         } finally {
-            btnSubmit.disabled = false; btnSubmit.style.opacity = '1';
+            espera.fin();
         }
         return false;
     }
@@ -1544,10 +1547,11 @@
             observaciones: document.getElementById('rst-observaciones').value
         });
 
-        btnSubmit.disabled = true; btnSubmit.style.opacity = '0.6';
+        var espera = esperaConProgreso(btnSubmit, msg, { boton: 'Enviando…', texto: 'Enviando tu solicitud…' });
         datos.idEnvio = idEnvioCorreo_('rst');
         try {
             const data = await fetchJsonConTimeout(RESET_APPS_SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(datos) });
+            espera.fin();
             if (data.status === 'ok') {
                 idsEnvioCorreo.rst = null;
                 msg.classList.add('ok');
@@ -1558,10 +1562,11 @@
                 msg.classList.add('error'); msg.textContent = 'No se pudo registrar la solicitud: ' + data.mensaje;
             }
         } catch (err) {
+            espera.fin();
             msg.classList.add('error');
             msg.textContent = MSG_REINTENTO_SEGURO;
         } finally {
-            btnSubmit.disabled = false; btnSubmit.style.opacity = '1';
+            espera.fin();
         }
         return false;
     }
@@ -1614,10 +1619,11 @@
             observaciones: document.getElementById('cyr-observaciones').value
         });
 
-        btnSubmit.disabled = true; btnSubmit.style.opacity = '0.6';
+        var espera = esperaConProgreso(btnSubmit, msg, { boton: 'Enviando…', texto: 'Enviando tu solicitud…' });
         datos.idEnvio = idEnvioCorreo_('cyr');
         try {
             const data = await fetchJsonConTimeout(CAMBIO_APPS_SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(datos) });
+            espera.fin();
             if (data.status === 'ok') {
                 idsEnvioCorreo.cyr = null;
                 msg.classList.add('ok');
@@ -1628,10 +1634,11 @@
                 msg.classList.add('error'); msg.textContent = 'No se pudo registrar la solicitud: ' + data.mensaje;
             }
         } catch (err) {
+            espera.fin();
             msg.classList.add('error');
             msg.textContent = MSG_REINTENTO_SEGURO;
         } finally {
-            btnSubmit.disabled = false; btnSubmit.style.opacity = '1';
+            espera.fin();
         }
         return false;
     }
@@ -1684,10 +1691,11 @@
             queProblema: document.getElementById('inc-que-problema').value
         });
 
-        btnSubmit.disabled = true; btnSubmit.style.opacity = '0.6';
+        var espera = esperaConProgreso(btnSubmit, msg, { boton: 'Enviando…', texto: 'Enviando tu solicitud…' });
         datos.idEnvio = idEnvioCorreo_('inc');
         try {
             const data = await fetchJsonConTimeout(INCIDENCIA_APPS_SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(datos) });
+            espera.fin();
             if (data.status === 'ok') {
                 idsEnvioCorreo.inc = null;
                 msg.classList.add('ok');
@@ -1698,10 +1706,11 @@
                 msg.classList.add('error'); msg.textContent = 'No se pudo registrar el reporte: ' + data.mensaje;
             }
         } catch (err) {
+            espera.fin();
             msg.classList.add('error');
             msg.textContent = MSG_REINTENTO_SEGURO;
         } finally {
-            btnSubmit.disabled = false; btnSubmit.style.opacity = '1';
+            espera.fin();
         }
         return false;
     }

@@ -1546,6 +1546,9 @@ ul[id$="-cct-suggestions"] .sg-name { color: #6b7280; font-size: 13px; display: 
     box-shadow: 0 4px 15px rgba(159,34,65,0.2);
 }
 .btn-spinner {
+    display: inline-block;
+    vertical-align: -3px;
+    margin-right: 8px;
     width: 18px;
     height: 18px;
     flex-shrink: 0;
@@ -1599,6 +1602,7 @@ ul[id$="-cct-suggestions"] .sg-name { color: #6b7280; font-size: 13px; display: 
     width: 35%;
     animation: ep-indefinida 1.4s ease-in-out infinite;
 }
+.form-button .btn-spinner { margin-right: 0; } /* .form-button ya es flex con gap */
 @keyframes giro-spinner { to { transform: rotate(360deg); } }
 @keyframes ep-indefinida {
     from { left: -35%; }

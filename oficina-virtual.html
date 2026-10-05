@@ -33,6 +33,7 @@
         .ov-buscar-btn { background: #9F2241; color: #fff; border: none; border-radius: 10px; padding: 13px 26px; font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
         .ov-buscar-btn:hover { background: #56212f; }
         .ov-buscar-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .ov-buscar-btn.ocupado { opacity: 1; cursor: progress; background: #56212f; }
         @media (max-width: 720px) { .ov-buscador-form { grid-template-columns: 1fr; } }
 
         .ov-resultado { margin-top: 22px; padding: 18px 20px; border-radius: 12px; display: none; }
@@ -160,6 +161,7 @@
             </div>
             <button type="submit" class="ov-buscar-btn" id="ov-btn">Consultar</button>
         </form>
+        <div class="soporte-submit-msg" id="ov-progreso"></div>
         <div class="ov-resultado" id="ov-resultado"></div>
     </div>
 </section>
@@ -216,20 +218,10 @@
         </div>
     </footer>
 
+<!-- fetchJsonConTimeout() y el indicador de progreso (esperaConProgreso) vienen de aquí
+     desde oct 2026; antes esta página tenía su propia copia del fetch con timeout. -->
+<script src="js/tramites-shared.js"></script>
 <script>
-    // Fetch + parseo JSON con timeout — mismo patrón que otde.html/formacion-docente.html
-    // (ver docs/QA-NOTES.md #1: fetch() sin timeout deja el botón congelado indefinidamente).
-    const OV_TIMEOUT_MS = 30000;
-    async function fetchJsonConTimeout(url, options) {
-        const ctrl = new AbortController();
-        const t = setTimeout(() => ctrl.abort(), OV_TIMEOUT_MS);
-        try {
-            const r = await fetch(url, options ? Object.assign({}, options, { signal: ctrl.signal }) : { signal: ctrl.signal });
-            return await r.json();
-        } finally {
-            clearTimeout(t);
-        }
-    }
 
     // Ruteo por prefijo de folio → backend correspondiente. Mismas URLs de
     // deployment ya usadas en otde.html (MANTENIMIENTO_/ASESORIAS_/SOPORTE_/
@@ -299,11 +291,16 @@
             return;
         }
 
-        btn.disabled = true;
-        btn.textContent = 'Consultando…';
+        document.getElementById('ov-resultado').className = 'ov-resultado';
+        const espera = esperaConProgreso(btn, document.getElementById('ov-progreso'), {
+            boton: 'Consultando…',
+            texto: 'Buscando tu solicitud de ' + tramite.nombre + '…',
+            detalle: 'Suele tardar unos segundos.'
+        });
         try {
             const url = tramite.url + '?action=consulta&folio=' + encodeURIComponent(tramite.folio) + '&correo=' + encodeURIComponent(correo);
             const data = await fetchJsonConTimeout(url);
+            espera.fin();
 
             if (data.status === 'ok') {
                 ovMostrarResultado(
@@ -317,10 +314,10 @@
                 ovMostrarResultado('No encontramos una solicitud con ese folio y ese correo. Verifica ambos datos e intenta de nuevo.', 'error');
             }
         } catch (err) {
+            espera.fin();
             ovMostrarResultado(err.name === 'AbortError' ? 'El servidor tardó demasiado en responder. Intenta de nuevo en un momento.' : 'No se pudo consultar el folio. Verifica tu conexión e intenta de nuevo.', 'error');
         } finally {
-            btn.disabled = false;
-            btn.textContent = 'Consultar';
+            espera.fin();
         }
     });
 </script>

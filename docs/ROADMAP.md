@@ -848,12 +848,16 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     la página parecía trabada medio minuto — los avisos de progreso se escribían en un
     `.soporte-submit-msg`, que tiene `display:none` sin clase `ok`/`error`. Ya aplicado en
     `ceremonias-civicas.html` (reserva, buscar folio, reagendar, cancelar, panel) y
-    `ficha-ceremonias-civicas.html` (buscar folio, envío con etapas y contador). Falta, una
-    página a la vez: `mantenimiento.html`, `asesorias.html`, `soporte.html`, `correo.html`,
-    `estrategias-nacionales.html`, `oficina-virtual.html`, `formacion-docente.html` y
-    `asistencia.html` (estas tres últimas tienen su propio `fetchJsonConTimeout` y su propio
-    sistema de diseño). Revisar en cada una si hay otro mensaje de progreso escrito en un
-    elemento oculto, igual que en la ficha.
+    `ficha-ceremonias-civicas.html` (buscar folio, envío con etapas y contador). **5 oct 2026,
+    OTDE:** atajo `esperaConProgreso(btn, msg, {boton, texto, detalle})` (botón + caja +
+    contador + avisos a los 10/25 s; `.etapa()` y `.fin()` idempotente) aplicado a los 5
+    formularios de `correo.html`, `mantenimiento.html`/`asesorias.html` (etapa "Preparando tu
+    oficio") y `soporte.html`; `oficina-virtual.html` ahora carga `js/tramites-shared.js` (se
+    quitó su copia de `fetchJsonConTimeout`) y la consulta de folio usa el mismo atajo;
+    `bitacora.html` tiene pantalla de carga al abrir con clave guardada (antes se veía en
+    blanco) y contador en "Verificando…"/"Guardando…". `formacion-docente.html` y
+    `reporte-visita.html` ya tenían spinner y avisos de demora — no se tocaron. Falta:
+    `estrategias-nacionales.html` y `asistencia.html` (fuera de OTDE).
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue
