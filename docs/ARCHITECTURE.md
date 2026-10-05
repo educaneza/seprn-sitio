@@ -2112,7 +2112,15 @@ Jorge trajo una lista de fricciones reportadas por los ~20 jefes usando el siste
   sabía si su ficha ya se había enviado. Reforzados solo en estas dos páginas (selectores por ID,
   `#reservar-msg`/`#ficha-msg`, para no tocar la clase compartida): ícono circular (✓/!, vía
   `::before` con `content`), sombra, borde lateral grueso, y `scrollIntoView()` automático al
-  mostrarse.
+  mostrarse. **Oct 2026:** el éxito de la reserva ya no usa `#reservar-msg`. Lo reemplaza la
+  tarjeta `#reservar-ok` (`pintarConfirmacion()`), que oculta el formulario hasta "Reservar otra
+  visita" (`reservarOtra()`): folio destacado con "Copiar folio", resumen (escuela, CCT, sector,
+  zona, fecha larga, tipo, responsable), comprobante PNG en canvas
+  (`guardarComprobanteVisita()`: en celular abre `navigator.share`, en computadora se descarga) y
+  WhatsApp (`textoWhatsAppVisita()`). Todo se genera en el navegador, sin cambios de backend: el
+  `POST` sigue devolviendo solo `{status, folio}` y la tarjeta usa los `datos` que ya se
+  enviaron. `#reservar-msg` queda solo para errores, con el texto dentro de un `<span>`
+  (`docs/QA-NOTES.md #50`). Las esperas usan el componente de §29.
 - Se agregó una guía "Cómo funciona, paso a paso" (4 pasos) antes del formulario. Se probó
   primero resumir el párrafo largo del `.servicio-header` (pendiente documentado en
   `docs/ROADMAP.md` ítem 14) a una sola oración, pero Jorge pidió restaurar el texto institucional
@@ -2706,4 +2714,61 @@ queda en `Historial de cambios`). Cancelar dos veces responde `status: 'ya_cance
 "2026-10" en fecha; `enMesTexto_()` normaliza si alguien lo edita a mano. Sin correo ni Telegram
 ("solo registrar", decisión de Jorge). La hoja `Resumen` (estrategia × mes) se arma desde el
 menú "SEPRN Estrategias" y no requiere redeploy.
+
+## 29. Indicador de progreso compartido: "que se note que sigue trabajando" (oct 2026)
+
+**Origen:** al enviar una ficha de Ceremonias Cívicas con fotos, la página parecía trabada medio
+minuto. Los avisos de progreso existían, pero se escribían en un `.soporte-submit-msg` oculto
+(`docs/QA-NOTES.md #51`). Jorge pidió que en todo lo que aplique se note que el sistema sigue
+trabajando ("optimizando la experiencia").
+
+**Piezas (en `js/tramites-shared.js` + `styles.css`, sin dependencias):**
+- `botonOcupado(btn, texto)` / `botonLibre(btn)`: deshabilitan el botón, guardan su etiqueta
+  original en `data-etiqueta-original`, ponen `.btn-spinner` + texto y `aria-busy`, y luego la
+  restauran. Clase `.ocupado` (en `.form-button`, sin el efecto de hover).
+- `mostrarProgreso(el, {texto, detalle, paso, total})`: convierte `el` en una caja
+  `.estado-progreso` (`role="status"`, `aria-live="polite"`) con spinner, texto principal, detalle
+  y barra. Con `paso`/`total` la barra avanza de verdad; sin ellos queda animada indefinida.
+  `detalleProgreso(el, texto)` solo cambia el detalle; `ocultarProgreso(el, claseBase)` devuelve
+  `el` a su clase base (por defecto `soporte-submit-msg`) y lo vacía.
+- `esperaConProgreso(btn, msg, {boton, texto, detalle, claseBase})`: atajo para un envío completo.
+  Une las dos piezas anteriores y agrega un contador de segundos (desde los 3 s) y avisos
+  escalonados (10 s "seguimos trabajando", 25 s "no cierres ni vuelvas a enviar"). Devuelve
+  `{etapa(texto), fin()}`. **`fin()` es idempotente:** se llama justo después de la respuesta (y
+  al inicio del `catch`), *antes* de escribir el ok/error en `msg`. Volver a llamarlo en el
+  `finally` solo libera el botón y no borra el resultado.
+- Los textos de la caja usan doble clase (`.estado-progreso .ep-detalle`) porque reglas de página
+  como `.content-block p` les ganaban el interlineado y los márgenes. Con
+  `prefers-reduced-motion`, la barra indefinida queda fija.
+
+**Patrón de uso en un formulario de trámite:**
+```js
+var espera = esperaConProgreso(btnSubmit, msg, { boton: 'Enviando…', texto: 'Enviando tu solicitud…' });
+try {
+    // (opcional) espera.etapa('…');
+    const data = await fetchJsonConTimeout(URL, {...});
+    espera.fin();
+    if (data.status === 'ok') { msg.classList.add('ok'); ... }
+} catch (err) {
+    espera.fin();
+    msg.classList.add('error'); ...
+} finally {
+    espera.fin();
+}
+```
+
+**Dónde está aplicado:** `ceremonias-civicas.html` (reserva con dos etapas: verificar disponibilidad
+y guardar; buscar folio, reagendar, cancelar, panel; spinner en "Cargando reservas/escuelas…"),
+`ficha-ceremonias-civicas.html` (buscar folio; envío con etapa "Preparando fotos x de n" de barra
+real y "Subiendo…" con contador propio), los 5 formularios de `correo.html`, `soporte.html`,
+`mantenimiento.html`/`asesorias.html` (primera etapa "Preparando tu oficio" mientras
+`leerArchivoBase64()` lee el PDF) y la consulta de folio de `oficina-virtual.html` (caja
+`#ov-progreso`). `oficina-virtual.html` empezó a cargar `js/tramites-shared.js` y su copia local
+de `fetchJsonConTimeout` se quitó. `bitacora.html` tiene su propio sistema visual: no usa la
+caja, sino `#screen-cargando` al arrancar y `contadorEnBoton()` (contador en el botón) al
+verificar la clave y guardar.
+
+**Fuera de alcance:** `formacion-docente.html` y `reporte-visita.html` ya tenían spinner en el
+botón y avisos de demora propios. `estrategias-nacionales.html` y `asistencia.html` siguen
+pendientes (`docs/ROADMAP.md` ítem 31).
 

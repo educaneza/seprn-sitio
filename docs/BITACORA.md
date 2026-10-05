@@ -14,6 +14,23 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-10-05 · Ceremonias Cívicas: comprobante de folio y confirmación rediseñada; progreso visible en Ceremonias, OTDE y Oficina Virtual
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-05 |
+| **Sesión** | Jorge pidió dos arreglos en Ceremonias Cívicas: descargar el comprobante del folio de la reserva (como en Formación Docente) y rediseñar el aviso de reserva, que se veía partido en columnas. Después agregó un tercero: "optimizando la experiencia", que el usuario note que el sistema sigue trabajando. Al enviar su propio reporte de visita había pensado que la página se había trabado. Al final pidió llevarlo a todo OTDE y Oficina Virtual. |
+| **Confirmación de reserva** | `ceremonias-civicas.html`: la tarjeta `#reservar-ok` (`pintarConfirmacion()`) ocupa el lugar del formulario. Tiene el folio destacado con "Copiar folio"; escuela con CCT, sector y zona; fecha larga (`visFechaLarga()`); tipo de visita y responsable. Botones: "Guardar comprobante (imagen)" (`guardarComprobanteVisita()`, PNG en canvas, mismo patrón que Formación Docente), "Enviármelo por WhatsApp" (`textoWhatsAppVisita()`), paso 2 "Ir a la ficha →" y "Reservar otra visita" (`reservarOtra()`). Los datos del usuario se pintan con `textContent`. El aviso roto era `display:flex` con texto suelto (`docs/QA-NOTES.md #50`); el error ahora va dentro de un `<span>` (`visMsgError()`). |
+| **Causa de la "página trabada"** | En `ficha-ceremonias-civicas.html` los avisos de progreso sí se escribían, pero en `#ficha-msg`, un `.soporte-submit-msg` que tiene `display:none` sin clase `ok`/`error`. Solo se veía el botón atenuado (`docs/QA-NOTES.md #51`). |
+| **Componente de progreso** | `js/tramites-shared.js` + `styles.css`: `botonOcupado()`/`botonLibre()` (spinner en el botón), `mostrarProgreso()`/`detalleProgreso()`/`ocultarProgreso()` (caja `.estado-progreso` con barra y texto vivo) y el atajo `esperaConProgreso()` (contador de segundos, avisos a los 10/25 s, `.etapa()`, `.fin()` idempotente). Ver `docs/ARCHITECTURE.md §29`. |
+| **Dónde se aplicó** | Ceremonias: reserva, buscar folio, reagendar, cancelar, panel y cargas de listas. Ficha: buscar folio y envío por etapas ("Preparando fotos x de n", "Subiendo…" con contador). OTDE: los 5 formularios de `correo.html`, `soporte.html`, `mantenimiento.html` y `asesorias.html` (etapa "Preparando tu oficio"). `oficina-virtual.html`: consulta de folio; ahora carga `js/tramites-shared.js` y se quitó su copia de `fetchJsonConTimeout`. `bitacora.html`: pantalla `#screen-cargando` al abrir con clave guardada (antes se veía en blanco, `docs/QA-NOTES.md #52`) y contador en "Verificando…"/"Guardando…" (`contadorEnBoton()`). Formación Docente y `reporte-visita.html` ya tenían spinner y avisos de demora; no se tocaron. |
+| **Verificación** | En Chrome local con la red simulada (sin tocar ningún backend): tarjeta en escritorio y a ~400 px, comprobante PNG con un nombre de escuela largo, ficha con 3 fotos (etapa 1 con barra, etapa 2 con contador y aviso de 10 s), reserva con error de red, Mantenimiento con oficio (pasa de "Preparando tu oficio" a "Enviando" con contador a los 12 s), Correo/Cambio con fallo y con éxito (el folio se queda), Oficina Virtual y la pantalla de carga de la Bitácora. Sin errores en consola. Publicado: `f09704e` en vivo a las 19:34 UTC; GitHub marcó el run como "failure", pero build y deploy salieron bien y solo `report-build-status` se canceló. **Falta la prueba en vivo** con una reserva real de Ceremonias. |
+| **Pendiente** | `docs/ROADMAP.md` ítem 31: `estrategias-nacionales.html` y `asistencia.html` (fuera de OTDE). |
+| **Documentación actualizada** | Este checkpoint, `docs/ARCHITECTURE.md §29` (nueva) y §22, `docs/QA-NOTES.md #50`-`#52`, `docs/ROADMAP.md` ítem 31 y `CLAUDE.md` (Oficina Virtual, `js/tramites-shared.js` y Ceremonias Cívicas). |
+| **Commits** | `f09704e` (Ceremonias Cívicas), `c2147d6` (OTDE y Oficina Virtual) y el commit de cierre (docs). |
+
+---
+
 ## CHECKPOINT — 2026-10-02 · Instalador de Office v4: EXE ligero, Office 2016 desde Drive y sin curl (proyecto externo)
 
 | | |

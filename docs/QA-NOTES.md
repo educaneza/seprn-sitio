@@ -1366,3 +1366,53 @@ usuario" → Nueva versión. Sin cambios de código.
 `grep -o "<title>[^<]*</title>"`: "Acceso denegado" significa que la implementación no está
 abierta al público. Hacer esto antes de cualquier `POST` de prueba.
 
+## 50. Ceremonias Cívicas: el aviso de "Visita reservada" se partía en columnas
+
+**Síntoma (5 oct 2026, captura de Jorge):** el mensaje de éxito de la reserva se mostraba como
+cinco columnas angostas ("Visita reservada. Tu folio es" | folio | "— anótalo…" | enlace |
+"usando este folio.").
+
+**Causa raíz:** `#reservar-msg.ok` tenía `display:flex` (para alinear el ícono `::before`), y el
+contenido era texto suelto + `<strong>` + `<a>` metidos con `innerHTML`. En un contenedor flex,
+cada nodo de texto y cada elemento en línea se vuelve un *flex item* independiente.
+
+**Fix:** el éxito ya no usa ese contenedor: lo reemplaza la tarjeta `#reservar-ok`. El error
+sigue en flex, pero su texto va dentro de un solo `<span>` (`visMsgError()`).
+
+**Regla:** si un contenedor es `display:flex`, todo su contenido de texto debe ir envuelto en un
+solo elemento hijo. Nunca mezclar texto suelto con `<strong>`/`<a>` directamente dentro de un flex.
+
+## 51. Ficha de Ceremonias Cívicas: los avisos de progreso existían pero no se veían
+
+**Síntoma (5 oct 2026, Jorge enviando su propia ficha):** al presionar "Enviar ficha" con varias
+fotos, la página se quedaba quieta un buen rato sin ninguna señal, hasta que aparecía la
+confirmación. Parecía trabada.
+
+**Causa raíz:** `enviarFicha()` sí escribía "Comprimiendo y subiendo fotos (x de n)…", "Enviando
+ficha…" y los avisos de 10 s y 30 s, pero en `#ficha-msg` después de dejarle solo la clase
+`soporte-submit-msg`. En `styles.css`, esa clase tiene `display:none` y solo se muestra con
+`.ok` o `.error`. Lo único visible era el botón atenuado al 60 %.
+
+**Fix:** componente compartido `mostrarProgreso()`/`esperaConProgreso()` en
+`js/tramites-shared.js`, con su propia clase visible `.estado-progreso` (ver
+`docs/ARCHITECTURE.md §29`). Aplicado a la ficha y extendido a Ceremonias, OTDE y Oficina Virtual.
+
+**Regla:** nunca escribir mensajes de progreso en un `.soporte-submit-msg` sin clase de estado.
+Para esperas, usar `esperaConProgreso()`. Al probar un envío, simular la red lenta y comprobar con
+una captura que el progreso **se ve**, no solo que el texto existe en el DOM.
+
+## 52. Bitácora: pantalla en blanco al abrirla con la clave ya guardada
+
+**Síntoma (5 oct 2026, encontrado al revisar las esperas de OTDE):** si el dispositivo ya tenía la
+clave de captura, la página mostraba solo el encabezado sobre fondo azul mientras cargaba la
+planeación, sin ningún indicador.
+
+**Causa raíz:** las tres pantallas (`screen-clave`, `screen-form`, `screen-ok`) empiezan con
+`hidden` y el arranque `iniciar()` no mostraba ninguna hasta que respondía `?action=planeacion`.
+
+**Fix:** pantalla nueva `#screen-cargando` ("Cargando tu planeación…" con spinner y contador),
+mostrada por `iniciar()` antes de la llamada.
+
+**Regla:** toda página que arranque con una llamada al servidor debe mostrar algo desde el primer
+momento. Ninguna pantalla debe quedar en blanco mientras espera.
+

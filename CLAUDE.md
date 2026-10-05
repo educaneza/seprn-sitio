@@ -738,7 +738,9 @@ manual de Sector/Zona/Escuela (`js/cct-db.js`, detalle del patrón en `docs/ARCH
 §11`; cada campo del fallback valida y muestra su propio error — no agrupar todo bajo el
 mensaje del CCT, anti-patrón ya corregido dos veces), y Nombre/Escuela manual homologados a
 Title Case. `toTitleCase()`, `fetchJsonConTimeout()`, `otdePoblarFuncion()`,
-`leerArchivoBase64()` y `TAMANO_MAX_ARCHIVO_BYTES` viven en `js/tramites-shared.js`, cargado con
+`leerArchivoBase64()`, `TAMANO_MAX_ARCHIVO_BYTES` y el indicador de progreso (`esperaConProgreso()`,
+`botonOcupado()`, `mostrarProgreso()`, oct 2026: todo envío debe mostrar que sigue trabajando,
+ver `docs/ARCHITECTURE.md §29`) viven en `js/tramites-shared.js`, cargado con
 `<script src="js/tramites-shared.js"></script>` en cada una de las 4 páginas, justo después de
 `js/cct-db.js`. El CSS de estos formularios (`.servicio-header`, `.content-block`,
 `.form-button`, `.form-container`, `.soporte-form-group` y sus hijos, `.sop-cct-wrapper`,
@@ -1053,8 +1055,9 @@ Formación Docente — es una utilidad de una sola pantalla que continúa un tr�
   trámite sobre el caso secundario de consultar un folio ya existente): folio + correo → ruteo
   automático
   por prefijo (`OV_TIPOS_DE_TRAMITE`, función `ovResolverTramite()`) a la URL de deployment
-  correspondiente, sin preguntarle al usuario el tipo de trámite. Reusa `fetchJsonConTimeout()`
-  duplicada inline (mismo patrón que el resto del sitio).
+  correspondiente, sin preguntarle al usuario el tipo de trámite. Desde el 5 oct 2026 carga
+  `js/tramites-shared.js` (antes tenía su propia copia de `fetchJsonConTimeout()`), y la consulta
+  muestra spinner y caja de progreso con `esperaConProgreso()` (`docs/ARCHITECTURE.md §29`).
 - **Contrato de consulta, igual en los 4 backends**: `GET ?action=consulta&folio=XXX&correo=YYY`
   → `{status:'ok', folio, fecha, estatus, notas}` o `{status:'no_encontrado'}` (mismo mensaje si
   el folio no existe o el correo no coincide, para no dejar adivinar folios válidos por
@@ -1160,6 +1163,12 @@ sitio, se comparte por link directo (hay un QR institucional, `images/qr-ceremon
   `js/escuelas-direcciones.js`, cargado solo aquí. Las "No realizada"/"Cancelada" salen de la
   tabla a los 7 días (pestaña `Archivo — No realizadas`, ver `apps-script/visitas-jefes.gs`
   arriba). Detalle en `docs/ARCHITECTURE.md §22`.
+- **Confirmación con comprobante + progreso visible (5 oct 2026, en producción)**: al reservar, la
+  tarjeta `#reservar-ok` reemplaza al formulario: folio con "Copiar", resumen, "Guardar
+  comprobante (imagen)" (PNG en canvas, como Formación Docente), WhatsApp y "Ir a la ficha". Todas
+  las esperas (reserva, ficha con fotos, buscar folio, reagendar, cancelar, panel) usan el
+  indicador compartido. Antes, la ficha escribía su progreso en una caja oculta
+  (`docs/QA-NOTES.md #51`). Ver `docs/ARCHITECTURE.md §22` y `§29`.
 - **`ficha-ceremonias-civicas.html`** (renombrado dos veces: `ficha-visita-jefe.html` →
   `ficha-informativa-visita.html` → nombre final; el genérico quedó reservado para una futura
   Fase 2 de reporte general al Community Manager, ver `docs/ROADMAP.md` ítem 13): ficha
