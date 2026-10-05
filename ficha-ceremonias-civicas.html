@@ -116,7 +116,7 @@
                 <input type="text" id="ficha-folio-input" placeholder="SEPRN-CC-0001" style="text-transform:uppercase;font-family:monospace;">
                 <div class="soporte-field-error" id="ficha-folio-input-error">Ingresa el folio de tu visita.</div>
             </div>
-            <button class="form-button" onclick="buscarFolio()">
+            <button class="form-button" id="btn-buscar-folio" onclick="buscarFolio()">
                 <span>Buscar</span>
             </button>
         </div>
@@ -366,6 +366,8 @@
         }
         input.classList.remove('error'); err.classList.remove('visible');
 
+        var btnBuscar = document.getElementById('btn-buscar-folio');
+        botonOcupado(btnBuscar, 'Buscando…');
         try {
             var data = await fetchJsonConTimeout(VISITAS_APPS_SCRIPT_URL + '?action=consulta&folio=' + encodeURIComponent(folio), { method: 'GET' });
             if (data.status !== 'ok') {
@@ -387,6 +389,8 @@
         } catch (err2) {
             msg.classList.add('error');
             msg.textContent = 'No se pudo consultar el folio. Verifica tu conexión e intenta de nuevo.';
+        } finally {
+            botonLibre(btnBuscar);
         }
     }
 
@@ -535,26 +539,39 @@
         if (!validarFichaForm()) return false;
 
         var files = Array.from(document.getElementById('ficha-fotos').files || []);
-        btnSubmit.disabled = true;
-        btnSubmit.style.opacity = '0.6';
+        botonOcupado(btnSubmit, 'Enviando ficha…');
+        var avisoLento, avisoMuyLento, reloj;
 
         try {
             var fotos = [];
             for (var i = 0; i < files.length; i++) {
-                msg.textContent = 'Comprimiendo y subiendo fotos (' + (i + 1) + ' de ' + files.length + ')...';
+                mostrarProgreso(msg, {
+                    texto: 'Preparando fotos (' + (i + 1) + ' de ' + files.length + ')',
+                    detalle: 'Las comprimimos aquí mismo para que se suban más rápido.',
+                    paso: i, total: files.length
+                });
                 var comprimida = await comprimirImagen(files[i]);
                 var base64 = await leerArchivoBase64(comprimida);
                 fotos.push({ base64: base64, nombre: files[i].name, tipo: 'image/jpeg' });
             }
-            msg.textContent = 'Enviando ficha...';
-            var avisoLento = setTimeout(function () {
-                msg.textContent = 'Enviando ficha... con varias fotos puede tardar un poco más.';
+            var textoEnvio = files.length
+                ? 'Subiendo tu ficha y ' + files.length + ' foto' + (files.length === 1 ? '' : 's') + '…'
+                : 'Subiendo tu ficha…';
+            var mensajeEnvio = 'Esto suele tardar entre 10 y 40 segundos. No cierres esta página.';
+            mostrarProgreso(msg, { texto: textoEnvio, detalle: mensajeEnvio });
+            // Contador visible: aunque el servidor tarde, el jefe ve que algo avanza.
+            var inicioEnvio = Date.now();
+            reloj = setInterval(function () {
+                detalleProgreso(msg, mensajeEnvio + ' (' + Math.round((Date.now() - inicioEnvio) / 1000) + '\u00a0s)');
+            }, 1000);
+            avisoLento = setTimeout(function () {
+                mensajeEnvio = 'Con varias fotos puede tardar un poco más. Seguimos trabajando, no cierres esta página.';
             }, 10000);
             // Umbral en 30s porque ahí es donde antes abortaba el fetch (TIMEOUT_FETCH_MS
             // default) — a partir de aquí es justo cuando el jefe antes veía el error de
             // "servidor tardó" aunque la ficha se siguiera guardando de fondo.
-            var avisoMuyLento = setTimeout(function () {
-                msg.textContent = 'Esto está tardando más de lo usual — seguimos esperando la respuesta del servidor, no cierres esta página.';
+            avisoMuyLento = setTimeout(function () {
+                mensajeEnvio = 'Está tardando más de lo usual — seguimos esperando la respuesta del servidor. No cierres esta página ni vuelvas a enviar.';
             }, 30000);
 
             var propositoVal = document.getElementById('ficha-proposito').value === 'Otro'
@@ -594,6 +611,7 @@
             } finally {
                 clearTimeout(avisoLento);
                 clearTimeout(avisoMuyLento);
+                clearInterval(reloj);
             }
 
             if (data.status === 'ok') {
@@ -611,13 +629,15 @@
                 msg.textContent = 'No se pudo enviar la ficha: ' + data.mensaje;
             }
         } catch (err) {
+            clearTimeout(avisoLento);
+            clearTimeout(avisoMuyLento);
+            clearInterval(reloj);
             msg.className = 'soporte-submit-msg error';
             msg.textContent = err.name === 'AbortError'
                 ? 'El servidor tardó demasiado en responder. Vuelve a intentarlo en un momento.'
                 : 'No se pudo enviar la ficha. Verifica tu conexión e intenta de nuevo.';
         } finally {
-            btnSubmit.disabled = false;
-            btnSubmit.style.opacity = '1';
+            botonLibre(btnSubmit);
             msg.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 

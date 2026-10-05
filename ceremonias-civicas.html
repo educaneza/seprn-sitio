@@ -43,10 +43,10 @@
         .vis-guia-texto h4 { margin: 4px 0 4px; font-size: 15px; color: #56212f; }
         .vis-guia-texto p { margin: 0; font-size: 14px; color: #333; line-height: 1.55; }
         .vis-guia-texto a { color: #9F2241; font-weight: 600; }
-        /* Mensaje de confirmación/error muy notorio (sep 2026) — mismo componente que el
-        resto del sitio (.soporte-submit-msg) pero reforzado solo en esta página, para que
-        no pase inadvertido tras enviar la reserva. */
-        #reservar-msg.ok, #reservar-msg.error {
+        /* Mensaje de error muy notorio (sep 2026). El éxito ya no usa este bloque: se
+        muestra la tarjeta .vis-ok (oct 2026). El texto va siempre dentro de un <span>
+        — con display:flex, texto suelto + <strong> + <a> se partían en columnas. */
+        #reservar-msg.error {
             display: flex;
             align-items: flex-start;
             gap: 14px;
@@ -59,7 +59,8 @@
             border-left-width: 6px;
             animation: vis-msg-in 0.35s ease-out;
         }
-        #reservar-msg.ok::before, #reservar-msg.error::before {
+        #reservar-msg.error::before {
+            content: '!';
             flex-shrink: 0;
             width: 26px;
             height: 26px;
@@ -70,10 +71,181 @@
             font-size: 15px;
             font-weight: 700;
             color: white;
+            background: #9F2241;
             margin-top: 1px;
         }
-        #reservar-msg.ok::before { content: '✓'; background: #2e7d32; }
-        #reservar-msg.error::before { content: '!'; background: #9F2241; }
+
+        /* ── Confirmación de reserva (oct 2026): folio destacado, resumen y
+        comprobante en imagen — mismo patrón que formacion-docente.html. ── */
+        .vis-ok {
+            margin: 8px auto 28px;
+            max-width: 560px;
+            background: #fff;
+            border: 1px solid #EAE2DC;
+            border-radius: 16px;
+            /* Sombra corta: .form-container tiene overflow:hidden y recortaba una más amplia. */
+            box-shadow: 0 6px 18px rgba(86,33,47,0.10);
+            scroll-margin-top: 96px;
+            outline: none;
+            overflow: hidden;
+            animation: vis-msg-in 0.35s ease-out;
+        }
+        .vis-ok[hidden] { display: none; }
+        .vis-ok-cabeza {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 22px 24px 18px;
+            background: linear-gradient(135deg, #f1f8f1 0%, #ffffff 70%);
+            border-bottom: 1px solid #EAE2DC;
+        }
+        .vis-ok-check {
+            flex-shrink: 0;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #2e7d32;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 0 6px rgba(46,125,50,0.12);
+        }
+        .vis-ok-check svg { width: 22px; height: 22px; }
+        /* Doble clase: las reglas `.content-block h3/p` de la página ganarían si no. */
+        .vis-ok .vis-ok-titulo { margin: 0; padding: 0; font-size: 20px; font-weight: 700; color: #1f3d22; line-height: 1.25; }
+        .vis-ok .vis-ok-sub { margin: 3px 0 0; padding: 0; font-size: 13.5px; color: #4f5d50; line-height: 1.4; }
+        .vis-ok .vis-ok-siguiente p { margin: 0; flex: 1; font-size: 13.5px; line-height: 1.45; color: #333; }
+        .vis-ok-cuerpo { padding: 22px 24px 24px; }
+        .vis-ok-folio {
+            text-align: center;
+            padding: 18px 16px 16px;
+            background: #F9F8F5;
+            border: 1.5px dashed #d8c7bd;
+            border-radius: 12px;
+        }
+        .vis-ok-folio-label { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; color: #977e5b; text-transform: uppercase; }
+        .vis-ok-folio-valor {
+            display: block;
+            margin: 6px 0 12px;
+            font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+            font-size: 30px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            color: #9F2241;
+            word-break: break-all;
+        }
+        .vis-ok-copiar {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border: 1px solid #d6d1ca;
+            border-radius: 999px;
+            background: #fff;
+            color: #56212f;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: border-color 0.2s, color 0.2s;
+        }
+        .vis-ok-copiar:hover { border-color: #9F2241; color: #9F2241; }
+        .vis-ok-copiar svg { width: 14px; height: 14px; }
+        .vis-ok-datos {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px 20px;
+            margin: 20px 0 0;
+        }
+        .vis-ok-datos div { min-width: 0; }
+        .vis-ok-datos .ancho { grid-column: 1 / -1; }
+        .vis-ok-datos dt { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #977e5b; margin-bottom: 3px; }
+        .vis-ok-datos dd { margin: 0; font-size: 14.5px; font-weight: 600; color: #222; line-height: 1.4; overflow-wrap: anywhere; }
+        .vis-ok-datos dd small { display: block; font-weight: 500; font-size: 12.5px; color: #6b6b6b; margin-top: 2px; }
+        .vis-ok-acciones { display: grid; gap: 10px; margin-top: 22px; }
+        .vis-ok-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 15px 18px;
+            border: none;
+            border-radius: 12px;
+            font: inherit;
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+            text-decoration: none;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+            transition: filter 0.2s, transform 0.12s;
+        }
+        .vis-ok-btn:hover { filter: brightness(1.1); }
+        .vis-ok-btn:active { transform: scale(0.985); }
+        .vis-ok-btn svg { width: 19px; height: 19px; flex-shrink: 0; }
+        .vis-ok-btn.comprobante { background: #9F2241; }
+        .vis-ok-btn.whatsapp { background: #1a7f4b; }
+        .vis-ok-btn[disabled] { opacity: 0.7; cursor: progress; }
+        .vis-ok-siguiente {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-top: 18px;
+            padding: 14px 16px;
+            background: #f4f6f9;
+            border: 1px solid #dde3ec;
+            border-radius: 12px;
+        }
+        .vis-ok-paso {
+            flex-shrink: 0;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #0C1A2E;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .vis-ok-siguiente a {
+            flex-shrink: 0;
+            padding: 9px 14px;
+            border: 1.5px solid #0C1A2E;
+            border-radius: 10px;
+            color: #0C1A2E;
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: background 0.2s, color 0.2s;
+        }
+        .vis-ok-siguiente a:hover { background: #0C1A2E; color: #fff; }
+        .vis-ok-otra {
+            display: block;
+            margin: 18px auto 0;
+            padding: 6px 10px;
+            border: none;
+            background: none;
+            font: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            color: #9F2241;
+            cursor: pointer;
+        }
+        .vis-ok-otra:hover { text-decoration: underline; }
+        @media (max-width: 480px) {
+            .vis-ok-cabeza, .vis-ok-cuerpo { padding-left: 18px; padding-right: 18px; }
+            .vis-ok-folio-valor { font-size: 25px; }
+            .vis-ok-datos { grid-template-columns: 1fr; }
+            .vis-ok-siguiente { flex-wrap: wrap; }
+            .vis-ok-siguiente a { width: 100%; text-align: center; }
+        }
+        /* Spinner chico para las cargas de tablas/listas (oct 2026). */
+        .vis-cargando-spin { display: inline-flex; align-items: center; gap: 10px; }
+        .vis-cargando-spin .ep-spinner { width: 16px; height: 16px; border-width: 2.5px; margin-top: 0; }
         @keyframes vis-msg-in {
             from { opacity: 0; transform: translateY(-8px); }
             to { opacity: 1; transform: translateY(0); }
@@ -350,6 +522,41 @@
 
                 <div id="reservar-msg" class="soporte-submit-msg"></div>
             </form>
+
+            <!-- Confirmación de reserva (oct 2026) — se pinta en pintarConfirmacion() y
+                 ocupa el lugar del formulario hasta que se elige "Reservar otra visita". -->
+            <div id="reservar-ok" class="vis-ok" hidden tabindex="-1">
+                <div class="vis-ok-cabeza">
+                    <span class="vis-ok-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div>
+                        <h3 class="vis-ok-titulo">Visita reservada</h3>
+                        <p class="vis-ok-sub">Guarda tu folio: no se envía por correo.</p>
+                    </div>
+                </div>
+                <div class="vis-ok-cuerpo">
+                    <div class="vis-ok-folio">
+                        <span class="vis-ok-folio-label">Tu folio</span>
+                        <strong class="vis-ok-folio-valor" id="vis-ok-folio"></strong>
+                        <button type="button" class="vis-ok-copiar" id="vis-ok-copiar"></button>
+                    </div>
+                    <dl class="vis-ok-datos">
+                        <div class="ancho"><dt>Escuela</dt><dd id="vis-ok-escuela"></dd></div>
+                        <div><dt>Fecha planeada</dt><dd id="vis-ok-fecha"></dd></div>
+                        <div><dt>Tipo de visita</dt><dd id="vis-ok-tipo"></dd></div>
+                        <div class="ancho"><dt>Responsable</dt><dd id="vis-ok-responsable"></dd></div>
+                    </dl>
+                    <div class="vis-ok-acciones">
+                        <button type="button" class="vis-ok-btn comprobante" id="vis-ok-comprobante"></button>
+                        <a class="vis-ok-btn whatsapp" id="vis-ok-whatsapp" target="_blank" rel="noopener noreferrer"></a>
+                    </div>
+                    <div class="vis-ok-siguiente">
+                        <span class="vis-ok-paso" aria-hidden="true">2</span>
+                        <p><strong>Después de la visita</strong>, sube la ficha con evidencias usando este folio.</p>
+                        <a id="vis-ok-ficha" href="ficha-ceremonias-civicas.html">Ir a la ficha →</a>
+                    </div>
+                    <button type="button" class="vis-ok-otra" onclick="reservarOtra()">Reservar otra visita</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -378,7 +585,7 @@
                 <input type="text" id="vis-pend-buscar" placeholder="Nombre, colonia o CCT" oninput="visPendFiltroCambio()">
             </div>
         </div>
-        <p class="vis-pend-contador" id="vis-pend-contador">Cargando…</p>
+        <p class="vis-pend-contador" id="vis-pend-contador"><span class="vis-cargando-spin"><span class="ep-spinner" aria-hidden="true"></span>Cargando escuelas…</span></p>
         <div class="vis-pend-lista" id="vis-pend-lista"></div>
         <div class="vis-paginacion" id="vis-pend-paginacion" style="display:none;">
             <button type="button" class="vis-pag-btn" id="vis-pend-anterior" onclick="visPendPagina(-1)">← Anterior</button>
@@ -425,7 +632,7 @@
         </div>
         <div class="vis-tabla-wrap">
             <div id="vis-tabla-wrap-inicio"></div>
-            <div id="vis-cargando" class="vis-cargando">Cargando…</div>
+            <div id="vis-cargando" class="vis-cargando" role="status"><span class="vis-cargando-spin"><span class="ep-spinner" aria-hidden="true"></span>Cargando reservas…</span></div>
             <table class="vis-tabla" id="vis-tabla" style="display:none;">
                 <thead>
                     <tr>
@@ -453,7 +660,7 @@
                 <input type="text" id="vis-gestion-folio-input" placeholder="SEPRN-CC-0001" style="text-transform:uppercase;font-family:monospace;">
                 <div class="soporte-field-error" id="vis-gestion-folio-input-error">Ingresa el folio de tu visita.</div>
             </div>
-            <button class="form-button" type="button" onclick="visBuscarFolioGestion()"><span>Buscar</span></button>
+            <button class="form-button" type="button" id="vis-gestion-buscar" onclick="visBuscarFolioGestion()"><span>Buscar</span></button>
         </div>
         <div id="vis-gestion-folio-encontrado" style="display:none;font-size:14px;color:#333;margin-top:10px;">
             Folio localizado: <strong id="vis-gestion-folio-valor"></strong> —
@@ -513,7 +720,7 @@
         <h3>Panel de cobertura</h3>
         <p>Visitas realizadas por persona y por sector.</p>
         <div id="dashboard-bloqueado">
-            <button class="form-button" type="button" onclick="cargarDashboard()">
+            <button class="form-button" type="button" id="btn-cargar-dashboard" onclick="cargarDashboard()">
                 <span>Ver panel</span>
             </button>
             <div class="soporte-field-error" id="dashboard-clave-error">No se pudo cargar el panel. Intenta de nuevo en un momento.</div>
@@ -1077,6 +1284,8 @@
         input.classList.remove('error');
         errEl.classList.remove('visible');
 
+        var btnBuscar = document.getElementById('vis-gestion-buscar');
+        botonOcupado(btnBuscar, 'Buscando…');
         try {
             var data = await fetchJsonConTimeout(VISITAS_APPS_SCRIPT_URL + '?action=consulta&folio=' + encodeURIComponent(folio), { method: 'GET' });
             if (data.status !== 'ok') {
@@ -1088,6 +1297,8 @@
         } catch (err) {
             msg.className = 'soporte-submit-msg error';
             msg.textContent = 'No se pudo consultar el folio. Verifica tu conexión e intenta de nuevo.';
+        } finally {
+            botonLibre(btnBuscar);
         }
     }
 
@@ -1156,7 +1367,7 @@
         if (!ok) return;
 
         var btn = document.getElementById('vis-reagendar-submit');
-        btn.disabled = true;
+        botonOcupado(btn, 'Reagendando…');
         var msg = document.getElementById('vis-gestion-msg');
         try {
             var data = await fetchJsonConTimeout(VISITAS_APPS_SCRIPT_URL, {
@@ -1183,7 +1394,7 @@
             msg.className = 'soporte-submit-msg error';
             msg.textContent = 'No se pudo consultar el servidor. Verifica tu conexión e intenta de nuevo.';
         } finally {
-            btn.disabled = false;
+            botonLibre(btn);
         }
     }
 
@@ -1202,7 +1413,7 @@
         if (!confirm('¿Seguro que quieres cancelar esta visita? Esta acción no se puede deshacer.')) return;
 
         var btn = document.getElementById('vis-cancelar-submit');
-        btn.disabled = true;
+        botonOcupado(btn, 'Cancelando…');
         var msg = document.getElementById('vis-gestion-msg');
         try {
             var data = await fetchJsonConTimeout(VISITAS_APPS_SCRIPT_URL, {
@@ -1229,7 +1440,7 @@
             msg.className = 'soporte-submit-msg error';
             msg.textContent = 'No se pudo consultar el servidor. Verifica tu conexión e intenta de nuevo.';
         } finally {
-            btn.disabled = false;
+            botonLibre(btn);
         }
     }
 
@@ -1446,16 +1657,19 @@
         evt.preventDefault();
         var msg = document.getElementById('reservar-msg');
         var btnSubmit = document.getElementById('btn-reservar-submit');
-        msg.className = 'soporte-submit-msg';
-        msg.textContent = '';
+        ocultarProgreso(msg);
 
         // Refrescar el caché justo antes de validar — evita reservar contra datos viejos si la
         // pestaña quedó abierta un rato (alguien más pudo haber reservado la misma escuela/semana).
         if (visInputCct && visInputCct.value.trim() && document.getElementById('vis-fecha').value) {
+            botonOcupado(btnSubmit, 'Verificando…');
+            mostrarProgreso(msg, { texto: 'Verificando que la escuela siga disponible…' });
             try {
                 var freshData = await fetchJsonConTimeout(VISITAS_APPS_SCRIPT_URL + '?action=disponibilidad', { method: 'GET' });
                 if (freshData && freshData.items) visReservasCache = freshData.items;
             } catch (err) { /* si falla el refresh, seguimos con el caché ya cargado */ }
+            ocultarProgreso(msg);
+            botonLibre(btnSubmit);
             visRevisarConflicto();
         }
 
@@ -1478,8 +1692,9 @@
             motivoRevisita: document.getElementById('vis-motivo-revisita').value.trim()
         };
 
-        btnSubmit.disabled = true;
-        btnSubmit.style.opacity = '0.6';
+        botonOcupado(btnSubmit, 'Reservando…');
+        mostrarProgreso(msg, { texto: 'Guardando tu reserva…', detalle: 'Suele tardar unos segundos. No cierres esta página.' });
+        var reservada = false;
 
         try {
             const data = await fetchJsonConTimeout(VISITAS_APPS_SCRIPT_URL, {
@@ -1489,10 +1704,9 @@
             });
 
             if (data.status === 'ok') {
-                msg.classList.add('ok');
-                var ligaFicha = 'ficha-ceremonias-civicas.html?folio=' + encodeURIComponent(data.folio);
-                msg.innerHTML = 'Visita reservada. Tu folio es <strong>' + data.folio + '</strong> — anótalo o guarda esta página, no se envía por correo. ' +
-                    'Después de la visita, llena la <a href="' + ligaFicha + '">ficha con evidencias</a> usando este folio.';
+                ocultarProgreso(msg);
+                reservada = true;
+                pintarConfirmacion(data.folio, datos);
                 document.getElementById('reservar-form').reset();
                 document.getElementById('vis-manual-fields').classList.remove('visible');
                 document.getElementById('vis-zona-group').style.display = 'none';
@@ -1505,21 +1719,299 @@
                 visResetCct();
                 cargarDisponibilidad();
             } else {
-                msg.classList.add('error');
-                msg.textContent = 'No se pudo reservar: ' + data.mensaje;
+                visMsgError(msg, 'No se pudo reservar: ' + data.mensaje);
             }
         } catch (err) {
-            msg.classList.add('error');
-            msg.textContent = err.name === 'AbortError'
+            visMsgError(msg, err.name === 'AbortError'
                 ? 'El servidor tardó demasiado en responder. Verifica el histórico antes de reintentar, pudo haberse guardado igual.'
-                : 'No se pudo enviar la reserva. Verifica tu conexión e intenta de nuevo.';
+                : 'No se pudo enviar la reserva. Verifica tu conexión e intenta de nuevo.');
         } finally {
-            btnSubmit.disabled = false;
-            btnSubmit.style.opacity = '1';
-            msg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            botonLibre(btnSubmit);
+            if (reservada) {
+                var tarjeta = document.getElementById('reservar-ok');
+                tarjeta.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                tarjeta.focus({ preventScroll: true });
+            } else {
+                msg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
         }
 
         return false;
+    }
+
+    // Texto dentro de un <span>: #reservar-msg.error es flex, y el texto suelto se
+    // partiría en columnas junto al ícono.
+    function visMsgError(msg, texto) {
+        ocultarProgreso(msg);
+        msg.className = 'soporte-submit-msg error';
+        var span = document.createElement('span');
+        span.textContent = texto;
+        msg.appendChild(span);
+    }
+
+    // ── Confirmación de reserva + comprobante (oct 2026) ──
+    // El folio no se manda por correo: la tarjeta lo destaca y ofrece guardarlo
+    // como imagen o mandárselo por WhatsApp. Mismo patrón que el comprobante de
+    // formacion-docente.html (guardarComprobante).
+    var VIS_ICON_COPIAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+    var VIS_ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    var VIS_ICON_IMAGEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
+    var VIS_ICON_MENSAJE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>';
+    var VIS_SITIO = 'https://educaneza.github.io/seprn-sitio/';
+
+    // "2026-10-12" → "lunes 12 de octubre de 2026" (sin desfase de zona horaria).
+    function visFechaLarga(iso) {
+        var p = String(iso || '').split('-');
+        if (p.length !== 3) return iso || '';
+        var f = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+        return f.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
+    function visUbicacion(datos) {
+        var partes = ['CCT ' + datos.cct];
+        if (datos.sector) partes.push('Sector ' + datos.sector);
+        if (datos.zona) partes.push('Zona ' + datos.zona);
+        return partes.join(' · ');
+    }
+
+    function pintarConfirmacion(folio, datos) {
+        var ligaFicha = 'ficha-ceremonias-civicas.html?folio=' + encodeURIComponent(folio);
+        document.getElementById('vis-ok-folio').textContent = folio;
+
+        var escuela = document.getElementById('vis-ok-escuela');
+        escuela.textContent = datos.escuela || datos.cct;
+        var ubic = document.createElement('small');
+        ubic.textContent = visUbicacion(datos);
+        escuela.appendChild(ubic);
+
+        document.getElementById('vis-ok-fecha').textContent = visFechaLarga(datos.fechaPlaneada);
+        document.getElementById('vis-ok-tipo').textContent = datos.tipoVisita;
+        var resp = document.getElementById('vis-ok-responsable');
+        resp.textContent = datos.nombre;
+        if (datos.cargo) {
+            var cargo = document.createElement('small');
+            cargo.textContent = datos.cargo;
+            resp.appendChild(cargo);
+        }
+
+        var copiar = document.getElementById('vis-ok-copiar');
+        copiar.innerHTML = VIS_ICON_COPIAR + ' Copiar folio';
+        copiar.onclick = function () {
+            if (!navigator.clipboard) return;
+            navigator.clipboard.writeText(folio).then(function () {
+                copiar.innerHTML = VIS_ICON_CHECK + ' Copiado';
+                setTimeout(function () { copiar.innerHTML = VIS_ICON_COPIAR + ' Copiar folio'; }, 2000);
+            }).catch(function () {});
+        };
+
+        var comp = document.getElementById('vis-ok-comprobante');
+        comp.innerHTML = VIS_ICON_IMAGEN + ' Guardar comprobante (imagen)';
+        comp.onclick = function () {
+            comp.disabled = true;
+            guardarComprobanteVisita(folio, datos)
+                .catch(function (err) { console.error('Comprobante:', err); })
+                .then(function () { comp.disabled = false; });
+        };
+
+        var wa = document.getElementById('vis-ok-whatsapp');
+        wa.innerHTML = VIS_ICON_MENSAJE + ' Enviármelo por WhatsApp';
+        wa.href = 'https://wa.me/?text=' + encodeURIComponent(textoWhatsAppVisita(folio, datos));
+
+        document.getElementById('vis-ok-ficha').href = ligaFicha;
+
+        document.getElementById('reservar-form').style.display = 'none';
+        document.getElementById('reservar-ok').hidden = false;
+    }
+
+    function reservarOtra() {
+        document.getElementById('reservar-ok').hidden = true;
+        document.getElementById('reservar-form').style.display = '';
+        document.getElementById('form-reservar').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setTimeout(function () { document.getElementById('vis-nombre').focus({ preventScroll: true }); }, 400);
+    }
+
+    function textoWhatsAppVisita(folio, datos) {
+        return [
+            '*Reserva de visita — Ceremonias Cívicas · OTDE NEZA*',
+            '',
+            'Folio: *' + folio + '*',
+            'Escuela: ' + (datos.escuela || '') + ' (' + visUbicacion(datos) + ')',
+            'Fecha planeada: ' + visFechaLarga(datos.fechaPlaneada),
+            'Tipo de visita: ' + datos.tipoVisita,
+            '',
+            'Después de la visita, sube la ficha con evidencias:',
+            VIS_SITIO + 'ficha-ceremonias-civicas.html?folio=' + encodeURIComponent(folio)
+        ].join('\n');
+    }
+
+    // Parte un texto en renglones que quepan en `ancho` px con la fuente actual
+    // (copia de renglones() en formacion-docente.html).
+    function visRenglones(ctx, texto, ancho) {
+        var palabras = String(texto || '').split(/\s+/);
+        var out = [];
+        var linea = '';
+        palabras.forEach(function (p) {
+            var prueba = linea ? linea + ' ' + p : p;
+            if (ctx.measureText(prueba).width > ancho && linea) { out.push(linea); linea = p; }
+            else linea = prueba;
+        });
+        if (linea) out.push(linea);
+        // Palabras sin espacios más anchas que el renglón (ligas largas): cortar por caracteres.
+        return out.reduce(function (acc, l) {
+            if (ctx.measureText(l).width <= ancho) { acc.push(l); return acc; }
+            var t = '';
+            Array.from(l).forEach(function (ch) {
+                if (ctx.measureText(t + ch).width > ancho) { acc.push(t); t = ch; } else t += ch;
+            });
+            if (t) acc.push(t);
+            return acc;
+        }, []);
+    }
+
+    async function guardarComprobanteVisita(folio, datos) {
+        if (document.fonts && document.fonts.ready) await document.fonts.ready;
+        var W = 1080, M = 80, ANCHO = W - M * 2, PAD = 40, INTERIOR = ANCHO - PAD * 2;
+        var FUENTE = "'Montserrat', sans-serif";
+        var MONO = "ui-monospace, 'SF Mono', Menlo, monospace";
+        var medir = document.createElement('canvas').getContext('2d');
+
+        medir.font = '700 36px ' + FUENTE;
+        var escuela = visRenglones(medir, datos.escuela || datos.cct, INTERIOR);
+        medir.font = '600 30px ' + FUENTE;
+        var fecha = visRenglones(medir, visFechaLarga(datos.fechaPlaneada), INTERIOR);
+        medir.font = '500 24px ' + FUENTE;
+        var ligaFicha = 'educaneza.github.io/seprn-sitio/ficha-ceremonias-civicas.html';
+        var liga = visRenglones(medir, ligaFicha, INTERIOR - 20);
+
+        // Alturas de cada bloque de la tarjeta, para calcular el lienzo antes de dibujar.
+        // Deben coincidir con los avances de `yy` al dibujar la tarjeta, más abajo.
+        var altoTarjeta = PAD + 30 + 70 + 41 + 40 +                  // folio + separador
+            escuela.length * 46 + 36 + 58 +                          // escuela + ubicación
+            4 + fecha.length * 40 + 54 +                             // fecha
+            44 + PAD + 6;                                            // tipo de visita
+        var altoSiguiente = 50 + 6 + liga.length * 32 + 40;
+        var ENCABEZADO = 300, PIE = 170;
+        var H = ENCABEZADO + altoTarjeta + 30 + altoSiguiente + PIE;
+
+        var canvas = document.createElement('canvas');
+        canvas.width = W;
+        canvas.height = H;
+        var ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#F9F8F5';
+        ctx.fillRect(0, 0, W, H);
+
+        // Encabezado
+        ctx.fillStyle = '#0C1A2E';
+        ctx.fillRect(0, 0, W, 230);
+        ctx.fillStyle = '#9F2241';
+        ctx.fillRect(0, 230, W, 10);
+        ctx.fillStyle = '#d6d1ca';
+        ctx.font = '700 22px ' + FUENTE;
+        ctx.fillText('VISITAS A ESCUELAS · CEREMONIAS CÍVICAS · OTDE NEZA', M, 88);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '800 54px ' + FUENTE;
+        ctx.fillText('Comprobante de reserva', M, 158);
+        ctx.fillStyle = '#c9cfd8';
+        ctx.font = '500 26px ' + FUENTE;
+        ctx.fillText((datos.nombre || '') + (datos.cargo ? ' · ' + datos.cargo : ''), M, 205);
+
+        function rect(x, y, w, h, r) {
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(x, y, w, h, r); else ctx.rect(x, y, w, h);
+        }
+        function etiqueta(texto, y) {
+            ctx.fillStyle = '#977e5b';
+            ctx.font = '700 20px ' + FUENTE;
+            ctx.fillText(texto, M + PAD, y);
+        }
+
+        // Tarjeta principal
+        var y = ENCABEZADO;
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = '#EAE2DC';
+        ctx.lineWidth = 2;
+        rect(M, y, ANCHO, altoTarjeta, 24);
+        ctx.fill();
+        ctx.stroke();
+
+        var yy = y + PAD + 30;
+        etiqueta('FOLIO', yy);
+        yy += 70;
+        ctx.fillStyle = '#9F2241';
+        ctx.font = '700 60px ' + MONO;
+        ctx.fillText(folio, M + PAD, yy);
+        yy += 40;
+        ctx.fillStyle = '#EAE2DC';
+        ctx.fillRect(M + PAD, yy, INTERIOR, 1);
+        yy += 1 + 40;
+
+        etiqueta('ESCUELA', yy);
+        ctx.fillStyle = '#56212f';
+        ctx.font = '700 36px ' + FUENTE;
+        escuela.forEach(function (t) { yy += 46; ctx.fillText(t, M + PAD, yy); });
+        yy += 36;
+        ctx.fillStyle = '#6b6b6b';
+        ctx.font = '500 24px ' + FUENTE;
+        ctx.fillText(visUbicacion(datos), M + PAD, yy);
+        yy += 4 + 54;
+
+        etiqueta('FECHA PLANEADA', yy);
+        yy += 4;
+        ctx.fillStyle = '#0C1A2E';
+        ctx.font = '600 30px ' + FUENTE;
+        fecha.forEach(function (t) { yy += 40; ctx.fillText(t, M + PAD, yy); });
+        yy += 54;
+
+        etiqueta('TIPO DE VISITA', yy);
+        yy += 44;
+        ctx.fillStyle = '#0C1A2E';
+        ctx.font = '600 30px ' + FUENTE;
+        ctx.fillText(datos.tipoVisita || '', M + PAD, yy);
+
+        // Siguiente paso
+        y += altoTarjeta + 30;
+        ctx.fillStyle = '#eef1f6';
+        rect(M, y, ANCHO, altoSiguiente, 20);
+        ctx.fill();
+        yy = y + 50;
+        ctx.fillStyle = '#0C1A2E';
+        ctx.font = '700 26px ' + FUENTE;
+        ctx.fillText('Siguiente paso: después de la visita, sube tu ficha con fotos', M + PAD - 10, yy);
+        yy += 6;
+        ctx.fillStyle = '#3a4a63';
+        ctx.font = '500 24px ' + FUENTE;
+        liga.forEach(function (t) { yy += 32; ctx.fillText(t, M + PAD - 10, yy); });
+
+        // Pie
+        var hoy = new Date();
+        ctx.fillStyle = '#56212f';
+        ctx.font = '600 24px ' + FUENTE;
+        ctx.fillText('Reservado el ' + hoy.getDate() + '/' + (hoy.getMonth() + 1) + '/' + hoy.getFullYear(), M, H - 100);
+        ctx.fillStyle = '#6b6b6b';
+        ctx.font = '500 22px ' + FUENTE;
+        ctx.fillText('Oficina de Tecnología para el Desarrollo Educativo · SEPRN', M, H - 60);
+
+        var blob = await new Promise(function (res) { canvas.toBlob(res, 'image/png'); });
+        var nombreArchivo = 'comprobante-' + folio + '.png';
+        var archivo = new File([blob], nombreArchivo, { type: 'image/png' });
+        // En celular: menú "Compartir" (Guardar en Fotos / WhatsApp). En
+        // computadora, o si el navegador no lo soporta: descarga directa.
+        var esMovil = matchMedia('(pointer: coarse)').matches;
+        if (esMovil && navigator.canShare && navigator.canShare({ files: [archivo] })) {
+            try {
+                await navigator.share({ files: [archivo], title: 'Comprobante de reserva' });
+                return;
+            } catch (err) {
+                if (err && err.name === 'AbortError') return; // cerró el menú
+            }
+        }
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = nombreArchivo;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 10000);
     }
 
     // ── Panel de cobertura: sin clave por ahora (prueba temporal, sep 2026 —
@@ -1529,6 +2021,8 @@
     async function cargarDashboard() {
         var err = document.getElementById('dashboard-clave-error');
         err.classList.remove('visible');
+        var btnPanel = document.getElementById('btn-cargar-dashboard');
+        botonOcupado(btnPanel, 'Cargando panel…');
         try {
             var data = await fetchJsonConTimeout(VISITAS_APPS_SCRIPT_URL + '?action=dashboard&token=', { method: 'GET' });
             if (data.status !== 'ok') {
@@ -1542,6 +2036,8 @@
         } catch (e) {
             err.textContent = 'No se pudo consultar el panel. Verifica tu conexión e intenta de nuevo.';
             err.classList.add('visible');
+        } finally {
+            botonLibre(btnPanel);
         }
     }
 

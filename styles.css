@@ -1535,3 +1535,80 @@ ul[id$="-cct-suggestions"] .sg-name { color: #6b7280; font-size: 13px; display: 
 .featured-box .download-button:hover {
     background: #f0f0f0;
 }
+
+/* ── "Que se note que sigue trabajando" (oct 2026) — ver botonOcupado() /
+   mostrarProgreso() en js/tramites-shared.js. ── */
+.form-button.ocupado,
+.form-button.ocupado:hover {
+    cursor: progress;
+    transform: none;
+    filter: saturate(0.85);
+    box-shadow: 0 4px 15px rgba(159,34,65,0.2);
+}
+.btn-spinner {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    border: 2.5px solid rgba(255,255,255,0.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: giro-spinner 0.8s linear infinite;
+}
+.estado-progreso {
+    margin-top: 20px;
+    padding: 16px 18px 14px;
+    background: #f4f6f9;
+    border: 1px solid #dde3ec;
+    border-radius: 12px;
+    color: #0C1A2E;
+    animation: ep-entrada 0.3s ease-out;
+}
+.ep-fila { display: flex; align-items: flex-start; gap: 12px; }
+.ep-spinner {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    border: 3px solid #d3dae5;
+    border-top-color: #9F2241;
+    border-radius: 50%;
+    animation: giro-spinner 0.8s linear infinite;
+}
+.ep-textos { min-width: 0; }
+/* Doble clase: las páginas tienen reglas tipo `.content-block p` que si no ganarían. */
+.estado-progreso .ep-texto { margin: 0; padding: 0; font-size: 15px; font-weight: 600; line-height: 1.4; color: #0C1A2E; }
+.estado-progreso .ep-detalle { margin: 3px 0 0; padding: 0; font-size: 13px; color: #5a6578; line-height: 1.45; text-indent: 0; }
+.ep-barra {
+    position: relative;
+    height: 6px;
+    margin-top: 12px;
+    background: #e3e8ef;
+    border-radius: 999px;
+    overflow: hidden;
+}
+.ep-barra span {
+    display: block;
+    height: 100%;
+    width: 4%;
+    background: linear-gradient(90deg, #9F2241, #c4335a);
+    border-radius: 999px;
+    transition: width 0.4s ease;
+}
+.ep-barra.indefinida span {
+    position: absolute;
+    width: 35%;
+    animation: ep-indefinida 1.4s ease-in-out infinite;
+}
+@keyframes giro-spinner { to { transform: rotate(360deg); } }
+@keyframes ep-indefinida {
+    from { left: -35%; }
+    to { left: 100%; }
+}
+@keyframes ep-entrada {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .btn-spinner, .ep-spinner { animation-duration: 2.4s; }
+    .ep-barra.indefinida span { animation: none; left: 0; width: 100%; opacity: 0.5; }
+}

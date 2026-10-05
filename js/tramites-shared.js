@@ -71,3 +71,76 @@ function leerArchivoBase64(file) {
         reader.readAsDataURL(file);
     });
 }
+
+// ── "Que se note que sigue trabajando" (oct 2026) ──
+// Nace porque al enviar una ficha con fotos el jefe veía la página quieta por
+// medio minuto y pensaba que se había trabado: los avisos de progreso se escribían
+// en un .soporte-submit-msg, que está oculto mientras no tenga clase ok/error.
+// Dos piezas reutilizables para cualquier formulario de trámite:
+//   botonOcupado(btn, 'Enviando…') / botonLibre(btn) — spinner dentro del botón.
+//   mostrarProgreso(el, {texto, detalle, paso, total}) / ocultarProgreso(el) —
+//   caja de estado visible con spinner, texto vivo y barra (con avance real si se
+//   pasan paso/total; animada indefinida si no). Estilos en styles.css.
+function botonOcupado(btn, texto) {
+    if (!btn) return;
+    if (!btn.dataset.etiquetaOriginal) btn.dataset.etiquetaOriginal = btn.innerHTML;
+    btn.disabled = true;
+    btn.classList.add('ocupado');
+    btn.setAttribute('aria-busy', 'true');
+    btn.innerHTML = '<span class="btn-spinner" aria-hidden="true"></span><span></span>';
+    btn.lastChild.textContent = texto || 'Procesando…';
+}
+
+function botonLibre(btn) {
+    if (!btn) return;
+    btn.disabled = false;
+    btn.classList.remove('ocupado');
+    btn.removeAttribute('aria-busy');
+    if (btn.dataset.etiquetaOriginal) {
+        btn.innerHTML = btn.dataset.etiquetaOriginal;
+        delete btn.dataset.etiquetaOriginal;
+    }
+}
+
+function mostrarProgreso(el, opciones) {
+    if (!el) return;
+    var o = opciones || {};
+    if (!el.classList.contains('estado-progreso')) {
+        el.className = 'estado-progreso';
+        el.setAttribute('role', 'status');
+        el.setAttribute('aria-live', 'polite');
+        el.innerHTML =
+            '<div class="ep-fila"><span class="ep-spinner" aria-hidden="true"></span>' +
+            '<div class="ep-textos"><p class="ep-texto"></p><p class="ep-detalle"></p></div></div>' +
+            '<div class="ep-barra" aria-hidden="true"><span></span></div>';
+    }
+    el.querySelector('.ep-texto').textContent = o.texto || 'Procesando…';
+    var detalle = el.querySelector('.ep-detalle');
+    detalle.textContent = o.detalle || '';
+    detalle.style.display = o.detalle ? '' : 'none';
+    var barra = el.querySelector('.ep-barra');
+    var relleno = barra.firstChild;
+    if (o.total) {
+        barra.classList.remove('indefinida');
+        relleno.style.width = Math.max(4, Math.round((o.paso / o.total) * 100)) + '%';
+    } else {
+        barra.classList.add('indefinida');
+        relleno.style.width = '';
+    }
+}
+
+// Solo cambia el texto secundario (ej. contador de segundos) sin redibujar la caja.
+function detalleProgreso(el, texto) {
+    var d = el && el.querySelector('.ep-detalle');
+    if (!d) return;
+    d.textContent = texto || '';
+    d.style.display = texto ? '' : 'none';
+}
+
+function ocultarProgreso(el, claseBase) {
+    if (!el) return;
+    el.className = claseBase || 'soporte-submit-msg';
+    el.removeAttribute('role');
+    el.removeAttribute('aria-live');
+    el.innerHTML = '';
+}

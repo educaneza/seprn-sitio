@@ -841,6 +841,19 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     reemplazar el `.exe` en `descargas/`, actualizar el texto y el tamaño de la tarjeta de
     descarga y la guía paso a paso (aparece el selector 2016/2019 y la descarga de ~830 MB), y
     avisar que Windows 7 ya no está soportado.
+31. **"Que se note que sigue trabajando" — extender al resto de formularios.** El 5 oct 2026
+    nació en `js/tramites-shared.js` + `styles.css` el componente `botonOcupado()/botonLibre()`
+    (spinner en el botón) y `mostrarProgreso()/detalleProgreso()/ocultarProgreso()` (caja de
+    estado con barra y texto vivo). Origen: al enviar una ficha de Ceremonias Cívicas con fotos
+    la página parecía trabada medio minuto — los avisos de progreso se escribían en un
+    `.soporte-submit-msg`, que tiene `display:none` sin clase `ok`/`error`. Ya aplicado en
+    `ceremonias-civicas.html` (reserva, buscar folio, reagendar, cancelar, panel) y
+    `ficha-ceremonias-civicas.html` (buscar folio, envío con etapas y contador). Falta, una
+    página a la vez: `mantenimiento.html`, `asesorias.html`, `soporte.html`, `correo.html`,
+    `estrategias-nacionales.html`, `oficina-virtual.html`, `formacion-docente.html` y
+    `asistencia.html` (estas tres últimas tienen su propio `fetchJsonConTimeout` y su propio
+    sistema de diseño). Revisar en cada una si hay otro mensaje de progreso escrito en un
+    elemento oculto, igual que en la ficha.
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue
