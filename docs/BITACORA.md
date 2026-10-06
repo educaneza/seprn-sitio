@@ -14,6 +14,21 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-10-06 (cont.) · Bitácora OTDE: los cursos de Formación Docente llegan solos (paso A), en producción
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-06 |
+| **Sesión** | Jorge retomó la bitácora y preguntó cómo iba. Se resumió el estado (Fase 1, Mantenimiento y Asesorías en producción; pendientes operativos suyos) y eligió seguir con el paso A del plan del 24 sep: que los cursos de Formación Docente dejen de capturarse a mano. |
+| **Ajuste al plan** | El plan de septiembre los metía como no planeados. Tras la renumeración del 29 sep, la planeación ya tiene N.P. 5, 10 y 13, así que cada curso lleva su N.P. en una columna nueva, y el propósito sale de "Propósito sugerido" (con verbo), no de "Resultados esperados". |
+| **Construido** | `formacion-docente.gs`: columna `NP_planeacion` en `Cursos` (bloque Control, con nota; la auto-heal la agrega al final de la hoja real), menú "Configurar token del panel (Bitácora OTDE)" (`fdConfigurarTokenPanel`, cuadro de diálogo) y `doGet ?action=cursosMes` (`fdListarCursosMes_`, solo lectura): cursos cuyo desarrollo se cruza con el mes, sin `Ocultar_historial` ni "Por definir", con inscritos por sector y función y constancias. `bitacora.gs`: menús "Traer cursos de Formación Docente" y "Configurar conexión con Formación Docente" (`FD_URL`), `bitImportarFormacion_` (una fila por curso y mes, `FD:<ID_Curso>:<mes>`, fecha recortada al mes) con `bitFdModalidad_`, `bitFdSectores_`, `bitFdDescripcion_` y `bitFdBeneficiarios_`; "Generar reporte del mes" trae la fuente nueva. +209/-3 en los 2 archivos. Ver `docs/ARCHITECTURE.md` §12 y §26. |
+| **Verificación** | Simulación en Node con ambos `.gs` reales y hojas falsas (la bitácora consultando al `doGet` de Formación Docente): rechazo sin token y con mes inválido; columna creada sola; curso de 3 meses en sep, oct y nov con la fecha recortada; N.P. 13 y "N.P. 10" planeados; N.P. 99, sin `Fecha_fin` y sin verbo con aviso; `Ocultar_historial` y "Por definir" excluidos; segunda corrida con 0 nuevas. La prueba destapó "sectores I, II, XIII y SEPRN"; ahora dice "…y XIII, y de la Subdirección". En vivo, tras el despliegue de Jorge: `curl` a `?action=cursosMes` sin token y con token falso da `no_autorizado`, y el catálogo sigue respondiendo (`ACF-2627-001`, 7-21 oct). Jorge corrió "Traer cursos de Formación Docente" y reportó que salió bien; no se revisaron aquí las filas resultantes. |
+| **Pendiente** | Llenar `NP_planeacion` en cada curso nuevo. Paso B (Soporte) y paso C (Correo, N.P. 12). Siguen abiertos los pendientes operativos del 1 oct (marcar "No" en los oficios, revisar propósitos, Beneficiarios de BIT-0006 a 0009). |
+| **Documentación actualizada** | Este checkpoint, `docs/ARCHITECTURE.md` §12 y §26, `docs/PLAN-OPERACION-INTERNA.md`, `docs/ROADMAP.md` ítem 27, `CLAUDE.md`. |
+| **Commits** | Uno solo con código y documentación (propuesto abajo). |
+
+---
+
 ## CHECKPOINT — 2026-10-06 · Excel fácil: herramienta 100% local de 6 módulos, publicada con link directo
 
 | | |

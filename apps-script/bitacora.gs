@@ -167,6 +167,15 @@ const BIT_TIPO_ASE_BANCO = 'Asesoría sobre el Banco de Materiales Digitales y C
 const BIT_TIPO_ASE_EXCEL = 'Asesoría de Excel básico para personal administrativo.';
 const BIT_CAPTURO_ASE = 'Asesorías (auto)';
 
+// Formación Docente (oct 2026): una actividad por curso y mes. El N.P. sale de
+// la columna NP_planeacion de Cursos; sin ella, el curso entra como no
+// planeado en META 23 y su propósito, si la descripción no empieza con verbo,
+// es el del N.P. 10 (formación a distancia).
+const BIT_CAPTURO_FD = 'Formación Docente (auto)';
+const BIT_META_NO_PLANEADA_FD = '23';
+const BIT_NP_PROPOSITO_FD = '10';
+const BIT_SECTORES_ORDEN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'SEPRN'];
+
 const BIT_MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
   'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
@@ -197,11 +206,13 @@ function onOpen() {
     .addItem('Generar reporte del mes', 'bitGenerarReporteMensual')
     .addItem('Traer visitas de Mantenimiento', 'bitTraerMantenimiento')
     .addItem('Traer asesorías resueltas', 'bitTraerAsesorias')
+    .addItem('Traer cursos de Formación Docente', 'bitTraerFormacion')
     .addSeparator()
     .addItem('Preparar hojas y cargar planeación 2026-2027', 'bitPrepararHojas')
     .addItem('Configurar clave de captura', 'bitConfigurarClave')
     .addItem('Configurar conexión con Mantenimiento', 'bitConfigurarConexionMantenimiento')
     .addItem('Configurar conexión con Asesorías', 'bitConfigurarConexionAsesorias')
+    .addItem('Configurar conexión con Formación Docente', 'bitConfigurarConexionFormacion')
     .addToUi();
 }
 
@@ -680,7 +691,8 @@ function bitGenerarReporteMensual() {
   bitRenumerarMetas_();
   const avisosFuentes = [
     ['Mantenimiento', bitImportarMantenimiento_],
-    ['Asesorías', bitImportarAsesorias_]
+    ['Asesorías', bitImportarAsesorias_],
+    ['Formación Docente', bitImportarFormacion_]
   ].map(function (f) {
     try {
       return f[0] + ': ' + bitResumenImportacion_(f[1](mes));
@@ -811,6 +823,7 @@ function bitCombinarFila_(hoja, fila) {
 // token es el mismo para los dos (el del Panel OTDE); solo se pide si falta.
 function bitConfigurarConexionMantenimiento() { bitConfigurarConexion_('Mantenimiento', 'MAN_URL', 'MANTENIMIENTO_APPS_SCRIPT_URL'); }
 function bitConfigurarConexionAsesorias() { bitConfigurarConexion_('Asesorías', 'ASE_URL', 'ASESORIAS_APPS_SCRIPT_URL'); }
+function bitConfigurarConexionFormacion() { bitConfigurarConexion_('Formación Docente', 'FD_URL', 'APPS_SCRIPT_URL de formacion-docente.html'); }
 
 function bitConfigurarConexion_(nombre, propUrl, constanteSitio) {
   const ui = SpreadsheetApp.getUi();
@@ -841,6 +854,7 @@ function bitConfigurarConexion_(nombre, propUrl, constanteSitio) {
 
 function bitTraerMantenimiento() { bitTraerDesdeMenu_('Traer visitas de Mantenimiento', bitImportarMantenimiento_); }
 function bitTraerAsesorias() { bitTraerDesdeMenu_('Traer asesorías resueltas', bitImportarAsesorias_); }
+function bitTraerFormacion() { bitTraerDesdeMenu_('Traer cursos de Formación Docente', bitImportarFormacion_); }
 
 function bitTraerDesdeMenu_(titulo, importar) {
   const ui = SpreadsheetApp.getUi();
@@ -1003,6 +1017,114 @@ function bitImportarAsesorias_(mes) {
   }));
   res.avisos = avisos;
   return res;
+}
+
+// Trae los cursos de Formación Docente cuyo desarrollo se cruza con el mes
+// (?action=cursosMes de formacion-docente.gs) y agrega una actividad por curso
+// y mes. Un curso de varios meses aparece en cada uno, con la fecha recortada
+// al mes. Inscritos y constancias son del curso completo.
+function bitImportarFormacion_(mes) {
+  const items = bitConsultarBackend_('FD_URL', 'Formación Docente', 'cursosMes', mes);
+  bitRenumerarMetas_();
+  const porNp = {};
+  bitLeerPlaneacion_().forEach(function (a) { porNp[a.np] = a; });
+  const m = mes.split('-').map(Number);
+  const primerDia = new Date(m[0], m[1] - 1, 1, 12);
+  const ultimoDia = new Date(m[0], m[1], 0, 12);
+  const avisos = [];
+
+  const res = bitAgregarActividades_(items.map(function (c) {
+    let accion = c.np ? porNp[c.np] : null;
+    if (c.np && !accion) avisos.push(c.idCurso + ' tiene N.P. ' + c.np + ', que no existe en Planeacion (entró como no planeado)');
+    if (c.sinFechaFin) avisos.push(c.idCurso + ' sin Fecha_fin (se tomó como de un día)');
+
+    let proposito;
+    if (accion) {
+      proposito = accion.proposito;
+    } else if (bitIniciaConVerbo_(c.descripcion)) {
+      proposito = c.descripcion;
+    } else {
+      proposito = porNp[BIT_NP_PROPOSITO_FD] ? porNp[BIT_NP_PROPOSITO_FD].proposito : '';
+      avisos.push(c.idCurso + ': propósito tomado del N.P. ' + BIT_NP_PROPOSITO_FD + ', revisarlo');
+    }
+
+    const inicioCurso = bitParsearFecha_(c.inicio);
+    const finCurso = bitParsearFecha_(c.fin) || inicioCurso;
+    const inicio = inicioCurso < primerDia ? primerDia : inicioCurso;
+    const fin = finCurso > ultimoDia ? ultimoDia : finCurso;
+    const modalidad = bitFdModalidad_(c.modalidad);
+    return {
+      idEnvio: 'FD:' + c.idCurso + ':' + mes,
+      valores: {
+        'Mes': mes,
+        'Meta': accion ? accion.meta : BIT_META_NO_PLANEADA_FD,
+        'N.P.': accion ? accion.np : '',
+        'Origen': accion ? '' : 'Convocatoria de ' + (c.responsable || 'Formación Docente'),
+        'Tipo y nombre': (c.categoria ? c.categoria + ': ' : '') + c.nombre,
+        'Fecha inicio': inicio,
+        'Fecha fin': fin.getTime() === inicio.getTime() ? '' : fin,
+        'Fecha (texto)': bitFechaTexto_(inicio, fin.getTime() === inicio.getTime() ? null : fin),
+        'Responsable': c.responsable || 'OTDE',
+        'Modalidad': modalidad,
+        'Lugar': { 'Virtual': 'Virtual, a través de la plataforma del curso.',
+          'Híbrida': 'Híbrida, presencial y a través de la plataforma del curso.',
+          'Presencial': 'Presencial, en la sede indicada en la convocatoria.' }[modalidad],
+        'CCT': '',
+        'Descripción': bitFdDescripcion_(c, inicioCurso, finCurso),
+        'Propósito': proposito,
+        'Beneficiarios': bitFdBeneficiarios_(c),
+        'Capturó': BIT_CAPTURO_FD
+      }
+    };
+  }));
+  res.avisos = avisos;
+  return res;
+}
+
+function bitFdModalidad_(texto) {
+  const t = String(texto || '').toLowerCase();
+  if (/h[ií]brid/.test(t)) return 'Híbrida';
+  if (/presencial/.test(t)) return 'Presencial';
+  return 'Virtual';
+}
+
+// Sectores en orden I…XIII, SEPRN; los que no se reconocen, al final.
+function bitFdSectores_(porSector) {
+  const orden = function (s) { const i = BIT_SECTORES_ORDEN.indexOf(s); return i === -1 ? 99 : i; };
+  const claves = Object.keys(porSector || {});
+  const lista = claves.filter(function (s) { return s !== 'Sin sector' && s !== 'SEPRN'; })
+    .sort(function (a, b) { return orden(a) - orden(b); });
+  const conSubdireccion = claves.indexOf('SEPRN') !== -1;
+  let texto = '';
+  if (lista.length === 1) texto = ' del sector ' + lista[0];
+  if (lista.length > 1) texto = ' de los sectores ' + lista.slice(0, -1).join(', ') + ' y ' + lista[lista.length - 1];
+  if (conSubdireccion) texto += (texto ? ', y' : '') + ' de la Subdirección';
+  return texto;
+}
+
+function bitFdDescripcion_(c, inicioCurso, finCurso) {
+  let texto = c.descripcion ? c.descripcion.replace(/\s*\.?\s*$/, '.') + ' ' : '';
+  texto += 'La OTDE difundió la convocatoria entre las figuras educativas de la región' +
+    (c.inscritos ? ' y registró a ' + c.inscritos + ' participante' + (c.inscritos === 1 ? '' : 's') +
+      bitFdSectores_(c.porSector) : '') + '.';
+  const otroMes = inicioCurso.getMonth() !== finCurso.getMonth() || inicioCurso.getFullYear() !== finCurso.getFullYear();
+  if (otroMes) {
+    const rango = bitFechaTexto_(inicioCurso, finCurso);
+    texto += ' El curso se desarrolla ' + rango.charAt(0).toLowerCase() + rango.slice(1) + '.';
+  }
+  return texto;
+}
+
+// "119 participantes inscritos\n85 Docente frente a grupo\n…" y, en cursos con
+// constancia (UNETE), "N constancias recibidas".
+function bitFdBeneficiarios_(c) {
+  if (!c.inscritos) return 'Docentes, directivos, supervisores escolares y ATP.';
+  const lineas = [c.inscritos + ' participante' + (c.inscritos === 1 ? '' : 's') + ' inscrito' + (c.inscritos === 1 ? '' : 's')];
+  Object.keys(c.porFuncion || {})
+    .sort(function (a, b) { return c.porFuncion[b] - c.porFuncion[a]; })
+    .forEach(function (f) { lineas.push(c.porFuncion[f] + ' ' + f); });
+  if (c.conConstancia) lineas.push(c.constancias + ' constancia' + (c.constancias === 1 ? '' : 's') + ' recibida' + (c.constancias === 1 ? '' : 's'));
+  return lineas.join('\n');
 }
 
 // Mismos campos que usa bitManSede_ (cct, escuela, zona, sector, tipoCct).

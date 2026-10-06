@@ -780,11 +780,13 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     vivo):** medios YouTube/Facebook/Otro, propósito con verbo ("Propósito sugerido"), sugerir y reusar
     descripciones, y columna "Va al reporte" (ver `docs/ARCHITECTURE.md §26`). Pendiente de Jorge:
     marcar "No" en los oficios de solicitud ya capturados y revisar los 13 propósitos sugeridos.
+    **Paso A, Formación Docente → bitácora (6 oct 2026, en producción, probado por Jorge):**
+    columna `NP_planeacion` en `Cursos`, `?action=cursosMes` y una actividad por curso y mes.
     **Siguiente** (Jorge decide si (b) se adelanta a (a); "Va al reporte" ya resolvió la duda del
     oficio en el reporte):
     (a) **alimentación desde Formación Docente, Soporte y Correo** (plan aprobado el 24 sep,
     `docs/PLAN-OPERACION-INTERNA.md` §"Alimentación desde Formación Docente, Soporte y Correo"):
-    Formación Docente con una fila por curso y mes en META 23 (paso A, sigue este); Soporte en META 21
+    ~~Formación Docente (paso A)~~ hecho; Soporte en META 21 (paso B, sigue este)
     y Correo en META 23 (metas renumeradas el 29 sep 2026; revisar el plan: la planeación ya tiene
     N.P. 10, 12 y 13 para formación a distancia, correo y difusión de conferencias), cada uno con una fila de resumen mensual; la asesoría de IA (N.P. 9) sigue a
     mano por ahora. (b) Fase 2, ampliada el 1 oct 2026 a **gestor de oficios** con una sola puerta de

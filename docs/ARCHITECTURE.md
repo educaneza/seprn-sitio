@@ -820,6 +820,18 @@ docente completa un trámite en su propio sitio — a diferencia del resto de Fo
   selector de "Ejecutar" del editor, hay que exponer una envoltura temporal sin guion bajo) para
   que aparezca el enlace de "otorgar permisos".
 
+### Alimentación de la Bitácora OTDE (`?action=cursosMes`, oct 2026)
+
+`doGet ?action=cursosMes&mes=AAAA-MM&token=…` (`fdListarCursosMes_`, solo lectura) devuelve los
+cursos cuyo desarrollo (`Fecha_inicio`–`Fecha_fin`) se cruza con el mes, para que
+`apps-script/bitacora.gs` cree sus actividades (§26). Excluye `Ocultar_historial=TRUE` y cursos
+con `Fecha_inicio` que no es fecha ("Por definir"); sin `Fecha_fin`, el curso se toma como de un
+día (`sinFechaFin: true`). Por curso: datos de `Cursos`, `np` (columna `NP_planeacion`, opcional,
+acepta "N.P. 13"), inscritos, `porSector`, `porFuncion` y, si tiene `Liga_tutorial_constancia`,
+las constancias con `Constancia_recibida = Sí`. Usa el mismo `PANEL_TOKEN` que los demás
+backends, configurado desde el menú "OTDE Formación → Configurar token del panel (Bitácora OTDE)"
+(`fdConfigurarTokenPanel`, cuadro de diálogo, QA-NOTES #14/#25).
+
 ### Ciclo escolar y archivado
 
 Un Spreadsheet por ciclo (`Formacion_Docente_2026_2027`), con el `.gs` bound a él vía `CICLO_ESCOLAR = '2627'` (afecta el prefijo del `ID_Curso`). Al cerrar el ciclo: duplicar el Spreadsheet completo, actualizar la constante y volver a desplegar.
@@ -2570,9 +2582,29 @@ que revisar. Las dos importaciones comparten `bitConfigurarConexion_` (el `PANEL
 sola vez), `bitConsultarBackend_` y `bitAgregarActividades_` (alta con `LockService`, sin tocar
 filas existentes).
 
+**Formación Docente (6 oct 2026), una fila por curso y mes.** `bitImportarFormacion_` pide
+`?action=cursosMes` (§12) al backend guardado en `FD_URL` (menú "Configurar conexión con Formación
+Docente") y crea una actividad por curso cuyo desarrollo (`Fecha_inicio`–`Fecha_fin`) se cruza con
+el mes, con `ID de envío` `FD:<ID_Curso>:<AAAA-MM>`: un curso de varios meses aparece en cada uno,
+con la fecha recortada al mes, y la descripción dice el periodo completo.
+- **N.P.:** sale de la columna `NP_planeacion` de `Cursos`. Con N.P., meta y propósito vienen de
+  `Planeacion`. Vacía (o con un N.P. que no existe, con aviso): no planeada en
+  `BIT_META_NO_PLANEADA_FD` (23), origen "Convocatoria de <Responsable>", y propósito = la
+  `Descripcion` del curso si empieza con verbo; si no, el de `BIT_NP_PROPOSITO_FD` (N.P. 10), con
+  aviso.
+- **Textos:** tipo "<Categoría>: <Nombre>"; modalidad con `bitFdModalidad_` ("Virtual Sincrónica"
+  → Virtual, "Híbrido" → Híbrida); descripción `bitFdDescripcion_` (descripción del curso + "La OTDE
+  difundió la convocatoria… y registró a N participantes de los sectores…", con `bitFdSectores_`
+  en orden I…XIII y SEPRN como "la Subdirección"); beneficiarios `bitFdBeneficiarios_` (inscritos,
+  desglose por función y, en cursos con constancia, las recibidas). Inscritos y constancias son
+  del curso completo, no del mes. Capturó = `BIT_CAPTURO_FD`.
+- **Avisos:** curso sin `Fecha_fin` (se toma como de un día), N.P. inexistente, propósito tomado
+  del N.P. 10. "Generar reporte del mes" trae las tres fuentes (Mantenimiento, Asesorías,
+  Formación Docente).
+
 **Sigue a mano:** la asesoría de IA (N.P. 9; el formulario de Asesorías no tiene ese tipo), Soporte
-y Correo (sin acción en la planeación). Ya hay plan aprobado para Formación Docente, Soporte y Correo
-(`docs/PLAN-OPERACION-INTERNA.md`). Ver `docs/ROADMAP.md` ítem 27.
+y Correo. Plan aprobado para los dos últimos (pasos B y C de `docs/PLAN-OPERACION-INTERNA.md`;
+Correo ya tendría acción propia, el N.P. 12). Ver `docs/ROADMAP.md` ítem 27.
 
 **Editar la planeación.** `Planeacion` se puede editar en el Sheet y agregar acciones: se lee en cada
 consulta y el formulario no la guarda en el navegador. `bitLeerPlaneacion_` lee por posición las

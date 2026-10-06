@@ -313,6 +313,10 @@ function doGet(e) {
   if (params.action === 'constanciaInfo') {
     return textResponse(JSON.stringify(constanciaInfo_(params.folio, params.t)));
   }
+  // Bitácora OTDE (apps-script/bitacora.gs): cursos del mes, solo lectura.
+  if (params.action === 'cursosMes') {
+    return textResponse(JSON.stringify(fdListarCursosMes_(params.token, params.mes)));
+  }
   try {
     const hoja  = obtenerHojaCursos();
     const datos = valoresCursos_(hoja).slice(1);
@@ -592,7 +596,7 @@ const ENCABEZADOS_CURSOS = [
   // 4. Validez y constancia
   'Valida_USICAMM', 'Valida_PROEEB', 'Liga_tutorial_constancia',
   // 5. Control
-  'Activo', 'Ocultar_historial', 'Notas',
+  'Activo', 'Ocultar_historial', 'NP_planeacion', 'Notas',
   // 6. Automáticas — las marca el sistema, no se llenan a mano
   'Recordatorio_inicio_enviado', 'Recordatorio_medio_enviado', 'Recordatorio_webinar_enviado'
 ];
@@ -1003,6 +1007,83 @@ function formatearFecha(valor) {
   }
 }
 
+// ============================================================
+// BITÁCORA OTDE — ?action=cursosMes&mes=AAAA-MM&token=… (oct 2026)
+// La bitácora (apps-script/bitacora.gs) jala los cursos cuyo desarrollo
+// (Fecha_inicio a Fecha_fin) se cruza con el mes y crea una actividad por
+// curso y mes. Solo lectura, mismo PANEL_TOKEN que los demás backends.
+// NP_planeacion dice a qué acción de la planeación pertenece el curso.
+// Inscritos y constancias son del curso completo, no solo de ese mes.
+// ============================================================
+
+// El token se pide con un cuadro de diálogo, no como argumento: ▶️ Ejecutar
+// lo dejaría vacío (QA-NOTES #14) y en el código quedaría a la vista (#25).
+function fdConfigurarTokenPanel() {
+  const ui = SpreadsheetApp.getUi();
+  const r = ui.prompt('PANEL_TOKEN', 'Escribe el PANEL_TOKEN (el mismo de Mantenimiento, Asesorías y el Panel OTDE).', ui.ButtonSet.OK_CANCEL);
+  if (r.getSelectedButton() !== ui.Button.OK) return;
+  const token = r.getResponseText().trim();
+  if (!token) { ui.alert('El token está vacío. No se guardó nada.'); return; }
+  PropertiesService.getScriptProperties().setProperty('PANEL_TOKEN', token);
+  ui.alert('Token guardado. La Bitácora OTDE ya puede traer los cursos.');
+}
+
+function fdListarCursosMes_(tokenRecibido, mes) {
+  const tokenEsperado = PropertiesService.getScriptProperties().getProperty('PANEL_TOKEN');
+  if (!tokenEsperado || tokenRecibido !== tokenEsperado) return { status: 'no_autorizado' };
+  const m = String(mes || '').match(/^(\d{4})-(0[1-9]|1[0-2])$/);
+  if (!m) return { status: 'error', mensaje: 'Mes no válido (AAAA-MM).' };
+  const primerDia = new Date(Number(m[1]), Number(m[2]) - 1, 1);
+  const ultimoDia = new Date(Number(m[1]), Number(m[2]), 0);
+
+  const txt = v => String(v == null ? '' : v).trim();
+  const fmt = d => Utilities.formatDate(d, 'America/Mexico_City', 'yyyy-MM-dd');
+
+  const cursos = [];
+  valoresCursos_(obtenerHojaCursos()).slice(1).forEach(row => {
+    const id = txt(row[CUR.ID_Curso]).toUpperCase();
+    if (!id || txt(row[CUR.Ocultar_historial]).toUpperCase() === 'TRUE') return;
+    const inicio = parseFechaSegura_(row[CUR.Fecha_inicio]);
+    if (!inicio) return; // "Por definir": todavía no tiene mes
+    const finReal = parseFechaSegura_(row[CUR.Fecha_fin]);
+    const fin = finReal && finReal >= inicio ? finReal : inicio;
+    if (inicio > ultimoDia || fin < primerDia) return;
+    cursos.push({
+      idCurso: id,
+      nombre: txt(row[CUR.Nombre]),
+      categoria: txt(row[CUR.Categoria]),
+      responsable: txt(row[CUR.Responsable]),
+      modalidad: txt(row[CUR.Modalidad]),
+      dirigidoA: txt(row[CUR.Dirigido_a]),
+      descripcion: txt(row[CUR.Descripcion]),
+      np: txt(row[CUR.NP_planeacion]).replace(/^N\.?\s*P\.?\s*/i, ''),
+      inicio: fmt(inicio),
+      fin: fmt(fin),
+      sinFechaFin: !finReal,
+      conConstancia: !!txt(row[CUR.Liga_tutorial_constancia]),
+      inscritos: 0, porSector: {}, porFuncion: {}, constancias: 0
+    });
+  });
+  if (!cursos.length) return { status: 'ok', items: [] };
+
+  const porId = {};
+  cursos.forEach(c => { porId[c.idCurso] = c; });
+  const datos = obtenerHojaInscripciones().getDataRange().getValues();
+  const cols = indicesPorEncabezado_(datos[0]);
+  const celda = (row, h) => (h in cols ? txt(row[cols[h]]) : '');
+  datos.slice(1).forEach(row => {
+    const c = porId[celda(row, 'ID_Curso').toUpperCase()];
+    if (!c) return;
+    c.inscritos++;
+    const sector = celda(row, 'Sector') || 'Sin sector';
+    const funcion = celda(row, 'Funcion') || 'Sin función';
+    c.porSector[sector] = (c.porSector[sector] || 0) + 1;
+    c.porFuncion[funcion] = (c.porFuncion[funcion] || 0) + 1;
+    if (c.conConstancia && celda(row, 'Constancia_recibida') === 'Sí') c.constancias++;
+  });
+  return { status: 'ok', items: cursos };
+}
+
 // ── Respuesta de texto plano (evita preflight CORS) ──
 function textResponse(text) {
   return ContentService
@@ -1059,7 +1140,8 @@ function fdAplicarValidacionCursos_(hoja) {
     Fecha_limite_inscripcion: 'Último día para inscribirse. Vacía = se usa Fecha_inicio.',
     Hora_limite_inscripcion: 'Opcional. Hora exacta de cierre ese día (ej. 14:00). Vacía = cierra a las 23:59.',
     Cupo_agotado: 'TRUE = ya no hay lugares: el curso sigue visible con "Cupo agotado" y no acepta registros nuevos (salvo quien ya se inscribió en la plataforma externa y viene a avisar).',
-    Ocultar_historial: 'TRUE = no mostrar en "Cursos anteriores" (cursos de prueba o cancelados). Activo=FALSE ya NO lo quita del historial.'
+    Ocultar_historial: 'TRUE = no mostrar en "Cursos anteriores" (cursos de prueba o cancelados). Activo=FALSE ya NO lo quita del historial.',
+    NP_planeacion: 'Opcional. N.P. de la planeación en la Bitácora OTDE (ej. 5, 10, 13). Vacía = el curso entra a la bitácora como no planeado.'
   };
   Object.keys(notas).forEach(h => hoja.getRange(1, col(h)).setNote(notas[h]));
   ['ID_Curso', 'Recordatorio_inicio_enviado', 'Recordatorio_medio_enviado', 'Recordatorio_webinar_enviado']
@@ -1177,6 +1259,8 @@ function onOpen() {
     .addSeparator()
     .addItem('Instalar auto-generación de ID de curso', 'instalarTriggerAutoId')
     .addItem('Desinstalar auto-generación de ID de curso', 'desinstalarTriggerAutoId')
+    .addSeparator()
+    .addItem('Configurar token del panel (Bitácora OTDE)', 'fdConfigurarTokenPanel')
     .addToUi();
 }
 
