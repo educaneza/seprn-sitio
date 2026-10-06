@@ -174,6 +174,21 @@ const BIT_CAPTURO_ASE = 'Asesorías (auto)';
 const BIT_CAPTURO_FD = 'Formación Docente (auto)';
 const BIT_META_NO_PLANEADA_FD = '23';
 const BIT_NP_PROPOSITO_FD = '10';
+// Soporte (oct 2026): una fila de RESUMEN por mes en META 21, no planeada
+// (no hay acción de soporte remoto en la planeación). Como el mes puede
+// seguir corriendo, la fila se regenera en cada importación mientras nadie
+// la haya corregido a mano (ver bitAgregarActividades_, "regenerable").
+const BIT_CAPTURO_SOP = 'Soporte (auto)';
+const BIT_META_SOP = '21';
+const BIT_TIPO_SOP = 'Soporte técnico remoto a equipos de cómputo y servicios digitales de escuelas y oficinas.';
+const BIT_ORIGEN_SOP = 'Solicitudes recibidas en la Oficina Virtual OTDE';
+const BIT_PROPOSITO_SOP = 'Asegurar el funcionamiento de los equipos de cómputo y de los servicios digitales de escuelas y oficinas mediante la atención oportuna de solicitudes de soporte técnico remoto.';
+const BIT_SOP_TIPOS_TEXTO = {
+  'Correo institucional': 'correo institucional', 'Office/Licencias': 'Office y licencias',
+  'Impresora': 'impresoras', 'Antivirus/Seguridad': 'antivirus y seguridad',
+  'Internet/Red': 'internet y red', 'Equipo de cómputo (hardware)': 'equipo de cómputo (hardware)',
+  'Otro': 'otros temas'
+};
 const BIT_SECTORES_ORDEN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'SEPRN'];
 
 const BIT_MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
@@ -207,12 +222,14 @@ function onOpen() {
     .addItem('Traer visitas de Mantenimiento', 'bitTraerMantenimiento')
     .addItem('Traer asesorías resueltas', 'bitTraerAsesorias')
     .addItem('Traer cursos de Formación Docente', 'bitTraerFormacion')
+    .addItem('Traer resumen de Soporte', 'bitTraerSoporte')
     .addSeparator()
     .addItem('Preparar hojas y cargar planeación 2026-2027', 'bitPrepararHojas')
     .addItem('Configurar clave de captura', 'bitConfigurarClave')
     .addItem('Configurar conexión con Mantenimiento', 'bitConfigurarConexionMantenimiento')
     .addItem('Configurar conexión con Asesorías', 'bitConfigurarConexionAsesorias')
     .addItem('Configurar conexión con Formación Docente', 'bitConfigurarConexionFormacion')
+    .addItem('Configurar conexión con Soporte', 'bitConfigurarConexionSoporte')
     .addToUi();
 }
 
@@ -692,7 +709,8 @@ function bitGenerarReporteMensual() {
   const avisosFuentes = [
     ['Mantenimiento', bitImportarMantenimiento_],
     ['Asesorías', bitImportarAsesorias_],
-    ['Formación Docente', bitImportarFormacion_]
+    ['Formación Docente', bitImportarFormacion_],
+    ['Soporte', bitImportarSoporte_]
   ].map(function (f) {
     try {
       return f[0] + ': ' + bitResumenImportacion_(f[1](mes));
@@ -823,6 +841,7 @@ function bitCombinarFila_(hoja, fila) {
 // token es el mismo para los dos (el del Panel OTDE); solo se pide si falta.
 function bitConfigurarConexionMantenimiento() { bitConfigurarConexion_('Mantenimiento', 'MAN_URL', 'MANTENIMIENTO_APPS_SCRIPT_URL'); }
 function bitConfigurarConexionAsesorias() { bitConfigurarConexion_('Asesorías', 'ASE_URL', 'ASESORIAS_APPS_SCRIPT_URL'); }
+function bitConfigurarConexionSoporte() { bitConfigurarConexion_('Soporte', 'SOP_URL', 'SOPORTE_APPS_SCRIPT_URL de soporte.html'); }
 function bitConfigurarConexionFormacion() { bitConfigurarConexion_('Formación Docente', 'FD_URL', 'APPS_SCRIPT_URL de formacion-docente.html'); }
 
 function bitConfigurarConexion_(nombre, propUrl, constanteSitio) {
@@ -854,6 +873,7 @@ function bitConfigurarConexion_(nombre, propUrl, constanteSitio) {
 
 function bitTraerMantenimiento() { bitTraerDesdeMenu_('Traer visitas de Mantenimiento', bitImportarMantenimiento_); }
 function bitTraerAsesorias() { bitTraerDesdeMenu_('Traer asesorías resueltas', bitImportarAsesorias_); }
+function bitTraerSoporte() { bitTraerDesdeMenu_('Traer resumen de Soporte', bitImportarSoporte_); }
 function bitTraerFormacion() { bitTraerDesdeMenu_('Traer cursos de Formación Docente', bitImportarFormacion_); }
 
 function bitTraerDesdeMenu_(titulo, importar) {
@@ -876,6 +896,8 @@ function bitTraerDesdeMenu_(titulo, importar) {
 function bitResumenImportacion_(res) {
   let texto = res.nuevas + ' nueva' + (res.nuevas === 1 ? '' : 's') + ' agregada' + (res.nuevas === 1 ? '' : 's') +
     ' a Actividades · ' + res.existentes + ' ya estaba' + (res.existentes === 1 ? '' : 'n') + ' (no se tocaron).';
+  if (res.actualizadas) texto += '\n' + res.actualizadas + ' resumen' + (res.actualizadas === 1 ? '' : 'es') + ' actualizado' + (res.actualizadas === 1 ? '' : 's') + ' con los datos nuevos.';
+  if (res.editadas) texto += '\n' + res.editadas + ' resumen' + (res.editadas === 1 ? '' : 'es') + ' no se actualizó porque se corrigió a mano en Actividades (bórralo y vuelve a traerlo si quieres regenerarlo).';
   if (res.avisos && res.avisos.length) texto += '\nRevisar: ' + res.avisos.join('; ');
   return texto;
 }
@@ -909,10 +931,14 @@ function bitAccionPlaneacion_(np) {
 }
 
 // Agrega a Actividades las filas cuyo "ID de envío" todavía no existe; las que
-// ya existen no se tocan (la hoja manda). filas: [{idEnvio, valores}] con
-// valores por nombre de encabezado, sin 'Registrado' ni 'ID'.
+// ya existen no se tocan (la hoja manda). filas: [{idEnvio, valores,
+// regenerable}] con valores por nombre de encabezado, sin 'Registrado' ni 'ID'.
+// regenerable (resúmenes mensuales, oct 2026): si la fila ya existe y sigue
+// tal como la escribió la última importación (misma huella guardada en Script
+// Properties), se reescribe con los datos nuevos; si alguien la corrigió a
+// mano, se respeta y se cuenta en "editadas".
 function bitAgregarActividades_(filas) {
-  if (!filas.length) return { nuevas: 0, existentes: 0 };
+  if (!filas.length) return { nuevas: 0, existentes: 0, actualizadas: 0, editadas: 0 };
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
   try {
@@ -922,12 +948,29 @@ function bitAgregarActividades_(filas) {
       ? hoja.getRange(2, 1, hoja.getLastRow() - 1, hoja.getLastColumn()).getValues()
       : [];
     const yaEstan = {};
-    actuales.forEach(function (r) { yaEstan[String(r[idx['ID de envío']])] = true; });
+    actuales.forEach(function (r, i) { yaEstan[String(r[idx['ID de envío']])] = i; });
     let siguiente = Number(bitSiguienteId_(actuales, idx['ID']).slice(4));
+    const props = PropertiesService.getScriptProperties();
+    let actualizadas = 0, editadas = 0;
 
     const nuevas = [];
     filas.forEach(function (f) {
-      if (yaEstan[f.idEnvio]) return;
+      if (f.idEnvio in yaEstan) {
+        if (!f.regenerable) return;
+        const i = yaEstan[f.idEnvio];
+        const actual = {};
+        Object.keys(f.valores).forEach(function (h) { if (idx[h] !== undefined) actual[h] = actuales[i][idx[h]]; });
+        const huellaActual = bitHuella_(actual);
+        if (huellaActual !== props.getProperty(BIT_PREFIJO_HUELLA + f.idEnvio)) { editadas++; return; }
+        if (huellaActual === bitHuella_(f.valores)) return;
+        Object.keys(f.valores).forEach(function (h) {
+          if (idx[h] !== undefined) hoja.getRange(i + 2, idx[h] + 1).setValue(f.valores[h]);
+        });
+        props.setProperty(BIT_PREFIJO_HUELLA + f.idEnvio, bitHuella_(f.valores));
+        actualizadas++;
+        return;
+      }
+      if (f.regenerable) props.setProperty(BIT_PREFIJO_HUELLA + f.idEnvio, bitHuella_(f.valores));
       const valores = Object.assign({
         'Registrado': new Date(),
         'ID': 'BIT-' + ('000' + siguiente++).slice(-4),
@@ -942,10 +985,27 @@ function bitAgregarActividades_(filas) {
     if (nuevas.length) {
       hoja.getRange(hoja.getLastRow() + 1, 1, nuevas.length, nuevas[0].length).setValues(nuevas);
     }
-    return { nuevas: nuevas.length, existentes: filas.length - nuevas.length };
+    return { nuevas: nuevas.length, existentes: filas.length - nuevas.length - actualizadas,
+      actualizadas: actualizadas, editadas: editadas };
   } finally {
     lock.releaseLock();
   }
+}
+
+// Huella corta de los valores que escribió una importación: fechas por día y
+// todo lo demás como texto, para comparar contra lo que se lee de la hoja.
+// Mes y Meta quedan fuera: Sheets puede convertir "2026-10" en fecha o "21" en
+// número al guardarlos, y no cambian para un mismo "ID de envío".
+const BIT_PREFIJO_HUELLA = 'BIT_HUELLA_';
+const BIT_FUERA_DE_HUELLA = ['Mes', 'Meta'];
+function bitHuella_(valores) {
+  const norm = Object.keys(valores).filter(function (h) { return BIT_FUERA_DE_HUELLA.indexOf(h) === -1; })
+    .sort().map(function (h) {
+    const v = valores[h];
+    return h + '=' + (v instanceof Date ? Utilities.formatDate(v, 'America/Mexico_City', 'yyyy-MM-dd')
+      : String(v == null ? '' : v).trim());
+  }).join('\u0001');
+  return Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, norm, Utilities.Charset.UTF_8));
 }
 
 // Trae los reportes de visita del mes y agrega a Actividades los que falten.
@@ -1081,6 +1141,66 @@ function bitImportarFormacion_(mes) {
   return res;
 }
 
+// Resumen mensual de Soporte: una sola fila (SOP:<mes>) con el total de
+// solicitudes resueltas, desglose por tipo de ayuda, sectores y funciones.
+function bitImportarSoporte_(mes) {
+  const items = bitConsultarBackend_('SOP_URL', 'Soporte', 'soporteMes', mes);
+  if (!items.length) return { nuevas: 0, existentes: 0, avisos: [] };
+  const sinAtencion = items.filter(function (x) { return x.fechaFuente !== 'atencion'; })
+    .map(function (x) { return x.folio; });
+  const fechas = items.map(function (x) { return x.fecha; }).sort();
+  const inicio = bitParsearFecha_(fechas[0]);
+  const fin = bitParsearFecha_(fechas[fechas.length - 1]);
+  const mismoDia = fin.getTime() === inicio.getTime();
+  const cuenta = function (campo, vacio) {
+    const c = {};
+    items.forEach(function (x) { const k = x[campo] || vacio; c[k] = (c[k] || 0) + 1; });
+    return c;
+  };
+  const res = bitAgregarActividades_([{
+    idEnvio: 'SOP:' + mes,
+    regenerable: true,
+    valores: {
+      'Mes': mes,
+      'Meta': BIT_META_SOP,
+      'N.P.': '',
+      'Origen': BIT_ORIGEN_SOP,
+      'Tipo y nombre': BIT_TIPO_SOP,
+      'Fecha inicio': inicio,
+      'Fecha fin': mismoDia ? '' : fin,
+      'Fecha (texto)': bitFechaTexto_(inicio, mismoDia ? null : fin),
+      'Responsable': 'OTDE',
+      'Modalidad': 'Virtual',
+      'Lugar': 'Virtual, a distancia mediante TeamViewer.',
+      'CCT': '',
+      'Descripción': bitSopDescripcion_(items.length, cuenta('tipoAyuda', 'Otro'), cuenta('sector', 'Sin sector')),
+      'Propósito': BIT_PROPOSITO_SOP,
+      'Beneficiarios': bitSopBeneficiarios_(cuenta('funcion', 'Sin función')),
+      'Capturó': BIT_CAPTURO_SOP
+    }
+  }]);
+  res.avisos = sinAtencion.length
+    ? [sinAtencion.length + ' sin "Fecha de atención" (se contó la fecha de la solicitud): ' + sinAtencion.join(', ')]
+    : [];
+  return res;
+}
+
+// "Brindar soporte técnico remoto, mediante TeamViewer, a 6 solicitudes de
+// escuelas y oficinas de los sectores I y IV: 3 de correo institucional, 2 de
+// impresoras y 1 de otros temas."
+function bitSopDescripcion_(total, porTipo, porSector) {
+  const tipos = Object.keys(porTipo).sort(function (a, b) { return porTipo[b] - porTipo[a]; })
+    .map(function (t) { return porTipo[t] + ' de ' + (BIT_SOP_TIPOS_TEXTO[t] || t.toLowerCase()); });
+  const lista = tipos.length > 1 ? tipos.slice(0, -1).join(', ') + ' y ' + tipos[tipos.length - 1] : tipos[0];
+  return 'Brindar soporte técnico remoto, mediante TeamViewer, a ' + total + ' solicitud' + (total === 1 ? '' : 'es') +
+    ' de escuelas y oficinas' + bitSectoresTexto_(porSector) + ': ' + lista + '.';
+}
+
+function bitSopBeneficiarios_(porFuncion) {
+  return Object.keys(porFuncion).sort(function (a, b) { return porFuncion[b] - porFuncion[a]; })
+    .map(function (f) { return porFuncion[f] + ' ' + f; }).join('\n');
+}
+
 function bitFdModalidad_(texto) {
   const t = String(texto || '').toLowerCase();
   if (/h[ií]brid/.test(t)) return 'Híbrida';
@@ -1089,7 +1209,7 @@ function bitFdModalidad_(texto) {
 }
 
 // Sectores en orden I…XIII, SEPRN; los que no se reconocen, al final.
-function bitFdSectores_(porSector) {
+function bitSectoresTexto_(porSector) {
   const orden = function (s) { const i = BIT_SECTORES_ORDEN.indexOf(s); return i === -1 ? 99 : i; };
   const claves = Object.keys(porSector || {});
   const lista = claves.filter(function (s) { return s !== 'Sin sector' && s !== 'SEPRN'; })
@@ -1106,7 +1226,7 @@ function bitFdDescripcion_(c, inicioCurso, finCurso) {
   let texto = c.descripcion ? c.descripcion.replace(/\s*\.?\s*$/, '.') + ' ' : '';
   texto += 'La OTDE difundió la convocatoria entre las figuras educativas de la región' +
     (c.inscritos ? ' y registró a ' + c.inscritos + ' participante' + (c.inscritos === 1 ? '' : 's') +
-      bitFdSectores_(c.porSector) : '') + '.';
+      bitSectoresTexto_(c.porSector) : '') + '.';
   const otroMes = inicioCurso.getMonth() !== finCurso.getMonth() || inicioCurso.getFullYear() !== finCurso.getFullYear();
   if (otroMes) {
     const rango = bitFechaTexto_(inicioCurso, finCurso);

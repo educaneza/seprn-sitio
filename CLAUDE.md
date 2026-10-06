@@ -189,7 +189,7 @@ ya esté expandido).
 ### `apps-script/soporte-remoto.gs`
 - Conectado a Google Sheets (hoja `Solicitudes_Soporte_2026`, autocreada si no existe; el archivo de Drive que la contiene se llama "Soporte Técnico Remoto", **no** igual que la hoja interna)
 - Folio: `OTDE-SOP-NNNN` (secuencial, autoincremental)
-- Columnas A-P: Fecha | Folio | Nombre | CCT | Sector | Zona | Escuela/Unidad | Función/Cargo | WhatsApp | Correo | Descripción | Urgencia | Tipo de ayuda | Estatus | Notas de revisión | Notificación de cierre enviada (las últimas 3, ago 2026 — ver "Oficina Virtual OTDE" abajo)
+- Columnas A-P: Fecha | Folio | Nombre | CCT | Sector | Zona | Escuela/Unidad | Función/Cargo | WhatsApp | Correo | Descripción | Urgencia | Tipo de ayuda | Estatus | Notas de revisión | Notificación de cierre enviada (las últimas 3, ago 2026 — ver "Oficina Virtual OTDE" abajo). Después: Q `ID de envío` (sep 2026) y R `Fecha de atención` (oct 2026, la anota `sopOnEditCierre` al marcar Resuelto; la usa `?action=soporteMes` para la Bitácora OTDE, ver `bitacora.gs`)
 - **CCT con autocomplete**: mismo patrón usado en `otde.html`/`formacion-docente.html` (`js/cct-db.js`, 506 registros) — funciones `sopSeleccionarCct`/`sopResetCct`/`sopActualizarZonas`/`sopActualizarTipoCct` (prefijo `sop` para no chocar con las de otras páginas). Si la CCT no está en la base, aparecen campos manuales de Tipo de CCT/Sector/Zona/Escuela (`#sop-manual-fields`) — ver `docs/ARCHITECTURE.md §11`
 - **Función/Cargo** es un `<select>` que se repuebla según el tipo de CCT (`otdePoblarFuncion()`, ver `docs/ARCHITECTURE.md §11`) con campo libre si se elige "Otro"
 - **Tipo de ayuda** (ago 2026, columna M): `<select>` obligatorio — Correo institucional, Office/Licencias, Impresora, Antivirus/Seguridad, Internet/Red, Equipo de cómputo (hardware), Otro — complementa, no reemplaza, la descripción libre
@@ -606,6 +606,11 @@ ya esté expandido).
   actividad por curso y mes (`FD:<ID_Curso>:<mes>`). El N.P. sale de la columna `NP_planeacion` de
   `Cursos` (vacía = no planeada en META 23, con aviso). "Generar reporte del mes" trae las tres
   fuentes. Ver `docs/ARCHITECTURE.md §26`.
+- **Soporte (6 oct 2026, en producción, probado por Jorge)**: menús "Traer resumen de Soporte" y
+  "Configurar conexión con Soporte" (`SOP_URL`). Una fila de resumen por mes (`SOP:<mes>`) en
+  META 21, no planeada. Es **regenerable**: si se trae otra vez, se actualiza con los totales
+  nuevos salvo que se haya corregido a mano (huella en Script Properties). "Generar reporte del
+  mes" trae las 4 fuentes. Ver `docs/ARCHITECTURE.md §26`.
 - **La planeación se edita en el Sheet** (hoja `Planeacion`) y se ve al instante en el formulario.
   Se pueden agregar filas con N.P. único y meta 21/23, y el "Nombre corto" va a mano. No insertar
   ni reordenar columnas antes de "Nombre corto" (lectura por posición) ni renumerar los N.P. 7/8.
@@ -1227,10 +1232,9 @@ Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/I
   de Jorge: cifras de Beneficiarios en BIT-0006 a 0009 y confirmar los folios `OTDE-MAN-0001`/`0002`
   (el arreglo del singular ya está desplegado, llegó con la versión de Asesorías). **Asesorías resueltas → N.P. 8 desplegado
   (cont. 2)**: falta importar el primer caso real, y que Nancy llene *Fecha de realización* y
-  *Asistentes* al cerrar. La asesoría de IA (N.P. 9), Soporte y Correo siguen a mano. **Paso A (Formación
-  Docente) en producción (6 oct 2026)**: falta llenar `NP_planeacion` en los cursos nuevos.
-  **Siguiente:** Soporte (paso B, META 21) y Correo (paso C, ahora N.P. 12) como resumen mensual;
-  ver `docs/PLAN-OPERACION-INTERNA.md`. Luego la Fase 2, ampliada el 1 oct 2026 a gestor de
+  *Asistentes* al cerrar. La asesoría de IA (N.P. 9) y Correo siguen a mano. **Pasos A (Formación
+  Docente) y B (Soporte) en producción (6 oct 2026)**: falta llenar `NP_planeacion` en los cursos
+  nuevos. **Siguiente:** Correo (paso C, N.P. 12) como resumen mensual regenerable; ver `docs/PLAN-OPERACION-INTERNA.md`. Luego la Fase 2, ampliada el 1 oct 2026 a gestor de
   oficios con una sola puerta (pasos 2A-2E; Jorge decide si se adelanta a Formación Docente; antes verificar Power Automate
   en M365 y conseguir el Excel de control y 1-2 oficios reales). Ver `docs/ROADMAP.md` ítem 27. Ver `docs/PLAN-OPERACION-INTERNA.md` y `docs/ROADMAP.md` ítem 27.
 - **Formación Docente — Workspace, decidir antes del 6 oct 2026**: desde el 28 sep la cuota ya

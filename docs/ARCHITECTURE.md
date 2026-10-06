@@ -2602,9 +2602,31 @@ con la fecha recortada al mes, y la descripción dice el periodo completo.
   del N.P. 10. "Generar reporte del mes" trae las tres fuentes (Mantenimiento, Asesorías,
   Formación Docente).
 
-**Sigue a mano:** la asesoría de IA (N.P. 9; el formulario de Asesorías no tiene ese tipo), Soporte
-y Correo. Plan aprobado para los dos últimos (pasos B y C de `docs/PLAN-OPERACION-INTERNA.md`;
-Correo ya tendría acción propia, el N.P. 12). Ver `docs/ROADMAP.md` ítem 27.
+**Soporte (6 oct 2026), una fila de resumen por mes.** `soporte-remoto.gs` anota "Fecha de
+atención" (columna R, `COL_SOP_FECHA_ATENCION`) la primera vez que `sopOnEditCierre` ve una
+solicitud en Resuelto (no la pisa, y si la columna R ya tiene otro encabezado no escribe nada), y
+expone `?action=soporteMes` (`sopListarResueltasMes_`, mismo `PANEL_TOKEN` del Panel OTDE): las
+resueltas cuya fecha de atención (o, si falta, la de la solicitud, `fechaFuente: 'solicitud'`)
+cae en el mes. `bitImportarSoporte_` (menús "Traer resumen de Soporte" / "Configurar conexión con
+Soporte", `SOP_URL`) arma **una** actividad `SOP:<mes>` en META 21, no planeada
+(`BIT_ORIGEN_SOP`; la planeación no tiene acción de soporte remoto), con `BIT_TIPO_SOP`,
+`BIT_PROPOSITO_SOP`, rango de fechas de la primera a la última atención, descripción
+`bitSopDescripcion_` (total, sectores con `bitSectoresTexto_` y desglose por tipo de ayuda con
+`BIT_SOP_TIPOS_TEXTO`) y beneficiarios `bitSopBeneficiarios_` (por función). Avisa los folios
+contados con la fecha de la solicitud.
+
+**Resúmenes regenerables.** Un resumen mensual se puede traer antes de que acabe el mes, así que
+`bitAgregarActividades_` acepta `regenerable: true`: guarda en Script Properties
+(`BIT_PREFIJO_HUELLA` + ID de envío) una huella MD5 (`bitHuella_`) de lo que escribió, y en la
+siguiente importación reescribe la fila solo si sigue idéntica a esa huella ("N resumen
+actualizado"); si alguien la corrigió a mano, la respeta ("no se actualizó porque se corrigió a
+mano"; para regenerarla se borra la fila). Mes y Meta quedan fuera de la huella
+(`BIT_FUERA_DE_HUELLA`) porque Sheets puede convertirlos en fecha o número. Las demás fuentes
+(Mantenimiento, Asesorías, Formación Docente) siguen sin reescribirse nunca.
+
+**Sigue a mano:** la asesoría de IA (N.P. 9; el formulario de Asesorías no tiene ese tipo) y Correo
+(paso C de `docs/PLAN-OPERACION-INTERNA.md`, con acción propia: el N.P. 12; puede usar
+`regenerable`). Ver `docs/ROADMAP.md` ítem 27.
 
 **Editar la planeación.** `Planeacion` se puede editar en el Sheet y agregar acciones: se lee en cada
 consulta y el formulario no la guarda en el navegador. `bitLeerPlaneacion_` lee por posición las

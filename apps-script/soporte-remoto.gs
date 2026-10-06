@@ -48,13 +48,19 @@ const HOJA_SOPORTE = 'Solicitudes_Soporte_2026';
 const ENCABEZADOS_SOPORTE = [
   'Fecha', 'Folio', 'Nombre', 'CCT', 'Sector', 'Zona',
   'Escuela/Unidad', 'Función/Cargo', 'WhatsApp', 'Correo', 'Descripción', 'Urgencia', 'Tipo de ayuda',
-  'Estatus', 'Notas de revisión', 'Notificación de cierre enviada', 'ID de envío'
+  'Estatus', 'Notas de revisión', 'Notificación de cierre enviada', 'ID de envío',
+  'Fecha de atención'
 ];
 // Ventana del respaldo anti-duplicados para envíos sin idEnvio (páginas viejas en caché):
 // misma CCT + correo + descripción dentro de estos minutos = mismo envío.
 const SOP_VENTANA_DUPLICADO_MIN = 10;
 const COL_SOP_ESTATUS = 14;
 const COL_SOP_NOTIFICACION_CIERRE = 16;
+// Fecha de atención (oct 2026, columna R): la anota sopOnEditCierre al marcar
+// Resuelto, para que la Bitácora OTDE cuente cada solicitud en el mes en que
+// se atendió (?action=soporteMes). Las resueltas antes de este cambio no la
+// tienen: el endpoint usa la fecha de la solicitud y lo indica.
+const COL_SOP_FECHA_ATENCION = 18;
 const ESTADOS_SOP_VALIDOS = ['Pendiente de validar', 'Validado', 'En atención', 'Resuelto', 'Rechazado'];
 // Notificación de "nueva solicitud" por correo, además del Telegram de abajo
 // (sep 2026) — Alejandro atiende Soporte y Mantenimiento, decisión de Jorge.
@@ -131,6 +137,9 @@ function doGet(e) {
   if (accion === 'pendientes') {
     return sopListarPendientes(e.parameter.token);
   }
+  if (accion === 'soporteMes') {
+    return textResponse(JSON.stringify(sopListarResueltasMes_(e.parameter.token, e.parameter.mes)));
+  }
   return textResponse(JSON.stringify({ status: 'ok', servicio: 'OTDE Soporte Técnico Remoto' }));
 }
 
@@ -168,6 +177,42 @@ function sopListarPendientes(tokenRecibido) {
     });
 
   return textResponse(JSON.stringify({ status: 'ok', tramite: 'Soporte Técnico Remoto', items: items }));
+}
+
+// ── Solicitudes resueltas de un mes para la Bitácora OTDE (?action=soporteMes) ──
+// La bitácora (apps-script/bitacora.gs) arma con ellas una fila de resumen
+// mensual. Solo lectura, mismo PANEL_TOKEN que ?action=pendientes. La fecha es
+// "Fecha de atención"; si falta (resueltas antes de oct 2026), la de la
+// solicitud, y fechaFuente lo dice para que la bitácora avise.
+function sopListarResueltasMes_(tokenRecibido, mes) {
+  const tokenEsperado = PropertiesService.getScriptProperties().getProperty('PANEL_TOKEN');
+  if (!tokenEsperado || tokenRecibido !== tokenEsperado) return { status: 'no_autorizado' };
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(String(mes || ''))) {
+    return { status: 'error', mensaje: 'Mes no válido (AAAA-MM).' };
+  }
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_SOPORTE);
+  if (!hoja) return { status: 'ok', items: [] };
+
+  const tz = 'America/Mexico_City';
+  const txt = function (v) { return String(v == null ? '' : v).trim(); };
+  const items = [];
+  hoja.getDataRange().getValues().slice(1).forEach(function (r) {
+    if (!txt(r[1]) || txt(r[COL_SOP_ESTATUS - 1]) !== 'Resuelto') return;
+    const atencion = r[COL_SOP_FECHA_ATENCION - 1];
+    const fecha = atencion instanceof Date ? atencion : (r[0] instanceof Date ? r[0] : null);
+    if (!fecha || Utilities.formatDate(fecha, tz, 'yyyy-MM') !== mes) return;
+    items.push({
+      folio: txt(r[1]).toUpperCase(),
+      fecha: Utilities.formatDate(fecha, tz, 'yyyy-MM-dd'),
+      fechaFuente: atencion instanceof Date ? 'atencion' : 'solicitud',
+      cct: txt(r[3]).toUpperCase(),
+      sector: txt(r[4]),
+      funcion: txt(r[7]),
+      urgencia: txt(r[11]),
+      tipoAyuda: txt(r[12])
+    });
+  });
+  return { status: 'ok', items: items };
 }
 
 // ── Consulta de estatus por folio + correo (Oficina Virtual OTDE) ──
@@ -453,6 +498,20 @@ function sopOnEditCierre(e) {
       const estatus = String(hoja.getRange(fila, COL_SOP_ESTATUS).getValue()).trim();
       if (estatus !== 'Resuelto') continue;
 
+      // Fecha de atención: solo la primera vez (no se pisa si se vuelve a
+      // marcar Resuelto ni si se corrigió a mano). La hoja puede no tener aún
+      // el encabezado si no ha llegado una solicitud con esta versión.
+      // Si la columna R ya tiene otro encabezado, no se toca.
+      const encAtencion = String(hoja.getRange(1, COL_SOP_FECHA_ATENCION).getValue()).trim();
+      const celdaAtencion = hoja.getRange(fila, COL_SOP_FECHA_ATENCION);
+      if ((encAtencion === '' || encAtencion === 'Fecha de atención') && !celdaAtencion.getValue()) {
+        if (!encAtencion) {
+          hoja.getRange(1, COL_SOP_FECHA_ATENCION).setValue('Fecha de atención')
+            .setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
+        }
+        celdaAtencion.setValue(new Date());
+      }
+
       const yaNotificado = String(hoja.getRange(fila, COL_SOP_NOTIFICACION_CIERRE).getValue()).trim();
       if (yaNotificado === 'Sí') continue;
 
@@ -685,7 +744,7 @@ function sopProtegerColumnaAutomatica_(hoja, columna) {
 }
 
 function sopConfigurarValidacionYSemaforo() {
-  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_SOPORTE);
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_SOPORTE) ? obtenerHojaSoporte() : null;
   if (hoja) {
     sopAplicarValidacionListaSuave_(hoja, 12, SOP_URGENCIAS_VALIDAS);
     sopAplicarValidacionListaSuave_(hoja, 13, SOP_TIPOS_AYUDA_VALIDOS);

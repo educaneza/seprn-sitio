@@ -14,6 +14,21 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-10-06 (cont. 2) · Bitácora OTDE: resumen mensual de Soporte (paso B), en producción
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-06 |
+| **Sesión** | Siguiente paso del plan de alimentación, justo después de Formación Docente: que las solicitudes de Soporte Técnico Remoto lleguen a la bitácora como una fila de resumen mensual. |
+| **Decisión de diseño** | Un resumen mensual se puede traer a mitad de mes, y la regla de siempre ("nunca pisa una fila existente") lo dejaría con datos parciales. Se agregó la opción `regenerable` en `bitAgregarActividades_`: la fila se reescribe solo si sigue igual a como la dejó la última importación (huella MD5 en Script Properties); si se corrigió a mano, se respeta y se avisa. Las otras fuentes no cambian. |
+| **Construido** | `soporte-remoto.gs`: columna R "Fecha de atención", que `sopOnEditCierre` anota al marcar Resuelto (solo la primera vez y sin tocar una columna R ajena); endpoint `?action=soporteMes` (`sopListarResueltasMes_`, `PANEL_TOKEN`), con la fecha de la solicitud como respaldo; "Aplicar validación y semáforo" ahora también completa encabezados faltantes. `bitacora.gs`: menús "Traer resumen de Soporte" y "Configurar conexión con Soporte" (`SOP_URL`), `bitImportarSoporte_` (fila `SOP:<mes>`, META 21, no planeada, desglose por tipo de ayuda, sectores y función), huella con `bitHuella_`; el helper de sectores se renombró `bitSectoresTexto_` (lo comparten Formación Docente y Soporte). "Generar reporte del mes" trae 4 fuentes. +190/-11 en los 2 archivos. Ver `docs/ARCHITECTURE.md §26`. |
+| **Verificación** | Simulación en Node con los dos `.gs` reales (Sheets falso que convierte "2026-10" en fecha y "21" en número, como el real): endpoint con y sin token; Rechazado y En atención excluidos; fecha de atención anotada una vez y sin pisar; encabezado ajeno en R intacto; resumen creado, sin cambios al repetir, actualizado al llegar una solicitud nueva y respetado tras una edición a mano; septiembre con la fecha de la solicitud y su aviso. Regresión del paso A sin cambios. En vivo, tras el despliegue de Jorge: `curl` a `soporteMes` sin token y con token falso da `no_autorizado` (la versión vieja habría respondido el estado del servicio), y `pendientes`/`consulta` responden igual que antes. Jorge corrió "Traer resumen de Soporte" y reportó que salió bien; no se revisó aquí la fila resultante. |
+| **Pendiente** | Paso C (Correo, N.P. 12, resumen regenerable); revisar antes la fecha de cierre de Incidencias. |
+| **Documentación actualizada** | Este checkpoint, `docs/ARCHITECTURE.md §26`, `docs/PLAN-OPERACION-INTERNA.md`, `docs/ROADMAP.md` ítem 27, `CLAUDE.md`. |
+| **Commits** | Uno solo con código y documentación (propuesto abajo). |
+
+---
+
 ## CHECKPOINT — 2026-10-06 (cont.) · Bitácora OTDE: los cursos de Formación Docente llegan solos (paso A), en producción
 
 | | |
