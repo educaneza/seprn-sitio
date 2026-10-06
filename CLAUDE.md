@@ -684,7 +684,13 @@ ya esté expandido).
      800 MB), archivos individuales hasta 80 MB (umbral de aviso 80 MB, límite duro de GitHub
      100 MB). Git LFS no es viable aquí — GitHub Pages no resuelve sus punteros, serviría el
      archivo de puntero en vez del PDF/ZIP real (confirmado ese mismo día, ver ROADMAP).
-5. Después de push: esperar 5-10 min o Cmd+Shift+R para invalidar caché de GitHub Pages
+5. Después de push: esperar 5-10 min o Cmd+Shift+R para invalidar caché de GitHub Pages. Antes
+   de dar algo por publicado, revisar con `gh run list -R educaneza/seprn-sitio -L 3` que el run
+   de **cada** commit terminó en `success`. Un run en "failure" o en `queued` más de 10 min
+   significa cancelarlo (`gh run cancel`) y volver a desplegar. Después confirmar con `curl` un
+   cambio de cada commit, no solo del primero (`docs/QA-NOTES.md #53`). `gh` en esta Mac tiene
+   dos cuentas (`educaneza` y `auliamx`): confirmar con `gh auth status` que la activa es
+   `educaneza`, o usar `gh auth switch -u educaneza`.
 6. Los PDFs de sesiones CTE se nombran con mayúsculas y acentos; URL-encodear la ó como `%C3%B3` en los hrefs
 7. **Sin emojis** en HTML — usar SVG inline para íconos de contacto (persona, correo, teléfono). Ver `contacto-icon` en cualquier página de área como referencia
 8. El portal SEP CTE usa la URL `https://gestion.cte.sep.gob.mx/insumos/` (sin `#!/` — ese sufijo era routing antiguo de AngularJS)
