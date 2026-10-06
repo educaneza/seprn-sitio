@@ -833,7 +833,7 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     (c) Al arrancar el ciclo 2027-2028: Sheet nueva (`Estrategias_Nacionales_27-28`) y
     `MESES_EN_CICLO` actualizado; con eso todas las escuelas vuelven a quedar libres.
 30. **Instalador de Office v4 — publicarlo en el sitio cuando se libere.** El instalador vive
-    fuera de este repo (`~/Proyectos/Instalador-Office-2019-OTDE/`, sin git, docs en su
+    fuera de este repo (`~/Proyectos/trabajo/Instalador-Office-2019-OTDE/`, sin git, docs en su
     `docs/ROADMAP.md`). Hoy `otde.html` (pestaña Licencias Office) ofrece
     `descargas/Instalador_Office_2019_OTDE.exe` (v3.0, 4.3 MB). La v4 (un solo EXE de ~15 MB
     para 2016 y 2019, Office 2016 descargado de Drive, Windows 7 sin soporte) está en código
