@@ -1416,3 +1416,24 @@ mostrada por `iniciar()` antes de la llamada.
 **Regla:** toda página que arranque con una llamada al servidor debe mostrar algo desde el primer
 momento. Ninguna pantalla debe quedar en blanco mientras espera.
 
+
+## 53. Push exitoso pero el sitio no se actualizó: despliegues de Pages atorados en cola
+
+**Síntoma (5-6 oct 2026):** se hizo push de 3 commits (`f09704e`, `c2147d6`, `0dd1e11`) y se dio
+todo por publicado. Al día siguiente, la barra de progreso de Correo, Soporte, Mantenimiento,
+Asesorías, Oficina Virtual y Bitácora (`c2147d6`) no estaba en producción. Ceremonias Cívicas
+(`f09704e`) sí.
+
+**Causa raíz:** el despliegue de `f09704e` publicó el sitio, pero GitHub lo marcó "failure"
+(`report-build-status` cancelado) y los tres runs se quedaron en `queued`, sin jobs, por ~19 h.
+Los runs de los commits siguientes nunca arrancaron. No era una caída general: githubstatus
+reportaba Actions y Pages normales. Solo se revisó en vivo Ceremonias, así que el hueco no se vio.
+
+**Fix:** `gh run cancel` de los 3 runs atorados y un push nuevo (`f9dec3a`). El run nuevo terminó
+en success en ~2 min y se confirmó con `curl` un archivo de cada commit.
+
+**Regla:** después de un push, revisar con `gh run list -R educaneza/seprn-sitio -L 3` que el run
+de **cada** commit termine en `success`. Un run en "failure" o en `queued` por más de 10 min
+significa que hay que cancelarlo y volver a desplegar. Confirmar en vivo con `curl` un cambio de
+cada commit publicado, no solo del primero. Ojo: `gh` en esta Mac tiene dos cuentas, así que hay
+que confirmar con `gh auth status` que la activa sea `educaneza`.

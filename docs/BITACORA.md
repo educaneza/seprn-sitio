@@ -14,6 +14,21 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-10-06 · Despliegue atorado del 5 oct: OTDE y Oficina Virtual no habían llegado a producción
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-06 |
+| **Sesión** | Jorge pidió revisar el problema del push del 5 oct. |
+| **Diagnóstico** | El push sí llegó (`main` = `origin/main` = `0dd1e11`), pero los runs de Pages #222-#224 (`f09704e`, `c2147d6`, `0dd1e11`) seguían en `queued`, sin jobs, después de ~19 h. El sitio servía `f09704e` (Ceremonias Cívicas) desde las 19:34 UTC. `c2147d6` (progreso visible en OTDE, Oficina Virtual y Bitácora) **nunca se publicó**. githubstatus reportaba todo normal. |
+| **Cuenta de `gh`** | `gh` solo tenía la cuenta `auliamx`. Jorge entró como `educaneza` con `gh auth login` y quedó como cuenta activa; `auliamx` sigue registrada pero inactiva. El remoto sigue por SSH (`github-educaneza`), sin credential helper de `gh`. |
+| **Fix** | `gh run cancel` de los 3 runs y push de `f9dec3a` (ruta del instalador en `docs/ROADMAP.md`) para disparar un despliegue nuevo. Run `37485014220`: build, deploy y report-build-status en success. |
+| **Verificación** | `curl` en vivo: `oficina-virtual.html` carga `tramites-shared.js`; `esperaConProgreso` aparece en las 4 páginas de trámite; `bitacora.html` tiene `screen-cargando`; Ceremonias sigue con `guardarComprobanteVisita`. `last-modified` 15:11 UTC. |
+| **Documentación actualizada** | Este checkpoint, corrección en el del 5 oct y `docs/QA-NOTES.md #53`. |
+| **Commits** | `f9dec3a` (disparador) y el de esta documentación. |
+
+---
+
 ## CHECKPOINT — 2026-10-05 · Ceremonias Cívicas: comprobante de folio y confirmación rediseñada; progreso visible en Ceremonias, OTDE y Oficina Virtual
 
 | | |
@@ -24,7 +39,7 @@ para qué otro documento tocar además de este.
 | **Causa de la "página trabada"** | En `ficha-ceremonias-civicas.html` los avisos de progreso sí se escribían, pero en `#ficha-msg`, un `.soporte-submit-msg` que tiene `display:none` sin clase `ok`/`error`. Solo se veía el botón atenuado (`docs/QA-NOTES.md #51`). |
 | **Componente de progreso** | `js/tramites-shared.js` + `styles.css`: `botonOcupado()`/`botonLibre()` (spinner en el botón), `mostrarProgreso()`/`detalleProgreso()`/`ocultarProgreso()` (caja `.estado-progreso` con barra y texto vivo) y el atajo `esperaConProgreso()` (contador de segundos, avisos a los 10/25 s, `.etapa()`, `.fin()` idempotente). Ver `docs/ARCHITECTURE.md §29`. |
 | **Dónde se aplicó** | Ceremonias: reserva, buscar folio, reagendar, cancelar, panel y cargas de listas. Ficha: buscar folio y envío por etapas ("Preparando fotos x de n", "Subiendo…" con contador). OTDE: los 5 formularios de `correo.html`, `soporte.html`, `mantenimiento.html` y `asesorias.html` (etapa "Preparando tu oficio"). `oficina-virtual.html`: consulta de folio; ahora carga `js/tramites-shared.js` y se quitó su copia de `fetchJsonConTimeout`. `bitacora.html`: pantalla `#screen-cargando` al abrir con clave guardada (antes se veía en blanco, `docs/QA-NOTES.md #52`) y contador en "Verificando…"/"Guardando…" (`contadorEnBoton()`). Formación Docente y `reporte-visita.html` ya tenían spinner y avisos de demora; no se tocaron. |
-| **Verificación** | En Chrome local con la red simulada (sin tocar ningún backend): tarjeta en escritorio y a ~400 px, comprobante PNG con un nombre de escuela largo, ficha con 3 fotos (etapa 1 con barra, etapa 2 con contador y aviso de 10 s), reserva con error de red, Mantenimiento con oficio (pasa de "Preparando tu oficio" a "Enviando" con contador a los 12 s), Correo/Cambio con fallo y con éxito (el folio se queda), Oficina Virtual y la pantalla de carga de la Bitácora. Sin errores en consola. Publicado: `f09704e` en vivo a las 19:34 UTC; GitHub marcó el run como "failure", pero build y deploy salieron bien y solo `report-build-status` se canceló. **Falta la prueba en vivo** con una reserva real de Ceremonias. |
+| **Verificación** | En Chrome local con la red simulada (sin tocar ningún backend): tarjeta en escritorio y a ~400 px, comprobante PNG con un nombre de escuela largo, ficha con 3 fotos (etapa 1 con barra, etapa 2 con contador y aviso de 10 s), reserva con error de red, Mantenimiento con oficio (pasa de "Preparando tu oficio" a "Enviando" con contador a los 12 s), Correo/Cambio con fallo y con éxito (el folio se queda), Oficina Virtual y la pantalla de carga de la Bitácora. Sin errores en consola. Publicado: `f09704e` en vivo a las 19:34 UTC; GitHub marcó el run como "failure", pero build y deploy salieron bien y solo `report-build-status` se canceló. **Corrección (6 oct 2026):** `c2147d6` y `0dd1e11` no llegaron a producción ese día, porque sus runs de Pages se quedaron en `queued`. Se publicaron el 6 oct, ver el checkpoint de ese día y `docs/QA-NOTES.md #53`. **Falta la prueba en vivo** con una reserva real de Ceremonias. |
 | **Pendiente** | `docs/ROADMAP.md` ítem 31: `estrategias-nacionales.html` y `asistencia.html` (fuera de OTDE). |
 | **Documentación actualizada** | Este checkpoint, `docs/ARCHITECTURE.md §29` (nueva) y §22, `docs/QA-NOTES.md #50`-`#52`, `docs/ROADMAP.md` ítem 31 y `CLAUDE.md` (Oficina Virtual, `js/tramites-shared.js` y Ceremonias Cívicas). |
 | **Commits** | `f09704e` (Ceremonias Cívicas), `c2147d6` (OTDE y Oficina Virtual) y el commit de cierre (docs). |
