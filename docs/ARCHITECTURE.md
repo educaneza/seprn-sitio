@@ -2624,9 +2624,22 @@ mano"; para regenerarla se borra la fila). Mes y Meta quedan fuera de la huella
 (`BIT_FUERA_DE_HUELLA`) porque Sheets puede convertirlos en fecha o número. Las demás fuentes
 (Mantenimiento, Asesorías, Formación Docente) siguen sin reescribirse nunca.
 
-**Sigue a mano:** la asesoría de IA (N.P. 9; el formulario de Asesorías no tiene ese tipo) y Correo
-(paso C de `docs/PLAN-OPERACION-INTERNA.md`, con acción propia: el N.P. 12; puede usar
-`regenerable`). Ver `docs/ROADMAP.md` ítem 27.
+**Correo institucional (6 oct 2026), una fila de resumen por mes, planeada.** `correo/WebApp.gs`
+expone `?action=correoMes` (`listarAtendidasMesCorreo_`, mismo `PANEL_TOKEN` de `?action=pendientes`):
+recorre las 5 hojas (Alta, Cambio de Contraseña, Reset 2FA, Cambio y Eliminar Autenticación,
+Incidencias) por encabezado y devuelve las filas cuya "Fecha de entrega" cae en el mes, con su
+tipo y sector. Esa fecha la anota la misma edición que pone el estado final de cada tipo, así que
+no hizo falta columna nueva y el histórico ya está completo. Las hojas se arman dentro de la
+función, no a nivel de módulo (orden de evaluación entre archivos, ver `manejarConsultaCorreo`).
+`bitImportarCorreo_` (menús "Traer resumen de Correo institucional" / "Configurar conexión con
+Correo institucional", `CORREO_URL`) crea una actividad `CORREO:<mes>`, **regenerable**, en el
+N.P. 12 (`BIT_NP_CORREO`; meta y propósito de `Planeacion`), con `BIT_TIPO_CORREO`, descripción
+`bitCorreoDescripcion_` (total, sectores y desglose por tipo con `BIT_CORREO_TIPOS_TEXTO`) y
+beneficiarios "N figuras educativas atendidas" (solo Alta guarda la función, no hay desglose).
+"Generar reporte del mes" trae las 5 fuentes.
+
+**Sigue a mano:** la asesoría de IA (N.P. 9; el formulario de Asesorías no tiene ese tipo) y lo que
+no pasa por un sistema (reuniones, visitas de programas, difusión). Ver `docs/ROADMAP.md` ítem 27.
 
 **Editar la planeación.** `Planeacion` se puede editar en el Sheet y agregar acciones: se lee en cada
 consulta y el formulario no la guarda en el navegador. `bitLeerPlaneacion_` lee por posición las

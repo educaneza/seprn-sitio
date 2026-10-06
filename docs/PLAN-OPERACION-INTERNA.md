@@ -142,7 +142,7 @@ Fase 1 construida (24 sep): `apps-script/bitacora.gs` y `bitacora.html`, probado
 **Próxima sesión, en este orden:**
 1. ~~**Alimentación automática** desde Mantenimiento~~ y ~~Asesorías resueltas → N.P. 8~~ (hecho el 24 sep; Asesorías usa las columnas *Fecha de realización* y *Asistentes* que Nancy llena al cerrar, y falta el primer caso real). La asesoría de IA (N.P. 9), Soporte y Correo siguen a mano. Texto original del paso:
    **Alimentación automática** (la segunda iteración de la Fase 1 descrita arriba). Empezar por Mantenimiento: al guardar un reporte de visita, `mantenimiento.gs` crea su actividad en `Actividades` (META 23, N.P. 7), con fecha, escuela/CCT y la descripción de la atención. Decidir el mecanismo: que `mantenimiento.gs` llame por `UrlFetchApp` al `doPost` de la bitácora (con la clave), o que la bitácora lea los reportes, como el Panel OTDE. Después, Asesorías resueltas → N.P. 8. Soporte y Correo no tienen acción en la planeación: preguntar a Jorge si se reportan.
-2. **Alimentación desde Formación Docente, Soporte y Correo** (plan aprobado el 24 sep, ver la sección de abajo). Va **antes** de la Fase 2, por decisión de Jorge. ~~Paso A (Formación Docente)~~ y ~~paso B (Soporte)~~ en producción el 6 oct 2026; sigue el paso C (Correo).
+2. **Alimentación desde Formación Docente, Soporte y Correo** (plan aprobado el 24 sep, ver la sección de abajo). Va **antes** de la Fase 2, por decisión de Jorge. ~~Pasos A (Formación Docente), B (Soporte) y C (Correo)~~ en producción el 6 oct 2026: plan completo. Sigue la Fase 2.
 3. **Fase 2 (oficios):** antes, que Jorge verifique Power Automate en su cuenta M365 (make.powerautomate.com) y comparta 1-2 oficios reales. Desde el 1 oct 2026 es un gestor de oficios con una sola puerta (pasos 2A-2E, ver Fase 2); Jorge decide si va antes que el paso A (Formación Docente).
 
 ## Alimentación desde Formación Docente, Soporte y Correo (plan aprobado el 24 sep 2026)
@@ -185,7 +185,7 @@ Fase 1 construida (24 sep): `apps-script/bitacora.gs` y `bitacora.html`, probado
   - Beneficiarios: por función (docentes, directores, administrativos).
 - Las resueltas antes de este cambio no tienen fecha de atención. Se usa la fecha de la solicitud y se avisa.
 
-**C. Correo → META 23, N.P. 12 (acción propia desde el 29 sep), resumen mensual**
+**C. Correo → META 23, N.P. 12 (acción propia desde el 29 sep), resumen mensual** (hecho el 6 oct 2026, en producción y probado por Jorge). Entra como **planeada** (N.P. 12) y regenerable como Soporte. Incidencias sí tiene "Fecha de entrega" (se anota al resolverla), así que las 5 hojas se cuentan igual y no hizo falta columna nueva. Detalle en `docs/ARCHITECTURE.md §26`. Plan original:
 - `correo/WebApp.gs`: endpoint `?action=correoMes` que junta las 5 hojas por `Fecha de entrega`. Antes, revisar la fecha de cierre de Incidencias.
 - `bitacora.gs`: una fila por mes (`CORREO:<AAAA-MM>`).
   - Descripción: "Gestión de cuentas de correo institucional ante SIGEE: N altas, N cambios de contraseña, N eliminaciones de método de autenticación, N combinados, N incidencias resueltas".

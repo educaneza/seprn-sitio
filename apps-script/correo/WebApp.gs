@@ -32,6 +32,9 @@ function doGet(e) {
   if (accion === 'pendientes') {
     return listarPendientesCorreo(e.parameter.token);
   }
+  if (accion === 'correoMes') {
+    return textResponse(JSON.stringify(listarAtendidasMesCorreo_(e.parameter.token, e.parameter.mes)));
+  }
   return textResponse(JSON.stringify({ status: 'ok', servicio: 'OTDE Webform Correos 2026-2027' }));
 }
 
@@ -93,6 +96,51 @@ function listarPendientesCorreo(tokenRecibido) {
   });
 
   return textResponse(JSON.stringify({ status: 'ok', tramite: 'Correo Institucional', items: items }));
+}
+
+// ── Solicitudes atendidas en un mes, para la Bitácora OTDE (?action=correoMes) ──
+// La bitácora (seprn-sitio/apps-script/bitacora.gs) arma con ellas una fila de
+// resumen mensual en el N.P. 12. "Atendida" = "Fecha de entrega" con fecha
+// dentro del mes: la anota la misma edición que pone el estado final de cada
+// tipo (Cuenta entregada, Reset notificado, Incidencia resuelta). Solo
+// lectura, mismo PANEL_TOKEN que ?action=pendientes. Las hojas se arman
+// dentro de la función (no a nivel de módulo): Apps Script no garantiza el
+// orden de los const entre archivos (ver manejarConsultaCorreo).
+function listarAtendidasMesCorreo_(tokenRecibido, mes) {
+  const tokenEsperado = PropertiesService.getScriptProperties().getProperty('PANEL_TOKEN');
+  if (!tokenEsperado || tokenRecibido !== tokenEsperado) return { status: 'no_autorizado' };
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(String(mes || ''))) {
+    return { status: 'error', mensaje: 'Mes no válido (AAAA-MM).' };
+  }
+  const tipos = [
+    [HOJA_ALTA, 'alta'], [HOJA_CAMBIO, 'cambio'], [HOJA_RESET, 'reset'],
+    [HOJA_CAMBIO_RESET, 'cambioReset'], [HOJA_INCIDENCIAS, 'incidencia']
+  ];
+  const tz = 'America/Mexico_City';
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const items = [];
+  tipos.forEach(function (t) {
+    const hoja = ss.getSheetByName(t[0]);
+    if (!hoja) return;
+    const datos = hoja.getDataRange().getValues();
+    const headers = datos[0].map(function (h) { return (h || '').toString().trim(); });
+    const idxFolio = indexOfHeader(headers, 'Folio');
+    const idxEntrega = indexOfHeader(headers, 'Fecha de entrega');
+    const idxSector = indexOfHeader(headers, 'Sector');
+    if (idxFolio === -1 || idxEntrega === -1) return;
+    datos.slice(1).forEach(function (fila) {
+      const entrega = fila[idxEntrega];
+      if (!fila[idxFolio] || !(entrega instanceof Date)) return;
+      if (Utilities.formatDate(entrega, tz, 'yyyy-MM') !== mes) return;
+      items.push({
+        folio: String(fila[idxFolio]).trim().toUpperCase(),
+        tipo: t[1],
+        fecha: Utilities.formatDate(entrega, tz, 'yyyy-MM-dd'),
+        sector: idxSector === -1 ? '' : String(fila[idxSector] || '').trim()
+      });
+    });
+  });
+  return { status: 'ok', items: items };
 }
 
 // ── Consulta de estatus por folio + correo (Oficina Virtual OTDE) ──

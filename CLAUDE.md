@@ -609,8 +609,14 @@ ya esté expandido).
 - **Soporte (6 oct 2026, en producción, probado por Jorge)**: menús "Traer resumen de Soporte" y
   "Configurar conexión con Soporte" (`SOP_URL`). Una fila de resumen por mes (`SOP:<mes>`) en
   META 21, no planeada. Es **regenerable**: si se trae otra vez, se actualiza con los totales
-  nuevos salvo que se haya corregido a mano (huella en Script Properties). "Generar reporte del
-  mes" trae las 4 fuentes. Ver `docs/ARCHITECTURE.md §26`.
+  nuevos salvo que se haya corregido a mano (huella en Script Properties). Ver
+  `docs/ARCHITECTURE.md §26`.
+- **Correo institucional (6 oct 2026, en producción, probado por Jorge)**: menús "Traer resumen de
+  Correo institucional" y "Configurar conexión con Correo institucional" (`CORREO_URL`, la URL
+  de `apps-script/correo/`). `?action=correoMes` en `correo/WebApp.gs` cuenta las solicitudes de
+  las 5 hojas con "Fecha de entrega" en el mes; una fila de resumen regenerable (`CORREO:<mes>`)
+  en el N.P. 12 / META 23. "Generar reporte del mes" trae las 5 fuentes. Ver
+  `docs/ARCHITECTURE.md §26`.
 - **La planeación se edita en el Sheet** (hoja `Planeacion`) y se ve al instante en el formulario.
   Se pueden agregar filas con N.P. único y meta 21/23, y el "Nombre corto" va a mano. No insertar
   ni reordenar columnas antes de "Nombre corto" (lectura por posición) ni renumerar los N.P. 7/8.
@@ -1232,9 +1238,9 @@ Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/I
   de Jorge: cifras de Beneficiarios en BIT-0006 a 0009 y confirmar los folios `OTDE-MAN-0001`/`0002`
   (el arreglo del singular ya está desplegado, llegó con la versión de Asesorías). **Asesorías resueltas → N.P. 8 desplegado
   (cont. 2)**: falta importar el primer caso real, y que Nancy llene *Fecha de realización* y
-  *Asistentes* al cerrar. La asesoría de IA (N.P. 9) y Correo siguen a mano. **Pasos A (Formación
-  Docente) y B (Soporte) en producción (6 oct 2026)**: falta llenar `NP_planeacion` en los cursos
-  nuevos. **Siguiente:** Correo (paso C, N.P. 12) como resumen mensual regenerable; ver `docs/PLAN-OPERACION-INTERNA.md`. Luego la Fase 2, ampliada el 1 oct 2026 a gestor de
+  *Asistentes* al cerrar. La asesoría de IA (N.P. 9) sigue a mano. **Plan de alimentación terminado (6 oct
+  2026)**: Formación Docente, Soporte y Correo en producción; falta llenar `NP_planeacion` en los
+  cursos nuevos. **Siguiente:** la Fase 2, ampliada el 1 oct 2026 a gestor de
   oficios con una sola puerta (pasos 2A-2E; Jorge decide si se adelanta a Formación Docente; antes verificar Power Automate
   en M365 y conseguir el Excel de control y 1-2 oficios reales). Ver `docs/ROADMAP.md` ítem 27. Ver `docs/PLAN-OPERACION-INTERNA.md` y `docs/ROADMAP.md` ítem 27.
 - **Formación Docente — Workspace, decidir antes del 6 oct 2026**: desde el 28 sep la cuota ya

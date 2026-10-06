@@ -189,6 +189,20 @@ const BIT_SOP_TIPOS_TEXTO = {
   'Internet/Red': 'internet y red', 'Equipo de cómputo (hardware)': 'equipo de cómputo (hardware)',
   'Otro': 'otros temas'
 };
+// Correo institucional (oct 2026): una fila de RESUMEN por mes en el N.P. 12
+// (acción propia en la planeación desde el 29 sep), regenerable como la de
+// Soporte. Meta y propósito salen de Planeacion.
+const BIT_NP_CORREO = '12';
+const BIT_CAPTURO_CORREO = 'Correo (auto)';
+const BIT_TIPO_CORREO = 'Gestión de cuentas de correo institucional de las figuras educativas ante la plataforma SIGEE.';
+// [singular, plural] por tipo, en el orden en que se listan en la descripción.
+const BIT_CORREO_TIPOS_TEXTO = {
+  alta: ['alta de cuenta', 'altas de cuenta'],
+  cambio: ['cambio de contraseña', 'cambios de contraseña'],
+  reset: ['eliminación del método de autenticación', 'eliminaciones del método de autenticación'],
+  cambioReset: ['cambio de contraseña con eliminación del método de autenticación', 'cambios de contraseña con eliminación del método de autenticación'],
+  incidencia: ['incidencia de acceso resuelta', 'incidencias de acceso resueltas']
+};
 const BIT_SECTORES_ORDEN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'SEPRN'];
 
 const BIT_MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
@@ -223,6 +237,7 @@ function onOpen() {
     .addItem('Traer asesorías resueltas', 'bitTraerAsesorias')
     .addItem('Traer cursos de Formación Docente', 'bitTraerFormacion')
     .addItem('Traer resumen de Soporte', 'bitTraerSoporte')
+    .addItem('Traer resumen de Correo institucional', 'bitTraerCorreo')
     .addSeparator()
     .addItem('Preparar hojas y cargar planeación 2026-2027', 'bitPrepararHojas')
     .addItem('Configurar clave de captura', 'bitConfigurarClave')
@@ -230,6 +245,7 @@ function onOpen() {
     .addItem('Configurar conexión con Asesorías', 'bitConfigurarConexionAsesorias')
     .addItem('Configurar conexión con Formación Docente', 'bitConfigurarConexionFormacion')
     .addItem('Configurar conexión con Soporte', 'bitConfigurarConexionSoporte')
+    .addItem('Configurar conexión con Correo institucional', 'bitConfigurarConexionCorreo')
     .addToUi();
 }
 
@@ -710,7 +726,8 @@ function bitGenerarReporteMensual() {
     ['Mantenimiento', bitImportarMantenimiento_],
     ['Asesorías', bitImportarAsesorias_],
     ['Formación Docente', bitImportarFormacion_],
-    ['Soporte', bitImportarSoporte_]
+    ['Soporte', bitImportarSoporte_],
+    ['Correo institucional', bitImportarCorreo_]
   ].map(function (f) {
     try {
       return f[0] + ': ' + bitResumenImportacion_(f[1](mes));
@@ -841,6 +858,7 @@ function bitCombinarFila_(hoja, fila) {
 // token es el mismo para los dos (el del Panel OTDE); solo se pide si falta.
 function bitConfigurarConexionMantenimiento() { bitConfigurarConexion_('Mantenimiento', 'MAN_URL', 'MANTENIMIENTO_APPS_SCRIPT_URL'); }
 function bitConfigurarConexionAsesorias() { bitConfigurarConexion_('Asesorías', 'ASE_URL', 'ASESORIAS_APPS_SCRIPT_URL'); }
+function bitConfigurarConexionCorreo() { bitConfigurarConexion_('Correo institucional', 'CORREO_URL', 'CAMBIO_APPS_SCRIPT_URL de correo.html'); }
 function bitConfigurarConexionSoporte() { bitConfigurarConexion_('Soporte', 'SOP_URL', 'SOPORTE_APPS_SCRIPT_URL de soporte.html'); }
 function bitConfigurarConexionFormacion() { bitConfigurarConexion_('Formación Docente', 'FD_URL', 'APPS_SCRIPT_URL de formacion-docente.html'); }
 
@@ -873,6 +891,7 @@ function bitConfigurarConexion_(nombre, propUrl, constanteSitio) {
 
 function bitTraerMantenimiento() { bitTraerDesdeMenu_('Traer visitas de Mantenimiento', bitImportarMantenimiento_); }
 function bitTraerAsesorias() { bitTraerDesdeMenu_('Traer asesorías resueltas', bitImportarAsesorias_); }
+function bitTraerCorreo() { bitTraerDesdeMenu_('Traer resumen de Correo institucional', bitImportarCorreo_); }
 function bitTraerSoporte() { bitTraerDesdeMenu_('Traer resumen de Soporte', bitImportarSoporte_); }
 function bitTraerFormacion() { bitTraerDesdeMenu_('Traer cursos de Formación Docente', bitImportarFormacion_); }
 
@@ -1183,6 +1202,63 @@ function bitImportarSoporte_(mes) {
     ? [sinAtencion.length + ' sin "Fecha de atención" (se contó la fecha de la solicitud): ' + sinAtencion.join(', ')]
     : [];
   return res;
+}
+
+// Resumen mensual de Correo institucional: una sola fila (CORREO:<mes>) en el
+// N.P. 12 con las solicitudes atendidas (Fecha de entrega en el mes) de los 5
+// tipos, sectores y desglose por tipo.
+function bitImportarCorreo_(mes) {
+  const items = bitConsultarBackend_('CORREO_URL', 'Correo institucional', 'correoMes', mes);
+  if (!items.length) return { nuevas: 0, existentes: 0, avisos: [] };
+  const accion = bitAccionPlaneacion_(BIT_NP_CORREO);
+  const fechas = items.map(function (x) { return x.fecha; }).sort();
+  const inicio = bitParsearFecha_(fechas[0]);
+  const fin = bitParsearFecha_(fechas[fechas.length - 1]);
+  const mismoDia = fin.getTime() === inicio.getTime();
+  const porTipo = {}, porSector = {};
+  items.forEach(function (x) {
+    porTipo[x.tipo] = (porTipo[x.tipo] || 0) + 1;
+    const s = x.sector || 'Sin sector';
+    porSector[s] = (porSector[s] || 0) + 1;
+  });
+  const res = bitAgregarActividades_([{
+    idEnvio: 'CORREO:' + mes,
+    regenerable: true,
+    valores: {
+      'Mes': mes,
+      'Meta': accion.meta,
+      'N.P.': accion.np,
+      'Origen': '',
+      'Tipo y nombre': BIT_TIPO_CORREO,
+      'Fecha inicio': inicio,
+      'Fecha fin': mismoDia ? '' : fin,
+      'Fecha (texto)': bitFechaTexto_(inicio, mismoDia ? null : fin),
+      'Responsable': 'OTDE',
+      'Modalidad': 'Virtual',
+      'Lugar': 'Virtual, a través de la Oficina Virtual OTDE y la plataforma SIGEE.',
+      'CCT': '',
+      'Descripción': bitCorreoDescripcion_(items.length, porTipo, porSector),
+      'Propósito': accion.proposito,
+      'Beneficiarios': items.length + ' figura' + (items.length === 1 ? '' : 's') + ' educativa' +
+        (items.length === 1 ? '' : 's') + ' atendida' + (items.length === 1 ? '' : 's'),
+      'Capturó': BIT_CAPTURO_CORREO
+    }
+  }]);
+  res.avisos = [];
+  return res;
+}
+
+// "Gestionar ante la plataforma SIGEE 6 solicitudes de correo institucional
+// recibidas en la Oficina Virtual OTDE, de los sectores I y IV: 3 altas de
+// cuenta, 2 cambios de contraseña y 1 incidencia de acceso resuelta."
+function bitCorreoDescripcion_(total, porTipo, porSector) {
+  const partes = Object.keys(BIT_CORREO_TIPOS_TEXTO).filter(function (t) { return porTipo[t]; })
+    .map(function (t) { return porTipo[t] + ' ' + BIT_CORREO_TIPOS_TEXTO[t][porTipo[t] === 1 ? 0 : 1]; });
+  const lista = partes.length > 1 ? partes.slice(0, -1).join(', ') + ' y ' + partes[partes.length - 1] : partes[0];
+  const sectores = bitSectoresTexto_(porSector);
+  return 'Gestionar ante la plataforma SIGEE ' + total + ' solicitud' + (total === 1 ? '' : 'es') +
+    ' de correo institucional recibida' + (total === 1 ? '' : 's') + ' en la Oficina Virtual OTDE' +
+    (sectores ? ',' + sectores : '') + ': ' + lista + '.';
 }
 
 // "Brindar soporte técnico remoto, mediante TeamViewer, a 6 solicitudes de

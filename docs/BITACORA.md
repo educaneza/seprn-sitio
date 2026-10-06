@@ -14,6 +14,21 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-10-06 (cont. 3) · Bitácora OTDE: resumen mensual de Correo institucional (paso C); plan de alimentación completo
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-06 |
+| **Sesión** | Último paso del plan de alimentación del 24 sep: que las solicitudes de Correo institucional lleguen a la bitácora como resumen mensual. |
+| **Hallazgo** | El plan pedía revisar si Incidencias tenía fecha de cierre. Sí: las 5 hojas (Alta, Cambio de Contraseña, Reset 2FA, Cambio y Eliminar Autenticación, Incidencias) tienen "Fecha de entrega", y la anota la misma edición que pone el estado final de cada tipo. No hizo falta columna nueva, y el histórico se cuenta completo (a diferencia de Soporte). |
+| **Construido** | `correo/WebApp.gs`: `?action=correoMes` (`listarAtendidasMesCorreo_`, `PANEL_TOKEN`), lectura por encabezado de las 5 hojas, armadas dentro de la función. `bitacora.gs`: menús "Traer resumen de Correo institucional" y "Configurar conexión con Correo institucional" (`CORREO_URL`), `bitImportarCorreo_` (fila `CORREO:<mes>`, regenerable, **planeada** en el N.P. 12 / META 23 con el propósito de la planeación) y `bitCorreoDescripcion_` (total, sectores y desglose por tipo con singular/plural). "Generar reporte del mes" trae 5 fuentes. +125/-1 en los 2 archivos; en Apps Script solo cambió `WebApp.gs`. |
+| **Verificación** | Simulación en Node con los 7 archivos del proyecto de Correo juntos y la bitácora consultándolo: token y mes inválido rechazados; solo cuentan filas con fecha de entrega en el mes (pendientes y septiembre fuera); N.P. 12 / META 23 con su propósito; sin cambios al repetir; actualizado al llegar otra en el mes. Regresión de los pasos A y B sin cambios. En vivo, tras el despliegue de Jorge: `curl` a `correoMes` sin token y con token falso da `no_autorizado` (la versión vieja habría respondido el estado del servicio); `pendientes` y la consulta de un folio `OTDE-CYR` inventado responden igual que antes. Jorge corrió el menú y reportó que salió bien; no se revisó aquí la fila resultante. |
+| **Estado del plan** | Completo: Mantenimiento (N.P. 7), Asesorías (N.P. 8), Formación Docente (por curso), Soporte (META 21) y Correo (N.P. 12) llegan solos. Sigue a mano la asesoría de IA (N.P. 9) y lo que no pasa por un sistema. Lo siguiente es la Fase 2 (gestor de oficios). |
+| **Documentación actualizada** | Este checkpoint, `docs/ARCHITECTURE.md §26`, `docs/PLAN-OPERACION-INTERNA.md`, `docs/ROADMAP.md` ítem 27, `CLAUDE.md`. |
+| **Commits** | Uno solo con código y documentación (propuesto abajo). |
+
+---
+
 ## CHECKPOINT — 2026-10-06 (cont. 2) · Bitácora OTDE: resumen mensual de Soporte (paso B), en producción
 
 | | |
