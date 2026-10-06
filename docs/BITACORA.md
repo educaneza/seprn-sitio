@@ -14,6 +14,20 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-10-06 (cont. 4) · Fase 2 explicada; el consecutivo de oficios es compartido por todo OTDE (sin código)
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-06 |
+| **Sesión** | Terminado el plan de alimentación, Jorge pidió que se le explicara de forma simple el flujo de trabajo antes y después de la Fase 2 (gestor de oficios), con ejemplos de un oficio que baja y uno que sube. |
+| **Dato nuevo** | El consecutivo de número de oficio no es solo de los oficios de salida: Jorge, Nancy, Alejandro y Marcos lo usan para cualquier documento (justificantes, comisiones…). Si el gestor numerara por su cuenta, habría números repetidos. |
+| **Propuesta (sin decidir)** | Un "Tomar número" compartido para todo el equipo y cualquier tipo de documento, adelantado al paso 2A junto con el control de oficios. Detalle y 5 preguntas pendientes (dónde vive la lista, formato, reinicio, si otra oficina la usa, qué se anota) en `docs/PLAN-OPERACION-INTERNA.md`. |
+| **Estado** | Jorge pausó para pensar antes de decidir. No se escribió código. |
+| **Documentación actualizada** | Este checkpoint, `docs/PLAN-OPERACION-INTERNA.md` (Fase 2), `docs/ROADMAP.md` ítem 27, `CLAUDE.md` (pendientes). |
+| **Commits** | El de esta documentación. |
+
+---
+
 ## CHECKPOINT — 2026-10-06 (cont. 3) · Bitácora OTDE: resumen mensual de Correo institucional (paso C); plan de alimentación completo
 
 | | |

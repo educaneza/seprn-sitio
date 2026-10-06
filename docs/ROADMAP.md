@@ -796,7 +796,9 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     entrada (control con las 10 columnas del Excel actual, solicitudes de la Oficina Virtual que
     entran solas, redacción del oficio de salida con consecutivo, acción atendida → bitácora y
     archivo digital; pasos 2A-2E en `docs/PLAN-OPERACION-INTERNA.md`). Para el 2A faltan: el Excel de
-    control, 1-2 oficios reales, un oficio de salida con membrete y su consecutivo, y verificar si
+    control, 1-2 oficios reales, un oficio de salida con membrete y su consecutivo (ojo: el
+    consecutivo lo comparte todo OTDE para cualquier documento; propuesta de un "Tomar número"
+    compartido en el 2A, con 5 preguntas pendientes en `docs/PLAN-OPERACION-INTERNA.md`), y verificar si
     la licencia M365 de `@dee.edu.mx` incluye Power Automate para capturar oficios desde Outlook.
 
 28. **Formación Docente — calendario y cuota "a quien alcance": verificación en uso real**

@@ -1242,7 +1242,9 @@ Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/I
   2026)**: Formación Docente, Soporte y Correo en producción; falta llenar `NP_planeacion` en los
   cursos nuevos. **Siguiente:** la Fase 2, ampliada el 1 oct 2026 a gestor de
   oficios con una sola puerta (pasos 2A-2E; Jorge decide si se adelanta a Formación Docente; antes verificar Power Automate
-  en M365 y conseguir el Excel de control y 1-2 oficios reales). Ver `docs/ROADMAP.md` ítem 27. Ver `docs/PLAN-OPERACION-INTERNA.md` y `docs/ROADMAP.md` ítem 27.
+  en M365 y conseguir el Excel de control y 1-2 oficios reales). El consecutivo de oficios lo
+  comparte todo OTDE para cualquier documento: propuesta (sin decidir) de un "Tomar número"
+  compartido en el 2A, con 5 preguntas pendientes para Jorge en `docs/PLAN-OPERACION-INTERNA.md`. Ver `docs/ROADMAP.md` ítem 27. Ver `docs/PLAN-OPERACION-INTERNA.md` y `docs/ROADMAP.md` ítem 27.
 - **Formación Docente — Workspace, decidir antes del 6 oct 2026**: desde el 28 sep la cuota ya
   no depende de Workspace (calendario en la confirmación + correos "a quien alcance" con reserva
   50 + 20), y los scripts corren en la cuenta Gmail personal, así que la prueba no les sube la
