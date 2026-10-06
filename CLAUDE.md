@@ -153,6 +153,7 @@ ya esté expandido).
 | `charla-ia.html` | Página del evento IA jun 2026 (sin formulario) |
 | `formacion-docente.html` | Centro de Formación Docente — catálogo dinámico (webinars, seminarios, diplomados, cursos autogestivos, acciones formativas, proyectos didácticos) + registro. Diseño premium propio (ver `docs/DESIGN_SYSTEM.md`) |
 | `instructivo-formacion-docente.html` | Guía imprimible del Centro de Formación Docente, mismo sistema tipográfico que la página anterior |
+| `excel-facil.html` | Excel fácil (oct 2026) — herramienta 100% local para docentes/administrativos: duplicados, filtrar por zona/sector, validar RFC/CURP/CCT, combinar correspondencia con Word, fórmulas e IA/Copilot (los 6 temas de "Excel básico" de `asesorias.html`). Autónoma (sin `styles.css`), un solo archivo de ~1.2 MB con SheetJS/JSZip 2.6.1/docxtemplater **incrustados** para funcionar sin internet; ningún dato sale del navegador. Sin entrada en nav/footer, link directo. Ver `docs/ARCHITECTURE.md §30` |
 | `404.html` | Página de error personalizada |
 | `protocolos.html` | Protocolos de Actuación — hub con 3 protocolos oficiales del Estado de México/SEIEM (ver sección propia abajo) |
 | `ceremonias-civicas.html` | Ceremonias Cívicas — reserva de visitas de jefes/docentes SEPRN-wide (no un trámite de OTDE), histórico, cobertura y panel por clave (ver sección propia abajo) |

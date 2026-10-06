@@ -14,6 +14,21 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-10-06 · Excel fácil: herramienta 100% local de 6 módulos, publicada con link directo
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-06 |
+| **Sesión** | Jorge pegó un prompt para una app de un solo archivo HTML que ayude a docentes y administrativos con Excel sin fórmulas: duplicados, filtros, validar RFC/CURP/CCT, combinar correspondencia con Word, fórmulas e IA/Copilot. Son los 6 temas de "Excel básico" de `asesorias.html`. Decidió: página autónoma en el repo, solo link directo, y que **funcione sin internet**. |
+| **Conflictos resueltos** | "Librerías desde cdnjs" contra "sin internet": se incrustaron en el archivo (SheetJS 0.18.5, JSZip 2.6.1, docxtemplater 3.71.0). PizZip no está en cdnjs: se usa JSZip 2.6.1 (misma API). Inter necesita internet: pila `system-ui`. El Excel de México separa con coma: interruptor para `;`. Vista previa de Word solo en texto. Detalle en `docs/ARCHITECTURE.md §30`. |
+| **Qué hace** | `excel-facil.html`, 2,071 líneas, ~1.2 MB. Inicio con 6 tarjetas y "Descargar archivo de práctica" (datos inventados con errores y duplicados sembrados). Cargador compartido (hoja con más datos, fila de títulos autodetectada, todo como texto). Duplicados con 3 descargas y la fórmula `CONTAR.SI`/`CONTAR.SI.CONJUNTO` con las letras reales; filtros encadenados (hasta 3); validación con motivo por registro y valor sugerido; Word en `.zip` (un archivo por persona) o un solo `.docx`; 12 tareas de fórmulas con explicación por partes; 10 instrucciones de IA y regla de seguridad de datos. |
+| **Verificación** | Playwright sobre `file://` con la red externa bloqueada: 0 peticiones salientes y 0 errores de consola; `__autoprueba()` 28/28. Archivo de práctica: 8 registros duplicados en 4 grupos (los sembrados); CURP 6 errores + 1 vacía, RFC 3, CCT 4 (los 13 sembrados). Descargas releídas con openpyxl: zona `005` y CCT siguen como texto. Word: 59 `.docx` en el `.zip` y 58 saltos de página en el combinado, sin llaves sin llenar. 20,000 filas: lectura 0.26 s y validación 0.42 s, la página responde durante el proceso. Modo oscuro y móvil (390 px, sin scroll horizontal) revisados en captura. |
+| **Pendiente** | Probar a mano fórmulas en Excel 2019 y un `.docx` en Word real; decidir si se enlaza desde `asesorias.html` u `oficina-virtual.html` — `docs/ROADMAP.md` ítem 32. |
+| **Documentación actualizada** | Este checkpoint, `CLAUDE.md` (tabla de páginas), `README.md` (árbol), `docs/ARCHITECTURE.md §30`, `docs/ROADMAP.md` ítem 32. |
+| **Commits** | `832ec1c` (la página) y el de esta documentación. |
+
+---
+
 ## CHECKPOINT — 2026-10-06 · Despliegue atorado del 5 oct: OTDE y Oficina Virtual no habían llegado a producción
 
 | | |

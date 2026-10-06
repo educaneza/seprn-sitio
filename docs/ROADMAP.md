@@ -858,6 +858,12 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     blanco) y contador en "Verificando…"/"Guardando…". `formacion-docente.html` y
     `reporte-visita.html` ya tenían spinner y avisos de demora — no se tocaron. Falta:
     `estrategias-nacionales.html` y `asistencia.html` (fuera de OTDE).
+32. **Excel fácil — pendientes tras publicarlo (6 oct 2026).** `excel-facil.html` está en
+    producción, solo con link directo. Falta: (a) que Jorge pruebe a mano en Excel 2019 en
+    español una muestra de las fórmulas del módulo 5 (no se pudo automatizar); (b) abrir en Word
+    real un `.docx` generado (solo se revisó con `python-docx` y unzip); (c) decidir si se enlaza
+    desde `asesorias.html` (tipo "Excel básico") o desde una tarjeta de `oficina-virtual.html`
+    (hoy no, por decisión de Jorge). Ver `docs/ARCHITECTURE.md §30`.
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue

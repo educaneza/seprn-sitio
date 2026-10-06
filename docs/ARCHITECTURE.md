@@ -2772,3 +2772,42 @@ verificar la clave y guardar.
 botón y avisos de demora propios. `estrategias-nacionales.html` y `asistencia.html` siguen
 pendientes (`docs/ROADMAP.md` ítem 31).
 
+
+## 30. Excel fácil: herramienta de un solo archivo que funciona sin internet (oct 2026)
+
+**Origen:** material práctico de la asesoría "Excel básico" (`asesorias.html`): sus 6 temas son
+los 6 módulos. Requisitos de Jorge: página autónoma en el repo, solo link directo, ningún dato
+sale del navegador y **debe funcionar sin internet** (descargada y abierta con doble clic).
+
+**Decisiones:**
+- **Librerías incrustadas, no por CDN.** Al final de `excel-facil.html` van, sin modificar y con
+  comentario de origen, SheetJS `0.18.5` (`xlsx.full.min.js`), JSZip `2.6.1` y docxtemplater
+  `3.71.0`, copiadas de cdnjs. Por eso pesa ~1.2 MB. Para actualizar una, reemplazar su bloque
+  `<script>` completo. Se revisó que ninguna contenga `<script` ni `</script` (rompería el HTML).
+- **JSZip 2.6.1 en lugar de PizZip.** PizZip no está en cdnjs; es un fork de JSZip 2 con la misma
+  API síncrona, y docxtemplater 3.71 funciona con JSZip 2.6.1 (verificado generando `.docx`).
+  No usar JSZip 3: su API es asíncrona.
+- **Sin Google Fonts** (pila `system-ui`) y nada de `fetch` a archivos locales: el archivo de
+  práctica (`descargarPractica()`) y la plantilla Word de ejemplo (`descargarPlantillaEjemplo()`)
+  se generan en el navegador.
+- **Separador de fórmulas:** las fórmulas se escriben con `§` y `F()` lo cambia por `,` (Excel de
+  México) o `;` según el interruptor "Mi Excel usa punto y coma".
+- **Sin `localStorage`**: todo vive en memoria.
+
+**Piezas compartidas (dentro del mismo archivo):** `crearCargador()` (pasos 1-2: carga, hoja con
+más datos y fila de títulos autodetectada con vista previa; todo se lee como texto para conservar
+ceros y no crear fechas), `porLotes()` (procesa en lotes de 2,000 cediendo el hilo, con barra),
+`tablaPaginada()` (100 filas por página) y `descargarXlsx()` (todas las celdas como texto).
+
+**Validación (`validarClave()`):** valida el valor tal como está en la celda; si solo le sobran
+espacios o está en minúsculas cuenta como error, pero sugiere el valor corregido. Diagnóstico
+por posición (letra O por cero, etc.), entidad de la CURP y fecha real (siglo de la CURP por su
+posición 17; el RFC acepta 19xx o 20xx). `__autoprueba()` en la consola corre 28 casos.
+
+**Un solo `.docx` con todos:** `plantillaCombinada()` envuelve el cuerpo de la plantilla en
+`{#__registros}…{/__registros}` con salto de página dentro de `{^__ultimo}`. Los campos del
+encabezado/pie de página quedan en blanco en ese modo (la página lo avisa).
+
+**Verificado (6 oct 2026, Playwright con la red externa bloqueada):** cero peticiones de red,
+los 4 grupos de duplicados y los 13 errores sembrados en el archivo de práctica, 59 `.docx` en el
+`.zip` y 58 saltos en el combinado, y 20,000 filas procesadas en menos de 1 s.
