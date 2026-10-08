@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Guía rápida · Control de oficios OTDE</title>
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --guinda:   #56212f;
+      --acento:   #9F2241;
+      --midnight: #0C1A2E;
+      --arena:    #d6d1ca;
+      --caramelo: #977e5b;
+      --off:      #F9F8F5;
+      --text:     #1f2937;
+      --muted:    #6b7280;
+      --border:   #e5e7eb;
+      --ambar:    #f59e0b;
+      --verde:    #d1fae5;
+      --verde-b:  #10b981;
+      --rojo:     #fee2e2;
+      --rojo-b:   #dc2626;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f6f4f1;
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    /* ── Portada ── */
+    .cover { background: var(--midnight); color: var(--off); padding: 2.75rem 1.25rem 2.25rem; text-align: center; }
+    .cover .org { font-size: .75rem; letter-spacing: .15em; text-transform: uppercase; color: var(--caramelo); margin-bottom: .75rem; }
+    .cover .badge {
+      display: inline-block; background: var(--acento); color: #fff; font-size: .7rem; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase; padding: .25rem .8rem; border-radius: 999px; margin-bottom: 1rem;
+    }
+    .cover h1 { font-size: clamp(1.5rem, 5vw, 2.1rem); font-weight: 800; line-height: 1.2; margin-bottom: .6rem; }
+    .cover p { font-size: .95rem; opacity: .8; max-width: 34rem; margin: 0 auto 1.4rem; }
+    .cta {
+      display: inline-block; background: var(--acento); color: #fff; text-decoration: none; font-weight: 700;
+      padding: .8rem 1.4rem; border-radius: 10px; font-size: 1rem;
+    }
+    .cta:hover { background: #b52a4c; }
+
+    .wrapper { max-width: 880px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+
+    /* ── Índice ── */
+    .toc { background: #fff; border-radius: 14px; padding: 1.1rem 1.25rem; margin-bottom: 2.25rem; border: 1px solid var(--border); }
+    .toc h2 { font-size: .75rem; text-transform: uppercase; letter-spacing: .1em; color: var(--guinda); margin-bottom: .6rem; }
+    .toc ol { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: .35rem 1.25rem; padding-left: 1.2rem; }
+    .toc a { color: var(--guinda); text-decoration: none; font-size: .9rem; }
+    .toc a:hover { text-decoration: underline; }
+
+    /* ── Secciones ── */
+    .section { margin-bottom: 3rem; scroll-margin-top: 1rem; }
+    .section-header { display: flex; align-items: center; gap: .75rem; margin-bottom: 1.1rem; }
+    .section-num {
+      flex: none; background: var(--guinda); color: #fff; width: 38px; height: 38px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.05rem;
+    }
+    .section-header h2 { font-size: 1.3rem; color: var(--guinda); line-height: 1.2; }
+    .section-header .cuando { display: block; font-size: .8rem; font-weight: 500; color: var(--muted); }
+    .lead { font-size: 1rem; margin-bottom: 1.1rem; }
+
+    /* ── Reglas de oro ── */
+    .reglas { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8rem; }
+    .regla { background: #fff; border-radius: 14px; padding: 1.1rem; border-top: 5px solid var(--acento); box-shadow: 0 2px 10px rgba(0,0,0,.05); }
+    .regla svg { width: 34px; height: 34px; color: var(--acento); margin-bottom: .5rem; }
+    .regla strong { display: block; font-size: 1rem; color: var(--guinda); margin-bottom: .25rem; line-height: 1.25; }
+    .regla span { font-size: .85rem; color: var(--muted); }
+
+    /* ── Quién hace qué ── */
+    .roles { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8rem; }
+    .rol { background: #fff; border-radius: 14px; padding: 1rem 1.1rem; border: 1px solid var(--border); }
+    .rol .quien { font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--caramelo); margin-bottom: .35rem; }
+    .rol ul { list-style: none; }
+    .rol li { font-size: .9rem; padding: .2rem 0 .2rem 1.3rem; position: relative; }
+    .rol li::before { content: ''; position: absolute; left: 0; top: .62rem; width: 8px; height: 8px; border-radius: 50%; background: var(--acento); }
+
+    /* ── Paso con captura ── */
+    .paso { display: grid; grid-template-columns: 300px 1fr; gap: 1.5rem; align-items: start; background: #fff;
+      border-radius: 16px; padding: 1.25rem; box-shadow: 0 2px 12px rgba(0,0,0,.05); margin-bottom: 1rem; }
+    .paso + .paso { margin-top: 0; }
+    .tel {
+      background: var(--midnight); border-radius: 22px; padding: 8px; box-shadow: 0 8px 26px rgba(12,26,46,.25);
+    }
+    .tel img { display: block; width: 100%; height: auto; border-radius: 15px; }
+    .pasos { list-style: none; counter-reset: p; }
+    .pasos li { display: grid; grid-template-columns: 30px 1fr; gap: .65rem; margin-bottom: .8rem; font-size: .95rem; }
+    .pasos .n {
+      width: 30px; height: 30px; border-radius: 50%; background: var(--ambar); color: #1a1a2e; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; font-size: .95rem;
+    }
+    .pasos b { color: var(--guinda); }
+    .pasos small { display: block; color: var(--muted); font-size: .82rem; margin-top: .1rem; }
+    .titulo-paso { font-size: 1.05rem; color: var(--guinda); font-weight: 800; margin-bottom: .75rem; }
+
+    /* ── Avisos ── */
+    .tip, .ojo, .bien {
+      display: grid; grid-template-columns: 26px 1fr; gap: .6rem; align-items: start;
+      border-radius: 12px; padding: .85rem 1rem; font-size: .9rem; margin: 1rem 0;
+    }
+    .tip { background: #eef2ff; border: 1px solid #c7d2fe; }
+    .ojo { background: #fff7ed; border: 1px solid #fed7aa; }
+    .bien { background: var(--verde); border: 1px solid #6ee7b7; }
+    .tip svg, .ojo svg, .bien svg { width: 24px; height: 24px; }
+    .tip svg { color: #4f46e5; } .ojo svg { color: #ea580c; } .bien svg { color: #059669; }
+
+    /* ── Oficio de papel (dónde está cada número) ── */
+    .papel-wrap { display: grid; grid-template-columns: minmax(0, 360px) 1fr; gap: 1.75rem; align-items: center; }
+    .papel {
+      background: #fff; border: 1px solid #d6d3d1; border-radius: 4px; padding: 1.1rem 1.2rem 1.5rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,.12); font-family: Georgia, 'Times New Roman', serif; font-size: .72rem;
+      color: #44403c; position: relative; aspect-ratio: 8.5 / 11; overflow: hidden; transform: rotate(-1deg);
+    }
+    .papel .membrete { display: flex; justify-content: space-between; border-bottom: 2px solid #a8a29e; padding-bottom: .4rem; margin-bottom: .6rem; font-weight: 700; font-family: inherit; }
+    .papel .der { text-align: right; line-height: 1.5; }
+    .papel .linea { height: 6px; background: #e7e5e4; border-radius: 3px; margin: .4rem 0; }
+    .papel .linea.c { width: 70%; }
+    .papel .marca { outline: 3px solid var(--ambar); outline-offset: 2px; border-radius: 3px; background: #fffbeb; }
+    .sello {
+      position: absolute; right: 8%; bottom: 10%; border: 3px solid #1d4ed8; color: #1d4ed8; border-radius: 8px;
+      padding: .45rem .6rem; transform: rotate(-8deg); font-family: -apple-system, 'Segoe UI', sans-serif;
+      text-align: center; font-weight: 800; line-height: 1.25; background: rgba(239,246,255,.85);
+      outline: 3px solid var(--ambar); outline-offset: 4px;
+    }
+    .sello small { display: block; font-size: .6rem; letter-spacing: .06em; }
+    .sello big { display: block; font-size: 1.15rem; }
+    .chip-n {
+      display: inline-flex; width: 22px; height: 22px; border-radius: 50%; background: var(--ambar); color: #1a1a2e;
+      font: 800 .8rem -apple-system, sans-serif; align-items: center; justify-content: center; vertical-align: middle; margin-right: .2rem;
+    }
+    .sello .chip-n { position: absolute; left: -16px; top: -16px; transform: rotate(8deg); }
+    .leyenda-papel { list-style: none; display: grid; gap: .8rem; }
+    .leyenda-papel li { background: #fff; border-radius: 12px; padding: .8rem .95rem; border: 1px solid var(--border); font-size: .9rem; }
+    .leyenda-papel strong { color: var(--guinda); }
+
+    /* ── Baja / Sube ── */
+    .direcciones { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; margin-top: 1rem; }
+    .dir { border-radius: 14px; padding: 1rem; color: #fff; display: grid; grid-template-columns: 44px 1fr; gap: .75rem; align-items: start; }
+    .dir.baja { background: linear-gradient(135deg, #56212f, #9F2241); }
+    .dir.sube { background: linear-gradient(135deg, #0C1A2E, #1e3a5f); }
+    .dir svg { width: 44px; height: 44px; }
+    .dir strong { display: block; font-size: 1.05rem; margin-bottom: .15rem; }
+    .dir span { font-size: .84rem; opacity: .9; }
+
+    /* ── Problemas ── */
+    .faq { display: grid; gap: .7rem; }
+    .faq details { background: #fff; border-radius: 12px; border: 1px solid var(--border); padding: .85rem 1rem; }
+    .faq summary { font-weight: 700; color: var(--guinda); cursor: pointer; font-size: .95rem; }
+    .faq details p { font-size: .9rem; margin-top: .55rem; }
+    .faq details img { display: block; max-width: 340px; width: 100%; border-radius: 10px; margin-top: .6rem; border: 1px solid var(--border); }
+
+    /* ── Retos de práctica ── */
+    .retos { display: grid; gap: .65rem; }
+    .reto { display: grid; grid-template-columns: 30px 1fr; gap: .7rem; background: #fff; border-radius: 12px; padding: .85rem 1rem; border: 1px solid var(--border); align-items: start; }
+    .reto input { width: 24px; height: 24px; accent-color: var(--acento); margin-top: .1rem; }
+    .reto strong { display: block; color: var(--guinda); }
+    .reto span { font-size: .87rem; color: var(--muted); }
+
+    footer { text-align: center; font-size: .8rem; color: var(--muted); padding: 1rem 1rem 2.5rem; }
+
+    @media (max-width: 720px) {
+      .reglas, .roles, .direcciones, .papel-wrap { grid-template-columns: 1fr; }
+      .paso { grid-template-columns: 1fr; }
+      .tel { max-width: 320px; margin: 0 auto; }
+      .papel { max-width: 320px; margin: 0 auto; }
+    }
+
+    @media print {
+      body { background: #fff; }
+      .cover { padding: 1.5rem; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .cta { display: none; }
+      .section { page-break-inside: avoid; }
+      .paso { box-shadow: none; border: 1px solid var(--border); page-break-inside: avoid; }
+      .faq details { page-break-inside: avoid; }
+      .faq details:not([open]) > *:not(summary) { display: block; }
+      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="cover">
+  <div class="org">SEPRN · Oficina de Tecnología para el Desarrollo Educativo</div>
+  <span class="badge">Guía rápida</span>
+  <h1>Control de oficios OTDE</h1>
+  <p>Para tomar el número de cualquier documento y registrar los oficios que llegan, sin la lista de papel. Se usa desde el celular o la computadora.</p>
+  <a class="cta" href="../oficios.html">Abrir el sistema</a>
+</header>
+
+<main class="wrapper">
+
+  <nav class="toc" aria-label="Contenido">
+    <h2>En esta guía</h2>
+    <ol>
+      <li><a href="#reglas">Las 3 reglas de oro</a></li>
+      <li><a href="#entrar">Entrar la primera vez</a></li>
+      <li><a href="#numero">Tomar un número</a></li>
+      <li><a href="#cancelar">Cancelar un número que no se usó</a></li>
+      <li><a href="#registrar">Registrar un oficio que llega</a></li>
+      <li><a href="#responder">Responder un oficio</a></li>
+      <li><a href="#buscar">Buscar un oficio</a></li>
+      <li><a href="#problemas">¿Qué hago si…?</a></li>
+      <li><a href="#practica">Retos de práctica</a></li>
+    </ol>
+  </nav>
+
+  <!-- 0. Reglas -->
+  <section class="section" id="reglas">
+    <div class="section-header">
+      <div class="section-num">!</div>
+      <h2>Las 3 reglas de oro</h2>
+    </div>
+    <div class="reglas">
+      <div class="regla">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/></svg>
+        <strong>Todo número sale de aquí</strong>
+        <span>Oficios, justificantes, comisiones… cualquier documento. Ya no se anota en la lista de papel.</span>
+      </div>
+      <div class="regla">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/></svg>
+        <strong>Si no lo usaste, cancélalo</strong>
+        <span>Un número nunca se borra ni se presta a otro documento. Se cancela y se escribe por qué.</span>
+      </div>
+      <div class="regla">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>
+        <strong>Oficio sellado, oficio registrado</strong>
+        <span>Todo oficio que llega con sello de Oficialía de Partes se registra el mismo día.</span>
+      </div>
+    </div>
+
+    <h3 class="titulo-paso" style="margin-top:1.75rem;">¿Quién hace qué?</h3>
+    <div class="roles">
+      <div class="rol">
+        <div class="quien">Todo el equipo</div>
+        <ul><li>Tomar número</li><li>Cancelar un número propio</li><li>Buscar oficios</li></ul>
+      </div>
+      <div class="rol">
+        <div class="quien">Nancy</div>
+        <ul><li>Registrar los oficios que llegan</li><li>Subir el PDF escaneado</li></ul>
+      </div>
+      <div class="rol">
+        <div class="quien">Jorge</div>
+        <ul><li>Capturar un lote nuevo de números</li><li>Corregir datos en la hoja</li></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 1. Entrar -->
+  <section class="section" id="entrar">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <h2>Entrar la primera vez<span class="cuando">Solo una vez por celular o computadora</span></h2>
+    </div>
+    <div class="paso">
+      <div class="tel"><img src="../images/manual-oficios/01-entrar.png" alt="Pantalla de entrada con la clave, el nombre y el botón Entrar" loading="lazy"></div>
+      <div>
+        <ol class="pasos">
+          <li><span class="n">1</span><div><b>Escribe la clave</b> que te dio Jorge.<small>Respeta mayúsculas y minúsculas.</small></div></li>
+          <li><span class="n">2</span><div><b>Elige tu nombre.</b><small>Así el sistema sabe quién toma cada número.</small></div></li>
+          <li><span class="n">3</span><div>Toca <b>Entrar</b>.</div></li>
+        </ol>
+        <div class="bien">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>
+          <div>Listo. La próxima vez que abras la página, entra directo.</div>
+        </div>
+        <div class="tip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></svg>
+          <div><b>Tenla a un toque.</b> En el celular, agrégala a tu pantalla de inicio. En iPhone: botón <b>Compartir</b> y luego <b>Agregar a inicio</b>. En Android: menú <b>⋮</b> y luego <b>Agregar a la pantalla principal</b>.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Tomar número -->
+  <section class="section" id="numero">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <h2>Tomar un número<span class="cuando">Antes de imprimir cualquier documento que lleve número</span></h2>
+    </div>
+    <div class="paso">
+      <div class="tel"><img src="../images/manual-oficios/02-tomar-numero.png" alt="Formulario Tomar número con asunto, dirigido a, elabora, fecha y botón" loading="lazy"></div>
+      <div>
+        <p class="titulo-paso">Pestaña «Tomar número»</p>
+        <ol class="pasos">
+          <li><span class="n">i</span><div>Aquí ves <b>cuál número sigue</b> y cuántos quedan en el lote del año.</div></li>
+          <li><span class="n">1</span><div><b>Asunto:</b> de qué trata el documento, en pocas palabras.<small>Ej. «Comisión para asistir a la reunión de CoEEE».</small></div></li>
+          <li><span class="n">2</span><div><b>Dirigido a:</b> Comisión, Sectores, CoEEE, Comisión sindical u Otro.</div></li>
+          <li><span class="n">3</span><div><b>Elabora:</b> ya viene tu nombre. Cámbialo solo si lo pides para alguien más.</div></li>
+          <li><span class="n">4</span><div><b>Fecha:</b> ya viene la de hoy.</div></li>
+          <li><span class="n">5</span><div>Toca <b>Tomar número</b>.</div></li>
+        </ol>
+      </div>
+    </div>
+    <div class="paso">
+      <div class="tel"><img src="../images/manual-oficios/03-numero-listo.png" alt="Pantalla con el número asignado en grande y los botones Copiar y Tomar otro" loading="lazy"></div>
+      <div>
+        <p class="titulo-paso">Tu número está listo</p>
+        <ol class="pasos">
+          <li><span class="n">1</span><div>Este es <b>tu número</b>. Ya es tuyo: nadie más lo puede recibir.</div></li>
+          <li><span class="n">2</span><div><b>Copiar número completo</b> y pégalo en tu documento de Word.<small>Copia el formato oficial: 228C0101110500T/4834/2026.</small></div></li>
+          <li><span class="n">3</span><div><b>Tomar otro número</b>, si necesitas otro.</div></li>
+        </ol>
+        <div class="ojo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17h.01"/></svg>
+          <div><b>Toma el número cuando ya vayas a hacer el documento</b>, no «por si acaso». Cada número que no se usa hay que cancelarlo.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Cancelar -->
+  <section class="section" id="cancelar">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <h2>Cancelar un número que no se usó<span class="cuando">El documento ya no salió, o se tomó dos veces</span></h2>
+    </div>
+    <div class="paso">
+      <div class="tel"><img src="../images/manual-oficios/04-cancelar.png" alt="Lista de últimos números con el campo para escribir el motivo de la cancelación" loading="lazy"></div>
+      <div>
+        <p class="titulo-paso">Abajo, en «Últimos números tomados»</p>
+        <ol class="pasos">
+          <li><span class="n">1</span><div>Toca <b>Cancelar este número</b> y escribe <b>por qué</b> no se usó.<small>Ej. «El oficio ya no se envió».</small></div></li>
+          <li><span class="n">2</span><div>Toca <b>Confirmar</b>.</div></li>
+        </ol>
+        <img src="../images/manual-oficios/05-cancelado.png" alt="El número aparece tachado con la etiqueta Cancelado" loading="lazy" style="width:100%;max-width:340px;border-radius:12px;border:1px solid var(--border);margin-top:.25rem;">
+        <div class="tip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></svg>
+          <div>El número queda <b>tachado</b>, no se borra. Así, si alguien pregunta por él, se sabe qué pasó.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Registrar -->
+  <section class="section" id="registrar">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <h2>Registrar un oficio que llega<span class="cuando">Cuando Oficialía de Partes nos turna un oficio</span></h2>
+    </div>
+
+    <p class="lead">Primero, ubica los dos números del oficio. <b>No son el mismo</b> y es la confusión más común:</p>
+    <div class="papel-wrap">
+      <div class="papel" aria-hidden="true">
+        <div class="membrete"><span>EDUCACIÓN · SEIEM</span><span>CoEEE</span></div>
+        <div class="der">Metepec, Estado de México; a 06 de octubre de 2026.<br><span class="chip-n">B</span> <span class="marca">228C0101110001L/2050/2026</span></div>
+        <div style="margin-top:.8rem;font-weight:700;">DRA. AVELINA GALINDO CELIX<br>ENCARGADA DEL DESPACHO</div>
+        <div class="linea"></div><div class="linea"></div><div class="linea c"></div>
+        <div class="linea"></div><div class="linea"></div><div class="linea c"></div>
+        <div class="sello"><span class="chip-n">A</span><small>OFICIALÍA DE PARTES</small><big>Folio 3662</big><small>08 OCT 2026</small></div>
+      </div>
+      <ul class="leyenda-papel">
+        <li><span class="chip-n">A</span> <strong>El sello de Oficialía de Partes.</strong> Su <b>folio</b> (aquí, 3662) es el dato más importante: va en el campo <b>1</b>. La fecha del sello va en el campo <b>2</b>.</li>
+        <li><span class="chip-n">B</span> <strong>El número que trae el oficio</strong>, puesto por quien lo manda. Va en el campo <b>3</b> («No. de oficio del remitente»).</li>
+      </ul>
+    </div>
+
+    <div class="paso" style="margin-top:1.5rem;">
+      <div class="tel"><img src="../images/manual-oficios/06-registrar-a.png" alt="Primera parte del formulario Registrar oficio" loading="lazy"></div>
+      <div>
+        <p class="titulo-paso">Pestaña «Registrar oficio» (parte 1)</p>
+        <ol class="pasos">
+          <li><span class="n">1</span><div><b>Folio de Oficialía de Partes</b>, el del sello (A).</div></li>
+          <li><span class="n">2</span><div><b>Fecha de recepción</b>, la del sello.</div></li>
+          <li><span class="n">3</span><div><b>No. de oficio del remitente</b> (B). Si no trae, déjalo vacío.</div></li>
+          <li><span class="n">4</span><div><b>Remitente:</b> quién lo manda.<small>Al escribir, el sistema sugiere los que ya existen.</small></div></li>
+          <li><span class="n">5</span><div><b>Asunto</b>, como viene en el oficio.</div></li>
+          <li><span class="n">6</span><div><b>Tipo de oficio:</b> el programa (MIED, CUANTRIX, Seminarios…).</div></li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="paso">
+      <div class="tel"><img src="../images/manual-oficios/07-registrar-b.png" alt="Segunda parte del formulario: baja o sube, cómo se atiende, PDF y botón" loading="lazy"></div>
+      <div>
+        <p class="titulo-paso">Parte 2</p>
+        <ol class="pasos">
+          <li><span class="n">7</span><div><b>¿Baja o sube?</b> (ver abajo).</div></li>
+          <li><span class="n">8</span><div><b>¿Cómo se atiende?</b> Si ya lo sabes: con un oficio de salida, con una acción o solo para conocimiento. Si no, déjalo así.</div></li>
+          <li><span class="n">9</span><div><b>PDF del oficio escaneado.</b> Opcional, pero muy recomendable: así se puede consultar desde cualquier lugar.</div></li>
+          <li><span class="n">10</span><div>Toca <b>Registrar oficio</b>.</div></li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="direcciones">
+      <div class="dir baja">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v16M5 13l7 7 7-7"/></svg>
+        <div><strong>Baja</strong><span>Viene de arriba: CoEEE, Subsecretaría, Dirección. Normalmente se atiende enviando oficios a sectores, zonas y escuelas.</span></div>
+      </div>
+      <div class="dir sube">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20V4M5 11l7-7 7 7"/></svg>
+        <div><strong>Sube</strong><span>Viene de la estructura: una escuela, zona o sector. Normalmente se atiende con una acción (mantenimiento, asesoría…).</span></div>
+      </div>
+    </div>
+
+    <div class="paso" style="margin-top:1rem;">
+      <div class="tel"><img src="../images/manual-oficios/08-oficio-registrado.png" alt="Confirmación con el ID del oficio y el botón para tomar número de respuesta" loading="lazy"></div>
+      <div>
+        <p class="titulo-paso">Oficio registrado</p>
+        <ol class="pasos">
+          <li><span class="n">1</span><div>El sistema le da una <b>clave interna</b> (OF-0004) y su <b>N.P.</b> del ciclo, como en el Excel.</div></li>
+          <li><span class="n">2</span><div>Si elegiste «Oficio de salida», aparece <b>Tomar número para la respuesta</b>. Ve al paso 5.</div></li>
+        </ol>
+        <div class="tip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></svg>
+          <div>Si el folio ya estaba registrado, el sistema te avisa y no lo duplica. Ver <a href="#problemas">¿Qué hago si…?</a></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Responder -->
+  <section class="section" id="responder">
+    <div class="section-header">
+      <div class="section-num">5</div>
+      <h2>Responder un oficio<span class="cuando">Cuando un oficio recibido se contesta con otro oficio</span></h2>
+    </div>
+    <div class="paso">
+      <div class="tel"><img src="../images/manual-oficios/09-responder.png" alt="Formulario Tomar número con el aviso de respuesta al oficio" loading="lazy"></div>
+      <div>
+        <p class="lead">Llegas aquí de dos maneras: justo después de registrar el oficio, o desde <b>Buscar</b> con el botón <b>Tomar número para responder</b>.</p>
+        <ol class="pasos">
+          <li><span class="n">1</span><div>Este aviso confirma <b>a qué oficio respondes</b>. El número quedará anotado en él.</div></li>
+          <li><span class="n">2</span><div>El asunto ya viene escrito. <b>Ajústalo</b> si hace falta, elige «Dirigido a» y toca <b>Tomar número</b>.</div></li>
+        </ol>
+        <div class="bien">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>
+          <div>El oficio recibido pasa solo a <b>«En atención»</b> y guarda el número con que se respondió. Así se puede rastrear siempre qué contestamos.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Buscar -->
+  <section class="section" id="buscar">
+    <div class="section-header">
+      <div class="section-num">6</div>
+      <h2>Buscar un oficio<span class="cuando">«¿Ya llegó el de Cuantrix?», «¿Con qué número lo contestamos?»</span></h2>
+    </div>
+    <div class="paso">
+      <div class="tel"><img src="../images/manual-oficios/10-buscar.png" alt="Pestaña Buscar con un resultado" loading="lazy"></div>
+      <div>
+        <ol class="pasos">
+          <li><span class="n">1</span><div>Escribe <b>lo que recuerdes</b>: folio, remitente, una palabra del asunto, el programa o el número con que se respondió.</div></li>
+          <li><span class="n">2</span><div>El color te dice en qué va:
+            <small><b style="background:#fde68a;color:#78350f;padding:0 .35rem;border-radius:6px;">Recibido</b> llegó y nadie lo ha atendido ·
+            <b style="background:#bfdbfe;color:#1e3a8a;padding:0 .35rem;border-radius:6px;">En atención</b> ya se está trabajando ·
+            <b style="background:#bbf7d0;color:#14532d;padding:0 .35rem;border-radius:6px;">Atendido</b> terminado</small></div></li>
+          <li><span class="n">3</span><div><b>Ver PDF</b> para abrir el oficio escaneado, o <b>Tomar número para responder</b>.</div></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. Problemas -->
+  <section class="section" id="problemas">
+    <div class="section-header">
+      <div class="section-num">?</div>
+      <h2>¿Qué hago si…?</h2>
+    </div>
+    <div class="faq">
+      <details open>
+        <summary>…dice «El servidor tardó demasiado en responder»</summary>
+        <p>Vuelve a tocar el mismo botón, sin cambiar nada. <b>No se duplica</b>: si el primer intento sí llegó, te devuelve el mismo número o el mismo registro.</p>
+      </details>
+      <details>
+        <summary>…dice que el folio ya está registrado</summary>
+        <p>Ese oficio ya lo registró alguien. Búscalo en <b>Buscar</b> con el folio del sello antes de volver a capturarlo.</p>
+        <img src="../images/manual-oficios/11-aviso-repetido.png" alt="Aviso: el folio de Oficialía de Partes ya está registrado" loading="lazy">
+      </details>
+      <details>
+        <summary>…dice que ya no quedan números</summary>
+        <p>Se acabó el lote que la Subdirección asignó a OTDE. <b>Avisa a Jorge</b>: pide un lote nuevo y lo captura en la hoja. El sistema también le manda un correo cuando quedan 10.</p>
+        <img src="../images/manual-oficios/12-aviso-sin-numeros.png" alt="Aviso: no quedan números en los lotes del año" loading="lazy">
+      </details>
+      <details>
+        <summary>…me equivoqué en un dato de un oficio ya registrado</summary>
+        <p>No lo registres otra vez. Dile a Jorge qué hay que corregir; él lo cambia directo en la hoja.</p>
+      </details>
+      <details>
+        <summary>…tomé un número por error</summary>
+        <p>Cancélalo con su motivo (<a href="#cancelar">paso 3</a>). No intentes «reusarlo» para otro documento.</p>
+      </details>
+      <details>
+        <summary>…me pide la clave otra vez o dice «clave incorrecta»</summary>
+        <p>La clave cambió o se borró del navegador. Pídesela a Jorge y escríbela de nuevo. Si usas una computadora compartida, toca <b>cambiar</b> junto a tu nombre al terminar.</p>
+      </details>
+      <details>
+        <summary>…alguien tomó un número de la lista de papel</summary>
+        <p>Avisa a Jorge en ese momento para que lo registre. Si no se registra, el sistema podría entregar ese mismo número a otra persona.</p>
+      </details>
+    </div>
+  </section>
+
+  <!-- 8. Práctica -->
+  <section class="section" id="practica">
+    <div class="section-header">
+      <div class="section-num">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>
+      </div>
+      <h2>Retos de práctica<span class="cuando">Para la primera semana. Márcalos conforme los hagas.</span></h2>
+    </div>
+    <p class="lead">Se aprende usándolo con trabajo real. <b>No tomes números «de prueba»</b>: cada uno gasta un número del lote. Practica con tu siguiente documento de verdad.</p>
+    <div class="retos">
+      <label class="reto"><input type="checkbox"><div><strong>1. Entra y deja la página en tu pantalla de inicio</strong><span>Que abrir el sistema te tome un solo toque.</span></div></label>
+      <label class="reto"><input type="checkbox"><div><strong>2. Busca un oficio que ya conozcas</strong><span>Prueba con el folio, después con el remitente y después con una palabra del asunto.</span></div></label>
+      <label class="reto"><input type="checkbox"><div><strong>3. Toma el número de tu siguiente documento real</strong><span>Cópialo y pégalo en Word. Ni una vez más a la lista de papel.</span></div></label>
+      <label class="reto"><input type="checkbox"><div><strong>4. Registra el siguiente oficio que llegue, con su PDF</strong><span>Revisa dos veces: folio del sello (A) y número del remitente (B).</span></div></label>
+      <label class="reto"><input type="checkbox"><div><strong>5. Responde un oficio desde «Buscar»</strong><span>Comprueba que el oficio recibido pase a «En atención» con tu número.</span></div></label>
+      <label class="reto"><input type="checkbox"><div><strong>6. Enséñale a alguien del equipo un paso que ya domines</strong><span>Explicarlo es la mejor señal de que ya es tuyo.</span></div></label>
+    </div>
+  </section>
+
+</main>
+
+<footer>OTDE · Subdirección de Educación Primaria en la Región de Nezahualcóyotl · Las capturas usan datos de ejemplo.</footer>
+
+</body>
+</html>
