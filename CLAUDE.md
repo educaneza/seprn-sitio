@@ -378,6 +378,10 @@ ya esté expandido).
   duplicados reales (`OTDE-MAN-0025`/`0026`, `0028`/`0029`). `manCrearSolicitudUrgente_()`
   también genera su folio bajo el candado. Ver `docs/ARCHITECTURE.md §27` y
   `docs/QA-NOTES.md #44`.
+- **`?action=oficiosOV&token=&desde=AAAA-MM-DD` (8 oct 2026, en producción)**: solicitudes con su
+  oficio (folio, escuela, CCT, `Equipos con falla`, link del oficio, estatus, notas) para el
+  paso 2B de `apps-script/oficios.gs` (`manListarOficiosOV_`, solo lectura, columnas por nombre,
+  mismo `PANEL_TOKEN`). Ver `docs/ARCHITECTURE.md §31`.
 
 ### `apps-script/asesorias.gs`
 - **Nuevo (ago 2026)**: mismo patrón que `mantenimiento.gs` (Sheet propio con hojas
@@ -467,6 +471,8 @@ ya esté expandido).
 - **Alta a prueba de reintentos (25 sep 2026, en producción y verificado en vivo)**: mismo patrón
   que Mantenimiento (`aseBuscarEnvioPrevio_`, `ID de envío` en la columna Z; el respaldo sin ID
   compara CCT + correo + tipo de asesoría + observaciones). Ver `docs/ARCHITECTURE.md §27`.
+- **`?action=oficiosOV` (8 oct 2026, en producción)**: mismo endpoint que Mantenimiento
+  (`aseListarOficiosOV_`, el detalle es `Tipo de Asesoría`), para el paso 2B de oficios.
 
 ### `apps-script/formacion-docente.gs`
 **Desplegado en producción desde jul 2026** (Spreadsheet real `Formacion_Docente_2026_2027`, URL real ya pegada en `APPS_SCRIPT_URL` de `formacion-docente.html`; la extinta `jornada-verano-2026.html` compartió este mismo backend hasta su eliminación el 13 jul 2026).
@@ -649,6 +655,16 @@ ya esté expandido).
   precargada; al guardar, el oficio queda Atendido con su BIT-ID) o *solo conocimiento*. La hoja
   `Config` tiene "N.P. planeación" por tipo de oficio (propuesta de Claude, **pendiente de
   revisión de Jorge**). Recordatorios de eventos: pendientes (eran parte del 2D en el plan)
+- **Paso 2B (8 oct 2026, en producción):** las solicitudes nuevas de Mantenimiento y Asesorías
+  entran solas (`ofSincronizarOV_`, cada 30 min + menú; jala `?action=oficiosOV` de los dos
+  backends con `PANEL_TOKEN`; URLs en Script Properties `OV_MAN_URL`/`OV_ASE_URL`, configuradas
+  con "Configurar conexión con la Oficina Virtual"). Solo desde `OF_OV_DESDE` (el día en que se
+  configuró, para no duplicar el Excel histórico). Entran sin folio de Oficialía (columna
+  `Origen` = "Oficina Virtual"), porque OTDE debe imprimir todo oficio digital y llevarlo a
+  Oficialía: la lista los marca "Falta folio de Oficialía" y "Anotar folio de Oficialía"
+  (`anotarFolioOP`) los completa sin registrarlos dos veces (también cuando la escuela manda el
+  impreso). Pasan a Atendido solos al quedar Resuelto/Rechazado. Pendiente = falta atender **o**
+  falta folio. La clave de duplicado (folio + año) ignora los folios vacíos
 - Si cambia la interfaz de `oficios.html`/`bitacora.html`, las capturas de
   `images/manual-oficios/` quedan desfasadas. Se generaron con un script de Playwright sobre la
   página real con los dos `.gs` en una simulación de Sheets: **ese script no está en el repo**
@@ -1275,8 +1291,8 @@ Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/I
   (`oficios.html`: Tomar número · Oficios · Actividad), con guía visual para el equipo.
   **Antes de arrancar** (Jorge): confirmar el último número de la lista de papel y corregir
   "Último usado antes del sistema" en `Lotes` si pasó del 4831, importar el histórico, revisar
-  "N.P. planeación" en `Config`, una prueba real y fecha de arranque. Siguiente: 2B, luego
-  recordatorios. Ver `docs/ROADMAP.md` ítem 27. Ver `docs/PLAN-OPERACION-INTERNA.md` y `docs/ROADMAP.md` ítem 27.
+  "N.P. planeación" en `Config`, una prueba real y fecha de arranque. El 2B (Oficina Virtual →
+  control) también quedó en producción el mismo día. Siguiente: recordatorios, 2C o 2E. Ver `docs/ROADMAP.md` ítem 27. Ver `docs/PLAN-OPERACION-INTERNA.md` y `docs/ROADMAP.md` ítem 27.
 - **Formación Docente — Workspace, decidir antes del 6 oct 2026**: desde el 28 sep la cuota ya
   no depende de Workspace (calendario en la confirmación + correos "a quien alcance" con reserva
   50 + 20), y los scripts corren en la cuenta Gmail personal, así que la prueba no les sube la

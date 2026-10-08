@@ -14,6 +14,21 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-10-08 (cont. 2) · Paso 2B: los oficios de la Oficina Virtual entran solos al control y se cierran solos
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-08 |
+| **Sesión** | Jorge pidió seguir con el 2B. Antes de diseñar se le preguntó si los oficios de Mantenimiento/Asesorías también llegan en papel. |
+| **Dato clave de Jorge** | "Estamos obligados a entregar todos los oficios digitales a Oficialía para su registro", así que OTDE los imprime, y a veces la escuela también manda el impreso. Por eso el 2B no solo registra: entran sin folio de Oficialía y la lista dice cuáles faltan por imprimir y llevar. El folio se anota en el mismo registro (también cuando llega el impreso de la escuela). Además decidió: Rechazado → Atendido con nota, y traer solo las solicitudes nuevas desde el día de la conexión (para no duplicar el Excel histórico). |
+| **Construido** | `mantenimiento.gs`/`asesorias.gs`: `?action=oficiosOV` (solo lectura, `PANEL_TOKEN`). `oficios.gs`: `ofSincronizarOV_` (cada 30 min + menú; consulta fuera del candado y escribe dentro), columna `Origen`, cierre automático al quedar Resuelto/Rechazado, `anotarFolioOP`, menús de conexión e instalación del activador; la clave de duplicado ignora folios vacíos. `oficios.html`: etiqueta "Falta folio de Oficialía", botón para anotarlo, aviso de última revisión; los de la Oficina Virtual no tienen "Marcar como atendido". Guía: sección 8 nueva con su captura. +421/-21 en 6 archivos. Ver `docs/ARCHITECTURE.md §31`. |
+| **Verificación** | 9 pruebas en Node con los tres `.gs` reales encadenados (endpoint, desde, sin duplicar, folios vacíos que no chocan, anotar folio con validaciones, Resuelto/Rechazado, una fuente caída). 1 prueba de navegador de la interfaz del 2B (6 verificaciones). Regresión: 29 + 11 + 13 pruebas anteriores. 0 errores y 0 peticiones externas. En vivo, tras el redespliegue de Jorge: `oficiosOV` y `pendientes` con token falso → `no_autorizado` en los dos backends (la versión vieja habría respondido el estado del servicio). Publicado (`d8fda3a`). No se pudo comprobar aquí la sincronización real (requiere el token). |
+| **Pendiente** | Ver la primera solicitud real entrar sola (≤30 min) y el aviso "última revisión" en Oficios. Siguen los 4 pasos antes de operar. Siguiente de la Fase 2: recordatorios, 2C o 2E (Jorge elige). |
+| **Documentación actualizada** | Este checkpoint, `docs/ARCHITECTURE.md §31`, `docs/PLAN-OPERACION-INTERNA.md`, `docs/ROADMAP.md` ítem 27 y `CLAUDE.md` (Mantenimiento, Asesorías, oficios y pendientes). |
+| **Commits** | `d8fda3a` (2B) y el de esta documentación. |
+
+---
+
 ## CHECKPOINT — 2026-10-08 (cont.) · Paso 2D y página única "Oficina interna OTDE" (Tomar número · Oficios · Actividad)
 
 | | |

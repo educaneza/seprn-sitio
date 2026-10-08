@@ -2971,9 +2971,32 @@ en un `<iframe>` del mismo sitio:
   Si no la hay o falla, la actividad queda guardada y se explica cómo ligarla a mano.
   `bitacora.gs` no cambió.
 
-**Guía de uso:** `docs/manual-oficios.html` (17 capturas en `images/manual-oficios/`, generadas
+**Paso 2B: Oficina Virtual → control (8 oct 2026).** Mantenimiento y Asesorías exigen el oficio
+en PDF, y OTDE está obligada a imprimir todo oficio digital y llevarlo a Oficialía de Partes. Por
+eso:
+- `mantenimiento.gs`/`asesorias.gs` exponen `?action=oficiosOV&token=PANEL_TOKEN&desde=AAAA-MM-DD`
+  (`manListarOficiosOV_`/`aseListarOficiosOV_`, solo lectura, columnas por nombre).
+- `ofSincronizarOV_()` (activador `ofSincronizarOVAutomatico` cada 30 min, instalado con
+  `ofInstalarSincronizacionOV()`, y menú "Traer de la Oficina Virtual ahora") consulta las dos
+  fuentes (`OF_FUENTES_OV`) **antes** de tomar el candado y luego escribe: cada solicitud nueva
+  (`ID de envío` = `OV:<folio>`) entra con `Origen` = "Oficina Virtual", sin folio de Oficialía,
+  `Vínculo` = folio de la solicitud, PDF, `Dirección` Sube, remitente armado por
+  `ofRemitenteOV_()`. Si la solicitud queda Resuelto/Rechazado (`OF_OV_CERRADOS`), el oficio pasa
+  a Atendido con nota (motivo, si se rechazó). Una fuente que falla no detiene a la otra; el
+  mensaje distingue "la versión desplegada aún no tiene ?action=oficiosOV". Solo trae desde
+  `OF_OV_DESDE` (se fija la primera vez que se configura la conexión, `ofConfigurarConexionOV()`,
+  con `OV_MAN_URL`/`OV_ASE_URL`/`PANEL_TOKEN` en Script Properties). `ofEstadoOV_()` devuelve a la
+  página si hay conexión y la hora de la última revisión (`OF_OV_ULTIMA`).
+- `doPost {accion: 'anotarFolioOP', id, folioOP}` (`ofAnotarFolioOP_()`): pone el folio de
+  Oficialía en el mismo registro (rechaza uno que ya tenga otro oficio). `ofClaveFolio_()`
+  devuelve vacío sin folio, para que los oficios de la Oficina Virtual no choquen entre sí.
+- En la página, "pendiente" = falta atender **o** falta folio (`faltaFolioOP()`); los de la
+  Oficina Virtual no tienen "Marcar como atendido" (se cierran solos).
+
+**Guía de uso:** `docs/manual-oficios.html` (18 capturas en `images/manual-oficios/`, generadas
 con Playwright sobre la página real, con `oficios.gs` y `bitacora.gs` en una simulación de
-Sheets y datos de ejemplo; enlazada desde `oficios.html`). **El script de capturas y las pruebas
+Sheets y datos de ejemplo; enlazada desde `oficios.html`; la 16, de la Oficina Virtual, se agregó
+con el 2B). **El script de capturas y las pruebas
 no están en el repo** (vivieron en la carpeta temporal de la sesión): si cambia la interfaz, hay
 que rehacerlos para regenerar las capturas.
 

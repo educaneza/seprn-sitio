@@ -809,7 +809,13 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     pasó del 4831), revisar "N.P. planeación" en `Config`, una prueba real con un documento, misma
     clave en los dos Sheets y fecha de arranque; reevaluar tras 1-2 semanas de uso si de verdad
     simplifica. Faltan los **recordatorios** (eran parte del 2D en el plan).
-    **Siguiente:** 2B (solicitudes de la Oficina Virtual que traen oficio → control). Para el 2C
+    **2B en producción (8 oct 2026, cont. 2):** las solicitudes nuevas de Mantenimiento y
+    Asesorías entran solas a Oficios (con su PDF y "Falta folio de Oficialía", porque OTDE debe
+    imprimirlas y llevarlas a Oficialía), se completan con "Anotar folio de Oficialía" y se cierran
+    solas al quedar Resuelto/Rechazado (`docs/ARCHITECTURE.md §31`). Falta verlo con la primera
+    solicitud real.
+    **Siguiente** (Jorge elige): recordatorios de eventos (el dolor de origen), 2C (redacción del
+    oficio de salida con plantilla) o 2E (archivo digital). Para el 2C
     falta un oficio de salida con membrete en Word (ya está `MACHOTE.docx` en `docs/insumos/`).
     Sigue sin verificar si la licencia M365 de `@dee.edu.mx` incluye Power Automate.
 

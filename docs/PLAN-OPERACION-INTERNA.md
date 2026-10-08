@@ -116,7 +116,7 @@ Así lo que ya queda registrado no se vuelve a capturar.
 - **Dos direcciones:** un oficio que **baja** (de instancias superiores) se atiende redactando oficios a sectores, zonas y escuelas; uno que **sube** (de la estructura) se atiende con una acción (mantenimiento, asesoría…).
 - **Pasos, uno por sesión:**
   - **2A · Control:** las 10 columnas del Excel actual (N.P., No. de folio recibido de particular, Fecha de recepción, No. de oficio elaboración, Fecha de elaboración, Remitente, Asunto, Tipo de oficio, Quién recibió, Observaciones), más Dirección, Estatus, Forma de atención (oficio de salida / acción / solo conocimiento), Vínculo (folio de la Oficina Virtual o BIT-ID) y PDF en Drive. Se importa el histórico.
-  - **2B · Oficina Virtual → control:** las solicitudes que traen oficio entran solas (patrón `?action=…Mes` + `PANEL_TOKEN`).
+  - **2B · Oficina Virtual → control:** las solicitudes que traen oficio entran solas (patrón `?action=…Mes` + `PANEL_TOKEN`). *En producción el 8 oct 2026: ver abajo.*
   - **2C · Redacción:** plantilla de Google Docs con membrete y consecutivo automático; borrador del oficio de salida para revisar, firmar y escanear. La firma y el sello siguen a mano.
   - **2D · Atendido → bitácora + recordatorios** (lo de arriba). *Atendido → bitácora en producción
     el 8 oct 2026; recordatorios pendientes.*
@@ -137,8 +137,13 @@ Así lo que ya queda registrado no se vuelve a capturar.
   "Marcar como atendido" → *ya llega sola* / *capturar la actividad* (precargada) / *solo
   conocimiento*. Jorge cuestionó que, en dos páginas, eso agregaba pasos; se resolvió con **una
   sola puerta**: `oficios.html` con pestañas Tomar número · Oficios · Actividad (bitácora
-  integrada), una entrada, sin navegar entre páginas. Siguiente: 2B (que la Oficina Virtual
-  registre y cierre sola lo que llega por ahí) y después los recordatorios.
+  integrada), una entrada, sin navegar entre páginas.
+- **2B (8 oct 2026, en producción):** dato de Jorge: OTDE está obligada a entregar todo oficio
+  digital a Oficialía de Partes para su registro (lo imprime), y a veces la escuela también manda
+  el impreso. Por eso las solicitudes nuevas de Mantenimiento y Asesorías entran solas **sin folio
+  de Oficialía** y la lista dice cuáles faltan por llevar; el folio se anota en el mismo registro.
+  Se cierran solas al quedar Resuelto o Rechazado (con nota). Solo las nuevas desde el día de la
+  conexión. Siguiente: recordatorios, 2C o 2E.
 - **Consecutivo compartido (dato nuevo de Jorge, 6 oct 2026; propuesta, ya construida en el 2A):** la lista de números de oficio asignada a OTDE la usan Jorge, Nancy, Alejandro y Marcos para **cualquier** documento (oficios, justificantes, comisiones…), no solo los oficios de salida. Si el gestor numerara por su cuenta mientras el resto sigue con la lista de siempre, habría números repetidos. Propuesta: un **"Tomar número"** compartido, con página corta con clave, para todo el equipo y cualquier tipo de documento. `LockService` evita repetidos; los números no usados se marcan "cancelado" y no se reutilizan; se importa la lista actual. El gestor (2C) tomaría su número de ahí. Se **adelantaría al 2A**, junto con el control, porque sirve desde el primer día. Antes, Jorge debe responder: (1) dónde vive hoy la lista; (2) el formato exacto del número (siglas, año); (3) cuándo se reinicia (año calendario, ciclo o nunca); (4) si alguna otra oficina usa la misma lista; (5) qué se anota hoy por cada número.
 
 ### Fase 3 — Padrón único de programas y consulta móvil
