@@ -118,7 +118,8 @@ Así lo que ya queda registrado no se vuelve a capturar.
   - **2A · Control:** las 10 columnas del Excel actual (N.P., No. de folio recibido de particular, Fecha de recepción, No. de oficio elaboración, Fecha de elaboración, Remitente, Asunto, Tipo de oficio, Quién recibió, Observaciones), más Dirección, Estatus, Forma de atención (oficio de salida / acción / solo conocimiento), Vínculo (folio de la Oficina Virtual o BIT-ID) y PDF en Drive. Se importa el histórico.
   - **2B · Oficina Virtual → control:** las solicitudes que traen oficio entran solas (patrón `?action=…Mes` + `PANEL_TOKEN`).
   - **2C · Redacción:** plantilla de Google Docs con membrete y consecutivo automático; borrador del oficio de salida para revisar, firmar y escanear. La firma y el sello siguen a mano.
-  - **2D · Atendido → bitácora + recordatorios** (lo de arriba).
+  - **2D · Atendido → bitácora + recordatorios** (lo de arriba). *Atendido → bitácora en producción
+    el 8 oct 2026; recordatorios pendientes.*
   - **2E · Archivo digital:** carpetas en Drive por ciclo y mes, búsqueda por remitente, asunto o folio.
 - **Insumos para el 2A:** el Excel de control, 1-2 oficios reales (uno que baja y uno que sube), un oficio de salida con membrete y el formato del consecutivo, y la verificación de Power Automate.
 - **2A en producción (8 oct 2026):** `apps-script/oficios.gs` + `oficios.html` (guía
@@ -129,7 +130,15 @@ Así lo que ya queda registrado no se vuelve a capturar.
   (5) por número se anota Elabora, Asunto, Fecha de elaboración y una sola casilla de destino
   (Comisión / Sectores / CoEEE / Comisión sindical / Otro). Además: el "No. de folio recibido de
   particular" del Excel es el folio de **Oficialía de Partes** (sella y turna todo oficio). Detalle
-  en `docs/ARCHITECTURE.md §31`. Siguiente: 2B.
+  en `docs/ARCHITECTURE.md §31`.
+- **2D y página única (8 oct 2026, en producción):** "crear la fila sin captura extra" no fue
+  posible tal cual: el oficio no trae descripción, beneficiarios ni lugar, y muchas acciones ya
+  llegan solas (crear otra fila las duplicaría). Quedó: responder con número = atendido; si no,
+  "Marcar como atendido" → *ya llega sola* / *capturar la actividad* (precargada) / *solo
+  conocimiento*. Jorge cuestionó que, en dos páginas, eso agregaba pasos; se resolvió con **una
+  sola puerta**: `oficios.html` con pestañas Tomar número · Oficios · Actividad (bitácora
+  integrada), una entrada, sin navegar entre páginas. Siguiente: 2B (que la Oficina Virtual
+  registre y cierre sola lo que llega por ahí) y después los recordatorios.
 - **Consecutivo compartido (dato nuevo de Jorge, 6 oct 2026; propuesta, ya construida en el 2A):** la lista de números de oficio asignada a OTDE la usan Jorge, Nancy, Alejandro y Marcos para **cualquier** documento (oficios, justificantes, comisiones…), no solo los oficios de salida. Si el gestor numerara por su cuenta mientras el resto sigue con la lista de siempre, habría números repetidos. Propuesta: un **"Tomar número"** compartido, con página corta con clave, para todo el equipo y cualquier tipo de documento. `LockService` evita repetidos; los números no usados se marcan "cancelado" y no se reutilizan; se importa la lista actual. El gestor (2C) tomaría su número de ahí. Se **adelantaría al 2A**, junto con el control, porque sirve desde el primer día. Antes, Jorge debe responder: (1) dónde vive hoy la lista; (2) el formato exacto del número (siglas, año); (3) cuándo se reinicia (año calendario, ciclo o nunca); (4) si alguna otra oficina usa la misma lista; (5) qué se anota hoy por cada número.
 
 ### Fase 3 — Padrón único de programas y consulta móvil

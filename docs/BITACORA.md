@@ -14,6 +14,23 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-10-08 (cont.) · Paso 2D y página única "Oficina interna OTDE" (Tomar número · Oficios · Actividad)
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-08 |
+| **Sesión** | Jorge preguntó si la nueva página dejaba inoperable la bitácora (no: proyectos separados, sin un solo cambio, verificado en vivo) y pidió conectar oficios con la bitácora (paso 2D). |
+| **Decisión 2D** | El oficio no trae los datos del reporte y muchas acciones ya llegan solas (Mantenimiento, Asesorías, Formación Docente, Correo): crear una fila por oficio duplicaría el reporte. Jorge eligió 3 opciones al atender: *ya llega sola*, *capturar la actividad* (precargada desde el oficio) y *solo conocimiento*. Propuse los N.P. por tipo de oficio (columna "N.P. planeación" en `Config`), que Jorge revisará. Los recordatorios quedaron para después. |
+| **La pregunta de Jorge** | Ya construido el 2D en dos páginas, preguntó si de verdad simplificaba: "siento que es un flujo muy laborioso navegando de aquí a allá y con múltiples sheets". Respuesta honesta: el reporte automático y "Tomar número" sí simplifican, pero ese 2D agregaba pasos, rompía la "una sola puerta" del plan y dejaba sin tocar el dolor de origen (recordatorios). Eligió la **página única**. |
+| **Construido** | `oficios.html` → **Oficina interna OTDE**: pestañas Tomar número · Oficios (registro plegado + lista que abre en pendientes) · Actividad (`bitacora.html?embed=1` en un `<iframe>`, misma sesión por `localStorage`, `postMessage` para alto y eventos). Tomar número para responder deja el oficio **Atendido** solo. `oficios.gs`: `ofAtenderOficio_`, `Fecha de atención`, `N.P. planeación`. `bitacora.html`: modo integrado y `?oficio=` (precarga y marca atendido al guardar); `bitacora.gs` sin cambios. Guía reescrita (secciones "Una página, 3 pestañas", "Marcar un oficio como atendido" y "Capturar una actividad", 17 capturas regeneradas). Ver `docs/ARCHITECTURE.md §31`. |
+| **Verificación** | 29 pruebas en Node del `oficios.gs` real. 11 pruebas de navegador de la página única con `oficios.gs` y `bitacora.gs` simulados: recorrido completo, Alejandro sin pestaña Actividad, bitácora con otra clave (la pide una vez). Las 13 anteriores, adaptadas. 0 errores de consola y 0 peticiones externas. Jorge redesplegó `oficios.gs` dos veces (2D y "responder = atendido"); en vivo, `curl` responde `servicio` y `no_autorizado` con clave falsa (la versión no se puede distinguir sin clave). Publicado (`cb299cb`, run en success, página y bitácora integrada en vivo). |
+| **Antes de operar** | Jorge preguntó si ya se puede operar: sí, con 4 pasos previos. (1) Confirmar el último número de la lista de papel y corregir `Lotes` si pasó del 4831. (2) Importar el histórico. (3) Revisar "N.P. planeación". (4) Una prueba real con un documento. Además, fecha de arranque y la misma clave en los dos Sheets. |
+| **Pendiente** | Lo de arriba. Reevaluar tras 1-2 semanas si de verdad simplifica. Siguiente: 2B (Oficina Virtual → control, que también cerraría sola la mayoría de "ya llega sola") y recordatorios. El script de capturas y las pruebas no quedaron en el repo. |
+| **Documentación actualizada** | Este checkpoint, `docs/ARCHITECTURE.md §31`, `docs/PLAN-OPERACION-INTERNA.md`, `docs/ROADMAP.md` ítem 27, `CLAUDE.md` (páginas `oficios.html`/`bitacora.html`, backend y pendientes) y `README.md`. |
+| **Commits** | `cb299cb` (página única + 2D + guía) y el de esta documentación. |
+
+---
+
 ## CHECKPOINT — 2026-10-08 · Fase 2A en producción: "Tomar número" compartido por lotes + control de oficios, con guía visual
 
 | | |

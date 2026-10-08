@@ -86,7 +86,7 @@ seprn-sitio/
 ├── ficha-ceremonias-civicas.html # Ficha post-visita de Ceremonias Cívicas, localizada por folio — sin entrada en nav/footer, link directo
 ├── estrategias-nacionales.html   # Estrategias Nacionales (sep 2026) — selección mensual de escuelas por estrategia, 1 escuela = 1 estrategia por ciclo; se llega desde academica.html
 ├── excel-facil.html              # Excel fácil (oct 2026) — herramienta 100% local de 6 módulos (duplicados, filtros, validar RFC/CURP/CCT, Word, fórmulas, IA); un solo archivo con librerías incrustadas, funciona sin internet; link directo
-├── oficios.html                  # Control de oficios OTDE (oct 2026) — "Tomar número" compartido por lotes + registro de oficios recibidos; con clave, link directo
+├── oficios.html                  # Oficina interna OTDE (oct 2026) — página única: Tomar número (lotes) · Oficios (recibidos y pendientes) · Actividad (bitácora integrada); con clave, link directo
 ├── 404.html                      # Página de error personalizada
 │
 ├── js/
@@ -118,7 +118,7 @@ seprn-sitio/
 │   ├── QA-NOTES.md               # Bugs reales ya cazados, con causa raíz — consultar antes de fetch()/appendRow() nuevos
 │   ├── manual-sistema-registro.html    # Manual de uso interno del sistema de registro (Conferencia IA)
 │   ├── manual-formacion-docente.html   # Manual de uso interno del Centro de Formación Docente
-│   └── manual-oficios.html             # Guía rápida visual del Control de oficios (capturas en images/manual-oficios/)
+│   └── manual-oficios.html             # Guía rápida visual de la Oficina interna OTDE (capturas en images/manual-oficios/)
 │
 ├── kit-digital/                  # Recursos digitales OTDE (banco de materiales)
 │

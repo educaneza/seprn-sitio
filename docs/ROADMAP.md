@@ -757,7 +757,7 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     **Recomendación: cancelar la prueba antes del 6 oct** si no hay otro motivo para conservarla.
     Decisión de Jorge pendiente.
 
-27. **Operación interna OTDE — Fase 1 en producción; alimentación desde Mantenimiento, Asesorías, Formación Docente, Soporte y Correo en producción (6 oct 2026); Fase 2A (Tomar número + control de oficios) en producción (8 oct 2026)** (23-24 sep 2026, ver
+27. **Operación interna OTDE — Fase 1 en producción; alimentación desde Mantenimiento, Asesorías, Formación Docente, Soporte y Correo en producción (6 oct 2026); Fase 2A y 2D en producción como página única (8 oct 2026)** (23-24 sep 2026, ver
     `docs/PLAN-OPERACION-INTERNA.md` y `docs/BITACORA.md` checkpoint "cont. 2"): bitácora única
     con reporte mensual automático, control de oficios con recordatorios, padrón de programas por
     CCT con consulta móvil, `.ics` mensual para Outlook y tablero, este último ampliando el
@@ -801,6 +801,14 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     `docs/ARCHITECTURE.md §31`). Pendiente del 2A: que Jorge corra "Importar histórico" con el Excel
     real (si no lo hizo) y revise los avisos (folios 3102 y 3622, fechas imposibles), que el equipo
     deje la lista de papel y haga los retos de la guía, y comprobar el primer número real (4832).
+    **2D y página única en producción (8 oct 2026, cont.):** `oficios.html` pasó a ser la Oficina
+    interna OTDE (Tomar número · Oficios · Actividad, con la bitácora integrada) y los oficios se
+    atienden ahí (responder con número = atendido; si no, "Marcar como atendido" con 3 opciones).
+    Nació de una pregunta de Jorge: el primer 2D, en dos páginas, agregaba pasos en vez de
+    quitarlos. Pendientes del arranque: confirmar el último número de papel (corregir `Lotes` si
+    pasó del 4831), revisar "N.P. planeación" en `Config`, una prueba real con un documento, misma
+    clave en los dos Sheets y fecha de arranque; reevaluar tras 1-2 semanas de uso si de verdad
+    simplifica. Faltan los **recordatorios** (eran parte del 2D en el plan).
     **Siguiente:** 2B (solicitudes de la Oficina Virtual que traen oficio → control). Para el 2C
     falta un oficio de salida con membrete en Word (ya está `MACHOTE.docx` en `docs/insumos/`).
     Sigue sin verificar si la licencia M365 de `@dee.edu.mx` incluye Power Automate.

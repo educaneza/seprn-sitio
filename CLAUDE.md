@@ -149,8 +149,8 @@ ya esté expandido).
 | `juridico.html` | Oficina Jurídica |
 | `asistencia.html` | Check-in de asistencia (eventos) |
 | `reporte-visita.html` | Formulario de captura del técnico tras una visita de Mantenimiento — reemplaza el llenado a mano de "Reportes de visita" en el Sheet, ver `apps-script/mantenimiento.gs` abajo. Sin entrada en nav/footer, se comparte por link directo |
-| `bitacora.html` | Bitácora de actividades de OTDE (uso interno, Jorge y Nancy) — captura cada actividad una vez para armar el reporte mensual de Planeación. Protegida con clave de captura (`CLAVE_CAPTURA`), `noindex`, sin entrada en nav/footer. Backend `apps-script/bitacora.gs`; ver `docs/PLAN-OPERACION-INTERNA.md` Fase 1 |
-| `oficios.html` | Control de oficios OTDE (oct 2026, uso interno de Jorge, Nancy, Alejandro y Marcos) — "Tomar número" compartido por lotes + registro y búsqueda de oficios recibidos. Protegida con clave (`CLAVE_CAPTURA`), `noindex`, sin entrada en nav/footer. Backend `apps-script/oficios.gs`; guía visual `docs/manual-oficios.html`. Ver sección del backend abajo |
+| `bitacora.html` | Bitácora de actividades de OTDE (uso interno, Jorge y Nancy) — captura cada actividad una vez para armar el reporte mensual de Planeación. Protegida con clave de captura (`CLAVE_CAPTURA`), `noindex`, sin entrada en nav/footer. Backend `apps-script/bitacora.gs`; ver `docs/PLAN-OPERACION-INTERNA.md` Fase 1. **Desde el 8 oct 2026 también vive como pestaña "Actividad" de `oficios.html`** (`?embed=1`: sin encabezado, avisa su alto y eventos a la página contenedora por `postMessage`); sigue funcionando sola. `?oficio=OF-NNNN` precarga la actividad de un oficio y lo marca atendido al guardar (ver `docs/ARCHITECTURE.md §31`) |
+| `oficios.html` | **Oficina interna OTDE** (oct 2026, uso interno de Jorge, Nancy, Alejandro y Marcos) — página única con 3 pestañas: **Tomar número** (consecutivo compartido por lotes), **Oficios** (registrar los recibidos + lista que abre en pendientes + "Marcar como atendido") y **Actividad** (la bitácora integrada, `bitacora.html?embed=1`, solo Jorge y Nancy). Una sola entrada con clave (`CLAVE_CAPTURA`), `noindex`, sin entrada en nav/footer. Backend `apps-script/oficios.gs`; guía visual `docs/manual-oficios.html`. Ver sección del backend abajo |
 | `charla-ia.html` | Página del evento IA jun 2026 (sin formulario) |
 | `formacion-docente.html` | Centro de Formación Docente — catálogo dinámico (webinars, seminarios, diplomados, cursos autogestivos, acciones formativas, proyectos didácticos) + registro. Diseño premium propio (ver `docs/DESIGN_SYSTEM.md`) |
 | `instructivo-formacion-docente.html` | Guía imprimible del Centro de Formación Docente, mismo sistema tipográfico que la página anterior |
@@ -641,10 +641,19 @@ ya esté expandido).
   menú "OTDE Oficios → Agregar lote de números" (solo Jorge). Correo a Jorge al quedar ≤10
 - **Oficios recibidos**: llave = **folio de Oficialía de Partes** + año (no duplica); el "No. de
   oficio del remitente" es otro dato. `OF-NNNN`, N.P. por ciclo, PDF a la carpeta de Drive
-  "Oficios OTDE". Un número tomado "para responder" queda anotado en el oficio (pasa a En atención)
-- El oficio **no** va al reporte de la bitácora (la acción sí, paso 2D pendiente)
-- Si cambia la interfaz de `oficios.html`, regenerar las capturas de `images/manual-oficios/`
-  para que la guía no se desfase. Detalle en `docs/ARCHITECTURE.md §31`
+  "Oficios OTDE"
+- **Paso 2D (8 oct 2026, en producción):** el oficio **no** va al reporte; la acción sí. Tomar
+  número "para responder" deja el oficio **Atendido** solo. Si no, "Marcar como atendido" con 3
+  opciones (`atenderOficio`): *ya llega sola* (Mantenimiento/Asesorías/Formación Docente/Correo,
+  sin fila nueva, para no duplicar el reporte), *capturar la actividad* (pestaña Actividad
+  precargada; al guardar, el oficio queda Atendido con su BIT-ID) o *solo conocimiento*. La hoja
+  `Config` tiene "N.P. planeación" por tipo de oficio (propuesta de Claude, **pendiente de
+  revisión de Jorge**). Recordatorios de eventos: pendientes (eran parte del 2D en el plan)
+- Si cambia la interfaz de `oficios.html`/`bitacora.html`, las capturas de
+  `images/manual-oficios/` quedan desfasadas. Se generaron con un script de Playwright sobre la
+  página real con los dos `.gs` en una simulación de Sheets: **ese script no está en el repo**
+  (vivió en la carpeta temporal de la sesión del 8 oct), hay que rehacerlo. Detalle en
+  `docs/ARCHITECTURE.md §31`
 
 ### `apps-script/visitas-jefes.gs` (nuevo, ago 2026)
 - **No es un backend de OTDE** — lo usan jefes de toda la Subdirección (~20 jefes de área +
@@ -1262,9 +1271,12 @@ Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/I
   en M365 y conseguir el Excel de control y 1-2 oficios reales). El consecutivo de oficios lo
   comparte todo OTDE para cualquier documento: propuesta (sin decidir) de un "Tomar número"
   compartido en el 2A, con 5 preguntas pendientes para Jorge en `docs/PLAN-OPERACION-INTERNA.md`.
-  **Actualización 8 oct 2026:** el 2A ya está en producción ("Tomar número" por lotes + control de
-  oficios, `apps-script/oficios.gs`), con guía visual para el equipo. Pendiente: importar el
-  histórico (si no se hizo) y que el equipo deje la lista de papel; sigue el 2B. Ver `docs/ROADMAP.md` ítem 27. Ver `docs/PLAN-OPERACION-INTERNA.md` y `docs/ROADMAP.md` ítem 27.
+  **Actualización 8 oct 2026:** el 2A y el 2D ya están en producción, en una **página única**
+  (`oficios.html`: Tomar número · Oficios · Actividad), con guía visual para el equipo.
+  **Antes de arrancar** (Jorge): confirmar el último número de la lista de papel y corregir
+  "Último usado antes del sistema" en `Lotes` si pasó del 4831, importar el histórico, revisar
+  "N.P. planeación" en `Config`, una prueba real y fecha de arranque. Siguiente: 2B, luego
+  recordatorios. Ver `docs/ROADMAP.md` ítem 27. Ver `docs/PLAN-OPERACION-INTERNA.md` y `docs/ROADMAP.md` ítem 27.
 - **Formación Docente — Workspace, decidir antes del 6 oct 2026**: desde el 28 sep la cuota ya
   no depende de Workspace (calendario en la confirmación + correos "a quien alcance" con reserva
   50 + 20), y los scripts corren en la cuenta Gmail personal, así que la prueba no les sube la

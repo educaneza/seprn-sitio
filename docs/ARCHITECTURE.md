@@ -2935,11 +2935,51 @@ validación y semáforo (§24) · Configurar clave.
 últimos 400 oficios, en una sola llamada); `doPost {accion: 'tomarNumero' | 'cancelarNumero' |
 'registrarOficio', clave, ...}`. La búsqueda es en el navegador sobre esos 400.
 
-**Guía de uso:** `docs/manual-oficios.html` (capturas de `images/manual-oficios/`, generadas con
-Playwright sobre la página real con el backend simulado y datos de ejemplo; enlazada desde
-`oficios.html`). Si cambia la interfaz, regenerar las capturas para que no se desfasen.
+**Paso 2D: oficio atendido → bitácora (8 oct 2026).** El oficio no trae los datos que pide el
+reporte (descripción, beneficiarios, lugar) y muchas acciones ya llegan solas a la bitácora
+(§26), así que crear una fila por oficio atendido duplicaría el reporte. Diseño acordado con Jorge:
+- `ofAnotarSalidaEnOficio_()`: tomar número con `vinculo = OF-NNNN` deja el oficio **Atendido**
+  (Forma "Oficio de salida", `Fecha de atención`, nota en Observaciones). Es el caso más común.
+- `doPost {accion: 'atenderOficio', id, modo, vinculo}` (`ofAtenderOficio_()`), con
+  `OF_MODOS_ATENCION`: `llegaSola` (Atendido, sin fila nueva; vínculo opcional al folio que lo
+  atendió), `bitacora` (exige `vinculo = BIT-NNNN`; lo llama la bitácora al guardar) y
+  `conocimiento`. Idempotente: repetirlo con el mismo vínculo no cambia nada.
+- Columna `Fecha de atención` en `Oficios` (auto-heal al final). En `Config`, columna
+  `N.P. planeación` junto a cada tipo de oficio (`ofAsegurarColumnaNp_()` la agrega con la
+  propuesta de `OF_NP_POR_TIPO` en la primera columna libre si la hoja es anterior). `doGet
+  inicio` devuelve `npPorTipo` y `npLleganSolas` (`OF_NP_LLEGAN_SOLAS`: 7, 8, 12), que la página
+  usa para sugerir "ya llega sola".
+
+**Página única "Oficina interna OTDE" (8 oct 2026).** El primer 2D vivía en dos páginas (ir de
+oficios.html a bitacora.html y volver, con dos claves) y agregaba pasos; Jorge lo cuestionó.
+`oficios.html` quedó con tres pestañas (`PESTANAS`): **Tomar número**, **Oficios** (registro
+plegado tras "+ Registrar un oficio que llegó" y lista que abre con "Solo los que faltan por
+atender"; `estaPendiente()`, `abrirAtender()`) y **Actividad**, que es `bitacora.html?embed=1`
+en un `<iframe>` del mismo sitio:
+- **Una sola entrada:** `prepararSesionBitacora()` deja en `localStorage` (mismo origen) el
+  capturista de la bitácora y, si no hay otra, la misma clave (`otdeBitacoraClave`). Si la
+  bitácora tiene otra clave, la pide una vez dentro de la pestaña. La pestaña y la opción
+  "capturar la actividad" solo aparecen para `CAPTURISTAS_BITACORA` (Jorge, Nancy), que son los
+  que acepta `bitacora.gs`.
+- **Modo integrado de `bitacora.html`** (`EMBEBIDA`): sin encabezado ni "cambiar"; `avisarPadre()`
+  manda por `postMessage` (solo a `location.origin`) `alto` (la página ajusta el `<iframe>`),
+  `pantalla`, `oficioAtendido` (la página recarga la lista con `refrescarDatos()`) e `irA` ("Ver
+  la lista de oficios"). La página solo acepta mensajes de su propio marco y origen.
+- **`?oficio=OF-NNNN&np=&nombre=&origen=`** (`paramsCapturaBitacora()` en oficios.html,
+  `aplicarOficio()` en la bitácora): precarga N.P., nombre (asunto sin mayúsculas sostenidas) y
+  origen; al guardar, `atenderOficio()` llama a `oficios.gs` con la clave de oficios guardada.
+  Si no la hay o falla, la actividad queda guardada y se explica cómo ligarla a mano.
+  `bitacora.gs` no cambió.
+
+**Guía de uso:** `docs/manual-oficios.html` (17 capturas en `images/manual-oficios/`, generadas
+con Playwright sobre la página real, con `oficios.gs` y `bitacora.gs` en una simulación de
+Sheets y datos de ejemplo; enlazada desde `oficios.html`). **El script de capturas y las pruebas
+no están en el repo** (vivieron en la carpeta temporal de la sesión): si cambia la interfaz, hay
+que rehacerlos para regenerar las capturas.
 
 **Verificación (8 oct 2026):** 22 pruebas en Node del `.gs` real con un Sheet simulado (lotes no
 contiguos, `sin_lote`, reintentos, cancelados, vínculo, importación) + importación del Excel real
 (52 oficios, 37 + 15, 3 avisos) + 13 pruebas de navegador con la red interceptada. En vivo:
-`curl` sin clave y con clave falsa → `no_autorizado`.
+`curl` sin clave y con clave falsa → `no_autorizado`. Página única + 2D (mismo día): 29 pruebas en Node + 11 de navegador con los dos backends
+simulados (recorrido completo, usuario sin bitácora, bitácora con otra clave) + las 13 anteriores
+adaptadas; 0 errores de consola y 0 peticiones externas.
