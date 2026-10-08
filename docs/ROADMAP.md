@@ -757,7 +757,7 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     **Recomendación: cancelar la prueba antes del 6 oct** si no hay otro motivo para conservarla.
     Decisión de Jorge pendiente.
 
-27. **Operación interna OTDE — Fase 1 en producción; alimentación desde Mantenimiento, Asesorías, Formación Docente, Soporte y Correo en producción (6 oct 2026); sigue la Fase 2** (23-24 sep 2026, ver
+27. **Operación interna OTDE — Fase 1 en producción; alimentación desde Mantenimiento, Asesorías, Formación Docente, Soporte y Correo en producción (6 oct 2026); Fase 2A (Tomar número + control de oficios) en producción (8 oct 2026)** (23-24 sep 2026, ver
     `docs/PLAN-OPERACION-INTERNA.md` y `docs/BITACORA.md` checkpoint "cont. 2"): bitácora única
     con reporte mensual automático, control de oficios con recordatorios, padrón de programas por
     CCT con consulta móvil, `.ics` mensual para Outlook y tablero, este último ampliando el
@@ -795,11 +795,15 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     asesoría de IA (N.P. 9) sigue a mano por ahora. **Sigue (b):** Fase 2, ampliada el 1 oct 2026 a **gestor de oficios** con una sola puerta de
     entrada (control con las 10 columnas del Excel actual, solicitudes de la Oficina Virtual que
     entran solas, redacción del oficio de salida con consecutivo, acción atendida → bitácora y
-    archivo digital; pasos 2A-2E en `docs/PLAN-OPERACION-INTERNA.md`). Para el 2A faltan: el Excel de
-    control, 1-2 oficios reales, un oficio de salida con membrete y su consecutivo (ojo: el
-    consecutivo lo comparte todo OTDE para cualquier documento; propuesta de un "Tomar número"
-    compartido en el 2A, con 5 preguntas pendientes en `docs/PLAN-OPERACION-INTERNA.md`), y verificar si
-    la licencia M365 de `@dee.edu.mx` incluye Power Automate para capturar oficios desde Outlook.
+    archivo digital; pasos 2A-2E en `docs/PLAN-OPERACION-INTERNA.md`). **2A en producción (8 oct
+    2026):** "Tomar número" compartido por lotes + control de oficios recibidos
+    (`apps-script/oficios.gs` + `oficios.html`, guía `docs/manual-oficios.html`, ver
+    `docs/ARCHITECTURE.md §31`). Pendiente del 2A: que Jorge corra "Importar histórico" con el Excel
+    real (si no lo hizo) y revise los avisos (folios 3102 y 3622, fechas imposibles), que el equipo
+    deje la lista de papel y haga los retos de la guía, y comprobar el primer número real (4832).
+    **Siguiente:** 2B (solicitudes de la Oficina Virtual que traen oficio → control). Para el 2C
+    falta un oficio de salida con membrete en Word (ya está `MACHOTE.docx` en `docs/insumos/`).
+    Sigue sin verificar si la licencia M365 de `@dee.edu.mx` incluye Power Automate.
 
 28. **Formación Docente — calendario y cuota "a quien alcance": verificación en uso real**
     (construido, desplegado y verificado en vivo el 28 sep 2026, ver `docs/ARCHITECTURE.md §12` y

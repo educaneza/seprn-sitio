@@ -14,6 +14,23 @@ para qué otro documento tocar además de este.
 
 ---
 
+## CHECKPOINT — 2026-10-08 · Fase 2A en producción: "Tomar número" compartido por lotes + control de oficios, con guía visual
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-08 |
+| **Sesión** | Jorge retomó la bitácora y eligió arrancar el paso 2A (gestor de oficios) junto con el "Tomar número" que quedó propuesto el 6 oct. Contestó las preguntas del consecutivo y dejó los insumos en `docs/insumos/`: el Excel `CONTROL DE OFICIOS 2026.xlsx`, un oficio que baja (CoEEE 2016, Kit Cuantrix), su respuesta (`MACHOTE.docx`, OTDE 4824) y un oficio que sube (Supervisión 31). |
+| **Datos nuevos** | La lista de números es de **toda la Subdirección**: a OTDE le asignan un lote por año (2026: 4501-5000, último usado a mano 4831) y otro si se acaba, no necesariamente contiguo. Formato `228C0101110500T/<n>/<año>`, reinicio por año calendario. "Elabora" se elige por nombre y el destino es una sola casilla. El "No. de folio recibido de particular" del Excel es el folio que pone **Oficialía de Partes**, que sella y turna todo oficio; el "No. de oficio elaboración" es el del remitente. |
+| **Construido** | `apps-script/oficios.gs` (891 líneas, proyecto separado de la bitácora) y `oficios.html` (946, con clave): reparto del siguiente libre dentro de los lotes bajo `LockService`, idempotente, sin reutilizar cancelados y con correo a Jorge al quedar 10 o menos. Registro de oficios con llave folio de Oficialía + año, `OF-NNNN`, N.P. por ciclo, PDF a Drive y "Tomar número para responder", que anota el número en el oficio. Importación repetible del Excel. Ver `docs/ARCHITECTURE.md §31`. |
+| **Bugs en pruebas** | (1) Reimportar duplicaba la fila con fecha de recepción 1904: se importaba con la clave de la fecha de elaboración y se comparaba contra la de 1904. Ahora también deduplica por el `ID de envío` `IMPORT:…`. (2) El Excel real trae una fila basura sin folio ("satua") y una fecha de elaboración de 1900: se salta la primera y se marca la segunda. (3) Un reintento o un folio repetido subía otra vez el PDF y lo dejaba huérfano: ahora se revisa antes de subir (`ofOficioYaExiste_`). Ninguno llegó a producción. |
+| **Verificación** | 22 pruebas en Node del `.gs` real con un Sheet simulado. Importación del Excel real: 52 oficios (37 + 15) y 3 avisos; reimportar da 0 nuevos. 13 pruebas de navegador (Playwright) con el `.gs` como backend y la red interceptada: 0 errores de consola y 0 peticiones externas; a 390 px no hay scroll horizontal. Jorge desplegó y en vivo `curl` responde `servicio` sin acción y `no_autorizado` sin clave y con clave falsa. No se escribió en el Sheet real. Publicado (`64ca92f`, run en success, página en vivo con la URL). |
+| **Guía para el equipo** | A pedido de Jorge ("requiere práctica"), `docs/manual-oficios.html`: 12 capturas reales en celular con marcas numeradas (`images/manual-oficios/`, 904 KB, datos de ejemplo), 3 reglas de oro, quién hace qué, el oficio de papel señalando folio del sello (A) contra el número del remitente (B), "¿Qué hago si…?" y 6 retos de práctica (sin números de prueba, porque gastan el lote). `oficios.html` la enlaza. Publicada (`71e2201`). |
+| **Pendiente** | Jorge: correr "Importar histórico" si no lo hizo y revisar los avisos (folios 3102 y 3622), compartir la liga y la clave con el equipo, y confirmar el primer número real (4832). Siguiente paso de la Fase 2: 2B. |
+| **Documentación actualizada** | Este checkpoint, `docs/ARCHITECTURE.md §31` (nueva), `docs/PLAN-OPERACION-INTERNA.md`, `docs/ROADMAP.md` ítem 27, `CLAUDE.md` (páginas, backend y pendientes) y `README.md` (árbol). |
+| **Commits** | `64ca92f` (sistema), `71e2201` (guía) y el de esta documentación. |
+
+---
+
 ## CHECKPOINT — 2026-10-06 (cont. 4) · Fase 2 explicada; el consecutivo de oficios es compartido por todo OTDE (sin código)
 
 | | |

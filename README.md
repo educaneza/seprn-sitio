@@ -86,6 +86,7 @@ seprn-sitio/
 ├── ficha-ceremonias-civicas.html # Ficha post-visita de Ceremonias Cívicas, localizada por folio — sin entrada en nav/footer, link directo
 ├── estrategias-nacionales.html   # Estrategias Nacionales (sep 2026) — selección mensual de escuelas por estrategia, 1 escuela = 1 estrategia por ciclo; se llega desde academica.html
 ├── excel-facil.html              # Excel fácil (oct 2026) — herramienta 100% local de 6 módulos (duplicados, filtros, validar RFC/CURP/CCT, Word, fórmulas, IA); un solo archivo con librerías incrustadas, funciona sin internet; link directo
+├── oficios.html                  # Control de oficios OTDE (oct 2026) — "Tomar número" compartido por lotes + registro de oficios recibidos; con clave, link directo
 ├── 404.html                      # Página de error personalizada
 │
 ├── js/
@@ -102,7 +103,8 @@ seprn-sitio/
 │   ├── correo/                   # Backend Correo Institucional (movido aquí el 31 ago 2026, antes en Correos-institucionales/webform-2026-2027/) — 9 archivos, un solo proyecto de Apps Script: Config.gs, WebApp.gs, Alta.gs, CambioContrasena.gs, Reset2FA.gs, Incidencias.gs, OnEdit.gs, GenerarResumenSIGEE.gs, ResumenSemanal.gs
 │   ├── panel-otde.gs             # Panel único de solicitudes pendientes (ago 2026) — Sheet aparte, agrega los 4 backends con folio
 │   ├── visitas-jefes.gs          # Backend Ceremonias Cívicas (ago 2026) — SEPRN-wide, no un trámite de OTDE; folio SEPRN-CC-NNNN, sin correo/Telegram a propósito
-│   └── estrategias-nacionales.gs # Backend Estrategias Nacionales (sep 2026) — folio SEPRN-EN-NNNN, bloqueo duro por ciclo, sin correo/Telegram
+│   ├── estrategias-nacionales.gs # Backend Estrategias Nacionales (sep 2026) — folio SEPRN-EN-NNNN, bloqueo duro por ciclo, sin correo/Telegram
+│   └── oficios.gs                # Backend Control de oficios (oct 2026) — lotes de números, oficios recibidos OF-NNNN, PDF a Drive
 │
 ├── descargas/                    # Instaladores/ejecutables descargables
 │   ├── Instalador_Office_2019_OTDE.exe
@@ -115,7 +117,8 @@ seprn-sitio/
 │   ├── DESIGN_SYSTEM.md          # Tokens/patrones del rediseño premium de Formación Docente
 │   ├── QA-NOTES.md               # Bugs reales ya cazados, con causa raíz — consultar antes de fetch()/appendRow() nuevos
 │   ├── manual-sistema-registro.html    # Manual de uso interno del sistema de registro (Conferencia IA)
-│   └── manual-formacion-docente.html   # Manual de uso interno del Centro de Formación Docente
+│   ├── manual-formacion-docente.html   # Manual de uso interno del Centro de Formación Docente
+│   └── manual-oficios.html             # Guía rápida visual del Control de oficios (capturas en images/manual-oficios/)
 │
 ├── kit-digital/                  # Recursos digitales OTDE (banco de materiales)
 │

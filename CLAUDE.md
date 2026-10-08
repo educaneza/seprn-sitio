@@ -150,6 +150,7 @@ ya esté expandido).
 | `asistencia.html` | Check-in de asistencia (eventos) |
 | `reporte-visita.html` | Formulario de captura del técnico tras una visita de Mantenimiento — reemplaza el llenado a mano de "Reportes de visita" en el Sheet, ver `apps-script/mantenimiento.gs` abajo. Sin entrada en nav/footer, se comparte por link directo |
 | `bitacora.html` | Bitácora de actividades de OTDE (uso interno, Jorge y Nancy) — captura cada actividad una vez para armar el reporte mensual de Planeación. Protegida con clave de captura (`CLAVE_CAPTURA`), `noindex`, sin entrada en nav/footer. Backend `apps-script/bitacora.gs`; ver `docs/PLAN-OPERACION-INTERNA.md` Fase 1 |
+| `oficios.html` | Control de oficios OTDE (oct 2026, uso interno de Jorge, Nancy, Alejandro y Marcos) — "Tomar número" compartido por lotes + registro y búsqueda de oficios recibidos. Protegida con clave (`CLAVE_CAPTURA`), `noindex`, sin entrada en nav/footer. Backend `apps-script/oficios.gs`; guía visual `docs/manual-oficios.html`. Ver sección del backend abajo |
 | `charla-ia.html` | Página del evento IA jun 2026 (sin formulario) |
 | `formacion-docente.html` | Centro de Formación Docente — catálogo dinámico (webinars, seminarios, diplomados, cursos autogestivos, acciones formativas, proyectos didácticos) + registro. Diseño premium propio (ver `docs/DESIGN_SYSTEM.md`) |
 | `instructivo-formacion-docente.html` | Guía imprimible del Centro de Formación Docente, mismo sistema tipográfico que la página anterior |
@@ -628,6 +629,22 @@ ya esté expandido).
   "No" saca la fila del reporte (oficios de solicitud, que no son acciones). Las columnas nuevas
   las crea "Preparar hojas"
 - Detalle completo en `docs/ARCHITECTURE.md §26`
+
+### `apps-script/oficios.gs` (nuevo, oct 2026)
+- **Fase 2A de la operación interna** (`docs/PLAN-OPERACION-INTERNA.md`): Sheet "Control de
+  oficios OTDE" con hojas `Lotes`, `Numeros`, `Oficios`, `Config` e `Importar`. Frontend
+  `oficios.html` (`OFICIOS_APPS_SCRIPT_URL`), en producción el 8 oct 2026
+- **Tomar número**: la lista de números es de toda la Subdirección; OTDE reparte solo dentro de
+  los **lotes** que le asignan cada año (2026: 4501-5000; el sistema empezó en el 4832). Formato
+  `228C0101110500T/<n>/<año>`, reinicio por año calendario. Bajo `LockService`, idempotente por
+  `ID de envío`, nunca reutiliza un número (cancelar = `Estatus` Cancelado + motivo). Lote nuevo:
+  menú "OTDE Oficios → Agregar lote de números" (solo Jorge). Correo a Jorge al quedar ≤10
+- **Oficios recibidos**: llave = **folio de Oficialía de Partes** + año (no duplica); el "No. de
+  oficio del remitente" es otro dato. `OF-NNNN`, N.P. por ciclo, PDF a la carpeta de Drive
+  "Oficios OTDE". Un número tomado "para responder" queda anotado en el oficio (pasa a En atención)
+- El oficio **no** va al reporte de la bitácora (la acción sí, paso 2D pendiente)
+- Si cambia la interfaz de `oficios.html`, regenerar las capturas de `images/manual-oficios/`
+  para que la guía no se desfase. Detalle en `docs/ARCHITECTURE.md §31`
 
 ### `apps-script/visitas-jefes.gs` (nuevo, ago 2026)
 - **No es un backend de OTDE** — lo usan jefes de toda la Subdirección (~20 jefes de área +
@@ -1244,7 +1261,10 @@ Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/I
   oficios con una sola puerta (pasos 2A-2E; Jorge decide si se adelanta a Formación Docente; antes verificar Power Automate
   en M365 y conseguir el Excel de control y 1-2 oficios reales). El consecutivo de oficios lo
   comparte todo OTDE para cualquier documento: propuesta (sin decidir) de un "Tomar número"
-  compartido en el 2A, con 5 preguntas pendientes para Jorge en `docs/PLAN-OPERACION-INTERNA.md`. Ver `docs/ROADMAP.md` ítem 27. Ver `docs/PLAN-OPERACION-INTERNA.md` y `docs/ROADMAP.md` ítem 27.
+  compartido en el 2A, con 5 preguntas pendientes para Jorge en `docs/PLAN-OPERACION-INTERNA.md`.
+  **Actualización 8 oct 2026:** el 2A ya está en producción ("Tomar número" por lotes + control de
+  oficios, `apps-script/oficios.gs`), con guía visual para el equipo. Pendiente: importar el
+  histórico (si no se hizo) y que el equipo deje la lista de papel; sigue el 2B. Ver `docs/ROADMAP.md` ítem 27. Ver `docs/PLAN-OPERACION-INTERNA.md` y `docs/ROADMAP.md` ítem 27.
 - **Formación Docente — Workspace, decidir antes del 6 oct 2026**: desde el 28 sep la cuota ya
   no depende de Workspace (calendario en la confirmación + correos "a quien alcance" con reserva
   50 + 20), y los scripts corren en la cuenta Gmail personal, así que la prueba no les sube la

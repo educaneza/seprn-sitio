@@ -2878,3 +2878,68 @@ encabezado/pie de página quedan en blanco en ese modo (la página lo avisa).
 **Verificado (6 oct 2026, Playwright con la red externa bloqueada):** cero peticiones de red,
 los 4 grupos de duplicados y los 13 errores sembrados en el archivo de práctica, 59 `.docx` en el
 `.zip` y 58 saltos en el combinado, y 20,000 filas procesadas en menos de 1 s.
+
+## 31. Control de oficios + "Tomar número" compartido (oct 2026)
+
+**Origen:** paso 2A de la Fase 2 (`docs/PLAN-OPERACION-INTERNA.md`). Dos piezas en un mismo Sheet
+("Control de oficios OTDE"), backend `apps-script/oficios.gs` y frontend `oficios.html` (con clave
+`CLAVE_CAPTURA`, `noindex`, sin nav/footer, mismo lenguaje visual que `bitacora.html`). Proyecto de
+Apps Script **separado de la bitácora**: el oficio no va al reporte mensual, la acción con que se
+atiende sí (paso 2D, pendiente).
+
+**1. Tomar número.** Los números de oficio (`228C0101110500T/<consecutivo>/<año>`,
+`OF_PREFIJO_NUMERO`) no son de OTDE: la lista es de toda la Subdirección, que cada año asigna a
+OTDE un **lote** (2026: 4501-5000) y otro cuando se agota, no necesariamente contiguo. Jorge,
+Nancy, Alejandro y Marcos los usan para cualquier documento. Por eso el sistema no numera solo:
+- `ofTomarNumero_()` reparte, bajo `LockService`, el siguiente libre de los lotes del año en curso
+  en el orden en que se capturaron (`ofResumenLotes_()` / `ofSiguienteEnLote_()`). El siguiente
+  libre es "después del mayor usado en el lote", **sin rellenar huecos** (un hueco puede ser un
+  número tomado por fuera). Columna `Último usado antes del sistema` en `Lotes`: el lote semilla
+  (`OF_LOTE_SEMILLA`) trae 4831, así que el primer número del sistema fue el 4832.
+- Idempotente por `ID de envío` (patrón §27). Un número nunca se borra ni se reutiliza:
+  `ofCancelarNumero_()` solo pone `Estatus = Cancelado` y anota motivo, quién y cuándo en `Notas`.
+- El año se toma de la fecha actual: el 1 de enero responde `sin_lote` hasta que Jorge capture el
+  lote nuevo (menú "Agregar lote de números", `ofAgregarLote()`, valida que no se encime).
+- `ofAvisarSiQuedanPocos_()`: correo a la cuenta que corre el script cuando quedan
+  `OF_UMBRAL_AVISO` (10) o menos, máx. 1 por día (Script Property `OF_AVISO_POCOS`).
+
+**2. Control de oficios recibidos** (reemplaza al Excel "CONTROL DE OFICIOS 2026"). Todo oficio
+pasa primero por **Oficialía de Partes**, que lo sella y le pone su propio número: el **Folio de
+Oficialía de Partes** (en el Excel, "No. de folio recibido de particular"). Folio + año de
+recepción es la llave que impide registrar dos veces el mismo oficio (`status: 'repetido'`).
+"No. de oficio del remitente" es el que trae el oficio. `ofRegistrarOficio_()` asigna `OF-NNNN`
+(continuo) y `N.P.` por ciclo (agosto abre ciclo), con `Dirección` (Baja/Sube), `Estatus`
+(Recibido/En atención/Atendido/Solo conocimiento) y `Forma de atención`. Si un número se toma con
+`vinculo = OF-NNNN`, `ofAnotarSalidaEnOficio_()` lo agrega a `Oficio(s) de salida` y pasa el
+oficio de Recibido a En atención.
+- **PDF:** se sube a Drive **antes** del candado (puede tardar), pero solo si
+  `ofOficioYaExiste_()` confirma que no es un reintento ni un folio repetido (si no, quedaba un
+  PDF huérfano). Carpeta `OF_CARPETA_PDF` ("Oficios OTDE") con subcarpeta por mes
+  (`ofCarpetaMes_()`), compartida una sola vez "cualquiera con el link, ver" para que se abra
+  desde el celular; el link solo aparece en el Sheet y detrás de la clave.
+- **Importación del histórico** (`ofImportarHistorico_()`, menú): se pega la Hoja1 del Excel en la
+  pestaña `Importar`. Detecta la fila separadora "CICLO ESCOLAR AAAA-AAAA" para el ciclo, marca en
+  Observaciones las fechas imposibles (antes de 2020) sin corregirlas, salta filas sin folio, pone
+  `Atendido` al ciclo cerrado y `Recibido` al actual, y deduce `Dirección` solo por el remitente
+  (`ofDireccionProbable_()`: escuela/zona/sector = Sube). Es repetible: deduplica por folio + año
+  y también por el `ID de envío` `IMPORT:<clave>` (una fila con fecha de recepción inválida se
+  importó con la clave de su fecha de elaboración; sin esto se duplicaba al reimportar).
+
+**Hojas** (todas leídas por encabezado, `ofIndices_()`, con auto-heal de columnas faltantes):
+`Lotes`, `Numeros`, `Oficios`, `Config` (tres listas editables: Elabora, Destinos —Comisión,
+Sectores, CoEEE, Comisión sindical, Otro—, y Tipos de oficio —los 18 de la Hoja2 del Excel—) e
+`Importar`. Menú "OTDE Oficios": Agregar lote · Importar histórico · Preparar hojas · Aplicar
+validación y semáforo (§24) · Configurar clave.
+
+**Endpoints:** `doGet ?action=inicio&clave=` (config, resumen de lote, últimos 40 números y
+últimos 400 oficios, en una sola llamada); `doPost {accion: 'tomarNumero' | 'cancelarNumero' |
+'registrarOficio', clave, ...}`. La búsqueda es en el navegador sobre esos 400.
+
+**Guía de uso:** `docs/manual-oficios.html` (capturas de `images/manual-oficios/`, generadas con
+Playwright sobre la página real con el backend simulado y datos de ejemplo; enlazada desde
+`oficios.html`). Si cambia la interfaz, regenerar las capturas para que no se desfasen.
+
+**Verificación (8 oct 2026):** 22 pruebas en Node del `.gs` real con un Sheet simulado (lotes no
+contiguos, `sin_lote`, reintentos, cancelados, vínculo, importación) + importación del Excel real
+(52 oficios, 37 + 15, 3 avisos) + 13 pruebas de navegador con la red interceptada. En vivo:
+`curl` sin clave y con clave falsa → `no_autorizado`.
