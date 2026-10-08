@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
-  <title>Control de oficios | SEPRN · OTDE</title>
+  <title>Oficina interna | SEPRN · OTDE</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png">
   <style>
@@ -55,7 +55,7 @@
       font-size: inherit; cursor: pointer; font-family: inherit; padding: 0;
     }
 
-    .tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: .4rem; margin-bottom: 1rem; }
+    .tabs { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: .4rem; margin-bottom: 1rem; }
     .tab {
       font-family: inherit; font-size: .85rem; font-weight: 700; cursor: pointer;
       padding: .65rem .4rem; border-radius: 10px; border: 1.5px solid rgba(255,255,255,.18);
@@ -178,7 +178,23 @@
     .btn-mini:hover { background: #ecd3da; }
     .cancelar-box { display: flex; gap: .4rem; margin-top: .45rem; width: 100%; }
     .cancelar-box input { padding: .45rem .6rem; font-size: .85rem; }
+    .badge.Solo-conocimiento { background: #e5e7eb; color: #374151; }
+
+    /* Paso 2D: marcar un oficio como atendido */
+    .atender { width: 100%; margin-top: .55rem; border-top: 1px dashed var(--border); padding-top: .6rem; }
+    .atender p { font-size: .8rem; font-weight: 700; color: var(--guinda); margin-bottom: .4rem; }
+    .atender .opcion { margin-bottom: .4rem; }
+    .atender .opcion small { font-weight: 400; }
+    .atender .sugerida { font-size: .68rem; font-weight: 700; color: #065f46; background: #d1fae5; border-radius: 999px; padding: .05rem .45rem; margin-left: .3rem; }
+    .atender input[type="text"] { padding: .45rem .6rem; font-size: .85rem; margin-top: .4rem; }
+    .atender .fila-btn { display: flex; gap: .4rem; margin-top: .5rem; flex-wrap: wrap; }
+    .atender .msg { font-size: .78rem; color: #dc2626; margin-top: .35rem; }
+    .filtro { display: flex; align-items: center; gap: .45rem; font-size: .82rem; margin: -.4rem 0 .9rem; color: var(--text); }
+    .filtro input { width: 18px; height: 18px; accent-color: var(--guinda-ac); }
     .vacio { font-size: .85rem; color: var(--muted); text-align: center; padding: .75rem 0; }
+    .btn-abrir { margin-bottom: 1rem; }
+    #registro-wrap { margin-bottom: 1rem; }
+    #bitacora-frame { display: block; width: 100%; min-height: 480px; border: 0; background: transparent; color-scheme: normal; }
 
     @media (max-width: 420px) {
       .fila-2, .opciones { grid-template-columns: 1fr; }
@@ -190,7 +206,7 @@
 
 <header class="hdr">
   <div class="brand">SEPRN <span>·</span> OTDE</div>
-  <span class="tag">OFICIOS</span>
+  <span class="tag">INTERNO</span>
 </header>
 
 <main>
@@ -205,8 +221,8 @@
   <!-- Clave (una vez por dispositivo) -->
   <div class="hidden" id="screen-clave">
     <div class="intro">
-      <h1>Control de oficios</h1>
-      <p>Uso interno de OTDE. Escribe la clave una sola vez; este dispositivo la recuerda.</p>
+      <h1>Oficina interna OTDE</h1>
+      <p>Números de oficio, oficios recibidos y actividades para el reporte mensual, en un solo lugar. Escribe la clave una sola vez; este dispositivo la recuerda.</p>
       <p class="sesion">¿Primera vez? <a class="link-btn" href="docs/manual-oficios.html" target="_blank" rel="noopener">Ver la guía rápida</a></p>
     </div>
     <form class="card" id="form-clave" novalidate>
@@ -231,14 +247,14 @@
   <!-- Aplicación -->
   <div class="hidden" id="screen-app">
     <div class="intro">
-      <h1>Control de oficios</h1>
+      <h1>Oficina interna OTDE</h1>
       <p class="sesion">Usando como <strong id="lbl-quien"></strong> · <button type="button" class="link-btn" id="btn-salir">cambiar</button> · <a class="link-btn" href="docs/manual-oficios.html" target="_blank" rel="noopener">Guía</a></p>
     </div>
 
     <div class="tabs" role="tablist">
       <button type="button" class="tab" role="tab" id="tab-numero" aria-controls="panel-numero" aria-selected="true">Tomar número</button>
-      <button type="button" class="tab" role="tab" id="tab-registrar" aria-controls="panel-registrar" aria-selected="false">Registrar oficio</button>
-      <button type="button" class="tab" role="tab" id="tab-buscar" aria-controls="panel-buscar" aria-selected="false">Buscar</button>
+      <button type="button" class="tab" role="tab" id="tab-oficios" aria-controls="panel-oficios" aria-selected="false">Oficios</button>
+      <button type="button" class="tab" role="tab" id="tab-actividad" aria-controls="panel-actividad" aria-selected="false">Actividad</button>
     </div>
 
     <!-- Tomar número -->
@@ -247,7 +263,7 @@
       <form class="card" id="form-numero" novalidate>
         <h2>Tomar número de oficio</h2>
         <div class="vinculo" id="vinculo-box">
-          Respuesta al oficio <strong id="vinculo-txt"></strong>. El número se anotará en ese oficio.
+          Respuesta al oficio <strong id="vinculo-txt"></strong>. Al tomar el número, ese oficio quedará atendido.
           <button type="button" class="link-btn" id="btn-quitar-vinculo">quitar</button>
         </div>
         <div class="campo">
@@ -293,8 +309,10 @@
       </div>
     </section>
 
-    <!-- Registrar oficio recibido -->
-    <section id="panel-registrar" role="tabpanel" class="hidden">
+    <!-- Oficios: registrar (plegado) + lista de pendientes / búsqueda -->
+    <section id="panel-oficios" role="tabpanel" class="hidden">
+      <button type="button" class="btn btn-abrir" id="btn-abrir-registro">+ Registrar un oficio que llegó</button>
+      <div class="hidden" id="registro-wrap">
       <form class="card" id="form-oficio" novalidate>
         <h2>Registrar oficio recibido</h2>
         <div class="fila-2">
@@ -363,6 +381,7 @@
           <div class="error-msg" id="err-of-pdf"></div>
         </div>
         <button type="submit" class="btn" id="btn-oficio">Registrar oficio</button>
+        <button type="button" class="btn btn-sec" id="btn-cerrar-registro" style="margin-top:.5rem;">Cancelar</button>
         <div class="envio-error" id="oficio-error"></div>
       </form>
 
@@ -373,20 +392,25 @@
         <div class="botones">
           <button type="button" class="btn hidden" id="btn-responder-nuevo">Tomar número para la respuesta</button>
           <button type="button" class="btn btn-sec" id="btn-otro-oficio">Registrar otro oficio</button>
+          <button type="button" class="btn btn-sec" id="btn-listo-oficio">Listo</button>
         </div>
       </div>
-    </section>
+      </div>
 
-    <!-- Buscar -->
-    <section id="panel-buscar" role="tabpanel" class="hidden">
       <div class="card">
-        <h2>Buscar oficios recibidos</h2>
+        <h2>Oficios recibidos</h2>
         <div class="campo">
           <label for="buscar">Folio, remitente, asunto, tipo o número de salida</label>
           <input type="search" id="buscar" placeholder="Ej. 3622, CoEEE, Cuantrix, 4824">
         </div>
+        <label class="filtro"><input type="checkbox" id="solo-pendientes" checked> Solo los que faltan por atender</label>
         <div class="lista" id="lista-oficios"></div>
       </div>
+    </section>
+
+    <!-- Actividad: la bitácora, integrada (bitacora.html?embed=1) -->
+    <section id="panel-actividad" role="tabpanel" class="hidden">
+      <iframe id="bitacora-frame" title="Bitácora de actividades" src="about:blank"></iframe>
     </section>
   </div>
 </main>
@@ -518,6 +542,7 @@ function aplicarDatos(d, quien) {
   $('remitentes').innerHTML = '';
   Object.keys(remitentes).sort().forEach(function (r) { const o = el('option'); o.value = r; $('remitentes').appendChild(o); });
   $('lbl-quien').textContent = quien;
+  $('tab-actividad').classList.toggle('hidden', CAPTURISTAS_BITACORA.indexOf(quien) === -1);
   pintarLote();
   pintarNumeros();
   pintarOficios();
@@ -543,6 +568,7 @@ $('form-clave').addEventListener('submit', async function (ev) {
     const d = await cargar(clave);
     guardarLS(LS_CLAVE, clave);
     guardarLS(LS_QUIEN, quien);
+    prepararSesionBitacora(clave, quien);
     aplicarDatos(d, quien);
     reiniciarNumero();
     reiniciarOficio();
@@ -556,21 +582,78 @@ $('form-clave').addEventListener('submit', async function (ev) {
 $('btn-salir').addEventListener('click', function () {
   borrarLS(LS_CLAVE);
   borrarLS(LS_QUIEN);
+  borrarLS(LS_BIT_CAPTURO);
+  $('bitacora-frame').src = 'about:blank';
+  actividadCargada = false;
+  abrirTab('numero');
   $('clave').value = '';
   $('quien').value = '';
   mostrar('screen-clave');
 });
 
 // ── Pestañas ──
+const PESTANAS = ['numero', 'oficios', 'actividad'];
 function abrirTab(nombre) {
-  ['numero', 'registrar', 'buscar'].forEach(function (t) {
+  PESTANAS.forEach(function (t) {
     $('tab-' + t).setAttribute('aria-selected', String(t === nombre));
     $('panel-' + t).classList.toggle('hidden', t !== nombre);
   });
+  if (nombre === 'actividad' && !actividadCargada) abrirActividad(null);
 }
-['numero', 'registrar', 'buscar'].forEach(function (t) {
+PESTANAS.forEach(function (t) {
   $('tab-' + t).addEventListener('click', function () { abrirTab(t); });
 });
+
+// ── Actividad: la bitácora de siempre, dentro de esta página (página única, 8 oct 2026) ──
+// Misma clave: al entrar aquí se deja guardada para la bitácora (mismo sitio, mismo
+// localStorage). Si la bitácora tiene otra clave, la pide una vez dentro de la pestaña.
+const CAPTURISTAS_BITACORA = ['Jorge', 'Nancy'];
+const LS_BIT_CLAVE = 'otdeBitacoraClave';
+const LS_BIT_CAPTURO = 'otdeBitacoraCapturo';
+let actividadCargada = false;
+
+function puedeCapturar() {
+  return CAPTURISTAS_BITACORA.indexOf(leerLS(LS_QUIEN)) !== -1;
+}
+
+function prepararSesionBitacora(clave, quien) {
+  if (CAPTURISTAS_BITACORA.indexOf(quien) === -1) return;
+  guardarLS(LS_BIT_CAPTURO, quien);
+  if (!leerLS(LS_BIT_CLAVE)) guardarLS(LS_BIT_CLAVE, clave);
+}
+
+function abrirActividad(oficio) {
+  const frame = $('bitacora-frame');
+  frame.style.height = '';
+  frame.src = 'bitacora.html?embed=1' + (oficio ? '&' + paramsCapturaBitacora(oficio) : '');
+  actividadCargada = true;
+  abrirTab('actividad');
+  window.scrollTo(0, 0);
+}
+
+// Mensajes de la bitácora integrada (solo del marco propio y del mismo sitio).
+window.addEventListener('message', function (ev) {
+  const frame = $('bitacora-frame');
+  if (ev.origin !== location.origin || ev.source !== frame.contentWindow) return;
+  const m = ev.data || {};
+  if (m.fuente !== 'bitacora') return;
+  if (m.tipo === 'alto' && m.alto > 0) frame.style.height = m.alto + 'px';
+  if (m.tipo === 'pantalla' && !$('panel-actividad').classList.contains('hidden')) {
+    const y = $('panel-actividad').getBoundingClientRect().top + window.scrollY - 80;
+    if (window.scrollY > y) window.scrollTo(0, Math.max(0, y));
+  }
+  if (m.tipo === 'oficioAtendido') refrescarDatos();
+  if (m.tipo === 'irA' && PESTANAS.indexOf(m.destino) !== -1) { abrirTab(m.destino); window.scrollTo(0, 0); }
+});
+
+// Vuelve a pedir lotes, números y oficios sin tocar lo que se está capturando.
+async function refrescarDatos() {
+  try {
+    const d = await cargar(leerLS(LS_CLAVE));
+    estado.lote = d.lote; estado.numeros = d.numeros || []; estado.oficios = d.oficios || [];
+    pintarLote(); pintarNumeros(); pintarOficios();
+  } catch (e) {}
+}
 
 // ── Lote ──
 function pintarLote() {
@@ -656,7 +739,7 @@ $('form-numero').addEventListener('submit', async function (ev) {
       }
       $('ok-consecutivo').textContent = d.consecutivo;
       $('ok-numero').textContent = d.numero;
-      $('ok-numero-detalle').textContent = vinculo ? 'Anotado como respuesta al oficio ' + vinculo.id + '.' : '';
+      $('ok-numero-detalle').textContent = vinculo ? 'El oficio ' + vinculo.id + ' quedó atendido con este número.' : '';
       idEnvioNumero = null;
       $('form-numero').classList.add('hidden');
       $('numero-ok').classList.remove('hidden');
@@ -768,6 +851,20 @@ function reiniciarOficio() {
   $('oficio-ok').classList.add('hidden');
 }
 
+function abrirRegistro() {
+  reiniciarOficio();
+  $('registro-wrap').classList.remove('hidden');
+  $('btn-abrir-registro').classList.add('hidden');
+  $('of-folio').focus();
+}
+function cerrarRegistro() {
+  $('registro-wrap').classList.add('hidden');
+  $('btn-abrir-registro').classList.remove('hidden');
+}
+$('btn-abrir-registro').addEventListener('click', abrirRegistro);
+$('btn-cerrar-registro').addEventListener('click', cerrarRegistro);
+$('btn-listo-oficio').addEventListener('click', cerrarRegistro);
+
 ['of-folio', 'of-remitente', 'of-asunto'].forEach(function (id) {
   $(id).addEventListener('input', function () { marcarError(id, false); });
 });
@@ -839,7 +936,10 @@ $('form-oficio').addEventListener('submit', async function (ev) {
       pintarOficios();
     } else if (d.status === 'repetido') {
       idEnvioOficio = null;
-      mostrarError('oficio-error', d.mensaje + ' Búscalo en la pestaña "Buscar".');
+      mostrarError('oficio-error', d.mensaje + ' Está en la lista de abajo.');
+      $('buscar').value = $('of-folio').value.trim();
+      $('solo-pendientes').checked = false;
+      pintarOficios();
     } else {
       mostrarError('oficio-error', errorDeEstado(d));
     }
@@ -852,7 +952,7 @@ $('form-oficio').addEventListener('submit', async function (ev) {
 $('btn-otro-oficio').addEventListener('click', reiniciarOficio);
 $('btn-responder-nuevo').addEventListener('click', function () {
   if (ultimoOficio) responderOficio(ultimoOficio);
-  reiniciarOficio();
+  cerrarRegistro();
 });
 
 // ── Buscar ──
@@ -861,7 +961,7 @@ function anotarSalidaLocal(id, numero) {
   if (!o) return;
   o.salida = o.salida ? o.salida + '; ' + numero : numero;
   if (!o.forma) o.forma = 'Oficio de salida';
-  if (o.estatus === 'Recibido') o.estatus = 'En atención';
+  if (o.estatus !== 'Atendido' && o.estatus !== 'Solo conocimiento') o.estatus = 'Atendido';
 }
 
 function normalizar(s) {
@@ -872,7 +972,9 @@ function pintarOficios() {
   const q = normalizar($('buscar').value.trim());
   const lista = $('lista-oficios');
   lista.innerHTML = '';
+  const soloPendientes = $('solo-pendientes').checked;
   const hallados = estado.oficios.filter(function (o) {
+    if (soloPendientes && !estaPendiente(o)) return false;
     if (!q) return true;
     return normalizar([o.id, o.folioOP, o.remitente, o.asunto, o.tipo, o.numRemitente, o.salida, o.ciclo].join(' ')).indexOf(q) !== -1;
   });
@@ -891,17 +993,22 @@ function pintarOficios() {
     item.appendChild(el('div', 'meta', o.remitente + ' · ' + fechaCorta(o.recepcion) + ' · ' + o.id +
       (o.tipo ? ' · ' + o.tipo : '')));
     if (o.salida) item.appendChild(el('div', 'meta', 'Oficio(s) de salida: ' + o.salida));
+    if (o.vinculo) item.appendChild(el('div', 'meta', 'Atendido con: ' + o.vinculo));
     const acc = el('div', 'acciones');
     if (/^https:\/\//.test(o.pdf)) {
       const a = el('a', 'btn-mini', 'Ver PDF');
       a.href = o.pdf; a.target = '_blank'; a.rel = 'noopener';
       acc.appendChild(a);
     }
-    if (o.estatus !== 'Atendido' && o.estatus !== 'Solo conocimiento') {
+    if (estaPendiente(o)) {
       const b = el('button', 'btn-mini', 'Tomar número para responder');
       b.type = 'button';
       b.addEventListener('click', function () { responderOficio(o); });
       acc.appendChild(b);
+      const at = el('button', 'btn-mini', 'Marcar como atendido');
+      at.type = 'button';
+      at.addEventListener('click', function () { abrirAtender(item, acc, o); });
+      acc.appendChild(at);
     }
     if (acc.childNodes.length) item.appendChild(acc);
     lista.appendChild(item);
@@ -911,6 +1018,102 @@ function pintarOficios() {
   }
 }
 $('buscar').addEventListener('input', pintarOficios);
+$('solo-pendientes').addEventListener('change', pintarOficios);
+
+function estaPendiente(o) {
+  return o.estatus !== 'Atendido' && o.estatus !== 'Solo conocimiento';
+}
+
+// ── Paso 2D: atender un oficio (llega sola / capturar en la bitácora / solo conocimiento) ──
+
+function npSugerido(o) {
+  return (estado.config.npPorTipo || {})[o.tipo] || '';
+}
+
+// "SEMINARIOS VIRTUALES EN EL MES" → "Seminarios virtuales en el mes" (solo si viene todo en mayúsculas).
+function sinMayusculas(t) {
+  t = String(t || '').trim();
+  if (t !== t.toUpperCase()) return t;
+  t = t.toLowerCase();
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
+function paramsCapturaBitacora(o) {
+  const p = new URLSearchParams({
+    oficio: o.id,
+    np: npSugerido(o),
+    nombre: sinMayusculas(o.asunto),
+    origen: 'Oficio ' + (o.numRemitente || 's/n') + ' de ' + o.remitente + ' (folio de Oficialía ' + o.folioOP + ')'
+  });
+  return p.toString();
+}
+
+function abrirAtender(item, acc, o) {
+  acc.classList.add('hidden');
+  const caja = el('div', 'atender');
+  const np = npSugerido(o);
+  const llegaSola = np && (estado.config.npLleganSolas || []).indexOf(np) !== -1;
+  caja.appendChild(el('p', null, '¿Cómo se atendió?'));
+  const nombre = 'modo-' + o.id;
+  const opciones = [
+    ['llegaSola', 'La acción ya llega sola a la bitácora', 'Mantenimiento, asesoría, curso de Formación Docente o correo institucional. No se captura de nuevo.'],
+    ['bitacora', 'Capturar la acción en la bitácora', 'Se abre la pestaña Actividad con los datos del oficio' + (np ? ' y el N.P. ' + np : '') + '. Al guardar, este oficio queda atendido.'],
+    ['conocimiento', 'Solo para conocimiento', 'No requirió ninguna acción.']
+  ];
+  const capturar = puedeCapturar();
+  const sugerida = llegaSola ? 'llegaSola' : (o.forma === 'Solo conocimiento' ? 'conocimiento' : (capturar ? 'bitacora' : 'llegaSola'));
+  opciones.filter(function (op) { return capturar || op[0] !== 'bitacora'; }).forEach(function (op) {
+    const l = el('label', 'opcion');
+    const r = el('input'); r.type = 'radio'; r.name = nombre; r.value = op[0];
+    if (op[0] === sugerida) r.checked = true;
+    l.appendChild(r);
+    l.appendChild(document.createTextNode(op[1]));
+    if (op[0] === sugerida) l.appendChild(el('span', 'sugerida', 'sugerida'));
+    l.appendChild(el('small', null, op[2]));
+    caja.appendChild(l);
+  });
+  const ref = el('input');
+  ref.type = 'text';
+  ref.placeholder = 'Folio o BIT-ID con que se atendió (opcional), ej. OTDE-MAN-0031';
+  ref.setAttribute('aria-label', 'Folio o ID con que se atendió');
+  caja.appendChild(ref);
+  const msg = el('div', 'msg');
+  const fila = el('div', 'fila-btn');
+  const ok = el('button', 'btn-mini', 'Confirmar');
+  ok.type = 'button';
+  const no = el('button', 'btn-mini', 'Cancelar');
+  no.type = 'button';
+  fila.appendChild(ok); fila.appendChild(no);
+  caja.appendChild(fila);
+  caja.appendChild(msg);
+
+  const actualizar = function () {
+    const modo = caja.querySelector('input[name="' + nombre + '"]:checked').value;
+    ref.classList.toggle('hidden', modo !== 'llegaSola');
+    ok.textContent = modo === 'bitacora' ? 'Capturar la actividad' : 'Confirmar';
+  };
+  caja.addEventListener('change', actualizar);
+  actualizar();
+  no.addEventListener('click', pintarOficios);
+  ok.addEventListener('click', async function () {
+    const modo = caja.querySelector('input[name="' + nombre + '"]:checked').value;
+    if (modo === 'bitacora') { abrirActividad(o); return; }
+    ok.disabled = true;
+    ok.textContent = 'Guardando…';
+    msg.textContent = '';
+    try {
+      const d = await post({ accion: 'atenderOficio', id: o.id, modo: modo, vinculo: ref.value.trim(), elabora: leerLS(LS_QUIEN) });
+      if (d.status !== 'ok') throw new Error(errorDeEstado(d));
+      Object.assign(o, d.oficio);
+      pintarOficios();
+    } catch (e) {
+      ok.disabled = false;
+      ok.textContent = 'Confirmar';
+      msg.textContent = mensajeDeFallo(e, true);
+    }
+  });
+  item.appendChild(caja);
+}
 
 // ── Arranque: si el dispositivo ya tiene clave, entra directo ──
 (async function iniciar() {
@@ -927,10 +1130,12 @@ $('buscar').addEventListener('input', pintarOficios);
   }, 1000);
   try {
     const d = await cargar(clave);
+    prepararSesionBitacora(clave, quien);
     aplicarDatos(d, quien);
     reiniciarNumero();
     reiniciarOficio();
     mostrar('screen-app');
+    if (/^#actividad$/.test(location.hash) && puedeCapturar()) abrirTab('actividad');
   } catch (e) {
     if (e.message === MSG_CLAVE_INCORRECTA) borrarLS(LS_CLAVE);
     $('quien').value = quien;

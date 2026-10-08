@@ -197,6 +197,27 @@
       font-size: 1.1rem; margin: .75rem 0 1.25rem;
     }
 
+    /* Paso 2D (oct 2026): actividad que atiende un oficio de Control de oficios */
+    .oficio-aviso {
+      background: #eef2ff; border: 1px solid #c7d2fe; color: #1e1b4b; border-radius: 8px;
+      padding: .65rem .8rem; font-size: .82rem; margin-bottom: 1.1rem; line-height: 1.4;
+    }
+    .oficio-aviso button {
+      background: none; border: none; padding: 0; font: inherit; color: var(--guinda-ac);
+      text-decoration: underline; cursor: pointer;
+    }
+    .ok-oficio { font-size: .85rem; border-radius: 8px; padding: .65rem .8rem; margin: 0 0 1rem; text-align: left; }
+    .ok-oficio.bien { background: #d1fae5; color: #065f46; }
+    .ok-oficio.pendiente { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+    .ok-oficio a { color: inherit; font-weight: 700; }
+
+    /* Modo integrado (?embed=1): la bitácora vive como pestaña "Actividad" de
+       oficios.html (página única de OTDE). Sin encabezado propio ni "cambiar":
+       la sesión la maneja la página que la contiene. */
+    html.embebida body { min-height: 0; background: transparent; }
+    html.embebida .hdr, html.embebida .intro .sesion { display: none; }
+    html.embebida main { padding: 0 0 1rem; max-width: none; }
+
     @media (max-width: 420px) {
       .fila-2 { grid-template-columns: 1fr; }
     }
@@ -254,6 +275,10 @@
     </div>
 
     <form class="card" id="form-actividad" novalidate>
+      <div class="oficio-aviso campo-oculto" id="oficio-aviso" role="status">
+        Capturando la acción del oficio <strong id="oficio-aviso-id"></strong>. Al guardar, quedará
+        atendido en Control de oficios. <button type="button" id="btn-quitar-oficio">No es de un oficio</button>
+      </div>
       <fieldset>
         <legend>Planeación</legend>
         <div class="campo">
@@ -398,6 +423,7 @@
       <h2>Actividad guardada</h2>
       <p id="ok-detalle"></p>
       <div class="id-final" id="ok-id"></div>
+      <div class="ok-oficio campo-oculto" id="ok-oficio" role="status"></div>
       <button type="button" class="btn" id="btn-otra">Capturar otra actividad</button>
     </div>
   </div>
@@ -428,7 +454,44 @@ let descripcionPrevia = null; // para "Deshacer" al sugerir o reusar una descrip
 let cctSeleccionada = null;
 let ultimoResponsableAuto = '';
 
+// ── Paso 2D: actividad que atiende un oficio (llega de oficios.html con
+// ?oficio=OF-NNNN&np=..&nombre=..&origen=..). Al guardar, se marca el oficio
+// como atendido con la clave de Control de oficios guardada en este navegador
+// (mismo sitio, mismo localStorage). Si no hay clave, se avisa cómo hacerlo a mano.
+const OFICIOS_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzWKPpkmYKCFniWWvSsN_rkG3UCFvUW9CaMqq-BhZseLokvScYHxn-BCH6B5Cg3GBQ2/exec';
+const LS_CLAVE_OFICIOS = 'otdeOficiosClave';
+let oficioActual = (function () {
+  try {
+    const p = new URLSearchParams(location.search);
+    const id = (p.get('oficio') || '').trim().toUpperCase();
+    if (!/^OF-\d+$/.test(id)) return null;
+    return { id: id, np: (p.get('np') || '').trim(), nombre: (p.get('nombre') || '').trim(), origen: (p.get('origen') || '').trim() };
+  } catch (e) { return null; }
+})();
+
 const $ = function (id) { return document.getElementById(id); };
+
+// ── Modo integrado en oficios.html (página única, 8 oct 2026) ──
+const EMBEBIDA = (function () {
+  try { return new URLSearchParams(location.search).get('embed') === '1' && window.parent !== window; } catch (e) { return false; }
+})();
+function avisarPadre(msg) {
+  if (!EMBEBIDA) return;
+  try { window.parent.postMessage(Object.assign({ fuente: 'bitacora' }, msg), location.origin); } catch (e) {}
+}
+if (EMBEBIDA) {
+  document.documentElement.classList.add('embebida');
+  // El alto lo pone la página contenedora: se le avisa cada vez que cambia.
+  const reportarAlto = function () {
+    const main = document.querySelector('main');
+    if (main) avisarPadre({ tipo: 'alto', alto: Math.ceil(main.getBoundingClientRect().bottom + window.scrollY) });
+  };
+  window.addEventListener('load', reportarAlto);
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.ResizeObserver) new ResizeObserver(reportarAlto).observe(document.querySelector('main'));
+    reportarAlto();
+  });
+}
 
 function leerLS(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
 function guardarLS(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
@@ -439,6 +502,7 @@ function mostrar(pantalla) {
     $(id).classList.toggle('hidden', id !== pantalla);
   });
   window.scrollTo(0, 0);
+  avisarPadre({ tipo: 'pantalla', pantalla: pantalla });
 }
 
 // Contador en el botón mientras espera al servidor (oct 2026, "que se note que sigue
@@ -515,6 +579,7 @@ async function entrar(clave, capturo) {
   poblarFormulario(d);
   $('lbl-capturo').textContent = capturo;
   reiniciarFormulario();
+  aplicarOficio();
   mostrar('screen-form');
 }
 
@@ -1003,7 +1068,14 @@ $('form-actividad').addEventListener('submit', async function (ev) {
         (mesNum ? ' · entra en el reporte de ' + MESES[mesNum - 1] : '');
       $('ok-id').textContent = d.id;
       idEnvioActual = null;
+      $('ok-oficio').classList.add('campo-oculto');
       mostrar('screen-ok');
+      if (oficioActual) {
+        const oficio = oficioActual;
+        olvidarOficio();
+        $('ok-oficio').classList.remove('campo-oculto');
+        await atenderOficio(oficio, d.id);
+      }
     } else if (d.status === 'sin_clave') {
       errorBox.textContent = MSG_SIN_CLAVE;
       errorBox.classList.add('visible');
@@ -1044,6 +1116,71 @@ function reiniciarFormulario() {
   cctSeleccionada = null;
   idEnvioActual = null;
   actualizarFechaPreview();
+}
+
+function aplicarOficio() {
+  $('oficio-aviso').classList.toggle('campo-oculto', !oficioActual);
+  if (!oficioActual) return;
+  $('oficio-aviso-id').textContent = oficioActual.id;
+  const planeada = oficioActual.np && acciones.some(function (a) { return a.np === oficioActual.np; });
+  $('np').value = planeada ? oficioActual.np : 'NP';
+  $('np').dispatchEvent(new Event('change'));
+  if (!planeada) $('origen').value = oficioActual.origen;
+  if (oficioActual.nombre) $('tipo-nombre').value = oficioActual.nombre;
+}
+
+function olvidarOficio() {
+  oficioActual = null;
+  $('oficio-aviso').classList.add('campo-oculto');
+  try { history.replaceState(null, '', location.pathname); } catch (e) {}
+}
+
+$('btn-quitar-oficio').addEventListener('click', olvidarOficio);
+
+// Marca el oficio como atendido en Control de oficios. Idempotente del lado del
+// servidor: si se repite con el mismo BIT-ID, no cambia nada.
+// En modo integrado, los enlaces a oficios.html del aviso cambian de pestaña en
+// la página contenedora en vez de abrir otra página dentro del marco.
+if (EMBEBIDA) {
+  $('ok-oficio').addEventListener('click', function (ev) {
+    if (!ev.target.closest('a[href="oficios.html"]')) return;
+    ev.preventDefault();
+    avisarPadre({ tipo: 'irA', destino: 'oficios' });
+  });
+}
+
+async function atenderOficio(oficio, bitId) {
+  const caja = $('ok-oficio');
+  caja.className = 'ok-oficio';
+  const aMano = 'Márcalo a mano en <a href="oficios.html">Control de oficios</a>: Buscar → ' +
+    oficio.id + ' → Marcar como atendido.';
+  const clave = leerLS(LS_CLAVE_OFICIOS);
+  if (!clave) {
+    caja.classList.add('pendiente');
+    caja.innerHTML = 'Este navegador no tiene la clave de Control de oficios, así que el oficio ' +
+      oficio.id + ' no se marcó como atendido. ' + aMano;
+    return;
+  }
+  caja.classList.add('pendiente');
+  caja.textContent = 'Marcando el oficio ' + oficio.id + ' como atendido…';
+  try {
+    const d = await fetchJsonConTimeout(OFICIOS_APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ accion: 'atenderOficio', clave: clave, id: oficio.id, modo: 'bitacora',
+        vinculo: bitId, elabora: leerLS(LS_CAPTURO) })
+    }, BITACORA_TIMEOUT_ENVIO_MS);
+    if (d.status !== 'ok') throw new Error(d.mensaje || d.status);
+    caja.className = 'ok-oficio bien';
+    caja.innerHTML = 'El oficio <strong></strong> quedó atendido con esta actividad. <a href="oficios.html">Volver a Control de oficios</a>';
+    caja.querySelector('strong').textContent = oficio.id;
+    avisarPadre({ tipo: 'oficioAtendido', id: oficio.id, bitId: bitId });
+    if (EMBEBIDA) caja.querySelector('a').textContent = 'Ver la lista de oficios';
+  } catch (e) {
+    caja.className = 'ok-oficio pendiente';
+    caja.innerHTML = 'La actividad sí se guardó, pero no se pudo marcar el oficio ' + oficio.id +
+      ' como atendido. ' + aMano;
+  }
 }
 
 $('btn-otra').addEventListener('click', function () {

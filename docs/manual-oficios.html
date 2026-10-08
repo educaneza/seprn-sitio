@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
-  <title>Guía rápida · Control de oficios OTDE</title>
+  <title>Guía rápida · Oficina interna OTDE</title>
   <link rel="icon" href="../favicon.svg" type="image/svg+xml">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -190,8 +190,8 @@
 <header class="cover">
   <div class="org">SEPRN · Oficina de Tecnología para el Desarrollo Educativo</div>
   <span class="badge">Guía rápida</span>
-  <h1>Control de oficios OTDE</h1>
-  <p>Para tomar el número de cualquier documento y registrar los oficios que llegan, sin la lista de papel. Se usa desde el celular o la computadora.</p>
+  <h1>Oficina interna OTDE</h1>
+  <p>Una sola página para tomar el número de cualquier documento, llevar los oficios que llegan y capturar las actividades del reporte mensual. Desde el celular o la computadora.</p>
   <a class="cta" href="../oficios.html">Abrir el sistema</a>
 </header>
 
@@ -201,12 +201,15 @@
     <h2>En esta guía</h2>
     <ol>
       <li><a href="#reglas">Las 3 reglas de oro</a></li>
+      <li><a href="#pestanas">Una página, 3 pestañas</a></li>
       <li><a href="#entrar">Entrar la primera vez</a></li>
       <li><a href="#numero">Tomar un número</a></li>
       <li><a href="#cancelar">Cancelar un número que no se usó</a></li>
       <li><a href="#registrar">Registrar un oficio que llega</a></li>
       <li><a href="#responder">Responder un oficio</a></li>
-      <li><a href="#buscar">Buscar un oficio</a></li>
+      <li><a href="#buscar">La lista de oficios</a></li>
+      <li><a href="#atender">Marcar un oficio como atendido</a></li>
+      <li><a href="#actividad">Capturar una actividad</a></li>
       <li><a href="#problemas">¿Qué hago si…?</a></li>
       <li><a href="#practica">Retos de práctica</a></li>
     </ol>
@@ -240,15 +243,33 @@
     <div class="roles">
       <div class="rol">
         <div class="quien">Todo el equipo</div>
-        <ul><li>Tomar número</li><li>Cancelar un número propio</li><li>Buscar oficios</li></ul>
+        <ul><li>Tomar número</li><li>Cancelar un número propio</li><li>Consultar oficios</li></ul>
       </div>
       <div class="rol">
         <div class="quien">Nancy</div>
-        <ul><li>Registrar los oficios que llegan</li><li>Subir el PDF escaneado</li></ul>
+        <ul><li>Registrar los oficios que llegan</li><li>Marcar los oficios como atendidos</li><li>Capturar actividades (pestaña Actividad)</li></ul>
       </div>
       <div class="rol">
         <div class="quien">Jorge</div>
-        <ul><li>Capturar un lote nuevo de números</li><li>Corregir datos en la hoja</li></ul>
+        <ul><li>Capturar actividades (pestaña Actividad)</li><li>Capturar un lote nuevo de números</li><li>Corregir datos en la hoja</li></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 0. Pestañas -->
+  <section class="section" id="pestanas">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <h2>Una página, 3 pestañas<span class="cuando">Todo se hace aquí: no hay que saltar a otras páginas</span></h2>
+    </div>
+    <div class="paso">
+      <div class="tel"><img src="../images/manual-oficios/00-pestanas.png" alt="Las tres pestañas: Tomar número, Oficios y Actividad" loading="lazy"></div>
+      <div>
+        <ol class="pasos">
+          <li><span class="n">1</span><div><b>Tomar número</b> para cualquier documento que lleve número de oficio.</div></li>
+          <li><span class="n">2</span><div><b>Oficios:</b> registrar los que llegan y ver cuáles faltan por atender.</div></li>
+          <li><span class="n">3</span><div><b>Actividad:</b> lo que se hizo, para el reporte mensual de Planeación (la bitácora).<small>Solo la ven Jorge y Nancy, que son quienes capturan el reporte.</small></div></li>
+        </ol>
       </div>
     </div>
   </section>
@@ -256,7 +277,7 @@
   <!-- 1. Entrar -->
   <section class="section" id="entrar">
     <div class="section-header">
-      <div class="section-num">1</div>
+      <div class="section-num">2</div>
       <h2>Entrar la primera vez<span class="cuando">Solo una vez por celular o computadora</span></h2>
     </div>
     <div class="paso">
@@ -269,7 +290,7 @@
         </ol>
         <div class="bien">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>
-          <div>Listo. La próxima vez que abras la página, entra directo.</div>
+          <div>Listo. Es <b>una sola clave para las 3 pestañas</b>, y la próxima vez que abras la página entras directo.</div>
         </div>
         <div class="tip">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></svg>
@@ -282,7 +303,7 @@
   <!-- 2. Tomar número -->
   <section class="section" id="numero">
     <div class="section-header">
-      <div class="section-num">2</div>
+      <div class="section-num">3</div>
       <h2>Tomar un número<span class="cuando">Antes de imprimir cualquier documento que lleve número</span></h2>
     </div>
     <div class="paso">
@@ -319,7 +340,7 @@
   <!-- 3. Cancelar -->
   <section class="section" id="cancelar">
     <div class="section-header">
-      <div class="section-num">3</div>
+      <div class="section-num">4</div>
       <h2>Cancelar un número que no se usó<span class="cuando">El documento ya no salió, o se tomó dos veces</span></h2>
     </div>
     <div class="paso">
@@ -342,11 +363,19 @@
   <!-- 4. Registrar -->
   <section class="section" id="registrar">
     <div class="section-header">
-      <div class="section-num">4</div>
+      <div class="section-num">5</div>
       <h2>Registrar un oficio que llega<span class="cuando">Cuando Oficialía de Partes nos turna un oficio</span></h2>
     </div>
 
-    <p class="lead">Primero, ubica los dos números del oficio. <b>No son el mismo</b> y es la confusión más común:</p>
+    <div class="paso">
+      <div class="tel"><img src="../images/manual-oficios/06a-oficios-registrar.png" alt="Pestaña Oficios con el botón Registrar un oficio que llegó" loading="lazy"></div>
+      <div>
+        <ol class="pasos">
+          <li><span class="n">1</span><div>En la pestaña <b>Oficios</b>, toca <b>+ Registrar un oficio que llegó</b>.</div></li>
+        </ol>
+      </div>
+    </div>
+    <p class="lead">Antes de llenar, ubica los dos números del oficio. <b>No son el mismo</b> y es la confusión más común:</p>
     <div class="papel-wrap">
       <div class="papel" aria-hidden="true">
         <div class="membrete"><span>EDUCACIÓN · SEIEM</span><span>CoEEE</span></div>
@@ -365,7 +394,7 @@
     <div class="paso" style="margin-top:1.5rem;">
       <div class="tel"><img src="../images/manual-oficios/06-registrar-a.png" alt="Primera parte del formulario Registrar oficio" loading="lazy"></div>
       <div>
-        <p class="titulo-paso">Pestaña «Registrar oficio» (parte 1)</p>
+        <p class="titulo-paso">El formulario (parte 1)</p>
         <ol class="pasos">
           <li><span class="n">1</span><div><b>Folio de Oficialía de Partes</b>, el del sello (A).</div></li>
           <li><span class="n">2</span><div><b>Fecha de recepción</b>, la del sello.</div></li>
@@ -407,7 +436,7 @@
         <p class="titulo-paso">Oficio registrado</p>
         <ol class="pasos">
           <li><span class="n">1</span><div>El sistema le da una <b>clave interna</b> (OF-0004) y su <b>N.P.</b> del ciclo, como en el Excel.</div></li>
-          <li><span class="n">2</span><div>Si elegiste «Oficio de salida», aparece <b>Tomar número para la respuesta</b>. Ve al paso 5.</div></li>
+          <li><span class="n">2</span><div>Si elegiste «Oficio de salida», aparece <b>Tomar número para la respuesta</b>. Ve al paso 6.</div></li>
         </ol>
         <div class="tip">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></svg>
@@ -420,20 +449,20 @@
   <!-- 5. Responder -->
   <section class="section" id="responder">
     <div class="section-header">
-      <div class="section-num">5</div>
+      <div class="section-num">6</div>
       <h2>Responder un oficio<span class="cuando">Cuando un oficio recibido se contesta con otro oficio</span></h2>
     </div>
     <div class="paso">
       <div class="tel"><img src="../images/manual-oficios/09-responder.png" alt="Formulario Tomar número con el aviso de respuesta al oficio" loading="lazy"></div>
       <div>
-        <p class="lead">Llegas aquí de dos maneras: justo después de registrar el oficio, o desde <b>Buscar</b> con el botón <b>Tomar número para responder</b>.</p>
+        <p class="lead">Llegas aquí de dos maneras: justo después de registrar el oficio, o desde la lista de <b>Oficios</b> con el botón <b>Tomar número para responder</b>.</p>
         <ol class="pasos">
-          <li><span class="n">1</span><div>Este aviso confirma <b>a qué oficio respondes</b>. El número quedará anotado en él.</div></li>
+          <li><span class="n">1</span><div>Este aviso confirma <b>a qué oficio respondes</b>.</div></li>
           <li><span class="n">2</span><div>El asunto ya viene escrito. <b>Ajústalo</b> si hace falta, elige «Dirigido a» y toca <b>Tomar número</b>.</div></li>
         </ol>
         <div class="bien">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>
-          <div>El oficio recibido pasa solo a <b>«En atención»</b> y guarda el número con que se respondió. Así se puede rastrear siempre qué contestamos.</div>
+          <div><b>Con eso el oficio queda atendido.</b> No hay que marcarlo después: sale de pendientes y guarda el número con que se respondió.</div>
         </div>
       </div>
     </div>
@@ -442,25 +471,99 @@
   <!-- 6. Buscar -->
   <section class="section" id="buscar">
     <div class="section-header">
-      <div class="section-num">6</div>
-      <h2>Buscar un oficio<span class="cuando">«¿Ya llegó el de Cuantrix?», «¿Con qué número lo contestamos?»</span></h2>
+      <div class="section-num">7</div>
+      <h2>La lista de oficios<span class="cuando">«¿Qué falta por atender?», «¿Ya llegó el de Cuantrix?», «¿Con qué lo contestamos?»</span></h2>
     </div>
     <div class="paso">
-      <div class="tel"><img src="../images/manual-oficios/10-buscar.png" alt="Pestaña Buscar con un resultado" loading="lazy"></div>
+      <div class="tel"><img src="../images/manual-oficios/10-buscar.png" alt="Lista de oficios pendientes en la pestaña Oficios" loading="lazy"></div>
       <div>
         <ol class="pasos">
-          <li><span class="n">1</span><div>Escribe <b>lo que recuerdes</b>: folio, remitente, una palabra del asunto, el programa o el número con que se respondió.</div></li>
-          <li><span class="n">2</span><div>El color te dice en qué va:
-            <small><b style="background:#fde68a;color:#78350f;padding:0 .35rem;border-radius:6px;">Recibido</b> llegó y nadie lo ha atendido ·
-            <b style="background:#bfdbfe;color:#1e3a8a;padding:0 .35rem;border-radius:6px;">En atención</b> ya se está trabajando ·
-            <b style="background:#bbf7d0;color:#14532d;padding:0 .35rem;border-radius:6px;">Atendido</b> terminado</small></div></li>
-          <li><span class="n">3</span><div><b>Ver PDF</b> para abrir el oficio escaneado, o <b>Tomar número para responder</b>.</div></li>
+          <li><span class="n">1</span><div>Para buscar, escribe <b>lo que recuerdes</b>: folio, remitente, una palabra del asunto, el programa o el número con que se respondió.</div></li>
+          <li><span class="n">2</span><div>Al abrir, la lista muestra <b>solo lo que falta por atender</b>. Quita la marca para ver todos.</div></li>
+          <li><span class="n">3</span><div>El color te dice en qué va:
+            <small><b style="background:#fde68a;color:#78350f;padding:0 .35rem;border-radius:6px;">Recibido</b> falta atenderlo ·
+            <b style="background:#bbf7d0;color:#14532d;padding:0 .35rem;border-radius:6px;">Atendido</b> terminado ·
+            <b style="background:#e5e7eb;color:#374151;padding:0 .35rem;border-radius:6px;">Solo conocimiento</b> no pedía nada</small></div></li>
+          <li><span class="n">4</span><div><b>Tomar número para responder</b> (paso 6) o <b>Marcar como atendido</b> (paso 8). Si tiene PDF, también <b>Ver PDF</b>.</div></li>
         </ol>
       </div>
     </div>
   </section>
 
-  <!-- 7. Problemas -->
+  <!-- 7. Atender -->
+  <section class="section" id="atender">
+    <div class="section-header">
+      <div class="section-num">8</div>
+      <h2>Marcar un oficio como atendido<span class="cuando">Cuando ya se hizo lo que pedía el oficio</span></h2>
+    </div>
+    <p class="lead">Es para los oficios que <b>no</b> se contestaron con otro oficio (esos ya quedan atendidos solos, paso 6). En la lista de <b>Oficios</b>, toca <b>Marcar como atendido</b> y elige cómo se atendió:</p>
+    <div class="paso">
+      <div class="tel"><img src="../images/manual-oficios/13-atender.png" alt="Opciones para marcar un oficio como atendido" loading="lazy"></div>
+      <div>
+        <ol class="pasos">
+          <li><span class="n">1</span><div><b>La acción ya llega sola a la bitácora.</b> Para mantenimiento, asesoría, un curso de Formación Docente o correo institucional: esos sistemas ya mandan su actividad a la bitácora.<small>El sistema la marca como «sugerida» cuando el tipo de oficio es uno de esos.</small></div></li>
+          <li><span class="n">2</span><div><b>Capturar la acción en la bitácora.</b> Para todo lo demás (MIED, CUANTRIX, UNETE, reuniones…). Abre la pestaña <b>Actividad</b> con los datos del oficio ya puestos.<small>Solo aparece para Jorge y Nancy.</small></div></li>
+          <li><span class="n">3</span><div><b>Solo para conocimiento.</b> El oficio no pedía hacer nada.</div></li>
+          <li><span class="n">4</span><div>En la opción 1, escribe el <b>folio</b> con que se atendió, si lo tienes (ej. OTDE-MAN-0031). Es opcional.</div></li>
+          <li><span class="n">5</span><div>Toca <b>Confirmar</b> (o <b>Capturar la actividad</b> en la opción 2).</div></li>
+        </ol>
+        <div class="ojo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17h.01"/></svg>
+          <div><b>Si la acción ya llega sola, no la captures en la bitácora.</b> Saldría dos veces en el reporte de Planeación.</div>
+        </div>
+      </div>
+    </div>
+    <div class="paso">
+      <div class="tel"><img src="../images/manual-oficios/14-bitacora-oficio.png" alt="Bitácora abierta con los datos del oficio" loading="lazy"></div>
+      <div>
+        <p class="titulo-paso">Si elegiste «Capturar la acción en la bitácora»</p>
+        <ol class="pasos">
+          <li><span class="n">1</span><div>Este aviso confirma <b>de qué oficio</b> es la actividad.</div></li>
+          <li><span class="n">2</span><div>La <b>acción de la planeación</b> ya viene elegida según el tipo de oficio. Cámbiala si no corresponde.</div></li>
+          <li><span class="n">3</span><div>El <b>nombre</b> viene del asunto del oficio: ajústalo a lo que se hizo (ej. «CUANTRIX» y abajo «Entrega de kit en ceremonia cívica»).</div></li>
+        </ol>
+        <p style="font-size:.92rem;margin-top:.25rem;">Completa lo que el oficio no sabe (fecha en que se hizo, lugar, descripción y beneficiarios) y toca <b>Guardar actividad</b>, como siempre.</p>
+
+      </div>
+    </div>
+    <div class="paso">
+      <div class="tel"><img src="../images/manual-oficios/15-bitacora-ok.png" alt="Actividad guardada y oficio atendido" loading="lazy"></div>
+      <div>
+        <ol class="pasos">
+          <li><span class="n">1</span><div>El ID de la actividad en la bitácora.</div></li>
+          <li><span class="n">2</span><div>Confirmación de que el oficio <b>quedó atendido</b> con esa actividad. <b>Ver la lista de oficios</b> te regresa a la pestaña Oficios, ya actualizada.</div></li>
+        </ol>
+        <div class="tip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></svg>
+          <div>En la lista, el oficio mostrará «Atendido con: BIT-…»: siempre se sabe con qué actividad se atendió.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. Actividad -->
+  <section class="section" id="actividad">
+    <div class="section-header">
+      <div class="section-num">9</div>
+      <h2>Capturar una actividad<span class="cuando">Jorge y Nancy · lo que se hizo, aunque no venga de un oficio</span></h2>
+    </div>
+    <div class="paso" style="grid-template-columns:1fr;">
+      <div>
+        <p class="lead" style="margin-bottom:.6rem;">La pestaña <b>Actividad</b> es la bitácora de siempre, ahora dentro de esta página. Úsala para todo lo que se hizo y va al reporte mensual: una reunión, una visita o una capacitación, venga o no de un oficio.</p>
+        <ol class="pasos">
+          <li><span class="n">1</span><div>Toca la pestaña <b>Actividad</b>.</div></li>
+          <li><span class="n">2</span><div>Elige la <b>acción de la planeación</b>; el propósito y los beneficiarios se sugieren solos.</div></li>
+          <li><span class="n">3</span><div>Llena fecha, lugar, descripción y beneficiarios, y toca <b>Guardar actividad</b>.</div></li>
+        </ol>
+        <div class="ojo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17h.01"/></svg>
+          <div><b>No captures</b> mantenimientos, asesorías, cursos de Formación Docente, soporte ni correo institucional: <b>llegan solos</b> al reporte.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10. Problemas -->
   <section class="section" id="problemas">
     <div class="section-header">
       <div class="section-num">?</div>
@@ -473,7 +576,7 @@
       </details>
       <details>
         <summary>…dice que el folio ya está registrado</summary>
-        <p>Ese oficio ya lo registró alguien. Búscalo en <b>Buscar</b> con el folio del sello antes de volver a capturarlo.</p>
+        <p>Ese oficio ya lo registró alguien. El sistema te lo muestra en la lista de abajo; no lo captures otra vez.</p>
         <img src="../images/manual-oficios/11-aviso-repetido.png" alt="Aviso: el folio de Oficialía de Partes ya está registrado" loading="lazy">
       </details>
       <details>
@@ -482,12 +585,20 @@
         <img src="../images/manual-oficios/12-aviso-sin-numeros.png" alt="Aviso: no quedan números en los lotes del año" loading="lazy">
       </details>
       <details>
+        <summary>…la pestaña Actividad dice que no se pudo marcar el oficio como atendido</summary>
+        <p>La actividad <b>sí se guardó</b>. En <b>Oficios</b>, busca el oficio → <b>Marcar como atendido</b> → «La acción ya llega sola a la bitácora» y escribe el BIT-ID que te dio. Así queda ligado sin capturar nada de nuevo.</p>
+      </details>
+      <details>
+        <summary>…la pestaña Actividad me pide una clave</summary>
+        <p>La bitácora tiene una clave distinta a la de esta página. Escríbela una vez ahí mismo y el dispositivo la recuerda. (Jorge puede poner la misma clave en los dos sistemas para que nunca pase.)</p>
+      </details>
+      <details>
         <summary>…me equivoqué en un dato de un oficio ya registrado</summary>
         <p>No lo registres otra vez. Dile a Jorge qué hay que corregir; él lo cambia directo en la hoja.</p>
       </details>
       <details>
         <summary>…tomé un número por error</summary>
-        <p>Cancélalo con su motivo (<a href="#cancelar">paso 3</a>). No intentes «reusarlo» para otro documento.</p>
+        <p>Cancélalo con su motivo (<a href="#cancelar">paso 4</a>). No intentes «reusarlo» para otro documento.</p>
       </details>
       <details>
         <summary>…me pide la clave otra vez o dice «clave incorrecta»</summary>
@@ -511,11 +622,12 @@
     <p class="lead">Se aprende usándolo con trabajo real. <b>No tomes números «de prueba»</b>: cada uno gasta un número del lote. Practica con tu siguiente documento de verdad.</p>
     <div class="retos">
       <label class="reto"><input type="checkbox"><div><strong>1. Entra y deja la página en tu pantalla de inicio</strong><span>Que abrir el sistema te tome un solo toque.</span></div></label>
-      <label class="reto"><input type="checkbox"><div><strong>2. Busca un oficio que ya conozcas</strong><span>Prueba con el folio, después con el remitente y después con una palabra del asunto.</span></div></label>
+      <label class="reto"><input type="checkbox"><div><strong>2. En Oficios, busca uno que ya conozcas</strong><span>Prueba con el folio, después con el remitente y después con una palabra del asunto.</span></div></label>
       <label class="reto"><input type="checkbox"><div><strong>3. Toma el número de tu siguiente documento real</strong><span>Cópialo y pégalo en Word. Ni una vez más a la lista de papel.</span></div></label>
       <label class="reto"><input type="checkbox"><div><strong>4. Registra el siguiente oficio que llegue, con su PDF</strong><span>Revisa dos veces: folio del sello (A) y número del remitente (B).</span></div></label>
-      <label class="reto"><input type="checkbox"><div><strong>5. Responde un oficio desde «Buscar»</strong><span>Comprueba que el oficio recibido pase a «En atención» con tu número.</span></div></label>
-      <label class="reto"><input type="checkbox"><div><strong>6. Enséñale a alguien del equipo un paso que ya domines</strong><span>Explicarlo es la mejor señal de que ya es tuyo.</span></div></label>
+      <label class="reto"><input type="checkbox"><div><strong>5. Responde un oficio desde la lista de Oficios</strong><span>Comprueba que salga de pendientes y quede «Atendido» con tu número.</span></div></label>
+      <label class="reto"><input type="checkbox"><div><strong>6. Deja en cero tus pendientes una vez</strong><span>Marca «Solo los que faltan por atender» y atiende cada uno con la opción que le toca.</span></div></label>
+      <label class="reto"><input type="checkbox"><div><strong>7. Enséñale a alguien del equipo un paso que ya domines</strong><span>Explicarlo es la mejor señal de que ya es tuyo.</span></div></label>
     </div>
   </section>
 

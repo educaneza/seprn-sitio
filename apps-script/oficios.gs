@@ -81,7 +81,7 @@ const OF_ESTATUS_NUMERO = ['Asignado', 'Cancelado'];
 const ENCABEZADOS_OF_OFICIOS = ['ID', 'N.P.', 'Ciclo', 'Folio de Oficialía de Partes', 'Fecha de recepción',
   'No. de oficio del remitente', 'Fecha de elaboración', 'Remitente', 'Asunto', 'Tipo de oficio',
   'Quién recibió', 'Observaciones', 'Dirección', 'Estatus', 'Forma de atención', 'Oficio(s) de salida',
-  'Vínculo', 'PDF', 'Registrado', 'ID de envío'];
+  'Vínculo', 'PDF', 'Registrado', 'ID de envío', 'Fecha de atención'];
 const OF_DIRECCIONES = ['Baja', 'Sube'];
 const OF_ESTATUS_OFICIO = ['Recibido', 'En atención', 'Atendido', 'Solo conocimiento'];
 const OF_COLORES_ESTATUS = {
@@ -93,6 +93,20 @@ const OF_FORMAS_ATENCION = ['Oficio de salida', 'Acción', 'Solo conocimiento'];
 const OF_COL_ELABORA = 'Elabora';
 const OF_COL_DESTINOS = 'Destinos';
 const OF_COL_TIPOS = 'Tipos de oficio';
+// Paso 2D (8 oct 2026): N.P. de la planeación con que suele atenderse cada tipo
+// de oficio, para precargar la actividad en bitacora.html. Jorge lo revisa y
+// corrige en Config; vacío = la bitácora lo deja como "No planeada".
+const OF_COL_NP = 'N.P. planeación';
+const OF_NP_POR_TIPO = {
+  'ACCIONES FORMATIVAS A DISTANCIA': '10', 'APRENDE CURSOS': '10', 'SOLICITUD DE ASESORÍA': '8',
+  'CONFERENCIAS UNETE': '13', 'CUANTRIX': '4', 'CURSOS - PDAE': '11', 'MIED': '1', 'SEMINARIOS': '13',
+  'SOLICITUD DE MANTENIMIENTOS A EQUIPOS': '7', 'SOLICITUD CUENTAS DE CORREO ELECTRÓNICO': '12',
+  'UNETE PFE': '3', 'INTERNET EN UNA CAJA': '6'
+};
+// Acciones que ya llegan solas a la bitácora (Mantenimiento, Asesorías, Correo):
+// la página sugiere "ya llega sola" para no capturarlas dos veces.
+const OF_NP_LLEGAN_SOLAS = ['7', '8', '12'];
+const OF_MODOS_ATENCION = ['llegaSola', 'bitacora', 'conocimiento'];
 const OF_ELABORA_INICIALES = ['Jorge', 'Nancy', 'Alejandro', 'Marcos'];
 // Las 5 columnas de la lista de números que se lleva hoy; se marca una sola.
 const OF_DESTINOS_INICIALES = ['Comisión', 'Sectores', 'CoEEE', 'Comisión sindical', 'Otro'];
@@ -154,14 +168,16 @@ function ofPrepararHojas() {
   let config = ss.getSheetByName(HOJA_OF_CONFIG);
   if (!config) config = ss.insertSheet(HOJA_OF_CONFIG);
   if (config.getLastRow() === 0) {
-    const listas = [OF_ELABORA_INICIALES, OF_DESTINOS_INICIALES, OF_TIPOS_INICIALES];
+    const listas = [OF_ELABORA_INICIALES, OF_DESTINOS_INICIALES, OF_TIPOS_INICIALES,
+      OF_TIPOS_INICIALES.map(function (t) { return OF_NP_POR_TIPO[t] || ''; })];
     const alto = Math.max.apply(null, listas.map(function (l) { return l.length; }));
-    ofEncabezar_(config, [OF_COL_ELABORA, OF_COL_DESTINOS, OF_COL_TIPOS]);
+    ofEncabezar_(config, [OF_COL_ELABORA, OF_COL_DESTINOS, OF_COL_TIPOS, OF_COL_NP]);
     const filas = [];
     for (let i = 0; i < alto; i++) filas.push(listas.map(function (l) { return l[i] || ''; }));
-    config.getRange(2, 1, alto, 3).setValues(filas);
+    config.getRange(2, 1, alto, 4).setValues(filas);
     config.setColumnWidth(3, 320);
-    config.getRange(1, 5).setValue('Agrega valores nuevos al final de cada columna. Aparecen en oficios.html.')
+    config.getRange(1, 6).setValue('Agrega valores nuevos al final de cada columna. Aparecen en oficios.html. ' +
+      '"N.P. planeación" va en el mismo renglón que su tipo de oficio.')
       .setFontColor('#6b7280');
   }
 
@@ -296,8 +312,30 @@ function ofSemaforo_(hoja, rango, colores) {
   hoja.setConditionalFormatRules(otras.concat(nuevas));
 }
 
+// Config creada antes del paso 2D: agrega "N.P. planeación" junto a los tipos
+// (en la primera columna libre) con la propuesta de OF_NP_POR_TIPO. Una vez.
+function ofAsegurarColumnaNp_() {
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_OF_CONFIG);
+  if (!hoja || hoja.getLastRow() < 1) return;
+  const enc = hoja.getRange(1, 1, 1, Math.max(hoja.getLastColumn(), 1)).getValues()[0]
+    .map(function (v) { return String(v).trim(); });
+  if (enc.indexOf(OF_COL_NP) !== -1) return;
+  const colTipos = enc.indexOf(OF_COL_TIPOS);
+  if (colTipos === -1) return;
+  let col = colTipos + 2; // 1-based, a la derecha de los tipos
+  while (enc[col - 1]) col++;
+  hoja.getRange(1, col).setValue(OF_COL_NP).setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
+  const n = hoja.getLastRow() - 1;
+  if (n < 1) return;
+  const tipos = hoja.getRange(2, colTipos + 1, n, 1).getValues();
+  hoja.getRange(2, col, n, 1).setValues(tipos.map(function (r) {
+    return [OF_NP_POR_TIPO[String(r[0]).replace(/\s+/g, ' ').trim().toUpperCase()] || ''];
+  }));
+}
+
 function ofLeerConfig_() {
-  const res = { elabora: OF_ELABORA_INICIALES.slice(), destinos: OF_DESTINOS_INICIALES.slice(), tipos: OF_TIPOS_INICIALES.slice() };
+  const res = { elabora: OF_ELABORA_INICIALES.slice(), destinos: OF_DESTINOS_INICIALES.slice(), tipos: OF_TIPOS_INICIALES.slice(),
+    npPorTipo: Object.assign({}, OF_NP_POR_TIPO), npLleganSolas: OF_NP_LLEGAN_SOLAS.slice() };
   const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_OF_CONFIG);
   if (!hoja || hoja.getLastRow() < 2) return res;
   const idx = ofIndices_(hoja);
@@ -310,6 +348,16 @@ function ofLeerConfig_() {
   res.elabora = leer(OF_COL_ELABORA) || res.elabora;
   res.destinos = leer(OF_COL_DESTINOS) || res.destinos;
   res.tipos = leer(OF_COL_TIPOS) || res.tipos;
+  // {tipo: N.P.} leído renglón por renglón (el N.P. va junto a su tipo).
+  res.npPorTipo = {};
+  if (idx[OF_COL_TIPOS] !== undefined && idx[OF_COL_NP] !== undefined) {
+    filas.forEach(function (r) {
+      const t = String(r[idx[OF_COL_TIPOS]]).trim();
+      const np = String(r[idx[OF_COL_NP]]).replace(/^N\.?P\.?\s*/i, '').trim();
+      if (t && np) res.npPorTipo[t] = np;
+    });
+  }
+  res.npLleganSolas = OF_NP_LLEGAN_SOLAS.slice();
   return res;
 }
 
@@ -443,6 +491,7 @@ function doGet(e) {
 
 function ofDatosInicio_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
+  ofAsegurarColumnaNp_();
   const anio = ofAnioActual_();
   const hojaNum = ss.getSheetByName(HOJA_OF_NUMEROS);
   const hojaOf = ss.getSheetByName(HOJA_OF_OFICIOS);
@@ -482,7 +531,10 @@ function ofOficioParaPagina_(r, i) {
     tipo: String(r[i['Tipo de oficio']]), direccion: String(r[i['Dirección']]),
     estatus: String(r[i['Estatus']]), forma: String(r[i['Forma de atención']]),
     salida: String(r[i['Oficio(s) de salida']]), pdf: String(r[i['PDF']]),
-    observaciones: String(r[i['Observaciones']])
+    observaciones: String(r[i['Observaciones']]),
+    elaboracion: ofFechaIso_(r[i['Fecha de elaboración']]),
+    vinculo: String(r[i['Vínculo']] == null ? '' : r[i['Vínculo']]),
+    fechaAtencion: i['Fecha de atención'] === undefined ? '' : ofFechaIso_(r[i['Fecha de atención']])
   };
 }
 
@@ -528,6 +580,7 @@ function doPost(e) {
     if (datos.accion === 'tomarNumero') return ofRespuesta_(ofTomarNumero_(datos));
     if (datos.accion === 'cancelarNumero') return ofRespuesta_(ofCancelarNumero_(datos));
     if (datos.accion === 'registrarOficio') return ofRespuesta_(ofRegistrarOficio_(datos, pdf));
+    if (datos.accion === 'atenderOficio') return ofRespuesta_(ofAtenderOficio_(datos));
     return ofRespuesta_({ status: 'error', mensaje: 'Acción no reconocida.' });
   } catch (err) {
     return ofRespuesta_({ status: 'error', mensaje: err.message });
@@ -587,30 +640,35 @@ function ofTomarNumero_(x) {
   hoja.appendRow(fila);
   filas.push(fila);
 
-  if (/^OF-\d+$/.test(d.vinculo)) ofAnotarSalidaEnOficio_(d.vinculo, numero);
+  if (/^OF-\d+$/.test(d.vinculo)) ofAnotarSalidaEnOficio_(d.vinculo, numero, d.elabora);
 
   const despues = ofResumenLotes_(anio, filas, idx);
   ofAvisarSiQuedanPocos_(despues);
   return { status: 'ok', numero: numero, consecutivo: consecutivo, lote: despues };
 }
 
-// El número de salida queda anotado en el oficio que atiende, y un oficio
-// "Recibido" pasa a "En atención".
-function ofAnotarSalidaEnOficio_(idOficio, numero) {
-  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_OF_OFICIOS);
-  if (!hoja) return;
+// El número de salida queda anotado en el oficio que atiende, y el oficio queda
+// Atendido (Forma "Oficio de salida"): tomar número para responder YA es atenderlo,
+// sin un paso extra de "marcar como atendido" (página única, 8 oct 2026).
+function ofAnotarSalidaEnOficio_(idOficio, numero, quien) {
+  if (!SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_OF_OFICIOS)) return;
+  const hoja = ofObtenerHoja_(HOJA_OF_OFICIOS, ENCABEZADOS_OF_OFICIOS);
   const idx = ofIndices_(hoja);
   const filas = ofFilas_(hoja);
   const i = filas.findIndex(function (r) { return String(r[idx['ID']]) === idOficio; });
   if (i === -1) return;
   const filaHoja = i + 2;
+  const set = function (encabezado, valor) { hoja.getRange(filaHoja, idx[encabezado] + 1).setValue(valor); };
   const actual = String(filas[i][idx['Oficio(s) de salida']] || '').trim();
-  hoja.getRange(filaHoja, idx['Oficio(s) de salida'] + 1).setValue(actual ? actual + '; ' + numero : numero);
-  if (!String(filas[i][idx['Forma de atención']]).trim()) {
-    hoja.getRange(filaHoja, idx['Forma de atención'] + 1).setValue('Oficio de salida');
-  }
-  if (String(filas[i][idx['Estatus']]).trim() === 'Recibido') {
-    hoja.getRange(filaHoja, idx['Estatus'] + 1).setValue('En atención');
+  set('Oficio(s) de salida', actual ? actual + '; ' + numero : numero);
+  if (!String(filas[i][idx['Forma de atención']]).trim()) set('Forma de atención', 'Oficio de salida');
+  const estatus = String(filas[i][idx['Estatus']]).trim();
+  if (estatus !== 'Atendido' && estatus !== 'Solo conocimiento') {
+    set('Estatus', 'Atendido');
+    set('Fecha de atención', new Date());
+    const obs = String(filas[i][idx['Observaciones']] || '').trim();
+    set('Observaciones', (obs ? obs + '\n' : '') + 'Atendido ' + Utilities.formatDate(new Date(), OF_ZONA, 'dd/MM/yyyy') +
+      (quien ? ' por ' + quien : '') + ': respondido con el oficio ' + numero + '.');
   }
 }
 
@@ -659,6 +717,49 @@ function ofSiguienteNp_(filas, idx, ciclo) {
     if (String(r[idx['Ciclo']]) === ciclo) max = Math.max(max, Number(r[idx['N.P.']]) || 0);
   });
   return max + 1;
+}
+
+// ── Paso 2D: marcar un oficio como atendido ──
+// modo 'llegaSola'    → la acción ya llega sola a la bitácora (Mantenimiento,
+//                       Asesorías, Formación Docente, Correo): Atendido sin fila nueva.
+// modo 'bitacora'     → la acción se capturó en bitacora.html, que llama aquí al
+//                       guardar con vinculo = BIT-NNNN.
+// modo 'conocimiento' → no requiere acción: Estatus "Solo conocimiento".
+// Se llama con el candado tomado. Repetirlo con el mismo vínculo no cambia nada.
+function ofAtenderOficio_(x) {
+  const id = ofTxt_(x.id).toUpperCase();
+  const modo = ofTxt_(x.modo);
+  const vinculo = ofTxt_(x.vinculo).toUpperCase();
+  const quien = ofTxt_(x.elabora);
+  if (OF_MODOS_ATENCION.indexOf(modo) === -1) throw new Error('Indica cómo se atendió el oficio.');
+  if (modo === 'bitacora' && !/^BIT-\d+$/.test(vinculo)) throw new Error('Falta el ID de la actividad de la bitácora.');
+  const hoja = ofObtenerHoja_(HOJA_OF_OFICIOS, ENCABEZADOS_OF_OFICIOS);
+  const idx = ofIndices_(hoja);
+  const filas = ofFilas_(hoja);
+  const i = filas.findIndex(function (r) { return String(r[idx['ID']]).toUpperCase() === id; });
+  if (i === -1) throw new Error('No encontré el oficio ' + id + '.');
+  const fila = i + 2;
+  const r = filas[i];
+  const set = function (encabezado, valor) { hoja.getRange(fila, idx[encabezado] + 1).setValue(valor); r[idx[encabezado]] = valor; };
+
+  const actualVinculo = String(r[idx['Vínculo']] || '').trim();
+  if (vinculo && actualVinculo.split(/;\s*/).indexOf(vinculo) === -1) {
+    set('Vínculo', actualVinculo ? actualVinculo + '; ' + vinculo : vinculo);
+  }
+  const estatus = modo === 'conocimiento' ? 'Solo conocimiento' : 'Atendido';
+  if (String(r[idx['Estatus']]) !== estatus) {
+    set('Estatus', estatus);
+    set('Fecha de atención', new Date());
+    const forma = String(r[idx['Forma de atención']] || '').trim();
+    if (modo === 'conocimiento') set('Forma de atención', 'Solo conocimiento');
+    else if (!forma) set('Forma de atención', 'Acción');
+    const textos = { llegaSola: 'la acción llega sola a la bitácora', bitacora: 'actividad ' + vinculo + ' en la bitácora', conocimiento: 'solo conocimiento' };
+    const nota = ofTxt_(x.nota);
+    const obs = String(r[idx['Observaciones']] || '').trim();
+    set('Observaciones', (obs ? obs + '\n' : '') + 'Atendido ' + Utilities.formatDate(new Date(), OF_ZONA, 'dd/MM/yyyy') +
+      (quien ? ' por ' + quien : '') + ': ' + textos[modo] + (nota ? ' (' + nota + ')' : '') + '.');
+  }
+  return { status: 'ok', oficio: ofOficioParaPagina_(r, idx) };
 }
 
 // Lectura sin candado, solo para decidir si vale la pena subir el PDF.
