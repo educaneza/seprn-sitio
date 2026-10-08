@@ -179,6 +179,10 @@
     .cancelar-box { display: flex; gap: .4rem; margin-top: .45rem; width: 100%; }
     .cancelar-box input { padding: .45rem .6rem; font-size: .85rem; }
     .badge.Solo-conocimiento { background: #e5e7eb; color: #374151; }
+    .badge.falta-op { background: #fee2e2; color: #991b1b; }
+    .badge.ov { background: #e0e7ff; color: #3730a3; }
+    .nota-ov { font-size: .76rem; color: #3730a3; margin-top: .25rem; }
+    .sync-ov { font-size: .75rem; color: var(--muted); margin: -.5rem 0 .8rem; }
 
     /* Paso 2D: marcar un oficio como atendido */
     .atender { width: 100%; margin-top: .55rem; border-top: 1px dashed var(--border); padding-top: .6rem; }
@@ -315,6 +319,7 @@
       <div class="hidden" id="registro-wrap">
       <form class="card" id="form-oficio" novalidate>
         <h2>Registrar oficio recibido</h2>
+        <p class="hint" style="margin:-.3rem 0 1rem;">Las solicitudes de <b>Mantenimiento</b> y <b>Asesoría</b> que llegan por la Oficina Virtual ya están en la lista: no las registres de nuevo, anótales su folio de Oficialía ahí.</p>
         <div class="fila-2">
           <div class="campo">
             <label for="of-folio">Folio de Oficialía de Partes <span class="req">*</span></label>
@@ -399,6 +404,7 @@
 
       <div class="card">
         <h2>Oficios recibidos</h2>
+        <p class="sync-ov" id="sync-ov"></p>
         <div class="campo">
           <label for="buscar">Folio, remitente, asunto, tipo o número de salida</label>
           <input type="search" id="buscar" placeholder="Ej. 3622, CoEEE, Cuantrix, 4824">
@@ -529,7 +535,7 @@ async function cargar(clave) {
 }
 
 function aplicarDatos(d, quien) {
-  estado = { config: d.config, lote: d.lote, numeros: d.numeros || [], oficios: d.oficios || [] };
+  estado = { config: d.config, lote: d.lote, numeros: d.numeros || [], oficios: d.oficios || [], ov: d.ov || {} };
   llenarSelect('num-destino', d.config.destinos, 'Selecciona…');
   llenarSelect('num-elabora', d.config.elabora);
   llenarSelect('of-tipo', d.config.tipos, 'Selecciona…');
@@ -546,6 +552,7 @@ function aplicarDatos(d, quien) {
   pintarLote();
   pintarNumeros();
   pintarOficios();
+  pintarSyncOV();
 }
 
 function llenarSelect(id, valores, vacio) {
@@ -650,8 +657,8 @@ window.addEventListener('message', function (ev) {
 async function refrescarDatos() {
   try {
     const d = await cargar(leerLS(LS_CLAVE));
-    estado.lote = d.lote; estado.numeros = d.numeros || []; estado.oficios = d.oficios || [];
-    pintarLote(); pintarNumeros(); pintarOficios();
+    estado.lote = d.lote; estado.numeros = d.numeros || []; estado.oficios = d.oficios || []; estado.ov = d.ov || {};
+    pintarLote(); pintarNumeros(); pintarOficios(); pintarSyncOV();
   } catch (e) {}
 }
 
@@ -985,7 +992,9 @@ function pintarOficios() {
   hallados.slice(0, MAX_RESULTADOS).forEach(function (o) {
     const item = el('div', 'item');
     const tit = el('div', 'tit');
-    tit.appendChild(el('span', null, 'Folio ' + o.folioOP));
+    tit.appendChild(el('span', null, o.folioOP ? 'Folio ' + o.folioOP : 'Oficina Virtual · ' + o.vinculo));
+    if (o.origen === 'Oficina Virtual' && o.folioOP) tit.appendChild(el('span', 'badge ov', 'Oficina Virtual'));
+    if (faltaFolioOP(o)) tit.appendChild(el('span', 'badge falta-op', 'Falta folio de Oficialía'));
     tit.appendChild(el('span', 'badge ' + String(o.estatus).replace(/ /g, '-').replace('ó', 'o'), o.estatus || 'Sin estatus'));
     if (o.direccion) tit.appendChild(el('span', 'badge dir', o.direccion));
     item.appendChild(tit);
@@ -993,22 +1002,34 @@ function pintarOficios() {
     item.appendChild(el('div', 'meta', o.remitente + ' · ' + fechaCorta(o.recepcion) + ' · ' + o.id +
       (o.tipo ? ' · ' + o.tipo : '')));
     if (o.salida) item.appendChild(el('div', 'meta', 'Oficio(s) de salida: ' + o.salida));
-    if (o.vinculo) item.appendChild(el('div', 'meta', 'Atendido con: ' + o.vinculo));
+    const deOV = o.origen === 'Oficina Virtual';
+    if (o.vinculo && !(deOV && !o.folioOP)) item.appendChild(el('div', 'meta', (deOV ? 'Solicitud: ' : 'Atendido con: ') + o.vinculo));
+    if (faltaFolioOP(o)) item.appendChild(el('div', 'nota-ov', 'Imprime el PDF, llévalo a Oficialía de Partes y anota aquí su folio.'));
+    if (deOV && faltaAtender(o)) item.appendChild(el('div', 'nota-ov', 'Se marca atendido solo cuando ' + o.vinculo + ' quede resuelta.'));
     const acc = el('div', 'acciones');
     if (/^https:\/\//.test(o.pdf)) {
       const a = el('a', 'btn-mini', 'Ver PDF');
       a.href = o.pdf; a.target = '_blank'; a.rel = 'noopener';
       acc.appendChild(a);
     }
-    if (estaPendiente(o)) {
+    if (faltaFolioOP(o)) {
+      const f = el('button', 'btn-mini', 'Anotar folio de Oficialía');
+      f.type = 'button';
+      f.addEventListener('click', function () { abrirFolioOP(item, acc, o); });
+      acc.appendChild(f);
+    }
+    if (faltaAtender(o)) {
       const b = el('button', 'btn-mini', 'Tomar número para responder');
       b.type = 'button';
       b.addEventListener('click', function () { responderOficio(o); });
       acc.appendChild(b);
-      const at = el('button', 'btn-mini', 'Marcar como atendido');
-      at.type = 'button';
-      at.addEventListener('click', function () { abrirAtender(item, acc, o); });
-      acc.appendChild(at);
+      // Los de la Oficina Virtual se cierran solos al resolverse la solicitud.
+      if (!deOV) {
+        const at = el('button', 'btn-mini', 'Marcar como atendido');
+        at.type = 'button';
+        at.addEventListener('click', function () { abrirAtender(item, acc, o); });
+        acc.appendChild(at);
+      }
     }
     if (acc.childNodes.length) item.appendChild(acc);
     lista.appendChild(item);
@@ -1020,8 +1041,58 @@ function pintarOficios() {
 $('buscar').addEventListener('input', pintarOficios);
 $('solo-pendientes').addEventListener('change', pintarOficios);
 
+// Pendiente = falta atenderlo, o (si llegó por la Oficina Virtual) falta llevarlo a Oficialía.
 function estaPendiente(o) {
+  return faltaAtender(o) || faltaFolioOP(o);
+}
+function faltaAtender(o) {
   return o.estatus !== 'Atendido' && o.estatus !== 'Solo conocimiento';
+}
+function faltaFolioOP(o) {
+  return o.origen === 'Oficina Virtual' && !String(o.folioOP || '').trim();
+}
+
+function pintarSyncOV() {
+  const ov = estado.ov || {};
+  const t = $('sync-ov');
+  if (!ov.conectada) { t.textContent = ''; return; }
+  const m = String(ov.ultima || '').match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}:\d{2})/);
+  t.textContent = 'Las solicitudes de la Oficina Virtual entran solas' +
+    (m ? ' · última revisión ' + m[3] + '/' + m[2] + ' a las ' + m[4] : '') + '.';
+}
+
+// Anotar el folio que puso Oficialía de Partes (paso 2B).
+function abrirFolioOP(item, acc, o) {
+  acc.classList.add('hidden');
+  const caja = el('div', 'atender');
+  caja.appendChild(el('p', null, 'Folio del sello de Oficialía de Partes'));
+  const inp = el('input');
+  inp.type = 'text'; inp.inputMode = 'numeric'; inp.placeholder = 'Ej. 3701';
+  inp.setAttribute('aria-label', 'Folio de Oficialía de Partes de ' + o.id);
+  caja.appendChild(inp);
+  const msg = el('div', 'msg');
+  const fila = el('div', 'fila-btn');
+  const ok = el('button', 'btn-mini', 'Guardar folio'); ok.type = 'button';
+  const no = el('button', 'btn-mini', 'Cancelar'); no.type = 'button';
+  fila.appendChild(ok); fila.appendChild(no);
+  caja.appendChild(fila); caja.appendChild(msg);
+  no.addEventListener('click', pintarOficios);
+  ok.addEventListener('click', async function () {
+    if (!inp.value.trim()) { inp.classList.add('campo-error'); inp.focus(); return; }
+    ok.disabled = true; ok.textContent = 'Guardando…'; msg.textContent = '';
+    try {
+      const d = await post({ accion: 'anotarFolioOP', id: o.id, folioOP: inp.value.trim(), elabora: leerLS(LS_QUIEN) });
+      if (d.status === 'repetido') throw new Error(d.mensaje);
+      if (d.status !== 'ok') throw new Error(errorDeEstado(d));
+      Object.assign(o, d.oficio);
+      pintarOficios();
+    } catch (e) {
+      ok.disabled = false; ok.textContent = 'Guardar folio';
+      msg.textContent = mensajeDeFallo(e, true);
+    }
+  });
+  item.appendChild(caja);
+  inp.focus();
 }
 
 // ── Paso 2D: atender un oficio (llega sola / capturar en la bitácora / solo conocimiento) ──

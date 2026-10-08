@@ -208,6 +208,7 @@
       <li><a href="#registrar">Registrar un oficio que llega</a></li>
       <li><a href="#responder">Responder un oficio</a></li>
       <li><a href="#buscar">La lista de oficios</a></li>
+      <li><a href="#oficina-virtual">Oficios que llegan por la Oficina Virtual</a></li>
       <li><a href="#atender">Marcar un oficio como atendido</a></li>
       <li><a href="#actividad">Capturar una actividad</a></li>
       <li><a href="#problemas">¿Qué hago si…?</a></li>
@@ -484,8 +485,37 @@
             <small><b style="background:#fde68a;color:#78350f;padding:0 .35rem;border-radius:6px;">Recibido</b> falta atenderlo ·
             <b style="background:#bbf7d0;color:#14532d;padding:0 .35rem;border-radius:6px;">Atendido</b> terminado ·
             <b style="background:#e5e7eb;color:#374151;padding:0 .35rem;border-radius:6px;">Solo conocimiento</b> no pedía nada</small></div></li>
-          <li><span class="n">4</span><div><b>Tomar número para responder</b> (paso 6) o <b>Marcar como atendido</b> (paso 8). Si tiene PDF, también <b>Ver PDF</b>.</div></li>
+          <li><span class="n">4</span><div><b>Tomar número para responder</b> (paso 6) o <b>Marcar como atendido</b> (paso 9). Si tiene PDF, también <b>Ver PDF</b>.</div></li>
         </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7b. Oficina Virtual -->
+  <section class="section" id="oficina-virtual">
+    <div class="section-header">
+      <div class="section-num">8</div>
+      <h2>Oficios que llegan por la Oficina Virtual<span class="cuando">Solicitudes de Mantenimiento y Asesoría con su oficio en PDF</span></h2>
+    </div>
+    <p class="lead">Estos oficios <b>entran solos</b> a la lista: nadie los registra. Como OTDE debe imprimir todo oficio digital y llevarlo a Oficialía de Partes, la lista te recuerda cuáles faltan.</p>
+    <div class="paso">
+      <div class="tel"><img src="../images/manual-oficios/16-oficina-virtual.png" alt="Oficio de la Oficina Virtual con la etiqueta Falta folio de Oficialía" loading="lazy"></div>
+      <div>
+        <ol class="pasos">
+          <li><span class="n">1</span><div>Aquí ves cuándo revisó el sistema la Oficina Virtual por última vez (lo hace solo cada 30 minutos).</div></li>
+          <li><span class="n">2</span><div><b>Falta folio de Oficialía:</b> todavía no se lleva a Oficialía de Partes.</div></li>
+          <li><span class="n">3</span><div>Lo que hay que hacer con él.</div></li>
+          <li><span class="n">4</span><div><b>Ver PDF</b> para imprimirlo.</div></li>
+          <li><span class="n">5</span><div>Cuando Oficialía lo selle, <b>Anotar folio de Oficialía</b> y escribe el número del sello. Se guarda en este mismo registro.</div></li>
+        </ol>
+        <div class="bien">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>
+          <div><b>Se marcan atendidos solos</b> cuando la solicitud queda Resuelta (o Rechazada, con su motivo) en Mantenimiento o Asesorías. No tienen botón «Marcar como atendido».</div>
+        </div>
+        <div class="ojo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17h.01"/></svg>
+          <div>Si la escuela <b>también</b> manda el oficio impreso, <b>no lo registres</b>: búscalo en la lista (por escuela o CCT) y anótale ahí el folio.</div>
+        </div>
       </div>
     </div>
   </section>
@@ -493,7 +523,7 @@
   <!-- 7. Atender -->
   <section class="section" id="atender">
     <div class="section-header">
-      <div class="section-num">8</div>
+      <div class="section-num">9</div>
       <h2>Marcar un oficio como atendido<span class="cuando">Cuando ya se hizo lo que pedía el oficio</span></h2>
     </div>
     <p class="lead">Es para los oficios que <b>no</b> se contestaron con otro oficio (esos ya quedan atendidos solos, paso 6). En la lista de <b>Oficios</b>, toca <b>Marcar como atendido</b> y elige cómo se atendió:</p>
@@ -544,7 +574,7 @@
   <!-- 9. Actividad -->
   <section class="section" id="actividad">
     <div class="section-header">
-      <div class="section-num">9</div>
+      <div class="section-num">10</div>
       <h2>Capturar una actividad<span class="cuando">Jorge y Nancy · lo que se hizo, aunque no venga de un oficio</span></h2>
     </div>
     <div class="paso" style="grid-template-columns:1fr;">
@@ -626,8 +656,9 @@
       <label class="reto"><input type="checkbox"><div><strong>3. Toma el número de tu siguiente documento real</strong><span>Cópialo y pégalo en Word. Ni una vez más a la lista de papel.</span></div></label>
       <label class="reto"><input type="checkbox"><div><strong>4. Registra el siguiente oficio que llegue, con su PDF</strong><span>Revisa dos veces: folio del sello (A) y número del remitente (B).</span></div></label>
       <label class="reto"><input type="checkbox"><div><strong>5. Responde un oficio desde la lista de Oficios</strong><span>Comprueba que salga de pendientes y quede «Atendido» con tu número.</span></div></label>
-      <label class="reto"><input type="checkbox"><div><strong>6. Deja en cero tus pendientes una vez</strong><span>Marca «Solo los que faltan por atender» y atiende cada uno con la opción que le toca.</span></div></label>
-      <label class="reto"><input type="checkbox"><div><strong>7. Enséñale a alguien del equipo un paso que ya domines</strong><span>Explicarlo es la mejor señal de que ya es tuyo.</span></div></label>
+      <label class="reto"><input type="checkbox"><div><strong>6. Lleva a Oficialía los oficios de la Oficina Virtual y anota sus folios</strong><span>Que ninguno se quede con «Falta folio de Oficialía».</span></div></label>
+      <label class="reto"><input type="checkbox"><div><strong>7. Deja en cero tus pendientes una vez</strong><span>Marca «Solo los que faltan por atender» y atiende cada uno con la opción que le toca.</span></div></label>
+      <label class="reto"><input type="checkbox"><div><strong>8. Enséñale a alguien del equipo un paso que ya domines</strong><span>Explicarlo es la mejor señal de que ya es tuyo.</span></div></label>
     </div>
   </section>
 

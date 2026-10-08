@@ -307,7 +307,50 @@ function doGet(e) {
   if (accion === 'reportesMes') {
     return manListarReportesMes_(e.parameter.token, e.parameter.mes);
   }
+  if (accion === 'oficiosOV') {
+    return manListarOficiosOV_(e.parameter.token, e.parameter.desde);
+  }
   return manTextResponse(JSON.stringify({ status: 'ok', servicio: 'OTDE Solicitudes de Mantenimiento' }));
+}
+
+// ── Solicitudes con oficio para el Control de oficios (?action=oficiosOV) ──
+// apps-script/oficios.gs (paso 2B, 8 oct 2026) las jala para registrar solo cada
+// oficio que llega por la Oficina Virtual (OTDE lo imprime y lo lleva a Oficialía
+// de Partes) y darlo por atendido cuando la solicitud queda Resuelto/Rechazado.
+// Mismo PANEL_TOKEN que ?action=pendientes. Solo lectura, columnas por nombre.
+// `desde` = "AAAA-MM-DD": solo solicitudes con Fecha a partir de ese día.
+function manListarOficiosOV_(tokenRecibido, desde) {
+  const tokenEsperado = PropertiesService.getScriptProperties().getProperty('PANEL_TOKEN');
+  if (!tokenEsperado || tokenRecibido !== tokenEsperado) {
+    return manTextResponse(JSON.stringify({ status: 'no_autorizado' }));
+  }
+  const m = String(desde || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return manTextResponse(JSON.stringify({ status: 'error', mensaje: 'Parámetro desde no válido (AAAA-MM-DD).' }));
+  const limite = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 0, 0, 0);
+
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_MAN_SOLICITUDES);
+  if (!hoja || hoja.getLastRow() < 2) return manTextResponse(JSON.stringify({ status: 'ok', tramite: 'Mantenimiento', items: [] }));
+  const datos = hoja.getDataRange().getValues();
+  const idx = {};
+  datos[0].forEach(function (h, i) { idx[String(h).trim()] = i; });
+  const v = function (r, h) { return idx[h] === undefined ? '' : r[idx[h]]; };
+  const items = datos.slice(1)
+    .filter(function (r) { return v(r, 'Folio') && v(r, 'Fecha') instanceof Date && v(r, 'Fecha') >= limite; })
+    .map(function (r) {
+      return {
+        folio: String(v(r, 'Folio')),
+        fecha: Utilities.formatDate(v(r, 'Fecha'), 'America/Mexico_City', 'yyyy-MM-dd'),
+        nombre: String(v(r, 'Nombre')), funcion: String(v(r, 'Función')),
+        cct: String(v(r, 'CCT')), escuela: String(v(r, 'Escuela')),
+        sector: String(v(r, 'Sector')), zona: String(v(r, 'Zona')),
+        tipoSolicitante: String(v(r, 'Tipo de solicitante')),
+        detalle: String(v(r, 'Equipos con falla')),
+        oficio: String(v(r, 'Oficio (link Drive)')),
+        estatus: String(v(r, 'Estatus') || 'Pendiente de validar').trim(),
+        notas: String(v(r, 'Notas de revisión'))
+      };
+    });
+  return manTextResponse(JSON.stringify({ status: 'ok', tramite: 'Mantenimiento', items: items }));
 }
 
 // ── Lista de solicitudes abiertas para el Panel OTDE (?action=pendientes) ──

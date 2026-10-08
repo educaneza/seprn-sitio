@@ -81,7 +81,11 @@ const OF_ESTATUS_NUMERO = ['Asignado', 'Cancelado'];
 const ENCABEZADOS_OF_OFICIOS = ['ID', 'N.P.', 'Ciclo', 'Folio de Oficialía de Partes', 'Fecha de recepción',
   'No. de oficio del remitente', 'Fecha de elaboración', 'Remitente', 'Asunto', 'Tipo de oficio',
   'Quién recibió', 'Observaciones', 'Dirección', 'Estatus', 'Forma de atención', 'Oficio(s) de salida',
-  'Vínculo', 'PDF', 'Registrado', 'ID de envío', 'Fecha de atención'];
+  'Vínculo', 'PDF', 'Registrado', 'ID de envío', 'Fecha de atención', 'Origen'];
+// Origen (paso 2B, 8 oct 2026): "Oficialía de Partes" (registrado a mano) u
+// "Oficina Virtual" (llegó solo desde Mantenimiento/Asesorías, ver ofSincronizarOV_).
+const OF_ORIGEN_OV = 'Oficina Virtual';
+const OF_ORIGEN_OP = 'Oficialía de Partes';
 const OF_DIRECCIONES = ['Baja', 'Sube'];
 const OF_ESTATUS_OFICIO = ['Recibido', 'En atención', 'Atendido', 'Solo conocimiento'];
 const OF_COLORES_ESTATUS = {
@@ -123,7 +127,10 @@ function onOpen() {
     .createMenu('OTDE Oficios')
     .addItem('Agregar lote de números', 'ofAgregarLote')
     .addItem('Importar histórico (pestaña Importar)', 'ofImportarHistorico')
+    .addItem('Traer de la Oficina Virtual ahora', 'ofSincronizarOV')
     .addSeparator()
+    .addItem('Configurar conexión con la Oficina Virtual', 'ofConfigurarConexionOV')
+    .addItem('Instalar sincronización automática (cada 30 min)', 'ofInstalarSincronizacionOV')
     .addItem('Preparar hojas', 'ofPrepararHojas')
     .addItem('Aplicar validación y semáforo', 'ofAplicarValidacion')
     .addItem('Configurar clave de captura', 'ofConfigurarClave')
@@ -516,6 +523,7 @@ function ofDatosInicio_() {
     status: 'ok',
     config: ofLeerConfig_(),
     lote: ofResumenLotes_(anio, filasN, iN),
+    ov: ofEstadoOV_(),
     numeros: numeros,
     oficios: oficios
   };
@@ -534,7 +542,8 @@ function ofOficioParaPagina_(r, i) {
     observaciones: String(r[i['Observaciones']]),
     elaboracion: ofFechaIso_(r[i['Fecha de elaboración']]),
     vinculo: String(r[i['Vínculo']] == null ? '' : r[i['Vínculo']]),
-    fechaAtencion: i['Fecha de atención'] === undefined ? '' : ofFechaIso_(r[i['Fecha de atención']])
+    fechaAtencion: i['Fecha de atención'] === undefined ? '' : ofFechaIso_(r[i['Fecha de atención']]),
+    origen: i['Origen'] === undefined ? '' : String(r[i['Origen']])
   };
 }
 
@@ -581,6 +590,7 @@ function doPost(e) {
     if (datos.accion === 'cancelarNumero') return ofRespuesta_(ofCancelarNumero_(datos));
     if (datos.accion === 'registrarOficio') return ofRespuesta_(ofRegistrarOficio_(datos, pdf));
     if (datos.accion === 'atenderOficio') return ofRespuesta_(ofAtenderOficio_(datos));
+    if (datos.accion === 'anotarFolioOP') return ofRespuesta_(ofAnotarFolioOP_(datos));
     return ofRespuesta_({ status: 'error', mensaje: 'Acción no reconocida.' });
   } catch (err) {
     return ofRespuesta_({ status: 'error', mensaje: err.message });
@@ -697,9 +707,13 @@ function ofCicloDe_(fecha) {
 }
 
 // Clave de duplicado: folio de Oficialía de Partes + año de recepción.
+// Vacío si no hay folio (oficio de la Oficina Virtual aún sin llevar a Oficialía):
+// esos no chocan entre sí.
 function ofClaveFolio_(folio, fecha) {
+  const f = String(folio == null ? '' : folio).trim().toUpperCase();
+  if (!f) return '';
   const anio = fecha instanceof Date && !isNaN(fecha.getTime()) ? fecha.getFullYear() : '';
-  return String(folio).trim().toUpperCase() + '|' + anio;
+  return f + '|' + anio;
 }
 
 function ofSiguienteIdOficio_(filas, col) {
@@ -771,7 +785,7 @@ function ofOficioYaExiste_(x) {
   const clave = ofClaveFolio_(ofTxt_(x.folioOP), ofParsearFecha_(x.fechaRecepcion));
   return ofFilas_(hoja).some(function (r) {
     return (idEnvio && String(r[idx['ID de envío']]) === idEnvio) ||
-      ofClaveFolio_(r[idx['Folio de Oficialía de Partes']], r[idx['Fecha de recepción']]) === clave;
+      (clave && ofClaveFolio_(r[idx['Folio de Oficialía de Partes']], r[idx['Fecha de recepción']]) === clave);
   });
 }
 
@@ -803,7 +817,7 @@ function ofRegistrarOficio_(x, pdf) {
     if (previa) return { status: 'ok', duplicado: true, oficio: ofOficioParaPagina_(previa, idx) };
   }
   const clave = ofClaveFolio_(d.folioOP, d.recepcion);
-  const repetido = filas.find(function (r) {
+  const repetido = clave && filas.find(function (r) {
     return ofClaveFolio_(r[idx['Folio de Oficialía de Partes']], r[idx['Fecha de recepción']]) === clave;
   });
   if (repetido) {
@@ -822,7 +836,7 @@ function ofRegistrarOficio_(x, pdf) {
     'Remitente': d.remitente, 'Asunto': d.asunto, 'Tipo de oficio': d.tipo, 'Quién recibió': d.recibio,
     'Observaciones': d.observaciones, 'Dirección': d.direccion, 'Estatus': estatus,
     'Forma de atención': d.forma, 'Oficio(s) de salida': '', 'Vínculo': '', 'PDF': pdf,
-    'Registrado': new Date(), 'ID de envío': d.idEnvio
+    'Registrado': new Date(), 'ID de envío': d.idEnvio, 'Origen': OF_ORIGEN_OP
   });
   hoja.appendRow(fila);
   return { status: 'ok', oficio: ofOficioParaPagina_(fila, idx) };
@@ -985,6 +999,204 @@ function ofTitulo_(s) {
 function ofDireccionProbable_(remitente) {
   const t = String(remitente).normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
   return /\bESC\b|ESC\.|ESCUELA|PRIM\.|SECTOR|SUPERVISI|ZONA|\bCCT\b/.test(t) ? 'Sube' : 'Baja';
+}
+
+// ── Paso 2B (8 oct 2026): oficios que llegan por la Oficina Virtual ──
+// Mantenimiento y Asesorías piden adjuntar el oficio en PDF. OTDE está obligada a
+// imprimir todo oficio digital y llevarlo a Oficialía de Partes, que le pone su
+// folio. Por eso cada solicitud nueva entra sola aquí (sin folio de Oficialía,
+// con su PDF y el folio de la Oficina Virtual en Vínculo): la lista muestra cuáles
+// faltan por imprimir y entregar, y "Anotar folio de Oficialía" la completa en el
+// mismo registro (sin registrarla dos veces). Cuando la solicitud queda Resuelto o
+// Rechazado en su sistema, el oficio pasa a Atendido solo; su acción ya llega sola
+// a la bitácora (§26). Se jala con ?action=oficiosOV&token=PANEL_TOKEN&desde=, solo
+// las solicitudes a partir de OF_OV_DESDE (el día en que se configuró la conexión,
+// decisión de Jorge: no duplicar lo que ya está en el Excel histórico).
+const OF_FUENTES_OV = [
+  { nombre: 'Mantenimiento', prop: 'OV_MAN_URL', tipo: 'SOLICITUD DE MANTENIMIENTOS A EQUIPOS',
+    asunto: function (it) { return 'Solicitud de mantenimiento a equipos de cómputo' + (it.detalle ? ': ' + it.detalle : '') + '.'; } },
+  { nombre: 'Asesorías', prop: 'OV_ASE_URL', tipo: 'SOLICITUD DE ASESORÍA',
+    asunto: function (it) { return 'Solicitud de asesoría' + (it.detalle ? ': ' + it.detalle : '') + '.'; } }
+];
+const OF_OV_CERRADOS = ['Resuelto', 'Rechazado'];
+
+function ofConfigurarConexionOV() {
+  const ui = SpreadsheetApp.getUi();
+  const props = PropertiesService.getScriptProperties();
+  const pedir = function (titulo, texto, actual) {
+    const r = ui.prompt(titulo, texto + (actual ? '\n\nActual: ' + actual : ''), ui.ButtonSet.OK_CANCEL);
+    if (r.getSelectedButton() !== ui.Button.OK) return null;
+    return r.getResponseText().trim() || actual || '';
+  };
+  const man = pedir('Conexión con Mantenimiento', 'Pega la URL de la aplicación web de Mantenimiento (termina en /exec). Vacío = dejar la actual.', props.getProperty('OV_MAN_URL'));
+  if (man === null) return;
+  const ase = pedir('Conexión con Asesorías', 'Pega la URL de la aplicación web de Asesorías (termina en /exec). Vacío = dejar la actual.', props.getProperty('OV_ASE_URL'));
+  if (ase === null) return;
+  const token = pedir('Token del panel', 'Escribe el PANEL_TOKEN (el mismo del Panel OTDE y de la bitácora). Vacío = dejar el actual.', props.getProperty('PANEL_TOKEN') ? '(configurado)' : '');
+  if (token === null) return;
+  if (!/^https:\/\/script\.google\.com\/.+\/exec$/.test(man) || !/^https:\/\/script\.google\.com\/.+\/exec$/.test(ase)) {
+    ui.alert('Alguna URL no parece de Apps Script (https://script.google.com/…/exec). No se guardó nada.');
+    return;
+  }
+  props.setProperty('OV_MAN_URL', man);
+  props.setProperty('OV_ASE_URL', ase);
+  if (token && token !== '(configurado)') props.setProperty('PANEL_TOKEN', token);
+  if (!props.getProperty('OF_OV_DESDE')) props.setProperty('OF_OV_DESDE', Utilities.formatDate(new Date(), OF_ZONA, 'yyyy-MM-dd'));
+  ui.alert('Conexión guardada. Se traerán las solicitudes desde el ' + props.getProperty('OF_OV_DESDE') +
+    '. Usa "Traer de la Oficina Virtual ahora" para probarla y después "Instalar sincronización automática".');
+}
+
+function ofInstalarSincronizacionOV() {
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    if (t.getHandlerFunction() === 'ofSincronizarOVAutomatico') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('ofSincronizarOVAutomatico').timeBased().everyMinutes(30).create();
+  try { SpreadsheetApp.getUi().alert('Listo: las solicitudes de la Oficina Virtual se traerán solas cada 30 minutos. Confírmalo en Activadores.'); } catch (err) {}
+}
+
+function ofSincronizarOV() {
+  const r = ofSincronizarOV_();
+  SpreadsheetApp.getUi().alert(r.mensaje);
+}
+
+function ofSincronizarOVAutomatico() {
+  const r = ofSincronizarOV_();
+  if (r.errores.length) console.error(r.mensaje);
+}
+
+// Estado para la página: si hay conexión y cuándo fue la última sincronización.
+function ofEstadoOV_() {
+  const props = PropertiesService.getScriptProperties();
+  return { conectada: !!(props.getProperty('OV_MAN_URL') && props.getProperty('PANEL_TOKEN')),
+    ultima: props.getProperty('OF_OV_ULTIMA') || '' };
+}
+
+function ofSincronizarOV_() {
+  const props = PropertiesService.getScriptProperties();
+  const token = props.getProperty('PANEL_TOKEN');
+  const desde = props.getProperty('OF_OV_DESDE');
+  if (!token || !desde) {
+    return { nuevos: 0, cerrados: 0, errores: ['sin conexión'], mensaje: 'Falta configurar la conexión: menú OTDE Oficios → Configurar conexión con la Oficina Virtual.' };
+  }
+  // Primero se consulta todo (red, puede tardar) y luego se escribe bajo el candado.
+  const errores = [];
+  const lotes = OF_FUENTES_OV.map(function (fuente) {
+    const url = props.getProperty(fuente.prop);
+    if (!url) { errores.push(fuente.nombre + ': sin URL'); return { fuente: fuente, items: [] }; }
+    try {
+      const resp = UrlFetchApp.fetch(url + '?action=oficiosOV&token=' + encodeURIComponent(token) + '&desde=' + desde, { muteHttpExceptions: true });
+      const d = JSON.parse(resp.getContentText());
+      if (d.status !== 'ok') throw new Error(d.status === 'no_autorizado' ? 'token no autorizado' : (d.mensaje || d.status));
+      return { fuente: fuente, items: d.items || [] };
+    } catch (err) {
+      errores.push(fuente.nombre + ': ' + (/Unexpected token|JSON/.test(err.message) ? 'la versión desplegada aún no tiene ?action=oficiosOV' : err.message));
+      return { fuente: fuente, items: [] };
+    }
+  });
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  let nuevos = 0, cerrados = 0;
+  try {
+    const hoja = ofObtenerHoja_(HOJA_OF_OFICIOS, ENCABEZADOS_OF_OFICIOS);
+    const idx = ofIndices_(hoja);
+    const filas = ofFilas_(hoja);
+    const porEnvio = {};
+    filas.forEach(function (r, i) { porEnvio[String(r[idx['ID de envío']])] = i; });
+    let siguienteId = Number(ofSiguienteIdOficio_(filas, idx['ID']).slice(3));
+    const agregar = [];
+    const hoyTxt = Utilities.formatDate(new Date(), OF_ZONA, 'dd/MM/yyyy');
+
+    lotes.forEach(function (lote) {
+      lote.items.forEach(function (it) {
+        const clave = 'OV:' + it.folio;
+        const cerrado = OF_OV_CERRADOS.indexOf(it.estatus) !== -1;
+        const nota = cerrado ? 'Atendido ' + hoyTxt + ': ' + it.folio + ' quedó ' + it.estatus +
+          ' en ' + lote.fuente.nombre + (it.estatus === 'Rechazado' && it.notas ? ' (' + it.notas + ')' : '') + '.' : '';
+        if (porEnvio[clave] === undefined) {
+          const recepcion = ofParsearFecha_(it.fecha) || new Date();
+          const ciclo = ofCicloDe_(recepcion);
+          const fila = ofArmarFila_(hoja, idx, {
+            'ID': 'OF-' + ('000' + siguienteId++).slice(-4),
+            'N.P.': ofSiguienteNp_(filas.concat(agregar), idx, ciclo), 'Ciclo': ciclo,
+            'Folio de Oficialía de Partes': '', 'Fecha de recepción': recepcion,
+            'No. de oficio del remitente': '', 'Fecha de elaboración': '',
+            'Remitente': ofRemitenteOV_(it), 'Asunto': lote.fuente.asunto(it), 'Tipo de oficio': lote.fuente.tipo,
+            'Quién recibió': OF_ORIGEN_OV, 'Observaciones': nota, 'Dirección': 'Sube',
+            'Estatus': cerrado ? 'Atendido' : 'Recibido', 'Forma de atención': 'Acción',
+            'Oficio(s) de salida': '', 'Vínculo': it.folio, 'PDF': /^https:\/\//.test(it.oficio) ? it.oficio : '',
+            'Registrado': new Date(), 'ID de envío': clave, 'Fecha de atención': cerrado ? new Date() : '',
+            'Origen': OF_ORIGEN_OV
+          });
+          agregar.push(fila);
+          nuevos++;
+          return;
+        }
+        const i = porEnvio[clave];
+        const r = filas[i];
+        const estatus = String(r[idx['Estatus']]).trim();
+        if (cerrado && estatus !== 'Atendido' && estatus !== 'Solo conocimiento') {
+          const filaHoja = i + 2;
+          const obs = String(r[idx['Observaciones']] || '').trim();
+          hoja.getRange(filaHoja, idx['Estatus'] + 1).setValue('Atendido');
+          hoja.getRange(filaHoja, idx['Fecha de atención'] + 1).setValue(new Date());
+          hoja.getRange(filaHoja, idx['Observaciones'] + 1).setValue((obs ? obs + '\n' : '') + nota);
+          cerrados++;
+        }
+      });
+    });
+    if (agregar.length) hoja.getRange(hoja.getLastRow() + 1, 1, agregar.length, agregar[0].length).setValues(agregar);
+    props.setProperty('OF_OV_ULTIMA', Utilities.formatDate(new Date(), OF_ZONA, 'yyyy-MM-dd HH:mm'));
+  } finally {
+    lock.releaseLock();
+  }
+  return {
+    nuevos: nuevos, cerrados: cerrados, errores: errores,
+    mensaje: 'Oficina Virtual: ' + nuevos + ' oficio(s) nuevo(s), ' + cerrados + ' atendido(s) solos.' +
+      (errores.length ? '\n\nProblemas: ' + errores.join(' · ') : '')
+  };
+}
+
+// "Esc. Prim. Benito Juárez, CCT 15DPR0000X, Sector V / Zona 12" (como en el Excel).
+function ofRemitenteOV_(it) {
+  const partes = [it.escuela || it.nombre, it.cct ? 'CCT ' + it.cct : ''];
+  const sz = [it.sector ? 'Sector ' + it.sector : '', it.zona ? 'Zona ' + it.zona : ''].filter(String).join(' / ');
+  return partes.concat(sz ? [sz] : []).filter(String).join(', ');
+}
+
+// Folio que puso Oficialía de Partes a un oficio que llegó por la Oficina Virtual
+// (OTDE lo imprimió y lo entregó, o la escuela también mandó el impreso).
+// Se llama con el candado tomado.
+function ofAnotarFolioOP_(x) {
+  const id = ofTxt_(x.id).toUpperCase();
+  const folio = ofTxt_(x.folioOP);
+  const quien = ofTxt_(x.elabora);
+  if (!folio) throw new Error('Escribe el folio del sello de Oficialía de Partes.');
+  const hoja = ofObtenerHoja_(HOJA_OF_OFICIOS, ENCABEZADOS_OF_OFICIOS);
+  const idx = ofIndices_(hoja);
+  const filas = ofFilas_(hoja);
+  const i = filas.findIndex(function (r) { return String(r[idx['ID']]).toUpperCase() === id; });
+  if (i === -1) throw new Error('No encontré el oficio ' + id + '.');
+  const actual = String(filas[i][idx['Folio de Oficialía de Partes']] || '').trim();
+  if (actual === folio) return { status: 'ok', oficio: ofOficioParaPagina_(filas[i], idx) };
+  if (actual) throw new Error('Ese oficio ya tiene el folio ' + actual + '.');
+  const clave = ofClaveFolio_(folio, filas[i][idx['Fecha de recepción']]);
+  const otro = filas.find(function (r, j) {
+    return j !== i && ofClaveFolio_(r[idx['Folio de Oficialía de Partes']], r[idx['Fecha de recepción']]) === clave;
+  });
+  if (otro) {
+    return { status: 'repetido', id: String(otro[idx['ID']]),
+      mensaje: 'El folio ' + folio + ' ya está en el oficio ' + otro[idx['ID']] + '. Revisa el número del sello.' };
+  }
+  const r = filas[i];
+  hoja.getRange(i + 2, idx['Folio de Oficialía de Partes'] + 1).setValue(folio);
+  r[idx['Folio de Oficialía de Partes']] = folio;
+  const obs = String(r[idx['Observaciones']] || '').trim();
+  const nota = 'Entregado a Oficialía de Partes (folio ' + folio + ') ' +
+    Utilities.formatDate(new Date(), OF_ZONA, 'dd/MM/yyyy') + (quien ? ' por ' + quien : '') + '.';
+  hoja.getRange(i + 2, idx['Observaciones'] + 1).setValue((obs ? obs + '\n' : '') + nota);
+  r[idx['Observaciones']] = (obs ? obs + '\n' : '') + nota;
+  return { status: 'ok', oficio: ofOficioParaPagina_(r, idx) };
 }
 
 function ofRespuesta_(obj) {
