@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Control de oficios | SEPRN · OTDE</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png">
+  <style>
+    /* Mismo lenguaje visual que bitacora.html (uso interno, hero midnight + tarjeta clara). */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --guinda:     #56212f;
+      --guinda-ac:  #9F2241;
+      --arena:      #d6d1ca;
+      --caramelo:   #977e5b;
+      --midnight:   #0C1A2E;
+      --off-white:  #F9F8F5;
+      --text:       #1a1a2e;
+      --muted:      #6b7280;
+      --border:     #d1d5db;
+    }
+
+    body {
+      background: var(--midnight);
+      color: var(--off-white);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+    }
+
+    .hdr {
+      background: var(--midnight);
+      border-bottom: 2px solid var(--guinda-ac);
+      padding: .85rem 1.5rem;
+      display: flex; align-items: center; gap: .75rem;
+      position: sticky; top: 0; z-index: 10;
+    }
+    .hdr .brand { font-size: 1rem; font-weight: 700; letter-spacing: .05em; }
+    .hdr .brand span { color: var(--guinda-ac); }
+    .hdr .tag {
+      margin-left: auto; font-size: .72rem; color: var(--guinda-ac);
+      border: 1px solid var(--guinda-ac); padding: .2rem .6rem; border-radius: 999px; letter-spacing: .06em;
+    }
+
+    main { max-width: 600px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+
+    .intro { margin-bottom: 1.1rem; }
+    .intro h1 { font-size: 1.3rem; margin-bottom: .35rem; }
+    .intro p { font-size: .85rem; color: var(--arena); }
+    .intro .sesion { margin-top: .5rem; font-size: .78rem; color: var(--arena); }
+    .link-btn {
+      background: none; border: none; color: #f3b6c4; text-decoration: underline;
+      font-size: inherit; cursor: pointer; font-family: inherit; padding: 0;
+    }
+
+    .tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: .4rem; margin-bottom: 1rem; }
+    .tab {
+      font-family: inherit; font-size: .85rem; font-weight: 700; cursor: pointer;
+      padding: .65rem .4rem; border-radius: 10px; border: 1.5px solid rgba(255,255,255,.18);
+      background: transparent; color: var(--arena);
+    }
+    .tab[aria-selected="true"] { background: var(--guinda-ac); border-color: var(--guinda-ac); color: #fff; }
+
+    .lote {
+      display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem .75rem;
+      font-size: .8rem; color: var(--arena); margin-bottom: 1rem;
+      border: 1px solid rgba(255,255,255,.15); border-radius: 10px; padding: .6rem .8rem;
+    }
+    .lote strong { color: #fff; font-size: .95rem; }
+    .lote.pocos { border-color: #f59e0b; color: #fde68a; }
+    .lote.sin { border-color: #f87171; color: #fecaca; }
+
+    .card {
+      background: var(--off-white); color: var(--text); border-radius: 14px;
+      padding: 1.4rem 1.2rem; box-shadow: 0 6px 32px rgba(0,0,0,.4);
+    }
+    .card + .card { margin-top: 1rem; }
+    .card h2 { font-size: .8rem; font-weight: 700; color: var(--guinda); text-transform: uppercase;
+      letter-spacing: .07em; margin-bottom: .75rem; padding-bottom: .4rem; border-bottom: 1px solid var(--arena); }
+
+    .campo { margin-bottom: 1rem; }
+    .campo label, .campo .etq { display: block; font-size: .82rem; font-weight: 600; margin-bottom: .35rem; }
+    .req { color: var(--guinda-ac); }
+    .opcional { font-weight: 400; color: var(--muted); }
+    .fila-2 { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+
+    input[type="text"], input[type="date"], input[type="password"], input[type="search"], select, textarea {
+      width: 100%; padding: .7rem .85rem; border: 1.5px solid var(--border); border-radius: 8px;
+      font-size: .95rem; color: var(--text); background: #fff; font-family: inherit; -webkit-appearance: none;
+    }
+    input[type="file"] { font-size: .85rem; width: 100%; }
+    textarea { resize: vertical; min-height: 4.5rem; line-height: 1.4; }
+    input:focus, select:focus, textarea:focus {
+      outline: none; border-color: var(--guinda-ac); box-shadow: 0 0 0 3px rgba(159,34,65,.15);
+    }
+    .campo-error { border-color: #dc2626 !important; }
+    .error-msg { font-size: .78rem; color: #dc2626; margin-top: .3rem; display: none; }
+    .error-msg.visible { display: block; }
+    .hint { font-size: .78rem; color: var(--muted); margin-top: .35rem; }
+
+    .opciones { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+    .opcion {
+      display: block; border: 1.5px solid var(--border); border-radius: 8px; padding: .6rem .7rem;
+      cursor: pointer; font-size: .85rem; background: #fff;
+    }
+    .opcion input { margin-right: .35rem; accent-color: var(--guinda-ac); }
+    .opcion small { display: block; color: var(--muted); font-size: .74rem; margin-top: .2rem; }
+    .opcion:has(input:checked) { border-color: var(--guinda-ac); background: #fdf2f4; }
+
+    .vinculo {
+      font-size: .8rem; background: #f5e9ec; color: var(--guinda); border-radius: 8px;
+      padding: .55rem .7rem; margin-bottom: 1rem; display: none;
+    }
+    .vinculo.visible { display: block; }
+    .vinculo button { color: var(--guinda-ac); }
+
+    .btn {
+      width: 100%; padding: .85rem; background: var(--guinda-ac); color: #fff; border: none;
+      border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; font-family: inherit;
+    }
+    .btn:hover:not(:disabled) { background: var(--guinda); }
+    .btn:disabled { opacity: .55; cursor: not-allowed; }
+    .btn-sec { background: #fff; color: var(--guinda-ac); border: 1.5px solid var(--guinda-ac); }
+    .btn-sec:hover:not(:disabled) { background: #fdf2f4; }
+    .botones { display: grid; gap: .5rem; margin-top: 1rem; }
+
+    .spinner {
+      display: inline-block; width: 16px; height: 16px; border: 2.5px solid rgba(255,255,255,.4);
+      border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite;
+      vertical-align: middle; margin-right: .4rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .cargando-inicial { text-align: center; padding: 4rem 1rem; }
+    .cargando-inicial .spinner { width: 34px; height: 34px; border-width: 3.5px; margin: 0 0 1rem; }
+    .cargando-inicial p { font-size: .95rem; font-weight: 600; }
+    .cargando-inicial small { display: block; margin-top: .4rem; font-size: .8rem; opacity: .7; }
+
+    .envio-error {
+      background: #fee2e2; border: 1.5px solid #fca5a5; color: #7f1d1d; border-radius: 8px;
+      padding: .8rem 1rem; font-size: .85rem; margin-top: 1rem; display: none;
+    }
+    .envio-error.visible { display: block; }
+
+    .hidden { display: none !important; }
+
+    .resultado { text-align: center; }
+    .resultado p { font-size: .88rem; color: var(--muted); }
+    .numero-final {
+      font-family: 'Courier New', monospace; font-weight: 700; color: var(--guinda-ac);
+      font-size: 1.15rem; margin: .6rem 0 .3rem; word-break: break-all;
+    }
+    .consecutivo-final { font-size: 2.6rem; font-weight: 800; color: var(--guinda); line-height: 1; margin-top: .4rem; }
+
+    .lista { display: grid; gap: .55rem; }
+    .item { border: 1px solid var(--border); border-radius: 10px; padding: .65rem .75rem; background: #fff; }
+    .item .tit { font-size: .85rem; font-weight: 700; color: var(--guinda); display: flex; gap: .5rem; flex-wrap: wrap; align-items: baseline; }
+    .item .tit .num { font-family: 'Courier New', monospace; }
+    .item .txt { font-size: .84rem; margin: .25rem 0; line-height: 1.35; }
+    .item .meta { font-size: .74rem; color: var(--muted); }
+    .item .acciones { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .45rem; align-items: center; }
+    .item.cancelado { opacity: .6; }
+    .item.cancelado .num { text-decoration: line-through; }
+    .badge {
+      display: inline-block; font-size: .68rem; font-weight: 700; border-radius: 999px;
+      padding: .12rem .5rem; background: #e5e7eb; color: #374151; letter-spacing: .02em;
+    }
+    .badge.Recibido { background: #fde68a; color: #78350f; }
+    .badge.En-atencion { background: #bfdbfe; color: #1e3a8a; }
+    .badge.Atendido { background: #bbf7d0; color: #14532d; }
+    .badge.Cancelado { background: #e5e7eb; color: #6b7280; }
+    .badge.dir { background: #f5e9ec; color: var(--guinda); }
+    .btn-mini {
+      font-family: inherit; font-size: .75rem; font-weight: 600; cursor: pointer; color: var(--guinda);
+      background: #f5e9ec; border: 1px solid #ecd3da; border-radius: 999px; padding: .25rem .7rem; text-decoration: none;
+    }
+    .btn-mini:hover { background: #ecd3da; }
+    .cancelar-box { display: flex; gap: .4rem; margin-top: .45rem; width: 100%; }
+    .cancelar-box input { padding: .45rem .6rem; font-size: .85rem; }
+    .vacio { font-size: .85rem; color: var(--muted); text-align: center; padding: .75rem 0; }
+
+    @media (max-width: 420px) {
+      .fila-2, .opciones { grid-template-columns: 1fr; }
+      .tab { font-size: .78rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="brand">SEPRN <span>·</span> OTDE</div>
+  <span class="tag">OFICIOS</span>
+</header>
+
+<main>
+  <div class="hidden" id="screen-cargando" role="status" aria-live="polite">
+    <div class="cargando-inicial">
+      <span class="spinner" aria-hidden="true"></span>
+      <p>Cargando el control de oficios…</p>
+      <small id="cargando-detalle">Suele tardar unos segundos.</small>
+    </div>
+  </div>
+
+  <!-- Clave (una vez por dispositivo) -->
+  <div class="hidden" id="screen-clave">
+    <div class="intro">
+      <h1>Control de oficios</h1>
+      <p>Uso interno de OTDE. Escribe la clave una sola vez; este dispositivo la recuerda.</p>
+    </div>
+    <form class="card" id="form-clave" novalidate>
+      <div class="campo">
+        <label for="clave">Clave de captura <span class="req">*</span></label>
+        <input type="password" id="clave" autocomplete="current-password">
+        <div class="error-msg" id="err-clave">Escribe la clave.</div>
+      </div>
+      <div class="campo">
+        <label for="quien">¿Quién usa este dispositivo? <span class="req">*</span></label>
+        <select id="quien">
+          <option value="">Selecciona…</option>
+          <option>Jorge</option><option>Nancy</option><option>Alejandro</option><option>Marcos</option>
+        </select>
+        <div class="error-msg" id="err-quien">Selecciona tu nombre.</div>
+      </div>
+      <button type="submit" class="btn" id="btn-clave">Entrar</button>
+      <div class="envio-error" id="clave-error"></div>
+    </form>
+  </div>
+
+  <!-- Aplicación -->
+  <div class="hidden" id="screen-app">
+    <div class="intro">
+      <h1>Control de oficios</h1>
+      <p class="sesion">Usando como <strong id="lbl-quien"></strong> · <button type="button" class="link-btn" id="btn-salir">cambiar</button></p>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button type="button" class="tab" role="tab" id="tab-numero" aria-controls="panel-numero" aria-selected="true">Tomar número</button>
+      <button type="button" class="tab" role="tab" id="tab-registrar" aria-controls="panel-registrar" aria-selected="false">Registrar oficio</button>
+      <button type="button" class="tab" role="tab" id="tab-buscar" aria-controls="panel-buscar" aria-selected="false">Buscar</button>
+    </div>
+
+    <!-- Tomar número -->
+    <section id="panel-numero" role="tabpanel">
+      <div class="lote" id="lote"></div>
+      <form class="card" id="form-numero" novalidate>
+        <h2>Tomar número de oficio</h2>
+        <div class="vinculo" id="vinculo-box">
+          Respuesta al oficio <strong id="vinculo-txt"></strong>. El número se anotará en ese oficio.
+          <button type="button" class="link-btn" id="btn-quitar-vinculo">quitar</button>
+        </div>
+        <div class="campo">
+          <label for="num-asunto">Asunto <span class="req">*</span></label>
+          <textarea id="num-asunto" rows="2" placeholder="Ej. CUANTRIX – Entrega de kit"></textarea>
+          <div class="error-msg" id="err-num-asunto">Escribe el asunto.</div>
+        </div>
+        <div class="fila-2">
+          <div class="campo">
+            <label for="num-destino">Dirigido a <span class="req">*</span></label>
+            <select id="num-destino"><option value="">Selecciona…</option></select>
+            <div class="error-msg" id="err-num-destino">Elige a quién va dirigido.</div>
+          </div>
+          <div class="campo">
+            <label for="num-elabora">Elabora <span class="req">*</span></label>
+            <select id="num-elabora"></select>
+            <div class="error-msg" id="err-num-elabora">Elige quién elabora.</div>
+          </div>
+        </div>
+        <div class="campo">
+          <label for="num-fecha">Fecha de elaboración <span class="req">*</span></label>
+          <input type="date" id="num-fecha">
+          <div class="error-msg" id="err-num-fecha">Indica la fecha.</div>
+        </div>
+        <button type="submit" class="btn" id="btn-numero">Tomar número</button>
+        <div class="envio-error" id="numero-error"></div>
+      </form>
+
+      <div class="card resultado hidden" id="numero-ok">
+        <p>Tu número de oficio es</p>
+        <div class="consecutivo-final" id="ok-consecutivo"></div>
+        <div class="numero-final" id="ok-numero"></div>
+        <p id="ok-numero-detalle"></p>
+        <div class="botones">
+          <button type="button" class="btn" id="btn-copiar">Copiar número completo</button>
+          <button type="button" class="btn btn-sec" id="btn-otro-numero">Tomar otro número</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Últimos números tomados</h2>
+        <div class="lista" id="lista-numeros"></div>
+      </div>
+    </section>
+
+    <!-- Registrar oficio recibido -->
+    <section id="panel-registrar" role="tabpanel" class="hidden">
+      <form class="card" id="form-oficio" novalidate>
+        <h2>Registrar oficio recibido</h2>
+        <div class="fila-2">
+          <div class="campo">
+            <label for="of-folio">Folio de Oficialía de Partes <span class="req">*</span></label>
+            <input type="text" id="of-folio" inputmode="numeric" placeholder="El del sello, ej. 3622">
+            <div class="error-msg" id="err-of-folio">Escribe el folio del sello.</div>
+          </div>
+          <div class="campo">
+            <label for="of-recepcion">Fecha de recepción <span class="req">*</span></label>
+            <input type="date" id="of-recepcion">
+            <div class="error-msg" id="err-of-recepcion">Indica la fecha del sello.</div>
+          </div>
+        </div>
+        <div class="fila-2">
+          <div class="campo">
+            <label for="of-num-remitente">No. de oficio del remitente <span class="opcional">(opcional)</span></label>
+            <input type="text" id="of-num-remitente" placeholder="Ej. 228C0101110001L/2016/2026">
+          </div>
+          <div class="campo">
+            <label for="of-elaboracion">Fecha del oficio <span class="opcional">(opcional)</span></label>
+            <input type="date" id="of-elaboracion">
+            <div class="error-msg" id="err-of-elaboracion">No puede ser posterior a la recepción.</div>
+          </div>
+        </div>
+        <div class="campo">
+          <label for="of-remitente">Remitente <span class="req">*</span></label>
+          <input type="text" id="of-remitente" list="remitentes" placeholder="Ej. CoEEE, Esc. Prim. … CCT …, Sector III">
+          <datalist id="remitentes"></datalist>
+          <div class="error-msg" id="err-of-remitente">Escribe el remitente.</div>
+        </div>
+        <div class="campo">
+          <label for="of-asunto">Asunto <span class="req">*</span></label>
+          <textarea id="of-asunto" rows="2"></textarea>
+          <div class="error-msg" id="err-of-asunto">Escribe el asunto.</div>
+        </div>
+        <div class="campo">
+          <label for="of-tipo">Tipo de oficio (programa) <span class="req">*</span></label>
+          <select id="of-tipo"><option value="">Selecciona…</option></select>
+          <div class="error-msg" id="err-of-tipo">Elige el tipo de oficio.</div>
+        </div>
+        <div class="campo">
+          <span class="etq">¿Baja o sube? <span class="req">*</span></span>
+          <div class="opciones" id="of-direccion">
+            <label class="opcion"><input type="radio" name="direccion" value="Baja">Baja<small>De instancias superiores (CoEEE, Subsecretaría…). Se atiende con oficios a sectores, zonas y escuelas.</small></label>
+            <label class="opcion"><input type="radio" name="direccion" value="Sube">Sube<small>De escuelas, zonas o sectores. Se atiende con una acción (mantenimiento, asesoría…).</small></label>
+          </div>
+          <div class="error-msg" id="err-of-direccion">Indica si el oficio baja o sube.</div>
+        </div>
+        <div class="campo">
+          <label for="of-forma">¿Cómo se atiende? <span class="opcional">(si ya se sabe)</span></label>
+          <select id="of-forma">
+            <option value="">Aún no se sabe</option>
+            <option>Oficio de salida</option>
+            <option>Acción</option>
+            <option>Solo conocimiento</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label for="of-observaciones">Observaciones <span class="opcional">(opcional)</span></label>
+          <textarea id="of-observaciones" rows="2"></textarea>
+        </div>
+        <div class="campo">
+          <label for="of-pdf">PDF del oficio escaneado <span class="opcional">(opcional, máx. 5 MB)</span></label>
+          <input type="file" id="of-pdf" accept="application/pdf">
+          <div class="error-msg" id="err-of-pdf"></div>
+        </div>
+        <button type="submit" class="btn" id="btn-oficio">Registrar oficio</button>
+        <div class="envio-error" id="oficio-error"></div>
+      </form>
+
+      <div class="card resultado hidden" id="oficio-ok">
+        <p>Oficio registrado</p>
+        <div class="numero-final" id="ok-oficio-id"></div>
+        <p id="ok-oficio-detalle"></p>
+        <div class="botones">
+          <button type="button" class="btn hidden" id="btn-responder-nuevo">Tomar número para la respuesta</button>
+          <button type="button" class="btn btn-sec" id="btn-otro-oficio">Registrar otro oficio</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Buscar -->
+    <section id="panel-buscar" role="tabpanel" class="hidden">
+      <div class="card">
+        <h2>Buscar oficios recibidos</h2>
+        <div class="campo">
+          <label for="buscar">Folio, remitente, asunto, tipo o número de salida</label>
+          <input type="search" id="buscar" placeholder="Ej. 3622, CoEEE, Cuantrix, 4824">
+        </div>
+        <div class="lista" id="lista-oficios"></div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script src="js/tramites-shared.js"></script>
+<script>
+// URL de despliegue de apps-script/oficios.gs (ver instrucciones al inicio de ese archivo).
+const OFICIOS_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzWKPpkmYKCFniWWvSsN_rkG3UCFvUW9CaMqq-BhZseLokvScYHxn-BCH6B5Cg3GBQ2/exec';
+
+const OFICIOS_TIMEOUT_ENVIO_MS = 60000;
+const LS_CLAVE = 'otdeOficiosClave';
+const LS_QUIEN = 'otdeOficiosQuien';
+const MAX_RESULTADOS = 30;
+const MSG_CLAVE_INCORRECTA = 'Clave incorrecta. Revisa mayúsculas, minúsculas y que no falte ningún carácter.';
+const MSG_SIN_CLAVE = 'El sistema todavía no tiene clave. En el Sheet "Control de oficios OTDE", usa ' +
+  'el menú "OTDE Oficios → Configurar clave de captura" y vuelve a intentar.';
+const MSG_SIN_URL = 'Falta pegar la URL del despliegue en oficios.html (OFICIOS_APPS_SCRIPT_URL).';
+
+let estado = { config: { elabora: [], destinos: [], tipos: [] }, lote: null, numeros: [], oficios: [] };
+let idEnvioNumero = null;
+let idEnvioOficio = null;
+let vinculo = null; // {id, folioOP} del oficio que se está respondiendo
+let ultimoOficio = null;
+
+const $ = function (id) { return document.getElementById(id); };
+function leerLS(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
+function guardarLS(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+function borrarLS(k) { try { localStorage.removeItem(k); } catch (e) {} }
+
+function mostrar(pantalla) {
+  ['screen-cargando', 'screen-clave', 'screen-app'].forEach(function (id) {
+    $(id).classList.toggle('hidden', id !== pantalla);
+  });
+  window.scrollTo(0, 0);
+}
+
+function nuevoIdEnvio() {
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
+function hoyISO() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function fechaCorta(iso) {
+  const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? m[3] + '/' + m[2] + '/' + m[1] : String(iso || '');
+}
+
+function marcarError(id, visible) {
+  const campo = $(id);
+  const msg = $('err-' + id);
+  if (campo) campo.classList.toggle('campo-error', visible);
+  if (msg) msg.classList.toggle('visible', visible);
+}
+
+// Contador en el botón mientras espera (mismo patrón que bitacora.html).
+function contadorEnBoton(btn, texto) {
+  const inicio = Date.now();
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>' + texto;
+  const reloj = setInterval(function () {
+    const seg = Math.round((Date.now() - inicio) / 1000);
+    if (seg < 3) return;
+    btn.innerHTML = '<span class="spinner"></span>' + texto + ' ' + seg + ' s' +
+      (seg >= 15 ? ' · seguimos esperando, no cierres' : '');
+  }, 1000);
+  return function (etiqueta) { clearInterval(reloj); btn.disabled = false; btn.textContent = etiqueta; };
+}
+
+function mensajeDeFallo(e, reintento) {
+  if (e && e.name === 'AbortError') {
+    return 'El servidor tardó demasiado en responder.' + (reintento ? ' Vuelve a tocar el botón: no se duplicará.' : ' Intenta de nuevo.');
+  }
+  if (e instanceof TypeError) return 'Error de conexión. Verifica tu internet e intenta de nuevo.';
+  return e.message;
+}
+
+function mostrarError(id, texto) {
+  $(id).textContent = texto;
+  $(id).classList.add('visible');
+}
+
+function el(tag, clase, texto) {
+  const e = document.createElement(tag);
+  if (clase) e.className = clase;
+  if (texto != null) e.textContent = texto;
+  return e;
+}
+
+async function post(payload) {
+  payload.clave = leerLS(LS_CLAVE) || $('clave').value.trim();
+  return fetchJsonConTimeout(OFICIOS_APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(payload)
+  }, OFICIOS_TIMEOUT_ENVIO_MS);
+}
+
+function errorDeEstado(d) {
+  if (d.status === 'sin_clave') return MSG_SIN_CLAVE;
+  if (d.status === 'no_autorizado') return 'La clave ya no es válida. Toca "cambiar" arriba y escribe la nueva.';
+  return d.mensaje || 'No se pudo completar. Intenta de nuevo.';
+}
+
+// ── Entrada ──
+async function cargar(clave) {
+  if (!OFICIOS_APPS_SCRIPT_URL) throw new Error(MSG_SIN_URL);
+  const d = await fetchJsonConTimeout(OFICIOS_APPS_SCRIPT_URL + '?action=inicio&clave=' + encodeURIComponent(clave));
+  if (d.status === 'sin_clave') throw new Error(MSG_SIN_CLAVE);
+  if (d.status === 'no_autorizado') throw new Error(MSG_CLAVE_INCORRECTA);
+  if (d.status !== 'ok') throw new Error(d.mensaje || 'No se pudo cargar el control de oficios.');
+  return d;
+}
+
+function aplicarDatos(d, quien) {
+  estado = { config: d.config, lote: d.lote, numeros: d.numeros || [], oficios: d.oficios || [] };
+  llenarSelect('num-destino', d.config.destinos, 'Selecciona…');
+  llenarSelect('num-elabora', d.config.elabora);
+  llenarSelect('of-tipo', d.config.tipos, 'Selecciona…');
+  if (d.config.elabora.indexOf(quien) === -1) {
+    const o = el('option', null, quien); o.value = quien; $('num-elabora').appendChild(o);
+  }
+  $('num-elabora').value = quien;
+  const remitentes = {};
+  estado.oficios.forEach(function (o) { if (o.remitente && o.remitente.length <= 60) remitentes[o.remitente] = true; });
+  $('remitentes').innerHTML = '';
+  Object.keys(remitentes).sort().forEach(function (r) { const o = el('option'); o.value = r; $('remitentes').appendChild(o); });
+  $('lbl-quien').textContent = quien;
+  pintarLote();
+  pintarNumeros();
+  pintarOficios();
+}
+
+function llenarSelect(id, valores, vacio) {
+  const s = $(id);
+  s.innerHTML = '';
+  if (vacio) { const o = el('option', null, vacio); o.value = ''; s.appendChild(o); }
+  valores.forEach(function (v) { const o = el('option', null, v); o.value = v; s.appendChild(o); });
+}
+
+$('form-clave').addEventListener('submit', async function (ev) {
+  ev.preventDefault();
+  const clave = $('clave').value.trim();
+  const quien = $('quien').value;
+  marcarError('clave', !clave);
+  marcarError('quien', !quien);
+  if (!clave || !quien) return;
+  $('clave-error').classList.remove('visible');
+  const parar = contadorEnBoton($('btn-clave'), 'Verificando…');
+  try {
+    const d = await cargar(clave);
+    guardarLS(LS_CLAVE, clave);
+    guardarLS(LS_QUIEN, quien);
+    aplicarDatos(d, quien);
+    reiniciarNumero();
+    reiniciarOficio();
+    mostrar('screen-app');
+  } catch (e) {
+    mostrarError('clave-error', mensajeDeFallo(e));
+  }
+  parar('Entrar');
+});
+
+$('btn-salir').addEventListener('click', function () {
+  borrarLS(LS_CLAVE);
+  borrarLS(LS_QUIEN);
+  $('clave').value = '';
+  $('quien').value = '';
+  mostrar('screen-clave');
+});
+
+// ── Pestañas ──
+function abrirTab(nombre) {
+  ['numero', 'registrar', 'buscar'].forEach(function (t) {
+    $('tab-' + t).setAttribute('aria-selected', String(t === nombre));
+    $('panel-' + t).classList.toggle('hidden', t !== nombre);
+  });
+}
+['numero', 'registrar', 'buscar'].forEach(function (t) {
+  $('tab-' + t).addEventListener('click', function () { abrirTab(t); });
+});
+
+// ── Lote ──
+function pintarLote() {
+  const l = estado.lote;
+  const box = $('lote');
+  box.className = 'lote';
+  box.innerHTML = '';
+  if (!l || l.siguiente === null) {
+    box.classList.add('sin');
+    box.textContent = 'No quedan números en los lotes de ' + (l ? l.anio : 'este año') +
+      '. Pide un lote nuevo a la Subdirección; Jorge lo captura en el Sheet (OTDE Oficios → Agregar lote).';
+    return;
+  }
+  if (l.quedan <= 10) box.classList.add('pocos');
+  box.appendChild(el('span', null, 'Siguiente número'));
+  box.appendChild(el('strong', null, String(l.siguiente)));
+  box.appendChild(el('span', null, '· quedan ' + l.quedan + ' en ' + l.anio +
+    ' (' + l.lotes.filter(function (x) { return x.quedan; }).map(function (x) { return x.desde + '-' + x.hasta; }).join(', ') + ')' +
+    (l.quedan <= 10 ? ' · pide un lote nuevo pronto' : '')));
+}
+
+// ── Tomar número ──
+function reiniciarNumero() {
+  $('form-numero').reset();
+  $('num-elabora').value = leerLS(LS_QUIEN);
+  $('num-fecha').value = hoyISO();
+  ['num-asunto', 'num-destino', 'num-elabora', 'num-fecha'].forEach(function (id) { marcarError(id, false); });
+  $('numero-error').classList.remove('visible');
+  ponerVinculo(null);
+  idEnvioNumero = null;
+  $('form-numero').classList.remove('hidden');
+  $('numero-ok').classList.add('hidden');
+}
+
+function ponerVinculo(oficio) {
+  vinculo = oficio ? { id: oficio.id, folioOP: oficio.folioOP } : null;
+  $('vinculo-box').classList.toggle('visible', !!oficio);
+  if (oficio) $('vinculo-txt').textContent = oficio.id + ' (folio ' + oficio.folioOP + ', ' + oficio.remitente + ')';
+}
+$('btn-quitar-vinculo').addEventListener('click', function () { ponerVinculo(null); });
+
+function responderOficio(oficio) {
+  reiniciarNumero();
+  ponerVinculo(oficio);
+  $('num-asunto').value = oficio.asunto;
+  abrirTab('numero');
+  window.scrollTo(0, 0);
+  $('num-asunto').focus();
+}
+
+['num-asunto', 'num-destino', 'num-elabora', 'num-fecha'].forEach(function (id) {
+  $(id).addEventListener(id === 'num-asunto' ? 'input' : 'change', function () { marcarError(id, false); });
+});
+
+$('form-numero').addEventListener('submit', async function (ev) {
+  ev.preventDefault();
+  let ok = true;
+  ['num-asunto', 'num-destino', 'num-elabora', 'num-fecha'].forEach(function (id) {
+    const falta = !$(id).value.trim();
+    marcarError(id, falta);
+    if (falta) ok = false;
+  });
+  if (!ok) return;
+  $('numero-error').classList.remove('visible');
+  // El mismo idEnvio se conserva en reintentos: si el primero sí llegó, no se toma otro número.
+  if (!idEnvioNumero) idEnvioNumero = nuevoIdEnvio();
+  const parar = contadorEnBoton($('btn-numero'), 'Tomando número…');
+  try {
+    const d = await post({
+      accion: 'tomarNumero', idEnvio: idEnvioNumero, elabora: $('num-elabora').value,
+      asunto: $('num-asunto').value.trim(), destino: $('num-destino').value,
+      fechaElaboracion: $('num-fecha').value, vinculo: vinculo ? vinculo.id : ''
+    });
+    if (d.status === 'ok') {
+      estado.lote = d.lote;
+      if (!d.duplicado) {
+        estado.numeros.unshift({
+          numero: d.numero, consecutivo: d.consecutivo, tomado: hoyISO(), elabora: $('num-elabora').value,
+          asunto: $('num-asunto').value.trim(), destino: $('num-destino').value, estatus: 'Asignado',
+          vinculo: vinculo ? vinculo.id : ''
+        });
+        if (vinculo) anotarSalidaLocal(vinculo.id, d.numero);
+      }
+      $('ok-consecutivo').textContent = d.consecutivo;
+      $('ok-numero').textContent = d.numero;
+      $('ok-numero-detalle').textContent = vinculo ? 'Anotado como respuesta al oficio ' + vinculo.id + '.' : '';
+      idEnvioNumero = null;
+      $('form-numero').classList.add('hidden');
+      $('numero-ok').classList.remove('hidden');
+      $('btn-copiar').textContent = 'Copiar número completo';
+      pintarLote();
+      pintarNumeros();
+      pintarOficios();
+    } else if (d.status === 'sin_lote') {
+      idEnvioNumero = null;
+      estado.lote = { anio: d.anio, siguiente: null, quedan: 0, lotes: [] };
+      pintarLote();
+      mostrarError('numero-error', 'Ya no quedan números en los lotes de ' + d.anio +
+        '. Pide un lote nuevo a la Subdirección; Jorge lo captura en el Sheet (OTDE Oficios → Agregar lote).');
+    } else {
+      mostrarError('numero-error', errorDeEstado(d));
+    }
+  } catch (e) {
+    mostrarError('numero-error', mensajeDeFallo(e, true));
+  }
+  parar('Tomar número');
+});
+
+$('btn-copiar').addEventListener('click', async function () {
+  const texto = $('ok-numero').textContent;
+  try {
+    await navigator.clipboard.writeText(texto);
+    this.textContent = 'Copiado';
+  } catch (e) {
+    // Sin API de portapapeles (navegador viejo o sin https): seleccionar y copiar a la antigua.
+    const r = document.createRange();
+    r.selectNodeContents($('ok-numero'));
+    const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+    let copiado = false;
+    try { copiado = document.execCommand('copy'); } catch (err) {}
+    this.textContent = copiado ? 'Copiado' : 'Ya está seleccionado: cópialo';
+  }
+});
+$('btn-otro-numero').addEventListener('click', reiniciarNumero);
+
+function pintarNumeros() {
+  const lista = $('lista-numeros');
+  lista.innerHTML = '';
+  if (!estado.numeros.length) { lista.appendChild(el('p', 'vacio', 'Todavía no se ha tomado ningún número desde este sistema.')); return; }
+  estado.numeros.slice(0, 15).forEach(function (n) {
+    const item = el('div', 'item' + (n.estatus === 'Cancelado' ? ' cancelado' : ''));
+    const tit = el('div', 'tit');
+    tit.appendChild(el('span', 'num', String(n.consecutivo)));
+    if (n.estatus === 'Cancelado') tit.appendChild(el('span', 'badge Cancelado', 'Cancelado'));
+    if (n.destino) tit.appendChild(el('span', 'badge dir', n.destino));
+    item.appendChild(tit);
+    item.appendChild(el('div', 'txt', n.asunto));
+    item.appendChild(el('div', 'meta', n.elabora + ' · ' + fechaCorta(n.tomado) + (n.vinculo ? ' · responde ' + n.vinculo : '')));
+    if (n.estatus !== 'Cancelado') {
+      const acc = el('div', 'acciones');
+      const b = el('button', 'btn-mini', 'Cancelar este número');
+      b.type = 'button';
+      b.addEventListener('click', function () { abrirCancelar(acc, n); });
+      acc.appendChild(b);
+      item.appendChild(acc);
+    }
+    lista.appendChild(item);
+  });
+}
+
+// Cancelar sin diálogos del navegador: un campo de motivo en la misma tarjeta.
+function abrirCancelar(contenedor, n) {
+  contenedor.innerHTML = '';
+  const box = el('div', 'cancelar-box');
+  const motivo = el('input');
+  motivo.type = 'text';
+  motivo.placeholder = '¿Por qué no se usó?';
+  motivo.setAttribute('aria-label', 'Motivo de la cancelación del número ' + n.consecutivo);
+  const ok = el('button', 'btn-mini', 'Confirmar');
+  ok.type = 'button';
+  const no = el('button', 'btn-mini', 'No');
+  no.type = 'button';
+  no.addEventListener('click', pintarNumeros);
+  ok.addEventListener('click', async function () {
+    if (!motivo.value.trim()) { motivo.classList.add('campo-error'); motivo.focus(); return; }
+    ok.disabled = true;
+    ok.textContent = 'Cancelando…';
+    try {
+      const d = await post({ accion: 'cancelarNumero', numero: n.numero, motivo: motivo.value.trim(), elabora: leerLS(LS_QUIEN) });
+      if (d.status !== 'ok') throw new Error(errorDeEstado(d));
+      n.estatus = 'Cancelado';
+      pintarNumeros();
+    } catch (e) {
+      ok.disabled = false;
+      ok.textContent = 'Confirmar';
+      motivo.value = '';
+      motivo.placeholder = mensajeDeFallo(e);
+      motivo.classList.add('campo-error');
+    }
+  });
+  box.appendChild(motivo); box.appendChild(ok); box.appendChild(no);
+  contenedor.appendChild(box);
+  motivo.focus();
+}
+
+// ── Registrar oficio ──
+function reiniciarOficio() {
+  $('form-oficio').reset();
+  $('of-recepcion').value = hoyISO();
+  document.querySelectorAll('#form-oficio .campo-error').forEach(function (x) { x.classList.remove('campo-error'); });
+  document.querySelectorAll('#form-oficio .error-msg').forEach(function (x) { x.classList.remove('visible'); });
+  $('oficio-error').classList.remove('visible');
+  idEnvioOficio = null;
+  $('form-oficio').classList.remove('hidden');
+  $('oficio-ok').classList.add('hidden');
+}
+
+['of-folio', 'of-remitente', 'of-asunto'].forEach(function (id) {
+  $(id).addEventListener('input', function () { marcarError(id, false); });
+});
+['of-recepcion', 'of-elaboracion', 'of-tipo'].forEach(function (id) {
+  $(id).addEventListener('change', function () { marcarError(id, false); });
+});
+$('of-direccion').addEventListener('change', function () { marcarError('of-direccion', false); });
+$('of-pdf').addEventListener('change', function () { marcarError('of-pdf', false); });
+
+// Cualquier cambio en los datos es un envío nuevo; un reintento sin cambios no lo es.
+$('form-oficio').addEventListener('input', function () { idEnvioOficio = null; });
+
+function validarOficio() {
+  let ok = true;
+  const req = function (id, valido) { marcarError(id, !valido); if (!valido) ok = false; };
+  req('of-folio', !!$('of-folio').value.trim());
+  req('of-recepcion', !!$('of-recepcion').value);
+  req('of-remitente', !!$('of-remitente').value.trim());
+  req('of-asunto', !!$('of-asunto').value.trim());
+  req('of-tipo', !!$('of-tipo').value);
+  req('of-direccion', !!document.querySelector('input[name="direccion"]:checked'));
+  const elab = $('of-elaboracion').value;
+  req('of-elaboracion', !elab || !$('of-recepcion').value || elab <= $('of-recepcion').value);
+  const f = $('of-pdf').files[0];
+  if (f) {
+    if (f.type !== 'application/pdf') { $('err-of-pdf').textContent = 'Solo se aceptan archivos PDF.'; req('of-pdf', false); }
+    else if (f.size > TAMANO_MAX_ARCHIVO_BYTES) { $('err-of-pdf').textContent = 'El PDF pesa más de 5 MB. Escanéalo en menor resolución.'; req('of-pdf', false); }
+  }
+  if (!ok) {
+    const primero = document.querySelector('#form-oficio .campo-error, #form-oficio .error-msg.visible');
+    if (primero) primero.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  return ok;
+}
+
+$('form-oficio').addEventListener('submit', async function (ev) {
+  ev.preventDefault();
+  if (!validarOficio()) return;
+  $('oficio-error').classList.remove('visible');
+  if (!idEnvioOficio) idEnvioOficio = nuevoIdEnvio();
+  const archivo = $('of-pdf').files[0];
+  const parar = contadorEnBoton($('btn-oficio'), archivo ? 'Subiendo oficio…' : 'Registrando…');
+  try {
+    const payload = {
+      accion: 'registrarOficio', idEnvio: idEnvioOficio,
+      folioOP: $('of-folio').value.trim(), fechaRecepcion: $('of-recepcion').value,
+      numRemitente: $('of-num-remitente').value.trim(), fechaElaboracion: $('of-elaboracion').value,
+      remitente: $('of-remitente').value.trim(), asunto: $('of-asunto').value.trim(), tipo: $('of-tipo').value,
+      direccion: document.querySelector('input[name="direccion"]:checked').value, forma: $('of-forma').value,
+      observaciones: $('of-observaciones').value.trim(), recibio: leerLS(LS_QUIEN)
+    };
+    if (archivo) {
+      payload.pdfBase64 = await leerArchivoBase64(archivo);
+      payload.pdfNombre = archivo.name;
+      payload.pdfTipo = archivo.type;
+    }
+    const d = await post(payload);
+    if (d.status === 'ok') {
+      ultimoOficio = d.oficio;
+      if (!d.duplicado) estado.oficios.unshift(d.oficio);
+      $('ok-oficio-id').textContent = d.oficio.id;
+      $('ok-oficio-detalle').textContent = 'N.P. ' + d.oficio.np + ' del ciclo ' + d.oficio.ciclo +
+        ' · folio ' + d.oficio.folioOP + (d.oficio.pdf ? ' · PDF guardado' : '');
+      $('btn-responder-nuevo').classList.toggle('hidden', d.oficio.forma !== 'Oficio de salida');
+      idEnvioOficio = null;
+      $('form-oficio').classList.add('hidden');
+      $('oficio-ok').classList.remove('hidden');
+      window.scrollTo(0, 0);
+      pintarOficios();
+    } else if (d.status === 'repetido') {
+      idEnvioOficio = null;
+      mostrarError('oficio-error', d.mensaje + ' Búscalo en la pestaña "Buscar".');
+    } else {
+      mostrarError('oficio-error', errorDeEstado(d));
+    }
+  } catch (e) {
+    mostrarError('oficio-error', mensajeDeFallo(e, true));
+  }
+  parar('Registrar oficio');
+});
+
+$('btn-otro-oficio').addEventListener('click', reiniciarOficio);
+$('btn-responder-nuevo').addEventListener('click', function () {
+  if (ultimoOficio) responderOficio(ultimoOficio);
+  reiniciarOficio();
+});
+
+// ── Buscar ──
+function anotarSalidaLocal(id, numero) {
+  const o = estado.oficios.find(function (x) { return x.id === id; });
+  if (!o) return;
+  o.salida = o.salida ? o.salida + '; ' + numero : numero;
+  if (!o.forma) o.forma = 'Oficio de salida';
+  if (o.estatus === 'Recibido') o.estatus = 'En atención';
+}
+
+function normalizar(s) {
+  return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+}
+
+function pintarOficios() {
+  const q = normalizar($('buscar').value.trim());
+  const lista = $('lista-oficios');
+  lista.innerHTML = '';
+  const hallados = estado.oficios.filter(function (o) {
+    if (!q) return true;
+    return normalizar([o.id, o.folioOP, o.remitente, o.asunto, o.tipo, o.numRemitente, o.salida, o.ciclo].join(' ')).indexOf(q) !== -1;
+  });
+  if (!hallados.length) {
+    lista.appendChild(el('p', 'vacio', estado.oficios.length ? 'Sin resultados.' : 'Todavía no hay oficios registrados.'));
+    return;
+  }
+  hallados.slice(0, MAX_RESULTADOS).forEach(function (o) {
+    const item = el('div', 'item');
+    const tit = el('div', 'tit');
+    tit.appendChild(el('span', null, 'Folio ' + o.folioOP));
+    tit.appendChild(el('span', 'badge ' + String(o.estatus).replace(/ /g, '-').replace('ó', 'o'), o.estatus || 'Sin estatus'));
+    if (o.direccion) tit.appendChild(el('span', 'badge dir', o.direccion));
+    item.appendChild(tit);
+    item.appendChild(el('div', 'txt', o.asunto));
+    item.appendChild(el('div', 'meta', o.remitente + ' · ' + fechaCorta(o.recepcion) + ' · ' + o.id +
+      (o.tipo ? ' · ' + o.tipo : '')));
+    if (o.salida) item.appendChild(el('div', 'meta', 'Oficio(s) de salida: ' + o.salida));
+    const acc = el('div', 'acciones');
+    if (/^https:\/\//.test(o.pdf)) {
+      const a = el('a', 'btn-mini', 'Ver PDF');
+      a.href = o.pdf; a.target = '_blank'; a.rel = 'noopener';
+      acc.appendChild(a);
+    }
+    if (o.estatus !== 'Atendido' && o.estatus !== 'Solo conocimiento') {
+      const b = el('button', 'btn-mini', 'Tomar número para responder');
+      b.type = 'button';
+      b.addEventListener('click', function () { responderOficio(o); });
+      acc.appendChild(b);
+    }
+    if (acc.childNodes.length) item.appendChild(acc);
+    lista.appendChild(item);
+  });
+  if (hallados.length > MAX_RESULTADOS) {
+    lista.appendChild(el('p', 'vacio', 'Se muestran ' + MAX_RESULTADOS + ' de ' + hallados.length + '. Escribe más para afinar la búsqueda.'));
+  }
+}
+$('buscar').addEventListener('input', pintarOficios);
+
+// ── Arranque: si el dispositivo ya tiene clave, entra directo ──
+(async function iniciar() {
+  const clave = leerLS(LS_CLAVE);
+  const quien = leerLS(LS_QUIEN);
+  if (!clave || !quien) { mostrar('screen-clave'); return; }
+  mostrar('screen-cargando');
+  const inicio = Date.now();
+  const reloj = setInterval(function () {
+    const seg = Math.round((Date.now() - inicio) / 1000);
+    if (seg >= 3) $('cargando-detalle').textContent = (seg >= 15
+      ? 'Está tardando más de lo usual; seguimos esperando al servidor.'
+      : 'Suele tardar unos segundos.') + ' (' + seg + ' s)';
+  }, 1000);
+  try {
+    const d = await cargar(clave);
+    aplicarDatos(d, quien);
+    reiniciarNumero();
+    reiniciarOficio();
+    mostrar('screen-app');
+  } catch (e) {
+    if (e.message === MSG_CLAVE_INCORRECTA) borrarLS(LS_CLAVE);
+    $('quien').value = quien;
+    mostrarError('clave-error', mensajeDeFallo(e));
+    mostrar('screen-clave');
+  } finally {
+    clearInterval(reloj);
+  }
+})();
+</script>
+
+</body>
+</html>
