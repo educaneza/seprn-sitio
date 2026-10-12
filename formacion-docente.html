@@ -2705,7 +2705,9 @@
   function textoCuandoCurso(sel) {
     const c = cursoDelCatalogo(sel);
     const sesiones = sesionesCurso(c);
-    const periodo = sesiones.length > 1
+    // Sin hora (autogestivo), las fechas capturadas son puntos de avance,
+    // no sesiones: se muestra el periodo completo del curso.
+    const periodo = sesiones.length > 1 && c.hora_inicio
       ? 'Sesiones: ' + listaEnTexto(sesiones.map(d => fechaCorta(d, false)))
       : textoPeriodoCurso(c);
     if (!periodo) return '';
@@ -2718,7 +2720,7 @@
   // alarmas 1 día y 30 min antes. Sin hora: de día completo (aviso a las
   // 9:00 del día anterior). Si Fecha_fin cae después de la última sesión (o
   // no hay sesiones), se suma un "Último día" con aviso una semana y un día
-  // antes — reemplaza al correo de "vas a la mitad".
+  // antes. Los cursos sin hora van aparte (eventosSinHora()).
   function eventosCalendario(r) {
     const c = cursoDelCatalogo(r.curso);
     const ini = isoDesdeDMA(c.fecha_inicio);
@@ -2728,6 +2730,7 @@
     const base = r.folio || r.curso.id;
     const desc = (r.folio ? 'Folio OTDE: ' + r.folio + '\n' : '') + (liga ? 'Acceso / convocatoria: ' + liga + '\n' : '') +
       'Centro de Formación Docente · OTDE NEZA\n' + SITIO_FORMACION;
+    if (!c.hora_inicio) return eventosSinHora(r.curso.nombre, c, ini, fin, base, desc, liga);
     const dias = (c.fechas_sesion && c.fechas_sesion.length) ? c.fechas_sesion : [ini];
     const eventos = dias.map((dia, i) => {
       const titulo = (dias.length > 1 ? 'Sesión ' + (i + 1) + ' de ' + dias.length + ': ' : (c.hora_inicio ? '' : 'Inicia: ')) + r.curso.nombre;
@@ -2740,6 +2743,39 @@
     });
     if (fin > dias[dias.length - 1]) {
       eventos.push({ uid: base + '-fin', titulo: 'Último día: ' + r.curso.nombre, dia: fin, desc, liga, alarmas: ['-P6DT15H', '-PT15H'] });
+    }
+    return eventos;
+  }
+
+  // Cursos sin Hora_inicio (autogestivos, oct 2026): no hay sesiones en vivo,
+  // así que las fechas de Fechas_sesion se agendan como puntos de avance
+  // ("Avance 1 de 3"). Sin ninguna y con 14+ días de duración, se agenda un
+  // "Vas a la mitad" — el correo equivalente casi nunca alcanza cuota. Todos
+  // de día completo, con aviso a las 9:00 del día anterior.
+  const DIAS_MIN_AVISO_MITAD = 14;
+
+  function diaMitadIso(ini, fin) {
+    const a = new Date(ini + 'T12:00:00Z');
+    const dias = Math.round((new Date(fin + 'T12:00:00Z') - a) / 86400000);
+    if (dias < DIAS_MIN_AVISO_MITAD) return '';
+    a.setUTCDate(a.getUTCDate() + Math.floor(dias / 2));
+    return a.toISOString().slice(0, 10);
+  }
+
+  function eventosSinHora(nombre, c, ini, fin, base, desc, liga) {
+    const evento = (uid, titulo, dia) => ({ uid: base + '-' + uid, titulo, dia, desc, liga, alarmas: ['-PT15H'] });
+    const eventos = [evento('inicio', 'Inicia: ' + nombre, ini)];
+    // Inicio y cierre ya tienen su propio evento.
+    const avances = (c.fechas_sesion || []).filter(dia => dia > ini && dia < fin);
+    avances.forEach((dia, i) => {
+      eventos.push(evento('a' + (i + 1), 'Avance ' + (i + 1) + ' de ' + avances.length + ': revisa tus actividades de ' + nombre, dia));
+    });
+    if (!avances.length) {
+      const mitad = diaMitadIso(ini, fin);
+      if (mitad) eventos.push(evento('mitad', 'Vas a la mitad: ' + nombre, mitad));
+    }
+    if (fin > ini) {
+      eventos.push({ uid: base + '-fin', titulo: 'Último día: ' + nombre, dia: fin, desc, liga, alarmas: ['-P6DT15H', '-PT15H'] });
     }
     return eventos;
   }
@@ -2859,7 +2895,9 @@
     const sub = document.createElement('p');
     sub.className = 'fi-cal-sub';
     sub.textContent = eventos[0].dia
-      ? 'Tu calendario te avisará un día antes de que inicie.'
+      ? (eventos.length > 2
+        ? 'Tu calendario te recordará revisar tu avance y te avisará antes del cierre.'
+        : 'Tu calendario te avisará un día antes de que inicie.')
       : 'Tu calendario te avisará un día antes y 30 minutos antes de ' + (sesiones.length ? 'cada sesión.' : 'empezar.');
     if (plataforma === 'escritorio') {
       sub.textContent += ' ¿Usas Gmail? Elige Google Calendar. ¿Usas Outlook o tu correo @dee.edu.mx? Elige Outlook.';
