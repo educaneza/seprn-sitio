@@ -216,6 +216,14 @@
     .persona-extra label { font-size: .76rem; }
     .persona-cab select { flex: 1; }
     .generar { margin-top: 1rem; text-align: left; }
+    .ruta { border: 1px solid var(--border); border-radius: 10px; padding: .6rem .7rem; margin-bottom: .55rem; background: #fff; }
+    .ruta .r-lugar { font-size: .84rem; font-weight: 700; color: var(--guinda); }
+    .ruta .r-meta { font-size: .76rem; color: var(--muted); margin: .15rem 0 .45rem; }
+    .ruta .r-fila { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+    .ruta .r-fila label { font-size: .78rem; font-weight: 600; }
+    .ruta .r-km { width: 6.5rem; padding: .45rem .6rem; font-size: .9rem; }
+    .ruta .r-mapa { font-size: .72rem; font-weight: 700; color: #92400e; background: #fef3c7; border-radius: 999px; padding: .1rem .5rem; }
+    a.btn-mini { display: inline-block; }
     .generado { margin-top: .6rem; background: #ecfdf5; border: 1.5px solid #a7f3d0; color: #065f46;
       border-radius: 8px; padding: .7rem .85rem; font-size: .85rem; }
     .generado a { color: #065f46; font-weight: 700; }
@@ -383,8 +391,10 @@
         <div id="ok-lista"></div>
         <p id="ok-numero-detalle"></p>
         <div class="generar hidden" id="ok-generar">
+          <p class="subtit">Ruta y kilometraje <small>Abre la ruta en Google Maps (SEPRN → destino → SEPRN). Si pasa de 20 km, imprímela para anexarla como siempre. Si la impresión marca otro kilometraje, corrígelo aquí antes de generar los oficios.</small></p>
+          <div id="ok-rutas"></div>
           <button type="button" class="btn" id="btn-generar">Generar los oficios de comisión (Word)</button>
-          <p class="hint">Un solo archivo con un oficio por página y, si el recorrido pasa de 20 km, la página del mapa. Ábrelo en Word, revísalo e imprímelo.</p>
+          <p class="hint">Un solo archivo con un oficio por página. Ábrelo en Word, revísalo e imprímelo.</p>
           <div class="envio-error" id="generar-error"></div>
           <div class="generado hidden" id="generar-ok"></div>
         </div>
@@ -795,10 +805,12 @@ let ultimoResultado = [];
 // "CCT — Nombre" en un <datalist>: se busca por CCT o por nombre y se puede
 // escribir un lugar que no esté en el catálogo.
 const DESTINOS = {};
+const CCT_DB_POR_CCT = {};
 (function () {
   if (typeof CCT_DB === 'undefined') return;
   const dl = $('destinos-catalogo');
   CCT_DB.forEach(function (e) {
+    CCT_DB_POR_CCT[e.cct] = e;
     const etiqueta = e.cct + ' — ' + e.nombre;
     DESTINOS[etiqueta] = e;
     const o = el('option'); o.value = etiqueta; dl.appendChild(o);
@@ -833,6 +845,31 @@ function destinoDeTexto(texto) {
   const e = DESTINOS[t];
   if (e) return { lugar: e.nombre + ' (' + e.cct + ')', cct: e.cct, direccion: direccionDe(e), destinoCompleto: destinoCompletoDe(e), catalogo: true };
   return { lugar: t, cct: '', direccion: t ? t + ', Estado de México' : '', destinoCompleto: t, catalogo: false };
+}
+
+// Liga oficial de Google Maps (Maps URLs) con los tres puntos de siempre:
+// SEPRN → destino → SEPRN. El origen va con el nombre del lugar en Google Maps,
+// como sale en la impresión que acepta Viáticos.
+const ORIGEN_MAPS = 'SECRETARÍA DE EDUCACIÓN SUBDIRECCIÓN DE SERVICIOS REGIONALES NEZAHUALCÓYOTL, Av. Texcoco 116, Juárez Pantitlán, 57460 Nezahualcóyotl, Méx.';
+const KM_CON_MAPA = 20;
+
+function destinoParaMaps(n) {
+  const e = n.cct && CCT_DB_POR_CCT[n.cct];
+  const nombre = e ? (e.tipo === 'escuela' ? 'Escuela Primaria ' + e.nombre : e.nombre) : '';
+  return [nombre, n.direccion || n.lugar].filter(Boolean).join(', ');
+}
+
+function urlRutaMaps(n) {
+  const destino = destinoParaMaps(n);
+  if (!destino) return '';
+  return 'https://www.google.com/maps/dir/?api=1&travelmode=driving&origin=' + encodeURIComponent(ORIGEN_MAPS) +
+    '&destination=' + encodeURIComponent(ORIGEN_MAPS) + '&waypoints=' + encodeURIComponent(destino);
+}
+
+function enlaceRuta(n, texto) {
+  const a = el('a', 'btn-mini', texto || 'Abrir la ruta en Google Maps');
+  a.href = urlRutaMaps(n); a.target = '_blank'; a.rel = 'noopener';
+  return a;
 }
 
 function tipoActual() {
@@ -1245,7 +1282,10 @@ $('form-numero').addEventListener('submit', async function (ev) {
         });
         if (vinculo) anotarSalidaLocal(vinculo.id, numeros[0].numero);
       }
-      numeros.forEach(function (n, k) { n.tipo = (docs[k] || docs[0]).tipo; });
+      numeros.forEach(function (n, k) {
+        const doc = docs[k] || docs[0];
+        n.tipo = doc.tipo; n.cct = doc.cct || ''; n.direccion = doc.direccion || ''; n.lugar = n.lugar || doc.lugar || '';
+      });
       mostrarResultado(numeros, numeros.length > 1 ? 'Tus ' + numeros.length + ' números de oficio son' : 'Tu número de oficio es',
         vinculo ? 'El oficio ' + vinculo.id + ' quedó atendido con este número.' : '');
       idEnvioNumero = null;
@@ -1285,7 +1325,8 @@ async function enviarReasignacion(doc) {
     const i = estado.numeros.findIndex(function (x) { return x.numero === n.numero; });
     if (i !== -1 && d.registro) estado.numeros[i] = d.registro;
     const r = d.registro || {};
-    mostrarResultado([{ numero: n.numero, consecutivo: n.consecutivo, persona: doc.persona || '', fechaEvento: doc.fechaEvento || '', lugar: doc.lugar || '', km: r.km, tipo: doc.tipo }],
+    mostrarResultado([{ numero: n.numero, consecutivo: n.consecutivo, persona: doc.persona || '', fechaEvento: doc.fechaEvento || '', lugar: doc.lugar || '',
+      km: r.km, tipo: doc.tipo, cct: doc.cct || '', direccion: doc.direccion || '' }],
       'Número reasignado',
       d.oficioReabierto ? 'El oficio ' + d.oficioReabierto + ' volvió a quedar pendiente.'
         : 'Lo que decía antes quedó guardado en el historial del Sheet.');
@@ -1313,14 +1354,16 @@ function mostrarResultado(numeros, titulo, detalle) {
   if (numeros.length === 1) {
     lista.appendChild(el('div', 'consecutivo-final', String(numeros[0].consecutivo)));
     lista.appendChild(el('div', 'numero-final', numeros[0].numero));
-    if (detalleComision(numeros[0])) lista.appendChild(el('p', null, detalleComision(numeros[0])));
+    // El kilometraje va en "Ruta y kilometraje" (se puede corregir), no aquí.
+    const det = detalleComision(Object.assign({}, numeros[0], { km: '' }));
+    if (det) lista.appendChild(el('p', null, det));
   } else {
     numeros.forEach(function (n) {
       const fila = el('div', 'ok-fila');
       fila.appendChild(el('span', 'ok-cons', String(n.consecutivo)));
       const datos = el('div', 'ok-datos');
       if (n.persona) datos.appendChild(el('strong', null, n.persona));
-      const sub = detalleComision(Object.assign({}, n, { persona: '' }));
+      const sub = detalleComision(Object.assign({}, n, { persona: '', km: '' }));
       if (sub) datos.appendChild(el('div', null, sub));
       datos.appendChild(el('div', 'numero-mini', n.numero));
       fila.appendChild(datos);
@@ -1334,6 +1377,7 @@ function mostrarResultado(numeros, titulo, detalle) {
   $('btn-copiar').textContent = numeros.length > 1 ? 'Copiar todos' : 'Copiar número completo';
   const comision = numeros.every(function (n) { return n.tipo === TIPO_COMISION; });
   $('ok-generar').classList.toggle('hidden', !comision);
+  pintarRutas(comision ? numeros : []);
   $('generar-ok').classList.add('hidden');
   $('generar-error').classList.remove('visible');
   $('btn-generar').disabled = false;
@@ -1370,23 +1414,91 @@ $('btn-copiar').addEventListener('click', function () {
 });
 $('btn-otro-numero').addEventListener('click', reiniciarNumero);
 
-// Word de las comisiones: lo arma Apps Script con la plantilla y Google Maps (puede tardar).
-async function generarOficios(numeros, boton, cajaOk, cajaError) {
+// Una tarjeta por destino distinto de la tanda: liga a la ruta en Google Maps y
+// el kilometraje (editable) que llevarán sus oficios.
+function pintarRutas(numeros) {
+  const caja = $('ok-rutas');
+  caja.innerHTML = '';
+  const grupos = [];
+  numeros.forEach(function (n) {
+    const clave = n.direccion || n.lugar;
+    let g = grupos.find(function (x) { return x.clave === clave; });
+    if (!g) { g = { clave: clave, n: n, numeros: [], fechas: [] }; grupos.push(g); }
+    g.numeros.push(n.numero);
+    if (n.fechaEvento && g.fechas.indexOf(n.fechaEvento) === -1) g.fechas.push(n.fechaEvento);
+  });
+  grupos.forEach(function (g) {
+    const t = el('div', 'ruta');
+    t.dataset.numeros = JSON.stringify(g.numeros);
+    t.dataset.kmOriginal = g.n.km === '' || g.n.km == null ? '' : String(g.n.km);
+    t.appendChild(el('div', 'r-lugar', g.n.lugar || 'Destino'));
+    t.appendChild(el('div', 'r-meta', g.fechas.map(fechaCorta).join(', ') + ' · ' + g.numeros.length +
+      (g.numeros.length === 1 ? ' oficio' : ' oficios')));
+    const fila = el('div', 'r-fila');
+    if (urlRutaMaps(g.n)) fila.appendChild(enlaceRuta(g.n));
+    const lbl = el('label', null, 'Km ida y vuelta');
+    const km = el('input', 'r-km');
+    km.type = 'text'; km.inputMode = 'decimal'; km.value = t.dataset.kmOriginal;
+    km.placeholder = 'Ej. 23.9';
+    km.setAttribute('aria-label', 'Kilometraje de ida y vuelta a ' + (g.n.lugar || 'el destino'));
+    lbl.appendChild(document.createTextNode(' '));
+    fila.appendChild(lbl);
+    fila.appendChild(km);
+    const aviso = el('span', 'r-mapa', 'Lleva mapa');
+    const pintarAviso = function () {
+      const v = Number(km.value.replace(',', '.'));
+      aviso.classList.toggle('hidden', !(v > KM_CON_MAPA));
+      km.classList.remove('campo-error');
+    };
+    km.addEventListener('input', pintarAviso);
+    fila.appendChild(aviso);
+    pintarAviso();
+    t.appendChild(fila);
+    caja.appendChild(t);
+  });
+}
+
+// {numero: km} de los destinos cuyo kilometraje se cambió; null si alguno no es válido.
+function kmCorregidos() {
+  const res = {};
+  let ok = true;
+  document.querySelectorAll('#ok-rutas .ruta').forEach(function (t) {
+    const input = t.querySelector('.r-km');
+    const texto = input.value.trim().replace(',', '.');
+    if (texto === (t.dataset.kmOriginal || '')) return;
+    const v = Number(texto);
+    const valido = texto !== '' && v > 0 && v < 2000;
+    input.classList.toggle('campo-error', !valido);
+    if (!valido) { ok = false; return; }
+    JSON.parse(t.dataset.numeros).forEach(function (n) { res[n] = v; });
+  });
+  return ok ? res : null;
+}
+
+// Word de las comisiones: lo arma Apps Script con la plantilla (puede tardar unos segundos).
+async function generarOficios(numeros, boton, cajaOk, cajaError, km) {
   const etiqueta = boton.textContent;
   cajaError.classList.remove('visible');
   const parar = contadorEnBoton(boton, numeros.length > 1 ? 'Armando ' + numeros.length + ' oficios…' : 'Armando el oficio…');
   try {
-    const d = await post({ accion: 'generarComision', numeros: numeros });
+    const d = await post({ accion: 'generarComision', numeros: numeros, km: km || {} });
     if (d.status !== 'ok') throw new Error(errorDeEstado(d));
+    // El kilometraje corregido ya quedó en el Sheet: se refleja en la lista.
+    Object.keys(d.km || {}).forEach(function (n) {
+      estado.numeros.forEach(function (x) { if (x.numero === n) x.km = d.km[n]; });
+      document.querySelectorAll('#ok-rutas .ruta').forEach(function (t) {
+        if (JSON.parse(t.dataset.numeros).indexOf(n) !== -1) t.dataset.kmOriginal = String(d.km[n]);
+      });
+    });
     cajaOk.innerHTML = '';
-    cajaOk.appendChild(el('div', null, 'Listo: ' + d.oficios + (d.oficios === 1 ? ' oficio' : ' oficios') +
-      (d.mapas ? ' y ' + d.mapas + (d.mapas === 1 ? ' mapa' : ' mapas') : '') + '.'));
+    cajaOk.appendChild(el('div', null, 'Listo: ' + d.oficios + (d.oficios === 1 ? ' oficio.' : ' oficios.')));
     const a = el('a', null, 'Descargar ' + d.nombre);
     a.href = d.descarga; a.target = '_blank'; a.rel = 'noopener';
     cajaOk.appendChild(a);
     cajaOk.appendChild(el('div', 'hint', 'También queda en Drive, en la carpeta "Oficios de comisión OTDE".'));
     cajaOk.classList.remove('hidden');
     estado.numeros.forEach(function (x) { if (numeros.indexOf(x.numero) !== -1) x.oficioGenerado = d.url; });
+    pintarNumeros();
     parar('Volver a generar');
   } catch (e) {
     cajaError.textContent = mensajeDeFallo(e);
@@ -1396,7 +1508,13 @@ async function generarOficios(numeros, boton, cajaOk, cajaError) {
 }
 
 $('btn-generar').addEventListener('click', function () {
-  generarOficios(ultimoResultado.map(function (n) { return n.numero; }), this, $('generar-ok'), $('generar-error'));
+  const km = kmCorregidos();
+  if (!km) {
+    $('generar-error').textContent = 'Revisa el kilometraje marcado: escribe solo el número, por ejemplo 23.9.';
+    $('generar-error').classList.add('visible');
+    return;
+  }
+  generarOficios(ultimoResultado.map(function (n) { return n.numero; }), this, $('generar-ok'), $('generar-error'), km);
 });
 
 function pintarNumeros() {
@@ -1420,6 +1538,7 @@ function pintarNumeros() {
     if (n.estatus !== 'Cancelado') {
       const acc = el('div', 'acciones');
       if (n.tipo === TIPO_COMISION) {
+        if (urlRutaMaps(n)) acc.appendChild(enlaceRuta(n, 'Ruta en Google Maps'));
         const g = el('button', 'btn-mini', n.oficioGenerado ? 'Volver a generar el oficio' : 'Generar oficio (Word)');
         g.type = 'button';
         const ok = el('div', 'generado hidden');

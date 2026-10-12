@@ -116,10 +116,9 @@ const OF_PERSONAL_INICIAL = [
 ];
 // Oficio de comisión en Word (12 oct 2026): plantilla .docx con {{CAMPOS}} en
 // Drive (Script Property OF_PLANTILLA_COMISION_ID, menú "Configurar plantilla
-// de comisión"); se genera un solo .docx por tanda, un oficio por página, y la
-// página del mapa cuando el recorrido pasa de OF_KM_MAPA km.
+// de comisión"); se genera un solo .docx por tanda, un oficio por página. El
+// mapa (más de 20 km) es la impresión de Google Maps que hace el equipo.
 const OF_CARPETA_COMISIONES = 'Oficios de comisión OTDE';
-const OF_KM_MAPA = 20;
 const OF_FIRMA_INICIALES = 'AGC/JABT';
 
 const ENCABEZADOS_OF_OFICIOS = ['ID', 'N.P.', 'Ciclo', 'Folio de Oficialía de Partes', 'Fecha de recepción',
@@ -1600,29 +1599,24 @@ function ofIniciales_(elabora, personal) {
   return ini && OF_FIRMA_INICIALES.split('/').indexOf(ini.toUpperCase()) === -1 ? OF_FIRMA_INICIALES + '/' + ini : OF_FIRMA_INICIALES;
 }
 
-// Recorrido SEPRN → destino → SEPRN como imagen de Google Maps (servicio Maps de Apps Script).
-function ofMapaRuta_(direccion) {
-  const ruta = Maps.newDirectionFinder().setOrigin(OF_ORIGEN_COMISION).addWaypoint(direccion)
-    .setDestination(OF_ORIGEN_COMISION).setMode(Maps.DirectionFinder.Mode.DRIVING).setLanguage('es').getDirections();
-  const r = ruta && ruta.routes && ruta.routes[0];
-  if (!r || !r.legs || r.legs.length < 2) throw new Error('Google Maps no encontró la ruta a ' + direccion + '.');
-  const ini = r.legs[0].start_location;
-  const fin = r.legs[0].end_location;
-  return Maps.newStaticMap().setSize(640, 640).setLanguage('es').setFormat(Maps.StaticMap.Format.PNG)
-    .setPathStyle(5, '0x3b3bd8ff', null).addPath(r.overview_polyline.points)
-    .setMarkerStyle(Maps.StaticMap.MarkerSize.MID, '0x9F2241', 'S').addMarker(ini.lat, ini.lng)
-    .setMarkerStyle(Maps.StaticMap.MarkerSize.MID, '0x0C1A2E', 'D').addMarker(fin.lat, fin.lng)
-    .getBlob().getBytes();
-}
-
-// Un .docx por tanda: un oficio por página (en el orden en que se tomaron) y,
-// después de cada oficio de más de OF_KM_MAPA km, la página de su mapa.
+// Un .docx por tanda: un oficio por página, en el orden en que se tomaron. La
+// hoja del mapa NO se genera: Viáticos pide la impresión de Google Maps tal
+// cual, así que la página da el botón "Abrir la ruta en Google Maps" (SEPRN →
+// destino → SEPRN) y el equipo la imprime como siempre (12 oct 2026).
+// x.km = {numero: km} corrige el kilometraje antes de generar, para que el
+// oficio diga lo mismo que la impresión (Google Maps puede variar unos décimos).
 function ofGenerarComision_(x) {
   const pedidos = (x.numeros || []).map(ofTxt_).filter(String);
   if (!pedidos.length) throw new Error('No llegó ningún número.');
   if (pedidos.length > OF_MAX_TANDA) throw new Error('Máximo ' + OF_MAX_TANDA + ' oficios por documento.');
   const idPlantilla = PropertiesService.getScriptProperties().getProperty('OF_PLANTILLA_COMISION_ID');
   if (!idPlantilla) throw new Error('Falta la plantilla del oficio de comisión. Jorge la configura en el Sheet: OTDE Oficios → Configurar plantilla de comisión.');
+  const correcciones = x.km && typeof x.km === 'object' ? x.km : {};
+  Object.keys(correcciones).forEach(function (n) {
+    const v = Number(String(correcciones[n]).replace(',', '.'));
+    if (!(v > 0 && v < 2000)) throw new Error('El kilometraje de ' + n + ' no es válido.');
+    correcciones[n] = Math.round(v * 10) / 10;
+  });
 
   const hoja = ofObtenerHoja_(HOJA_OF_NUMEROS, ENCABEZADOS_OF_NUMEROS);
   const idx = ofIndices_(hoja);
@@ -1637,6 +1631,14 @@ function ofGenerarComision_(x) {
     return { i: i, r: r };
   }).sort(function (a, b) { return Number(a.r[idx['Consecutivo']]) - Number(b.r[idx['Consecutivo']]); });
 
+  // Kilometraje corregido: queda en el Sheet y en el oficio.
+  elegidas.forEach(function (e) {
+    const n = String(e.r[idx['Número']]);
+    if (!(n in correcciones) || idx['Km (ida y vuelta)'] === undefined) return;
+    e.r[idx['Km (ida y vuelta)']] = correcciones[n];
+    hoja.getRange(e.i + 2, idx['Km (ida y vuelta)'] + 1).setValue(correcciones[n]);
+  });
+
   const archivos = Utilities.unzip(DriveApp.getFileById(idPlantilla).getBlob().setContentType('application/zip'));
   const porNombre = {};
   archivos.forEach(function (b) { porNombre[b.getName()] = b; });
@@ -1646,10 +1648,8 @@ function ofGenerarComision_(x) {
   const cuerpo = docXml.slice(iBody, iSect);
 
   const salto = '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
-  const rels = [];
-  const mapasPorDireccion = {};
   let docPr = 1000;
-  const paginas = elegidas.map(function (e, k) {
+  const paginas = elegidas.map(function (e) {
     const r = e.r;
     const v = function (h) { return idx[h] === undefined ? '' : r[idx[h]]; };
     const fechaCom = v('Fecha del evento') instanceof Date ? v('Fecha del evento') : null;
@@ -1666,35 +1666,15 @@ function ofGenerarComision_(x) {
       NOMBRE_FIRMA: nombre.toUpperCase(), CARGO: ofTxt_(v('Cargo')).toUpperCase(),
       INICIALES: ofIniciales_(ofTxt_(v('Elabora')), personal)
     };
-    let pag = cuerpo.replace(/\{\{([A-Z_]+)\}\}/g, function (m0, c) { return c in campos ? ofXml_(campos[c]) : m0; });
+    const pag = cuerpo.replace(/\{\{([A-Z_]+)\}\}/g, function (m0, c) { return c in campos ? ofXml_(campos[c]) : m0; });
     // Varias copias del mismo cuerpo: ids de dibujo únicos y sin ids de párrafo repetidos.
-    pag = pag.replace(/(<wp:docPr\b[^>]*\bid=")(\d+)"/g, function (m0, a) { return a + (++docPr) + '"'; })
+    return pag.replace(/(<wp:docPr\b[^>]*\bid=")(\d+)"/g, function (m0, a) { return a + (++docPr) + '"'; })
       .replace(/ w14:paraId="[0-9A-F]+"/g, '').replace(/ w14:textId="[0-9A-F]+"/g, '')
       .replace(/ wp14:anchorId="[0-9A-F]+"/g, '');
-
-    const dir = ofTxt_(v('Dirección destino'));
-    if (typeof km === 'number' && km > OF_KM_MAPA && dir) {
-      if (!(dir in mapasPorDireccion)) {
-        const id = 'rIdMapa' + (rels.length + 1);
-        const media = 'mapa' + (rels.length + 1) + '.png';
-        porNombre['word/media/' + media] = Utilities.newBlob(ofMapaRuta_(dir), 'image/png', 'word/media/' + media);
-        rels.push('<Relationship Id="' + id + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/' + media + '"/>');
-        mapasPorDireccion[dir] = id;
-      }
-      pag += salto + ofPaginaMapa_(mapasPorDireccion[dir], ++docPr, campos, ofTxt_(v('Lugar / destino')), String(v('Número')));
-    }
-    return pag;
   });
 
-  let nuevoDoc = docXml.slice(0, iBody) + paginas.join(salto) + docXml.slice(iSect);
+  const nuevoDoc = docXml.slice(0, iBody) + paginas.join(salto) + docXml.slice(iSect);
   porNombre['word/document.xml'] = Utilities.newBlob(nuevoDoc, 'application/xml', 'word/document.xml');
-  if (rels.length) {
-    const relsXml = porNombre['word/_rels/document.xml.rels'].getDataAsString('UTF-8').replace('</Relationships>', rels.join('') + '</Relationships>');
-    porNombre['word/_rels/document.xml.rels'] = Utilities.newBlob(relsXml, 'application/xml', 'word/_rels/document.xml.rels');
-    let tipos = porNombre['[Content_Types].xml'].getDataAsString('UTF-8');
-    if (!/Extension="png"/i.test(tipos)) tipos = tipos.replace('<Types ', '<Types ').replace(/(<Types[^>]*>)/, '$1<Default Extension="png" ContentType="image/png"/>');
-    porNombre['[Content_Types].xml'] = Utilities.newBlob(tipos, 'application/xml', '[Content_Types].xml');
-  }
 
   const primero = elegidas[0].r;
   const ultimo = elegidas[elegidas.length - 1].r;
@@ -1709,28 +1689,7 @@ function ofGenerarComision_(x) {
     elegidas.forEach(function (e) { hoja.getRange(e.i + 2, idx['Oficio generado'] + 1).setValue(url); });
   }
   return { status: 'ok', url: url, nombre: nombreArchivo, descarga: 'https://drive.google.com/uc?export=download&id=' + archivo.getId(),
-    oficios: elegidas.length, mapas: rels.length };
-}
-
-// Página del mapa: título, imagen de la ruta (6.5" de ancho) y la fuente.
-function ofPaginaMapa_(rId, id, campos, lugar, numero) {
-  const emu = 5943600; // 6.5 pulgadas
-  const p = function (texto, negritas, tam) {
-    return '<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Gotham" w:hAnsi="Gotham"/>' +
-      (negritas ? '<w:b/>' : '') + '<w:sz w:val="' + tam + '"/></w:rPr><w:t xml:space="preserve">' + ofXml_(texto) + '</w:t></w:r></w:p>';
-  };
-  return p('Recorrido de la comisión — Of. No. ' + numero, true, 20) +
-    p('Subdirección de Educación Primaria en la Región de Nezahualcóyotl → ' + lugar + ' → regreso a la SEPRN', false, 18) +
-    p(campos.FECHA_COMISION + ' · ' + campos.NOMBRE + ' · ' + campos.KM + ' km (ida y vuelta)', false, 18) +
-    '<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0">' +
-    '<wp:extent cx="' + emu + '" cy="' + emu + '"/><wp:docPr id="' + id + '" name="Mapa ' + id + '"/>' +
-    '<wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/></wp:cNvGraphicFramePr>' +
-    '<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">' +
-    '<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="' + id + '" name="mapa.png"/><pic:cNvPicPr/></pic:nvPicPr>' +
-    '<pic:blipFill><a:blip r:embed="' + rId + '"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>' +
-    '<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="' + emu + '" cy="' + emu + '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr>' +
-    '</pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>' +
-    p('Datos del mapa © Google. Ruta en automóvil calculada con Google Maps.', false, 14);
+    oficios: elegidas.length, km: correcciones };
 }
 
 function ofCarpetaComisiones_(mes) {
