@@ -1256,7 +1256,10 @@ Los 506 registros se enriquecieron con `municipio` (18 municipios) cruzando por 
 ## Ritual de cierre de sesión
 Automatizado en el skill `/close` (`.claude/skills/close/SKILL.md`) — invocarlo al terminar una
 sesión de trabajo en vez de repetir este ritual a mano. Tabla de qué documento actualizar según
-qué cambió (el skill defiere a esta tabla, no la duplica — si cambia, solo se edita aquí):
+qué cambió (el skill defiere a esta tabla, no la duplica — si cambia, solo se edita aquí).
+La apertura es el skill `/open` (`.claude/skills/open/SKILL.md`): revisa la cuenta de `gh`, git
+contra `origin/main` y los últimos despliegues, y retoma la fila **Pendiente** del checkpoint más
+reciente de `docs/BITACORA.md` (por eso esa fila debe quedar clara al cerrar):
 
 | Documento | Actualizar cuando la sesión… |
 |---|---|
@@ -1293,14 +1296,13 @@ Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/I
   "Último usado antes del sistema" en `Lotes` si pasó del 4831, importar el histórico, revisar
   "N.P. planeación" en `Config`, una prueba real y fecha de arranque. El 2B (Oficina Virtual →
   control) también quedó en producción el mismo día. Siguiente: recordatorios, 2C o 2E. Ver `docs/ROADMAP.md` ítem 27. Ver `docs/PLAN-OPERACION-INTERNA.md` y `docs/ROADMAP.md` ítem 27.
-- **Formación Docente — Workspace, decidir antes del 6 oct 2026**: desde el 28 sep la cuota ya
-  no depende de Workspace (calendario en la confirmación + correos "a quien alcance" con reserva
-  50 + 20), y los scripts corren en la cuenta Gmail personal, así que la prueba no les sube la
-  cuota. Recomendación: cancelarla antes del cobro. Ver `docs/ROADMAP.md` ítem 26.
-- **Formación Docente — verificar en uso real el calendario y la cuota** (1, 6 y 7 oct): probar un
-  `.ics` en Outlook/iPhone/Android, revisar "Ejecuciones" esos días, compartir la liga
-  `?calendario=ACF-2627-001` y borrar los respaldos del reordenamiento del 28 sep. Ver
-  `docs/ROADMAP.md` ítems 19 y 28.
+- ~~**Formación Docente — Workspace, decidir antes del 6 oct 2026**~~ — resuelto 12 oct 2026:
+  Jorge canceló la prueba. Ver `docs/ROADMAP.md` ítem 26.
+- **Formación Docente — verificar en uso real el calendario**: probar un `.ics` en
+  Outlook/iPhone/Android, compartir la liga `?calendario=ACF-2627-001` y borrar los respaldos
+  del reordenamiento del 28 sep. La revisión de "Ejecuciones" del 6-7 oct ya se hizo (12 oct
+  2026): en cursos de ~190 inscritos los correos casi no salen por cuota, y Jorge decidió dejarlo
+  así porque **el calendario es el aviso principal**. Ver `docs/ROADMAP.md` ítems 19 y 28.
 - **Formación Docente — doble registro, seguimiento pendiente**: decidir si se renumera una de
   las dos filas del folio duplicado `OTDE-CAP-0089` (datos sin tocar); Paso 5 (reconciliar
   `Registro_externo` contra la lista real de Aula Digital cuando CoEEE la tenga disponible);

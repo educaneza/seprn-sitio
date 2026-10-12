@@ -10,7 +10,24 @@ Complementa, no duplica, a los demás docs:
 
 Se actualiza automáticamente al cerrar sesión vía el skill `/close`
 (`.claude/skills/close/SKILL.md`) — ver la tabla "Ritual de cierre de sesión" en `CLAUDE.md`
-para qué otro documento tocar además de este.
+para qué otro documento tocar además de este. Al abrir sesión, el skill `/open`
+(`.claude/skills/open/SKILL.md`) lee solo el checkpoint más reciente y retoma su fila **Pendiente**.
+
+---
+
+## CHECKPOINT — 2026-10-12 · Skill `/open` y revisión de la cuota de correos de Formación Docente (6-7 oct)
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-12 |
+| **Sesión** | Jorge pidió revisar el skill `/open` de barber-saas y ver si servía aquí. Después lo usó para abrir sesión. |
+| **Skill `/open`** | `.claude/skills/open/SKILL.md` (84 líneas), adaptado de barber-saas, no copiado. Revisa: cuenta de `gh` (`educaneza`; si no lo es, la cambia y avisa que es global), remoto y correo de git, `main` contra `origin/main` (recuerda el patrón `publish-*` si divergen), últimos 3 runs de GitHub Pages y peso del sitio contra 800 MB. Lee solo el checkpoint más reciente de esta bitácora y los ítems de ROADMAP que cite. No escribe nada. Quitado de barber-saas: Vercel, Supabase, `MASTER_PLAN.md`, `CURRENT_CONTEXT.md`. Referencias en `CLAUDE.md` (Ritual de cierre) y en el encabezado de este archivo. |
+| **Primera apertura** | `gh` estaba en `albertobonillat-collab` y se cambió a `educaneza`. Git al día con `origin/main`, los 3 runs del 8 oct en `success`, 518 MB. Jorge cerró dos pendientes vencidos: canceló la prueba de Google Workspace (ROADMAP 26) y ya envió el WhatsApp de constancias de `CNF-2627-002` (28g). |
+| **Ejecuciones 6-7 oct** | Revisadas en el proyecto "Formacion Docente - Backend" con Chrome (cuenta `otde.nezahualcoyotl@gmail.com`). `ACF-2627-001` (192 inscritos, 16:00) y `ACF-2627-003` (78, 15:00) empezaron el 7 oct. 6 oct 9:15: recordatorio de constancia a 31. 6 oct 9:29, "empieza mañana": 0 enviados (191 + 77 pendientes, "Cuota insuficiente (reserva 50)"). 7 oct 9:19, "empieza hoy": 0 (174 + 77, reserva 70). 7 oct 2:22 pm, 30 min de `003`: 20 enviados, 57 pendientes. 3:22 pm, 30 min de `001`: 0 de 191. Sin errores: `enviarCorreoLote()` recorta a la cuota, pero con ~100 diarios compartidos, `RESERVA_CUOTA_CORREO` 50 y `RESERVA_AVISO_30MIN` 20, no quedaba nada. |
+| **Decisión de Jorge** | Dejarlo así: "el calendario es el aviso principal". Sin cambios de código. |
+| **Pendiente** | ROADMAP 28: (a) probar un `.ics` en Outlook/iPhone/Android, (c) compartir `?calendario=ACF-2627-001` (más importante ahora), (f) recordatorio de constancia en el calendario antes de la próxima conferencia UNETE. Fase 2 de oficios: los 4 pasos antes de operar y el siguiente bloque (recordatorios, 2C o 2E). |
+| **Documentación actualizada** | Este checkpoint (y el encabezado), `docs/ROADMAP.md` ítems 26 y 28 (b, c, g), `CLAUDE.md` (Ritual de cierre y Pendientes vigentes). |
+| **Commits** | El de esta sesión (skill + documentación). |
 
 ---
 

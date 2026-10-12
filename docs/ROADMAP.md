@@ -755,7 +755,7 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     Además, los Apps Script corren en la cuenta personal de Gmail: la prueba de Workspace no les
     sube la cuota salvo que se muevan todos los proyectos y activadores a la cuenta Workspace.
     **Recomendación: cancelar la prueba antes del 6 oct** si no hay otro motivo para conservarla.
-    Decisión de Jorge pendiente.
+    **Resuelto (12 oct 2026):** Jorge canceló la prueba de Workspace.
 
 27. **Operación interna OTDE — Fase 1 en producción; alimentación desde Mantenimiento, Asesorías, Formación Docente, Soporte y Correo en producción (6 oct 2026); Fase 2A y 2D en producción como página única (8 oct 2026)** (23-24 sep 2026, ver
     `docs/PLAN-OPERACION-INTERNA.md` y `docs/BITACORA.md` checkpoint "cont. 2"): bitácora única
@@ -829,9 +829,14 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     (b) Revisar en "Ejecuciones" los primeros días con cuota real: 6 y 7 oct (inicio de
     `ACF-2627-001`/`003`), incluidos los logs "N enviado(s), M pospuesto(s)". `CNF-2627-002`
     (1 oct) ya se revisó el 2 oct: aviso de 30 min a ~46 de 130, recordatorio de constancia a 50,
-    0 constancias (ver `docs/BITACORA.md`).
+    0 constancias (ver `docs/BITACORA.md`). **Resuelto (12 oct 2026):** del 6 y 7 oct solo salió
+    el aviso de 30 min de `003` a 20 de 77; "empieza mañana", "empieza hoy" y el de 30 min de
+    `001` salieron en 0 (cuota ya consumida: el recordatorio de constancia de `CNF-2627-002`
+    tomó 32 a las 9:15 del 6 oct, y la reserva 50 + 20 dejó el resto sin cupo). Jorge decidió no
+    cambiar nada: el calendario de la confirmación es el aviso principal (ver `docs/BITACORA.md`).
     (c) Que Jorge comparta la liga `formacion-docente.html?calendario=ACF-2627-001` con los
-    inscritos previos.
+    inscritos previos. Más importante desde la revisión de (b): los correos casi no llegan en
+    cursos grandes.
     (d) Opcional: página "Mi inscripción" con liga firmada por folio, para que un cambio de liga
     u hora llegue aunque el `.ics` ya se haya descargado, y para subir la constancia desde ahí.
     (e) Opcional: aviso de 30 min por correo para cada sesión (hoy solo la primera; las demás las
@@ -847,6 +852,7 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     (g) **Urgente, antes del 7 oct:** mensaje de WhatsApp de difusión para los inscritos de
     `CNF-2627-002` (prometido a Jorge el 2 oct). La liga de carga es personal; decidir entre
     mensaje general con tutorial, lista folio → liga para envío individual, u otra vía.
+    **Resuelto:** Jorge confirmó el 12 oct 2026 que el mensaje ya se envió.
     (h) `enviarRecordatoriosConstancia_()` recorre en orden de hoja: con cuota corta, las últimas
     filas siempre quedan al final. Valorar usar `ordenarParaEnvio_()` como en los avisos por lote.
 29. **Estrategias Nacionales — pendientes tras el despliegue** (en producción desde el 29 sep
