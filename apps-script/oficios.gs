@@ -17,6 +17,17 @@
 //    así que el 1 de enero el consecutivo empieza en el lote del año nuevo
 //    (que Jorge captura con "Agregar lote"). Cuando quedan
 //    OF_UMBRAL_AVISO números o menos, avisa a Jorge por correo (1 vez/día).
+//    Tipos de documento, tandas y reasignar (feedback del equipo, 12 oct
+//    2026): cada número lleva un "Tipo de documento" (Comisión, Difusión,
+//    Oficio a Toluca/CoEEE, Otro) con sus propios campos. Un oficio de
+//    comisión es UNO POR PERSONA Y POR DÍA, cada uno con su folio, aunque
+//    sea el mismo destino: la página arma la tanda (personas × días, hasta
+//    OF_MAX_TANDA) y se toman números seguidos en un solo envío (todo o
+//    nada). El kilometraje de ida y vuelta lo calcula el servicio Maps de
+//    Apps Script desde OF_ORIGEN_COMISION. Difusión y Toluca/CoEEE: un solo
+//    folio por asunto, aunque vaya a los 13 sectores. Un número que no salió
+//    se puede REASIGNAR a otro documento: conserva el número y deja en
+//    "Historial" lo que decía antes.
 //
 // 2. CONTROL DE OFICIOS (entrada). Reemplaza al Excel "CONTROL DE OFICIOS
 //    2026". Todo oficio que llega pasa primero por Oficialía de Partes, que
@@ -75,8 +86,41 @@ const ENCABEZADOS_OF_LOTES = ['Año', 'Desde', 'Hasta', 'Último usado antes del
 const OF_LOTE_SEMILLA = [2026, 4501, 5000, 4831, '', 'Lote 2026. Del 4501 al 4831 se tomaron antes del sistema.'];
 
 const ENCABEZADOS_OF_NUMEROS = ['Número', 'Consecutivo', 'Año', 'Tomado', 'Elabora', 'Asunto', 'Destino',
-  'Fecha de elaboración', 'Estatus', 'Vínculo', 'Notas', 'ID de envío'];
+  'Fecha de elaboración', 'Estatus', 'Vínculo', 'Notas', 'ID de envío',
+  // 12 oct 2026, al final para no mover las de arriba (en Comisión, "Asunto" es el motivo):
+  'Tipo de documento', 'Persona comisionada', 'Lugar / destino', 'Fecha del evento', 'Horario',
+  'Resumen del cuerpo', 'Fecha límite', 'Tanda', 'Historial',
+  'CCT destino', 'Dirección destino', 'Modalidad', 'Km (ida y vuelta)',
+  'RFC', 'Cargo', 'Destino completo', 'Oficio generado'];
 const OF_ESTATUS_NUMERO = ['Asignado', 'Cancelado'];
+const OF_TIPO_COMISION = 'Comisión';
+const OF_TIPO_DIFUSION = 'Difusión de información';
+const OF_TIPO_SUBE = 'Oficio a Toluca / CoEEE';
+const OF_TIPO_OTRO = 'Otro documento';
+const OF_TIPOS_DOCUMENTO = [OF_TIPO_COMISION, OF_TIPO_DIFUSION, OF_TIPO_SUBE, OF_TIPO_OTRO];
+const OF_MAX_TANDA = 20;
+// Origen de toda comisión (contacto.html) y modalidades de traslado (Config → "Modalidades").
+const OF_ORIGEN_COMISION = 'Av. Texcoco 116, Col. Juárez Pantitlán, Nezahualcóyotl, Estado de México, C.P. 57460';
+const OF_COL_MODALIDADES = 'Modalidades';
+const OF_MODALIDADES_INICIALES = ['B3 Transporte particular sin gasolina'];
+// Catálogo de personal (Config, columnas alineadas por renglón): lo que lleva el
+// oficio de comisión de cada persona. El RFC solo vive en el Sheet: nunca se
+// manda a la página ni se escribe en este código (el repo es público).
+const OF_COL_PERSONAL = 'Personal';
+const OF_COL_PERSONAL_RFC = 'RFC';
+const OF_COL_PERSONAL_CARGO = 'Cargo';
+const OF_COL_PERSONAL_INICIALES = 'Iniciales';
+const OF_PERSONAL_INICIAL = [
+  ['Mtro. Jorge Alberto Bonilla Torres', '', 'JEFE DE OFICINA', 'JABT'],
+  ['Nancy', '', '', ''], ['Alejandro', '', '', ''], ['Marcos', '', '', '']
+];
+// Oficio de comisión en Word (12 oct 2026): plantilla .docx con {{CAMPOS}} en
+// Drive (Script Property OF_PLANTILLA_COMISION_ID, menú "Configurar plantilla
+// de comisión"); se genera un solo .docx por tanda, un oficio por página, y la
+// página del mapa cuando el recorrido pasa de OF_KM_MAPA km.
+const OF_CARPETA_COMISIONES = 'Oficios de comisión OTDE';
+const OF_KM_MAPA = 20;
+const OF_FIRMA_INICIALES = 'AGC/JABT';
 
 const ENCABEZADOS_OF_OFICIOS = ['ID', 'N.P.', 'Ciclo', 'Folio de Oficialía de Partes', 'Fecha de recepción',
   'No. de oficio del remitente', 'Fecha de elaboración', 'Remitente', 'Asunto', 'Tipo de oficio',
@@ -134,6 +178,7 @@ function onOpen() {
     .addItem('Preparar hojas', 'ofPrepararHojas')
     .addItem('Aplicar validación y semáforo', 'ofAplicarValidacion')
     .addItem('Configurar clave de captura', 'ofConfigurarClave')
+    .addItem('Configurar plantilla de comisión', 'ofConfigurarPlantillaComision')
     .addToUi();
 }
 
@@ -176,14 +221,16 @@ function ofPrepararHojas() {
   if (!config) config = ss.insertSheet(HOJA_OF_CONFIG);
   if (config.getLastRow() === 0) {
     const listas = [OF_ELABORA_INICIALES, OF_DESTINOS_INICIALES, OF_TIPOS_INICIALES,
-      OF_TIPOS_INICIALES.map(function (t) { return OF_NP_POR_TIPO[t] || ''; })];
+      OF_TIPOS_INICIALES.map(function (t) { return OF_NP_POR_TIPO[t] || ''; }), OF_MODALIDADES_INICIALES].concat(
+      [0, 1, 2, 3].map(function (c) { return OF_PERSONAL_INICIAL.map(function (p) { return p[c]; }); }));
     const alto = Math.max.apply(null, listas.map(function (l) { return l.length; }));
-    ofEncabezar_(config, [OF_COL_ELABORA, OF_COL_DESTINOS, OF_COL_TIPOS, OF_COL_NP]);
+    ofEncabezar_(config, [OF_COL_ELABORA, OF_COL_DESTINOS, OF_COL_TIPOS, OF_COL_NP, OF_COL_MODALIDADES,
+      OF_COL_PERSONAL, OF_COL_PERSONAL_RFC, OF_COL_PERSONAL_CARGO, OF_COL_PERSONAL_INICIALES]);
     const filas = [];
     for (let i = 0; i < alto; i++) filas.push(listas.map(function (l) { return l[i] || ''; }));
-    config.getRange(2, 1, alto, 4).setValues(filas);
+    config.getRange(2, 1, alto, listas.length).setValues(filas);
     config.setColumnWidth(3, 320);
-    config.getRange(1, 6).setValue('Agrega valores nuevos al final de cada columna. Aparecen en oficios.html. ' +
+    config.getRange(1, listas.length + 2).setValue('Agrega valores nuevos al final de cada columna. Aparecen en oficios.html. ' +
       '"N.P. planeación" va en el mismo renglón que su tipo de oficio.')
       .setFontColor('#6b7280');
   }
@@ -288,6 +335,8 @@ function ofAplicarValidacion_() {
     if (dest) dest.setDataValidation(lista(config.destinos, false));
     const elab = columna(numeros, i, 'Elabora');
     if (elab) elab.setDataValidation(lista(config.elabora, false));
+    const tipoDoc = columna(numeros, i, 'Tipo de documento');
+    if (tipoDoc) tipoDoc.setDataValidation(lista(OF_TIPOS_DOCUMENTO, false));
     ofSemaforo_(numeros, est, { 'Cancelado': '#e5e7eb' });
   }
 
@@ -340,9 +389,41 @@ function ofAsegurarColumnaNp_() {
   }));
 }
 
+// Config creada antes del 12 oct 2026: agrega la columna "Modalidades" en la
+// primera columna libre, con la modalidad de siempre. Una vez; luego se edita a mano.
+function ofAsegurarColumnaModalidades_() {
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_OF_CONFIG);
+  if (!hoja || hoja.getLastRow() < 1) return;
+  const enc = hoja.getRange(1, 1, 1, Math.max(hoja.getLastColumn(), 1)).getValues()[0]
+    .map(function (v) { return String(v).trim(); });
+  if (enc.indexOf(OF_COL_MODALIDADES) !== -1) return;
+  let col = 1;
+  while (enc[col - 1]) col++;
+  hoja.getRange(1, col).setValue(OF_COL_MODALIDADES).setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
+  hoja.getRange(2, col, OF_MODALIDADES_INICIALES.length, 1).setValues(OF_MODALIDADES_INICIALES.map(function (m) { return [m]; }));
+}
+
+// Config sin catálogo de personal (antes del 12 oct 2026): agrega las 4
+// columnas juntas en las primeras libres, con el equipo. RFC y cargos se llenan a mano.
+function ofAsegurarColumnasPersonal_() {
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_OF_CONFIG);
+  if (!hoja || hoja.getLastRow() < 1) return;
+  const enc = hoja.getRange(1, 1, 1, Math.max(hoja.getLastColumn(), 1)).getValues()[0]
+    .map(function (v) { return String(v).trim(); });
+  if (enc.indexOf(OF_COL_PERSONAL) !== -1) return;
+  let col = 1;
+  while (enc[col - 1]) col++;
+  hoja.getRange(1, col, 1, 4).setValues([[OF_COL_PERSONAL, OF_COL_PERSONAL_RFC, OF_COL_PERSONAL_CARGO, OF_COL_PERSONAL_INICIALES]])
+    .setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
+  hoja.getRange(2, col, OF_PERSONAL_INICIAL.length, 4).setValues(OF_PERSONAL_INICIAL);
+  hoja.getRange(1, col).setNote('Como va en el oficio de comisión: grado y nombre completo (ej. "Mtra. Nancy …"). ' +
+    'RFC, cargo e iniciales en el mismo renglón. Las iniciales de quien elabora van al pie (AGC/JABT/…).');
+}
+
 function ofLeerConfig_() {
   const res = { elabora: OF_ELABORA_INICIALES.slice(), destinos: OF_DESTINOS_INICIALES.slice(), tipos: OF_TIPOS_INICIALES.slice(),
-    npPorTipo: Object.assign({}, OF_NP_POR_TIPO), npLleganSolas: OF_NP_LLEGAN_SOLAS.slice() };
+    npPorTipo: Object.assign({}, OF_NP_POR_TIPO), npLleganSolas: OF_NP_LLEGAN_SOLAS.slice(),
+    modalidades: OF_MODALIDADES_INICIALES.slice(), personal: [] };
   const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_OF_CONFIG);
   if (!hoja || hoja.getLastRow() < 2) return res;
   const idx = ofIndices_(hoja);
@@ -355,6 +436,18 @@ function ofLeerConfig_() {
   res.elabora = leer(OF_COL_ELABORA) || res.elabora;
   res.destinos = leer(OF_COL_DESTINOS) || res.destinos;
   res.tipos = leer(OF_COL_TIPOS) || res.tipos;
+  res.modalidades = leer(OF_COL_MODALIDADES) || res.modalidades;
+  res.personal = [];
+  if (idx[OF_COL_PERSONAL] !== undefined) {
+    const col = function (r, h) { return idx[h] === undefined ? '' : String(r[idx[h]]).trim(); };
+    filas.forEach(function (r) {
+      const nombre = col(r, OF_COL_PERSONAL);
+      if (nombre) {
+        res.personal.push({ nombre: nombre, rfc: col(r, OF_COL_PERSONAL_RFC),
+          cargo: col(r, OF_COL_PERSONAL_CARGO), iniciales: col(r, OF_COL_PERSONAL_INICIALES) });
+      }
+    });
+  }
   // {tipo: N.P.} leído renglón por renglón (el N.P. va junto a su tipo).
   res.npPorTipo = {};
   if (idx[OF_COL_TIPOS] !== undefined && idx[OF_COL_NP] !== undefined) {
@@ -499,6 +592,8 @@ function doGet(e) {
 function ofDatosInicio_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   ofAsegurarColumnaNp_();
+  ofAsegurarColumnaModalidades_();
+  ofAsegurarColumnasPersonal_();
   const anio = ofAnioActual_();
   const hojaNum = ss.getSheetByName(HOJA_OF_NUMEROS);
   const hojaOf = ss.getSheetByName(HOJA_OF_OFICIOS);
@@ -509,23 +604,36 @@ function ofDatosInicio_() {
   const filasO = ofFilas_(hojaOf);
 
   const numeros = filasN.slice(-OF_MAX_NUMEROS_PAGINA).reverse().map(function (r) {
-    return {
-      numero: String(r[iN['Número']]), consecutivo: Number(r[iN['Consecutivo']]),
-      tomado: ofFechaIso_(r[iN['Tomado']], true), elabora: String(r[iN['Elabora']]),
-      asunto: String(r[iN['Asunto']]), destino: String(r[iN['Destino']]),
-      estatus: String(r[iN['Estatus']]), vinculo: String(r[iN['Vínculo']])
-    };
+    return ofNumeroParaPagina_(r, iN);
   });
   const oficios = filasO.slice(-OF_MAX_OFICIOS_PAGINA).reverse().map(function (r) {
     return ofOficioParaPagina_(r, iO);
   });
+  const config = ofLeerConfig_();
+  config.personal = config.personal.map(function (p) { return { nombre: p.nombre, cargo: p.cargo }; }); // sin RFC
   return {
     status: 'ok',
-    config: ofLeerConfig_(),
+    config: config,
     lote: ofResumenLotes_(anio, filasN, iN),
     ov: ofEstadoOV_(),
     numeros: numeros,
     oficios: oficios
+  };
+}
+
+function ofNumeroParaPagina_(r, i) {
+  // Las columnas del 12 oct 2026 pueden faltar en una hoja que aún no se ha tocado.
+  const v = function (h, conHora) { return i[h] === undefined ? '' : ofFechaIso_(r[i[h]], conHora); };
+  return {
+    numero: v('Número'), consecutivo: Number(r[i['Consecutivo']]),
+    tomado: v('Tomado', true), elabora: v('Elabora'), asunto: v('Asunto'), destino: v('Destino'),
+    elaboracion: v('Fecha de elaboración'), estatus: v('Estatus'), vinculo: v('Vínculo'),
+    tipo: v('Tipo de documento') || OF_TIPO_OTRO, persona: v('Persona comisionada'),
+    lugar: v('Lugar / destino'), fechaEvento: v('Fecha del evento'), horario: v('Horario'),
+    resumen: v('Resumen del cuerpo'), fechaLimite: v('Fecha límite'), tanda: v('Tanda'),
+    reasignado: !!v('Historial').trim(),
+    cct: v('CCT destino'), direccion: v('Dirección destino'), modalidad: v('Modalidad'), km: v('Km (ida y vuelta)'),
+    cargo: v('Cargo'), destinoCompleto: v('Destino completo'), oficioGenerado: v('Oficio generado')
   };
 }
 
@@ -555,7 +663,7 @@ function ofFechaIso_(v, conHora) {
   return String(v == null ? '' : v);
 }
 
-// ── doPost: {accion: 'tomarNumero' | 'cancelarNumero' | 'registrarOficio', clave, ...} ──
+// ── doPost: {accion: 'tomarNumero' | 'cancelarNumero' | 'reasignarNumero' | 'registrarOficio' | ..., clave, ...} ──
 function doPost(e) {
   let datos;
   try {
@@ -579,6 +687,18 @@ function doPost(e) {
     }
   }
 
+  // El Word de las comisiones solo lee filas y escribe en Drive: no necesita el candado.
+  if (datos.accion === 'generarComision') {
+    try {
+      return ofRespuesta_(ofGenerarComision_(datos));
+    } catch (err) {
+      return ofRespuesta_({ status: 'error', mensaje: err.message });
+    }
+  }
+
+  // Kilometraje de las comisiones, también antes del candado (Maps tarda ~1 s por destino).
+  if (datos.accion === 'tomarNumero' || datos.accion === 'reasignarNumero') ofCalcularKm_(datos);
+
   const lock = LockService.getScriptLock();
   try {
     lock.waitLock(20000);
@@ -588,6 +708,7 @@ function doPost(e) {
   try {
     if (datos.accion === 'tomarNumero') return ofRespuesta_(ofTomarNumero_(datos));
     if (datos.accion === 'cancelarNumero') return ofRespuesta_(ofCancelarNumero_(datos));
+    if (datos.accion === 'reasignarNumero') return ofRespuesta_(ofReasignarNumero_(datos));
     if (datos.accion === 'registrarOficio') return ofRespuesta_(ofRegistrarOficio_(datos, pdf));
     if (datos.accion === 'atenderOficio') return ofRespuesta_(ofAtenderOficio_(datos));
     if (datos.accion === 'anotarFolioOP') return ofRespuesta_(ofAnotarFolioOP_(datos));
@@ -609,52 +730,176 @@ function ofParsearFecha_(valor) {
   return isNaN(f.getTime()) ? null : f;
 }
 
-// Se llama con el candado tomado.
+// Datos propios de un documento según su tipo. Un payload sin "tipo" (la
+// página anterior al 12 oct 2026) se trata como "Otro documento".
+function ofNormalizarDocumento_(x) {
+  const tipo = OF_TIPOS_DOCUMENTO.indexOf(ofTxt_(x.tipo)) !== -1 ? ofTxt_(x.tipo) : OF_TIPO_OTRO;
+  const fechaOpcional = function (v) { return ofTxt_(v) ? ofParsearFecha_(v) : ''; };
+  return {
+    tipo: tipo, asunto: ofTxt_(x.asunto), destino: ofTxt_(x.destino),
+    persona: tipo === OF_TIPO_COMISION ? ofTxt_(x.persona) : '',
+    lugar: tipo === OF_TIPO_COMISION ? ofTxt_(x.lugar) : '',
+    fechaEvento: tipo === OF_TIPO_COMISION ? fechaOpcional(x.fechaEvento) : '',
+    horario: tipo === OF_TIPO_COMISION ? ofTxt_(x.horario) : '',
+    cct: tipo === OF_TIPO_COMISION ? ofTxt_(x.cct).toUpperCase() : '',
+    direccion: tipo === OF_TIPO_COMISION ? ofTxt_(x.direccion) : '',
+    modalidad: tipo === OF_TIPO_COMISION ? ofTxt_(x.modalidad) : '',
+    km: tipo === OF_TIPO_COMISION && typeof x.km === 'number' ? x.km : '',
+    rfc: tipo === OF_TIPO_COMISION ? ofTxt_(x.rfc).toUpperCase() : '',
+    cargo: tipo === OF_TIPO_COMISION ? ofTxt_(x.cargo) : '',
+    destinoCompleto: tipo === OF_TIPO_COMISION ? ofTxt_(x.destinoCompleto) : '',
+    resumen: tipo === OF_TIPO_DIFUSION || tipo === OF_TIPO_SUBE ? ofTxt_(x.resumen) : '',
+    fechaLimite: tipo === OF_TIPO_DIFUSION ? fechaOpcional(x.fechaLimite) : ''
+  };
+}
+
+// Kilometraje de ida y vuelta a cada destino distinto de la tanda, con el
+// servicio Maps de Apps Script (sin clave ni cuenta de pago). Igual que se hace
+// a mano en Google Maps (oficio de comisión real, 5 oct 2026: "SEPRN a SEPRN",
+// 23.9 km): origen SEPRN → destino como parada → regreso a SEPRN, sumando los
+// dos tramos (el regreso puede ir por otras calles). Se guarda en caché 6 h por
+// dirección. Si Maps falla o no hay dirección, queda vacío: el
+// número se toma igual y el km se anota a mano.
+function ofCalcularKm_(datos) {
+  const docs = Array.isArray(datos.documentos) && datos.documentos.length ? datos.documentos : [datos];
+  const cache = CacheService.getScriptCache();
+  const porDireccion = {};
+  docs.forEach(function (d) {
+    d.km = '';
+    const dir = ofTxt_(d.direccion);
+    if (ofTxt_(d.tipo) !== OF_TIPO_COMISION || !dir) return;
+    if (!(dir in porDireccion)) porDireccion[dir] = ofKmIdaVuelta_(dir, cache);
+    d.km = porDireccion[dir];
+  });
+}
+
+function ofKmIdaVuelta_(direccion, cache) {
+  const clave = 'km_' + Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, direccion));
+  const guardado = cache.get(clave);
+  if (guardado !== null) return guardado === '' ? '' : Number(guardado);
+  let km = '';
+  try {
+    const ruta = Maps.newDirectionFinder().setOrigin(OF_ORIGEN_COMISION).addWaypoint(direccion)
+      .setDestination(OF_ORIGEN_COMISION).setMode(Maps.DirectionFinder.Mode.DRIVING).setLanguage('es').getDirections();
+    const tramos = (ruta && ruta.routes && ruta.routes[0] && ruta.routes[0].legs) || [];
+    if (tramos.length === 2 && tramos.every(function (t) { return t.distance; })) {
+      km = Math.round((tramos[0].distance.value + tramos[1].distance.value) / 100) / 10;
+    }
+  } catch (err) {
+    console.error('Km a ' + direccion + ': ' + err.message);
+  }
+  cache.put(clave, String(km), 21600);
+  return km;
+}
+
+// n > 0: número de renglón en una tanda, para decir cuál falta.
+function ofValidarDocumento_(d, n) {
+  const pre = n ? 'Renglón ' + n + ': ' : '';
+  const comision = d.tipo === OF_TIPO_COMISION;
+  if (comision && !d.persona) throw new Error(pre + 'escribe el nombre de la persona comisionada.');
+  if (!d.asunto) throw new Error(pre + (comision ? 'escribe el motivo de la comisión.' : 'escribe el asunto.'));
+  if (!d.destino) throw new Error(pre + 'elige a quién va dirigido.');
+  if (comision && !d.lugar) throw new Error(pre + 'escribe el lugar o destino de la comisión.');
+  if (comision && !d.modalidad) throw new Error(pre + 'elige la modalidad de traslado.');
+  if (comision && !d.fechaEvento) throw new Error(pre + 'indica la fecha de la comisión.');
+  if ((d.tipo === OF_TIPO_DIFUSION || d.tipo === OF_TIPO_SUBE) && !d.resumen) {
+    throw new Error(pre + 'escribe el resumen del cuerpo del oficio.');
+  }
+  if (d.fechaEvento === null || d.fechaLimite === null) throw new Error(pre + 'hay una fecha no válida.');
+}
+
+function ofValoresDocumento_(d) {
+  return {
+    'Tipo de documento': d.tipo, 'Asunto': d.asunto, 'Destino': d.destino,
+    'Persona comisionada': d.persona, 'Lugar / destino': d.lugar, 'Fecha del evento': d.fechaEvento,
+    'Horario': d.horario, 'Resumen del cuerpo': d.resumen, 'Fecha límite': d.fechaLimite,
+    'CCT destino': d.cct, 'Dirección destino': d.direccion, 'Modalidad': d.modalidad, 'Km (ida y vuelta)': d.km,
+    'RFC': d.rfc, 'Cargo': d.cargo, 'Destino completo': d.destinoCompleto
+  };
+}
+
+// Se llama con el candado tomado. Acepta una tanda ({documentos: [...]}, de 1
+// a OF_MAX_TANDA) o un solo documento con sus campos sueltos (payload anterior).
+// La tanda es todo o nada: se valida completa y, si no alcanzan los números
+// del lote para todos, no se toma ninguno.
 function ofTomarNumero_(x) {
-  const d = {
-    elabora: ofTxt_(x.elabora), asunto: ofTxt_(x.asunto), destino: ofTxt_(x.destino),
+  const comun = {
+    elabora: ofTxt_(x.elabora),
     fecha: x.fechaElaboracion ? ofParsearFecha_(x.fechaElaboracion) : new Date(),
     vinculo: ofTxt_(x.vinculo).toUpperCase(), idEnvio: ofTxt_(x.idEnvio)
   };
-  if (!d.elabora) throw new Error('Indica quién elabora el documento.');
-  if (!d.asunto) throw new Error('Escribe el asunto.');
-  if (!d.destino) throw new Error('Elige a quién va dirigido.');
-  if (!d.fecha) throw new Error('Fecha de elaboración no válida.');
+  if (!comun.elabora) throw new Error('Indica quién elabora el documento.');
+  if (!comun.fecha) throw new Error('Fecha de elaboración no válida.');
+  const crudos = Array.isArray(x.documentos) && x.documentos.length ? x.documentos : [x];
+  if (crudos.length > OF_MAX_TANDA) throw new Error('Una tanda puede tener hasta ' + OF_MAX_TANDA + ' documentos.');
+  const docs = crudos.map(ofNormalizarDocumento_);
+  ofCompletarPersonal_(docs);
+  docs.forEach(function (d, k) { ofValidarDocumento_(d, docs.length > 1 ? k + 1 : 0); });
+  if (comun.vinculo && docs.length > 1) throw new Error('Para responder un oficio se toma un solo número.');
 
   const hoja = ofObtenerHoja_(HOJA_OF_NUMEROS, ENCABEZADOS_OF_NUMEROS);
   const idx = ofIndices_(hoja);
   const filas = ofFilas_(hoja);
   const anio = ofAnioActual_();
+  const salida = function (r) {
+    return {
+      numero: String(r[idx['Número']]), consecutivo: Number(r[idx['Consecutivo']]),
+      persona: String(r[idx['Persona comisionada']] || ''),
+      fechaEvento: idx['Fecha del evento'] === undefined ? '' : ofFechaIso_(r[idx['Fecha del evento']]),
+      lugar: String(r[idx['Lugar / destino']] || ''),
+      km: idx['Km (ida y vuelta)'] === undefined ? '' : r[idx['Km (ida y vuelta)']]
+    };
+  };
 
-  if (d.idEnvio) {
-    const previa = filas.find(function (r) { return String(r[idx['ID de envío']]) === d.idEnvio; });
-    if (previa) {
+  // Reintento: un documento suelto guarda el idEnvio tal cual; una tanda, "<idEnvio>#1..N".
+  if (comun.idEnvio) {
+    const previas = filas.filter(function (r) {
+      const id = String(r[idx['ID de envío']]);
+      return id === comun.idEnvio || id.indexOf(comun.idEnvio + '#') === 0;
+    }).map(salida).sort(function (a, b) { return a.consecutivo - b.consecutivo; });
+    if (previas.length) {
       return {
-        status: 'ok', duplicado: true, numero: String(previa[idx['Número']]),
-        consecutivo: Number(previa[idx['Consecutivo']]), lote: ofResumenLotes_(anio, filas, idx)
+        status: 'ok', duplicado: true, numeros: previas, numero: previas[0].numero,
+        consecutivo: previas[0].consecutivo, lote: ofResumenLotes_(anio, filas, idx)
       };
     }
   }
 
   const antes = ofResumenLotes_(anio, filas, idx);
-  if (antes.siguiente === null) {
-    return { status: 'sin_lote', anio: anio };
+  if (antes.siguiente === null || antes.quedan < docs.length) {
+    return { status: 'sin_lote', anio: anio, quedan: antes.quedan, pedidos: docs.length };
   }
-  const consecutivo = antes.siguiente;
-  const numero = ofFormatearNumero_(consecutivo, anio);
-  const fila = ofArmarFila_(hoja, idx, {
-    'Número': numero, 'Consecutivo': consecutivo, 'Año': anio, 'Tomado': new Date(),
-    'Elabora': d.elabora, 'Asunto': d.asunto, 'Destino': d.destino, 'Fecha de elaboración': d.fecha,
-    'Estatus': 'Asignado', 'Vínculo': d.vinculo, 'Notas': '', 'ID de envío': d.idEnvio
-  });
-  hoja.appendRow(fila);
-  filas.push(fila);
 
-  if (/^OF-\d+$/.test(d.vinculo)) ofAnotarSalidaEnOficio_(d.vinculo, numero, d.elabora);
+  const nuevas = [];
+  docs.forEach(function (d, k) {
+    const consecutivo = ofResumenLotes_(anio, filas, idx).siguiente;
+    const valores = ofValoresDocumento_(d);
+    Object.assign(valores, {
+      'Número': ofFormatearNumero_(consecutivo, anio), 'Consecutivo': consecutivo, 'Año': anio,
+      'Tomado': new Date(), 'Elabora': comun.elabora, 'Fecha de elaboración': comun.fecha,
+      'Estatus': 'Asignado', 'Vínculo': comun.vinculo, 'Notas': '', 'Historial': '',
+      'ID de envío': comun.idEnvio && docs.length > 1 ? comun.idEnvio + '#' + (k + 1) : comun.idEnvio
+    });
+    const fila = ofArmarFila_(hoja, idx, valores);
+    filas.push(fila);
+    nuevas.push(fila);
+  });
+  if (docs.length > 1) {
+    const tanda = nuevas[0][idx['Consecutivo']] + '-' + nuevas[nuevas.length - 1][idx['Consecutivo']];
+    nuevas.forEach(function (f) { if (idx['Tanda'] !== undefined) f[idx['Tanda']] = tanda; });
+  }
+  // Todas las filas de la tanda en una sola escritura.
+  hoja.getRange(hoja.getLastRow() + 1, 1, nuevas.length, nuevas[0].length).setValues(nuevas);
+
+  const resultado = nuevas.map(salida);
+  if (/^OF-\d+$/.test(comun.vinculo)) ofAnotarSalidaEnOficio_(comun.vinculo, resultado[0].numero, comun.elabora);
 
   const despues = ofResumenLotes_(anio, filas, idx);
   ofAvisarSiQuedanPocos_(despues);
-  return { status: 'ok', numero: numero, consecutivo: consecutivo, lote: despues };
+  return {
+    status: 'ok', numeros: resultado, numero: resultado[0].numero,
+    consecutivo: resultado[0].consecutivo, lote: despues
+  };
 }
 
 // El número de salida queda anotado en el oficio que atiende, y el oficio queda
@@ -699,6 +944,96 @@ function ofCancelarNumero_(x) {
   hoja.getRange(i + 2, idx['Notas'] + 1).setValue((nota ? nota + '\n' : '') +
     'Cancelado ' + sello + (quien ? ' por ' + quien : '') + ': ' + motivo);
   return { status: 'ok', numero: numero };
+}
+
+// Reasignar: un número que no salió (la comisión no se hizo, el oficio no se
+// envió) se usa para otro documento. Conserva número y consecutivo; lo que
+// decía antes queda en "Historial" con quién, cuándo y por qué.
+function ofReasignarNumero_(x) {
+  const numero = ofTxt_(x.numero);
+  const motivo = ofTxt_(x.motivo);
+  const quien = ofTxt_(x.quien);
+  if (!motivo) throw new Error('Escribe por qué se reasigna el número.');
+  const d = ofNormalizarDocumento_(x);
+  ofCompletarPersonal_([d]);
+  ofValidarDocumento_(d, 0);
+  const elabora = ofTxt_(x.elabora);
+  const fecha = x.fechaElaboracion ? ofParsearFecha_(x.fechaElaboracion) : null;
+  if (x.fechaElaboracion && !fecha) throw new Error('Fecha de elaboración no válida.');
+
+  const hoja = ofObtenerHoja_(HOJA_OF_NUMEROS, ENCABEZADOS_OF_NUMEROS);
+  const idx = ofIndices_(hoja);
+  const filas = ofFilas_(hoja);
+  const i = filas.findIndex(function (r) { return String(r[idx['Número']]) === numero; });
+  if (i === -1) throw new Error('No encontré el número ' + numero + '.');
+  const r = filas[i];
+  if (String(r[idx['Estatus']]) === 'Cancelado') {
+    throw new Error('El número ' + numero + ' está cancelado: ya no se puede reasignar.');
+  }
+
+  const fmt = function (v) { return v instanceof Date ? Utilities.formatDate(v, OF_ZONA, 'dd/MM/yyyy') : ofTxt_(v); };
+  // Reintento tras un tiempo de espera: si ya dice exactamente eso, no se anota otra vez.
+  const nuevos = ofValoresDocumento_(d);
+  // Misma persona sin RFC nuevo (la página no recibe el RFC): se conserva el registrado.
+  if (!d.rfc && idx['RFC'] !== undefined && d.persona === ofTxt_(r[idx['Persona comisionada']])) nuevos['RFC'] = ofTxt_(r[idx['RFC']]);
+  if (elabora) nuevos['Elabora'] = elabora;
+  if (fecha) nuevos['Fecha de elaboración'] = fecha;
+  const igual = Object.keys(nuevos).every(function (h) { return idx[h] === undefined || fmt(r[idx[h]]) === fmt(nuevos[h]); });
+  if (igual && ofTxt_(r[idx['Historial']]) && !ofTxt_(r[idx['Vínculo']])) {
+    return { status: 'ok', duplicado: true, numero: numero, oficioReabierto: '', registro: ofNumeroParaPagina_(r, idx) };
+  }
+  const antes = [['Tipo', 'Tipo de documento'], ['Asunto', 'Asunto'], ['Dirigido a', 'Destino'],
+    ['Persona', 'Persona comisionada'], ['Lugar', 'Lugar / destino'], ['Fecha', 'Fecha del evento'],
+    ['Resumen', 'Resumen del cuerpo'], ['Elabora', 'Elabora'], ['Responde', 'Vínculo']]
+    .filter(function (p) { return idx[p[1]] !== undefined && fmt(r[idx[p[1]]]); })
+    .map(function (p) { return p[0] + ': ' + fmt(r[idx[p[1]]]); }).join('; ');
+  const linea = Utilities.formatDate(new Date(), OF_ZONA, 'dd/MM/yyyy HH:mm') + (quien ? ' · ' + quien : '') +
+    ' · ' + motivo + '. Antes: ' + (antes || '(sin datos)');
+  const historial = ofTxt_(r[idx['Historial']]);
+  const vinculoAnterior = ofTxt_(r[idx['Vínculo']]).toUpperCase();
+
+  const valores = nuevos;
+  valores['Historial'] = (historial ? historial + '\n' : '') + linea;
+  valores['Vínculo'] = '';
+  Object.keys(valores).forEach(function (h) { if (idx[h] !== undefined) r[idx[h]] = valores[h]; });
+  hoja.getRange(i + 2, 1, 1, r.length).setValues([r]);
+
+  let oficioReabierto = '';
+  if (/^OF-\d+$/.test(vinculoAnterior)) {
+    oficioReabierto = ofDesanotarSalidaEnOficio_(vinculoAnterior, numero, quien) ? vinculoAnterior : '';
+  }
+  return { status: 'ok', numero: numero, oficioReabierto: oficioReabierto, registro: ofNumeroParaPagina_(r, idx) };
+}
+
+// Inverso de ofAnotarSalidaEnOficio_: el número ya no responde ese oficio. Si
+// era su única salida y quedó atendido por ella, el oficio vuelve a Recibido
+// para que aparezca otra vez como pendiente. Devuelve true si lo reabrió.
+function ofDesanotarSalidaEnOficio_(idOficio, numero, quien) {
+  if (!SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_OF_OFICIOS)) return false;
+  const hoja = ofObtenerHoja_(HOJA_OF_OFICIOS, ENCABEZADOS_OF_OFICIOS);
+  const idx = ofIndices_(hoja);
+  const filas = ofFilas_(hoja);
+  const i = filas.findIndex(function (r) { return String(r[idx['ID']]) === idOficio; });
+  if (i === -1) return false;
+  const filaHoja = i + 2;
+  const set = function (encabezado, valor) { hoja.getRange(filaHoja, idx[encabezado] + 1).setValue(valor); };
+  const salidas = String(filas[i][idx['Oficio(s) de salida']] || '').split(';')
+    .map(function (s) { return s.trim(); }).filter(String)
+    .map(function (s) { return s === numero ? numero + ' (reasignado)' : s; });
+  set('Oficio(s) de salida', salidas.join('; '));
+  const vigentes = salidas.filter(function (s) { return s.indexOf('(reasignado)') === -1; });
+  const reabrir = !vigentes.length && String(filas[i][idx['Estatus']]).trim() === 'Atendido' &&
+    String(filas[i][idx['Forma de atención']]).trim() === 'Oficio de salida';
+  const obs = String(filas[i][idx['Observaciones']] || '').trim();
+  set('Observaciones', (obs ? obs + '\n' : '') + Utilities.formatDate(new Date(), OF_ZONA, 'dd/MM/yyyy') +
+    (quien ? ' ' + quien : '') + ': el oficio ' + numero + ' se reasignó a otro documento' +
+    (reabrir ? '; este oficio vuelve a quedar pendiente.' : '.'));
+  if (reabrir) {
+    set('Estatus', 'Recibido');
+    set('Forma de atención', '');
+    if (idx['Fecha de atención'] !== undefined) set('Fecha de atención', '');
+  }
+  return reabrir;
 }
 
 function ofCicloDe_(fecha) {
@@ -1197,6 +1532,220 @@ function ofAnotarFolioOP_(x) {
   hoja.getRange(i + 2, idx['Observaciones'] + 1).setValue((obs ? obs + '\n' : '') + nota);
   r[idx['Observaciones']] = (obs ? obs + '\n' : '') + nota;
   return { status: 'ok', oficio: ofOficioParaPagina_(r, idx) };
+}
+
+// ── Oficio de comisión en Word ──
+// RFC y cargo de quien está en el catálogo de personal (Config), si la página
+// no los mandó (la página nunca recibe el RFC).
+function ofCompletarPersonal_(docs) {
+  const personal = ofLeerConfig_().personal;
+  docs.forEach(function (d) {
+    if (d.tipo !== OF_TIPO_COMISION) return;
+    const p = personal.find(function (x) { return x.nombre === d.persona; });
+    if (!p) return;
+    if (!d.rfc) d.rfc = p.rfc.toUpperCase();
+    if (!d.cargo) d.cargo = p.cargo;
+  });
+}
+
+function ofConfigurarPlantillaComision() {
+  const ui = SpreadsheetApp.getUi();
+  const props = PropertiesService.getScriptProperties();
+  const actual = props.getProperty('OF_PLANTILLA_COMISION_ID');
+  const r = ui.prompt('Plantilla del oficio de comisión',
+    'Sube PLANTILLA-COMISION.docx a tu Drive (como Word, sin convertir a Documentos de Google) y pega aquí su enlace.' +
+    (actual ? '\n\nActual: ' + actual : ''), ui.ButtonSet.OK_CANCEL);
+  if (r.getSelectedButton() !== ui.Button.OK) return;
+  const m = r.getResponseText().match(/[-\w]{25,}/);
+  if (!m) { ui.alert('No encontré el ID del archivo en ese enlace. No se guardó nada.'); return; }
+  let archivo;
+  try { archivo = DriveApp.getFileById(m[0]); } catch (err) { ui.alert('No pude abrir ese archivo: ' + err.message); return; }
+  const faltan = ofCamposFaltantesPlantilla_(archivo.getBlob());
+  if (faltan === null) { ui.alert('Ese archivo no es un Word (.docx). Súbelo sin convertir a Documentos de Google.'); return; }
+  if (faltan.length) { ui.alert('A la plantilla le faltan estos campos: ' + faltan.join(', ') + '. No se guardó.'); return; }
+  props.setProperty('OF_PLANTILLA_COMISION_ID', m[0]);
+  ui.alert('Plantilla guardada: ' + archivo.getName() + '.');
+}
+
+const OF_CAMPOS_PLANTILLA = ['FECHA_OFICIO', 'NOMBRE', 'RFC', 'NUMERO', 'ANIO', 'MES', 'DESTINO', 'FECHA_COMISION',
+  'MOTIVO', 'KM', 'MODALIDAD', 'NOMBRE_FIRMA', 'CARGO', 'INICIALES'];
+
+function ofCamposFaltantesPlantilla_(blob) {
+  let doc;
+  try {
+    doc = Utilities.unzip(blob.setContentType('application/zip')).find(function (b) { return b.getName() === 'word/document.xml'; });
+  } catch (err) { return null; }
+  if (!doc) return null;
+  const xml = doc.getDataAsString('UTF-8');
+  return OF_CAMPOS_PLANTILLA.filter(function (c) { return xml.indexOf('{{' + c + '}}') === -1; });
+}
+
+const OF_MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre',
+  'octubre', 'noviembre', 'diciembre'];
+// Date → "05 de octubre de 2026"
+function ofFechaLarga_(f) {
+  return Utilities.formatDate(f, OF_ZONA, 'dd') + ' de ' + OF_MESES[Number(Utilities.formatDate(f, OF_ZONA, 'M')) - 1] +
+    ' de ' + Utilities.formatDate(f, OF_ZONA, 'yyyy');
+}
+
+function ofXml_(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// Iniciales del pie: firma + jefe de oficina + quien elabora ("AGC/JABT/nygd").
+function ofIniciales_(elabora, personal) {
+  const norm = function (t) { return String(t).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); };
+  const p = personal.find(function (x) { return elabora && norm(x.nombre).indexOf(norm(elabora)) !== -1; });
+  const ini = p ? p.iniciales : '';
+  return ini && OF_FIRMA_INICIALES.split('/').indexOf(ini.toUpperCase()) === -1 ? OF_FIRMA_INICIALES + '/' + ini : OF_FIRMA_INICIALES;
+}
+
+// Recorrido SEPRN → destino → SEPRN como imagen de Google Maps (servicio Maps de Apps Script).
+function ofMapaRuta_(direccion) {
+  const ruta = Maps.newDirectionFinder().setOrigin(OF_ORIGEN_COMISION).addWaypoint(direccion)
+    .setDestination(OF_ORIGEN_COMISION).setMode(Maps.DirectionFinder.Mode.DRIVING).setLanguage('es').getDirections();
+  const r = ruta && ruta.routes && ruta.routes[0];
+  if (!r || !r.legs || r.legs.length < 2) throw new Error('Google Maps no encontró la ruta a ' + direccion + '.');
+  const ini = r.legs[0].start_location;
+  const fin = r.legs[0].end_location;
+  return Maps.newStaticMap().setSize(640, 640).setLanguage('es').setFormat(Maps.StaticMap.Format.PNG)
+    .setPathStyle(5, '0x3b3bd8ff', null).addPath(r.overview_polyline.points)
+    .setMarkerStyle(Maps.StaticMap.MarkerSize.MID, '0x9F2241', 'S').addMarker(ini.lat, ini.lng)
+    .setMarkerStyle(Maps.StaticMap.MarkerSize.MID, '0x0C1A2E', 'D').addMarker(fin.lat, fin.lng)
+    .getBlob().getBytes();
+}
+
+// Un .docx por tanda: un oficio por página (en el orden en que se tomaron) y,
+// después de cada oficio de más de OF_KM_MAPA km, la página de su mapa.
+function ofGenerarComision_(x) {
+  const pedidos = (x.numeros || []).map(ofTxt_).filter(String);
+  if (!pedidos.length) throw new Error('No llegó ningún número.');
+  if (pedidos.length > OF_MAX_TANDA) throw new Error('Máximo ' + OF_MAX_TANDA + ' oficios por documento.');
+  const idPlantilla = PropertiesService.getScriptProperties().getProperty('OF_PLANTILLA_COMISION_ID');
+  if (!idPlantilla) throw new Error('Falta la plantilla del oficio de comisión. Jorge la configura en el Sheet: OTDE Oficios → Configurar plantilla de comisión.');
+
+  const hoja = ofObtenerHoja_(HOJA_OF_NUMEROS, ENCABEZADOS_OF_NUMEROS);
+  const idx = ofIndices_(hoja);
+  const filas = ofFilas_(hoja);
+  const personal = ofLeerConfig_().personal;
+  const elegidas = pedidos.map(function (n) {
+    const i = filas.findIndex(function (r) { return String(r[idx['Número']]) === n; });
+    if (i === -1) throw new Error('No encontré el número ' + n + '.');
+    const r = filas[i];
+    if (String(r[idx['Tipo de documento']]) !== OF_TIPO_COMISION) throw new Error('El número ' + n + ' no es un oficio de comisión.');
+    if (String(r[idx['Estatus']]) === 'Cancelado') throw new Error('El número ' + n + ' está cancelado.');
+    return { i: i, r: r };
+  }).sort(function (a, b) { return Number(a.r[idx['Consecutivo']]) - Number(b.r[idx['Consecutivo']]); });
+
+  const archivos = Utilities.unzip(DriveApp.getFileById(idPlantilla).getBlob().setContentType('application/zip'));
+  const porNombre = {};
+  archivos.forEach(function (b) { porNombre[b.getName()] = b; });
+  const docXml = porNombre['word/document.xml'].getDataAsString('UTF-8');
+  const iBody = docXml.indexOf('<w:body>') + '<w:body>'.length;
+  const iSect = docXml.lastIndexOf('<w:sectPr');
+  const cuerpo = docXml.slice(iBody, iSect);
+
+  const salto = '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+  const rels = [];
+  const mapasPorDireccion = {};
+  let docPr = 1000;
+  const paginas = elegidas.map(function (e, k) {
+    const r = e.r;
+    const v = function (h) { return idx[h] === undefined ? '' : r[idx[h]]; };
+    const fechaCom = v('Fecha del evento') instanceof Date ? v('Fecha del evento') : null;
+    const fechaOf = v('Fecha de elaboración') instanceof Date ? v('Fecha de elaboración') : new Date();
+    const nombre = ofTxt_(v('Persona comisionada'));
+    const km = v('Km (ida y vuelta)');
+    const campos = {
+      FECHA_OFICIO: ofFechaLarga_(fechaOf), NOMBRE: nombre, RFC: ofTxt_(v('RFC')),
+      NUMERO: String(v('Consecutivo')), ANIO: String(v('Año')),
+      MES: fechaCom ? OF_MESES[Number(Utilities.formatDate(fechaCom, OF_ZONA, 'M')) - 1].replace(/^./, function (c) { return c.toUpperCase(); }) : '',
+      DESTINO: ofTxt_(v('Destino completo')) || ofTxt_(v('Lugar / destino')),
+      FECHA_COMISION: fechaCom ? ofFechaLarga_(fechaCom) : '', MOTIVO: ofTxt_(v('Asunto')),
+      KM: km === '' ? '____' : String(km), MODALIDAD: ofTxt_(v('Modalidad')),
+      NOMBRE_FIRMA: nombre.toUpperCase(), CARGO: ofTxt_(v('Cargo')).toUpperCase(),
+      INICIALES: ofIniciales_(ofTxt_(v('Elabora')), personal)
+    };
+    let pag = cuerpo.replace(/\{\{([A-Z_]+)\}\}/g, function (m0, c) { return c in campos ? ofXml_(campos[c]) : m0; });
+    // Varias copias del mismo cuerpo: ids de dibujo únicos y sin ids de párrafo repetidos.
+    pag = pag.replace(/(<wp:docPr\b[^>]*\bid=")(\d+)"/g, function (m0, a) { return a + (++docPr) + '"'; })
+      .replace(/ w14:paraId="[0-9A-F]+"/g, '').replace(/ w14:textId="[0-9A-F]+"/g, '')
+      .replace(/ wp14:anchorId="[0-9A-F]+"/g, '');
+
+    const dir = ofTxt_(v('Dirección destino'));
+    if (typeof km === 'number' && km > OF_KM_MAPA && dir) {
+      if (!(dir in mapasPorDireccion)) {
+        const id = 'rIdMapa' + (rels.length + 1);
+        const media = 'mapa' + (rels.length + 1) + '.png';
+        porNombre['word/media/' + media] = Utilities.newBlob(ofMapaRuta_(dir), 'image/png', 'word/media/' + media);
+        rels.push('<Relationship Id="' + id + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/' + media + '"/>');
+        mapasPorDireccion[dir] = id;
+      }
+      pag += salto + ofPaginaMapa_(mapasPorDireccion[dir], ++docPr, campos, ofTxt_(v('Lugar / destino')), String(v('Número')));
+    }
+    return pag;
+  });
+
+  let nuevoDoc = docXml.slice(0, iBody) + paginas.join(salto) + docXml.slice(iSect);
+  porNombre['word/document.xml'] = Utilities.newBlob(nuevoDoc, 'application/xml', 'word/document.xml');
+  if (rels.length) {
+    const relsXml = porNombre['word/_rels/document.xml.rels'].getDataAsString('UTF-8').replace('</Relationships>', rels.join('') + '</Relationships>');
+    porNombre['word/_rels/document.xml.rels'] = Utilities.newBlob(relsXml, 'application/xml', 'word/_rels/document.xml.rels');
+    let tipos = porNombre['[Content_Types].xml'].getDataAsString('UTF-8');
+    if (!/Extension="png"/i.test(tipos)) tipos = tipos.replace('<Types ', '<Types ').replace(/(<Types[^>]*>)/, '$1<Default Extension="png" ContentType="image/png"/>');
+    porNombre['[Content_Types].xml'] = Utilities.newBlob(tipos, 'application/xml', '[Content_Types].xml');
+  }
+
+  const primero = elegidas[0].r;
+  const ultimo = elegidas[elegidas.length - 1].r;
+  const nombreArchivo = 'Comisión ' + primero[idx['Consecutivo']] +
+    (elegidas.length > 1 ? '-' + ultimo[idx['Consecutivo']] : '') + ' — ' + ofTxt_(primero[idx['Asunto']]).slice(0, 50) + '.docx';
+  const zip = Utilities.zip(Object.keys(porNombre).map(function (n) { return porNombre[n].setName(n); }), nombreArchivo)
+    .setContentType('application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+  const mes = Utilities.formatDate(primero[idx['Fecha de elaboración']] instanceof Date ? primero[idx['Fecha de elaboración']] : new Date(), OF_ZONA, 'yyyy-MM');
+  const archivo = ofCarpetaComisiones_(mes).createFile(zip);
+  const url = archivo.getUrl();
+  if (idx['Oficio generado'] !== undefined) {
+    elegidas.forEach(function (e) { hoja.getRange(e.i + 2, idx['Oficio generado'] + 1).setValue(url); });
+  }
+  return { status: 'ok', url: url, nombre: nombreArchivo, descarga: 'https://drive.google.com/uc?export=download&id=' + archivo.getId(),
+    oficios: elegidas.length, mapas: rels.length };
+}
+
+// Página del mapa: título, imagen de la ruta (6.5" de ancho) y la fuente.
+function ofPaginaMapa_(rId, id, campos, lugar, numero) {
+  const emu = 5943600; // 6.5 pulgadas
+  const p = function (texto, negritas, tam) {
+    return '<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Gotham" w:hAnsi="Gotham"/>' +
+      (negritas ? '<w:b/>' : '') + '<w:sz w:val="' + tam + '"/></w:rPr><w:t xml:space="preserve">' + ofXml_(texto) + '</w:t></w:r></w:p>';
+  };
+  return p('Recorrido de la comisión — Of. No. ' + numero, true, 20) +
+    p('Subdirección de Educación Primaria en la Región de Nezahualcóyotl → ' + lugar + ' → regreso a la SEPRN', false, 18) +
+    p(campos.FECHA_COMISION + ' · ' + campos.NOMBRE + ' · ' + campos.KM + ' km (ida y vuelta)', false, 18) +
+    '<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0">' +
+    '<wp:extent cx="' + emu + '" cy="' + emu + '"/><wp:docPr id="' + id + '" name="Mapa ' + id + '"/>' +
+    '<wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/></wp:cNvGraphicFramePr>' +
+    '<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">' +
+    '<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="' + id + '" name="mapa.png"/><pic:cNvPicPr/></pic:nvPicPr>' +
+    '<pic:blipFill><a:blip r:embed="' + rId + '"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>' +
+    '<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="' + emu + '" cy="' + emu + '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr>' +
+    '</pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>' +
+    p('Datos del mapa © Google. Ruta en automóvil calculada con Google Maps.', false, 14);
+}
+
+function ofCarpetaComisiones_(mes) {
+  const raiz = DriveApp.getFoldersByName(OF_CARPETA_COMISIONES);
+  let carpeta;
+  if (raiz.hasNext()) {
+    carpeta = raiz.next();
+  } else {
+    carpeta = DriveApp.createFolder(OF_CARPETA_COMISIONES);
+    // Mismo criterio que "Oficios OTDE": el equipo abre los archivos desde el
+    // celular sin entrar a esta cuenta; la liga solo aparece detrás de la clave.
+    carpeta.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  }
+  const sub = carpeta.getFoldersByName(mes);
+  return sub.hasNext() ? sub.next() : carpeta.createFolder(mes);
 }
 
 function ofRespuesta_(obj) {

@@ -200,6 +200,42 @@
     #registro-wrap { margin-bottom: 1rem; }
     #bitacora-frame { display: block; width: 100%; min-height: 480px; border: 0; background: transparent; color-scheme: normal; }
 
+    /* Tipos de documento, tandas de comisiones y reasignar (12 oct 2026) */
+    .subtit { font-size: .8rem; font-weight: 700; color: var(--guinda); margin: .2rem 0 .7rem; }
+    .subtit small { display: block; font-weight: 400; color: var(--muted); font-size: .74rem; margin-top: .1rem; }
+    .personas { border-top: 1px dashed var(--border); padding-top: .8rem; margin-bottom: 1rem; }
+    .persona { border: 1px solid var(--border); border-radius: 10px; padding: .6rem .7rem; margin-bottom: .55rem; background: #fff; }
+    .persona-cab { display: flex; align-items: center; gap: .5rem; }
+    .persona-n { font-weight: 700; color: var(--guinda); font-size: .85rem; min-width: 1.2rem; }
+    .persona-cab input { flex: 1; }
+    .persona-cab .link-btn { color: var(--guinda-ac); font-size: .78rem; }
+    .d-titulo { font-size: .82rem; font-weight: 700; color: var(--guinda); }
+    .dia .persona-n { display: none; }
+    .persona-extra { margin-top: .6rem; padding-top: .6rem; border-top: 1px dashed var(--border); }
+    .persona-extra .campo { margin-bottom: .55rem; }
+    .persona-extra label { font-size: .76rem; }
+    .persona-cab select { flex: 1; }
+    .generar { margin-top: 1rem; text-align: left; }
+    .generado { margin-top: .6rem; background: #ecfdf5; border: 1.5px solid #a7f3d0; color: #065f46;
+      border-radius: 8px; padding: .7rem .85rem; font-size: .85rem; }
+    .generado a { color: #065f46; font-weight: 700; }
+    .dias { margin-bottom: 1rem; }
+    .dia { border: 1px solid var(--border); border-radius: 10px; padding: .6rem .7rem; margin-bottom: .55rem; background: #fff; }
+    .dia .campo { margin-bottom: .55rem; }
+    .dia label { font-size: .76rem; }
+    .dia .d-info { font-size: .74rem; color: #065f46; margin-top: .25rem; }
+    .dia .d-info.manual { color: var(--muted); }
+    .total-tanda { font-size: .82rem; font-weight: 700; color: var(--guinda); margin: -.4rem 0 1rem; }
+    .aviso-vinculo { display: block; margin-top: .3rem; font-weight: 700; }
+    .aviso-vinculo:empty { display: none; }
+    .ok-fila { display: flex; align-items: center; gap: .7rem; text-align: left; border: 1px solid var(--border);
+      border-radius: 10px; padding: .55rem .7rem; margin-top: .5rem; background: #fff; }
+    .ok-fila .ok-cons { font-size: 1.5rem; font-weight: 800; color: var(--guinda); min-width: 3.2rem; }
+    .ok-fila .ok-datos { flex: 1; min-width: 0; font-size: .84rem; }
+    .ok-fila .numero-mini { font-family: 'Courier New', monospace; font-size: .78rem; color: var(--guinda-ac); word-break: break-all; }
+    .badge.tipo { background: #e0f2fe; color: #075985; }
+    .badge.reasignado { background: #fef3c7; color: #92400e; }
+
     @media (max-width: 420px) {
       .fila-2, .opciones { grid-template-columns: 1fr; }
       .tab { font-size: .78rem; }
@@ -270,10 +306,45 @@
           Respuesta al oficio <strong id="vinculo-txt"></strong>. Al tomar el número, ese oficio quedará atendido.
           <button type="button" class="link-btn" id="btn-quitar-vinculo">quitar</button>
         </div>
+        <div class="vinculo" id="reasignar-box">
+          Reasignando el número <strong id="reasignar-txt"></strong>. Escribe los datos del documento nuevo: lo que decía antes queda guardado en el historial del Sheet.
+          <span class="aviso-vinculo" id="reasignar-aviso"></span>
+          <button type="button" class="link-btn" id="btn-quitar-reasignar">no reasignar</button>
+        </div>
         <div class="campo">
-          <label for="num-asunto">Asunto <span class="req">*</span></label>
+          <span class="etq">Tipo de documento <span class="req">*</span></span>
+          <div class="opciones" role="radiogroup" aria-label="Tipo de documento">
+            <label class="opcion"><input type="radio" name="num-tipo" value="Comisión">Comisión<small>Una o varias personas a la vez</small></label>
+            <label class="opcion"><input type="radio" name="num-tipo" value="Difusión de información">Difusión de información<small>Baja a sectores, zonas o escuelas</small></label>
+            <label class="opcion"><input type="radio" name="num-tipo" value="Oficio a Toluca / CoEEE">Oficio a Toluca / CoEEE<small>Sube a instancias superiores</small></label>
+            <label class="opcion"><input type="radio" name="num-tipo" value="Otro documento" checked>Otro documento<small>Justificantes y demás</small></label>
+          </div>
+        </div>
+        <p class="subtit" data-solo="Comisión">Datos de la comisión <small>Cada persona lleva un oficio por cada día, cada uno con su número, aunque sea el mismo destino. El origen siempre es la SEPRN.</small></p>
+        <div class="campo">
+          <label for="num-asunto" id="lbl-num-asunto">Asunto <span class="req">*</span></label>
           <textarea id="num-asunto" rows="2" placeholder="Ej. CUANTRIX – Entrega de kit"></textarea>
           <div class="error-msg" id="err-num-asunto">Escribe el asunto.</div>
+        </div>
+        <div class="campo" data-solo="Comisión">
+          <label for="num-modalidad">Modalidad <span class="req">*</span></label>
+          <select id="num-modalidad"></select>
+          <div class="error-msg" id="err-num-modalidad">Elige la modalidad.</div>
+        </div>
+        <div class="dias" data-solo="Comisión">
+          <p class="subtit">Días de la comisión <small>Un renglón por día. Busca la escuela por CCT o nombre; si no está en el catálogo, escribe el lugar.</small></p>
+          <div id="lista-dias"></div>
+          <button type="button" class="btn-mini" id="btn-agregar-dia">+ Agregar día</button>
+          <datalist id="destinos-catalogo"></datalist>
+        </div>
+        <div class="campo" data-solo="Difusión de información|Oficio a Toluca / CoEEE">
+          <label for="num-resumen">Resumen del cuerpo del oficio <span class="req">*</span></label>
+          <textarea id="num-resumen" rows="3" placeholder="De qué trata el oficio y qué se pide, en pocas líneas."></textarea>
+          <div class="error-msg" id="err-num-resumen">Escribe el resumen del cuerpo.</div>
+        </div>
+        <div class="campo" data-solo="Difusión de información">
+          <label for="num-fecha-limite">Fecha límite <span class="opcional">(opcional)</span></label>
+          <input type="date" id="num-fecha-limite">
         </div>
         <div class="fila-2">
           <div class="campo">
@@ -292,15 +363,31 @@
           <input type="date" id="num-fecha">
           <div class="error-msg" id="err-num-fecha">Indica la fecha.</div>
         </div>
+        <div class="personas" data-solo="Comisión">
+          <p class="subtit">Personas comisionadas</p>
+          <div id="lista-personas"></div>
+          <button type="button" class="btn-mini" id="btn-agregar-persona">+ Agregar persona</button>
+        </div>
+        <p class="total-tanda hidden" id="total-tanda"></p>
+        <div class="campo hidden" id="campo-motivo-reasignar">
+          <label for="num-motivo">¿Por qué se reasigna? <span class="req">*</span></label>
+          <input type="text" id="num-motivo" placeholder="Ej. La comisión se suspendió y el oficio no salió">
+          <div class="error-msg" id="err-num-motivo">Escribe por qué se reasigna el número.</div>
+        </div>
         <button type="submit" class="btn" id="btn-numero">Tomar número</button>
         <div class="envio-error" id="numero-error"></div>
       </form>
 
       <div class="card resultado hidden" id="numero-ok">
-        <p>Tu número de oficio es</p>
-        <div class="consecutivo-final" id="ok-consecutivo"></div>
-        <div class="numero-final" id="ok-numero"></div>
+        <p id="ok-titulo">Tu número de oficio es</p>
+        <div id="ok-lista"></div>
         <p id="ok-numero-detalle"></p>
+        <div class="generar hidden" id="ok-generar">
+          <button type="button" class="btn" id="btn-generar">Generar los oficios de comisión (Word)</button>
+          <p class="hint">Un solo archivo con un oficio por página y, si el recorrido pasa de 20 km, la página del mapa. Ábrelo en Word, revísalo e imprímelo.</p>
+          <div class="envio-error" id="generar-error"></div>
+          <div class="generado hidden" id="generar-ok"></div>
+        </div>
         <div class="botones">
           <button type="button" class="btn" id="btn-copiar">Copiar número completo</button>
           <button type="button" class="btn btn-sec" id="btn-otro-numero">Tomar otro número</button>
@@ -421,6 +508,8 @@
   </div>
 </main>
 
+<script src="js/cct-db.js"></script>
+<script src="js/escuelas-direcciones.js"></script>
 <script src="js/tramites-shared.js"></script>
 <script>
 // URL de despliegue de apps-script/oficios.gs (ver instrucciones al inicio de ese archivo).
@@ -683,24 +772,400 @@ function pintarLote() {
 }
 
 // ── Tomar número ──
+// Tipos de documento (12 oct 2026): cada tipo muestra sus campos (data-solo en el
+// HTML). Comisión: un oficio POR PERSONA Y POR DÍA, cada uno con su número, aunque
+// sea el mismo destino; la tanda es personas × días (hasta MAX_TANDA). Difusión y
+// Toluca/CoEEE: un solo número por asunto. Un número que no salió se reasigna con
+// este mismo formulario.
+const TIPO_COMISION = 'Comisión';
+const TIPO_DIFUSION = 'Difusión de información';
+const TIPO_SUBE = 'Oficio a Toluca / CoEEE';
+const TIPO_OTRO = 'Otro documento';
+const DESTINO_POR_TIPO = {};
+DESTINO_POR_TIPO[TIPO_COMISION] = 'Comisión';
+DESTINO_POR_TIPO[TIPO_DIFUSION] = 'Sectores';
+DESTINO_POR_TIPO[TIPO_SUBE] = 'CoEEE';
+const MAX_TANDA = 20;
+const MAX_FILAS = 10;
+const CAMPOS_NUMERO = ['num-asunto', 'num-modalidad', 'num-resumen', 'num-destino', 'num-elabora', 'num-fecha', 'num-motivo'];
+let reasignando = null; // número de estado.numeros que se está reasignando
+let ultimoResultado = [];
+
+// ── Catálogo de destinos: CCT_DB (js/cct-db.js) + direcciones de escuelas ──
+// "CCT — Nombre" en un <datalist>: se busca por CCT o por nombre y se puede
+// escribir un lugar que no esté en el catálogo.
+const DESTINOS = {};
+(function () {
+  if (typeof CCT_DB === 'undefined') return;
+  const dl = $('destinos-catalogo');
+  CCT_DB.forEach(function (e) {
+    const etiqueta = e.cct + ' — ' + e.nombre;
+    DESTINOS[etiqueta] = e;
+    const o = el('option'); o.value = etiqueta; dl.appendChild(o);
+  });
+})();
+
+// Dirección para calcular el kilometraje (la de la escuela si la hay).
+function direccionDe(e) {
+  const d = typeof ESCUELAS_DIRECCIONES !== 'undefined' ? ESCUELAS_DIRECCIONES[e.cct] : null;
+  if (d) return [d.d, d.c, d.l + (e.municipio && e.municipio !== d.l ? ', ' + e.municipio : ''), 'Estado de México', 'C.P. ' + d.cp].filter(Boolean).join(', ');
+  return [e.nombre, e.municipio, 'Estado de México'].filter(Boolean).join(', ');
+}
+
+// Texto del "Lugar de destino" como va en el oficio de comisión (oficio real del 5 oct 2026):
+// Escuela Primaria "15 de Septiembre", Jornada Ampliada, con C.C.T. 15DPR3023D, de la Zona Escolar
+// No. 53, perteneciente al Sector Educativo XI, ubicada …, Colonia …, Municipio de … C.P. …, Estado de México.
+function destinoCompletoDe(e) {
+  const d = typeof ESCUELAS_DIRECCIONES !== 'undefined' ? ESCUELAS_DIRECCIONES[e.cct] : null;
+  const turno = d && d.t ? (/^(Matutino|Vespertino)$/i.test(d.t) ? 'Turno ' + d.t : d.t) : '';
+  const ubicacion = d
+    ? 'ubicada ' + d.d + ', Colonia ' + d.c + ', Municipio de ' + (e.municipio || d.l) + ' C.P. ' + d.cp
+    : (e.municipio ? 'Municipio de ' + e.municipio : '');
+  const partes = e.tipo === 'escuela'
+    ? ['Escuela Primaria “' + e.nombre + '”', turno, 'con C.C.T. ' + e.cct,
+      e.zona ? 'de la Zona Escolar No. ' + e.zona : '', 'perteneciente al Sector Educativo ' + e.sector, ubicacion]
+    : [e.nombre, 'con C.C.T. ' + e.cct, e.tipo === 'supervision' ? 'perteneciente al Sector Educativo ' + e.sector : '', ubicacion];
+  return partes.filter(Boolean).join(', ') + ', Estado de México.';
+}
+
+function destinoDeTexto(texto) {
+  const t = String(texto || '').trim();
+  const e = DESTINOS[t];
+  if (e) return { lugar: e.nombre + ' (' + e.cct + ')', cct: e.cct, direccion: direccionDe(e), destinoCompleto: destinoCompletoDe(e), catalogo: true };
+  return { lugar: t, cct: '', direccion: t ? t + ', Estado de México' : '', destinoCompleto: t, catalogo: false };
+}
+
+function tipoActual() {
+  const r = document.querySelector('input[name="num-tipo"]:checked');
+  return r ? r.value : TIPO_OTRO;
+}
+
+function ponerTipo(tipo) {
+  document.querySelectorAll('input[name="num-tipo"]').forEach(function (r) { r.checked = r.value === tipo; });
+  if (!document.querySelector('input[name="num-tipo"]:checked')) ponerTipo(TIPO_OTRO);
+}
+
+function tieneOpcion(select, valor) {
+  return Array.prototype.some.call(select.options, function (o) { return o.value === valor; });
+}
+
+function aplicarTipo() {
+  const tipo = tipoActual();
+  document.querySelectorAll('#form-numero [data-solo]').forEach(function (n) {
+    n.classList.toggle('hidden', n.getAttribute('data-solo').split('|').indexOf(tipo) === -1);
+  });
+  const comision = tipo === TIPO_COMISION;
+  $('lbl-num-asunto').innerHTML = (comision ? 'Motivo de la comisión' : 'Asunto') + ' <span class="req">*</span>';
+  $('err-num-asunto').textContent = comision ? 'Escribe el motivo de la comisión.' : 'Escribe el asunto.';
+  $('num-asunto').placeholder = comision ? 'Ej. Mantenimiento preventivo al aula de medios' : 'Ej. CUANTRIX – Entrega de kit';
+  // "Dirigido a" se sugiere según el tipo, salvo que ya se haya elegido otra cosa a mano.
+  const dest = $('num-destino');
+  const sugeridos = Object.keys(DESTINO_POR_TIPO).map(function (k) { return DESTINO_POR_TIPO[k]; });
+  if (!dest.value || sugeridos.indexOf(dest.value) !== -1) {
+    const s = DESTINO_POR_TIPO[tipo] || '';
+    dest.value = tieneOpcion(dest, s) ? s : '';
+  }
+  CAMPOS_NUMERO.forEach(function (id) { if (id !== 'num-motivo') marcarError(id, false); });
+  renumerar();
+}
+
+document.querySelectorAll('input[name="num-tipo"]').forEach(function (r) {
+  r.addEventListener('change', function () { idEnvioNumero = null; aplicarTipo(); });
+});
+
+// Una sola fila de cada lista al responder un oficio o al reasignar (un solo número).
+function maxFilas() { return vinculo || reasignando ? 1 : MAX_FILAS; }
+
+function errorEnCampo(input, visible) {
+  input.classList.toggle('campo-error', visible);
+  const msg = input.parentNode.querySelector('.error-msg');
+  if (msg) msg.classList.toggle('visible', visible);
+}
+
+function campo(etiqueta, input, error) {
+  const c = el('div', 'campo');
+  c.appendChild(el('label', null, etiqueta));
+  input.setAttribute('aria-label', etiqueta);
+  c.appendChild(input);
+  if (error) c.appendChild(el('div', 'error-msg', error));
+  input.addEventListener(input.type === 'date' ? 'change' : 'input', function () { errorEnCampo(input, false); idEnvioNumero = null; });
+  return c;
+}
+
+function botonQuitar(fila) {
+  const b = el('button', 'link-btn f-quitar', 'quitar');
+  b.type = 'button';
+  b.addEventListener('click', function () { fila.remove(); idEnvioNumero = null; renumerar(); });
+  return b;
+}
+
+// ── Personas comisionadas: del catálogo de personal (Config) u "Otra persona" ──
+// La página no recibe el RFC del catálogo: lo pone Apps Script al tomar el número.
+const OTRA_PERSONA = '__otra__';
+
+function personalCatalogo() { return (estado.config && estado.config.personal) || []; }
+
+function agregarPersona(datos) {
+  const lista = $('lista-personas');
+  if (lista.children.length >= maxFilas()) return null;
+  datos = datos || {};
+  const fila = el('div', 'persona');
+  const cab = el('div', 'persona-cab');
+  cab.appendChild(el('span', 'persona-n'));
+  const sel = el('select', 'p-sel');
+  const vacia = el('option', null, 'Elige a la persona…'); vacia.value = ''; sel.appendChild(vacia);
+  personalCatalogo().forEach(function (p) { const o = el('option', null, p.nombre); o.value = p.nombre; sel.appendChild(o); });
+  const otra = el('option', null, 'Otra persona…'); otra.value = OTRA_PERSONA; sel.appendChild(otra);
+  cab.appendChild(sel);
+  cab.appendChild(botonQuitar(fila));
+  fila.appendChild(cab);
+  const err = el('div', 'error-msg p-err-nombre', 'Elige a la persona.');
+  fila.appendChild(err);
+
+  const extra = el('div', 'persona-extra hidden');
+  const nombre = el('input', 'p-nombre'); nombre.type = 'text'; nombre.placeholder = 'Ej. Mtra. Ana López Ruiz';
+  const rfc = el('input', 'p-rfc'); rfc.type = 'text'; rfc.maxLength = 13; rfc.placeholder = '13 caracteres';
+  const cargo = el('input', 'p-cargo'); cargo.type = 'text'; cargo.placeholder = 'Ej. Asesor técnico pedagógico';
+  extra.appendChild(campo('Grado y nombre completo', nombre, 'Escribe el nombre.'));
+  const g = el('div', 'fila-2');
+  g.appendChild(campo('RFC', rfc, 'El RFC lleva 12 o 13 caracteres.'));
+  g.appendChild(campo('Cargo', cargo, 'Escribe el cargo.'));
+  extra.appendChild(g);
+  fila.appendChild(extra);
+
+  const enCatalogo = personalCatalogo().some(function (p) { return p.nombre === datos.persona; });
+  if (datos.persona && enCatalogo) sel.value = datos.persona;
+  else if (datos.persona) {
+    sel.value = OTRA_PERSONA; nombre.value = datos.persona; cargo.value = datos.cargo || '';
+    rfc.placeholder = 'Vacío = conservar el RFC registrado';
+  }
+  const mostrarOtra = function () { extra.classList.toggle('hidden', sel.value !== OTRA_PERSONA); };
+  sel.addEventListener('change', function () {
+    sel.classList.remove('campo-error'); err.classList.remove('visible'); mostrarOtra(); idEnvioNumero = null;
+    if (sel.value === OTRA_PERSONA) nombre.focus();
+  });
+  mostrarOtra();
+  lista.appendChild(fila);
+  renumerar();
+  return sel;
+}
+
+// {persona, rfc, cargo} de un renglón, marcando los errores; null si falta algo.
+function leerPersona(f) {
+  const sel = f.querySelector('.p-sel');
+  const err = f.querySelector('.p-err-nombre');
+  sel.classList.toggle('campo-error', !sel.value);
+  err.classList.toggle('visible', !sel.value);
+  if (!sel.value) return null;
+  if (sel.value !== OTRA_PERSONA) {
+    const p = personalCatalogo().find(function (x) { return x.nombre === sel.value; }) || {};
+    return { persona: sel.value, rfc: '', cargo: p.cargo || '' };
+  }
+  const nombre = f.querySelector('.p-nombre');
+  const rfc = f.querySelector('.p-rfc');
+  const cargo = f.querySelector('.p-cargo');
+  rfc.value = rfc.value.trim().toUpperCase();
+  // Al reasignar, la misma persona puede dejar el RFC vacío: se conserva el que ya tenía.
+  const mismaPersona = reasignando && nombre.value.trim() === reasignando.persona;
+  const okRfc = /^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/.test(rfc.value) || (mismaPersona && !rfc.value);
+  errorEnCampo(nombre, !nombre.value.trim());
+  errorEnCampo(rfc, !okRfc);
+  errorEnCampo(cargo, !cargo.value.trim());
+  if (!nombre.value.trim() || !okRfc || !cargo.value.trim()) return null;
+  return { persona: nombre.value.trim(), rfc: rfc.value, cargo: cargo.value.trim() };
+}
+
+// ── Días de la comisión (cada uno con su destino) ──
+function sumarDia(iso) {
+  const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return '';
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]) + 1, 12);
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function agregarDia(datos) {
+  const lista = $('lista-dias');
+  if (lista.children.length >= maxFilas()) return null;
+  // Un día nuevo copia el destino y el horario del anterior, con la fecha siguiente.
+  const previo = lista.lastElementChild;
+  datos = datos || (previo ? {
+    fecha: sumarDia(previo.querySelector('.d-fecha').value), destino: previo.querySelector('.d-destino').value,
+    horario: previo.querySelector('.d-horario').value
+  } : {});
+  const fila = el('div', 'dia');
+  const cab = el('div', 'persona-cab');
+  cab.appendChild(el('span', 'persona-n'));
+  cab.appendChild(el('span', 'd-titulo'));
+  cab.lastChild.style.flex = '1';
+  cab.appendChild(botonQuitar(fila));
+  fila.appendChild(cab);
+  const fecha = el('input', 'd-fecha'); fecha.type = 'date'; fecha.value = datos.fecha || '';
+  const destino = el('input', 'd-destino'); destino.type = 'text'; destino.setAttribute('list', 'destinos-catalogo');
+  destino.placeholder = 'CCT o nombre de la escuela, o el lugar'; destino.value = datos.destino || '';
+  const horario = el('input', 'd-horario'); horario.type = 'text'; horario.placeholder = 'Ej. 9:00 a 14:00'; horario.value = datos.horario || '';
+  const g = el('div', 'fila-2');
+  g.appendChild(campo('Fecha', fecha, 'Indica la fecha.'));
+  g.appendChild(campo('Horario (opcional)', horario));
+  fila.appendChild(g);
+  const cDest = campo('Destino', destino, 'Escribe el destino.');
+  const info = el('div', 'd-info');
+  cDest.appendChild(info);
+  fila.appendChild(cDest);
+  const pintarInfo = function () {
+    const d = destinoDeTexto(destino.value);
+    info.className = 'd-info' + (d.catalogo ? '' : ' manual');
+    info.textContent = !destino.value.trim() ? '' : d.catalogo
+      ? 'En el oficio: ' + d.destinoCompleto
+      : 'No está en el catálogo: el oficio y el kilometraje usan lo que escribas (unidad administrativa y domicilio completo).';
+  };
+  destino.addEventListener('input', pintarInfo);
+  pintarInfo();
+  lista.appendChild(fila);
+  renumerar();
+  return fecha;
+}
+
+function renumerar() {
+  const personas = $('lista-personas').children;
+  const dias = $('lista-dias').children;
+  [personas, dias].forEach(function (filas) {
+    Array.prototype.forEach.call(filas, function (f, k) {
+      f.querySelector('.persona-n').textContent = (k + 1) + '.';
+      f.querySelector('.f-quitar').classList.toggle('hidden', filas.length < 2);
+    });
+  });
+  Array.prototype.forEach.call(personas, function (f, k) { f.querySelector('.p-sel').setAttribute('aria-label', 'Persona ' + (k + 1)); });
+  Array.prototype.forEach.call(dias, function (f, k) { f.querySelector('.d-titulo').textContent = 'Día ' + (k + 1); });
+  $('btn-agregar-persona').classList.toggle('hidden', personas.length >= maxFilas());
+  $('btn-agregar-dia').classList.toggle('hidden', dias.length >= maxFilas());
+  const comision = tipoActual() === TIPO_COMISION;
+  const n = cuantosNumeros();
+  $('total-tanda').classList.toggle('hidden', !comision || reasignando || n < 2);
+  $('total-tanda').textContent = personas.length + (personas.length === 1 ? ' persona' : ' personas') + ' × ' +
+    dias.length + (dias.length === 1 ? ' día' : ' días') + ' = ' + n + ' oficios, cada uno con su número' +
+    (n > MAX_TANDA ? '. Máximo ' + MAX_TANDA + ' por tanda: divídela en dos.' : '.');
+  $('btn-numero').textContent = textoBotonNumero();
+}
+
+function cuantosNumeros() {
+  if (tipoActual() !== TIPO_COMISION) return 1;
+  return Math.max(1, $('lista-personas').children.length) * Math.max(1, $('lista-dias').children.length);
+}
+
+function textoBotonNumero() {
+  if (reasignando) return 'Guardar reasignación';
+  const n = cuantosNumeros();
+  return n > 1 ? 'Tomar ' + n + ' números' : 'Tomar número';
+}
+
+$('btn-agregar-persona').addEventListener('click', function () {
+  idEnvioNumero = null;
+  const input = agregarPersona(null);
+  if (input) input.focus();
+});
+$('btn-agregar-dia').addEventListener('click', function () {
+  idEnvioNumero = null;
+  const input = agregarDia(null);
+  if (input) input.focus();
+});
+
+// Lee y valida el formulario; cada campo marca su propio error. null si falta algo.
+// En comisión devuelve un documento por persona y por día (ordenados por persona).
+function leerFormularioNumero() {
+  let ok = true;
+  const req = function (id, valido) { marcarError(id, !valido); if (!valido) ok = false; };
+  const val = function (id) { return $(id).value.trim(); };
+  const tipo = tipoActual();
+  const base = { tipo: tipo, asunto: val('num-asunto'), destino: $('num-destino').value };
+  req('num-asunto', !!base.asunto);
+  req('num-destino', !!base.destino);
+  req('num-elabora', !!$('num-elabora').value);
+  req('num-fecha', !!$('num-fecha').value);
+  if (reasignando) req('num-motivo', !!val('num-motivo'));
+  let docs = [base];
+
+  if (tipo === TIPO_COMISION) {
+    base.modalidad = $('num-modalidad').value;
+    req('num-modalidad', !!base.modalidad);
+    const personas = Array.prototype.map.call($('lista-personas').children, function (f) {
+      const p = leerPersona(f);
+      if (!p) ok = false;
+      return p || {};
+    });
+    const dias = Array.prototype.map.call($('lista-dias').children, function (f) {
+      const fecha = f.querySelector('.d-fecha');
+      const destino = f.querySelector('.d-destino');
+      errorEnCampo(fecha, !fecha.value);
+      errorEnCampo(destino, !destino.value.trim());
+      if (!fecha.value || !destino.value.trim()) ok = false;
+      return Object.assign({ fechaEvento: fecha.value, horario: f.querySelector('.d-horario').value.trim() }, destinoDeTexto(destino.value));
+    });
+    if (personas.length * dias.length > MAX_TANDA) ok = false;
+    docs = [];
+    personas.forEach(function (p) {
+      dias.forEach(function (d) {
+        docs.push(Object.assign({}, base, p, {
+          fechaEvento: d.fechaEvento, horario: d.horario, lugar: d.lugar, cct: d.cct, direccion: d.direccion,
+          destinoCompleto: d.destinoCompleto
+        }));
+      });
+    });
+  } else if (tipo === TIPO_DIFUSION || tipo === TIPO_SUBE) {
+    base.resumen = val('num-resumen');
+    req('num-resumen', !!base.resumen);
+    if (tipo === TIPO_DIFUSION) base.fechaLimite = $('num-fecha-limite').value;
+  }
+  return ok ? docs : null;
+}
+
+function llenarModalidades(seleccion) {
+  const lista = (estado.config.modalidades && estado.config.modalidades.length) ? estado.config.modalidades.slice() : ['B3 Transporte particular sin gasolina'];
+  if (seleccion && lista.indexOf(seleccion) === -1) lista.push(seleccion);
+  llenarSelect('num-modalidad', lista, 'Selecciona…');
+  // La de casi siempre: B3, o la primera de la lista.
+  const b3 = lista.find(function (m) { return /^B3\b/i.test(m); });
+  $('num-modalidad').value = seleccion || b3 || lista[0];
+}
+
 function reiniciarNumero() {
   $('form-numero').reset();
+  reasignando = null;
+  vinculo = null;
+  $('vinculo-box').classList.remove('visible');
+  $('reasignar-box').classList.remove('visible');
+  $('campo-motivo-reasignar').classList.add('hidden');
   $('num-elabora').value = leerLS(LS_QUIEN);
   $('num-fecha').value = hoyISO();
-  ['num-asunto', 'num-destino', 'num-elabora', 'num-fecha'].forEach(function (id) { marcarError(id, false); });
+  llenarModalidades('');
+  $('lista-personas').innerHTML = '';
+  $('lista-dias').innerHTML = '';
+  agregarPersona(null);
+  agregarDia({ fecha: hoyISO() });
+  ponerTipo(TIPO_OTRO);
+  aplicarTipo();
+  CAMPOS_NUMERO.forEach(function (id) { marcarError(id, false); });
   $('numero-error').classList.remove('visible');
-  ponerVinculo(null);
   idEnvioNumero = null;
   $('form-numero').classList.remove('hidden');
   $('numero-ok').classList.add('hidden');
+}
+
+function recortarListas() {
+  ['lista-personas', 'lista-dias'].forEach(function (id) {
+    const lista = $(id);
+    while (lista.children.length > maxFilas()) lista.lastChild.remove();
+  });
+  renumerar();
 }
 
 function ponerVinculo(oficio) {
   vinculo = oficio ? { id: oficio.id, folioOP: oficio.folioOP } : null;
   $('vinculo-box').classList.toggle('visible', !!oficio);
   if (oficio) $('vinculo-txt').textContent = oficio.id + ' (folio ' + oficio.folioOP + ', ' + oficio.remitente + ')';
+  recortarListas(); // para responder un oficio se toma un solo número
 }
 $('btn-quitar-vinculo').addEventListener('click', function () { ponerVinculo(null); });
+$('btn-quitar-reasignar').addEventListener('click', reiniciarNumero);
 
 function responderOficio(oficio) {
   reiniciarNumero();
@@ -711,80 +1176,228 @@ function responderOficio(oficio) {
   $('num-asunto').focus();
 }
 
-['num-asunto', 'num-destino', 'num-elabora', 'num-fecha'].forEach(function (id) {
-  $(id).addEventListener(id === 'num-asunto' ? 'input' : 'change', function () { marcarError(id, false); });
+// Reasignar: el mismo formulario, precargado con lo que dice hoy el número.
+function reasignarNumero(n) {
+  reiniciarNumero();
+  reasignando = n;
+  $('lista-personas').innerHTML = '';
+  $('lista-dias').innerHTML = '';
+  agregarPersona({ persona: n.persona || '', cargo: n.cargo || '' });
+  // El destino vuelve al texto del catálogo ("CCT — Nombre") si se capturó de ahí.
+  const delCatalogo = n.cct && Object.keys(DESTINOS).find(function (k) { return DESTINOS[k].cct === n.cct; });
+  agregarDia({ fecha: n.fechaEvento || '', destino: delCatalogo || n.lugar || '', horario: n.horario || '' });
+  ponerTipo(n.tipo || TIPO_OTRO);
+  aplicarTipo();
+  $('num-asunto').value = n.asunto || '';
+  if (n.destino && !tieneOpcion($('num-destino'), n.destino)) {
+    const o = el('option', null, n.destino); o.value = n.destino; $('num-destino').appendChild(o);
+  }
+  $('num-destino').value = n.destino || '';
+  if (n.modalidad) llenarModalidades(n.modalidad);
+  $('num-resumen').value = n.resumen || '';
+  $('num-fecha-limite').value = n.fechaLimite || '';
+  if (n.elabora && tieneOpcion($('num-elabora'), n.elabora)) $('num-elabora').value = n.elabora;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(n.elaboracion || '')) $('num-fecha').value = n.elaboracion;
+  $('reasignar-txt').textContent = n.consecutivo + ' (' + n.numero + ')';
+  $('reasignar-aviso').textContent = n.vinculo
+    ? 'Este número respondía el oficio ' + n.vinculo + ': si era su única respuesta, ese oficio volverá a quedar pendiente.'
+    : '';
+  $('reasignar-box').classList.add('visible');
+  $('campo-motivo-reasignar').classList.remove('hidden');
+  renumerar();
+  abrirTab('numero');
+  window.scrollTo(0, 0);
+  $('num-motivo').focus();
+}
+
+CAMPOS_NUMERO.forEach(function (id) {
+  const tag = $(id).tagName;
+  $(id).addEventListener(tag === 'SELECT' || $(id).type === 'date' ? 'change' : 'input', function () { marcarError(id, false); });
 });
+// Si cambian los datos, el siguiente envío es otro documento (no un reintento).
+$('form-numero').addEventListener('input', function () { idEnvioNumero = null; });
 
 $('form-numero').addEventListener('submit', async function (ev) {
   ev.preventDefault();
-  let ok = true;
-  ['num-asunto', 'num-destino', 'num-elabora', 'num-fecha'].forEach(function (id) {
-    const falta = !$(id).value.trim();
-    marcarError(id, falta);
-    if (falta) ok = false;
-  });
-  if (!ok) return;
+  const docs = leerFormularioNumero();
+  if (!docs) return;
   $('numero-error').classList.remove('visible');
-  // El mismo idEnvio se conserva en reintentos: si el primero sí llegó, no se toma otro número.
+  if (reasignando) { await enviarReasignacion(docs[0]); return; }
+  // El mismo idEnvio se conserva en reintentos: si el primero sí llegó, no se toman otros números.
   if (!idEnvioNumero) idEnvioNumero = nuevoIdEnvio();
-  const parar = contadorEnBoton($('btn-numero'), 'Tomando número…');
+  const parar = contadorEnBoton($('btn-numero'), docs.length > 1 ? 'Tomando ' + docs.length + ' números…' : 'Tomando número…');
   try {
     const d = await post({
       accion: 'tomarNumero', idEnvio: idEnvioNumero, elabora: $('num-elabora').value,
-      asunto: $('num-asunto').value.trim(), destino: $('num-destino').value,
-      fechaElaboracion: $('num-fecha').value, vinculo: vinculo ? vinculo.id : ''
+      fechaElaboracion: $('num-fecha').value, vinculo: vinculo ? vinculo.id : '', documentos: docs
     });
     if (d.status === 'ok') {
+      const numeros = d.numeros || [{ numero: d.numero, consecutivo: d.consecutivo, persona: '' }];
       estado.lote = d.lote;
       if (!d.duplicado) {
-        estado.numeros.unshift({
-          numero: d.numero, consecutivo: d.consecutivo, tomado: hoyISO(), elabora: $('num-elabora').value,
-          asunto: $('num-asunto').value.trim(), destino: $('num-destino').value, estatus: 'Asignado',
-          vinculo: vinculo ? vinculo.id : ''
+        const tanda = numeros.length > 1 ? numeros[0].consecutivo + '-' + numeros[numeros.length - 1].consecutivo : '';
+        numeros.forEach(function (n, k) {
+          estado.numeros.unshift(Object.assign({}, docs[k] || docs[0], {
+            numero: n.numero, consecutivo: n.consecutivo, tomado: hoyISO(), elabora: $('num-elabora').value,
+            elaboracion: $('num-fecha').value, estatus: 'Asignado', vinculo: vinculo ? vinculo.id : '',
+            tanda: tanda, reasignado: false, km: n.km == null ? '' : n.km
+          }));
         });
-        if (vinculo) anotarSalidaLocal(vinculo.id, d.numero);
+        if (vinculo) anotarSalidaLocal(vinculo.id, numeros[0].numero);
       }
-      $('ok-consecutivo').textContent = d.consecutivo;
-      $('ok-numero').textContent = d.numero;
-      $('ok-numero-detalle').textContent = vinculo ? 'El oficio ' + vinculo.id + ' quedó atendido con este número.' : '';
+      numeros.forEach(function (n, k) { n.tipo = (docs[k] || docs[0]).tipo; });
+      mostrarResultado(numeros, numeros.length > 1 ? 'Tus ' + numeros.length + ' números de oficio son' : 'Tu número de oficio es',
+        vinculo ? 'El oficio ' + vinculo.id + ' quedó atendido con este número.' : '');
       idEnvioNumero = null;
-      $('form-numero').classList.add('hidden');
-      $('numero-ok').classList.remove('hidden');
-      $('btn-copiar').textContent = 'Copiar número completo';
       pintarLote();
       pintarNumeros();
       pintarOficios();
     } else if (d.status === 'sin_lote') {
       idEnvioNumero = null;
-      estado.lote = { anio: d.anio, siguiente: null, quedan: 0, lotes: [] };
+      if (d.quedan > 0) {
+        estado.lote.quedan = d.quedan;
+        mostrarError('numero-error', 'Solo quedan ' + d.quedan + ' números en los lotes de ' + d.anio + ' y pediste ' +
+          d.pedidos + '. No se tomó ninguno: quita personas o días, o pide un lote nuevo a la Subdirección.');
+      } else {
+        estado.lote = { anio: d.anio, siguiente: null, quedan: 0, lotes: [] };
+        mostrarError('numero-error', 'Ya no quedan números en los lotes de ' + d.anio +
+          '. Pide un lote nuevo a la Subdirección; Jorge lo captura en el Sheet (OTDE Oficios → Agregar lote).');
+      }
       pintarLote();
-      mostrarError('numero-error', 'Ya no quedan números en los lotes de ' + d.anio +
-        '. Pide un lote nuevo a la Subdirección; Jorge lo captura en el Sheet (OTDE Oficios → Agregar lote).');
     } else {
       mostrarError('numero-error', errorDeEstado(d));
     }
   } catch (e) {
     mostrarError('numero-error', mensajeDeFallo(e, true));
   }
-  parar('Tomar número');
+  parar(textoBotonNumero());
 });
 
-$('btn-copiar').addEventListener('click', async function () {
-  const texto = $('ok-numero').textContent;
+async function enviarReasignacion(doc) {
+  const n = reasignando;
+  const parar = contadorEnBoton($('btn-numero'), 'Guardando…');
+  try {
+    const d = await post(Object.assign({}, doc, {
+      accion: 'reasignarNumero', numero: n.numero, motivo: $('num-motivo').value.trim(), quien: leerLS(LS_QUIEN),
+      elabora: $('num-elabora').value, fechaElaboracion: $('num-fecha').value
+    }));
+    if (d.status !== 'ok') throw new Error(errorDeEstado(d));
+    const i = estado.numeros.findIndex(function (x) { return x.numero === n.numero; });
+    if (i !== -1 && d.registro) estado.numeros[i] = d.registro;
+    const r = d.registro || {};
+    mostrarResultado([{ numero: n.numero, consecutivo: n.consecutivo, persona: doc.persona || '', fechaEvento: doc.fechaEvento || '', lugar: doc.lugar || '', km: r.km, tipo: doc.tipo }],
+      'Número reasignado',
+      d.oficioReabierto ? 'El oficio ' + d.oficioReabierto + ' volvió a quedar pendiente.'
+        : 'Lo que decía antes quedó guardado en el historial del Sheet.');
+    reasignando = null;
+    pintarNumeros();
+    if (n.vinculo) refrescarDatos();
+  } catch (e) {
+    mostrarError('numero-error', mensajeDeFallo(e));
+  }
+  parar(textoBotonNumero());
+}
+
+// "Persona · 20/10/2026 · Escuela (CCT) · 34.2 km i/v" para la tarjeta de resultado y la lista.
+function detalleComision(n) {
+  return [n.persona, n.fechaEvento ? fechaCorta(n.fechaEvento) : '', n.lugar,
+    n.km !== '' && n.km != null ? n.km + ' km ida y vuelta' : ''].filter(Boolean).join(' · ');
+}
+
+function mostrarResultado(numeros, titulo, detalle) {
+  ultimoResultado = numeros;
+  $('ok-titulo').textContent = titulo;
+  $('ok-numero-detalle').textContent = detalle;
+  const lista = $('ok-lista');
+  lista.innerHTML = '';
+  if (numeros.length === 1) {
+    lista.appendChild(el('div', 'consecutivo-final', String(numeros[0].consecutivo)));
+    lista.appendChild(el('div', 'numero-final', numeros[0].numero));
+    if (detalleComision(numeros[0])) lista.appendChild(el('p', null, detalleComision(numeros[0])));
+  } else {
+    numeros.forEach(function (n) {
+      const fila = el('div', 'ok-fila');
+      fila.appendChild(el('span', 'ok-cons', String(n.consecutivo)));
+      const datos = el('div', 'ok-datos');
+      if (n.persona) datos.appendChild(el('strong', null, n.persona));
+      const sub = detalleComision(Object.assign({}, n, { persona: '' }));
+      if (sub) datos.appendChild(el('div', null, sub));
+      datos.appendChild(el('div', 'numero-mini', n.numero));
+      fila.appendChild(datos);
+      const b = el('button', 'btn-mini', 'Copiar');
+      b.type = 'button';
+      b.addEventListener('click', function () { copiarTexto(n.numero, b); });
+      fila.appendChild(b);
+      lista.appendChild(fila);
+    });
+  }
+  $('btn-copiar').textContent = numeros.length > 1 ? 'Copiar todos' : 'Copiar número completo';
+  const comision = numeros.every(function (n) { return n.tipo === TIPO_COMISION; });
+  $('ok-generar').classList.toggle('hidden', !comision);
+  $('generar-ok').classList.add('hidden');
+  $('generar-error').classList.remove('visible');
+  $('btn-generar').disabled = false;
+  $('btn-generar').textContent = numeros.length > 1 ? 'Generar los ' + numeros.length + ' oficios de comisión (Word)' : 'Generar el oficio de comisión (Word)';
+  $('form-numero').classList.add('hidden');
+  $('numero-ok').classList.remove('hidden');
+  window.scrollTo(0, 0);
+}
+
+async function copiarTexto(texto, boton) {
   try {
     await navigator.clipboard.writeText(texto);
-    this.textContent = 'Copiado';
+    boton.textContent = 'Copiado';
   } catch (e) {
-    // Sin API de portapapeles (navegador viejo o sin https): seleccionar y copiar a la antigua.
-    const r = document.createRange();
-    r.selectNodeContents($('ok-numero'));
-    const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+    // Sin API de portapapeles (navegador viejo o sin https): copiar a la antigua.
+    const t = el('textarea');
+    t.value = texto;
+    t.setAttribute('readonly', '');
+    t.style.position = 'fixed'; t.style.opacity = '0';
+    document.body.appendChild(t);
+    t.select();
     let copiado = false;
     try { copiado = document.execCommand('copy'); } catch (err) {}
-    this.textContent = copiado ? 'Copiado' : 'Ya está seleccionado: cópialo';
+    t.remove();
+    boton.textContent = copiado ? 'Copiado' : 'No se pudo copiar';
   }
+}
+
+$('btn-copiar').addEventListener('click', function () {
+  const texto = ultimoResultado.length === 1 ? ultimoResultado[0].numero : ultimoResultado.map(function (n) {
+    return [n.consecutivo, n.numero, n.persona, n.fechaEvento ? fechaCorta(n.fechaEvento) : ''].filter(Boolean).join(' · ');
+  }).join('\n');
+  copiarTexto(texto, this);
 });
 $('btn-otro-numero').addEventListener('click', reiniciarNumero);
+
+// Word de las comisiones: lo arma Apps Script con la plantilla y Google Maps (puede tardar).
+async function generarOficios(numeros, boton, cajaOk, cajaError) {
+  const etiqueta = boton.textContent;
+  cajaError.classList.remove('visible');
+  const parar = contadorEnBoton(boton, numeros.length > 1 ? 'Armando ' + numeros.length + ' oficios…' : 'Armando el oficio…');
+  try {
+    const d = await post({ accion: 'generarComision', numeros: numeros });
+    if (d.status !== 'ok') throw new Error(errorDeEstado(d));
+    cajaOk.innerHTML = '';
+    cajaOk.appendChild(el('div', null, 'Listo: ' + d.oficios + (d.oficios === 1 ? ' oficio' : ' oficios') +
+      (d.mapas ? ' y ' + d.mapas + (d.mapas === 1 ? ' mapa' : ' mapas') : '') + '.'));
+    const a = el('a', null, 'Descargar ' + d.nombre);
+    a.href = d.descarga; a.target = '_blank'; a.rel = 'noopener';
+    cajaOk.appendChild(a);
+    cajaOk.appendChild(el('div', 'hint', 'También queda en Drive, en la carpeta "Oficios de comisión OTDE".'));
+    cajaOk.classList.remove('hidden');
+    estado.numeros.forEach(function (x) { if (numeros.indexOf(x.numero) !== -1) x.oficioGenerado = d.url; });
+    parar('Volver a generar');
+  } catch (e) {
+    cajaError.textContent = mensajeDeFallo(e);
+    cajaError.classList.add('visible');
+    parar(etiqueta);
+  }
+}
+
+$('btn-generar').addEventListener('click', function () {
+  generarOficios(ultimoResultado.map(function (n) { return n.numero; }), this, $('generar-ok'), $('generar-error'));
+});
 
 function pintarNumeros() {
   const lista = $('lista-numeros');
@@ -795,12 +1408,31 @@ function pintarNumeros() {
     const tit = el('div', 'tit');
     tit.appendChild(el('span', 'num', String(n.consecutivo)));
     if (n.estatus === 'Cancelado') tit.appendChild(el('span', 'badge Cancelado', 'Cancelado'));
-    if (n.destino) tit.appendChild(el('span', 'badge dir', n.destino));
+    if (n.tipo && n.tipo !== TIPO_OTRO) tit.appendChild(el('span', 'badge tipo', n.tipo));
+    if (n.destino && n.destino !== n.tipo) tit.appendChild(el('span', 'badge dir', n.destino));
+    if (n.reasignado) tit.appendChild(el('span', 'badge reasignado', 'Reasignado'));
     item.appendChild(tit);
     item.appendChild(el('div', 'txt', n.asunto));
-    item.appendChild(el('div', 'meta', n.elabora + ' · ' + fechaCorta(n.tomado) + (n.vinculo ? ' · responde ' + n.vinculo : '')));
+    const com = n.tipo === TIPO_COMISION ? detalleComision(n) : '';
+    if (com) item.appendChild(el('div', 'txt', com));
+    item.appendChild(el('div', 'meta', n.elabora + ' · ' + fechaCorta(n.tomado) +
+      (n.tanda ? ' · tanda ' + n.tanda : '') + (n.vinculo ? ' · responde ' + n.vinculo : '')));
     if (n.estatus !== 'Cancelado') {
       const acc = el('div', 'acciones');
+      if (n.tipo === TIPO_COMISION) {
+        const g = el('button', 'btn-mini', n.oficioGenerado ? 'Volver a generar el oficio' : 'Generar oficio (Word)');
+        g.type = 'button';
+        const ok = el('div', 'generado hidden');
+        const er = el('div', 'envio-error');
+        g.addEventListener('click', function () { generarOficios([n.numero], g, ok, er); });
+        acc.appendChild(g);
+        item.appendChild(ok);
+        item.appendChild(er);
+      }
+      const r = el('button', 'btn-mini', 'Reasignar / corregir');
+      r.type = 'button';
+      r.addEventListener('click', function () { reasignarNumero(n); });
+      acc.appendChild(r);
       const b = el('button', 'btn-mini', 'Cancelar este número');
       b.type = 'button';
       b.addEventListener('click', function () { abrirCancelar(acc, n); });
