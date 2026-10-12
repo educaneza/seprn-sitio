@@ -814,6 +814,16 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     imprimirlas y llevarlas a Oficialía), se completan con "Anotar folio de Oficialía" y se cierran
     solas al quedar Resuelto/Rechazado (`docs/ARCHITECTURE.md §31`). Falta verlo con la primera
     solicitud real.
+    **Arranque real (12 oct 2026):** Jorge arrancó. `Lotes` con 4831 como último de papel; números
+    4832-4838 tomados; histórico importado (`OF-0001`-`0052`); la primera solicitud de la Oficina
+    Virtual ya entró sola (`OF-0053` = `OTDE-MAN-0031`, solo le falta el folio de Oficialía, que
+    es lo esperado); Nancy capturó 8 de papel (`OF-0054`-`0061`). Afinación, sin urgencia: cerrar
+    los 14 importados del ciclo 2026-2027 que siguen "Recibido"; corregir fechas de `OF-0041`
+    (recepción 1904) y `OF-0052` (elaboración 1900); revisar si `OF-0057` repite a `OF-0031`
+    (misma escuela y fecha de elaboración); fecha de recepción de `OF-0059`; "Forma de atención"
+    vacía en `OF-0060`; dar de alta en Mantenimiento/Asesorías los oficios de papel para que
+    tengan folio y se cierren solos; escanear los PDF; ligar números a su oficio con "para
+    responder". Jorge pidió **simplificar**: el flujo le resultó confuso el primer día.
     **Siguiente** (Jorge elige): recordatorios de eventos (el dolor de origen), 2C (redacción del
     oficio de salida con plantilla) o 2E (archivo digital). Para el 2C
     falta un oficio de salida con membrete en Word (ya está `MACHOTE.docx` en `docs/insumos/`).
@@ -839,6 +849,12 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     cursos grandes.
     (d) Opcional: página "Mi inscripción" con liga firmada por folio, para que un cambio de liga
     u hora llegue aunque el `.ics` ya se haya descargado, y para subir la constancia desde ahí.
+    (c2) **12 oct 2026:** `003` ya tiene sus 5 sesiones en `Fechas_sesion` y los autogestivos
+    agendan avances / "Vas a la mitad" (ver `docs/ARCHITECTURE.md §12`). Ligas listas para
+    compartir: `?calendario=ACF-2627-001`, `-002` y `-003`. A `001` le falta `Liga_convocatoria`
+    (el evento llega sin enlace de acceso). La nota de ayuda de `Fechas_sesion` en
+    `formacion-docente.gs` (`'Opcional. Días de sesión…'`) aún no menciona los avances; ajustarla
+    en el próximo redespliegue.
     (e) Opcional: aviso de 30 min por correo para cada sesión (hoy solo la primera; las demás las
     avisa el calendario).
     (f) **Recordatorio de constancia en el calendario** (plan del 2 oct 2026, sin código aún,

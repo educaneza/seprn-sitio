@@ -15,6 +15,22 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-10-12 (cont.) · Revisión de sistemas, calendario de autogestivos y arranque de Oficios
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-12 |
+| **Sesión** | Jorge pidió revisar sistemas y automatizaciones (sanos / requieren atención / pueden mejorar). Derivó en el calendario de Formación Docente y en revisar el arranque de Oficios. |
+| **Revisión de sistemas** | Solo lectura: git = `origin/main`, deploys en `success`, 518 MB publicados. GET con folio inventado a cada backend: Mantenimiento, Asesorías, Soporte, Correo y Ceremonias responden `no_encontrado`; Estrategias, Bitácora y Oficios `status: ok`; Formación Docente con catálogo vivo (3 vigentes en "cerrada", `ACF-2627-001` ya con `Fecha_fin` 21/10). **`conferencia-ia.gs` responde 403**: `asistencia.html` (evento jun 2026, solo enlazada desde `charla-ia.html`) apunta a un backend muerto. No se revisaron activadores de Apps Script. |
+| **Ligas de calendario** | Mensajes de WhatsApp para `?calendario=ACF-2627-001`, `-002` y `-003`. Antes de compartir, Jorge llenó `Fechas_sesion` de `003` (5 sesiones, 15:00), verificado contra el `doGet` real. `001` sigue sin `Liga_convocatoria`. |
+| **Calendario de autogestivos** | `formacion-docente.html`: cursos sin `Hora_inicio` pasan por `eventosSinHora()`: "Inicia", `Fechas_sesion` como "Avance N de M", o "Vas a la mitad" (`diaMitadIso()`, cursos de 14+ días) y "Último día". Probado en Chromium headless con el catálogo real interceptado: `002` = inicia 5 oct, mitad 19 oct, último día 3 nov (`.ics` correcto); `001`/`003` sin cambios. Publicado (`ecfc722`, run `success`, confirmado con `curl`). |
+| **Arranque de Oficios** | Jorge ya arrancó. Leída la hoja "Control de oficios OTDE" (solo lectura, vista `gviz` HTML): ver detalle y lista de afinaciones en `docs/ROADMAP.md` ítem 27. Un primer intento con `out:csv` pudo haber descargado un `data.csv` en Descargas del usuario. Jorge dijo sentirse confundido con el flujo; se le explicó en simple (3 puertas de entrada, 4 formas de cierre, `OF-0053` solo necesita su folio de Oficialía). |
+| **Pendiente** | Oficios: **simplificar / dar claridad** (Jorge lo pidió) y, si acepta, lista de los 14 importados para cerrarlos de una vez. Mandar ligas de calendario antes del miércoles 14 a las 15:00 y probar en iPhone/Android. Revisar activadores de Apps Script en Chrome. Decidir `asistencia.html`. Siguiente código: constancia en el calendario (ROADMAP 28f/28h). |
+| **Documentación actualizada** | Este checkpoint, `docs/ARCHITECTURE.md §12`, `docs/ROADMAP.md` ítems 27 y 28, `CLAUDE.md` (Formación Docente, calendario). |
+| **Commits** | `ecfc722` (calendario de autogestivos) y el de este cierre. |
+
+---
+
 ## CHECKPOINT — 2026-10-12 · Skill `/open` y revisión de la cuota de correos de Formación Docente (6-7 oct)
 
 | | |
