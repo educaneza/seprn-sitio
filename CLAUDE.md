@@ -150,7 +150,7 @@ ya esté expandido).
 | `asistencia.html` | Check-in de asistencia (eventos) |
 | `reporte-visita.html` | Formulario de captura del técnico tras una visita de Mantenimiento — reemplaza el llenado a mano de "Reportes de visita" en el Sheet, ver `apps-script/mantenimiento.gs` abajo. Sin entrada en nav/footer, se comparte por link directo |
 | `bitacora.html` | Bitácora de actividades de OTDE (uso interno, Jorge y Nancy) — captura cada actividad una vez para armar el reporte mensual de Planeación. Protegida con clave de captura (`CLAVE_CAPTURA`), `noindex`, sin entrada en nav/footer. Backend `apps-script/bitacora.gs`; ver `docs/PLAN-OPERACION-INTERNA.md` Fase 1. **Desde el 8 oct 2026 también vive como pestaña "Actividad" de `oficios.html`** (`?embed=1`: sin encabezado, avisa su alto y eventos a la página contenedora por `postMessage`); sigue funcionando sola. `?oficio=OF-NNNN` precarga la actividad de un oficio y lo marca atendido al guardar (ver `docs/ARCHITECTURE.md §31`) |
-| `oficios.html` | **Oficina interna OTDE** (oct 2026, uso interno de Jorge, Nancy, Alejandro y Marcos) — página única con 3 pestañas: **Tomar número** (consecutivo compartido por lotes), **Oficios** (registrar los recibidos + lista que abre en pendientes + "Marcar como atendido") y **Actividad** (la bitácora integrada, `bitacora.html?embed=1`, solo Jorge y Nancy). Una sola entrada con clave (`CLAVE_CAPTURA`), `noindex`, sin entrada en nav/footer. Backend `apps-script/oficios.gs`; guía visual `docs/manual-oficios.html`. Ver sección del backend abajo |
+| `oficios.html` | **Oficina interna OTDE** (oct 2026, uso interno de Jorge, Nancy, Alejandro y Marcos) — página única con 3 pestañas: **Tomar número** (consecutivo compartido por lotes; desde el 12 oct 2026 por tipo de documento, comisiones por persona × día con oficio en Word y "Reasignar / corregir"; carga `js/cct-db.js` y `js/escuelas-direcciones.js`), **Oficios** (registrar los recibidos + lista que abre en pendientes + "Marcar como atendido") y **Actividad** (la bitácora integrada, `bitacora.html?embed=1`, solo Jorge y Nancy). Una sola entrada con clave (`CLAVE_CAPTURA`), `noindex`, sin entrada en nav/footer. Backend `apps-script/oficios.gs`; guía visual `docs/manual-oficios.html`. Ver sección del backend abajo |
 | `charla-ia.html` | Página del evento IA jun 2026 (sin formulario) |
 | `formacion-docente.html` | Centro de Formación Docente — catálogo dinámico (webinars, seminarios, diplomados, cursos autogestivos, acciones formativas, proyectos didácticos) + registro. Diseño premium propio (ver `docs/DESIGN_SYSTEM.md`) |
 | `instructivo-formacion-docente.html` | Guía imprimible del Centro de Formación Docente, mismo sistema tipográfico que la página anterior |
@@ -665,8 +665,25 @@ ya esté expandido).
   (`anotarFolioOP`) los completa sin registrarlos dos veces (también cuando la escuela manda el
   impreso). Pasan a Atendido solos al quedar Resuelto/Rechazado. Pendiente = falta atender **o**
   falta folio. La clave de duplicado (folio + año) ignora los folios vacíos
+- **Tipos de documento, comisiones y reasignar (12 oct 2026, en producción, probado por Jorge
+  con una comisión real):** pedido del equipo. Tipo de documento (`OF_TIPOS_DOCUMENTO`);
+  Difusión y Toluca/CoEEE = **un solo número por asunto**, aunque vaya a los 13 sectores.
+  **Comisión = un oficio por persona y por día**, cada uno con su folio aunque sea el mismo
+  destino: la tanda (personas × días, máx. `OF_MAX_TANDA` = 20) es todo o nada. Destino del
+  catálogo con su texto completo (`destinoCompletoDe()`, "Turno Matutino/Vespertino"), modalidad
+  (`Config → Modalidades`, B3 por default) y **km de ida y vuelta** con el servicio Maps de Apps
+  Script (SEPRN → destino → SEPRN, sumando los dos tramos, como se hace a mano en Google Maps).
+  Catálogo de personal en `Config` (`Personal`/`RFC`/`Cargo`/`Iniciales`, por renglón); **el RFC
+  nunca sale del Sheet ni va en el código** (el repo es público). **Oficio de comisión en Word**
+  (`generarComision`): `.docx` (no Google Doc: Gotham y cuadros de texto) a partir de la plantilla
+  en Drive (`OF_PLANTILLA_COMISION_ID`, menú "Configurar plantilla de comisión"; copia local en
+  `docs/insumos/PLANTILLA-COMISION.docx`, ignorada por git), un oficio por página. **La hoja del
+  mapa NO se genera**: Viáticos exige la impresión de Google Maps tal cual; la página da "Abrir la
+  ruta en Google Maps" (`urlRutaMaps()`) y el km editable antes de generar. "Reasignar /
+  corregir" conserva el número y deja lo anterior en `Historial`. Al tocar el `.gs`, Maps puede
+  pedir autorización nueva. Ver `docs/ARCHITECTURE.md §31`
 - Si cambia la interfaz de `oficios.html`/`bitacora.html`, las capturas de
-  `images/manual-oficios/` quedan desfasadas. Se generaron con un script de Playwright sobre la
+  `images/manual-oficios/` quedan desfasadas (las 02-05 de Tomar número lo están desde el 12 oct). Se generaron con un script de Playwright sobre la
   página real con los dos `.gs` en una simulación de Sheets: **ese script no está en el repo**
   (vivió en la carpeta temporal de la sesión del 8 oct), hay que rehacerlo. Detalle en
   `docs/ARCHITECTURE.md §31`

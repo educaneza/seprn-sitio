@@ -15,6 +15,23 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-10-12 (cont. 2) · Oficios: tipos de documento, comisiones por persona y día con oficio en Word, y reasignar número
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-12 |
+| **Sesión** | Jorge trajo el feedback del equipo sobre "Tomar número": varios oficios de comisión por tanda capturados uno por uno, números de comisiones que no salieron y se perdían al cancelarlos, y campos distintos según el tipo de oficio. Se planeó, se probó en una vista local con el backend simulado y se publicó en dos rondas. |
+| **Modelo acordado con Jorge** | Comisión = **un folio por persona y por día**, aunque sea el mismo destino. Difusión y Toluca/CoEEE = un folio por asunto, aunque vaya a los 13 sectores. Reasignar con historial; los cancelados no se vuelven a repartir. El km es de **ida y vuelta**: lo leí mal del oficio real (23.9 km) como solo ida y Jorge lo corrigió ("SEPRN a SEPRN" con la escuela de parada); se ajustó para sumar los dos tramos de Maps. En el destino, "Turno Matutino/Vespertino". |
+| **Construido** | `oficios.gs`: tipo de documento, tanda todo o nada (hasta 20, una sola escritura, reintento por `<idEnvio>#k`), km con el servicio Maps de Apps Script (caché 6 h), `Config → Modalidades` y catálogo de personal (RFC solo en el Sheet), `reasignarNumero` con `Historial` y reapertura del oficio que respondía, y `generarComision`: `.docx` por tanda desde la plantilla en Drive, con km corregible. `oficios.html`: selector de tipo, días con destino del catálogo (`js/cct-db.js` + `js/escuelas-direcciones.js`, texto completo como en el oficio), personas del catálogo u "Otra persona", "Ruta y kilometraje" con "Abrir la ruta en Google Maps", generar el Word y reasignar en el mismo formulario. Guía actualizada. +1387/-94 en 3 archivos. Ver `docs/ARCHITECTURE.md §31`. |
+| **Word, no Google Doc** | El machote (`MACHOTE-COMISION.docx`) usa Gotham y cuadros de texto que Google Docs no respeta. La plantilla es el mismo Word con 14 `{{CAMPOS}}`: un script cambió solo el texto de los runs y se verificó que la estructura es idéntica salvo textos. Jorge la subió a Drive y la configuró. |
+| **Hoja del mapa: descartada** | Se construyó una hoja generada (Static Maps, sección sin membrete que imitaba la impresión del navegador). Jorge explicó que Viáticos exige la impresión de Google Maps tal cual. Apps Script no puede tomar capturas, y automatizarlas va contra las condiciones de Google. Se comparó con el Optimizador de Rutas de SIIDEE (hace lo mismo), pero el equipo no lo usa: va directo a Google Maps. Quedó un botón con la liga oficial de Maps (3 puntos) y el km editable para que el oficio diga lo mismo que la impresión. |
+| **Verificación** | Arnés de Node con Sheets/Maps/caché simulados (12 casos: tanda, reintento, lote insuficiente, payload viejo, reasignar e idempotencia, cancelado, km por destino y caché). Prueba de generación con la plantilla real que produce un `.docx` válido (`MUESTRA-COMISIONES.docx` en `docs/insumos/`, sin campos pendientes, ids únicos, km corregido en el Sheet y en el oficio). Playwright a 375 px contra la vista local (0 errores, 0 llamadas a `script.google.com`). En producción: los dos runs en `success` y `curl` a la página y a la guía. **Jorge lo probó con una comisión real: "funciona bien".** |
+| **Pendiente** | Confirmar con la primera ruta real que Google Maps ubica bien la SEPRN (`ORIGEN_MAPS`) y la escuela. Rehacer las capturas 02-05 de `images/manual-oficios/` (Tomar número cambió; el script no está en el repo). Siguen los pendientes del checkpoint anterior (simplificar Oficios, cerrar los 14 importados, ligas de calendario antes del miércoles 14 a las 15:00, activadores, `asistencia.html`). Siguiente de la Fase 2: recordatorios, resto del 2C (ya existe la técnica de plantilla `.docx`) o 2E. |
+| **Documentación actualizada** | Este checkpoint, `docs/ARCHITECTURE.md §31`, `docs/ROADMAP.md` ítem 27 y `CLAUDE.md` (fila de `oficios.html` y sección de `oficios.gs`). |
+| **Commits** | `3a3c2ac` (tipos, comisiones, Word, reasignar), `3541745` (ruta en Google Maps y km corregible, sin hoja de mapa) y el de este cierre. |
+
+---
+
 ## CHECKPOINT — 2026-10-12 (cont.) · Revisión de sistemas, calendario de autogestivos y arranque de Oficios
 
 | | |

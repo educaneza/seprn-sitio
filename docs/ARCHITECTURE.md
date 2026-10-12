@@ -2897,8 +2897,10 @@ Nancy, Alejandro y Marcos los usan para cualquier documento. Por eso el sistema 
   libre es "después del mayor usado en el lote", **sin rellenar huecos** (un hueco puede ser un
   número tomado por fuera). Columna `Último usado antes del sistema` en `Lotes`: el lote semilla
   (`OF_LOTE_SEMILLA`) trae 4831, así que el primer número del sistema fue el 4832.
-- Idempotente por `ID de envío` (patrón §27). Un número nunca se borra ni se reutiliza:
+- Idempotente por `ID de envío` (patrón §27). Un número nunca se borra ni se vuelve a repartir:
   `ofCancelarNumero_()` solo pone `Estatus = Cancelado` y anota motivo, quién y cuándo en `Notas`.
+  Desde el 12 oct 2026 un número **Asignado** que no salió se puede *reasignar* a otro documento
+  (ver "Tipos de documento…" abajo); uno Cancelado ya no.
 - El año se toma de la fecha actual: el 1 de enero responde `sin_lote` hasta que Jorge capture el
   lote nuevo (menú "Agregar lote de números", `ofAgregarLote()`, valida que no se encime).
 - `ofAvisarSiQuedanPocos_()`: correo a la cuenta que corre el script cuando quedan
@@ -2934,7 +2936,8 @@ validación y semáforo (§24) · Configurar clave.
 
 **Endpoints:** `doGet ?action=inicio&clave=` (config, resumen de lote, últimos 40 números y
 últimos 400 oficios, en una sola llamada); `doPost {accion: 'tomarNumero' | 'cancelarNumero' |
-'registrarOficio', clave, ...}`. La búsqueda es en el navegador sobre esos 400.
+'reasignarNumero' | 'generarComision' | 'registrarOficio' | 'atenderOficio' | 'anotarFolioOP', clave, ...}`.
+La búsqueda es en el navegador sobre esos 400.
 
 **Paso 2D: oficio atendido → bitácora (8 oct 2026).** El oficio no trae los datos que pide el
 reporte (descripción, beneficiarios, lugar) y muchas acciones ya llegan solas a la bitácora
@@ -2993,6 +2996,68 @@ eso:
   devuelve vacío sin folio, para que los oficios de la Oficina Virtual no choquen entre sí.
 - En la página, "pendiente" = falta atender **o** falta folio (`faltaFolioOP()`); los de la
   Oficina Virtual no tienen "Marcar como atendido" (se cierran solos).
+
+**Tipos de documento, tandas de comisión, Word y reasignar (12 oct 2026).** Nace del feedback del
+equipo sobre "Tomar número" (hasta 5 oficios de comisión por tanda capturados uno por uno; números
+de comisiones que no se realizaron y se perdían al cancelarlos).
+- **Tipo de documento** (`OF_TIPOS_DOCUMENTO`): Comisión, Difusión de información, Oficio a
+  Toluca / CoEEE, Otro documento. `ofNormalizarDocumento_()`/`ofValidarDocumento_()` piden los
+  campos de cada tipo; un payload sin `tipo` (página anterior) es "Otro documento". En Comisión
+  el motivo se guarda en `Asunto`. Difusión y Toluca/CoEEE: **un solo número por asunto**, aunque
+  el oficio vaya a los 13 sectores (combinación de correspondencia en Word, como `MACHOTE.docx`).
+- **Comisión = un oficio por persona y por día**, cada uno con su folio, aunque sea el mismo
+  destino (regla de Jorge). La página arma la tanda personas × días (máx. `OF_MAX_TANDA` = 20,
+  ordenada por persona y fecha) y la manda en `documentos: [...]`. `ofTomarNumero_()` valida todo,
+  revisa que alcance el lote para **toda** la tanda (`sin_lote` con `quedan`/`pedidos` si no; no
+  escribe ninguno) y escribe las filas con un solo `setValues`. Reintento: `ID de envío` =
+  `<idEnvio>` para un documento o `<idEnvio>#1..N` para una tanda; `Tanda` = "4839-4842".
+- **Destino:** `<datalist>` con los 506 de `js/cct-db.js` ("CCT — Nombre") o texto libre; la
+  página carga además `js/escuelas-direcciones.js`. `destinoCompletoDe()` arma el texto del
+  "Lugar de destino" como en el oficio real ("Escuela Primaria "15 de Septiembre", Jornada
+  Ampliada, con C.C.T. … de la Zona Escolar No. 53, perteneciente al Sector Educativo XI, ubicada
+  …, Colonia …, Municipio de … C.P. …, Estado de México."; Matutino/Vespertino van como "Turno …").
+- **Kilometraje de ida y vuelta** (`ofCalcularKm_()`/`ofKmIdaVuelta_()`, antes del candado): el
+  servicio **Maps** de Apps Script (sin clave ni cuenta de pago) calcula la ruta
+  `OF_ORIGEN_COMISION` → destino como parada → `OF_ORIGEN_COMISION` y suma los dos tramos, igual
+  que se hace a mano en Google Maps (el oficio real del 5 oct marca 23.9 km para el recorrido
+  completo). Caché 6 h por dirección. Si Maps falla, el número se toma igual y el km queda vacío.
+- **Config:** columna `Modalidades` (`ofAsegurarColumnaModalidades_()`, B3 por default) y
+  catálogo de personal `Personal`/`RFC`/`Cargo`/`Iniciales`, alineado por renglón
+  (`ofAsegurarColumnasPersonal_()`). **El RFC del catálogo nunca sale del Sheet**: `doGet inicio`
+  manda solo nombre y cargo, y `ofCompletarPersonal_()` pone RFC y cargo al tomar el número. Una
+  "Otra persona" captura nombre, RFC y cargo en la página. Columnas nuevas de `Numeros` al final
+  (auto-heal): las de tipo/persona/lugar/fechas/resumen/tanda/historial, `CCT destino`,
+  `Dirección destino`, `Modalidad`, `Km (ida y vuelta)`, `RFC`, `Cargo`, `Destino completo`,
+  `Oficio generado`.
+- **Oficio de comisión en Word** (`ofGenerarComision_()`, `doPost generarComision`, fuera del
+  candado): se genera **.docx, no Google Doc**, porque el machote usa la fuente Gotham (Docs no la
+  tiene) y cuadros de texto ("Cumplimiento de la comisión", "C.c.p.") que Docs mueve al
+  convertir. La plantilla es el `MACHOTE-COMISION.docx` real con 14 `{{CAMPOS}}`
+  (`OF_CAMPOS_PLANTILLA`), convertida con un script que solo cambió el texto de los runs
+  (verificado: estructura idéntica salvo textos). Vive en Drive (Script Property
+  `OF_PLANTILLA_COMISION_ID`, menú "Configurar plantilla de comisión", que valida los campos con
+  `ofCamposFaltantesPlantilla_()`); la copia local está en `docs/insumos/PLANTILLA-COMISION.docx`
+  (`.gitignore`). Por tanda: `Utilities.unzip` → repite el cuerpo de `word/document.xml` una vez
+  por oficio (renumera `wp:docPr`, quita `w14:paraId`/`textId`/`wp14:anchorId`), salto de página
+  entre oficios → `Utilities.zip` → carpeta `OF_CARPETA_COMISIONES` por mes, compartida con liga.
+  Pie de iniciales: `OF_FIRMA_INICIALES` + las de quien elabora (`ofIniciales_()`).
+  `x.km = {numero: km}` corrige el kilometraje antes de generar (queda en el Sheet y en el oficio).
+- **Hoja del mapa: NO se genera.** Se construyó una (Static Maps, sección sin membrete que imitaba
+  la impresión del navegador) y se descartó el mismo día: Viáticos exige la impresión de Google
+  Maps tal cual, y Apps Script no puede tomar capturas (y capturar Google Maps de forma
+  automatizada va contra sus condiciones). En su lugar, la página (`pintarRutas()`) muestra una
+  tarjeta por destino con **"Abrir la ruta en Google Maps"** (`urlRutaMaps()`: liga oficial
+  `maps/dir/?api=1` con `origin` = `destination` = `ORIGEN_MAPS`, el nombre del lugar como sale
+  en la impresión, y la escuela en `waypoints`), el km editable (`kmCorregidos()`) y "Lleva mapa"
+  si pasa de `KM_CON_MAPA` (20). El equipo imprime la ruta como siempre. La misma liga está en
+  cada número de comisión de la lista.
+- **Reasignar** (`doPost reasignarNumero`, `ofReasignarNumero_()`): solo números Asignados.
+  Conserva número y consecutivo; antes de sobrescribir agrega a `Historial` fecha, quién, motivo y
+  "Antes: …". Un reintento idéntico no duplica la línea. La misma persona sin RFC nuevo conserva el
+  registrado (la página no lo tiene). Si el número respondía un oficio,
+  `ofDesanotarSalidaEnOficio_()` marca la salida "(reasignado)" y, si era la única, el oficio
+  vuelve a Recibido. En la página es el mismo formulario precargado (`reasignarNumero()`), con
+  una sola persona y un solo día.
 
 **Guía de uso:** `docs/manual-oficios.html` (18 capturas en `images/manual-oficios/`, generadas
 con Playwright sobre la página real, con `oficios.gs` y `bitacora.gs` en una simulación de

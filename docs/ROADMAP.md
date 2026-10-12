@@ -824,9 +824,20 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     vacía en `OF-0060`; dar de alta en Mantenimiento/Asesorías los oficios de papel para que
     tengan folio y se cierren solos; escanear los PDF; ligar números a su oficio con "para
     responder". Jorge pidió **simplificar**: el flujo le resultó confuso el primer día.
-    **Siguiente** (Jorge elige): recordatorios de eventos (el dolor de origen), 2C (redacción del
-    oficio de salida con plantilla) o 2E (archivo digital). Para el 2C
-    falta un oficio de salida con membrete en Word (ya está `MACHOTE.docx` en `docs/insumos/`).
+    **Feedback del equipo en "Tomar número" (12 oct 2026, cont. 2, en producción):** tipo de
+    documento (Comisión / Difusión / Toluca-CoEEE / Otro), comisión = un folio por persona y por
+    día con tandas de hasta 20, kilometraje de ida y vuelta con Maps, catálogo de personal en
+    `Config`, **oficio de comisión generado en Word** con el machote real (es el primer pedazo del
+    2C) y "Reasignar / corregir" con historial (`docs/ARCHITECTURE.md §31`). Jorge lo probó con una
+    comisión real y "funciona bien". La hoja del mapa no se genera (Viáticos pide la impresión de
+    Google Maps): botón "Abrir la ruta en Google Maps" + km editable. Pendiente: confirmar con la
+    primera ruta real que Google Maps ubica bien la SEPRN (`ORIGEN_MAPS`) y la escuela; rehacer las
+    capturas 02-05 de `images/manual-oficios/` (Tomar número cambió; el script de capturas no está
+    en el repo); en reasignar, la "Otra persona" conserva su RFC solo si no cambia de nombre.
+    **Siguiente** (Jorge elige): recordatorios de eventos (el dolor de origen), resto del 2C
+    (redacción de oficios de salida que no son comisión, con plantilla) o 2E (archivo digital).
+    Para el resto del 2C ya están `MACHOTE.docx` y la técnica de plantilla `.docx` con
+    `{{CAMPOS}}` de las comisiones.
     Sigue sin verificar si la licencia M365 de `@dee.edu.mx` incluye Power Automate.
 
 28. **Formación Docente — calendario y cuota "a quien alcance": verificación en uso real**
