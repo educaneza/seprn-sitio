@@ -277,6 +277,7 @@ function altaEnviarCredenciales(fila) {
     linksAcceso +
     '<p style="margin:0 0 8px 0;font-size:14px;color:#333333;line-height:1.7;">1. Al ingresar con la contraseña temporal, Microsoft te pedirá cambiarla. Elige una contraseña segura.</p>' +
     '<p style="margin:0 0 20px 0;font-size:14px;color:#333333;line-height:1.7;">2. Después se te solicitará configurar la <strong>autenticación de 2 pasos</strong> con la app <strong>Microsoft Authenticator</strong>. Descárgala en tu celular, escanea el código QR y sigue las instrucciones.</p>' +
+    recuadroDosDispositivosHTML_() +
     altaBotonSeguimientoHTML() +
     altaAvisoPieHTML() +
     altaFirmaHTML();

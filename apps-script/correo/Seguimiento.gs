@@ -91,6 +91,28 @@ function segPrepararColumnas_(hoja) {
   protegerColumnaAutomatica_(hoja, colEnviado);
 }
 
+// ── "¿Qué pasó con tu método de autenticación?" (Eliminar autenticación y Cambio +
+// Eliminar, oct 2026): la causa real de cada solicitud, para medir cuánto pesa perder
+// o cambiar el celular. Opcional en el servidor (una página vieja en caché no la manda). ──
+const SEG_COL_MOTIVO_PERDIDA = 'Motivo de pérdida de acceso';
+
+function segAnotarEnFolio_(hoja, folio, encabezado, valor) {
+  const texto = String(valor || '').trim();
+  if (!texto) return;
+  try {
+    const col = segAsegurarColumna_(hoja, encabezado);
+    const folios = hoja.getRange(1, 2, hoja.getLastRow(), 1).getValues();
+    for (let i = folios.length - 1; i >= 1; i--) {
+      if (String(folios[i][0]).trim() === folio) {
+        hoja.getRange(i + 1, col).setValue(texto);
+        return;
+      }
+    }
+  } catch (err) {
+    Logger.log('No se pudo anotar ' + encabezado + ' en ' + folio + ': ' + err.message);
+  }
+}
+
 // ── Menú: prepara las 5 hojas de una vez, sin esperar un envío nuevo. ──
 function prepararSeguimientoSIGEE() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -213,6 +235,7 @@ function segResumenSemanal_() {
   const sinSubir = [];
   const entregadasSinNP = [];
   const rechazadas = {};
+  const perdidas = {};
   const tramos = { subir: [], sigee: [], entregar: [] };
 
   segHojasCorreo_().forEach(function (nombreHoja) {
@@ -224,7 +247,8 @@ function segResumenSemanal_() {
       folio: indexOfHeader(h, 'Folio'), fecha: indexOfHeader(h, 'Fecha'),
       estado: indexOfHeader(h, 'Estado general'), np: indexOfHeader(h, SEG_COL_NP),
       subida: indexOfHeader(h, SEG_COL_SUBIDA), resp: indexOfHeader(h, SEG_COL_RESPUESTA),
-      entrega: indexOfHeader(h, 'Fecha de entrega'), motivo: indexOfHeader(h, SEG_COL_MOTIVO)
+      entrega: indexOfHeader(h, 'Fecha de entrega'), motivo: indexOfHeader(h, SEG_COL_MOTIVO),
+      perdida: indexOfHeader(h, SEG_COL_MOTIVO_PERDIDA)
     };
     if (i.folio === -1 || i.fecha === -1 || i.estado === -1 || i.np === -1) return;
 
@@ -247,6 +271,11 @@ function segResumenSemanal_() {
           esFecha(fecha) && ahora - fecha.getTime() <= SEG_DIAS_TIEMPOS * dia) {
         const m = String(r[i.motivo] || 'Sin motivo').trim();
         rechazadas[m] = (rechazadas[m] || 0) + 1;
+      }
+      if (i.perdida !== -1 && String(r[i.perdida] || '').trim() &&
+          esFecha(fecha) && ahora - fecha.getTime() <= SEG_DIAS_TIEMPOS * dia) {
+        const p = String(r[i.perdida]).trim();
+        perdidas[p] = (perdidas[p] || 0) + 1;
       }
       if (esFecha(entrega) && ahora - entrega.getTime() <= SEG_DIAS_TIEMPOS * dia && esFecha(fecha)) {
         const subida = i.subida === -1 ? null : r[i.subida];
@@ -299,6 +328,11 @@ function segResumenSemanal_() {
   if (motivos.length) {
     html += tabla('Rechazadas en los últimos ' + SEG_DIAS_TIEMPOS + ' días',
       motivos.map(function (m) { return fila(escapeHtml_(m), rechazadas[m], '#7a6a5a'); }).join(''));
+  }
+  const causas = Object.keys(perdidas).sort(function (a, b) { return perdidas[b] - perdidas[a]; });
+  if (causas.length) {
+    html += tabla('¿Por qué perdieron el acceso? (últimos ' + SEG_DIAS_TIEMPOS + ' días)',
+      causas.map(function (c) { return fila(escapeHtml_(c), perdidas[c], '#7a6a5a'); }).join(''));
   }
   return { html: html, hayAlgo: !!(sinSubir.length || entregadasSinNP.length) };
 }

@@ -39,6 +39,7 @@ function manejarReset2FA(datos) {
   const registro = registrarSolicitudSinDuplicar_(hoja, fila, 11, resetGenerarFolio, datos.idEnvio);
   if (registro.duplicado) return respuestaDuplicado_(registro.folio);
   const folio = registro.folio;
+  segAnotarEnFolio_(hoja, folio, SEG_COL_MOTIVO_PERDIDA, datos.motivoPerdida);
 
   resetEnviarConfirmacion(folio, datos);
   resetNotificarEquipo(folio, datos);
@@ -238,6 +239,7 @@ function resetEnviarNotificacion(fila) {
     '<p style="margin:0 0 8px 0;font-size:14px;color:#333333;line-height:1.7;">3. Descarga <strong>Microsoft Authenticator</strong> en tu celular si aún no la tienes.</p>' +
     '<p style="margin:0;font-size:14px;color:#333333;line-height:1.7;">4. Escanea el código QR con la app y sigue las instrucciones.</p>' +
     '</div>' +
+    recuadroDosDispositivosHTML_() +
     '<div style="background-color:#f9f6f3;border-left:4px solid #977e5b;border-radius:4px;padding:14px 16px;margin-bottom:20px;">' +
     '<p style="margin:0 0 6px 0;font-size:10px;color:#977e5b;text-transform:uppercase;letter-spacing:1.5px;font-weight:bold;">Recursos de apoyo</p>' +
     '<p style="margin:0;font-size:13px;"><a href="' + CONFIG.videoTutorial2FA + '" style="color:#9F2241;font-weight:bold;text-decoration:none;">▶️ Video tutorial</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="' + CONFIG.manualPDF2FA + '" style="color:#9F2241;font-weight:bold;text-decoration:none;">📄 Manual en PDF</a></p>' +

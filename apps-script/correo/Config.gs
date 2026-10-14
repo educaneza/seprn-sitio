@@ -213,6 +213,21 @@ function configurarValidacionYSemaforo() {
   } catch (err) {}
 }
 
+// ── Recuadro "Vincula 2 celulares" (oct 2026) para los correos que piden configurar
+// Microsoft Authenticator (Alta, Eliminar autenticación, Cambio + Eliminar). Corto y
+// con el paso concreto: el tutorial ya se enviaba, pero casi nadie agregaba un
+// segundo dispositivo y la escuela se quedaba sin acceso al perder el celular. ──
+function recuadroDosDispositivosHTML_() {
+  return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#fff8f0;border:2px solid #9F2241;border-radius:6px;margin-bottom:18px;">' +
+    '<tr><td style="padding:14px 16px;">' +
+    '<p style="margin:0 0 6px 0;font-size:15px;color:#9F2241;font-weight:bold;">📱📱 Vincula 2 celulares: si pierdes uno, no pierdes tu correo</p>' +
+    '<p style="margin:0 0 8px 0;font-size:14px;color:#333333;line-height:1.6;">Celular perdido, robado, cambiado o app desinstalada son la causa número uno de cuentas bloqueadas. Al terminar de configurar la app, agrega un segundo dispositivo (el de otra persona de la escuela o uno tuyo de respaldo):</p>' +
+    '<p style="margin:0 0 4px 0;font-size:14px;color:#333333;line-height:1.6;">1. Entra a <a href="https://mysignins.microsoft.com/security-info" style="color:#9F2241;font-weight:bold;">mysignins.microsoft.com/security-info</a></p>' +
+    '<p style="margin:0 0 4px 0;font-size:14px;color:#333333;line-height:1.6;">2. Elige <strong>"Agregar método de inicio de sesión"</strong> → <strong>Microsoft Authenticator</strong>.</p>' +
+    '<p style="margin:0;font-size:14px;color:#333333;line-height:1.6;">3. Escanea el código QR con el segundo celular.</p>' +
+    '</td></tr></table>';
+}
+
 // ── Notificar por Telegram a OTDE (silencioso si falla o no está configurado) ──
 function notificarTelegram(mensaje) {
   try {

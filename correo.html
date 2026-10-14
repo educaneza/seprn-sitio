@@ -44,6 +44,8 @@
             width: 100%;
             height: 100%;
         }
+        .authenticator-infografia { margin-top: 14px; display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+        .authenticator-infografia img { width: 100%; max-width: 280px; height: auto; border-radius: 10px; box-shadow: 0 4px 14px rgba(12,26,46,.15); }
     </style>
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="SEPRN">
@@ -119,6 +121,11 @@
             <div class="highlight-box">
                 <p><strong>Importante: puedes configurar la app en 2 o más dispositivos con la misma cuenta.</strong></p>
                 <p>Normalmente solo el director(a) configura Microsoft Authenticator en su propio celular. El problema: cuando esa persona cambia de centro de trabajo, se lleva su teléfono y, con él, el único dispositivo autorizado — la escuela donde estaba se queda sin poder acceder al correo institucional. Para evitarlo, recomendamos que además del director(a), al menos otra persona de la escuela (subdirector(a) u otro encargado) configure también la app en su propio teléfono, siguiendo el mismo tutorial.</p>
+                <p>Para agregar el segundo celular, entra con tu cuenta a <a href="https://mysignins.microsoft.com/security-info" target="_blank" rel="noopener">mysignins.microsoft.com/security-info</a> y elige <strong>"Agregar método de inicio de sesión"</strong>.</p>
+                <div class="authenticator-infografia">
+                    <img src="images/authenticator-2-celulares.png" alt="Infografía: vincula 2 celulares a tu cuenta institucional en 3 pasos — entra a mysignins.microsoft.com/security-info, toca Agregar método de inicio de sesión y escanea el QR con el segundo celular." loading="lazy" width="1080" height="1920">
+                    <a href="images/authenticator-2-celulares.png" download="Vincula-2-celulares-OTDE.png" class="download-button">Descargar imagen para compartir por WhatsApp</a>
+                </div>
             </div>
 
             <div class="highlight-box">
@@ -452,11 +459,24 @@
                                 <div class="soporte-field-error" id="rst-telefono-error">Ingresa un teléfono válido (10 dígitos).</div>
                             </div>
                             <div class="soporte-form-group">
+                                <label for="rst-motivo-perdida">¿Qué pasó con tu método de autenticación?<span class="req">*</span></label>
+                                <select id="rst-motivo-perdida">
+                                    <option value="">— Selecciona una opción —</option>
+                                    <option>Perdí el celular o me lo robaron</option>
+                                    <option>Cambié de celular</option>
+                                    <option>Desinstalé la app o borré el celular</option>
+                                    <option>La persona que tenía la app ya no está en la escuela</option>
+                                    <option>Otro</option>
+                                </select>
+                                <div class="soporte-field-error" id="rst-motivo-perdida-error">Selecciona qué pasó.</div>
+                            </div>
+                            <div class="soporte-form-group">
                                 <label for="rst-observaciones">Observaciones</label>
                                 <textarea id="rst-observaciones" placeholder="Describe el problema que presentas, si aplica"></textarea>
                             </div>
                             <button type="submit" class="form-button" id="btn-rst-submit"><span>Enviar Solicitud</span></button>
                             <div id="rst-msg" class="soporte-submit-msg"></div>
+                            <div id="rst-consejo" class="highlight-box" style="display:none;margin-top:14px;"></div>
                         </form>
                     </div>
                 </div>
@@ -542,11 +562,24 @@
                                 <div class="soporte-field-error" id="cyr-telefono-error">Ingresa un teléfono válido (10 dígitos).</div>
                             </div>
                             <div class="soporte-form-group">
+                                <label for="cyr-motivo-perdida">¿Qué pasó con tu método de autenticación?<span class="req">*</span></label>
+                                <select id="cyr-motivo-perdida">
+                                    <option value="">— Selecciona una opción —</option>
+                                    <option>Perdí el celular o me lo robaron</option>
+                                    <option>Cambié de celular</option>
+                                    <option>Desinstalé la app o borré el celular</option>
+                                    <option>La persona que tenía la app ya no está en la escuela</option>
+                                    <option>Otro</option>
+                                </select>
+                                <div class="soporte-field-error" id="cyr-motivo-perdida-error">Selecciona qué pasó.</div>
+                            </div>
+                            <div class="soporte-form-group">
                                 <label for="cyr-observaciones">Observaciones</label>
                                 <textarea id="cyr-observaciones" placeholder="Opcional"></textarea>
                             </div>
                             <button type="submit" class="form-button" id="btn-cyr-submit"><span>Enviar Solicitud</span></button>
                             <div id="cyr-msg" class="soporte-submit-msg"></div>
+                            <div id="cyr-consejo" class="highlight-box" style="display:none;margin-top:14px;"></div>
                         </form>
                     </div>
                 </div>
@@ -1500,6 +1533,24 @@
         return false;
     }
 
+    // ── Consejo de "2 dispositivos" (oct 2026): se muestra al registrar una solicitud de
+    // eliminar autenticación, justo cuando la persona está viviendo el problema. ──
+    var MYSIGNINS_URL = 'https://mysignins.microsoft.com/security-info';
+    function mostrarConsejoDosDispositivos(prefijo, motivo) {
+        var intro = {
+            'Perdí el celular o me lo robaron': 'Para que no vuelva a pasarte si pierdes o te roban el celular:',
+            'Cambié de celular': 'La próxima vez que cambies de celular, agrega el nuevo antes de borrar el anterior. Y para estar cubierto:',
+            'Desinstalé la app o borré el celular': 'Si vuelves a desinstalar la app o a borrar el celular, no perderás el acceso si:',
+            'La persona que tenía la app ya no está en la escuela': 'Para que la escuela no vuelva a quedarse sin acceso cuando alguien se cambie de centro de trabajo:'
+        }[motivo] || 'Para no volver a quedarte sin acceso:';
+        var caja = document.getElementById(prefijo + '-consejo');
+        caja.innerHTML =
+            '<p style="margin:0 0 8px 0;"><strong>' + intro + '</strong></p>' +
+            '<p style="margin:0 0 8px 0;">Cuando vuelvas a configurar Microsoft Authenticator, <strong>agrega un segundo celular</strong> (el de otra persona de la escuela o uno tuyo de respaldo). Si uno falla, el otro sigue funcionando.</p>' +
+            '<p style="margin:0;">Ya dentro de tu cuenta, entra a <a href="' + MYSIGNINS_URL + '" target="_blank" rel="noopener">mysignins.microsoft.com/security-info</a> y elige <strong>"Agregar método de inicio de sesión"</strong>.</p>';
+        caja.style.display = 'block';
+    }
+
     // ── Eliminar método de autenticación (antes "Reset 2FA") ──
     function toggleRstForm(btn) {
         var container = document.getElementById('form-rst');
@@ -1514,6 +1565,9 @@
     }
     document.getElementById('rst-nombre').addEventListener('blur', function() { if (this.value.trim()) this.value = toTitleCase(this.value); });
     document.getElementById('rst-escuela-manual').addEventListener('blur', function() { if (this.value.trim()) this.value = toTitleCase(this.value); });
+    document.getElementById('rst-motivo-perdida').addEventListener('change', function() {
+        if (this.value) { this.classList.remove('error'); document.getElementById('rst-motivo-perdida-error').classList.remove('visible'); }
+    });
 
     function validarRstForm() {
         var ok = validarCctYManual('rst', rstCct);
@@ -1521,7 +1575,8 @@
             { id: 'rst-correo-institucional', err: 'rst-correo-institucional-error', test: function(input) { return validarCorreoInstitucional(input); } },
             { id: 'rst-nombre',               err: 'rst-nombre-error',               test: function(input) { return input.value.trim().length >= 3; } },
             { id: 'rst-correo-personal',      err: 'rst-correo-personal-error',      test: function(input) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value.trim()); } },
-            { id: 'rst-telefono',             err: 'rst-telefono-error',             test: function(input) { return /^\d{10}$/.test(input.value.trim()); } }
+            { id: 'rst-telefono',             err: 'rst-telefono-error',             test: function(input) { return /^\d{10}$/.test(input.value.trim()); } },
+            { id: 'rst-motivo-perdida',       err: 'rst-motivo-perdida-error',       test: function(input) { return !!input.value; } }
         ];
         campos.forEach(function(c) {
             var input = document.getElementById(c.id), errEl = document.getElementById(c.err);
@@ -1536,6 +1591,7 @@
         var msg = document.getElementById('rst-msg');
         var btnSubmit = document.getElementById('btn-rst-submit');
         msg.className = 'soporte-submit-msg'; msg.textContent = '';
+        document.getElementById('rst-consejo').style.display = 'none';
         if (!validarRstForm()) return false;
 
         var cctDatos = datosCctYManual('rst');
@@ -1544,7 +1600,8 @@
             nombre: toTitleCase(document.getElementById('rst-nombre').value.trim()),
             correoPersonal: document.getElementById('rst-correo-personal').value,
             telefono: document.getElementById('rst-telefono').value,
-            observaciones: document.getElementById('rst-observaciones').value
+            observaciones: document.getElementById('rst-observaciones').value,
+            motivoPerdida: document.getElementById('rst-motivo-perdida').value
         });
 
         var espera = esperaConProgreso(btnSubmit, msg, { boton: 'Enviando…', texto: 'Enviando tu solicitud…' });
@@ -1556,6 +1613,7 @@
                 idsEnvioCorreo.rst = null;
                 msg.classList.add('ok');
                 msg.textContent = 'Solicitud registrada (folio ' + data.folio + '). Te avisaremos a tu correo personal en cuanto el reset esté listo.';
+                mostrarConsejoDosDispositivos('rst', datos.motivoPerdida);
                 document.getElementById('rst-form').reset();
                 resetFormularioCctManual('rst', rstCct);
             } else {
@@ -1586,6 +1644,9 @@
     }
     document.getElementById('cyr-nombre').addEventListener('blur', function() { if (this.value.trim()) this.value = toTitleCase(this.value); });
     document.getElementById('cyr-escuela-manual').addEventListener('blur', function() { if (this.value.trim()) this.value = toTitleCase(this.value); });
+    document.getElementById('cyr-motivo-perdida').addEventListener('change', function() {
+        if (this.value) { this.classList.remove('error'); document.getElementById('cyr-motivo-perdida-error').classList.remove('visible'); }
+    });
 
     function validarCyrForm() {
         var ok = validarCctYManual('cyr', cyrCct);
@@ -1593,7 +1654,8 @@
             { id: 'cyr-correo-institucional', err: 'cyr-correo-institucional-error', test: function(input) { return validarCorreoInstitucional(input); } },
             { id: 'cyr-nombre',               err: 'cyr-nombre-error',               test: function(input) { return input.value.trim().length >= 3; } },
             { id: 'cyr-correo-personal',      err: 'cyr-correo-personal-error',      test: function(input) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value.trim()); } },
-            { id: 'cyr-telefono',             err: 'cyr-telefono-error',             test: function(input) { return /^\d{10}$/.test(input.value.trim()); } }
+            { id: 'cyr-telefono',             err: 'cyr-telefono-error',             test: function(input) { return /^\d{10}$/.test(input.value.trim()); } },
+            { id: 'cyr-motivo-perdida',       err: 'cyr-motivo-perdida-error',       test: function(input) { return !!input.value; } }
         ];
         campos.forEach(function(c) {
             var input = document.getElementById(c.id), errEl = document.getElementById(c.err);
@@ -1608,6 +1670,7 @@
         var msg = document.getElementById('cyr-msg');
         var btnSubmit = document.getElementById('btn-cyr-submit');
         msg.className = 'soporte-submit-msg'; msg.textContent = '';
+        document.getElementById('cyr-consejo').style.display = 'none';
         if (!validarCyrForm()) return false;
 
         var cctDatos = datosCctYManual('cyr');
@@ -1616,7 +1679,8 @@
             nombre: toTitleCase(document.getElementById('cyr-nombre').value.trim()),
             correoPersonal: document.getElementById('cyr-correo-personal').value,
             telefono: document.getElementById('cyr-telefono').value,
-            observaciones: document.getElementById('cyr-observaciones').value
+            observaciones: document.getElementById('cyr-observaciones').value,
+            motivoPerdida: document.getElementById('cyr-motivo-perdida').value
         });
 
         var espera = esperaConProgreso(btnSubmit, msg, { boton: 'Enviando…', texto: 'Enviando tu solicitud…' });
@@ -1628,6 +1692,7 @@
                 idsEnvioCorreo.cyr = null;
                 msg.classList.add('ok');
                 msg.textContent = 'Solicitud registrada (folio ' + data.folio + '). Te avisaremos a tu correo personal en cuanto tengamos tu nueva contraseña.';
+                mostrarConsejoDosDispositivos('cyr', datos.motivoPerdida);
                 document.getElementById('cyr-form').reset();
                 resetFormularioCctManual('cyr', cyrCct);
             } else {
