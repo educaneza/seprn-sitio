@@ -207,7 +207,8 @@
     .link-btn { background: none; border: none; padding: 0; font: inherit; color: var(--guinda-ac); text-decoration: underline; cursor: pointer; }
     .badge.interno { background: #ede9fe; color: #5b21b6; }
     .mas-datos { margin-bottom: 1rem; }
-    .mas-datos summary { cursor: pointer; font-size: .85rem; font-weight: 600; color: var(--guinda-ac); margin-bottom: .6rem; }
+    .mas-datos-tit { font-size: .85rem; font-weight: 700; color: var(--guinda); margin-bottom: .6rem; }
+    .mas-datos-tit span { font-weight: 400; color: var(--muted); }
     .atender .sugerencia { font-size: .82rem; font-weight: 400; color: var(--text); margin-bottom: .2rem; }
     .vacio { font-size: .85rem; color: var(--muted); text-align: center; padding: .75rem 0; }
     .btn-abrir { margin-bottom: 1rem; }
@@ -480,8 +481,8 @@
             <label class="opcion"><input type="radio" name="forma" value="" checked>Todavía no sé<small>Queda pendiente en la lista.</small></label>
           </div>
         </div>
-        <details class="mas-datos">
-          <summary>Más datos (opcional)</summary>
+        <div class="mas-datos">
+          <p class="mas-datos-tit">Más datos <span>(opcional, si vienen en el oficio)</span></p>
           <div class="fila-2">
             <div class="campo">
               <label for="of-num-remitente">No. de oficio del remitente</label>
@@ -497,7 +498,7 @@
             <label for="of-observaciones">Observaciones</label>
             <textarea id="of-observaciones" rows="2"></textarea>
           </div>
-        </details>
+        </div>
         <div class="campo">
           <label for="of-pdf">PDF del oficio escaneado <span class="opcional">(opcional, máx. 5 MB)</span></label>
           <input type="file" id="of-pdf" accept="application/pdf">
@@ -1664,7 +1665,6 @@ function reiniciarOficio() {
   $('of-recepcion').value = hoyISO();
   $('of-direccion').classList.add('hidden');
   $('of-direccion-linea').classList.remove('hidden');
-  document.querySelector('#form-oficio .mas-datos').open = false;
   document.querySelectorAll('#form-oficio .campo-error').forEach(function (x) { x.classList.remove('campo-error'); });
   document.querySelectorAll('#form-oficio .error-msg').forEach(function (x) { x.classList.remove('visible'); });
   $('oficio-error').classList.remove('visible');
@@ -1722,7 +1722,6 @@ function validarOficio() {
   const elab = $('of-elaboracion').value;
   const elabOk = !elab || !$('of-recepcion').value || elab <= $('of-recepcion').value;
   req('of-elaboracion', elabOk);
-  if (!elabOk) document.querySelector('#form-oficio .mas-datos').open = true;
   const f = $('of-pdf').files[0];
   if (f) {
     if (f.type !== 'application/pdf') { $('err-of-pdf').textContent = 'Solo se aceptan archivos PDF.'; req('of-pdf', false); }
