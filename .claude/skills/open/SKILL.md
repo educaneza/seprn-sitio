@@ -62,6 +62,8 @@ red o falta de login, se reporta y se sigue: esto no bloquea la apertura.
    ```
 3. De la fila **Pendiente** del checkpoint y de "Pendientes vigentes" de `CLAUDE.md`, abre en
    `docs/ROADMAP.md` solo los ítems que se citen por número. Nunca cargues todo `docs/`.
+4. Lee `docs/TABLERO-SALUD.md` (es corto). De ahí salen los sistemas en Rojo y los de
+   **prueba en vivo más vieja**: los que se pueden estar olvidando mientras se trabaja en otro.
 
 ## 4. Informe y espera
 
@@ -72,6 +74,9 @@ Muestra en el chat, en lenguaje llano y breve:
 - **Pendientes de Jorge:** los de la fila Pendiente y los de "Pendientes vigentes" que dependen de
   él (pruebas en vivo, decisiones, redespliegues de Apps Script). **Resalta los que tengan una
   fecha ya vencida** respecto a hoy.
+- **Salud de los sistemas:** los que estén en Rojo y los 2-3 de prueba en vivo más vieja, con su
+  pendiente principal (de `docs/TABLERO-SALUD.md`). Si toca sesión de rotación (una de cada tres,
+  ver la regla en el tablero), propón uno de esos en vez del "Siguiente".
 - **Propuesta:** el "Siguiente" del último checkpoint.
 
 Después **para y espera** a que Jorge diga qué se hace.

@@ -467,7 +467,7 @@ Visitante
                                                                         ├── Google Sheets (Registros_IA_2026)
                                                                         └── GmailApp → correo HTML + QR
 
-Operador en puerta
+Operador en puerta (retirado 14 oct 2026, ver CLAUDE.md "Páginas retiradas")
   └── asistencia.html
         ├── PIN local (sessionStorage) — sin red
         ├── html5-qrcode (cámara) o lector físico o tipeo manual

@@ -147,7 +147,6 @@ ya esté expandido).
 | `oficina-virtual.html` | Oficina Virtual OTDE — hub de servicios digitales (Formación Docente, Mantenimiento, Asesorías, Correo, Soporte) + consulta de estatus de solicitudes por folio |
 | `oeve.html` | Oficina de Extensión y Vinculación |
 | `juridico.html` | Oficina Jurídica |
-| `asistencia.html` | Check-in de asistencia (eventos) |
 | `reporte-visita.html` | Formulario de captura del técnico tras una visita de Mantenimiento — reemplaza el llenado a mano de "Reportes de visita" en el Sheet, ver `apps-script/mantenimiento.gs` abajo. Sin entrada en nav/footer, se comparte por link directo |
 | `bitacora.html` | Bitácora de actividades de OTDE (uso interno, Jorge y Nancy) — captura cada actividad una vez para armar el reporte mensual de Planeación. Protegida con clave de captura (`CLAVE_CAPTURA`), `noindex`, sin entrada en nav/footer. Backend `apps-script/bitacora.gs`; ver `docs/PLAN-OPERACION-INTERNA.md` Fase 1. **Desde el 8 oct 2026 también vive como pestaña "Actividad" de `oficios.html`** (`?embed=1`: sin encabezado, avisa su alto y eventos a la página contenedora por `postMessage`); sigue funcionando sola. `?oficio=OF-NNNN` precarga la actividad de un oficio y lo marca atendido al guardar (ver `docs/ARCHITECTURE.md §31`) |
 | `oficios.html` | **Oficina interna OTDE** (oct 2026, uso interno de Jorge, Nancy, Alejandro y Marcos) — página única con 3 pestañas: **Tomar número** (consecutivo compartido por lotes; desde el 12 oct 2026 por tipo de documento, comisiones por persona × día con oficio en Word y "Reasignar / corregir"; carga `js/cct-db.js` y `js/escuelas-direcciones.js`), **Oficios** (registrar los recibidos — por Oficialía o internos sin folio, desde el 14 oct 2026 — + lista con chips Por atender / Falta folio / Todos y un "Siguiente paso" por oficio + "Marcar como atendido") y **Actividad** (la bitácora integrada, `bitacora.html?embed=1`, solo Jorge y Nancy). Una sola entrada con clave (`CLAVE_CAPTURA`), `noindex`, sin entrada en nav/footer. Backend `apps-script/oficios.gs`; guía visual `docs/manual-oficios.html`. Ver sección del backend abajo |
@@ -171,6 +170,12 @@ ya esté expandido).
 
 ## Páginas retiradas definitivamente (no recrear)
 - `jornada-verano-2026.html` e `instructivo-jornada-verano-2026.html` — eliminadas el 13 jul 2026: cerró el periodo de inscripciones a la Jornada de Capacitación Verano 2026 y ya nadie debe/puede llegar a ese wizard. El backend que usaban (`apps-script/formacion-docente.gs`) sigue vivo porque también sirve a `formacion-docente.html`; solo se perdió la parte de esas 2 páginas. Patrones que nacieron ahí (autocomplete de CCT con fallback manual por campo, `fetchJsonConTimeout()`, Title Case en Nombre/Escuela) siguen documentados en `docs/ARCHITECTURE.md` porque se reutilizan en `otde.html` y `formacion-docente.html`.
+
+## Páginas retiradas (se pueden rehacer)
+- `asistencia.html` — check-in con QR/PIN del evento IA de jun 2026, retirada el 14 oct 2026: sin
+  uso desde el evento y su backend (`apps-script/conferencia-ia.gs`) ya respondía 403. Jorge no
+  descarta replicarla o mejorarla para un evento futuro: recuperarla con
+  `git show 7a1f171:asistencia.html` (último commit donde existe). El `.gs` se queda en el repo.
 
 ## Backend (Apps Script)
 
@@ -1292,6 +1297,7 @@ reciente de `docs/BITACORA.md` (por eso esa fila debe quedar clara al cerrar):
 | `README.md` | Cambió cómo se levanta/despliega el proyecto, o la estructura de archivos en disco |
 | `CLAUDE.md` (este archivo) | Se acordó una regla o convención de desarrollo nueva, o una página/tab cambió lo suficiente para que su sección aquí quede desactualizada |
 | `docs/QA-NOTES.md` | Se cazó un bug real con causa raíz identificada |
+| `docs/TABLERO-SALUD.md` | Se tocó, se probó en vivo, se apagó o se retiró un sistema (solo sus filas). `/open` lo lee para no olvidar los sistemas que no se están trabajando |
 
 Regla de esta tabla: **no tocar todos los documentos por costumbre** — solo los que el trabajo
 de la sesión realmente volvió obsoletos.

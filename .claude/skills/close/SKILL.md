@@ -68,6 +68,13 @@ tiene cada archivo, sin inventar secciones estructurales nuevas que no encajen c
 convención existente (ej. `docs/ARCHITECTURE.md` usa secciones numeradas `## N. Título`;
 `CLAUDE.md` usa `## \`archivo.html\` — Descripción`).
 
+## 5b. Actualizar `docs/TABLERO-SALUD.md`
+
+Solo las filas de los sistemas que la sesión tocó o verificó: estado, fecha de **prueba en vivo**
+(solo si de verdad se probó contra producción o Jorge lo confirmó; un cambio de código sin prueba
+no la mueve) y pendiente principal. Cambia también la fecha de "Actualizado". Si un sistema se
+apagó o se retiró, pásalo a la tabla de sistemas viejos.
+
 ## 6. Proponer el commit de cierre — nunca comitear sin que se pida
 
 Revisa el patrón real de commits de cierre ya usado en este repo antes de asumir un formato:

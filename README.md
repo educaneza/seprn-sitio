@@ -46,7 +46,6 @@ rediseño, [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md); para bugs reales ya
 | Backend eventos | Google Apps Script (Web App) + Google Sheets |
 | Correo | GmailApp (Apps Script) + api.qrserver.com para QR |
 | Notificaciones | Bot de Telegram (API `sendMessage`) — solicitudes de Soporte Remoto |
-| Scanner QR | html5-qrcode v2.3.8 vía CDN (solo `asistencia.html`) |
 
 No hay framework, bundler, ni dependencias npm. El sitio es completamente estático. Los backends externos son 7 Google Apps Script (uno por Spreadsheet/flujo): `conferencia-ia.gs`, `cursos-coeee-2026.gs` (congelado desde jul 2026, ver abajo), `soporte-remoto.gs`, `formacion-docente.gs`, `mantenimiento.gs`, `asesorias.gs` (ago 2026) y `correo/` (webform de Correo Institucional — Alta/Cambio/Reset/Incidencias, 9 archivos en un solo proyecto de Apps Script, movido a este repo el 31 ago 2026 desde `Correos-institucionales/webform-2026-2027/`, en paralelo al Google Form viejo que sigue en producción; ver `docs/ARCHITECTURE.md §16`). La cuota diaria de `MailApp`/`GmailApp` la comparten los 7, no es por proyecto. Un octavo Apps Script, `panel-otde.gs` (ago 2026), no es backend de ningún flujo — vive en un Sheet propio y solo lee, vía `UrlFetchApp`, el `?action=pendientes` de los 4 backends con folio (los 3 sueltos + `correo/`) para mostrar en una sola hoja lo que falta atender; ver `docs/ARCHITECTURE.md §20`.
 
@@ -79,7 +78,6 @@ seprn-sitio/
 ├── script.js                     # JS global: hamburger menu + IntersectionObserver
 │
 ├── charla-ia.html                # Página del evento IA jun 2026 (informativa, sin formulario)
-├── asistencia.html                # Check-in con QR/PIN para operador en puerta (evento IA)
 ├── formacion-docente.html        # Centro de Formación Docente — catálogo dinámico + registro, diseño premium propio
 ├── instructivo-formacion-docente.html  # Guía imprimible del Centro de Formación Docente
 ├── ceremonias-civicas.html       # Ceremonias Cívicas (ago 2026) — reserva de visitas SEPRN-wide (no un trámite de OTDE), histórico y cobertura
