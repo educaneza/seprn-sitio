@@ -3101,3 +3101,72 @@ contiguos, `sin_lote`, reintentos, cancelados, vínculo, importación) + importa
 `curl` sin clave y con clave falsa → `no_autorizado`. Página única + 2D (mismo día): 29 pruebas en Node + 11 de navegador con los dos backends
 simulados (recorrido completo, usuario sin bitácora, bitácora con otra clave) + las 13 anteriores
 adaptadas; 0 errores de consola y 0 peticiones externas.
+
+## 32. Mejoras de operación: SIGEE, preparación de visita, atención administrativa y verificación cruzada (oct 2026)
+
+Seis ideas de Jorge salidas de la operación diaria, resueltas con patrones que ya existían
+(columnas al final, `PANEL_TOKEN`, compresión en el navegador, "no bloquear, señalar"). Las
+páginas están en producción desde el 14 oct 2026; los `.gs`, pendientes de desplegar (ROADMAP 33).
+
+**Correo — seguimiento de SIGEE (`apps-script/correo/Seguimiento.gs`).** Principio: quien
+atiende no captura más de lo que ya captura; las fechas se anotan solas desde el `onEditWebform`
+existente (`segRevisarEdicion_()`, llamado después de la revisión de cada tipo).
+- Columnas al final de las 5 hojas, agregadas por encabezado (`segAsegurarColumna_()`, mismo
+  criterio que `asegurarColumnaIdEnvio_()`; respeta la columna R sin encabezado de Cambio de
+  Contraseña): `NP SIGEE`, `Fecha subida a SIGEE`, `Fecha respuesta SIGEE`, `Motivo de rechazo`,
+  `Rechazo notificado`. Se crean en cada alta (`registrarSolicitudSinDuplicar_()` llama a
+  `segPrepararColumnas_()`) o con el menú "Preparar columnas de seguimiento SIGEE".
+- Disparadores: escribir el NP → fecha de subida; llenar usuario/contraseña (en Reset,
+  "¿Reset listo?" = Sí) → fecha de respuesta, editable porque solo es tan exacta como el momento
+  de la captura; elegir un motivo → `Estado general` = "Rechazada" y correo al solicitante. El
+  rechazo no aplica a una solicitud ya entregada y no se repite (`Rechazo notificado`).
+- "Rechazada" se agregó a los 5 dropdowns y semáforos de `Estado general`. Como no es "Solicitud
+  recibida", sale sola de `?action=pendientes` y del conteo de pendientes; no tiene `Fecha de
+  entrega`, así que no llega a `?action=correoMes`. `manejarConsultaCorreo()` devuelve el motivo
+  en `notas` (escapado: Oficina Virtual lo pinta como HTML).
+- `segResumenSemanal_()` agrega al resumen de los lunes: atoradas sin NP más de
+  `SEG_DIAS_ALERTA_SIGEE` días, entregadas en la semana sin NP, tiempos promedio de los 3 tramos
+  (nuestro, SIGEE, nuestro) en `SEG_DIAS_TIEMPOS` días, rechazos por motivo y causas de pérdida
+  de acceso. El correo sale aunque no haya pendientes si hay atoradas.
+
+**Correo — Authenticator.** `recuadroDosDispositivosHTML_()` (`Config.gs`) en los 3 correos que
+piden configurar la app. Pregunta obligatoria en Eliminar autenticación y Cambio + Eliminar,
+guardada con `segAnotarEnFolio_()` en `Motivo de pérdida de acceso` (opcional en el servidor).
+Infografía estática `images/authenticator-2-celulares.png`, generada desde HTML con Playwright.
+
+**Mantenimiento — "Prepárate para la visita".** El momento en que el solicitante presta atención
+es cuando llega la fecha programada; ahí va `manBloquePreparacion_()`, que lista solo lo que
+aplica (respaldo si hay equipo administrativo, aula lista si hay aula de medios, pilas CR2032 si
+hay síntoma de CMOS o el modelo dice "mini"). Versión corta en el correo de solicitud recibida;
+línea de pila CMOS y link de fotos en el aviso al técnico. Columnas al final de Solicitudes (AB-AD):
+`Síntoma de pila CMOS`, `Confirmó respaldo`, `Fotos de equipos`; `manAgregarSolicitud_()` ya las
+coloca por nombre de encabezado.
+
+**Mantenimiento — fotos de equipos.** Hasta `MAN_MAX_FOTOS_EQUIPOS` (3), comprimidas con
+`comprimirImagen()` (ahora en `js/tramites-shared.js`) y subidas por `manSubirFotosEquipos_()` a
+"Fotos de equipos (solicitudes)/<folio>" dentro del candado, después de generar el folio. Un
+fallo deja la solicitud sin fotos en vez de rechazarla.
+
+**Reporte de visita — tipo de atención.** "Tipo de atención" es el primer campo. Los elementos
+`.solo-aula` se ocultan con la clase `.oculto-tipo` (distinta de `.campo-oculto` para no chocar
+con los otros toggles) y la validación salta lo oculto. En "Solo equipos administrativos" el
+envío manda los campos del aula como "No aplica"/0, así `manValidarDatosReporte_()` no cambió.
+Columnas AD-AH de "Reportes de visita" (`COL_MAN_REP_TIPO_ATENCION`…`COL_MAN_REP_PILA_CMOS`);
+el PDF omite las filas del aula cuando `MAN_TIPO_ATENCION_ADMIN`. `MAN_ESTADOS_AULA` suma "⚫ No se
+pudo trabajar" (condiciones del espacio) y "No aplica".
+
+**Asesorías — verificación de mantenimiento previo.** Por CCT y no por folio (casi nadie guarda su
+folio). `manMantenimientoPorCct_()` (`?action=mantenimientoPorCct`, `PANEL_TOKEN`, solo lectura,
+sin datos personales): atendida = solicitud Resuelta o con reporte de visita; si no, la más
+reciente en proceso; además consulta la hoja opcional `MAN_HOJA_HISTORICO` (`Historico_v8.5`, CCT
+en columna A) para las aulas atendidas antes del sistema, y comprueba que el folio indicado sea
+de ese CCT. `aseVerificarMantenimiento_()` la llama antes del candado (URL en `MAN_URL`, menú
+"Configurar conexión con Mantenimiento") y escribe `Verificación de mantenimiento` + `Folio de
+mantenimiento indicado` al final de Solicitudes. **No bloquea**: el semáforo (por prefijo:
+Verificado / En proceso / Sin verificar) solo señala a Nancy qué revisar. La consulta no se hace
+en vivo desde la página, para no exponer en un endpoint público qué escuelas fueron atendidas.
+
+**Verificación (14 oct 2026):** simulaciones en Node con hojas falsas (Correo: fechas, rechazo,
+resumen; Asesorías: 9 casos) y Playwright local con el `fetch` interceptado para los 4
+formularios. Sin pruebas contra Apps Script real todavía.
+

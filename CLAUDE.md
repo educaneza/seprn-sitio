@@ -387,6 +387,15 @@ ya esté expandido).
   oficio (folio, escuela, CCT, `Equipos con falla`, link del oficio, estatus, notas) para el
   paso 2B de `apps-script/oficios.gs` (`manListarOficiosOV_`, solo lectura, columnas por nombre,
   mismo `PANEL_TOKEN`). Ver `docs/ARCHITECTURE.md §31`.
+- **Mejoras del 14 oct 2026 (páginas en producción, `.gs` pendiente de desplegar)**: casilla
+  obligatoria de respaldo (equipo administrativo), nota de aula limpia, pregunta de pila CMOS y
+  hasta 3 fotos opcionales de los equipos (`manSubirFotosEquipos_()`, carpeta "Fotos de equipos
+  (solicitudes)/<folio>"); columnas AB-AD al final de `Solicitudes`. `manBloquePreparacion_()`
+  agrega "Prepárate para la visita" a los correos de solicitud recibida y fecha programada.
+  `reporte-visita.html` abre con "Tipo de atención": en "Solo equipos administrativos" se ocultan
+  los campos del aula (van como "No aplica"/0), columnas AD-AH en "Reportes de visita", estado
+  "⚫ No se pudo trabajar". Endpoint `?action=mantenimientoPorCct` (`PANEL_TOKEN`) para la
+  verificación de Asesorías, con hoja opcional `Historico_v8.5`. Ver `docs/ARCHITECTURE.md §32`.
 
 ### `apps-script/asesorias.gs`
 - **Nuevo (ago 2026)**: mismo patrón que `mantenimiento.gs` (Sheet propio con hojas
@@ -478,6 +487,12 @@ ya esté expandido).
   compara CCT + correo + tipo de asesoría + observaciones). Ver `docs/ARCHITECTURE.md §27`.
 - **`?action=oficiosOV` (8 oct 2026, en producción)**: mismo endpoint que Mantenimiento
   (`aseListarOficiosOV_`, el detalle es `Tipo de Asesoría`), para el paso 2B de oficios.
+- **Verificación del mantenimiento previo (14 oct 2026, `.gs` pendiente de desplegar)**: para
+  Banco de Materiales y Chuka, `aseVerificarMantenimiento_()` consulta Mantenimiento por CCT
+  (`MAN_URL` + `PANEL_TOKEN`, menú "Configurar conexión con Mantenimiento") y escribe
+  `Verificación de mantenimiento` (Verificado / En proceso / Sin verificar, con semáforo) y
+  `Folio de mantenimiento indicado` al final de `Solicitudes`. **No bloquea** la solicitud
+  (decisión de Jorge). Folio opcional en `asesorias.html`. Ver `docs/ARCHITECTURE.md §32`.
 
 ### `apps-script/formacion-docente.gs`
 **Desplegado en producción desde jul 2026** (Spreadsheet real `Formacion_Docente_2026_2027`, URL real ya pegada en `APPS_SCRIPT_URL` de `formacion-docente.html`; la extinta `jornada-verano-2026.html` compartió este mismo backend hasta su eliminación el 13 jul 2026).
@@ -836,7 +851,8 @@ manual de Sector/Zona/Escuela (`js/cct-db.js`, detalle del patrón en `docs/ARCH
 §11`; cada campo del fallback valida y muestra su propio error — no agrupar todo bajo el
 mensaje del CCT, anti-patrón ya corregido dos veces), y Nombre/Escuela manual homologados a
 Title Case. `toTitleCase()`, `fetchJsonConTimeout()`, `otdePoblarFuncion()`,
-`leerArchivoBase64()`, `TAMANO_MAX_ARCHIVO_BYTES` y el indicador de progreso (`esperaConProgreso()`,
+`leerArchivoBase64()`, `TAMANO_MAX_ARCHIVO_BYTES`, `comprimirImagen()` (oct 2026; también la usa
+`reporte-visita.html`) y el indicador de progreso (`esperaConProgreso()`,
 `botonOcupado()`, `mostrarProgreso()`, oct 2026: todo envío debe mostrar que sigue trabajando,
 ver `docs/ARCHITECTURE.md §29`) viven en `js/tramites-shared.js`, cargado con
 `<script src="js/tramites-shared.js"></script>` en cada una de las 4 páginas, justo después de
@@ -1006,6 +1022,15 @@ arquitectura completo en `docs/ARCHITECTURE.md §16`. Resumen operativo:
   última columna con datos. En `Cambio de Contraseña` quedó en S porque Marcos usa la R, sin
   encabezado, para notas a mano. Al redesplegar hay que pegar **los 6** (`WebApp.gs` + los 5 tipos)
   y hacer una sola "Nueva versión". Ver `docs/ARCHITECTURE.md §27`.
+- **Seguimiento de SIGEE, rechazos y Authenticator (14 oct 2026, `correo.html` en producción,
+  `.gs` pendientes de desplegar)**: `apps-script/correo/Seguimiento.gs` (nuevo) agrega al final de
+  las 5 hojas `NP SIGEE`/`Fecha subida a SIGEE`/`Fecha respuesta SIGEE` (se anotan solas) y
+  `Motivo de rechazo` (elegirlo pone "Rechazada" y avisa al solicitante). El resumen semanal
+  suma atoradas sin NP, tiempos y rechazos. Los correos de Alta/Eliminar/Cambio + Eliminar traen
+  `recuadroDosDispositivosHTML_()`; los formularios de Eliminar y Cambio + Eliminar preguntan
+  "¿Qué pasó?" (`Motivo de pérdida de acceso`). Infografía `images/authenticator-2-celulares.png`.
+  Al redesplegar, pegar `Seguimiento.gs` **y** los 10 modificados en una sola Nueva versión, y
+  correr "Preparar columnas de seguimiento SIGEE". Ver `docs/ARCHITECTURE.md §32`.
 
 ### Mantenimiento (página propia desde el 27 ago 2026, ver `mantenimiento.html`)
 Ya no es solo texto ("solicita por oficio y vía estructura") — formulario "Solicitar
@@ -1311,6 +1336,11 @@ de la sesión realmente volvió obsoletos.
 Para saber qué sistema necesita atención (y cuál se está olvidando), empezar por
 `docs/TABLERO-SALUD.md`. Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/Identidad) y
 `docs/BITACORA.md` para el historial de qué ya se hizo. Resumen de lo genuinamente abierto:
+- **Mejoras de operación del 14 oct 2026 — desplegar los `.gs`**: las páginas ya están en
+  producción. Jorge despliega Correo → Mantenimiento → Asesorías (con sus pasos de menú) y prueba
+  cada uno con modo de prueba. Además: confirmar pila CR2032 con los técnicos, a qué correo más
+  llega el resumen semanal de Correo, y la lista del histórico de v8.5 (`Historico_v8.5`). Ver
+  `docs/ROADMAP.md` ítem 33.
 - **Operación interna OTDE — Fase 1 en producción y validada (24 sep 2026)**: bitácora +
   reporte mensual (`apps-script/bitacora.gs` + `bitacora.html`), probada con las 5 actividades
   reales de septiembre y pegada en el Excel real de Planeación. **Alimentación desde Mantenimiento

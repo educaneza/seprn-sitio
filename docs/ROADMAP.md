@@ -936,6 +936,20 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     real un `.docx` generado (solo se revisó con `python-docx` y unzip); (c) decidir si se enlaza
     desde `asesorias.html` (tipo "Excel básico") o desde una tarjeta de `oficina-virtual.html`
     (hoy no, por decisión de Jorge). Ver `docs/ARCHITECTURE.md §30`.
+33. **Mejoras de operación del 14 oct 2026 — desplegar los `.gs` y verificar en vivo.** Las
+    páginas ya están en producción; los 3 backends no. Falta: (a) Jorge despliega Correo
+    (`Seguimiento.gs` nuevo + 10 modificados, una sola Nueva versión, luego "Preparar columnas
+    de seguimiento SIGEE"), Mantenimiento ("Aplicar validación y semáforo") y Asesorías
+    ("Configurar conexión con Mantenimiento", "Probar verificación", "Aplicar validación y
+    semáforo"), en ese orden; (b) una prueba por sistema con modo de prueba activo (rechazo de
+    Correo y fechas de SIGEE; solicitud de Mantenimiento con fotos y equipo administrativo;
+    reporte "solo administrativo"; asesoría de Banco de Materiales); (c) confirmar con los
+    técnicos que la pila es CR2032; (d) decidir a qué correo más llega el resumen semanal de
+    Correo; (e) cuando exista, la lista de CCT del histórico de v8.5 en una hoja
+    `Historico_v8.5` del Sheet de Mantenimiento (sin cambios de código); (f) opcional: correo de
+    seguimiento a los 3 días con botón "Ya vinculé un segundo dispositivo" (patrón HMAC del
+    doble registro), cuando haya datos de "Motivo de pérdida de acceso". Ver
+    `docs/ARCHITECTURE.md §32`.
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue
