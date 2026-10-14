@@ -580,7 +580,10 @@ ya esté expandido).
   las **9am** (antes 8am). Ver `docs/QA-NOTES.md #40`.
 - Para cambios: copiar el `.gs` completo en Apps Script y re-desplegar como aplicación web (Cualquier usuario) — recordar **Administrar implementaciones → Nueva versión**, no solo "Guardar" en el editor, o el sitio sigue sirviendo la versión anterior
 
-### `apps-script/panel-otde.gs` (nuevo, ago 2026)
+### `apps-script/panel-otde.gs` (nuevo, ago 2026 — apagado el 14 oct 2026)
+- **Apagado (14 oct 2026):** Jorge nunca lo usó y Oficios ya muestra las solicitudes de
+  Mantenimiento y Asesorías. Se desinstaló su actualización automática (corría 48 veces al día,
+  hasta 35 s, del tope diario de activadores de la cuenta). El código y el Sheet se quedan
 - **No es un backend de trámite** — es un Apps Script aparte, pegado en un Google Sheet nuevo y propio ("Panel OTDE"), que junta en una sola hoja las solicitudes abiertas de Mantenimiento/Asesorías/Soporte/Correo, para no tener que entrar a los 4 Sheets por separado
 - Llama por `UrlFetchApp` al `?action=pendientes&token=...` de cada uno de los 4 backends (los 3 sueltos de `apps-script/` + `apps-script/correo/WebApp.gs`, ver esa sección abajo). Token en Propiedades del script (`PANEL_TOKEN`), mismo secreto que los 4 backends
 - Columna "Días" marcada en rojo/negrita a partir de `PANEL_UMBRAL_DIAS_ALERTA` (3 por default) sin moverse; aviso resumen arriba de la hoja
@@ -912,8 +915,10 @@ arquitectura completo en `docs/ARCHITECTURE.md §16`. Resumen operativo:
   un solo despliegue — 5 tipos desde sep 2026, sin constante nueva: el 5º reusa
   `CAMBIO_APPS_SCRIPT_URL`). El switcher del sitio ya mostraba los 4 tipos nativos originales desde
   antes de este despliegue, así que técnicamente el webform ya está en producción — pero el
-  sistema viejo de Marcos sigue vivo en paralelo; retirarlo es una decisión de Jorge, no
-  automática por haber desplegado esto.
+  sistema viejo de Marcos siguió vivo en paralelo hasta el **14 oct 2026**, cuando se apagó: el
+  Form ya no aceptaba respuestas y Jorge borró los activadores `resumenSemanal` y `onFormSubmit`
+  del proyecto "Envío automatico". Solo queda `onEditTrigger`, por si Marcos cierra a mano una
+  solicitud vieja.
 - **Notificaciones a Marcos por Telegram + correo, reactivadas y ampliadas (sep 2026)**: el 18
   ago 2026 Jorge había acotado Telegram a solo `Incidencias.gs` y decidido no agregar correo de
   respaldo, para evitar ruido en el chat compartido de OTDE ante trámites rutinarios. En sep

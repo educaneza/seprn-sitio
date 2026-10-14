@@ -27,7 +27,7 @@ Actualizado: **14 oct 2026**.
 | Mantenimiento (`mantenimiento.html`, `reporte-visita.html`, `mantenimiento.gs`) | Escuelas, Alejandro | Amarillo | 25 sep 2026 | v8.5 sigue vivo en paralelo; decidir su retiro (ROADMAP 9) |
 | Asesorías (`asesorias.html`, `asesorias.gs`) | Escuelas, Nancy | Verde | 25 sep 2026 | Que Nancy llene Fecha de realización y Asistentes al cerrar, para que llegue a la Bitácora |
 | Soporte remoto (`soporte.html`, `soporte-remoto.gs`) | Escuelas, Alejandro | Verde | 25 sep 2026 | Ninguno que afecte a usuarios (modo de prueba de correo escrito pero sin desplegar) |
-| Correo institucional (`correo.html`, `apps-script/correo/`) | Escuelas, Marcos | Amarillo | 25 sep 2026 | Quitar 2 activadores del proyecto viejo (ver abajo); prueba de punta a punta del tipo combinado `OTDE-CYR`; tipos "Actualización de datos" y "Baja" sin construir |
+| Correo institucional (`correo.html`, `apps-script/correo/`) | Escuelas, Marcos | Amarillo | 25 sep 2026 | Prueba de punta a punta del tipo combinado `OTDE-CYR`; tipos "Actualización de datos" y "Baja" sin construir |
 | Oficina Virtual (`oficina-virtual.html`) | Escuelas | Verde | 10 ago 2026 (consulta de los 7 prefijos con `curl`) | Ninguno |
 | Ceremonias Cívicas (`ceremonias-civicas.html`, `ficha-…`, `visitas-jefes.gs`) | ~20 jefes de la Subdirección | Verde | 14 oct 2026 (las 4 mejoras del 20 sep) | Ninguno. El panel de cobertura queda público sin clave (decisión de Jorge, 14 oct 2026) |
 | Estrategias Nacionales (`estrategias-nacionales.html`, `.gs`) | Programas Educativos | Verde | 29 sep 2026 | Al cambiar de ciclo: Sheet nueva y `MESES_EN_CICLO` |
@@ -40,8 +40,8 @@ Actualizado: **14 oct 2026**.
 
 | Sistema | Estado | Decisión |
 |---|---|---|
-| Form viejo de Correo (repo `Correos-institucionales`, proyecto "Envío automatico") | Casi apagado | El Form ya no acepta respuestas (833 en total). Faltan en manos de Jorge: borrar los activadores `resumenSemanal` (manda a Marcos un resumen de lunes repetido; corrió el 12 oct) y `onFormSubmit`. `onEditTrigger` se queda por si Marcos cierra a mano una solicitud vieja. Revisado el 14 oct 2026 |
-| Panel OTDE (`panel-otde.gs`) | Por apagar | Nunca se usó; Oficios ya muestra las solicitudes de Mantenimiento y Asesorías. Corre 48 veces al día (hasta 35 s cada vez) y gasta del tope diario de tiempo de activadores que comparten todos los sistemas de la cuenta. Jorge: menú "Panel OTDE → Desinstalar actualización automática". El código se queda |
+| Form viejo de Correo (repo `Correos-institucionales`, proyecto "Envío automatico") | Apagado | 14 oct 2026: el Form ya no aceptaba respuestas (833 en total) y Jorge borró los activadores `resumenSemanal` y `onFormSubmit`. Queda solo `onEditTrigger`, por si Marcos cierra a mano una solicitud vieja |
+| Panel OTDE (`panel-otde.gs`) | Apagado | 14 oct 2026: Jorge desinstaló su actualización automática (corría 48 veces al día sin que nadie lo usara). El código y el Sheet se quedan; se reactiva con "Instalar actualización automática" |
 | v8.5 (Reportes de Visitas, solo en Apps Script) | En revisión | Su Form de campo ("Rehabilitación de Aulas de Medios — Reporte de Visita Técnica") ya no acepta respuestas (18 en total): los técnicos solo usan `reporte-visita.html`. Solo queda el reporte mensual: falta que Jorge confirme si la Bitácora OTDE ya lo reemplaza (ROADMAP 9) |
 | `asistencia.html` + `conferencia-ia.gs` | Retirado | Sin uso desde el evento de jun 2026 (backend en 403). Se puede rehacer desde el historial de git |
 | `cursos-coeee-2026.gs` | Congelado | Archivo histórico de Verano 2026; no recibe nada |
