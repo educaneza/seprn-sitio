@@ -15,6 +15,25 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-10-14 (cont.) · Tablero de salud de los sistemas y apagado de sistemas viejos
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-14 |
+| **Sesión** | Jorge dijo sentirse abrumado: los sistemas funcionan, pero el feedback obliga a mejorarlos y al enfocarse en uno olvida los otros. Preguntó cuál requería más atención. La revisión de fechas de último cambio mostró que el código no está abandonado; lo que se acumula son cierres (pruebas en vivo pendientes, cosas "temporales", sistemas viejos en paralelo). |
+| **Tablero de salud** | `docs/TABLERO-SALUD.md`: una fila por sistema (quién lo usa, Verde/Amarillo/Rojo, fecha de la última prueba en vivo, pendiente principal), tabla de sistemas viejos y regla de rotación (1 de cada 3 sesiones a un sistema distinto al del momento). `/open` lo lee y muestra los sistemas en Rojo y los de prueba más vieja; `/close` actualiza solo las filas tocadas (paso 5b). Referencias en la tabla del ritual de cierre y en "Pendientes vigentes" de `CLAUDE.md`. |
+| **Confirmado por Jorge** | Ceremonias Cívicas: las 4 mejoras del 20 sep ya se probaron en vivo y funcionan; el panel de cobertura se queda público sin clave. Calendario de Formación Docente: funciona en iPhone y computadora; Android sin probar. |
+| **Retirado** | `asistencia.html` (check-in del evento IA de jun 2026, backend en 403, ninguna página la enlazaba). Recuperable con `git show 7a1f171:asistencia.html`; anotado en `CLAUDE.md` "Páginas retiradas (se pueden rehacer)". |
+| **Apagado** | Revisado en Chrome (cuenta OTDE, solo lectura). **Form viejo de Correo**: ya no aceptaba respuestas (833); su `resumenSemanal` seguía mandando a Marcos un resumen repetido los lunes. **Panel OTDE**: nunca se usó y corría 48 veces al día (hasta 35 s) del tope diario de activadores de la cuenta. El modo automático no permitió que Claude borrara activadores (cambio de configuración de cuenta), así que Jorge borró `resumenSemanal` y `onFormSubmit` de "Envío automatico" (queda `onEditTrigger`) y desinstaló la actualización del Panel. |
+| **v8.5** | Su Form de campo ya no acepta respuestas (18). Solo lo sostiene el reporte mensual; Jorge no sabe si ya lo saca completo de la Bitácora OTDE. Queda como decisión al armar el próximo reporte (ROADMAP 9). |
+| **Hallazgo** | "Mis activadores" de la cuenta tiene decenas de activadores "Al enviar el formulario" de Forms viejos sin proyecto visible. Anotado en el tablero como limpieza sin prisa. |
+| **Verificación** | GitHub Pages en `success` para `198d412`; `curl` a `asistencia.html` → 404. Las ejecuciones de la cuenta (últimos 7 días) confirmaron qué corre: Formación Docente cada 15 min, Oficios y Panel cada 30. |
+| **Pendiente** | v8.5: confirmar con el próximo reporte mensual si todavía hace falta. Barrido de activadores huérfanos. Calendario en Android. Lo del checkpoint anterior (capturas de la guía de Oficios, 14 importados, `ORIGEN_MAPS`, siguiente bloque de la Fase 2). La próxima `/open` ya muestra el tablero. |
+| **Documentación actualizada** | Este checkpoint, `docs/TABLERO-SALUD.md` (nuevo), `docs/ROADMAP.md` ítems 9, 17, 20 y 28, `CLAUDE.md` (páginas, Panel OTDE, Correo viejo, ritual de cierre, Pendientes vigentes), `README.md`, `docs/ARCHITECTURE.md` (diagrama de `asistencia.html`), skills `/open` y `/close`. |
+| **Commits** | `198d412` (tablero + retiro de `asistencia.html`), `6bf0e98` (Correo viejo y Panel apagados) y el de este cierre. |
+
+---
+
 ## CHECKPOINT — 2026-10-14 · Oficios simplificado: origen Interno, baja/sube deducido y un siguiente paso por oficio
 
 | | |

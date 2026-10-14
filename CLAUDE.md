@@ -1308,7 +1308,8 @@ Regla de esta tabla: **no tocar todos los documentos por costumbre** — solo lo
 de la sesión realmente volvió obsoletos.
 
 ## Pendientes vigentes
-Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/Identidad) y
+Para saber qué sistema necesita atención (y cuál se está olvidando), empezar por
+`docs/TABLERO-SALUD.md`. Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/Identidad) y
 `docs/BITACORA.md` para el historial de qué ya se hizo. Resumen de lo genuinamente abierto:
 - **Operación interna OTDE — Fase 1 en producción y validada (24 sep 2026)**: bitácora +
   reporte mensual (`apps-script/bitacora.gs` + `bitacora.html`), probada con las 5 actividades
@@ -1332,8 +1333,8 @@ Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/I
   control) también quedó en producción el mismo día. Siguiente: recordatorios, 2C o 2E. Ver `docs/ROADMAP.md` ítem 27. Ver `docs/PLAN-OPERACION-INTERNA.md` y `docs/ROADMAP.md` ítem 27.
 - ~~**Formación Docente — Workspace, decidir antes del 6 oct 2026**~~ — resuelto 12 oct 2026:
   Jorge canceló la prueba. Ver `docs/ROADMAP.md` ítem 26.
-- **Formación Docente — verificar en uso real el calendario**: probar un `.ics` en
-  Outlook/iPhone/Android, compartir la liga `?calendario=ACF-2627-001` y borrar los respaldos
+- **Formación Docente — verificar en uso real el calendario**: iPhone y computadora confirmados
+  por Jorge (14 oct 2026); falta Android (sin forma de probar) y Outlook. Compartir la liga `?calendario=ACF-2627-001` y borrar los respaldos
   del reordenamiento del 28 sep. La revisión de "Ejecuciones" del 6-7 oct ya se hizo (12 oct
   2026): en cursos de ~190 inscritos los correos casi no salen por cuota, y Jorge decidió dejarlo
   así porque **el calendario es el aviso principal**. Ver `docs/ROADMAP.md` ítems 19 y 28.
@@ -1390,9 +1391,10 @@ Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/I
 - ~~**Ceremonias Cívicas — `visitas-jefes.gs` con fixes sin desplegar (6 sep 2026)**~~ — nota
   desactualizada, corregida el 20 sep 2026: esos fixes (fichas duplicadas, fotos por semana) ya
   se habían pegado y redesplegado el 6 sep 2026 (`docs/ROADMAP.md` ítem 17 sí lo tenía correcto,
-  esta sección quedó desincronizada). Sigue abierto el pendiente (a) de ese mismo ítem: decidir si
-  el panel de cobertura se queda público o vuelve a pedir clave.
-- **Ceremonias Cívicas — verificación en vivo pendiente de las 4 etapas del 20 sep 2026**: Jorge
+  esta sección quedó desincronizada). El pendiente (a) se cerró el 14 oct 2026: el panel de
+  cobertura se queda público, sin clave (decisión de Jorge).
+- ~~**Ceremonias Cívicas — verificación en vivo pendiente de las 4 etapas del 20 sep 2026**~~ —
+  resuelto 14 oct 2026: Jorge confirmó que ya se probaron en vivo y funcionan. Historia: Jorge
   ya pegó y redesplegó `visitas-jefes.gs` (confirmado) y probó el reporte resumido (encontró y se
   corrigió el problema de legibilidad de la tabla). Falta probar en vivo, con una reserva real:
   reagendar/cancelar (conflicto de semana, liberación del cupo al cancelar, los mensajes por

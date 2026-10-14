@@ -502,6 +502,11 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
      barrido posterior. **Único pendiente real de esta fase**: el reporte mensual (formato
      Planeación, cruce contra el catálogo de direcciones) — menor prioridad, sigue viviendo solo en
      v8.5 mientras no se construya.
+   - **14 oct 2026:** el Form de campo de v8.5 ("Rehabilitación de Aulas de Medios — Reporte de
+     Visita Técnica") ya no acepta respuestas (18 en total): los técnicos solo usan
+     `reporte-visita.html`. Lo único que sostiene a v8.5 es el reporte mensual; Jorge no está
+     seguro de si ya lo saca completo de la Bitácora OTDE (`?action=reportesMes`, META 21/N.P. 7).
+     Si al armar el próximo reporte mensual no abre v8.5, se puede apagar (Fase 4).
    - **Fase 4 — no iniciada**: decidir el destino del histórico de v8.5 (380 aulas, reportes ya
      generados — probablemente archivo de solo lectura, no migración) y el corte real.
    Detalle completo del diseño de la Fase 1 y de la verificación en vivo de v8.5 que precedió la
@@ -601,8 +606,8 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     confirmados en vivo en `Solicitudes_Soporte_2026` y dropdowns confirmados en
     `Formacion_Docente_2026_2027` (hoja `Cursos`). Sin probar el diálogo de protección de solo
     aviso en ninguna de las dos hojas en esta ronda.
-17. **Feedback de una semana en producción de Ceremonias Cívicas (6 sep 2026) — desplegado,
-    queda decidir el panel público** (ver `docs/BITACORA.md` y `docs/ARCHITECTURE.md §22` para el
+17. **Feedback de una semana en producción de Ceremonias Cívicas (6 sep 2026) — desplegado;
+    panel público decidido (14 oct 2026)** (ver `docs/BITACORA.md` y `docs/ARCHITECTURE.md §22` para el
     detalle completo): `apps-script/visitas-jefes.gs` con el fix de fichas duplicadas
     (`LockService` + idempotencia por folio) y la organización de fotos por semana ya se pegó y
     redesplegó en el proyecto real de Apps Script (6 sep 2026). El panel de cobertura ya quedó en
@@ -611,7 +616,8 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     `visConfigurarDashboardPublico(true)` desde el dropdown ▶️ Ejecutar (esa función necesita un
     argumento — correrla así la deja sin argumentos y guarda `'false'`, mismo gotcha que ya
     advierte `docs/QA-NOTES.md #14`); verificado con un GET de solo lectura a
-    `?action=dashboard&token=` devolviendo datos reales sin token. Pendiente real: (a) que Jorge
+    `?action=dashboard&token=` devolviendo datos reales sin token. **(a) Resuelto el 14 oct 2026: el panel se queda público, sin clave (decisión de Jorge).**
+    Antes: (a) que Jorge
     decida, tras unos días de prueba, si el panel se queda público o se revierte a pedir clave
     (`visConfigurarDashboardPublico(false)` o borrar la Script Property); (b) confirmar que el
     reenvío de una ficha ya enviada responde `ya_enviada` sin duplicar fotos en Drive — decisión
@@ -653,8 +659,9 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     `Inscripciones_respaldo_20260928` (esos dos ya se compararon celda por celda contra las hojas
     nuevas, sin diferencias de datos).
 
-20. **Ceremonias Cívicas — 4 etapas + rediseño de reporte, desplegadas 20 sep 2026, falta
-    verificación en vivo contra datos reales** (ver `docs/ARCHITECTURE.md` §22 para el detalle
+20. ~~**Ceremonias Cívicas — 4 etapas + rediseño de reporte, desplegadas 20 sep 2026, falta
+    verificación en vivo contra datos reales**~~ — **resuelto 14 oct 2026: Jorge confirmó que las
+    mejoras ya se probaron en vivo y todo funciona bien.** Historia (ver `docs/ARCHITECTURE.md` §22 para el detalle
     completo de cada etapa, `docs/QA-NOTES.md #33` para el bug de ventana de fecha encontrado y
     corregido antes de desplegar): filtros de historial + sectores 0/X en el Panel de cobertura
     (frontend, ya en `origin/main`); reagendar/cancelar visita (columna `Historial de cambios`
@@ -848,7 +855,9 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
 28. **Formación Docente — calendario y cuota "a quien alcance": verificación en uso real**
     (construido, desplegado y verificado en vivo el 28 sep 2026, ver `docs/ARCHITECTURE.md §12` y
     `docs/BITACORA.md`). Falta:
-    (a) Importar un `.ics` real en Outlook (`@dee.edu.mx`), iPhone y Android y confirmar que la
+    (a) **14 oct 2026: Jorge confirmó que los botones de calendario funcionan en iPhone y en
+    computadora. Android sigue sin probar (no tiene cómo).** Original: importar un `.ics` real en
+    Outlook (`@dee.edu.mx`), iPhone y Android y confirmar que la
     alarma de 30 min suena (probado solo en Chrome headless). Desde el 29 sep, confirmar también
     que el botón marcado "Recomendado" en cada celular es el que sí agrega el evento (Google en
     Android, `.ics` en iPhone) y que "Todos mis cursos" importa todos los eventos en iPhone.
