@@ -840,30 +840,6 @@ const REP_COMPRESION_ANCHO_MAX = 1600;
 const REP_COMPRESION_CALIDAD = 0.8;
 const REP_FOTOS_TIMEOUT_MS = 120000;
 
-function comprimirImagen(file) {
-  return new Promise(function (resolve, reject) {
-    var img = new Image();
-    var reader = new FileReader();
-    reader.onload = function (e) {
-      img.onload = function () {
-        var ratio = Math.min(1, REP_COMPRESION_ANCHO_MAX / img.width);
-        var canvas = document.createElement('canvas');
-        canvas.width = Math.round(img.width * ratio);
-        canvas.height = Math.round(img.height * ratio);
-        var ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        canvas.toBlob(function (blob) {
-          blob ? resolve(blob) : reject(new Error('No se pudo comprimir la imagen.'));
-        }, 'image/jpeg', REP_COMPRESION_CALIDAD);
-      };
-      img.onerror = function () { reject(new Error('No se pudo leer la imagen.')); };
-      img.src = e.target.result;
-    };
-    reader.onerror = function () { reject(reader.error); };
-    reader.readAsDataURL(file);
-  });
-}
-
 document.getElementById('fotos-evidencia').addEventListener('change', function () {
   var preview = document.getElementById('fotos-preview');
   preview.innerHTML = '';
@@ -1367,7 +1343,7 @@ document.getElementById('form-reporte').addEventListener('submit', async (e) => 
     const fotos = [];
     for (let i = 0; i < files.length; i++) {
       btn.innerHTML = '<span class="spinner"></span>Comprimiendo y subiendo fotos (' + (i + 1) + ' de ' + files.length + ')…';
-      const comprimida = await comprimirImagen(files[i]);
+      const comprimida = await comprimirImagen(files[i], REP_COMPRESION_ANCHO_MAX, REP_COMPRESION_CALIDAD);
       const base64 = await leerArchivoBase64(comprimida);
       fotos.push({ base64: base64, nombre: files[i].name, tipo: 'image/jpeg' });
     }

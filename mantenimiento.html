@@ -289,6 +289,13 @@
                         <label for="man-marca-modelo">Marca y modelo (opcional, si lo sabes)</label>
                         <input type="text" id="man-marca-modelo" placeholder="Ej. HP ProDesk, Dell OptiPlex...">
                     </div>
+                    <div class="soporte-form-group" id="man-fotos-group" style="display:none;">
+                        <label for="man-fotos">Fotos de tus equipos (opcional, hasta 3)</label>
+                        <input type="file" id="man-fotos" accept="image/*" multiple>
+                        <div class="soporte-field-hint">Muy recomendable: ayudan al técnico a llevar lo necesario. Toma una foto de la <strong>etiqueta con el modelo</strong> (atrás o abajo del equipo) de cada modelo distinto que tengas. Si no sabes cuál es, una foto del equipo completo también sirve.</div>
+                        <div id="man-fotos-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;"></div>
+                        <div class="soporte-field-error" id="man-fotos-error">Puedes adjuntar hasta 3 fotos.</div>
+                    </div>
                     <div class="soporte-form-group" id="man-estado-equipo-group" style="display:none;">
                         <label for="man-estado-equipo">Estado actual<span class="req">*</span></label>
                         <select id="man-estado-equipo">
@@ -582,6 +589,29 @@
     manInitCctAutocomplete();
     otdePoblarFuncion('man-funcion', null);
 
+    // ── Fotos de los equipos (oct 2026, opcionales): saber los modelos antes de la visita.
+    // Se comprimen en el navegador (comprimirImagen, js/tramites-shared.js) y viajan
+    // junto con el oficio. ──
+    var MAN_MAX_FOTOS = 3;
+    var MAN_MAX_FOTO_BYTES_ORIGINAL = 15 * 1024 * 1024;
+    function manLimpiarFotos() {
+        document.getElementById('man-fotos').value = '';
+        document.getElementById('man-fotos-preview').innerHTML = '';
+        document.getElementById('man-fotos-error').classList.remove('visible');
+    }
+    document.getElementById('man-fotos').addEventListener('change', function() {
+        var preview = document.getElementById('man-fotos-preview');
+        preview.innerHTML = '';
+        Array.from(this.files || []).slice(0, MAN_MAX_FOTOS).forEach(function(file) {
+            var img = document.createElement('img');
+            img.src = URL.createObjectURL(file);
+            img.alt = '';
+            img.style.cssText = 'width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--arena, #d6d1ca);';
+            preview.appendChild(img);
+        });
+        document.getElementById('man-fotos-error').classList.remove('visible');
+    });
+
     document.getElementById('man-confirma-respaldo').addEventListener('change', function() {
         if (this.checked) document.getElementById('man-confirma-respaldo-error').classList.remove('visible');
     });
@@ -602,6 +632,8 @@
         }
         var hayComputadora = document.getElementById('man-equipo-aula').checked || document.getElementById('man-equipo-admin').checked;
         document.getElementById('man-marca-modelo-group').style.display = hayComputadora ? 'block' : 'none';
+        document.getElementById('man-fotos-group').style.display = hayComputadora ? 'block' : 'none';
+        if (!hayComputadora) manLimpiarFotos();
         document.getElementById('man-estado-equipo-group').style.display = hayComputadora ? 'block' : 'none';
         document.getElementById('man-cmos-group').style.display = hayComputadora ? 'block' : 'none';
         if (!hayComputadora) document.getElementById('man-cmos').value = '';
@@ -799,6 +831,19 @@
             respaldoErr.classList.remove('visible');
         }
 
+        var fotosInput = document.getElementById('man-fotos');
+        var fotosErr = document.getElementById('man-fotos-error');
+        var fotos = Array.from(fotosInput.files || []);
+        if (fotos.length > MAN_MAX_FOTOS) {
+            fotosErr.textContent = 'Puedes adjuntar hasta ' + MAN_MAX_FOTOS + ' fotos.';
+            fotosErr.classList.add('visible'); ok = false;
+        } else if (fotos.some(function(f) { return f.size > MAN_MAX_FOTO_BYTES_ORIGINAL; })) {
+            fotosErr.textContent = 'Una de las fotos es demasiado pesada (máximo 15MB).';
+            fotosErr.classList.add('visible'); ok = false;
+        } else {
+            fotosErr.classList.remove('visible');
+        }
+
         var oficioInput = document.getElementById('man-oficio');
         var oficioErr = document.getElementById('man-oficio-error');
         var oficioFile = oficioInput.files[0];
@@ -857,6 +902,14 @@
 
         try {
             var oficioBase64 = await leerArchivoBase64(oficioFile);
+
+            var fotosArchivos = Array.from(document.getElementById('man-fotos').files || []).slice(0, MAN_MAX_FOTOS);
+            var fotosEquipos = [];
+            for (var i = 0; i < fotosArchivos.length; i++) {
+                espera.etapa('Preparando foto ' + (i + 1) + ' de ' + fotosArchivos.length + '…');
+                var comprimida = await comprimirImagen(fotosArchivos[i]);
+                fotosEquipos.push({ base64: await leerArchivoBase64(comprimida), tipo: 'image/jpeg' });
+            }
             espera.etapa('Enviando tu solicitud…');
 
             var tipoEquipo = [];
@@ -887,6 +940,7 @@
                 oficioBase64: oficioBase64,
                 oficioNombre: oficioFile.name,
                 oficioTipo: oficioFile.type,
+                fotosEquipos: fotosEquipos,
                 idEnvio: idEnvioMan
             };
 
@@ -909,6 +963,7 @@
                 document.getElementById('man-otra-funcion-group').style.display = 'none';
                 manToggleCantidad('aula');
                 manToggleCantidad('admin');
+                manLimpiarFotos();
                 document.querySelectorAll('#mantenimiento-form .error').forEach(function(el) { el.classList.remove('error'); });
                 document.querySelectorAll('#mantenimiento-form .soporte-field-error.visible').forEach(function(el) { el.classList.remove('visible'); });
                 manResetCct();

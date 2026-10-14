@@ -72,6 +72,34 @@ function leerArchivoBase64(file) {
     });
 }
 
+// Comprime una foto en el navegador antes de subirla (canvas → JPEG): una foto de
+// celular de 4-8MB queda en unos cientos de KB. Compartida por reporte-visita.html y
+// mantenimiento.html (oct 2026); ficha-ceremonias-civicas.html conserva su copia.
+function comprimirImagen(file, anchoMax, calidad) {
+    anchoMax = anchoMax || 1600;
+    calidad = calidad || 0.8;
+    return new Promise(function(resolve, reject) {
+        var img = new Image();
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            img.onload = function() {
+                var ratio = Math.min(1, anchoMax / img.width);
+                var canvas = document.createElement('canvas');
+                canvas.width = Math.round(img.width * ratio);
+                canvas.height = Math.round(img.height * ratio);
+                canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                canvas.toBlob(function(blob) {
+                    blob ? resolve(blob) : reject(new Error('No se pudo comprimir la imagen.'));
+                }, 'image/jpeg', calidad);
+            };
+            img.onerror = function() { reject(new Error('No se pudo leer la imagen.')); };
+            img.src = e.target.result;
+        };
+        reader.onerror = function() { reject(reader.error); };
+        reader.readAsDataURL(file);
+    });
+}
+
 // ── "Que se note que sigue trabajando" (oct 2026) ──
 // Nace porque al enviar una ficha con fotos el jefe veía la página quieta por
 // medio minuto y pensaba que se había trabado: los avisos de progreso se escribían

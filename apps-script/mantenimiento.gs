@@ -39,6 +39,7 @@
 //   X Notificación de fecha programada enviada | Y Técnico asignado
 //   Z Notificación a técnico enviada | AA ID de envío
 //   AB Síntoma de pila CMOS | AC Confirmó respaldo (oct 2026, al final a propósito)
+//   AD Fotos de equipos (link a la carpeta de Drive del folio, opcional)
 //
 // COLUMNAS DE LA HOJA "Contactos_Zona_Sector" (Jorge la llena a mano):
 //   A Sector | B Zona | C Correo | D Teléfono
@@ -143,8 +144,12 @@ const ENCABEZADOS_MAN_SOLICITUDES = [
   'Notificación a técnico enviada', 'ID de envío',
   // Oct 2026, al final para no correr ninguna columna existente (se auto-completan
   // en manObtenerHojaSolicitudes). Alimentan "Prepárate para la visita".
-  'Síntoma de pila CMOS', 'Confirmó respaldo'
+  'Síntoma de pila CMOS', 'Confirmó respaldo', 'Fotos de equipos'
 ];
+// Fotos opcionales de los equipos (oct 2026): para que el técnico sepa qué modelos
+// hay antes de ir. Ya comprimidas en el navegador; carpeta por folio en Drive.
+const CARPETA_MAN_FOTOS_EQUIPOS = 'Fotos de equipos (solicitudes)';
+const MAN_MAX_FOTOS_EQUIPOS = 3;
 // Ventana del respaldo anti-duplicados para envíos sin idEnvio (páginas viejas en caché):
 // misma CCT + correo + "Equipos con falla" dentro de estos minutos = mismo envío.
 const MAN_VENTANA_DUPLICADO_MIN = 10;
@@ -543,6 +548,7 @@ function doPost(e) {
 
       oficioUrl = manSubirOficio(datos);
       folio = manGenerarFolio(hoja);
+      datos.fotosUrl = manSubirFotosEquipos_(folio, datos.fotosEquipos);
       manAgregarSolicitud_(hoja, datos, folio, oficioUrl);
       SpreadsheetApp.flush();
     } finally {
@@ -631,6 +637,7 @@ function manAgregarSolicitud_(hoja, datos, folio, oficioUrl) {
   fila[col('ID de envío')] = String(datos.idEnvio || '').trim();
   fila[col('Síntoma de pila CMOS')] = String(datos.sintomaCmos || '').trim();
   fila[col('Confirmó respaldo')] = datos.confirmaRespaldo === true ? 'Sí' : '';
+  fila[col('Fotos de equipos')] = datos.fotosUrl || '';
   hoja.appendRow(fila);
 }
 
@@ -894,6 +901,29 @@ function manSubirOficio(d) {
   return archivo.getUrl();
 }
 
+// ── Sube las fotos opcionales de los equipos a "Fotos de equipos (solicitudes)/<folio>"
+// y devuelve el link de esa carpeta ('' si no hay fotos). Si algo falla, la solicitud
+// se registra igual sin fotos: son un apoyo, no un requisito. Reutiliza los helpers de
+// carpeta de las fotos del reporte (compartir una sola vez, no por archivo, QA-NOTES #23). ──
+function manSubirFotosEquipos_(folio, fotos) {
+  if (!fotos || !fotos.length) return '';
+  try {
+    const carpetas = DriveApp.getFoldersByName(CARPETA_MAN_FOTOS_EQUIPOS);
+    const base = carpetas.hasNext() ? carpetas.next() : DriveApp.createFolder(CARPETA_MAN_FOTOS_EQUIPOS);
+    const carpeta = manObtenerCarpetaFotosPorFolio_(base, folio);
+    fotos.slice(0, MAN_MAX_FOTOS_EQUIPOS).forEach(function (foto, idx) {
+      const bytes = Utilities.base64Decode(foto.base64);
+      if (bytes.length > MAN_TAMANO_MAX_BYTES) return;
+      const mimeType = foto.tipo || 'image/jpeg';
+      carpeta.createFile(Utilities.newBlob(bytes, mimeType, folio + ' — equipo ' + (idx + 1) + '.' + manExtensionPorMime_(mimeType)));
+    });
+    return carpeta.getUrl();
+  } catch (err) {
+    Logger.log('No se pudieron subir las fotos de equipos de ' + folio + ': ' + err.message);
+    return '';
+  }
+}
+
 // ── Obtener o crear la carpeta de Drive para los oficios ──
 function manObtenerCarpetaOficios() {
   const carpetas = DriveApp.getFoldersByName(CARPETA_MAN_OFICIOS);
@@ -1048,7 +1078,8 @@ function manNotificarTelegram(folio, d, oficioUrl) {
       'WhatsApp: ' + d.whatsapp.trim() + '\n' +
       (d.tipoEquipo ? 'Tipo de equipo: ' + manEscapeMarkdown_(d.tipoEquipo) + '\n' : '') +
       'Equipos con falla: ' + manEscapeMarkdown_(d.equipos.trim()) + '\n' +
-      'Oficio: ' + manEscapeMarkdown_(oficioUrl);
+      'Oficio: ' + manEscapeMarkdown_(oficioUrl) +
+      (d.fotosUrl ? '\nFotos de equipos: ' + manEscapeMarkdown_(d.fotosUrl) : '');
 
     UrlFetchApp.fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
       method: 'post',
@@ -1075,7 +1106,8 @@ function manNotificarEquipoPorCorreo(folio, d, oficioUrl) {
         '<p style="margin:0 0 8px 0;font-size:14px;">Nombre: ' + manEscapeHtml_(d.nombre.trim()) + ' (' + manEscapeHtml_(d.funcion.trim()) + ')</p>' +
         '<p style="margin:0 0 8px 0;font-size:14px;">CCT: ' + manEscapeHtml_(d.cct.trim().toUpperCase()) + (d.escuela ? ' — ' + manEscapeHtml_(d.escuela.trim()) : '') + '</p>' +
         '<p style="margin:0 0 8px 0;font-size:14px;">Equipos con falla: ' + manEscapeHtml_(d.equipos.trim()) + '</p>' +
-        '<p style="margin:0;font-size:14px;">Oficio: <a href="' + oficioUrl + '">' + oficioUrl + '</a></p>',
+        '<p style="margin:0;font-size:14px;">Oficio: <a href="' + oficioUrl + '">' + oficioUrl + '</a></p>' +
+        (d.fotosUrl ? '<p style="margin:8px 0 0 0;font-size:14px;">Fotos de equipos: <a href="' + d.fotosUrl + '">' + d.fotosUrl + '</a></p>' : ''),
       name: 'OTDE | Oficina de Tecnología para el Desarrollo Educativo',
       replyTo: 'otde.nezahualcoyotl@dee.edu.mx'
     });
@@ -1532,7 +1564,9 @@ function manNotificarTecnicoAsignado(fila) {
         { icono: '🏢', etiqueta: 'Sector / Zona', valor: 'Sector ' + manEscapeHtml_(sector) + ' · Zona ' + manEscapeHtml_(zona) },
         { icono: '🛠️', etiqueta: 'Equipos con falla reportados', valor: manEscapeHtml_(equipos || '—') },
         { icono: '👤', etiqueta: 'Contacto en la escuela', valor: manEscapeHtml_(nombre) + (whatsapp ? ' · WhatsApp ' + manEscapeHtml_(whatsapp) : '') }
-      ].concat(manNecesitaPilaCmos_(manInfoPreparacionDeFila_(fila))
+      ].concat(fila[ENCABEZADOS_MAN_SOLICITUDES.indexOf('Fotos de equipos')]
+        ? [{ icono: '📷', etiqueta: 'Fotos de los equipos', valor: '<a href="' + fila[ENCABEZADOS_MAN_SOLICITUDES.indexOf('Fotos de equipos')] + '" style="color:#9F2241;">Ver fotos que envió la escuela</a>' }]
+        : []).concat(manNecesitaPilaCmos_(manInfoPreparacionDeFila_(fila))
         ? [{ icono: '🔋', etiqueta: 'Posible pila CMOS', valor: 'La escuela reporta fecha/hora equivocada o modelo HP Mini. Lleva pilas CR2032 de repuesto por si no las consiguieron.' }]
         : []),
       colorCaja: '#977e5b',
