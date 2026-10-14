@@ -100,6 +100,10 @@
                         <span>Confirmo que mi Aula de Medios ya recibió una visita de mantenimiento con instalación de Banco de Materiales y Chuka<span class="req">*</span> — esta asesoría requiere que esos recursos ya estén instalados en los equipos.</span>
                     </label>
                     <div class="soporte-field-error" id="ase-confirma-mantenimiento-error">Debes confirmar esto antes de continuar; si aún no tienes mantenimiento, solicítalo primero desde la <a href="oficina-virtual.html">Oficina Virtual</a>.</div>
+                    <label for="ase-folio-mantenimiento" style="margin-top:12px;display:block;">Folio de tu solicitud de mantenimiento (opcional, si lo tienes)</label>
+                    <input type="text" id="ase-folio-mantenimiento" placeholder="OTDE-MAN-0000" maxlength="13" autocomplete="off" style="text-transform:uppercase;">
+                    <div class="soporte-field-hint">Viene en el correo que recibiste al solicitar el mantenimiento. Si no lo tienes, no pasa nada: lo buscamos con tu CCT.</div>
+                    <div class="soporte-field-error" id="ase-folio-mantenimiento-error">El folio se ve así: OTDE-MAN-0000.</div>
                 </div>
                 <div class="soporte-form-group" id="ase-excel-temas-group" style="display:none;">
                     <label>¿Qué te gustaría aprender? (opcional, puedes marcar varios)</label>
@@ -358,6 +362,10 @@
     document.getElementById('ase-escuela-manual').addEventListener('blur', function() {
         if (this.value.trim()) this.value = toTitleCase(this.value);
     });
+    document.getElementById('ase-folio-mantenimiento').addEventListener('input', function() {
+        this.classList.remove('error');
+        document.getElementById('ase-folio-mantenimiento-error').classList.remove('visible');
+    });
     document.getElementById('ase-confirma-mantenimiento').addEventListener('change', function() {
         if (this.checked) document.getElementById('ase-confirma-mantenimiento-error').classList.remove('visible');
     });
@@ -377,6 +385,8 @@
         if (!esBanco) {
             confirmaInput.checked = false;
             document.getElementById('ase-confirma-mantenimiento-error').classList.remove('visible');
+            document.getElementById('ase-folio-mantenimiento').value = '';
+            document.getElementById('ase-folio-mantenimiento-error').classList.remove('visible');
         }
 
         document.getElementById('ase-excel-temas-group').style.display = esExcel ? 'block' : 'none';
@@ -563,6 +573,17 @@
 
         var confirmaInput = document.getElementById('ase-confirma-mantenimiento');
         var confirmaErr = document.getElementById('ase-confirma-mantenimiento-error');
+        // Folio de mantenimiento: opcional, pero si se escribe debe tener el formato.
+        var folioManInput = document.getElementById('ase-folio-mantenimiento');
+        var folioManErr = document.getElementById('ase-folio-mantenimiento-error');
+        var folioManVal = folioManInput.value.trim().toUpperCase();
+        if (document.getElementById('ase-tipo').value === 'Banco de Materiales y Chuka' &&
+            folioManVal && !/^OTDE-MAN-\d{4}$/.test(folioManVal)) {
+            folioManInput.classList.add('error'); folioManErr.classList.add('visible'); ok = false;
+        } else {
+            folioManInput.classList.remove('error'); folioManErr.classList.remove('visible');
+        }
+
         if (document.getElementById('ase-tipo').value === 'Banco de Materiales y Chuka' && !confirmaInput.checked) {
             confirmaErr.classList.add('visible');
             ok = false;
@@ -766,6 +787,8 @@
                 correo: document.getElementById('ase-correo').value,
                 observaciones: document.getElementById('ase-observaciones').value,
                 confirmaMantenimiento: document.getElementById('ase-confirma-mantenimiento').checked,
+                folioMantenimiento: document.getElementById('ase-tipo').value === 'Banco de Materiales y Chuka'
+                    ? document.getElementById('ase-folio-mantenimiento').value.trim().toUpperCase() : '',
                 temasExcel: temasExcelVal,
                 oficioBase64: oficioBase64,
                 oficioNombre: oficioFile.name,

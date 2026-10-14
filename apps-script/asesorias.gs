@@ -112,7 +112,10 @@ const ENCABEZADOS_ASE_SOLICITUDES = [
   'Confirmó Mantenimiento Previo', 'Notificación de cierre enviada',
   'Tipo de solicitante', 'Fecha programada de visita',
   'Notificación de fecha programada enviada', 'Temas de Excel',
-  'Fecha de realización', 'Asistentes', 'ID de envío'
+  'Fecha de realización', 'Asistentes', 'ID de envío',
+  // Oct 2026, al final: resultado de consultar Mantenimiento por CCT (ver
+  // aseVerificarMantenimiento_). Solo para Banco de Materiales y Chuka.
+  'Verificación de mantenimiento', 'Folio de mantenimiento indicado'
 ];
 // Ventana del respaldo anti-duplicados para envíos sin idEnvio (páginas viejas en caché):
 // misma CCT + correo + tipo de asesoría + observaciones dentro de estos minutos = mismo envío.
@@ -157,6 +160,58 @@ function aseDesactivarModoPrueba() {
 // largo') desde el editor — el mismo valor debe pegarse en panel-otde.gs. ──
 function aseConfigurarTokenPanel(token) {
   PropertiesService.getScriptProperties().setProperty('PANEL_TOKEN', token);
+}
+
+// ── Verificación del mantenimiento previo (oct 2026) ──
+// Banco de Materiales y Chuka exige que la escuela ya haya recibido mantenimiento con
+// esos recursos instalados. Antes solo había una casilla que cualquiera podía marcar;
+// ahora, al registrar, se consulta Mantenimiento por CCT (?action=mantenimientoPorCct en
+// mantenimiento.gs, mismo PANEL_TOKEN) y el resultado queda en "Verificación de
+// mantenimiento". NO bloquea la solicitud: muchas escuelas se atendieron antes de que
+// existiera el sistema; "Sin verificar" solo le pide a Nancy revisarla. Configura la URL
+// de Mantenimiento una vez con aseConfigurarConexionMantenimiento('https://script.google.com/...').
+function aseConfigurarConexionMantenimiento(url) {
+  PropertiesService.getScriptProperties().setProperty('MAN_URL', String(url || '').trim());
+}
+
+function aseVerificarMantenimiento_(cct, folioDado) {
+  try {
+    const props = PropertiesService.getScriptProperties();
+    const url = props.getProperty('MAN_URL');
+    const token = props.getProperty('PANEL_TOKEN');
+    if (!url || !token) return 'Sin verificar — falta configurar la conexión con Mantenimiento';
+    const resp = UrlFetchApp.fetch(url + '?action=mantenimientoPorCct' +
+      '&token=' + encodeURIComponent(token) +
+      '&cct=' + encodeURIComponent(String(cct || '').trim().toUpperCase()) +
+      (folioDado ? '&folio=' + encodeURIComponent(folioDado) : ''),
+      { muteHttpExceptions: true, followRedirects: true });
+    const r = JSON.parse(resp.getContentText());
+    if (r.status !== 'ok') return 'Sin verificar — no se pudo consultar Mantenimiento';
+
+    const avisoFolio = r.folioDado === 'otra_escuela' ? ' (ojo: el folio ' + folioDado + ' es de otra escuela)'
+      : r.folioDado === 'no_existe' ? ' (ojo: el folio ' + folioDado + ' no existe)' : '';
+    if (r.atendida && r.fuente === 'historico') return 'Verificado (histórico v8.5)' + avisoFolio;
+    if (r.atendida) return 'Verificado (' + r.folio + (r.fecha ? ', solicitado ' + r.fecha : '') + ')' + avisoFolio;
+    if (r.enProceso) return 'En proceso — mantenimiento ' + r.enProceso.folio + ' aún sin atender' + avisoFolio;
+    return 'Sin verificar — no hay mantenimiento registrado para este CCT' + avisoFolio;
+  } catch (err) {
+    return 'Sin verificar — no se pudo consultar Mantenimiento';
+  }
+}
+
+// Color por cómo empieza el texto (el detalle del folio cambia en cada fila).
+function aseAplicarSemaforoVerificacion_(hoja) {
+  const col = ENCABEZADOS_ASE_SOLICITUDES.indexOf('Verificación de mantenimiento') + 1;
+  const rango = hoja.getRange(2, col, 1000, 1);
+  const otras = hoja.getConditionalFormatRules().filter(function (r) {
+    return r.getRanges().every(function (rg) { return rg.getColumn() !== col; });
+  });
+  const reglas = [['Verificado', '#d1fae5'], ['En proceso', '#fef3c7'], ['Sin verificar', '#fed7aa']]
+    .map(function (par) {
+      return SpreadsheetApp.newConditionalFormatRule().whenTextStartsWith(par[0])
+        .setBackground(par[1]).setRanges([rango]).build();
+    });
+  hoja.setConditionalFormatRules(otras.concat(reglas));
 }
 
 // ── Escapa HTML/Markdown de campos capturados por el solicitante antes de
@@ -374,6 +429,11 @@ function doPost(e) {
     const datos = JSON.parse(e.postData.contents);
     aseValidarCampos(datos);
 
+    // Antes del candado: la consulta a Mantenimiento tarda un par de segundos.
+    datos.folioMantenimiento = String(datos.folioMantenimiento || '').trim().toUpperCase();
+    datos.verificacionMantenimiento = datos.tipoAsesoria.trim() === 'Banco de Materiales y Chuka'
+      ? aseVerificarMantenimiento_(datos.cct, datos.folioMantenimiento) : '';
+
     // LockService + "ID de envío" generado en el navegador: si la confirmación se pierde
     // en el camino (el servidor sí guardó) y la persona vuelve a presionar Enviar, el
     // reintento devuelve el mismo folio en vez de crear otro (QA-NOTES #44, mismo
@@ -481,9 +541,13 @@ function aseAgregarSolicitud_(hoja, datos, folio, oficioUrl) {
     '',  // Notificación de fecha programada enviada — la llena aseOnEditProgramacion()
     (datos.temasExcel || '').trim()
   ];
-  // Fecha de realización / Asistentes quedan en blanco (las llena Nancy); 'ID de envío' va al final.
-  while (fila.length < ENCABEZADOS_ASE_SOLICITUDES.length - 1) fila.push('');
-  fila.push(String(datos.idEnvio || '').trim());
+  // Fecha de realización / Asistentes quedan en blanco (las llena Nancy); las columnas
+  // posteriores se colocan por nombre de encabezado.
+  while (fila.length < ENCABEZADOS_ASE_SOLICITUDES.length) fila.push('');
+  const col = n => ENCABEZADOS_ASE_SOLICITUDES.indexOf(n);
+  fila[col('ID de envío')] = String(datos.idEnvio || '').trim();
+  fila[col('Verificación de mantenimiento')] = datos.verificacionMantenimiento || '';
+  fila[col('Folio de mantenimiento indicado')] = datos.folioMantenimiento || '';
   hoja.appendRow(fila);
 }
 
@@ -561,6 +625,7 @@ function aseConfigurarValidacionYSemaforo() {
     aseAplicarValidacionListaSuave_(solicitudes, COL_ASE_CONFIRMO_MANTENIMIENTO, ASE_CONFIRMO_MANTENIMIENTO_VALIDOS);
     aseAplicarValidacionListaSuave_(solicitudes, COL_ASE_TIPO_SOLICITANTE_IDX + 1, ASE_TIPOS_SOLICITANTE_VALIDOS);
     aseAplicarSemaforoPorValor_(solicitudes, COL_ASE_ESTATUS, ESTADOS_ASE_VALIDOS, ASE_COLORES_ESTATUS);
+    aseAplicarSemaforoVerificacion_(solicitudes);
     [1, 2, 15, COL_ASE_NOTIFICACION_CIERRE, COL_ASE_NOTIFICACION_PROGRAMADA]
       .forEach(function (col) { aseProtegerColumnaAutomatica_(solicitudes, col); });
   }
@@ -766,6 +831,7 @@ function aseNotificarTelegram(folio, d, oficioUrl) {
       'WhatsApp: ' + d.whatsapp.trim() + '\n' +
       (d.temasExcel ? 'Temas de Excel: ' + aseEscapeMarkdown_(d.temasExcel.trim()) + '\n' : '') +
       (d.observaciones ? 'Observaciones: ' + aseEscapeMarkdown_(d.observaciones.trim()) + '\n' : '') +
+      (d.verificacionMantenimiento ? 'Mantenimiento previo: ' + aseEscapeMarkdown_(d.verificacionMantenimiento) + '\n' : '') +
       'Oficio: ' + aseEscapeMarkdown_(oficioUrl);
 
     UrlFetchApp.fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
@@ -794,6 +860,7 @@ function aseNotificarEquipoPorCorreo(folio, d, oficioUrl) {
         '<p style="margin:0 0 8px 0;font-size:14px;">Nombre: ' + aseEscapeHtml_(d.nombre.trim()) + ' (' + aseEscapeHtml_(d.funcion.trim()) + ')</p>' +
         '<p style="margin:0 0 8px 0;font-size:14px;">CCT: ' + aseEscapeHtml_(d.cct.trim().toUpperCase()) + (d.escuela ? ' — ' + aseEscapeHtml_(d.escuela.trim()) : '') + '</p>' +
         '<p style="margin:0 0 8px 0;font-size:14px;">Número de personas: ' + d.numDocentes + '</p>' +
+        (d.verificacionMantenimiento ? '<p style="margin:0 0 8px 0;font-size:14px;">Mantenimiento previo: <strong>' + aseEscapeHtml_(d.verificacionMantenimiento) + '</strong></p>' : '') +
         '<p style="margin:0;font-size:14px;">Oficio: <a href="' + oficioUrl + '">' + oficioUrl + '</a></p>',
       name: 'OTDE | Oficina de Tecnología para el Desarrollo Educativo',
       replyTo: 'otde.nezahualcoyotl@dee.edu.mx'
@@ -1148,7 +1215,33 @@ function onOpen() {
     .addItem('Instalar trigger de programación de visita', 'aseInstalarTriggerProgramacion')
     .addItem('Desinstalar trigger de programación de visita', 'aseDesinstalarTriggerProgramacion')
     .addItem('Aplicar validación y semáforo', 'aseConfigurarValidacionYSemaforo')
+    .addItem('Configurar conexión con Mantenimiento', 'aseConfigurarConexionMantenimientoMenu')
+    .addItem('Probar verificación de mantenimiento (un CCT)', 'aseProbarVerificacionMenu')
     .addToUi();
+}
+
+// Versiones de menú (con cuadro de diálogo) de la configuración de arriba: correr desde
+// ▶️ una función que recibe argumentos la ejecuta sin ellos (docs/QA-NOTES.md #14).
+function aseConfigurarConexionMantenimientoMenu() {
+  const ui = SpreadsheetApp.getUi();
+  const r = ui.prompt('Conexión con Mantenimiento',
+    'Pega la URL de la aplicación web de Mantenimiento (termina en /exec). ' +
+    'Usa el mismo PANEL_TOKEN que ya está configurado aquí.', ui.ButtonSet.OK_CANCEL);
+  if (r.getSelectedButton() !== ui.Button.OK) return;
+  const url = r.getResponseText().trim();
+  if (!/^https:\/\/script\.google\.com\/.+\/exec$/.test(url)) {
+    ui.alert('La URL no parece de una aplicación web de Apps Script (debe terminar en /exec).');
+    return;
+  }
+  aseConfigurarConexionMantenimiento(url);
+  ui.alert('Listo. Prueba con "Probar verificación de mantenimiento (un CCT)".');
+}
+
+function aseProbarVerificacionMenu() {
+  const ui = SpreadsheetApp.getUi();
+  const r = ui.prompt('Probar verificación', 'Escribe un CCT (ej. 15DPR0860F):', ui.ButtonSet.OK_CANCEL);
+  if (r.getSelectedButton() !== ui.Button.OK) return;
+  ui.alert(aseVerificarMantenimiento_(r.getResponseText(), ''));
 }
 
 // ── Respuesta de texto plano (evita preflight CORS) ──

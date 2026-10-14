@@ -339,7 +339,71 @@ function doGet(e) {
   if (accion === 'oficiosOV') {
     return manListarOficiosOV_(e.parameter.token, e.parameter.desde);
   }
+  if (accion === 'mantenimientoPorCct') {
+    return manTextResponse(JSON.stringify(manMantenimientoPorCct_(e.parameter.token, e.parameter.cct, e.parameter.folio)));
+  }
   return manTextResponse(JSON.stringify({ status: 'ok', servicio: 'OTDE Solicitudes de Mantenimiento' }));
+}
+
+// ── ¿Esta escuela ya recibió mantenimiento? (?action=mantenimientoPorCct, oct 2026) ──
+// Lo consulta asesorias.gs al registrar una asesoría de Banco de Materiales y Chuka, que
+// requiere mantenimiento previo: antes solo había una casilla de "sí, ya lo recibimos".
+// Por CCT y no por folio, porque casi ninguna escuela guarda su folio. "Atendida" = una
+// solicitud del CCT en Resuelto o con reporte de visita. Si existe la hoja
+// MAN_HOJA_HISTORICO (CCT en la columna A, una por fila), también cuenta: ahí puede ir la
+// lista de aulas atendidas en v8.5, antes de este sistema. `folio` es opcional: si la
+// escuela lo da, se comprueba que sea de ese mismo CCT. Mismo PANEL_TOKEN, solo lectura,
+// sin datos personales en la respuesta.
+const MAN_HOJA_HISTORICO = 'Historico_v8.5';
+
+function manMantenimientoPorCct_(tokenRecibido, cctRecibido, folioRecibido) {
+  const tokenEsperado = PropertiesService.getScriptProperties().getProperty('PANEL_TOKEN');
+  if (!tokenEsperado || tokenRecibido !== tokenEsperado) return { status: 'no_autorizado' };
+  const cct = String(cctRecibido || '').trim().toUpperCase();
+  const folioDado = String(folioRecibido || '').trim().toUpperCase();
+  if (!cct) return { status: 'error', mensaje: 'Falta el CCT.' };
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const resp = { status: 'ok', cct: cct, atendida: false, enProceso: null, folio: '', fecha: '', fuente: '', folioDado: '' };
+
+  const conReporte = {};
+  const hojaRep = ss.getSheetByName(HOJA_MAN_REPORTES);
+  if (hojaRep && hojaRep.getLastRow() > 1) {
+    hojaRep.getRange(2, COL_MAN_REP_FOLIO, hojaRep.getLastRow() - 1, 1).getValues()
+      .forEach(function (r) { conReporte[String(r[0]).trim().toUpperCase()] = true; });
+  }
+
+  const hoja = ss.getSheetByName(HOJA_MAN_SOLICITUDES);
+  if (hoja && hoja.getLastRow() > 1) {
+    const col = n => ENCABEZADOS_MAN_SOLICITUDES.indexOf(n);
+    const filas = hoja.getRange(2, 1, hoja.getLastRow() - 1, ENCABEZADOS_MAN_SOLICITUDES.length).getValues();
+    for (let i = filas.length - 1; i >= 0; i--) {   // la más reciente primero
+      const r = filas[i];
+      const folio = String(r[col('Folio')]).trim().toUpperCase();
+      const cctFila = String(r[col('CCT')]).trim().toUpperCase();
+      if (folioDado && folio === folioDado) resp.folioDado = cctFila === cct ? 'coincide' : 'otra_escuela';
+      if (cctFila !== cct) continue;
+      const estatus = String(r[col('Estatus')] || '').trim();
+      const fecha = r[col('Fecha')] instanceof Date
+        ? Utilities.formatDate(r[col('Fecha')], 'America/Mexico_City', 'dd/MM/yyyy') : '';
+      if (!resp.atendida && (estatus === 'Resuelto' || conReporte[folio])) {
+        resp.atendida = true; resp.folio = folio; resp.fecha = fecha; resp.fuente = 'solicitud';
+      } else if (!resp.enProceso && estatus !== 'Rechazado' && estatus !== 'Resuelto') {
+        resp.enProceso = { folio: folio, fecha: fecha };
+      }
+    }
+    if (folioDado && !resp.folioDado) resp.folioDado = 'no_existe';
+  }
+
+  if (!resp.atendida) {
+    const hist = ss.getSheetByName(MAN_HOJA_HISTORICO);
+    if (hist && hist.getLastRow() > 0) {
+      const enHistorico = hist.getRange(1, 1, hist.getLastRow(), 1).getValues()
+        .some(function (r) { return String(r[0]).trim().toUpperCase() === cct; });
+      if (enHistorico) { resp.atendida = true; resp.fuente = 'historico'; }
+    }
+  }
+  return resp;
 }
 
 // ── Solicitudes con oficio para el Control de oficios (?action=oficiosOV) ──
