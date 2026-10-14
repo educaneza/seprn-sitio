@@ -15,6 +15,22 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-10-14 · Oficios simplificado: origen Interno, baja/sube deducido y un siguiente paso por oficio
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-14 |
+| **Sesión** | Apertura con `/open`: `gh` en `albertobonillat-collab` (no se cambió; el push va por SSH y el repo es público), git al día con `origin/main`, deploys en `success`, 518 MB. Se encontró trabajo del 13 oct sin commit ni cierre: la simplificación de Oficios que Jorge pidió el 12 oct ("el flujo me confunde"). Jorge eligió terminarla. |
+| **Qué cambió** | Registrar: "¿Cómo llegó?" con origen **Interno** (sin folio ni tipo, cerrado como informativo; decisión de Jorge: casi siempre son avisos o invitaciones). "¿Baja o sube?" deducido con "cambiar" (`ofDeducirDireccion_()` / `direccionDeducida()`). "¿Qué hay que hacer con él?" en opciones. Lista: chips Por atender / Falta folio de Oficialía / Todos con su cuenta, "Siguiente paso" y un solo botón principal por oficio. "Marcar como atendido" con una sugerencia y "Se atendió de otra forma". Guía actualizada. Ver `docs/ARCHITECTURE.md §31`. |
+| **Ajuste tras la prueba** | Jorge: "Más datos" sí es información importante y abrir el desplegable quita tiempo. Se cambió el `<details>` por un bloque siempre visible, opcional (`.mas-datos-tit`). Solo página, sin tocar el `.gs`. |
+| **Orden de despliegue** | La página nueva con el `.gs` viejo rechazaría los internos (pedía folio); el `.gs` nuevo es compatible con la página vieja. Por eso Jorge pegó primero `oficios.gs` (Nueva versión) y después se hizo el push. |
+| **Verificación** | `node --check` de la página y del `.gs`. Arnés de Node con el `oficios.gs` real y Sheets simulado: 12 de 12 (interno, dos internos el mismo día, reintento, Oficialía sin folio o sin tipo, deducción de dirección, dirección explícita, folio repetido, `inicio`). Playwright (Python) a 375 y 1280 px con la red a `script.google.com` desviada al arnés: 37 de 37 en cada ancho, 0 errores de consola, sin scroll horizontal; repetido tras el ajuste de "Más datos". En producción: los dos runs en `success` y `curl` a la página y a la guía. **Jorge lo probó en vivo: "funciona bien".** El arnés y las pruebas quedaron en la carpeta temporal de la sesión, no en el repo. |
+| **Pendiente** | Rehacer las capturas 02-06, 10 y 13 de `images/manual-oficios/` (`07-registrar-b.png` ya no se usa). Reevaluar con el equipo tras unos días de uso. Siguen: cerrar los 14 importados, confirmar `ORIGEN_MAPS` con la primera ruta real, ligas de calendario (vencían hoy a las 15:00; no se confirmó en la sesión si salieron), activadores de Apps Script, `asistencia.html`. Siguiente de la Fase 2: recordatorios, resto del 2C o 2E. |
+| **Documentación actualizada** | Este checkpoint, `docs/ARCHITECTURE.md §31`, `docs/ROADMAP.md` ítem 27 y `CLAUDE.md` (fila de `oficios.html` y sección de `oficios.gs`). |
+| **Commits** | `f89448c` (simplificación), `fbcc907` ("Más datos" visible) y el de este cierre. |
+
+---
+
 ## CHECKPOINT — 2026-10-12 (cont. 2) · Oficios: tipos de documento, comisiones por persona y día con oficio en Word, y reasignar número
 
 | | |

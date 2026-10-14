@@ -3059,6 +3059,35 @@ de comisiones que no se realizaron y se perdían al cancelarlos).
   vuelve a Recibido. En la página es el mismo formulario precargado (`reasignarNumero()`), con
   una sola persona y un solo día.
 
+**Simplificación de la pestaña Oficios (13-14 oct 2026).** Jorge pidió "simplificar / dar
+claridad" tras el primer día de uso real.
+- **Registrar:** "¿Cómo llegó?" — *Por Oficialía de Partes* (pide folio y tipo, como antes) o
+  *Interno o comunicado* (`OF_ORIGEN_INTERNO = 'Interno'`, columna `Origen`): sin folio ni tipo,
+  sin `Dirección` y con `Forma de atención` "Solo conocimiento" por default (casi siempre son
+  avisos o invitaciones), así que queda cerrado al registrarlo. Dos internos el mismo día no se
+  marcan como repetidos porque `ofClaveFolio_()` ya devolvía vacío sin folio.
+- **"¿Baja o sube?" ya no se pregunta:** se deduce igual en la página (`direccionDeducida()`) y en
+  el backend (`ofDeducirDireccion_()`): tipo que empieza con SOLICITUD = Sube; si no,
+  `ofDireccionProbable_()` por remitente (escuela, zona, sector, CCT = Sube). La página lo muestra
+  ("Se registra como Baja · cambiar") y manda la dirección elegida. Compatibilidad: un payload sin
+  `origen` se trata como Oficialía, y una dirección explícita se respeta.
+- "¿Qué hay que hacer con él?" pasó de `<select>` a opciones (incluye "Todavía no sé"). "No. de
+  oficio del remitente", "Fecha del oficio" y "Observaciones" van en un bloque "Más datos
+  (opcional)" **siempre visible**: primero fue un `<details>` plegado y Jorge pidió quitarlo
+  porque abrirlo en cada registro quitaba tiempo.
+- **Lista:** chips "Por atender" / "Falta folio de Oficialía" / "Todos" con su cuenta
+  (`ponerFiltro()`, `pintarChips()`; abre en Por atender, o en Falta folio si no hay nada por
+  atender) en lugar de la casilla "solo pendientes". Cada oficio dice su **"Siguiente paso"** y
+  tiene un solo botón principal (`botonMini(texto, principal, fn)`): anotar folio, tomar número
+  (si la forma es "Oficio de salida") o marcar como atendido; lo demás va como botón claro.
+  Etiquetas de estatus para la vista (`ETIQUETA_ESTATUS`: Recibido → "Por atender", Solo
+  conocimiento → "Informativo"); en la hoja los valores no cambian.
+- **Marcar como atendido** (`abrirAtender()`): una sola sugerencia en una frase y un botón; las
+  otras dos formas quedan detrás de "Se atendió de otra forma".
+- Verificación: arnés de Node con el `.gs` real y Sheets simulado (12 casos) + 37 pruebas de
+  navegador a 375 y 1280 px con la red desviada al arnés (0 errores, 0 llamadas a producción).
+  En vivo: Jorge probó un interno y uno de Oficialía.
+
 **Guía de uso:** `docs/manual-oficios.html` (18 capturas en `images/manual-oficios/`, generadas
 con Playwright sobre la página real, con `oficios.gs` y `bitacora.gs` en una simulación de
 Sheets y datos de ejemplo; enlazada desde `oficios.html`; la 16, de la Oficina Virtual, se agregó
