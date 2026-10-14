@@ -189,12 +189,26 @@
     .atender p { font-size: .8rem; font-weight: 700; color: var(--guinda); margin-bottom: .4rem; }
     .atender .opcion { margin-bottom: .4rem; }
     .atender .opcion small { font-weight: 400; }
-    .atender .sugerida { font-size: .68rem; font-weight: 700; color: #065f46; background: #d1fae5; border-radius: 999px; padding: .05rem .45rem; margin-left: .3rem; }
     .atender input[type="text"] { padding: .45rem .6rem; font-size: .85rem; margin-top: .4rem; }
     .atender .fila-btn { display: flex; gap: .4rem; margin-top: .5rem; flex-wrap: wrap; }
     .atender .msg { font-size: .78rem; color: #dc2626; margin-top: .35rem; }
-    .filtro { display: flex; align-items: center; gap: .45rem; font-size: .82rem; margin: -.4rem 0 .9rem; color: var(--text); }
-    .filtro input { width: 18px; height: 18px; accent-color: var(--guinda-ac); }
+    /* Simplificación (13 oct 2026): filtros, siguiente paso, más datos */
+    .chips { display: flex; flex-wrap: wrap; gap: .4rem; margin: -.3rem 0 .9rem; }
+    .chip {
+      font-family: inherit; font-size: .8rem; font-weight: 600; cursor: pointer; color: var(--guinda);
+      background: #fff; border: 1.5px solid #ecd3da; border-radius: 999px; padding: .35rem .8rem;
+    }
+    .chip.activo { background: var(--guinda-ac); border-color: var(--guinda-ac); color: #fff; }
+    .chip .n { font-weight: 800; margin-left: .25rem; }
+    .siguiente { font-size: .8rem; margin-top: .4rem; color: var(--text); }
+    .siguiente b { color: var(--guinda); }
+    .btn-mini.principal { background: var(--guinda-ac); border-color: var(--guinda-ac); color: #fff; }
+    .btn-mini.principal:hover { background: var(--guinda); }
+    .link-btn { background: none; border: none; padding: 0; font: inherit; color: var(--guinda-ac); text-decoration: underline; cursor: pointer; }
+    .badge.interno { background: #ede9fe; color: #5b21b6; }
+    .mas-datos { margin-bottom: 1rem; }
+    .mas-datos summary { cursor: pointer; font-size: .85rem; font-weight: 600; color: var(--guinda-ac); margin-bottom: .6rem; }
+    .atender .sugerencia { font-size: .82rem; font-weight: 400; color: var(--text); margin-bottom: .2rem; }
     .vacio { font-size: .85rem; color: var(--muted); text-align: center; padding: .75rem 0; }
     .btn-abrir { margin-bottom: 1rem; }
     #registro-wrap { margin-bottom: 1rem; }
@@ -416,67 +430,74 @@
       <div class="hidden" id="registro-wrap">
       <form class="card" id="form-oficio" novalidate>
         <h2>Registrar oficio recibido</h2>
-        <p class="hint" style="margin:-.3rem 0 1rem;">Las solicitudes de <b>Mantenimiento</b> y <b>Asesoría</b> que llegan por la Oficina Virtual ya están en la lista: no las registres de nuevo, anótales su folio de Oficialía ahí.</p>
+        <p class="hint" style="margin:-.3rem 0 1rem;">Lo que llega por la <b>Oficina Virtual</b> ya está en la lista: no lo registres de nuevo.</p>
+        <div class="campo">
+          <span class="etq">¿Cómo llegó?</span>
+          <div class="opciones" id="of-origen">
+            <label class="opcion"><input type="radio" name="origen" value="Oficialía de Partes" checked>Por Oficialía de Partes<small>Trae el sello con su folio.</small></label>
+            <label class="opcion"><input type="radio" name="origen" value="Interno">Interno o comunicado<small>Sin folio de Oficialía: avisos, invitaciones a capacitaciones…</small></label>
+          </div>
+        </div>
         <div class="fila-2">
-          <div class="campo">
+          <div class="campo solo-op">
             <label for="of-folio">Folio de Oficialía de Partes <span class="req">*</span></label>
             <input type="text" id="of-folio" inputmode="numeric" placeholder="El del sello, ej. 3622">
             <div class="error-msg" id="err-of-folio">Escribe el folio del sello.</div>
           </div>
           <div class="campo">
-            <label for="of-recepcion">Fecha de recepción <span class="req">*</span></label>
+            <label for="of-recepcion">Fecha en que llegó <span class="req">*</span></label>
             <input type="date" id="of-recepcion">
-            <div class="error-msg" id="err-of-recepcion">Indica la fecha del sello.</div>
-          </div>
-        </div>
-        <div class="fila-2">
-          <div class="campo">
-            <label for="of-num-remitente">No. de oficio del remitente <span class="opcional">(opcional)</span></label>
-            <input type="text" id="of-num-remitente" placeholder="Ej. 228C0101110001L/2016/2026">
-          </div>
-          <div class="campo">
-            <label for="of-elaboracion">Fecha del oficio <span class="opcional">(opcional)</span></label>
-            <input type="date" id="of-elaboracion">
-            <div class="error-msg" id="err-of-elaboracion">No puede ser posterior a la recepción.</div>
+            <div class="error-msg" id="err-of-recepcion">Indica la fecha en que llegó.</div>
           </div>
         </div>
         <div class="campo">
-          <label for="of-remitente">Remitente <span class="req">*</span></label>
+          <label for="of-remitente">¿Quién lo manda? <span class="req">*</span></label>
           <input type="text" id="of-remitente" list="remitentes" placeholder="Ej. CoEEE, Esc. Prim. … CCT …, Sector III">
           <datalist id="remitentes"></datalist>
-          <div class="error-msg" id="err-of-remitente">Escribe el remitente.</div>
+          <div class="error-msg" id="err-of-remitente">Escribe quién lo manda.</div>
         </div>
         <div class="campo">
           <label for="of-asunto">Asunto <span class="req">*</span></label>
           <textarea id="of-asunto" rows="2"></textarea>
           <div class="error-msg" id="err-of-asunto">Escribe el asunto.</div>
         </div>
-        <div class="campo">
+        <div class="campo solo-op">
           <label for="of-tipo">Tipo de oficio (programa) <span class="req">*</span></label>
           <select id="of-tipo"><option value="">Selecciona…</option></select>
           <div class="error-msg" id="err-of-tipo">Elige el tipo de oficio.</div>
-        </div>
-        <div class="campo">
-          <span class="etq">¿Baja o sube? <span class="req">*</span></span>
-          <div class="opciones" id="of-direccion">
-            <label class="opcion"><input type="radio" name="direccion" value="Baja">Baja<small>De instancias superiores (CoEEE, Subsecretaría…). Se atiende con oficios a sectores, zonas y escuelas.</small></label>
-            <label class="opcion"><input type="radio" name="direccion" value="Sube">Sube<small>De escuelas, zonas o sectores. Se atiende con una acción (mantenimiento, asesoría…).</small></label>
+          <p class="hint solo-op" id="of-direccion-linea">Se registra como <b id="of-direccion-txt">Baja</b> · <button type="button" class="link-btn" id="of-direccion-cambiar">cambiar</button></p>
+          <div class="opciones hidden" id="of-direccion" style="margin-top:.5rem;">
+            <label class="opcion"><input type="radio" name="direccion" value="Baja">Baja<small>De instancias superiores (CoEEE, Subsecretaría…).</small></label>
+            <label class="opcion"><input type="radio" name="direccion" value="Sube">Sube<small>De escuelas, zonas o sectores.</small></label>
           </div>
-          <div class="error-msg" id="err-of-direccion">Indica si el oficio baja o sube.</div>
         </div>
         <div class="campo">
-          <label for="of-forma">¿Cómo se atiende? <span class="opcional">(si ya se sabe)</span></label>
-          <select id="of-forma">
-            <option value="">Aún no se sabe</option>
-            <option>Oficio de salida</option>
-            <option>Acción</option>
-            <option>Solo conocimiento</option>
-          </select>
+          <span class="etq">¿Qué hay que hacer con él?</span>
+          <div class="opciones" id="of-forma">
+            <label class="opcion"><input type="radio" name="forma" value="Oficio de salida">Responder con un oficio<small>Habrá que tomar un número.</small></label>
+            <label class="opcion"><input type="radio" name="forma" value="Acción">Hacer algo<small>Una visita, un curso, una asesoría…</small></label>
+            <label class="opcion"><input type="radio" name="forma" value="Solo conocimiento">Solo informativo<small>Queda cerrado al registrarlo.</small></label>
+            <label class="opcion"><input type="radio" name="forma" value="" checked>Todavía no sé<small>Queda pendiente en la lista.</small></label>
+          </div>
         </div>
-        <div class="campo">
-          <label for="of-observaciones">Observaciones <span class="opcional">(opcional)</span></label>
-          <textarea id="of-observaciones" rows="2"></textarea>
-        </div>
+        <details class="mas-datos">
+          <summary>Más datos (opcional)</summary>
+          <div class="fila-2">
+            <div class="campo">
+              <label for="of-num-remitente">No. de oficio del remitente</label>
+              <input type="text" id="of-num-remitente" placeholder="Ej. 228C0101110001L/2016/2026">
+            </div>
+            <div class="campo">
+              <label for="of-elaboracion">Fecha del oficio</label>
+              <input type="date" id="of-elaboracion">
+              <div class="error-msg" id="err-of-elaboracion">No puede ser posterior a la fecha en que llegó.</div>
+            </div>
+          </div>
+          <div class="campo">
+            <label for="of-observaciones">Observaciones</label>
+            <textarea id="of-observaciones" rows="2"></textarea>
+          </div>
+        </details>
         <div class="campo">
           <label for="of-pdf">PDF del oficio escaneado <span class="opcional">(opcional, máx. 5 MB)</span></label>
           <input type="file" id="of-pdf" accept="application/pdf">
@@ -506,7 +527,11 @@
           <label for="buscar">Folio, remitente, asunto, tipo o número de salida</label>
           <input type="search" id="buscar" placeholder="Ej. 3622, CoEEE, Cuantrix, 4824">
         </div>
-        <label class="filtro"><input type="checkbox" id="solo-pendientes" checked> Solo los que faltan por atender</label>
+        <div class="chips" id="filtro-oficios" role="group" aria-label="Qué oficios ver">
+          <button type="button" class="chip" data-filtro="atender">Por atender</button>
+          <button type="button" class="chip" data-filtro="folio">Falta folio de Oficialía</button>
+          <button type="button" class="chip" data-filtro="todos">Todos</button>
+        </div>
         <div class="lista" id="lista-oficios"></div>
       </div>
     </section>
@@ -1598,13 +1623,53 @@ function abrirCancelar(contenedor, n) {
 }
 
 // ── Registrar oficio ──
+// Simplificado el 13 oct 2026: "¿Cómo llegó?" (Oficialía o interno), "¿Baja o
+// sube?" deducido y lo opcional plegado en "Más datos".
+const ORIGEN_INTERNO = 'Interno';
+
+function origenElegido() {
+  const r = document.querySelector('input[name="origen"]:checked');
+  return r ? r.value : 'Oficialía de Partes';
+}
+function esInterno() { return origenElegido() === ORIGEN_INTERNO; }
+
+// Misma regla que ofDeducirDireccion_ en oficios.gs: las solicitudes suben; si
+// no, se decide por el remitente (escuela, zona o sector = sube).
+function direccionDeducida() {
+  if (/^SOLICITUD/.test($('of-tipo').value.trim().toUpperCase())) return 'Sube';
+  const t = normalizar($('of-remitente').value).toUpperCase();
+  return /\bESC\b|ESC\.|ESCUELA|PRIM\.|SECTOR|SUPERVISI|ZONA|\bCCT\b/.test(t) ? 'Sube' : 'Baja';
+}
+function direccionElegida() {
+  if (esInterno()) return '';
+  const r = document.querySelector('input[name="direccion"]:checked');
+  return r ? r.value : direccionDeducida();
+}
+function pintarDireccion() {
+  $('of-direccion-txt').textContent = direccionElegida();
+}
+
+function aplicarOrigen() {
+  const interno = esInterno();
+  document.querySelectorAll('#form-oficio .solo-op').forEach(function (x) { x.classList.toggle('hidden', interno); });
+  if (interno) { marcarError('of-folio', false); marcarError('of-tipo', false); }
+  // Los internos casi siempre son informativos (decisión de Jorge, 13 oct 2026).
+  const forma = document.querySelector('input[name="forma"][value="' + (interno ? 'Solo conocimiento' : '') + '"]');
+  if (forma) forma.checked = true;
+  pintarDireccion();
+}
+
 function reiniciarOficio() {
   $('form-oficio').reset();
   $('of-recepcion').value = hoyISO();
+  $('of-direccion').classList.add('hidden');
+  $('of-direccion-linea').classList.remove('hidden');
+  document.querySelector('#form-oficio .mas-datos').open = false;
   document.querySelectorAll('#form-oficio .campo-error').forEach(function (x) { x.classList.remove('campo-error'); });
   document.querySelectorAll('#form-oficio .error-msg').forEach(function (x) { x.classList.remove('visible'); });
   $('oficio-error').classList.remove('visible');
   idEnvioOficio = null;
+  aplicarOrigen();
   $('form-oficio').classList.remove('hidden');
   $('oficio-ok').classList.add('hidden');
 }
@@ -1629,23 +1694,35 @@ $('btn-listo-oficio').addEventListener('click', cerrarRegistro);
 ['of-recepcion', 'of-elaboracion', 'of-tipo'].forEach(function (id) {
   $(id).addEventListener('change', function () { marcarError(id, false); });
 });
-$('of-direccion').addEventListener('change', function () { marcarError('of-direccion', false); });
+$('of-tipo').addEventListener('change', pintarDireccion);
+$('of-remitente').addEventListener('input', pintarDireccion);
+$('of-origen').addEventListener('change', aplicarOrigen);
+$('of-direccion').addEventListener('change', pintarDireccion);
+$('of-direccion-cambiar').addEventListener('click', function () {
+  const actual = document.querySelector('input[name="direccion"][value="' + direccionElegida() + '"]');
+  if (actual) actual.checked = true;
+  $('of-direccion').classList.remove('hidden');
+  $('of-direccion-linea').classList.add('hidden');
+});
 $('of-pdf').addEventListener('change', function () { marcarError('of-pdf', false); });
 
 // Cualquier cambio en los datos es un envío nuevo; un reintento sin cambios no lo es.
 $('form-oficio').addEventListener('input', function () { idEnvioOficio = null; });
+$('form-oficio').addEventListener('change', function () { idEnvioOficio = null; });
 
 function validarOficio() {
   let ok = true;
+  const interno = esInterno();
   const req = function (id, valido) { marcarError(id, !valido); if (!valido) ok = false; };
-  req('of-folio', !!$('of-folio').value.trim());
+  if (!interno) req('of-folio', !!$('of-folio').value.trim());
   req('of-recepcion', !!$('of-recepcion').value);
   req('of-remitente', !!$('of-remitente').value.trim());
   req('of-asunto', !!$('of-asunto').value.trim());
-  req('of-tipo', !!$('of-tipo').value);
-  req('of-direccion', !!document.querySelector('input[name="direccion"]:checked'));
+  if (!interno) req('of-tipo', !!$('of-tipo').value);
   const elab = $('of-elaboracion').value;
-  req('of-elaboracion', !elab || !$('of-recepcion').value || elab <= $('of-recepcion').value);
+  const elabOk = !elab || !$('of-recepcion').value || elab <= $('of-recepcion').value;
+  req('of-elaboracion', elabOk);
+  if (!elabOk) document.querySelector('#form-oficio .mas-datos').open = true;
   const f = $('of-pdf').files[0];
   if (f) {
     if (f.type !== 'application/pdf') { $('err-of-pdf').textContent = 'Solo se aceptan archivos PDF.'; req('of-pdf', false); }
@@ -1664,14 +1741,16 @@ $('form-oficio').addEventListener('submit', async function (ev) {
   $('oficio-error').classList.remove('visible');
   if (!idEnvioOficio) idEnvioOficio = nuevoIdEnvio();
   const archivo = $('of-pdf').files[0];
+  const interno = esInterno();
   const parar = contadorEnBoton($('btn-oficio'), archivo ? 'Subiendo oficio…' : 'Registrando…');
   try {
     const payload = {
-      accion: 'registrarOficio', idEnvio: idEnvioOficio,
-      folioOP: $('of-folio').value.trim(), fechaRecepcion: $('of-recepcion').value,
+      accion: 'registrarOficio', idEnvio: idEnvioOficio, origen: origenElegido(),
+      folioOP: interno ? '' : $('of-folio').value.trim(), fechaRecepcion: $('of-recepcion').value,
       numRemitente: $('of-num-remitente').value.trim(), fechaElaboracion: $('of-elaboracion').value,
-      remitente: $('of-remitente').value.trim(), asunto: $('of-asunto').value.trim(), tipo: $('of-tipo').value,
-      direccion: document.querySelector('input[name="direccion"]:checked').value, forma: $('of-forma').value,
+      remitente: $('of-remitente').value.trim(), asunto: $('of-asunto').value.trim(),
+      tipo: interno ? '' : $('of-tipo').value, direccion: direccionElegida(),
+      forma: document.querySelector('input[name="forma"]:checked').value,
       observaciones: $('of-observaciones').value.trim(), recibio: leerLS(LS_QUIEN)
     };
     if (archivo) {
@@ -1684,8 +1763,10 @@ $('form-oficio').addEventListener('submit', async function (ev) {
       ultimoOficio = d.oficio;
       if (!d.duplicado) estado.oficios.unshift(d.oficio);
       $('ok-oficio-id').textContent = d.oficio.id;
+      const cerrado = !faltaAtender(d.oficio);
       $('ok-oficio-detalle').textContent = 'N.P. ' + d.oficio.np + ' del ciclo ' + d.oficio.ciclo +
-        ' · folio ' + d.oficio.folioOP + (d.oficio.pdf ? ' · PDF guardado' : '');
+        (d.oficio.folioOP ? ' · folio ' + d.oficio.folioOP : ' · interno') + (d.oficio.pdf ? ' · PDF guardado' : '') +
+        (cerrado ? '. Quedó cerrado como informativo.' : '. Quedó en "Por atender".');
       $('btn-responder-nuevo').classList.toggle('hidden', d.oficio.forma !== 'Oficio de salida');
       idEnvioOficio = null;
       $('form-oficio').classList.add('hidden');
@@ -1696,8 +1777,7 @@ $('form-oficio').addEventListener('submit', async function (ev) {
       idEnvioOficio = null;
       mostrarError('oficio-error', d.mensaje + ' Está en la lista de abajo.');
       $('buscar').value = $('of-folio').value.trim();
-      $('solo-pendientes').checked = false;
-      pintarOficios();
+      ponerFiltro('todos');
     } else {
       mostrarError('oficio-error', errorDeEstado(d));
     }
@@ -1726,61 +1806,118 @@ function normalizar(s) {
   return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 }
 
+// Filtro de la lista (13 oct 2026): chips "Por atender" / "Falta folio" / "Todos".
+let filtroOficios = null;
+const ETIQUETA_ESTATUS = { 'Recibido': 'Por atender', 'Solo conocimiento': 'Informativo' };
+
+function ponerFiltro(f) {
+  filtroOficios = f;
+  pintarOficios();
+}
+
+function pintarChips(nAtender, nFolio) {
+  document.querySelectorAll('#filtro-oficios .chip').forEach(function (c) {
+    const f = c.dataset.filtro;
+    c.classList.toggle('activo', f === filtroOficios);
+    c.setAttribute('aria-pressed', f === filtroOficios ? 'true' : 'false');
+    const n = f === 'atender' ? nAtender : (f === 'folio' ? nFolio : null);
+    if (!c.dataset.txt) c.dataset.txt = c.textContent.trim();
+    c.innerHTML = '';
+    c.appendChild(document.createTextNode(c.dataset.txt));
+    if (n !== null) c.appendChild(el('span', 'n', String(n)));
+  });
+}
+
+function pasaFiltro(o) {
+  if (filtroOficios === 'atender') return faltaAtender(o);
+  if (filtroOficios === 'folio') return faltaFolioOP(o);
+  return true;
+}
+
+function botonMini(texto, principal, fn) {
+  const b = el('button', 'btn-mini' + (principal ? ' principal' : ''), texto);
+  b.type = 'button';
+  b.addEventListener('click', fn);
+  return b;
+}
+
 function pintarOficios() {
   const q = normalizar($('buscar').value.trim());
   const lista = $('lista-oficios');
   lista.innerHTML = '';
-  const soloPendientes = $('solo-pendientes').checked;
+  const nAtender = estado.oficios.filter(faltaAtender).length;
+  const nFolio = estado.oficios.filter(faltaFolioOP).length;
+  if (!filtroOficios) filtroOficios = nAtender || !nFolio ? 'atender' : 'folio';
+  pintarChips(nAtender, nFolio);
   const hallados = estado.oficios.filter(function (o) {
-    if (soloPendientes && !estaPendiente(o)) return false;
+    if (!pasaFiltro(o)) return false;
     if (!q) return true;
     return normalizar([o.id, o.folioOP, o.remitente, o.asunto, o.tipo, o.numRemitente, o.salida, o.ciclo].join(' ')).indexOf(q) !== -1;
   });
   if (!hallados.length) {
-    lista.appendChild(el('p', 'vacio', estado.oficios.length ? 'Sin resultados.' : 'Todavía no hay oficios registrados.'));
+    let vacio = 'Sin resultados.';
+    if (!estado.oficios.length) vacio = 'Todavía no hay oficios registrados.';
+    else if (!q && filtroOficios === 'atender') vacio = 'No hay oficios por atender.';
+    else if (!q && filtroOficios === 'folio') vacio = 'No falta ningún folio de Oficialía.';
+    lista.appendChild(el('p', 'vacio', vacio));
     return;
   }
   hallados.slice(0, MAX_RESULTADOS).forEach(function (o) {
+    const deOV = o.origen === 'Oficina Virtual';
+    const interno = o.origen === ORIGEN_INTERNO;
     const item = el('div', 'item');
     const tit = el('div', 'tit');
-    tit.appendChild(el('span', null, o.folioOP ? 'Folio ' + o.folioOP : 'Oficina Virtual · ' + o.vinculo));
-    if (o.origen === 'Oficina Virtual' && o.folioOP) tit.appendChild(el('span', 'badge ov', 'Oficina Virtual'));
+    let titulo = 'Folio ' + o.folioOP;
+    if (interno) titulo = 'Interno · ' + o.remitente;
+    else if (!o.folioOP) titulo = 'Oficina Virtual · ' + o.vinculo;
+    tit.appendChild(el('span', null, titulo));
+    if (deOV && o.folioOP) tit.appendChild(el('span', 'badge ov', 'Oficina Virtual'));
+    if (interno) tit.appendChild(el('span', 'badge interno', 'Interno'));
+    tit.appendChild(el('span', 'badge ' + String(o.estatus).replace(/ /g, '-').replace('ó', 'o'),
+      ETIQUETA_ESTATUS[o.estatus] || o.estatus || 'Sin estatus'));
     if (faltaFolioOP(o)) tit.appendChild(el('span', 'badge falta-op', 'Falta folio de Oficialía'));
-    tit.appendChild(el('span', 'badge ' + String(o.estatus).replace(/ /g, '-').replace('ó', 'o'), o.estatus || 'Sin estatus'));
-    if (o.direccion) tit.appendChild(el('span', 'badge dir', o.direccion));
     item.appendChild(tit);
     item.appendChild(el('div', 'txt', o.asunto));
-    item.appendChild(el('div', 'meta', o.remitente + ' · ' + fechaCorta(o.recepcion) + ' · ' + o.id +
-      (o.tipo ? ' · ' + o.tipo : '')));
+    item.appendChild(el('div', 'meta', (interno ? '' : o.remitente + ' · ') + fechaCorta(o.recepcion) + ' · ' + o.id +
+      (o.tipo ? ' · ' + o.tipo : '') + (o.direccion ? ' · ' + o.direccion : '')));
     if (o.salida) item.appendChild(el('div', 'meta', 'Oficio(s) de salida: ' + o.salida));
-    const deOV = o.origen === 'Oficina Virtual';
     if (o.vinculo && !(deOV && !o.folioOP)) item.appendChild(el('div', 'meta', (deOV ? 'Solicitud: ' : 'Atendido con: ') + o.vinculo));
-    if (faltaFolioOP(o)) item.appendChild(el('div', 'nota-ov', 'Imprime el PDF, llévalo a Oficialía de Partes y anota aquí su folio.'));
-    if (deOV && faltaAtender(o)) item.appendChild(el('div', 'nota-ov', 'Se marca atendido solo cuando ' + o.vinculo + ' quede resuelta.'));
+
+    // Un solo "siguiente paso" con un solo botón principal.
     const acc = el('div', 'acciones');
+    let paso = '';
+    if (faltaFolioOP(o)) {
+      paso = 'imprímelo, llévalo a Oficialía de Partes y anota aquí el folio del sello.';
+      acc.appendChild(botonMini('Anotar folio de Oficialía', true, function () { abrirFolioOP(item, acc, o); }));
+    } else if (faltaAtender(o) && deOV) {
+      paso = 'nada. Se cierra solo cuando la solicitud ' + o.vinculo + ' quede resuelta.';
+    } else if (faltaAtender(o) && o.forma === 'Oficio de salida') {
+      paso = 'responderlo con un oficio.';
+      acc.appendChild(botonMini('Tomar número para responder', true, function () { responderOficio(o); }));
+    } else if (faltaAtender(o)) {
+      paso = 'cuando se atienda, márcalo como atendido.';
+      acc.appendChild(botonMini('Marcar como atendido', true, function () { abrirAtender(item, acc, o); }));
+    }
+    if (faltaAtender(o) && deOV && faltaFolioOP(o)) {
+      paso += ' Después se cierra solo cuando ' + o.vinculo + ' quede resuelta.';
+    }
+    if (paso) {
+      const sig = el('div', 'siguiente');
+      sig.appendChild(el('b', null, 'Siguiente paso: '));
+      sig.appendChild(document.createTextNode(paso));
+      item.appendChild(sig);
+    }
+    // Acciones secundarias, más chicas.
+    if (faltaAtender(o) && !deOV && o.forma !== 'Oficio de salida') {
+      acc.appendChild(botonMini('Tomar número para responder', false, function () { responderOficio(o); }));
+    }
+    if (faltaAtender(o) && !deOV && o.forma === 'Oficio de salida') {
+      acc.appendChild(botonMini('Se atendió de otra forma', false, function () { abrirAtender(item, acc, o); }));
+    }
     if (/^https:\/\//.test(o.pdf)) {
       const a = el('a', 'btn-mini', 'Ver PDF');
       a.href = o.pdf; a.target = '_blank'; a.rel = 'noopener';
       acc.appendChild(a);
-    }
-    if (faltaFolioOP(o)) {
-      const f = el('button', 'btn-mini', 'Anotar folio de Oficialía');
-      f.type = 'button';
-      f.addEventListener('click', function () { abrirFolioOP(item, acc, o); });
-      acc.appendChild(f);
-    }
-    if (faltaAtender(o)) {
-      const b = el('button', 'btn-mini', 'Tomar número para responder');
-      b.type = 'button';
-      b.addEventListener('click', function () { responderOficio(o); });
-      acc.appendChild(b);
-      // Los de la Oficina Virtual se cierran solos al resolverse la solicitud.
-      if (!deOV) {
-        const at = el('button', 'btn-mini', 'Marcar como atendido');
-        at.type = 'button';
-        at.addEventListener('click', function () { abrirAtender(item, acc, o); });
-        acc.appendChild(at);
-      }
     }
     if (acc.childNodes.length) item.appendChild(acc);
     lista.appendChild(item);
@@ -1790,7 +1927,9 @@ function pintarOficios() {
   }
 }
 $('buscar').addEventListener('input', pintarOficios);
-$('solo-pendientes').addEventListener('change', pintarOficios);
+document.querySelectorAll('#filtro-oficios .chip').forEach(function (c) {
+  c.addEventListener('click', function () { ponerFiltro(c.dataset.filtro); });
+});
 
 // Pendiente = falta atenderlo, o (si llegó por la Oficina Virtual) falta llevarlo a Oficialía.
 function estaPendiente(o) {
@@ -1865,35 +2004,47 @@ function paramsCapturaBitacora(o) {
     oficio: o.id,
     np: npSugerido(o),
     nombre: sinMayusculas(o.asunto),
-    origen: 'Oficio ' + (o.numRemitente || 's/n') + ' de ' + o.remitente + ' (folio de Oficialía ' + o.folioOP + ')'
+    origen: 'Oficio ' + (o.numRemitente || 's/n') + ' de ' + o.remitente +
+      (o.folioOP ? ' (folio de Oficialía ' + o.folioOP + ')' : ' (interno)')
   });
   return p.toString();
 }
 
+// Simplificado el 13 oct 2026: arriba solo la forma sugerida, en una frase y un
+// botón; las otras dos quedan detrás de "Se atendió de otra forma".
 function abrirAtender(item, acc, o) {
   acc.classList.add('hidden');
   const caja = el('div', 'atender');
   const np = npSugerido(o);
   const llegaSola = np && (estado.config.npLleganSolas || []).indexOf(np) !== -1;
-  caja.appendChild(el('p', null, '¿Cómo se atendió?'));
+  const capturar = puedeCapturar();
   const nombre = 'modo-' + o.id;
   const opciones = [
     ['llegaSola', 'La acción ya llega sola a la bitácora', 'Mantenimiento, asesoría, curso de Formación Docente o correo institucional. No se captura de nuevo.'],
     ['bitacora', 'Capturar la acción en la bitácora', 'Se abre la pestaña Actividad con los datos del oficio' + (np ? ' y el N.P. ' + np : '') + '. Al guardar, este oficio queda atendido.'],
-    ['conocimiento', 'Solo para conocimiento', 'No requirió ninguna acción.']
+    ['conocimiento', 'Solo informativo', 'No requirió ninguna acción.']
   ];
-  const capturar = puedeCapturar();
   const sugerida = llegaSola ? 'llegaSola' : (o.forma === 'Solo conocimiento' ? 'conocimiento' : (capturar ? 'bitacora' : 'llegaSola'));
+  const frase = {
+    llegaSola: llegaSola
+      ? 'Este tipo de oficio se atiende con una acción que ya llega sola a la bitácora (N.P. ' + np + '). Solo confírmalo.'
+      : 'Si se atendió con un mantenimiento, una asesoría, un curso o un correo institucional, ya llega solo a la bitácora: solo confírmalo.',
+    bitacora: 'Captura en la pestaña Actividad lo que se hizo. Al guardarla, este oficio queda atendido.',
+    conocimiento: 'Si no requirió ninguna acción, ciérralo como informativo.'
+  }[sugerida];
+  caja.appendChild(el('p', 'sugerencia', frase));
+
+  const otras = el('div', 'hidden');
   opciones.filter(function (op) { return capturar || op[0] !== 'bitacora'; }).forEach(function (op) {
     const l = el('label', 'opcion');
     const r = el('input'); r.type = 'radio'; r.name = nombre; r.value = op[0];
     if (op[0] === sugerida) r.checked = true;
     l.appendChild(r);
     l.appendChild(document.createTextNode(op[1]));
-    if (op[0] === sugerida) l.appendChild(el('span', 'sugerida', 'sugerida'));
     l.appendChild(el('small', null, op[2]));
-    caja.appendChild(l);
+    otras.appendChild(l);
   });
+  caja.appendChild(otras);
   const ref = el('input');
   ref.type = 'text';
   ref.placeholder = 'Folio o BIT-ID con que se atendió (opcional), ej. OTDE-MAN-0031';
@@ -1901,24 +2052,33 @@ function abrirAtender(item, acc, o) {
   caja.appendChild(ref);
   const msg = el('div', 'msg');
   const fila = el('div', 'fila-btn');
-  const ok = el('button', 'btn-mini', 'Confirmar');
+  const ok = el('button', 'btn-mini principal', 'Confirmar');
   ok.type = 'button';
+  const otra = el('button', 'btn-mini', 'Se atendió de otra forma');
+  otra.type = 'button';
   const no = el('button', 'btn-mini', 'Cancelar');
   no.type = 'button';
-  fila.appendChild(ok); fila.appendChild(no);
+  fila.appendChild(ok); fila.appendChild(otra); fila.appendChild(no);
   caja.appendChild(fila);
   caja.appendChild(msg);
 
+  const modoActual = function () { return caja.querySelector('input[name="' + nombre + '"]:checked').value; };
+  const textoBoton = { llegaSola: 'Confirmar', bitacora: 'Capturar la actividad', conocimiento: 'Cerrar como informativo' };
   const actualizar = function () {
-    const modo = caja.querySelector('input[name="' + nombre + '"]:checked').value;
+    const modo = modoActual();
     ref.classList.toggle('hidden', modo !== 'llegaSola');
-    ok.textContent = modo === 'bitacora' ? 'Capturar la actividad' : 'Confirmar';
+    ok.textContent = textoBoton[modo];
   };
   caja.addEventListener('change', actualizar);
   actualizar();
+  otra.addEventListener('click', function () {
+    otras.classList.remove('hidden');
+    otra.classList.add('hidden');
+    caja.querySelector('.sugerencia').textContent = '¿Cómo se atendió?';
+  });
   no.addEventListener('click', pintarOficios);
   ok.addEventListener('click', async function () {
-    const modo = caja.querySelector('input[name="' + nombre + '"]:checked').value;
+    const modo = modoActual();
     if (modo === 'bitacora') { abrirActividad(o); return; }
     ok.disabled = true;
     ok.textContent = 'Guardando…';
@@ -1930,7 +2090,7 @@ function abrirAtender(item, acc, o) {
       pintarOficios();
     } catch (e) {
       ok.disabled = false;
-      ok.textContent = 'Confirmar';
+      actualizar();
       msg.textContent = mensajeDeFallo(e, true);
     }
   });

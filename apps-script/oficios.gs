@@ -129,6 +129,10 @@ const ENCABEZADOS_OF_OFICIOS = ['ID', 'N.P.', 'Ciclo', 'Folio de Oficialía de P
 // "Oficina Virtual" (llegó solo desde Mantenimiento/Asesorías, ver ofSincronizarOV_).
 const OF_ORIGEN_OV = 'Oficina Virtual';
 const OF_ORIGEN_OP = 'Oficialía de Partes';
+// Interno (13 oct 2026): oficios y comunicados internos que no pasan por Oficialía.
+// No llevan folio; casi siempre son informativos o invitaciones a capacitaciones,
+// por eso por default quedan cerrados como "Solo conocimiento" desde el alta.
+const OF_ORIGEN_INTERNO = 'Interno';
 const OF_DIRECCIONES = ['Baja', 'Sube'];
 const OF_ESTATUS_OFICIO = ['Recibido', 'En atención', 'Atendido', 'Solo conocimiento'];
 const OF_COLORES_ESTATUS = {
@@ -1131,16 +1135,25 @@ function ofRegistrarOficio_(x, pdf) {
     elaboracion: x.fechaElaboracion ? ofParsearFecha_(x.fechaElaboracion) : null,
     remitente: ofTxt_(x.remitente), asunto: ofTxt_(x.asunto), tipo: ofTxt_(x.tipo),
     recibio: ofTxt_(x.recibio), observaciones: ofTxt_(x.observaciones),
-    direccion: ofTxt_(x.direccion), forma: ofTxt_(x.forma), idEnvio: ofTxt_(x.idEnvio)
+    direccion: ofTxt_(x.direccion), forma: ofTxt_(x.forma), idEnvio: ofTxt_(x.idEnvio),
+    // Sin origen = página vieja en caché: se trata como Oficialía, igual que antes.
+    origen: ofTxt_(x.origen) === OF_ORIGEN_INTERNO ? OF_ORIGEN_INTERNO : OF_ORIGEN_OP
   };
-  if (!d.folioOP) throw new Error('Escribe el folio de Oficialía de Partes (el del sello).');
+  const interno = d.origen === OF_ORIGEN_INTERNO;
+  if (!interno && !d.folioOP) throw new Error('Escribe el folio de Oficialía de Partes (el del sello).');
   if (!d.recepcion) throw new Error('Fecha de recepción no válida.');
   if (x.fechaElaboracion && !d.elaboracion) throw new Error('Fecha de elaboración no válida.');
   if (!d.remitente) throw new Error('Escribe el remitente.');
   if (!d.asunto) throw new Error('Escribe el asunto.');
-  if (!d.tipo) throw new Error('Elige el tipo de oficio.');
-  if (OF_DIRECCIONES.indexOf(d.direccion) === -1) throw new Error('Indica si el oficio baja o sube.');
+  if (!interno && !d.tipo) throw new Error('Elige el tipo de oficio.');
   if (d.forma && OF_FORMAS_ATENCION.indexOf(d.forma) === -1) throw new Error('Forma de atención no válida.');
+  if (interno) {
+    d.direccion = '';
+    if (!d.forma) d.forma = 'Solo conocimiento';
+  } else if (OF_DIRECCIONES.indexOf(d.direccion) === -1) {
+    // "¿Baja o sube?" ya no se pregunta: se deduce (la página puede corregirla).
+    d.direccion = ofDeducirDireccion_(d.tipo, d.remitente);
+  }
 
   const hoja = ofObtenerHoja_(HOJA_OF_OFICIOS, ENCABEZADOS_OF_OFICIOS);
   const idx = ofIndices_(hoja);
@@ -1170,7 +1183,7 @@ function ofRegistrarOficio_(x, pdf) {
     'Remitente': d.remitente, 'Asunto': d.asunto, 'Tipo de oficio': d.tipo, 'Quién recibió': d.recibio,
     'Observaciones': d.observaciones, 'Dirección': d.direccion, 'Estatus': estatus,
     'Forma de atención': d.forma, 'Oficio(s) de salida': '', 'Vínculo': '', 'PDF': pdf,
-    'Registrado': new Date(), 'ID de envío': d.idEnvio, 'Origen': OF_ORIGEN_OP
+    'Registrado': new Date(), 'ID de envío': d.idEnvio, 'Origen': d.origen
   });
   hoja.appendRow(fila);
   return { status: 'ok', oficio: ofOficioParaPagina_(fila, idx) };
@@ -1330,6 +1343,14 @@ function ofTitulo_(s) {
 
 // Sube: lo manda la estructura (escuela, zona, supervisión, sector). Se decide
 // solo por el remitente: un tipo "SOLICITUD…" puede ser la respuesta de CoEEE.
+// Registro desde la página (13 oct 2026): las solicitudes (mantenimiento,
+// asesoría, correo…) siempre suben; si no, se decide por el remitente. La misma
+// regla vive en direccionDeducida() de oficios.html.
+function ofDeducirDireccion_(tipo, remitente) {
+  if (/^SOLICITUD/.test(String(tipo).trim().toUpperCase())) return 'Sube';
+  return ofDireccionProbable_(remitente);
+}
+
 function ofDireccionProbable_(remitente) {
   const t = String(remitente).normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
   return /\bESC\b|ESC\.|ESCUELA|PRIM\.|SECTOR|SUPERVISI|ZONA|\bCCT\b/.test(t) ? 'Sube' : 'Baja';

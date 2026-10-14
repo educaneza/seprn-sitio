@@ -236,7 +236,7 @@
       <div class="regla">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>
         <strong>Oficio sellado, oficio registrado</strong>
-        <span>Todo oficio que llega con sello de Oficialía de Partes se registra el mismo día.</span>
+        <span>Todo oficio que llega se registra el mismo día: con sello de Oficialía de Partes o interno (sin folio).</span>
       </div>
     </div>
 
@@ -399,7 +399,7 @@
   <section class="section" id="registrar">
     <div class="section-header">
       <div class="section-num">5</div>
-      <h2>Registrar un oficio que llega<span class="cuando">Cuando Oficialía de Partes nos turna un oficio</span></h2>
+      <h2>Registrar un oficio que llega<span class="cuando">Cuando Oficialía de Partes nos turna un oficio, o llega un oficio o comunicado interno</span></h2>
     </div>
 
     <div class="paso">
@@ -407,6 +407,8 @@
       <div>
         <ol class="pasos">
           <li><span class="n">1</span><div>En la pestaña <b>Oficios</b>, toca <b>+ Registrar un oficio que llegó</b>.</div></li>
+          <li><span class="n">2</span><div>Lo primero: <b>¿Cómo llegó?</b>
+            <small><b>Por Oficialía de Partes</b> si trae el sello con su folio. <b>Interno o comunicado</b> si no pasó por Oficialía: avisos, invitaciones a capacitaciones, comunicados de la Subdirección. Los internos no piden folio ni tipo de oficio.</small></div></li>
         </ol>
       </div>
     </div>
@@ -421,47 +423,26 @@
         <div class="sello"><span class="chip-n">A</span><small>OFICIALÍA DE PARTES</small><big>Folio 3662</big><small>08 OCT 2026</small></div>
       </div>
       <ul class="leyenda-papel">
-        <li><span class="chip-n">A</span> <strong>El sello de Oficialía de Partes.</strong> Su <b>folio</b> (aquí, 3662) es el dato más importante: va en el campo <b>1</b>. La fecha del sello va en el campo <b>2</b>.</li>
-        <li><span class="chip-n">B</span> <strong>El número que trae el oficio</strong>, puesto por quien lo manda. Va en el campo <b>3</b> («No. de oficio del remitente»).</li>
+        <li><span class="chip-n">A</span> <strong>El sello de Oficialía de Partes.</strong> Su <b>folio</b> (aquí, 3662) es el dato más importante: va en <b>Folio de Oficialía de Partes</b>. La fecha del sello va en <b>Fecha en que llegó</b>.</li>
+        <li><span class="chip-n">B</span> <strong>El número que trae el oficio</strong>, puesto por quien lo manda. Es opcional: va en <b>Más datos</b> → «No. de oficio del remitente».</li>
       </ul>
     </div>
 
     <div class="paso" style="margin-top:1.5rem;">
       <div class="tel"><img src="../images/manual-oficios/06-registrar-a.png" alt="Primera parte del formulario Registrar oficio" loading="lazy"></div>
       <div>
-        <p class="titulo-paso">El formulario (parte 1)</p>
+        <p class="titulo-paso">El formulario</p>
         <ol class="pasos">
-          <li><span class="n">1</span><div><b>Folio de Oficialía de Partes</b>, el del sello (A).</div></li>
-          <li><span class="n">2</span><div><b>Fecha de recepción</b>, la del sello.</div></li>
-          <li><span class="n">3</span><div><b>No. de oficio del remitente</b> (B). Si no trae, déjalo vacío.</div></li>
-          <li><span class="n">4</span><div><b>Remitente:</b> quién lo manda.<small>Al escribir, el sistema sugiere los que ya existen.</small></div></li>
-          <li><span class="n">5</span><div><b>Asunto</b>, como viene en el oficio.</div></li>
-          <li><span class="n">6</span><div><b>Tipo de oficio:</b> el programa (MIED, CUANTRIX, Seminarios…).</div></li>
+          <li><span class="n">1</span><div><b>Folio de Oficialía de Partes</b>, el del sello (A). Solo si llegó por Oficialía.</div></li>
+          <li><span class="n">2</span><div><b>Fecha en que llegó</b>: la del sello, o la de hoy si es interno.</div></li>
+          <li><span class="n">3</span><div><b>¿Quién lo manda?</b><small>Al escribir, el sistema sugiere los que ya existen.</small></div></li>
+          <li><span class="n">4</span><div><b>Asunto</b>, como viene en el oficio.</div></li>
+          <li><span class="n">5</span><div><b>Tipo de oficio:</b> el programa (MIED, CUANTRIX, Seminarios…). Solo si llegó por Oficialía.<small>Abajo verás «Se registra como Baja» o «Sube». El sistema lo decide solo: las solicitudes y lo que manda una escuela, zona o sector <b>sube</b>; lo demás <b>baja</b>. Toca «cambiar» solo si no corresponde.</small></div></li>
+          <li><span class="n">6</span><div><b>¿Qué hay que hacer con él?</b> Responder con un oficio, hacer algo, solo informativo, o «todavía no sé».<small>Los internos ya vienen en <b>Solo informativo</b>: quedan cerrados al registrarlos y no aparecen en «Por atender».</small></div></li>
+          <li><span class="n">7</span><div><b>Más datos (opcional):</b> número de oficio del remitente, fecha del oficio y observaciones. Ábrelo solo si los tienes.</div></li>
+          <li><span class="n">8</span><div><b>PDF del oficio escaneado.</b> Opcional, pero muy recomendable.</div></li>
+          <li><span class="n">9</span><div>Toca <b>Registrar oficio</b>.</div></li>
         </ol>
-      </div>
-    </div>
-
-    <div class="paso">
-      <div class="tel"><img src="../images/manual-oficios/07-registrar-b.png" alt="Segunda parte del formulario: baja o sube, cómo se atiende, PDF y botón" loading="lazy"></div>
-      <div>
-        <p class="titulo-paso">Parte 2</p>
-        <ol class="pasos">
-          <li><span class="n">7</span><div><b>¿Baja o sube?</b> (ver abajo).</div></li>
-          <li><span class="n">8</span><div><b>¿Cómo se atiende?</b> Si ya lo sabes: con un oficio de salida, con una acción o solo para conocimiento. Si no, déjalo así.</div></li>
-          <li><span class="n">9</span><div><b>PDF del oficio escaneado.</b> Opcional, pero muy recomendable: así se puede consultar desde cualquier lugar.</div></li>
-          <li><span class="n">10</span><div>Toca <b>Registrar oficio</b>.</div></li>
-        </ol>
-      </div>
-    </div>
-
-    <div class="direcciones">
-      <div class="dir baja">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v16M5 13l7 7 7-7"/></svg>
-        <div><strong>Baja</strong><span>Viene de arriba: CoEEE, Subsecretaría, Dirección. Normalmente se atiende enviando oficios a sectores, zonas y escuelas.</span></div>
-      </div>
-      <div class="dir sube">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20V4M5 11l7-7 7 7"/></svg>
-        <div><strong>Sube</strong><span>Viene de la estructura: una escuela, zona o sector. Normalmente se atiende con una acción (mantenimiento, asesoría…).</span></div>
       </div>
     </div>
 
@@ -514,12 +495,12 @@
       <div>
         <ol class="pasos">
           <li><span class="n">1</span><div>Para buscar, escribe <b>lo que recuerdes</b>: folio, remitente, una palabra del asunto, el programa o el número con que se respondió.</div></li>
-          <li><span class="n">2</span><div>Al abrir, la lista muestra <b>solo lo que falta por atender</b>. Quita la marca para ver todos.</div></li>
+          <li><span class="n">2</span><div>Arriba hay tres botones con su cuenta: <b>Por atender</b> (al abrir), <b>Falta folio de Oficialía</b> (oficios de la Oficina Virtual que aún no se llevan a Oficialía) y <b>Todos</b>.</div></li>
           <li><span class="n">3</span><div>El color te dice en qué va:
-            <small><b style="background:#fde68a;color:#78350f;padding:0 .35rem;border-radius:6px;">Recibido</b> falta atenderlo ·
+            <small><b style="background:#fde68a;color:#78350f;padding:0 .35rem;border-radius:6px;">Por atender</b> falta hacer algo ·
             <b style="background:#bbf7d0;color:#14532d;padding:0 .35rem;border-radius:6px;">Atendido</b> terminado ·
-            <b style="background:#e5e7eb;color:#374151;padding:0 .35rem;border-radius:6px;">Solo conocimiento</b> no pedía nada</small></div></li>
-          <li><span class="n">4</span><div><b>Tomar número para responder</b> (paso 6) o <b>Marcar como atendido</b> (paso 9). Si tiene PDF, también <b>Ver PDF</b>.</div></li>
+            <b style="background:#e5e7eb;color:#374151;padding:0 .35rem;border-radius:6px;">Informativo</b> no pedía nada</small></div></li>
+          <li><span class="n">4</span><div>Cada oficio pendiente dice su <b>Siguiente paso</b> y tiene <b>un botón principal</b> (el de color): anotar el folio, tomar número para responder (paso 6) o marcar como atendido (paso 9). Los botones claros son otras opciones.</div></li>
         </ol>
       </div>
     </div>
@@ -560,16 +541,16 @@
       <div class="section-num">9</div>
       <h2>Marcar un oficio como atendido<span class="cuando">Cuando ya se hizo lo que pedía el oficio</span></h2>
     </div>
-    <p class="lead">Es para los oficios que <b>no</b> se contestaron con otro oficio (esos ya quedan atendidos solos, paso 6). En la lista de <b>Oficios</b>, toca <b>Marcar como atendido</b> y elige cómo se atendió:</p>
+    <p class="lead">Es para los oficios que <b>no</b> se contestaron con otro oficio (esos ya quedan atendidos solos, paso 6). En la lista de <b>Oficios</b>, toca <b>Marcar como atendido</b> y el sistema te sugiere una forma en una frase. Si es correcta, toca el botón de color; si no, toca <b>Se atendió de otra forma</b> y elige:</p>
     <div class="paso">
       <div class="tel"><img src="../images/manual-oficios/13-atender.png" alt="Opciones para marcar un oficio como atendido" loading="lazy"></div>
       <div>
         <ol class="pasos">
-          <li><span class="n">1</span><div><b>La acción ya llega sola a la bitácora.</b> Para mantenimiento, asesoría, un curso de Formación Docente o correo institucional: esos sistemas ya mandan su actividad a la bitácora.<small>El sistema la marca como «sugerida» cuando el tipo de oficio es uno de esos.</small></div></li>
+          <li><span class="n">1</span><div><b>La acción ya llega sola a la bitácora.</b> Para mantenimiento, asesoría, un curso de Formación Docente o correo institucional: esos sistemas ya mandan su actividad a la bitácora.<small>El sistema la sugiere cuando el tipo de oficio es uno de esos.</small></div></li>
           <li><span class="n">2</span><div><b>Capturar la acción en la bitácora.</b> Para todo lo demás (MIED, CUANTRIX, UNETE, reuniones…). Abre la pestaña <b>Actividad</b> con los datos del oficio ya puestos.<small>Solo aparece para Jorge y Nancy.</small></div></li>
-          <li><span class="n">3</span><div><b>Solo para conocimiento.</b> El oficio no pedía hacer nada.</div></li>
+          <li><span class="n">3</span><div><b>Solo informativo.</b> El oficio no pedía hacer nada.</div></li>
           <li><span class="n">4</span><div>En la opción 1, escribe el <b>folio</b> con que se atendió, si lo tienes (ej. OTDE-MAN-0031). Es opcional.</div></li>
-          <li><span class="n">5</span><div>Toca <b>Confirmar</b> (o <b>Capturar la actividad</b> en la opción 2).</div></li>
+          <li><span class="n">5</span><div>Toca el botón de color: <b>Confirmar</b>, <b>Capturar la actividad</b> o <b>Cerrar como informativo</b>.</div></li>
         </ol>
         <div class="ojo">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17h.01"/></svg>
