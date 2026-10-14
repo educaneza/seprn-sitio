@@ -35,6 +35,10 @@ function onEditWebform(e) {
       incidenciaRevisarEdicion(e);
       break;
   }
+
+  // Seguimiento de SIGEE y rechazos (Seguimiento.gs): corre después de la
+  // revisión de cada tipo, para leer el estado ya actualizado.
+  segRevisarEdicion_(e);
 }
 
 /**

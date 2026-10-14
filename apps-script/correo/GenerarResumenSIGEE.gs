@@ -41,6 +41,8 @@ function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('OTDE Correos')
     .addItem('Generar resumen para SIGEE (fila activa)', 'generarResumenSIGEE')
+    .addItem('Preparar columnas de seguimiento SIGEE', 'prepararSeguimientoSIGEE')
+    .addItem('Enviar resumen semanal ahora', 'resumenSemanal')
     .addToUi();
 }
 

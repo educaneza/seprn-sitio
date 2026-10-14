@@ -113,7 +113,7 @@ const COL_CAMBIO_CUENTA_LISTA = 14;
 const COL_CAMBIO_USUARIO_ENVIADO = 15;
 const COL_CAMBIO_FECHA_ENTREGA = 16;
 const COL_CAMBIO_ESTADO = 17;
-const CAMBIO_COLORES_ESTADO = { 'Solicitud recibida': '#e5e7eb', 'Cuenta entregada': '#d1fae5' };
+const CAMBIO_COLORES_ESTADO = { 'Solicitud recibida': '#e5e7eb', 'Cuenta entregada': '#d1fae5', 'Rechazada': '#fee2e2' };
 
 function cambioAplicarSemaforoYProteccion_(hoja) {
   aplicarValidacionListaSuave_(hoja, COL_CAMBIO_CUENTA_LISTA, ['Sí', 'No']);
@@ -126,7 +126,7 @@ function cambioAplicarSemaforoYProteccion_(hoja) {
 // altaAplicarValidacionEstado() en Alta.gs — ver ese comentario). ──
 function cambioAplicarValidacionEstado(hoja) {
   const regla = SpreadsheetApp.newDataValidation()
-    .requireValueInList(['Solicitud recibida', 'Cuenta entregada'], true)
+    .requireValueInList(['Solicitud recibida', 'Cuenta entregada', 'Rechazada'], true)
     .setAllowInvalid(false)
     .build();
   hoja.getRange(2, 17, 1000, 1).setDataValidation(regla);

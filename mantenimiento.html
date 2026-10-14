@@ -235,6 +235,15 @@
                             <option value="Más de 20">Más de 20</option>
                         </select>
                         <div class="soporte-field-error" id="man-cantidad-aula-error">Selecciona la cantidad aproximada.</div>
+                        <div class="highlight-box" style="margin:12px 0 0 0;">
+                            <p style="margin:0 0 6px 0;font-size:14px;"><strong>Para que la visita rinda:</strong></p>
+                            <ul class="benefit-list" style="margin:0;font-size:14px;">
+                                <li>Aula limpia y despejada (sin cajas ni material encima de las mesas y los equipos).</li>
+                                <li>Contactos eléctricos accesibles y funcionando.</li>
+                                <li>Alguien con la llave del aula el día de la visita.</li>
+                            </ul>
+                            <p style="margin:6px 0 0 0;font-size:13px;">Un espacio en malas condiciones puede impedir que el técnico trabaje y obligar a reprogramar la visita.</p>
+                        </div>
                     </div>
                     <label style="display:flex;align-items:flex-start;gap:8px;font-weight:normal;margin-bottom:8px;">
                         <input type="checkbox" id="man-equipo-admin" onchange="manToggleCantidad('admin')" style="margin-top:3px;">
@@ -251,6 +260,20 @@
                             <option value="Más de 10">Más de 10</option>
                         </select>
                         <div class="soporte-field-error" id="man-cantidad-admin-error">Selecciona la cantidad aproximada.</div>
+                        <div class="highlight-box" style="margin:12px 0 0 0;">
+                            <p style="margin:0 0 6px 0;font-size:14px;"><strong>Antes de la visita, respalda tu información.</strong> En algunos casos el técnico necesita reinstalar el sistema y lo que no esté respaldado se pierde.</p>
+                            <ul class="benefit-list" style="margin:0;font-size:14px;">
+                                <li>Copia las carpetas <strong>Escritorio, Documentos y Descargas</strong> a una USB o disco externo.</li>
+                                <li>Mejor aún: súbelas al <strong>OneDrive de tu cuenta institucional</strong> (@dee.edu.mx). Ya lo tienes incluido y no se pierde aunque falle el equipo.</li>
+                                <li>Anota o exporta las <strong>contraseñas y favoritos</strong> guardados en el navegador.</li>
+                                <li>Ubica los archivos de programas especiales (nómina, control escolar, plantillas).</li>
+                            </ul>
+                        </div>
+                        <label style="display:flex;align-items:flex-start;gap:8px;font-weight:normal;margin-top:10px;">
+                            <input type="checkbox" id="man-confirma-respaldo" style="margin-top:3px;">
+                            <span>Entiendo que debo respaldar mi información antes de la visita. OTDE no se hace responsable de archivos no respaldados.<span class="req">*</span></span>
+                        </label>
+                        <div class="soporte-field-error" id="man-confirma-respaldo-error">Confirma que respaldarás tu información antes de la visita.</div>
                     </div>
                     <label style="display:flex;align-items:flex-start;gap:8px;font-weight:normal;margin-bottom:8px;">
                         <input type="checkbox" id="man-equipo-red" onchange="manToggleCantidad('red')" style="margin-top:3px;">
@@ -275,6 +298,17 @@
                             <option>Abandonadas / posible baja</option>
                         </select>
                         <div class="soporte-field-error" id="man-estado-equipo-error">Selecciona el estado actual de los equipos.</div>
+                    </div>
+                    <div class="soporte-form-group" id="man-cmos-group" style="display:none;">
+                        <label for="man-cmos">Al encender, ¿alguna computadora muestra la fecha u hora equivocada, pide presionar F1 o da un error que dice "CMOS"?<span class="req">*</span></label>
+                        <select id="man-cmos">
+                            <option value="">— Selecciona una opción —</option>
+                            <option>Sí</option>
+                            <option>No</option>
+                            <option>No sé</option>
+                        </select>
+                        <div class="soporte-field-hint">Esa señal casi siempre es la pila interna (tipo reloj) agotada. Si es tu caso, te diremos cuántas tener a la mano para la visita.</div>
+                        <div class="soporte-field-error" id="man-cmos-error">Selecciona una opción.</div>
                     </div>
 
                     <label for="man-equipos" style="margin-top:12px;display:block;">Describe la falla<span class="req">*</span></label>
@@ -548,6 +582,16 @@
     manInitCctAutocomplete();
     otdePoblarFuncion('man-funcion', null);
 
+    document.getElementById('man-confirma-respaldo').addEventListener('change', function() {
+        if (this.checked) document.getElementById('man-confirma-respaldo-error').classList.remove('visible');
+    });
+    document.getElementById('man-cmos').addEventListener('change', function() {
+        if (this.value) {
+            this.classList.remove('error');
+            document.getElementById('man-cmos-error').classList.remove('visible');
+        }
+    });
+
     // Muestra/oculta el desplegable de cantidad según qué checkbox de tipo de equipo
     // se marcó, y el bloque de marca/modelo + estado si hay al menos una computadora marcada.
     function manToggleCantidad(cual) {
@@ -559,6 +603,12 @@
         var hayComputadora = document.getElementById('man-equipo-aula').checked || document.getElementById('man-equipo-admin').checked;
         document.getElementById('man-marca-modelo-group').style.display = hayComputadora ? 'block' : 'none';
         document.getElementById('man-estado-equipo-group').style.display = hayComputadora ? 'block' : 'none';
+        document.getElementById('man-cmos-group').style.display = hayComputadora ? 'block' : 'none';
+        if (!hayComputadora) document.getElementById('man-cmos').value = '';
+        if (!document.getElementById('man-equipo-admin').checked) {
+            document.getElementById('man-confirma-respaldo').checked = false;
+            document.getElementById('man-confirma-respaldo-error').classList.remove('visible');
+        }
         var algunoMarcado = hayComputadora || document.getElementById('man-equipo-red').checked || document.getElementById('man-equipo-otro').checked;
         if (algunoMarcado) document.getElementById('man-equipo-tipo-error').classList.remove('visible');
     }
@@ -730,6 +780,25 @@
             estadoErr.classList.remove('visible');
         }
 
+        var cmosInput = document.getElementById('man-cmos');
+        var cmosErr = document.getElementById('man-cmos-error');
+        if ((equipoAula || equipoAdmin) && !cmosInput.value) {
+            cmosInput.classList.add('error');
+            cmosErr.classList.add('visible');
+            ok = false;
+        } else {
+            cmosInput.classList.remove('error');
+            cmosErr.classList.remove('visible');
+        }
+
+        var respaldoErr = document.getElementById('man-confirma-respaldo-error');
+        if (equipoAdmin && !document.getElementById('man-confirma-respaldo').checked) {
+            respaldoErr.classList.add('visible');
+            ok = false;
+        } else {
+            respaldoErr.classList.remove('visible');
+        }
+
         var oficioInput = document.getElementById('man-oficio');
         var oficioErr = document.getElementById('man-oficio-error');
         var oficioFile = oficioInput.files[0];
@@ -813,6 +882,8 @@
                 cantidadAdmin: document.getElementById('man-cantidad-admin').value,
                 marcaModelo: document.getElementById('man-marca-modelo').value.trim(),
                 estadoEquipo: document.getElementById('man-estado-equipo').value,
+                sintomaCmos: document.getElementById('man-cmos').value,
+                confirmaRespaldo: document.getElementById('man-equipo-admin').checked && document.getElementById('man-confirma-respaldo').checked,
                 oficioBase64: oficioBase64,
                 oficioNombre: oficioFile.name,
                 oficioTipo: oficioFile.type,

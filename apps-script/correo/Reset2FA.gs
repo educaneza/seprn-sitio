@@ -105,7 +105,7 @@ const COL_RESET_LISTO = 12;
 const COL_RESET_USUARIO_ENVIADO = 13;
 const COL_RESET_FECHA_ENTREGA = 14;
 const COL_RESET_ESTADO = 15;
-const RESET_COLORES_ESTADO = { 'Solicitud recibida': '#e5e7eb', 'Reset notificado': '#d1fae5' };
+const RESET_COLORES_ESTADO = { 'Solicitud recibida': '#e5e7eb', 'Reset notificado': '#d1fae5', 'Rechazada': '#fee2e2' };
 
 function resetAplicarSemaforoYProteccion_(hoja) {
   aplicarValidacionListaSuave_(hoja, COL_RESET_LISTO, ['Sí', 'No']);
@@ -118,7 +118,7 @@ function resetAplicarSemaforoYProteccion_(hoja) {
 // altaAplicarValidacionEstado() en Alta.gs — ver ese comentario). ──
 function resetAplicarValidacionEstado(hoja) {
   const regla = SpreadsheetApp.newDataValidation()
-    .requireValueInList(['Solicitud recibida', 'Reset notificado'], true)
+    .requireValueInList(['Solicitud recibida', 'Reset notificado', 'Rechazada'], true)
     .setAllowInvalid(false)
     .build();
   hoja.getRange(2, 15, 1000, 1).setDataValidation(regla);

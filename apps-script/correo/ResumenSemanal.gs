@@ -43,7 +43,9 @@ function resumenSemanal() {
     if (conteo > 0) conteos[nombreHoja] = conteo;
   }
 
-  if (totalPendientes === 0) return;
+  // Seguimiento de SIGEE (Seguimiento.gs): atoradas, entregadas sin NP, tiempos, rechazos.
+  const seguimiento = segResumenSemanal_();
+  if (totalPendientes === 0 && !seguimiento.hayAlgo) return;
 
   const urlSheet = ss.getUrl();
   const hoy = Utilities.formatDate(new Date(), 'America/Mexico_City', 'dd/MM/yyyy');
@@ -97,6 +99,8 @@ function resumenSemanal() {
                 </td>
               </tr>
             </table>
+
+            ${seguimiento.html}
 
             <p style="margin:0 0 16px 0; font-size:14px; color:#333333; line-height:1.6;">
               Revisa y actualiza el estatus de cada caso directamente en la hoja de control:

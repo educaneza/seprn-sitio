@@ -199,11 +199,18 @@ function manejarConsultaCorreo(folioBuscado, correoBuscado) {
     (idxCorreoInstitucional !== -1 && String(fila[idxCorreoInstitucional]).trim().toLowerCase() === correoBuscadoNorm);
   if (!coincide) return noEncontrado();
 
+  // Rechazada: el motivo va en "notas" (Oficina Virtual lo pinta como HTML, por eso se escapa).
+  const idxMotivo = indexOfHeader(headers, 'Motivo de rechazo');
+  const estatus = idxEstado !== -1 ? fila[idxEstado] : '';
+  const notas = (normalizarTexto(estatus) === normalizarTexto('Rechazada') && idxMotivo !== -1)
+    ? escapeHtml_('Motivo: ' + String(fila[idxMotivo] || '').trim()) : '';
+
   return textResponse(JSON.stringify({
     status: 'ok',
     folio: fila[idxFolio],
     fecha: fila[idxFecha] instanceof Date ? fila[idxFecha].toISOString() : String(fila[idxFecha]),
-    estatus: idxEstado !== -1 ? fila[idxEstado] : ''
+    estatus: estatus,
+    notas: notas
   }));
 }
 
@@ -255,6 +262,7 @@ function registrarSolicitudSinDuplicar_(hoja, fila, nCapturadas, generarFolio, i
   }
   try {
     const colId = asegurarColumnaIdEnvio_(hoja);
+    segPrepararColumnas_(hoja);   // columnas de seguimiento SIGEE al final (Seguimiento.gs)
     const id = String(idEnvio || '').trim();
     const ultimaFila = hoja.getLastRow();
     const filas = ultimaFila > 1 ? hoja.getRange(2, 1, ultimaFila - 1, colId).getValues() : [];

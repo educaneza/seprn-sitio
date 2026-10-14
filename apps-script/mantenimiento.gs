@@ -37,7 +37,8 @@
 //   S Cantidad (Administrativas) | T Marca/Modelo | U Estado de instalación
 //   V Tipo de solicitante | W Fecha programada de visita
 //   X Notificación de fecha programada enviada | Y Técnico asignado
-//   Z Notificación a técnico enviada
+//   Z Notificación a técnico enviada | AA ID de envío
+//   AB Síntoma de pila CMOS | AC Confirmó respaldo (oct 2026, al final a propósito)
 //
 // COLUMNAS DE LA HOJA "Contactos_Zona_Sector" (Jorge la llena a mano):
 //   A Sector | B Zona | C Correo | D Teléfono
@@ -116,6 +117,10 @@
 //   W ¿Se atendieron equipos administrativos? | X ¿Se instaló Toolwiz Time Freeze?
 //   Y ¿Requiere segunda visita? | Z Descripción de la atención realizada
 //   AA Fotografías de evidencia (URLs, una por línea)
+//   AB Docentes de la escuela | AC Alumnos de la escuela
+//   AD Tipo de atención | AE Área administrativa atendida
+//   AF Equipos administrativos funcionales | AG Información respaldada
+//   AH Pila CMOS (oct 2026: visitas solo de equipo administrativo + pilas)
 // (U-AA agregadas al final a propósito — rediseño del formulario, sep 2026 —
 // para no correr los índices de S/T ya usados por COL_MAN_REP_PDF_URL/
 // COL_MAN_REP_NOTIFICACION, mismo criterio que las columnas agregadas al
@@ -135,7 +140,10 @@ const ENCABEZADOS_MAN_SOLICITUDES = [
   'Cantidad (Administrativas)', 'Marca/Modelo', 'Estado de instalación',
   'Tipo de solicitante', 'Fecha programada de visita',
   'Notificación de fecha programada enviada', 'Técnico asignado',
-  'Notificación a técnico enviada', 'ID de envío'
+  'Notificación a técnico enviada', 'ID de envío',
+  // Oct 2026, al final para no correr ninguna columna existente (se auto-completan
+  // en manObtenerHojaSolicitudes). Alimentan "Prepárate para la visita".
+  'Síntoma de pila CMOS', 'Confirmó respaldo'
 ];
 // Ventana del respaldo anti-duplicados para envíos sin idEnvio (páginas viejas en caché):
 // misma CCT + correo + "Equipos con falla" dentro de estos minutos = mismo envío.
@@ -178,7 +186,9 @@ const ENCABEZADOS_MAN_REPORTES = [
   'Atención sin solicitud previa', 'Modelo/marca del equipo',
   '¿Se atendieron equipos administrativos?', '¿Se instaló Toolwiz Time Freeze?',
   '¿Requiere segunda visita?', 'Descripción de la atención realizada',
-  'Fotografías de evidencia', 'Docentes de la escuela', 'Alumnos de la escuela'
+  'Fotografías de evidencia', 'Docentes de la escuela', 'Alumnos de la escuela',
+  'Tipo de atención', 'Área administrativa atendida', 'Equipos administrativos funcionales',
+  'Información respaldada', 'Pila CMOS'
 ];
 const COL_MAN_REP_FOLIO = 1;
 const COL_MAN_REP_RESPONSABLE = 2;
@@ -212,6 +222,15 @@ const COL_MAN_REP_FOTOS_EVIDENCIA = 27;
 // cada visita (?action=reportesMes, ver manListarReportesMes_).
 const COL_MAN_REP_DOCENTES = 28;
 const COL_MAN_REP_ALUMNOS = 29;
+// Oct 2026, al final, mismo criterio. "Tipo de atención" distingue las visitas
+// solo de equipo administrativo (Dirección/Supervisión/Sector): en esas, los
+// campos del aula llegan como "No aplica" y el PDF no los muestra.
+const COL_MAN_REP_TIPO_ATENCION = 30;
+const COL_MAN_REP_AREA_ADMIN = 31;
+const COL_MAN_REP_ADMIN_FUNCIONALES = 32;
+const COL_MAN_REP_RESPALDO = 33;
+const COL_MAN_REP_PILA_CMOS = 34;
+const MAN_TIPO_ATENCION_ADMIN = 'Solo equipos administrativos';
 // Nombre → correo, para el "cc" del correo del reporte y el selector de la
 // hoja. Mismo criterio de "no inventar" que el resto del sitio — confirmado
 // por Jorge, no copiado de v8.5 (ese proyecto no expuso los correos reales
@@ -229,7 +248,12 @@ const MAN_ESTADOS_AULA = [
   '🟢 Operativa — todos los equipos encienden y funcionan correctamente. Lista para uso regular, asesorías y aula modelo.',
   '🟡 Operativa con observaciones — funciona pero con detalles menores que no impiden su uso.',
   '🟠 Operativa parcialmente — menos del 70% de equipos funcionales o intervención incompleta. Uso limitado, se requiere segunda visita.',
-  '🔴 No operativa — la mayoría de los equipos no funciona o el aula no está en condiciones de uso.'
+  '🔴 No operativa — la mayoría de los equipos no funciona o el aula no está en condiciones de uso.',
+  // Oct 2026: deja como dato medible que el espacio impidió trabajar (técnicos
+  // reportan aulas sucias o abandonadas), y "No aplica" para las visitas solo
+  // de equipo administrativo.
+  '⚫ No se pudo trabajar — las condiciones del espacio (suciedad, abandono, sin luz o sin acceso) impidieron la intervención.',
+  'No aplica — visita solo a equipos administrativos.'
 ];
 
 // ── Modo de prueba: redirige TODOS los correos salientes (Zona/Sector +
@@ -600,9 +624,13 @@ function manAgregarSolicitud_(hoja, datos, folio, oficioUrl) {
     (datos.estadoEquipo || '').trim(),
     (datos.tipoCct || '').trim()
   ];
-  // Las columnas de programación/técnico quedan en blanco; 'ID de envío' va al final.
-  while (fila.length < ENCABEZADOS_MAN_SOLICITUDES.length - 1) fila.push('');
-  fila.push(String(datos.idEnvio || '').trim());
+  // Las columnas de programación/técnico quedan en blanco; las que van después se
+  // colocan por nombre de encabezado.
+  while (fila.length < ENCABEZADOS_MAN_SOLICITUDES.length) fila.push('');
+  const col = n => ENCABEZADOS_MAN_SOLICITUDES.indexOf(n);
+  fila[col('ID de envío')] = String(datos.idEnvio || '').trim();
+  fila[col('Síntoma de pila CMOS')] = String(datos.sintomaCmos || '').trim();
+  fila[col('Confirmó respaldo')] = datos.confirmaRespaldo === true ? 'Sí' : '';
   hoja.appendRow(fila);
 }
 
@@ -717,7 +745,8 @@ const MAN_COLORES_ESTADO_AULA = {
   '🟢 Operativa — todos los equipos encienden y funcionan correctamente. Lista para uso regular, asesorías y aula modelo.': '#d1fae5',
   '🟡 Operativa con observaciones — funciona pero con detalles menores que no impiden su uso.': '#fef3c7',
   '🟠 Operativa parcialmente — menos del 70% de equipos funcionales o intervención incompleta. Uso limitado, se requiere segunda visita.': '#fed7aa',
-  '🔴 No operativa — la mayoría de los equipos no funciona o el aula no está en condiciones de uso.': '#fee2e2'
+  '🔴 No operativa — la mayoría de los equipos no funciona o el aula no está en condiciones de uso.': '#fee2e2',
+  '⚫ No se pudo trabajar — las condiciones del espacio (suciedad, abandono, sin luz o sin acceso) impidieron la intervención.': '#e5e7eb'
 };
 
 // Colorea el fondo de una celda según su valor exacto — quita cualquier
@@ -1130,10 +1159,53 @@ function manCorreoHtml_(opts) {
     '<p class="header-sub">Oficina de Tecnología para el Desarrollo Educativo | OTDE</p>' +
     '<p class="header-title">' + opts.titulo + '</p>' +
     '<div class="header-line"></div></div>' +
-    '<div class="body">' + (opts.introHtml || '') + caja + cta + aviso + '</div>' +
+    '<div class="body">' + (opts.introHtml || '') + caja + (opts.despuesHtml || '') + cta + aviso + '</div>' +
     manCorreoFirma_() +
     '<div class="pie"><p>SEPRN © 2026 — Gobierno del Estado de México</p></div>' +
     '</div></div></body></html>';
+}
+
+// ── "Prepárate para la visita" (oct 2026) ──
+// Lista solo lo que aplica a la solicitud: respaldo (equipo administrativo),
+// aula limpia (aula de medios) y pilas CMOS (síntoma reportado o HP Mini).
+// `info` = { tipoEquipo, marcaModelo, sintomaCmos }. Devuelve '' si nada aplica.
+function manPreparacionItems_(info) {
+  const tipo = String(info.tipoEquipo || '');
+  const items = [];
+  if (/Administrativa/.test(tipo)) {
+    items.push('<strong>Respalda tu información:</strong> copia Escritorio, Documentos y Descargas a una USB o al OneDrive de tu cuenta institucional, y anota las contraseñas guardadas en el navegador. Si hay que reinstalar el sistema, lo no respaldado se pierde.');
+  }
+  if (/Aula de medios/.test(tipo)) {
+    items.push('<strong>Aula lista:</strong> limpia y despejada, con contactos eléctricos funcionando y alguien con la llave el día de la visita.');
+  }
+  if (manNecesitaPilaCmos_(info)) {
+    items.push('<strong>Ten a la mano pilas tipo reloj CR2032</strong> (una por cada computadora que muestre la fecha equivocada o pida presionar F1). Las encuentras en ferreterías y tiendas de electrónica; sin ellas la falla regresa aunque el técnico la corrija.');
+  }
+  return items;
+}
+
+function manNecesitaPilaCmos_(info) {
+  return String(info.sintomaCmos || '').trim() === 'Sí' || /mini/i.test(String(info.marcaModelo || ''));
+}
+
+function manBloquePreparacion_(info, titulo) {
+  const items = manPreparacionItems_(info);
+  if (!items.length) return '';
+  return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#fff8f0;border-left:4px solid #977e5b;border-radius:4px;margin-bottom:14px;">' +
+    '<tr><td style="padding:15px 17px;">' +
+    '<p style="margin:0 0 8px 0;font-size:14px;color:#1a1a1a;font-weight:bold;">' + (titulo || 'Prepárate para la visita') + '</p>' +
+    items.map(t => '<p style="margin:0 0 8px 0;font-size:13.5px;color:#333333;line-height:1.6;">• ' + t + '</p>').join('') +
+    '</td></tr></table>';
+}
+
+// Lee de una fila de Solicitudes los datos que usa el bloque de preparación.
+function manInfoPreparacionDeFila_(fila) {
+  const col = n => ENCABEZADOS_MAN_SOLICITUDES.indexOf(n);
+  return {
+    tipoEquipo: fila[col('Tipo de equipo')],
+    marcaModelo: fila[col('Marca/Modelo')],
+    sintomaCmos: fila[col('Síntoma de pila CMOS')]
+  };
 }
 
 const MAN_CTA_SEGUIMIENTO = 'https://educaneza.github.io/seprn-sitio/oficina-virtual.html#buscar-folio';
@@ -1161,6 +1233,7 @@ function manNotificarSolicitudRecibida(folio, d) {
         { icono: '👤', etiqueta: 'Solicita', valor: manEscapeHtml_(d.nombre.trim()) + ' (' + manEscapeHtml_(d.funcion.trim()) + ')' },
         { icono: '🛠️', etiqueta: 'Equipos con falla', valor: manEscapeHtml_(d.equipos.trim()) }
       ],
+      despuesHtml: manBloquePreparacion_(d, 'Mientras programamos tu visita'),
       ctaHref: MAN_CTA_SEGUIMIENTO,
       ctaTexto: 'Consultar estatus de tu solicitud'
     });
@@ -1403,6 +1476,7 @@ function manNotificarFechaProgramada(fila) {
         { icono: '🏫', etiqueta: 'Escuela / CCT', valor: manEscapeHtml_(escuela || '') + ' — ' + manEscapeHtml_(cct) },
         { icono: '👤', etiqueta: 'Solicitó', valor: manEscapeHtml_(nombre) }
       ],
+      despuesHtml: manBloquePreparacion_(manInfoPreparacionDeFila_(fila)),
       ctaHref: MAN_CTA_SEGUIMIENTO,
       ctaTexto: 'Consultar estatus de tu solicitud'
     });
@@ -1458,7 +1532,9 @@ function manNotificarTecnicoAsignado(fila) {
         { icono: '🏢', etiqueta: 'Sector / Zona', valor: 'Sector ' + manEscapeHtml_(sector) + ' · Zona ' + manEscapeHtml_(zona) },
         { icono: '🛠️', etiqueta: 'Equipos con falla reportados', valor: manEscapeHtml_(equipos || '—') },
         { icono: '👤', etiqueta: 'Contacto en la escuela', valor: manEscapeHtml_(nombre) + (whatsapp ? ' · WhatsApp ' + manEscapeHtml_(whatsapp) : '') }
-      ],
+      ].concat(manNecesitaPilaCmos_(manInfoPreparacionDeFila_(fila))
+        ? [{ icono: '🔋', etiqueta: 'Posible pila CMOS', valor: 'La escuela reporta fecha/hora equivocada o modelo HP Mini. Lleva pilas CR2032 de repuesto por si no las consiguieron.' }]
+        : []),
       colorCaja: '#977e5b',
       ctaHref: 'https://educaneza.github.io/seprn-sitio/reporte-visita.html',
       ctaTexto: 'Llenar reporte de visita',
@@ -1735,6 +1811,9 @@ function manGenerarPDFReporte_(solicitud, datos) {
     '<tr><td colspan="2" class="seccion">' + manEscapeHtml_(titulo) + '</td></tr>';
 
   const sinSolicitud = String(datos[COL_MAN_REP_SIN_SOLICITUD - 1] || '').trim();
+  const tipoAtencion = String(datos[COL_MAN_REP_TIPO_ATENCION - 1] || '').trim();
+  const soloAdmin = tipoAtencion === MAN_TIPO_ATENCION_ADMIN;
+  const filaSi = (etiqueta, v) => String(v || '').trim() ? fila(etiqueta, val(v)) : '';
   const fotosEvidencia = String(datos[COL_MAN_REP_FOTOS_EVIDENCIA - 1] || '').trim();
   const numFotos = fotosEvidencia ? fotosEvidencia.split('\n').filter(Boolean).length : 0;
 
@@ -1752,22 +1831,29 @@ function manGenerarPDFReporte_(solicitud, datos) {
     fila('Inicio de la visita', manFormatearHora12_(inicio)) +
     fila('Fin de la visita', manFormatearHora12_(fin)) +
     fila('Duración de la jornada', manCalcularDuracion_(inicio, fin)) +
-    fila('Aula en uso al llegar', val(datos[COL_MAN_REP_AULA_EN_USO - 1])) +
-    fila('Mobiliario', val(datos[COL_MAN_REP_MOBILIARIO - 1])) +
-    fila('Conectividad', val(datos[COL_MAN_REP_CONECTIVIDAD - 1])) +
+    filaSi('Tipo de atención', tipoAtencion) +
+    (soloAdmin ? '' :
+      fila('Aula en uso al llegar', val(datos[COL_MAN_REP_AULA_EN_USO - 1])) +
+      fila('Mobiliario', val(datos[COL_MAN_REP_MOBILIARIO - 1])) +
+      fila('Conectividad', val(datos[COL_MAN_REP_CONECTIVIDAD - 1]))) +
     seccion('Equipos atendidos') +
-    fila('Equipos atendidos', val(datos[COL_MAN_REP_EQUIPOS_ATENDIDOS - 1])) +
-    fila('Equipos funcionales', val(datos[COL_MAN_REP_EQUIPOS_FUNCIONALES - 1])) +
-    fila('Equipos no funcionales', val(datos[COL_MAN_REP_EQUIPOS_NO_FUNCIONALES - 1])) +
+    (soloAdmin ? '' :
+      fila('Equipos atendidos (aula)', val(datos[COL_MAN_REP_EQUIPOS_ATENDIDOS - 1])) +
+      fila('Equipos funcionales', val(datos[COL_MAN_REP_EQUIPOS_FUNCIONALES - 1])) +
+      fila('Equipos no funcionales', val(datos[COL_MAN_REP_EQUIPOS_NO_FUNCIONALES - 1]))) +
     fila('Modelo / marca', val(datos[COL_MAN_REP_MODELO_EQUIPO - 1])) +
+    filaSi('Área administrativa', datos[COL_MAN_REP_AREA_ADMIN - 1]) +
     fila('Equipos administrativos', val(datos[COL_MAN_REP_EQUIPOS_ADMIN - 1])) +
+    filaSi('Administrativos funcionales', datos[COL_MAN_REP_ADMIN_FUNCIONALES - 1]) +
+    filaSi('Información respaldada', datos[COL_MAN_REP_RESPALDO - 1]) +
+    filaSi('Pila CMOS', datos[COL_MAN_REP_PILA_CMOS - 1]) +
     seccion('Actividades realizadas') +
     fila('Preventivas', val(datos[COL_MAN_REP_ACTIVIDADES_PREVENTIVAS - 1])) +
     fila('Correctivas', val(datos[COL_MAN_REP_ACTIVIDADES_CORRECTIVAS - 1])) +
     fila('Instalación realizada', val(datos[COL_MAN_REP_INSTALACION_REALIZADA - 1])) +
-    fila('Toolwiz Time Freeze', val(datos[COL_MAN_REP_TOOLWIZ - 1])) +
+    (soloAdmin ? '' : fila('Toolwiz Time Freeze', val(datos[COL_MAN_REP_TOOLWIZ - 1]))) +
     seccion('Resultado de la intervención') +
-    fila('Estado del aula', val(datos[COL_MAN_REP_ESTADO_AULA - 1])) +
+    (soloAdmin ? '' : fila('Estado del aula', val(datos[COL_MAN_REP_ESTADO_AULA - 1]))) +
     fila('¿Requiere segunda visita?', val(datos[COL_MAN_REP_SEGUNDA_VISITA - 1])) +
     fila('Seguimiento requerido', val(datos[COL_MAN_REP_SEGUIMIENTO - 1])) +
     seccion('Descripción y observaciones') +
@@ -1845,7 +1931,9 @@ function manEnviarReporteVisita_(solicitud, datos, pdfBlob) {
     filas: [
       { icono: '🎫', etiqueta: 'Folio', valor: solicitud.folio },
       { icono: '🏫', etiqueta: 'Escuela / CCT', valor: manEscapeHtml_(solicitud.escuela || '') + ' — ' + manEscapeHtml_(solicitud.cct) },
-      { icono: '📋', etiqueta: 'Estado del aula', valor: manEscapeHtml_(String(datos[COL_MAN_REP_ESTADO_AULA - 1] || '')) }
+      String(datos[COL_MAN_REP_TIPO_ATENCION - 1] || '').trim() === MAN_TIPO_ATENCION_ADMIN
+        ? { icono: '🖥️', etiqueta: 'Equipos administrativos atendidos', valor: manEscapeHtml_(String(datos[COL_MAN_REP_EQUIPOS_ADMIN - 1] || '')) }
+        : { icono: '📋', etiqueta: 'Estado del aula', valor: manEscapeHtml_(String(datos[COL_MAN_REP_ESTADO_AULA - 1] || '')) }
     ],
     ctaHref: MAN_CTA_SEGUIMIENTO,
     ctaTexto: 'Ver el detalle de tu solicitud'
@@ -1988,7 +2076,12 @@ function manDoPostReporteVisita_(datos) {
     String(datos.descripcionAtencion || '').trim(),
     urlsFotos.join('\n'),
     manEnteroNoNegativo_(datos.docentes),
-    manEnteroNoNegativo_(datos.alumnos)
+    manEnteroNoNegativo_(datos.alumnos),
+    String(datos.tipoAtencion || '').trim(),
+    String(datos.areaAdministrativa || '').trim(),
+    String(datos.equiposAdminFuncionales || '').trim(),
+    String(datos.informacionRespaldada || '').trim(),
+    String(datos.pilaCmos || '').trim()
   ];
 
   const faltantes = manValidarDatosReporte_(filaValores);

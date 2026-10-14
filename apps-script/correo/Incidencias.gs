@@ -111,7 +111,7 @@ const COL_INCIDENCIA_CUENTA_LISTA = 14;
 const COL_INCIDENCIA_USUARIO_ENVIADO = 15;
 const COL_INCIDENCIA_FECHA_ENTREGA = 16;
 const COL_INCIDENCIA_ESTADO = 17;
-const INCIDENCIA_COLORES_ESTADO = { 'Solicitud recibida': '#e5e7eb', 'Incidencia resuelta': '#d1fae5' };
+const INCIDENCIA_COLORES_ESTADO = { 'Solicitud recibida': '#e5e7eb', 'Incidencia resuelta': '#d1fae5', 'Rechazada': '#fee2e2' };
 
 function incidenciaAplicarSemaforoYProteccion_(hoja) {
   aplicarValidacionListaSuave_(hoja, COL_INCIDENCIA_CUENTA_LISTA, ['Sí', 'No']);
@@ -124,7 +124,7 @@ function incidenciaAplicarSemaforoYProteccion_(hoja) {
 // altaAplicarValidacionEstado() en Alta.gs — ver ese comentario). ──
 function incidenciaAplicarValidacionEstado(hoja) {
   const regla = SpreadsheetApp.newDataValidation()
-    .requireValueInList(['Solicitud recibida', 'Incidencia resuelta'], true)
+    .requireValueInList(['Solicitud recibida', 'Incidencia resuelta', 'Rechazada'], true)
     .setAllowInvalid(false)
     .build();
   hoja.getRange(2, 17, 1000, 1).setDataValidation(regla);

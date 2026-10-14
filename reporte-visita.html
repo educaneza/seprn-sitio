@@ -179,6 +179,9 @@
     .aviso-inline.visible { display: block; }
 
     .campo-oculto { display: none; }
+    /* Oculto por "Tipo de atención" (visita solo de equipo administrativo): clase aparte
+       para no chocar con los campo-oculto que ya manejan otros toggles. */
+    .oculto-tipo { display: none !important; }
 
     .urg-cct-wrapper { position: relative; }
     .urg-cct-wrapper ul {
@@ -530,8 +533,23 @@
       </fieldset>
 
       <fieldset>
-        <legend>Aula al llegar</legend>
+        <legend>Tipo de atención</legend>
         <div class="campo">
+          <label for="tipo-atencion">¿Qué se atendió en esta visita? <span class="req">*</span></label>
+          <select id="tipo-atencion">
+            <option value="">Selecciona…</option>
+            <option value="Aula de medios">Aula de medios</option>
+            <option value="Solo equipos administrativos">Solo equipos administrativos (Dirección, Supervisión, Sector)</option>
+            <option value="Aula de medios y equipos administrativos">Aula de medios y equipos administrativos</option>
+          </select>
+          <div class="hint">Según lo que elijas, el formulario solo te pide lo que aplica.</div>
+          <div class="error-msg" id="err-tipo-atencion">Indica qué se atendió en la visita.</div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Al llegar a la escuela</legend>
+        <div class="campo solo-aula" id="wrap-aula-en-uso">
           <label for="aula-en-uso">¿El aula estaba en uso al llegar? <span class="req">*</span></label>
           <select id="aula-en-uso">
             <option value="">Selecciona…</option>
@@ -541,7 +559,7 @@
           </select>
           <div class="error-msg" id="err-aula-en-uso">Indica si el aula estaba en uso al llegar.</div>
         </div>
-        <div class="campo">
+        <div class="campo solo-aula" id="wrap-mobiliario">
           <label for="mobiliario">Condición del mobiliario <span class="req">*</span></label>
           <select id="mobiliario">
             <option value="">Selecciona…</option>
@@ -567,7 +585,7 @@
         <div class="hint">Pregúntalo a la dirección. Son los beneficiarios que se reportan a Planeación; si la visita fue solo a equipos administrativos, puede ser 0.</div>
       </fieldset>
 
-      <fieldset>
+      <fieldset class="solo-aula" id="fs-aula">
         <legend>Equipos del aula de medios</legend>
         <div class="fila-2">
           <div class="campo">
@@ -589,12 +607,6 @@
         </div>
         <div class="aviso-inline" id="aviso-conteo">Funcionales + no funcionales no coincide con el total de equipos atendidos — revísalo (puede ser correcto si hay equipos ya contados en otra jornada).</div>
         <div class="campo">
-          <label for="modelo-equipo">Modelo / marca del equipo(s) <span class="req">*</span></label>
-          <input type="text" id="modelo-equipo" autocomplete="off" placeholder="Ej. HP Mini 110, HP Compaq dc5800">
-          <div class="hint">Si hay varios modelos, sepáralos con coma.</div>
-          <div class="error-msg" id="err-modelo-equipo">Escribe el modelo o marca de los equipos atendidos.</div>
-        </div>
-        <div class="campo">
           <label for="conectividad">Conectividad del aula <span class="req">*</span></label>
           <select id="conectividad">
             <option value="">Selecciona…</option>
@@ -609,7 +621,7 @@
 
       <fieldset>
         <legend>Equipos administrativos</legend>
-        <div class="campo">
+        <div class="campo solo-aula" id="wrap-equipos-admin-si-no">
           <label for="equipos-admin-si-no">¿Se atendieron equipos administrativos adicionales? <span class="req">*</span></label>
           <select id="equipos-admin-si-no">
             <option value="">Selecciona…</option>
@@ -622,6 +634,58 @@
           <label for="equipos-admin-cantidad">Cantidad de equipos administrativos atendidos <span class="req">*</span></label>
           <input type="number" id="equipos-admin-cantidad" min="0" step="1" inputmode="numeric">
           <div class="error-msg" id="err-equipos-admin-cantidad">Indica cuántos equipos administrativos se atendieron.</div>
+        </div>
+        <div class="campo-oculto" id="wrap-admin-detalle">
+          <div class="campo">
+            <label for="area-admin">Área atendida <span class="req">*</span></label>
+            <select id="area-admin">
+              <option value="">Selecciona…</option>
+              <option value="Dirección">Dirección</option>
+              <option value="Subdirección">Subdirección</option>
+              <option value="Supervisión escolar">Supervisión escolar</option>
+              <option value="Jefatura de Sector">Jefatura de Sector</option>
+              <option value="Otra">Otra</option>
+            </select>
+            <div class="error-msg" id="err-area-admin">Indica el área atendida.</div>
+          </div>
+          <div class="campo">
+            <label for="admin-funcionales">Equipos administrativos funcionales al final <span class="req">*</span></label>
+            <input type="number" id="admin-funcionales" min="0" step="1" inputmode="numeric">
+            <div class="error-msg" id="err-admin-funcionales">Indica cuántos quedaron funcionales.</div>
+          </div>
+          <div class="campo">
+            <label for="respaldo-info">¿La información del equipo estaba respaldada? <span class="req">*</span></label>
+            <select id="respaldo-info">
+              <option value="">Selecciona…</option>
+              <option value="Sí">Sí, ya estaba respaldada</option>
+              <option value="No — se respaldó en la visita">No, se respaldó durante la visita</option>
+              <option value="No — sin respaldo">No, y no se pudo respaldar</option>
+              <option value="No fue necesario">No fue necesario (no se reinstaló)</option>
+            </select>
+            <div class="error-msg" id="err-respaldo-info">Indica si la información estaba respaldada.</div>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Modelos y pila CMOS</legend>
+        <div class="campo">
+          <label for="modelo-equipo">Modelo / marca del equipo(s) <span class="req">*</span></label>
+          <input type="text" id="modelo-equipo" autocomplete="off" placeholder="Ej. HP Mini 110, HP Compaq dc5800">
+          <div class="hint">Si hay varios modelos, sepáralos con coma.</div>
+          <div class="error-msg" id="err-modelo-equipo">Escribe el modelo o marca de los equipos atendidos.</div>
+        </div>
+        <div class="campo">
+          <label for="pila-cmos">¿Se cambió la pila CMOS (tipo reloj) en algún equipo? <span class="req">*</span></label>
+          <select id="pila-cmos">
+            <option value="">Selecciona…</option>
+            <option value="No se requirió">No se requirió</option>
+            <option value="Sí — la escuela tenía las pilas">Sí, la escuela tenía las pilas</option>
+            <option value="Sí — las llevó el técnico">Sí, las llevó el técnico</option>
+            <option value="Se requiere y no había pilas">Se requiere y no había pilas</option>
+          </select>
+          <div class="hint">Síntomas: fecha u hora equivocada al encender, pide presionar F1 o marca error de "CMOS". Es frecuente en HP Mini.</div>
+          <div class="error-msg" id="err-pila-cmos">Indica si se cambió la pila CMOS.</div>
         </div>
       </fieldset>
 
@@ -655,9 +719,9 @@
           <div class="error-msg" id="err-correctiva-otro-texto">Especifica la actividad correctiva.</div>
         </div>
         <div class="campo">
-          <label>Instalación realizada en el aula <span class="req">*</span></label>
+          <label>Instalación realizada <span class="req">*</span></label>
           <div class="check-list" id="grupo-instalacion">
-            <label class="check-item"><input type="checkbox" class="chk-instalacion" value="Windows 10 + Banco de materiales"><span>Windows 10 + Banco de materiales</span></label>
+            <label class="check-item solo-aula" id="item-banco-materiales"><input type="checkbox" class="chk-instalacion" value="Windows 10 + Banco de materiales"><span>Windows 10 + Banco de materiales</span></label>
             <label class="check-item"><input type="checkbox" class="chk-instalacion" value="Windows 10 — Equipo administrativo"><span>Windows 10 — Equipo administrativo</span></label>
             <label class="check-item"><input type="checkbox" class="chk-instalacion" value="ChromeOS Flex"><span>ChromeOS Flex</span></label>
             <label class="check-item"><input type="checkbox" class="chk-instalacion" value="Mantenimiento correctivo sin reinstalación"><span>Mantenimiento correctivo sin reinstalación</span></label>
@@ -668,7 +732,7 @@
           <div class="error-msg" id="err-instalacion-realizada">Marca al menos una opción.</div>
           <div class="error-msg" id="err-instalacion-otro">Especifica la instalación realizada.</div>
         </div>
-        <div class="campo">
+        <div class="campo solo-aula" id="wrap-toolwiz">
           <label for="toolwiz">¿Se instaló/verificó Toolwiz Time Freeze? <span class="req">*</span></label>
           <select id="toolwiz">
             <option value="">Selecciona…</option>
@@ -682,7 +746,7 @@
 
       <fieldset>
         <legend>Resultado</legend>
-        <div class="campo">
+        <div class="campo solo-aula" id="wrap-estado-aula">
           <label for="estado-aula">Estado del aula al terminar <span class="req">*</span></label>
           <select id="estado-aula">
             <option value="">Selecciona…</option>
@@ -690,6 +754,7 @@
             <option value="🟡 Operativa con observaciones — funciona pero con detalles menores que no impiden su uso.">🟡 Operativa con observaciones</option>
             <option value="🟠 Operativa parcialmente — menos del 70% de equipos funcionales o intervención incompleta. Uso limitado, se requiere segunda visita.">🟠 Operativa parcialmente</option>
             <option value="🔴 No operativa — la mayoría de los equipos no funciona o el aula no está en condiciones de uso.">🔴 No operativa</option>
+            <option value="⚫ No se pudo trabajar — las condiciones del espacio (suciedad, abandono, sin luz o sin acceso) impidieron la intervención.">⚫ No se pudo trabajar por las condiciones del espacio</option>
           </select>
           <div class="error-msg" id="err-estado-aula">Selecciona el estado del aula al terminar la visita.</div>
         </div>
@@ -830,7 +895,7 @@ function marcarError(id) {
 // ser un grupo de checkboxes (ver más abajo) — ninguno de los dos va en esta lista genérica.
 const CAMPOS_SIMPLES = [
   'responsable', 'fecha-atencion', 'inicio-visita', 'fin-visita', 'sin-solicitud',
-  'aula-en-uso', 'mobiliario', 'docentes-escuela', 'alumnos-escuela', 'equipos-atendidos', 'equipos-funcionales', 'equipos-no-funcionales',
+  'tipo-atencion', 'pila-cmos', 'aula-en-uso', 'mobiliario', 'docentes-escuela', 'alumnos-escuela', 'equipos-atendidos', 'equipos-funcionales', 'equipos-no-funcionales',
   'modelo-equipo', 'conectividad', 'equipos-admin-si-no', 'toolwiz',
   'estado-aula', 'segunda-visita', 'seguimiento', 'descripcion-atencion', 'observaciones'
 ];
@@ -840,8 +905,11 @@ CAMPOS_SIMPLES.forEach(id => {
   el.addEventListener('input', () => limpiarError(id));
   el.addEventListener('change', () => limpiarError(id));
 });
-['otro-responsable', 'equipos-admin-cantidad', 'instalacion-otro', 'folio'].forEach(id => {
+['otro-responsable', 'equipos-admin-cantidad', 'instalacion-otro', 'folio', 'admin-funcionales'].forEach(id => {
   document.getElementById(id).addEventListener('input', () => limpiarError(id));
+});
+['area-admin', 'respaldo-info'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => limpiarError(id));
 });
 // Campos del sub-bloque "Identificación de la escuela" (caso urgente, sin folio) — mismo
 // tratamiento de limpiar-error-al-tocar que el resto del formulario.
@@ -1060,13 +1128,45 @@ function revisarConteoEquipos() {
   document.getElementById(id).addEventListener('input', revisarConteoEquipos);
 });
 
-// ── Mostrar/ocultar cantidad de equipos administrativos ──
-document.getElementById('equipos-admin-si-no').addEventListener('change', function () {
-  const wrap = document.getElementById('wrap-equipos-admin-cantidad');
-  const esSi = this.value === 'Sí';
-  wrap.classList.toggle('campo-oculto', !esSi);
-  if (!esSi) { document.getElementById('equipos-admin-cantidad').value = ''; limpiarError('equipos-admin-cantidad'); }
-});
+// ── Mostrar/ocultar cantidad y detalle de equipos administrativos ──
+function actualizarAdmin() {
+  const esSi = document.getElementById('equipos-admin-si-no').value === 'Sí';
+  document.getElementById('wrap-equipos-admin-cantidad').classList.toggle('campo-oculto', !esSi);
+  document.getElementById('wrap-admin-detalle').classList.toggle('campo-oculto', !esSi);
+  if (!esSi) {
+    ['equipos-admin-cantidad', 'area-admin', 'admin-funcionales', 'respaldo-info'].forEach(id => {
+      document.getElementById(id).value = '';
+      limpiarError(id);
+    });
+  }
+}
+document.getElementById('equipos-admin-si-no').addEventListener('change', actualizarAdmin);
+
+// ── "Tipo de atención" (oct 2026): en una visita solo de equipo administrativo se
+// ocultan los campos del aula (.solo-aula) y el envío los manda como "No aplica";
+// si hubo equipo administrativo, la pregunta "¿adicionales?" ya tiene respuesta. ──
+const TIPO_SOLO_ADMIN = 'Solo equipos administrativos';
+function esSoloAdmin() { return document.getElementById('tipo-atencion').value === TIPO_SOLO_ADMIN; }
+function aplicarTipoAtencion() {
+  const tipo = document.getElementById('tipo-atencion').value;
+  const soloAdmin = tipo === TIPO_SOLO_ADMIN;
+  const conAdmin = soloAdmin || tipo === 'Aula de medios y equipos administrativos';
+  document.querySelectorAll('.solo-aula').forEach(el => el.classList.toggle('oculto-tipo', soloAdmin));
+  const siNo = document.getElementById('equipos-admin-si-no');
+  document.getElementById('wrap-equipos-admin-si-no').classList.toggle('oculto-tipo', conAdmin);
+  if (conAdmin) siNo.value = 'Sí';
+  else if (siNo.dataset.auto === '1') siNo.value = '';
+  siNo.dataset.auto = conAdmin ? '1' : '';
+  limpiarError('equipos-admin-si-no');
+  if (soloAdmin) {
+    const banco = document.querySelector('#item-banco-materiales input');
+    banco.checked = false;
+  }
+  actualizarAdmin();
+}
+document.getElementById('tipo-atencion').addEventListener('change', aplicarTipoAtencion);
+// Elegir "Sí"/"No" a mano deja de ser automático.
+document.getElementById('equipos-admin-si-no').addEventListener('change', function () { this.dataset.auto = ''; });
 
 // ── "Instalación realizada" — checkbox "Otro" limpia su texto libre al desmarcarse
 // (el grupo permite varias opciones a la vez, no exclusivas como preventivas/correctivas). ──
@@ -1131,6 +1231,7 @@ function validarFormulario() {
 
   CAMPOS_SIMPLES.forEach(id => {
     const el = document.getElementById(id);
+    if (el.closest('.oculto-tipo')) return; // no aplica a este tipo de atención
     if (!el.value || !String(el.value).trim()) { marcarError(id); valido = false; }
   });
 
@@ -1145,9 +1246,16 @@ function validarFormulario() {
     marcarError('otro-responsable'); valido = false;
   }
 
-  if (document.getElementById('equipos-admin-si-no').value === 'Sí' &&
-      document.getElementById('equipos-admin-cantidad').value === '') {
-    marcarError('equipos-admin-cantidad'); valido = false;
+  if (document.getElementById('equipos-admin-si-no').value === 'Sí') {
+    if (!/^\d+$/.test(document.getElementById('equipos-admin-cantidad').value.trim())) {
+      marcarError('equipos-admin-cantidad'); valido = false;
+    }
+    if (!/^\d+$/.test(document.getElementById('admin-funcionales').value.trim())) {
+      marcarError('admin-funcionales'); valido = false;
+    }
+    ['area-admin', 'respaldo-info'].forEach(id => {
+      if (!document.getElementById(id).value) { marcarError(id); valido = false; }
+    });
   }
 
   // ── Folio condicional / identificación de la escuela (caso urgente) ──
@@ -1282,6 +1390,11 @@ document.getElementById('form-reporte').addEventListener('submit', async (e) => 
     const manualUrgVisible = !document.getElementById('urg-manual-fields').classList.contains('campo-oculto');
     const urgFuncionSeleccionada = document.getElementById('urg-funcion').value;
 
+    // Visita solo de equipo administrativo: los campos del aula van como "No aplica" / 0.
+    const soloAdmin = esSoloAdmin();
+    const aula = (id, noAplica) => soloAdmin ? noAplica : document.getElementById(id).value;
+    const adminSi = document.getElementById('equipos-admin-si-no').value === 'Sí';
+
     const payload = {
       accion: 'reporteVisita',
       folio: sinSolicitudVal === 'Sí' ? '' : document.getElementById('folio').value.trim().toUpperCase(),
@@ -1290,13 +1403,13 @@ document.getElementById('form-reporte').addEventListener('submit', async (e) => 
       inicioVisita: document.getElementById('inicio-visita').value,
       finVisita: document.getElementById('fin-visita').value,
       atencionSinSolicitud: document.getElementById('sin-solicitud').value,
-      aulaEnUso: document.getElementById('aula-en-uso').value,
-      mobiliario: document.getElementById('mobiliario').value,
-      equiposAtendidos: document.getElementById('equipos-atendidos').value,
-      equiposFuncionales: document.getElementById('equipos-funcionales').value,
-      equiposNoFuncionales: document.getElementById('equipos-no-funcionales').value,
+      aulaEnUso: aula('aula-en-uso', 'No aplica'),
+      mobiliario: aula('mobiliario', 'No aplica'),
+      equiposAtendidos: aula('equipos-atendidos', '0'),
+      equiposFuncionales: aula('equipos-funcionales', '0'),
+      equiposNoFuncionales: aula('equipos-no-funcionales', '0'),
       modeloEquipo: document.getElementById('modelo-equipo').value.trim(),
-      conectividad: document.getElementById('conectividad').value,
+      conectividad: aula('conectividad', 'No aplica'),
       equiposAdministrativosSiNo: document.getElementById('equipos-admin-si-no').value,
       equiposAdministrativos: document.getElementById('equipos-admin-si-no').value === 'Sí'
         ? document.getElementById('equipos-admin-cantidad').value
@@ -1311,8 +1424,13 @@ document.getElementById('form-reporte').addEventListener('submit', async (e) => 
         return partes.join('; ');
       })(),
       instalacionRealizada: instalacionFinal,
-      toolwizTimeFreeze: document.getElementById('toolwiz').value,
-      estadoAula: document.getElementById('estado-aula').value,
+      toolwizTimeFreeze: aula('toolwiz', 'No aplica'),
+      estadoAula: aula('estado-aula', 'No aplica — visita solo a equipos administrativos.'),
+      tipoAtencion: document.getElementById('tipo-atencion').value,
+      areaAdministrativa: adminSi ? document.getElementById('area-admin').value : '',
+      equiposAdminFuncionales: adminSi ? document.getElementById('admin-funcionales').value : '',
+      informacionRespaldada: adminSi ? document.getElementById('respaldo-info').value : '',
+      pilaCmos: document.getElementById('pila-cmos').value,
       segundaVisitaRequerida: document.getElementById('segunda-visita').value,
       seguimientoRequerido: document.getElementById('seguimiento').value.trim(),
       descripcionAtencion: document.getElementById('descripcion-atencion').value.trim(),
@@ -1382,6 +1500,8 @@ document.getElementById('btn-otro').addEventListener('click', () => {
   document.getElementById('fotos-preview').innerHTML = '';
   document.getElementById('wrap-otro-responsable').classList.add('campo-oculto');
   document.getElementById('wrap-equipos-admin-cantidad').classList.add('campo-oculto');
+  document.getElementById('equipos-admin-si-no').dataset.auto = '';
+  aplicarTipoAtencion();
   document.getElementById('wrap-folio').classList.remove('campo-oculto');
   document.getElementById('wrap-urgente-id').classList.add('campo-oculto');
   document.getElementById('urg-manual-fields').classList.add('campo-oculto');

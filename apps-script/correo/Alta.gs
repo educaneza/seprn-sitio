@@ -116,7 +116,7 @@ const COL_ALTA_USUARIO_ENVIADO = 22;
 const COL_ALTA_FECHA_ENTREGA = 23;
 const COL_ALTA_ESTADO = 24;
 const ALTA_TIPOS_CUENTA_VALIDOS = ['oficina', 'personal', 'N/A'];
-const ALTA_COLORES_ESTADO = { 'Solicitud recibida': '#e5e7eb', 'Cuenta entregada': '#d1fae5' };
+const ALTA_COLORES_ESTADO = { 'Solicitud recibida': '#e5e7eb', 'Cuenta entregada': '#d1fae5', 'Rechazada': '#fee2e2' };
 
 function altaAplicarSemaforoYProteccion_(hoja) {
   aplicarValidacionListaSuave_(hoja, COL_ALTA_TIPO_CUENTA, ALTA_TIPOS_CUENTA_VALIDOS);
@@ -134,7 +134,7 @@ function altaAplicarSemaforoYProteccion_(hoja) {
 // que también cubre la hoja ya desplegada la próxima vez que llegue un alta. ──
 function altaAplicarValidacionEstado(hoja) {
   const regla = SpreadsheetApp.newDataValidation()
-    .requireValueInList(['Solicitud recibida', 'Cuenta entregada'], true)
+    .requireValueInList(['Solicitud recibida', 'Cuenta entregada', 'Rechazada'], true)
     .setAllowInvalid(false)
     .build();
   hoja.getRange(2, 24, 1000, 1).setDataValidation(regla);
