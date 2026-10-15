@@ -3220,6 +3220,14 @@ CMOS`, `Tipo de atención`, `Área administrativa atendida`, `Equipos administra
 `Información respaldada`, `Pila CMOS`). Respaldos: `Solicitudes_respaldo_20261015` y
 `Reportes de visita_respaldo_20261015`.
 
-**Pendiente:** Soporte y Correo (5 hojas; columnas a mano `NOTAS`/`OBSERVACIONES` y una sin
+**Soporte (15 oct 2026, versión 13).** Una sola hoja, 18 columnas en el orden de `soporte.html`
+(registro → quién la pide → centro de trabajo → tipo de ayuda/urgencia/descripción → atención →
+automáticas); se retiraron las `COL_SOP_*`. Simulación local con las 3 solicitudes reales: 17
+comprobaciones. En producción: hash del editor igual al repo, versión 13, `curl` de solo lectura
+antes y después, "Reordenar columnas" sin diferencias (respaldo
+`Solicitudes_Soporte_2026_respaldo_20261015`) y captura con `Estatus` y sus dropdowns en su
+lugar.
+
+**Pendiente:** Correo (5 hojas; columnas a mano `NOTAS`/`OBSERVACIONES` y una sin
 título donde Marcos anota, que se conservan al final con título). Ver `docs/ROADMAP.md` ítem 34.
 

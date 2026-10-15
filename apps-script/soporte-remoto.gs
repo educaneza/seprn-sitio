@@ -17,11 +17,8 @@
 //   5. Copia la URL generada y pégala en otde.html
 //      en la constante SOPORTE_APPS_SCRIPT_URL
 //
-// COLUMNAS DE LA HOJA:
-//   A Fecha | B Folio | C Nombre | D CCT | E Sector | F Zona
-//   G Escuela/Unidad | H Función/Cargo | I WhatsApp | J Correo
-//   K Descripción | L Urgencia | M Tipo de ayuda | N Estatus
-//   O Notas de revisión | P Notificación de cierre enviada
+// COLUMNAS DE LA HOJA: ver ENCABEZADOS_SOPORTE abajo (orden por bloques del formulario,
+// oct 2026). El código las lee y escribe por nombre, no por letra de columna.
 //
 // CIERRE AUTOMÁTICO (ago 2026, mismo patrón que mantenimiento.gs/
 // asesorias.gs): al marcar Estatus = "Resuelto", un trigger onEdit
@@ -45,26 +42,73 @@
 
 const HOJA_SOPORTE = 'Solicitudes_Soporte_2026';
 
+// Orden por bloques, el mismo en que se llena soporte.html (oct 2026). El código lee y
+// escribe SIEMPRE por nombre de encabezado: filas canónicas (sopFilasCanonicas_/
+// sopFilaCanonica_, fila[SOP['Estatus']]) y sopCol_(hoja, nombre) para escribir. Mover o
+// insertar columnas ya no rompe nada; para dejar una hoja vieja en este orden, menú
+// "OTDE Soporte → Reordenar columnas". Una columna nueva va en su bloque.
 const ENCABEZADOS_SOPORTE = [
-  'Fecha', 'Folio', 'Nombre', 'CCT', 'Sector', 'Zona',
-  'Escuela/Unidad', 'Función/Cargo', 'WhatsApp', 'Correo', 'Descripción', 'Urgencia', 'Tipo de ayuda',
-  'Estatus', 'Notas de revisión', 'Notificación de cierre enviada', 'ID de envío',
-  'Fecha de atención'
+  // 1. Registro
+  'Fecha', 'Folio',
+  // 2. Quién la pide
+  'Nombre', 'Función/Cargo', 'WhatsApp', 'Correo',
+  // 3. Centro de trabajo
+  'CCT', 'Escuela/Unidad', 'Sector', 'Zona',
+  // 4. La solicitud
+  'Tipo de ayuda', 'Urgencia', 'Descripción',
+  // 5. Atención (Alejandro). "Fecha de atención" la anota sopOnEditCierre al marcar
+  //    Resuelto, para que la Bitácora OTDE cuente cada solicitud en su mes (?action=soporteMes)
+  'Estatus', 'Notas de revisión', 'Fecha de atención',
+  // 6. Automáticas
+  'Notificación de cierre enviada', 'ID de envío'
 ];
+// { 'Encabezado': índice 0-based } dentro de una fila canónica.
+const SOP = ENCABEZADOS_SOPORTE.reduce(function (m, h, i) { m[h] = i; return m; }, {});
 // Ventana del respaldo anti-duplicados para envíos sin idEnvio (páginas viejas en caché):
 // misma CCT + correo + descripción dentro de estos minutos = mismo envío.
 const SOP_VENTANA_DUPLICADO_MIN = 10;
-const COL_SOP_ESTATUS = 14;
-const COL_SOP_NOTIFICACION_CIERRE = 16;
-// Fecha de atención (oct 2026, columna R): la anota sopOnEditCierre al marcar
-// Resuelto, para que la Bitácora OTDE cuente cada solicitud en el mes en que
-// se atendió (?action=soporteMes). Las resueltas antes de este cambio no la
-// tienen: el endpoint usa la fecha de la solicitud y lo indica.
-const COL_SOP_FECHA_ATENCION = 18;
 const ESTADOS_SOP_VALIDOS = ['Pendiente de validar', 'Validado', 'En atención', 'Resuelto', 'Rechazado'];
 // Notificación de "nueva solicitud" por correo, además del Telegram de abajo
 // (sep 2026) — Alejandro atiende Soporte y Mantenimiento, decisión de Jorge.
 const SOP_CORREO_EQUIPO = 'alejandro.morales@dee.edu.mx';
+
+// ── Lectura y escritura por nombre de encabezado ──
+function sopIndicesReales_(filaEncabezados) {
+  const mapa = {};
+  filaEncabezados.forEach(function (h, i) {
+    const nombre = String(h).trim();
+    if (nombre && !(nombre in mapa)) mapa[nombre] = i;
+  });
+  return mapa;
+}
+
+// Fila real → fila canónica (orden de ENCABEZADOS_SOPORTE). Lo que falte llega vacío.
+function sopACanonica_(filaReal, real) {
+  return ENCABEZADOS_SOPORTE.map(function (h) { return h in real ? filaReal[real[h]] : ''; });
+}
+
+// Filas de datos (sin encabezado) en orden canónico. La fila i es la fila i + 2 de la hoja.
+function sopFilasCanonicas_(hoja) {
+  if (!hoja || hoja.getLastRow() < 2) return [];
+  const datos = hoja.getDataRange().getValues();
+  const real = sopIndicesReales_(datos[0]);
+  return datos.slice(1).map(function (r) { return sopACanonica_(r, real); });
+}
+
+function sopFilaCanonica_(hoja, numFila) {
+  const ancho = Math.max(hoja.getLastColumn(), 1);
+  const real = sopIndicesReales_(hoja.getRange(1, 1, 1, ancho).getValues()[0]);
+  return sopACanonica_(hoja.getRange(numFila, 1, 1, ancho).getValues()[0], real);
+}
+
+// Número de columna (1-based) REAL de un encabezado, para escribir en la hoja.
+function sopCol_(hoja, nombre) {
+  const enc = hoja.getRange(1, 1, 1, Math.max(hoja.getLastColumn(), 1)).getValues()[0]
+    .map(function (h) { return String(h).trim(); });
+  const i = enc.indexOf(nombre);
+  if (i === -1) throw new Error('La hoja ' + hoja.getName() + ' no tiene la columna "' + nombre + '".');
+  return i + 1;
+}
 
 // ── Modo de prueba: redirige el correo de cierre al solicitante a un solo
 // correo, para probar el flujo completo sin avisarle a nadie real. Actívalo
@@ -156,23 +200,23 @@ function sopListarPendientes(tokenRecibido) {
   const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_SOPORTE);
   if (!hoja) return textResponse(JSON.stringify({ status: 'ok', tramite: 'Soporte Técnico Remoto', items: [] }));
 
-  const filas = hoja.getDataRange().getValues().slice(1);
-  const items = filas
-    .filter(function (r) { return r[1]; }) // folio no vacío
+  const items = sopFilasCanonicas_(hoja)
+    .filter(function (r) { return r[SOP['Folio']]; }) // folio no vacío
     .filter(function (r) {
-      const estatus = String(r[COL_SOP_ESTATUS - 1] || '').trim();
+      const estatus = String(r[SOP['Estatus']] || '').trim();
       return estatus !== 'Resuelto' && estatus !== 'Rechazado';
     })
     .map(function (r) {
+      const fecha = r[SOP['Fecha']];
       return {
-        folio: r[1],
-        fecha: r[0] instanceof Date ? r[0].toISOString() : String(r[0]),
-        nombre: r[2],
-        escuela: r[6],
-        sector: r[4],
-        zona: r[5],
-        estatus: String(r[COL_SOP_ESTATUS - 1] || 'Pendiente de validar').trim(),
-        notas: r[14] || ''
+        folio: r[SOP['Folio']],
+        fecha: fecha instanceof Date ? fecha.toISOString() : String(fecha),
+        nombre: r[SOP['Nombre']],
+        escuela: r[SOP['Escuela/Unidad']],
+        sector: r[SOP['Sector']],
+        zona: r[SOP['Zona']],
+        estatus: String(r[SOP['Estatus']] || 'Pendiente de validar').trim(),
+        notas: r[SOP['Notas de revisión']] || ''
       };
     });
 
@@ -196,20 +240,21 @@ function sopListarResueltasMes_(tokenRecibido, mes) {
   const tz = 'America/Mexico_City';
   const txt = function (v) { return String(v == null ? '' : v).trim(); };
   const items = [];
-  hoja.getDataRange().getValues().slice(1).forEach(function (r) {
-    if (!txt(r[1]) || txt(r[COL_SOP_ESTATUS - 1]) !== 'Resuelto') return;
-    const atencion = r[COL_SOP_FECHA_ATENCION - 1];
-    const fecha = atencion instanceof Date ? atencion : (r[0] instanceof Date ? r[0] : null);
+  sopFilasCanonicas_(hoja).forEach(function (r) {
+    if (!txt(r[SOP['Folio']]) || txt(r[SOP['Estatus']]) !== 'Resuelto') return;
+    const atencion = r[SOP['Fecha de atención']];
+    const solicitada = r[SOP['Fecha']];
+    const fecha = atencion instanceof Date ? atencion : (solicitada instanceof Date ? solicitada : null);
     if (!fecha || Utilities.formatDate(fecha, tz, 'yyyy-MM') !== mes) return;
     items.push({
-      folio: txt(r[1]).toUpperCase(),
+      folio: txt(r[SOP['Folio']]).toUpperCase(),
       fecha: Utilities.formatDate(fecha, tz, 'yyyy-MM-dd'),
       fechaFuente: atencion instanceof Date ? 'atencion' : 'solicitud',
-      cct: txt(r[3]).toUpperCase(),
-      sector: txt(r[4]),
-      funcion: txt(r[7]),
-      urgencia: txt(r[11]),
-      tipoAyuda: txt(r[12])
+      cct: txt(r[SOP['CCT']]).toUpperCase(),
+      sector: txt(r[SOP['Sector']]),
+      funcion: txt(r[SOP['Función/Cargo']]),
+      urgencia: txt(r[SOP['Urgencia']]),
+      tipoAyuda: txt(r[SOP['Tipo de ayuda']])
     });
   });
   return { status: 'ok', items: items };
@@ -232,16 +277,16 @@ function sopConsultarFolio(folioBuscado, correoBuscado) {
   const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_SOPORTE);
   if (!hoja) return noEncontrado();
 
-  const filas = hoja.getDataRange().getValues().slice(1);
-  const fila = filas.find(r => String(r[1]).trim().toUpperCase() === folio);
-  if (!fila || String(fila[9]).trim().toLowerCase() !== correo) return noEncontrado();
+  const fila = sopFilasCanonicas_(hoja).find(r => String(r[SOP['Folio']]).trim().toUpperCase() === folio);
+  if (!fila || String(fila[SOP['Correo']]).trim().toLowerCase() !== correo) return noEncontrado();
 
+  const fecha = fila[SOP['Fecha']];
   return textResponse(JSON.stringify({
     status: 'ok',
-    folio: fila[1],
-    fecha: fila[0] instanceof Date ? fila[0].toISOString() : String(fila[0]),
-    estatus: fila[COL_SOP_ESTATUS - 1] || 'Pendiente de validar',
-    notas: fila[14] || ''
+    folio: fila[SOP['Folio']],
+    fecha: fecha instanceof Date ? fecha.toISOString() : String(fecha),
+    estatus: fila[SOP['Estatus']] || 'Pendiente de validar',
+    notas: fila[SOP['Notas de revisión']] || ''
   }));
 }
 
@@ -271,25 +316,29 @@ function doPost(e) {
       }
 
       folio = generarFolioSoporte(hoja);
-      hoja.appendRow([
-        new Date(),
-        folio,
-        datos.nombre.trim(),
-        datos.cct.trim().toUpperCase(),
-        (datos.sector || '').trim(),
-        (datos.zona || '').toString().trim(),
-        (datos.escuela || '').trim(),
-        datos.funcion.trim(),
-        datos.whatsapp.trim(),
-        (datos.correo || '').trim(),
-        datos.descripcion.trim(),
-        datos.urgencia.trim(),
-        (datos.tipoAyuda || '').trim(),
-        'Pendiente de validar',
-        '',
-        '',
-        String(datos.idEnvio || '').trim()
-      ]);
+      // Por nombre, en el orden REAL de la hoja (antes y después de reordenar); lo que no
+      // se nombra (notas, fecha de atención, notificación, columnas a mano) queda en blanco.
+      const valores = {
+        'Fecha': new Date(),
+        'Folio': folio,
+        'Nombre': datos.nombre.trim(),
+        'Función/Cargo': datos.funcion.trim(),
+        'WhatsApp': datos.whatsapp.trim(),
+        'Correo': (datos.correo || '').trim(),
+        'CCT': datos.cct.trim().toUpperCase(),
+        'Escuela/Unidad': (datos.escuela || '').trim(),
+        'Sector': (datos.sector || '').trim(),
+        'Zona': (datos.zona || '').toString().trim(),
+        'Tipo de ayuda': (datos.tipoAyuda || '').trim(),
+        'Urgencia': datos.urgencia.trim(),
+        'Descripción': datos.descripcion.trim(),
+        'Estatus': 'Pendiente de validar',
+        'ID de envío': String(datos.idEnvio || '').trim()
+      };
+      hoja.appendRow(hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0].map(function (h) {
+        const nombre = String(h).trim();
+        return nombre in valores ? valores[nombre] : '';
+      }));
       SpreadsheetApp.flush();
     } finally {
       lock.releaseLock();
@@ -311,10 +360,10 @@ function doPost(e) {
 // soporte.html desde sep 2026); si no viene, por CCT + correo + descripción dentro de
 // SOP_VENTANA_DUPLICADO_MIN minutos. Devuelve el folio o null. ──
 function sopBuscarEnvioPrevio_(hoja, datos) {
-  if (hoja.getLastRow() < 2) return null;
-  const filas = hoja.getRange(2, 1, hoja.getLastRow() - 1, hoja.getLastColumn()).getValues();
-  const iFolio = ENCABEZADOS_SOPORTE.indexOf('Folio');
-  const iId = ENCABEZADOS_SOPORTE.indexOf('ID de envío');
+  const filas = sopFilasCanonicas_(hoja);
+  if (!filas.length) return null;
+  const iFolio = SOP['Folio'];
+  const iId = SOP['ID de envío'];
   const idEnvio = String(datos.idEnvio || '').trim();
 
   if (idEnvio) {
@@ -322,10 +371,10 @@ function sopBuscarEnvioPrevio_(hoja, datos) {
     if (previa) return String(previa[iFolio]);
   }
 
-  const iFecha = ENCABEZADOS_SOPORTE.indexOf('Fecha');
-  const iCct = ENCABEZADOS_SOPORTE.indexOf('CCT');
-  const iCorreo = ENCABEZADOS_SOPORTE.indexOf('Correo');
-  const iDesc = ENCABEZADOS_SOPORTE.indexOf('Descripción');
+  const iFecha = SOP['Fecha'];
+  const iCct = SOP['CCT'];
+  const iCorreo = SOP['Correo'];
+  const iDesc = SOP['Descripción'];
   const cct = String(datos.cct || '').trim().toUpperCase();
   const correo = String(datos.correo || '').trim().toLowerCase();
   const desc = String(datos.descripcion || '').trim();
@@ -357,17 +406,16 @@ function obtenerHojaSoporte() {
           .setBackground('#56212f')
           .setFontColor('#F9F8F5');
     hoja.setFrozenRows(1);
-    hoja.setColumnWidth(3, 180); // Nombre
-    hoja.setColumnWidth(7, 200); // Escuela/Unidad
-    hoja.setColumnWidth(11, 320); // Descripción
+    [['Nombre', 180], ['Escuela/Unidad', 200], ['Descripción', 320]]
+      .forEach(function (p) { hoja.setColumnWidth(SOP[p[0]] + 1, p[1]); });
   } else {
-    // Hoja creada antes de agregar Estatus/Notas de revisión/Notificación de
-    // cierre: se completa el encabezado faltante sin tocar columnas ni datos
-    // ya existentes — mismo patrón que manObtenerHojaSolicitudes().
-    const colsActuales = hoja.getLastColumn();
-    if (colsActuales < ENCABEZADOS_SOPORTE.length) {
-      const faltantes = ENCABEZADOS_SOPORTE.slice(colsActuales);
-      hoja.getRange(1, colsActuales + 1, 1, faltantes.length)
+    // Hoja ya existente: se agrega AL FINAL, por nombre, cualquier encabezado que le
+    // falte, sin mover nada. Para el orden por bloques está "Reordenar columnas".
+    const ancho = Math.max(hoja.getLastColumn(), 1);
+    const reales = sopIndicesReales_(hoja.getRange(1, 1, 1, ancho).getValues()[0]);
+    const faltantes = ENCABEZADOS_SOPORTE.filter(function (h) { return !(h in reales); });
+    if (faltantes.length) {
+      hoja.getRange(1, hoja.getLastColumn() + 1, 1, faltantes.length)
         .setValues([faltantes])
         .setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
     }
@@ -384,15 +432,14 @@ function sopAplicarValidacionEstatus(hoja) {
     .requireValueInList(ESTADOS_SOP_VALIDOS, true)
     .setAllowInvalid(false)
     .build();
-  hoja.getRange(2, COL_SOP_ESTATUS, 1000, 1).setDataValidation(regla);
+  hoja.getRange(2, sopCol_(hoja, 'Estatus'), 1000, 1).setDataValidation(regla);
 }
 
 // ── Generar folio único ──
 function generarFolioSoporte(hoja) {
-  const datos  = hoja.getDataRange().getValues();
   const prefix = 'OTDE-SOP-';
-  const maxNum = datos.slice(1)
-    .map(row => String(row[1]))
+  const maxNum = sopFilasCanonicas_(hoja)
+    .map(row => String(row[SOP['Folio']]))
     .filter(f => f.startsWith(prefix))
     .map(f => parseInt(f.replace(prefix, ''), 10) || 0)
     .reduce((a, b) => Math.max(a, b), 0);
@@ -487,45 +534,46 @@ function sopOnEditCierre(e) {
     const hoja = e.range.getSheet();
     if (hoja.getName() !== HOJA_SOPORTE) return;
 
+    const colEstatus = sopCol_(hoja, 'Estatus');
+    const colNotificacion = sopCol_(hoja, 'Notificación de cierre enviada');
     const colInicio = e.range.getColumn();
     const colFin = e.range.getLastColumn();
-    if (COL_SOP_ESTATUS < colInicio || COL_SOP_ESTATUS > colFin) return;
+    if (colEstatus < colInicio || colEstatus > colFin) return;
 
     const filaInicio = Math.max(e.range.getRow(), 2);
     const filaFin = e.range.getRow() + e.range.getNumRows() - 1;
 
     for (let fila = filaInicio; fila <= filaFin; fila++) {
-      const estatus = String(hoja.getRange(fila, COL_SOP_ESTATUS).getValue()).trim();
+      const estatus = String(hoja.getRange(fila, colEstatus).getValue()).trim();
       if (estatus !== 'Resuelto') continue;
 
-      // Fecha de atención: solo la primera vez (no se pisa si se vuelve a
-      // marcar Resuelto ni si se corrigió a mano). La hoja puede no tener aún
-      // el encabezado si no ha llegado una solicitud con esta versión.
-      // Si la columna R ya tiene otro encabezado, no se toca.
-      const encAtencion = String(hoja.getRange(1, COL_SOP_FECHA_ATENCION).getValue()).trim();
-      const celdaAtencion = hoja.getRange(fila, COL_SOP_FECHA_ATENCION);
-      if ((encAtencion === '' || encAtencion === 'Fecha de atención') && !celdaAtencion.getValue()) {
-        if (!encAtencion) {
-          hoja.getRange(1, COL_SOP_FECHA_ATENCION).setValue('Fecha de atención')
-            .setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
-        }
-        celdaAtencion.setValue(new Date());
+      // Fecha de atención: solo la primera vez (no se pisa si se vuelve a marcar Resuelto
+      // ni si se corrigió a mano). Si la hoja aún no tiene la columna, se agrega al final.
+      let colAtencion;
+      try {
+        colAtencion = sopCol_(hoja, 'Fecha de atención');
+      } catch (errCol) {
+        colAtencion = hoja.getLastColumn() + 1;
+        hoja.getRange(1, colAtencion).setValue('Fecha de atención')
+          .setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
       }
+      const celdaAtencion = hoja.getRange(fila, colAtencion);
+      if (!celdaAtencion.getValue()) celdaAtencion.setValue(new Date());
 
-      const yaNotificado = String(hoja.getRange(fila, COL_SOP_NOTIFICACION_CIERRE).getValue()).trim();
+      const yaNotificado = String(hoja.getRange(fila, colNotificacion).getValue()).trim();
       if (yaNotificado === 'Sí') continue;
 
-      const datosFila = hoja.getRange(fila, 1, 1, ENCABEZADOS_SOPORTE.length).getValues()[0];
-      const folio = datosFila[1];
-      const cct = datosFila[3];
-      const escuela = datosFila[6];
-      const correo = datosFila[9];
-      const notas = datosFila[14];
+      const datosFila = sopFilaCanonica_(hoja, fila);
+      const folio = datosFila[SOP['Folio']];
+      const cct = datosFila[SOP['CCT']];
+      const escuela = datosFila[SOP['Escuela/Unidad']];
+      const correo = datosFila[SOP['Correo']];
+      const notas = datosFila[SOP['Notas de revisión']];
 
       if (correo) {
         sopNotificarCierreSolicitante(folio, escuela, cct, notas, correo);
       }
-      hoja.getRange(fila, COL_SOP_NOTIFICACION_CIERRE).setValue('Sí');
+      hoja.getRange(fila, colNotificacion).setValue('Sí');
     }
   } catch (err) {
     // Silencioso: un fallo aquí no debe romper la edición del Sheet
@@ -743,15 +791,94 @@ function sopProtegerColumnaAutomatica_(hoja, columna) {
     .setDescription('Columna automática — se llena sola, evita editarla a mano.');
 }
 
+const SOP_COLUMNAS_AUTOMATICAS = ['Fecha', 'Folio', 'Notificación de cierre enviada', 'ID de envío'];
+
 function sopConfigurarValidacionYSemaforo() {
-  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_SOPORTE) ? obtenerHojaSoporte() : null;
-  if (hoja) {
-    sopAplicarValidacionListaSuave_(hoja, 12, SOP_URGENCIAS_VALIDAS);
-    sopAplicarValidacionListaSuave_(hoja, 13, SOP_TIPOS_AYUDA_VALIDOS);
-    sopAplicarSemaforoPorValor_(hoja, COL_SOP_ESTATUS, ESTADOS_SOP_VALIDOS, SOP_COLORES_ESTATUS);
-    [1, 2, COL_SOP_NOTIFICACION_CIERRE].forEach(function (col) { sopProtegerColumnaAutomatica_(hoja, col); });
-  }
+  sopConfigurarValidacionYSemaforo_();
   try { SpreadsheetApp.getUi().alert('Validación y semáforo aplicados en Solicitudes.'); } catch (err) {}
+}
+
+function sopConfigurarValidacionYSemaforo_() {
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_SOPORTE) ? obtenerHojaSoporte() : null;
+  if (!hoja) return;
+  const col = function (n) { return sopCol_(hoja, n); };
+  sopAplicarValidacionListaSuave_(hoja, col('Urgencia'), SOP_URGENCIAS_VALIDAS);
+  sopAplicarValidacionListaSuave_(hoja, col('Tipo de ayuda'), SOP_TIPOS_AYUDA_VALIDOS);
+  sopAplicarSemaforoPorValor_(hoja, col('Estatus'), ESTADOS_SOP_VALIDOS, SOP_COLORES_ESTATUS);
+  SOP_COLUMNAS_AUTOMATICAS.forEach(function (n) { sopProtegerColumnaAutomatica_(hoja, col(n)); });
+}
+
+// ============================================================
+// REORDENAR COLUMNAS (oct 2026) — mismo patrón que aseReordenarColumnasSolicitudes_()
+// de asesorias.gs: respaldo completo "<hoja>_respaldo_AAAAMMDD", moveColumns() (conserva
+// dropdowns, semáforo y protecciones), verificación columna por columna, columnas a mano
+// al final. Toma el mismo candado que doPost.
+// ============================================================
+function sopReordenarColumnas() {
+  SpreadsheetApp.getUi().alert(sopReordenarColumnas_().mensaje);
+}
+
+function sopReordenarColumnas_() {
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(30000)) {
+    return { ok: false, mensaje: 'Hay una solicitud registrándose en este momento. Intenta de nuevo en unos segundos.' };
+  }
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const hoja = obtenerHojaSoporte(); // agrega al final los encabezados que falten
+    SpreadsheetApp.flush();
+    const antes = hoja.getDataRange().getValues();
+    const enc = antes[0].map(function (h) { return String(h).trim(); });
+    if (ENCABEZADOS_SOPORTE.every(function (h, k) { return enc[k] === h; })) {
+      return { ok: true, mensaje: 'La hoja ya está en el orden nuevo. No se cambió nada.' };
+    }
+
+    const tz = 'America/Mexico_City';
+    let nombreRespaldo = HOJA_SOPORTE + '_respaldo_' + Utilities.formatDate(new Date(), tz, 'yyyyMMdd');
+    if (ss.getSheetByName(nombreRespaldo)) nombreRespaldo += '_' + Utilities.formatDate(new Date(), tz, 'HHmm');
+    const respaldo = hoja.copyTo(ss).setName(nombreRespaldo);
+    respaldo.setTabColor('#948A8E');
+    ss.setActiveSheet(respaldo);
+    ss.moveActiveSheet(ss.getNumSheets());
+
+    ENCABEZADOS_SOPORTE.forEach(function (h, k) {
+      const i = enc.indexOf(h);
+      if (i === -1 || i === k) return;
+      hoja.moveColumns(hoja.getRange(1, i + 1), k + 1);
+      enc.splice(k, 0, enc.splice(i, 1)[0]);
+    });
+    SpreadsheetApp.flush();
+
+    const despues = hoja.getDataRange().getValues();
+    const idxAntes = sopIndicesReales_(antes[0]);
+    const idxDespues = sopIndicesReales_(despues[0]);
+    const valor = function (v) { return v instanceof Date ? v.getTime() : String(v); };
+    const diferencias = [];
+    if (despues.length !== antes.length) diferencias.push('filas ' + antes.length + ' → ' + despues.length);
+    if (despues[0].length !== antes[0].length) diferencias.push('columnas ' + antes[0].length + ' → ' + despues[0].length);
+    Object.keys(idxAntes).forEach(function (h) {
+      if (!(h in idxDespues)) { diferencias.push('falta ' + h); return; }
+      for (let r = 1; r < antes.length; r++) {
+        if (valor(antes[r][idxAntes[h]]) !== valor((despues[r] || [])[idxDespues[h]])) {
+          diferencias.push(h + ' fila ' + (r + 1));
+          break;
+        }
+      }
+    });
+    if (diferencias.length) {
+      return { ok: false, mensaje: 'ATENCIÓN: la verificación encontró diferencias (' + diferencias.slice(0, 5).join('; ') +
+        '). Los datos originales están completos en la hoja "' + nombreRespaldo + '". No captures nada y avisa antes de continuar.' };
+    }
+
+    sopConfigurarValidacionYSemaforo_();
+    ss.setActiveSheet(hoja);
+    const extras = enc.slice(ENCABEZADOS_SOPORTE.length).filter(Boolean);
+    return { ok: true, mensaje: 'Listo: la hoja quedó en el orden nuevo (' + (antes.length - 1) +
+      ' solicitud(es) verificadas columna por columna). Respaldo: "' + nombreRespaldo + '".' +
+      (extras.length ? ' Columnas agregadas a mano que dejé al final: ' + extras.join(', ') + '.' : '') };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 // ── Menú del Sheet ──
@@ -761,6 +888,7 @@ function onOpen() {
     .addItem('Instalar trigger de cierre automático', 'sopInstalarTriggerCierre')
     .addItem('Desinstalar trigger de cierre automático', 'sopDesinstalarTriggerCierre')
     .addItem('Aplicar validación y semáforo', 'sopConfigurarValidacionYSemaforo')
+    .addItem('Reordenar columnas', 'sopReordenarColumnas')
     .addToUi();
 }
 

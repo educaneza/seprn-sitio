@@ -212,7 +212,7 @@ ya esté expandido).
 - **Redesplegado (7 ago 2026, versión 4)**: mismo ID de implementación de siempre, no cambió `SOPORTE_APPS_SCRIPT_URL`. La columna `Tipo de ayuda` se agregó a mano al final de la hoja real (este proyecto no tenía auto-heal de encabezados, a diferencia de `mantenimiento.gs`/`formacion-docente.gs`)
 - **Estatus + cierre automático + auto-heal (ago 2026, pendiente de redeploy)**: ya tiene el mismo mecanismo que Mantenimiento/Asesorías — dropdown de 5 valores en `Estatus`, trigger instalable `sopOnEditCierre` (correr `sopInstalarTriggerCierre()` una vez tras pegar esta versión, o el menú "OTDE Soporte" nuevo que agrega `onOpen()`), y ahora sí completa solo cualquier encabezado que falte en la hoja real. A diferencia de Mantenimiento/Asesorías, Soporte no tiene `Contactos_Zona_Sector` — el cierre solo notifica al solicitante, no a Zona/Sector (decisión deliberada, no un pendiente). Ver "Oficina Virtual OTDE" abajo para el endpoint de consulta que motivó este cambio.
 - Para cambios: copiar el `.gs` completo en Apps Script y re-desplegar como aplicación web (Cualquier usuario) — **cuidado**: probar el endpoint con `curl -X POST`, o incluso desde un navegador headless con acceso real a internet (confirmado: el sandbox de pruebas SÍ tiene salida real a `script.google.com`), ejecuta `doPost` de verdad (escribe en Sheets y dispara Telegram). Para pruebas locales, interceptar la llamada de red (`page.route()` en Playwright) en vez de dejarla llegar al backend real
-- **Modo de prueba (código listo, aún sin desplegar, 11 ago 2026)**: `sopEnviarCorreo_()` — mismo wrapper que `manEnviarCorreo_()`/`aseEnviarCorreo_()`, activable con `sopActivarModoPrueba('correo')`/`sopDesactivarModoPrueba()` — ya reemplaza el único `MailApp.sendEmail()` de este archivo (el de cierre al solicitante) en el repo local, pero **no se pegó ni redesplegó** en el proyecto de Apps Script real esta sesión; en producción sigue corriendo la versión sin modo de prueba
+- **Modo de prueba (11 ago 2026; ya en producción — confirmado el 15 oct 2026 al comparar el editor con el repo)**: `sopEnviarCorreo_()` — mismo wrapper que `manEnviarCorreo_()`/`aseEnviarCorreo_()`, activable con `sopActivarModoPrueba('correo')`/`sopDesactivarModoPrueba()` — ya reemplaza el único `MailApp.sendEmail()` de este archivo (el de cierre al solicitante) en el repo local, pero **no se pegó ni redesplegó** en el proyecto de Apps Script real esta sesión; en producción sigue corriendo la versión sin modo de prueba
 - **`?action=pendientes&token=...` (ago 2026)**: nuevo endpoint para el Panel OTDE (`apps-script/panel-otde.gs`, ver sección propia abajo) — regresa las solicitudes abiertas (Estatus ≠ Resuelto/Rechazado). Requiere `PANEL_TOKEN` en Propiedades del script, configurado con `sopConfigurarTokenPanel('secreto')` (correrla envuelta en una función temporal, no seleccionándola directo en ▶️ Ejecutar — ver `docs/QA-NOTES.md #14`). Detalle completo en `docs/ARCHITECTURE.md §20`
 - **"Planchado" de la hoja — dropdowns + semáforo + protección de solo aviso (desplegado y
   verificado en vivo, 3 sep 2026)**: `sopConfigurarValidacionYSemaforo()`, mismo patrón que
@@ -230,6 +230,13 @@ ya esté expandido).
 - **Alta a prueba de reintentos (25 sep 2026, en producción y verificado en vivo)**: mismo patrón
   que Mantenimiento/Asesorías (`sopBuscarEnvioPrevio_`, `ID de envío` en la columna Q; el
   respaldo sin ID compara CCT + correo + descripción). Ver `docs/ARCHITECTURE.md §27`.
+- **Columnas por nombre y orden por bloques (15 oct 2026, en producción y verificado en vivo,
+  versión 13)**: mismo patrón que Asesorías/Mantenimiento (`ENCABEZADOS_SOPORTE` en el orden de
+  `soporte.html`, mapa `SOP`, `sopFilasCanonicas_()`/`sopCol_()`; ya no hay `COL_SOP_*`, así que
+  `ID de envío` ya no está en la Q). Menú "OTDE Soporte → Reordenar columnas"
+  (`sopReordenarColumnas_()`), ya corrido en producción. "Fecha de atención" ya no depende de
+  estar en la columna R: si falta, `sopOnEditCierre` la agrega al final. Ver
+  `docs/ARCHITECTURE.md §33`.
 
 ### `apps-script/mantenimiento.gs`
 - **Nuevo (ago 2026)**: conectado a un Google Sheet propio (hojas `Solicitudes` y

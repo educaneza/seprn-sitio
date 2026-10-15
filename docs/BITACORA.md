@@ -15,6 +15,20 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-10-15 (cont. 5) · Soporte: columnas por nombre y hoja reordenada por bloques
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-15 |
+| **Sesión** | Tercer trámite del reordenamiento (ROADMAP 34), mismo procedimiento. |
+| **Código** | `apps-script/soporte-remoto.gs`: `ENCABEZADOS_SOPORTE` por bloques en el orden de `soporte.html` + mapa `SOP`; `sopFilasCanonicas_()`, `sopFilaCanonica_()`, `sopCol_()`; se retiraron `COL_SOP_*`; alta, consultas (Oficina Virtual, Panel, `soporteMes`), `sopOnEditCierre` (la "Fecha de atención" ya no depende de estar en la columna R), validación/semáforo/protecciones por nombre; menú "Reordenar columnas" (`sopReordenarColumnas_()`). Mismos 18 encabezados. |
+| **Verificación** | Simulación local con las 3 solicitudes reales y una columna a mano: 17 de 17. En producción vía Chrome: editor idéntico al repo (SHA-256), versión 13 en la misma implementación, `curl` de solo lectura antes y después, "Reordenar columnas" → verificadas columna por columna (cuenta 6 filas: 3 solicitudes + 3 casi vacías), respaldo `Solicitudes_Soporte_2026_respaldo_20261015`, captura con `Estatus`, `Tipo de ayuda` y `Urgencia` con sus dropdowns y la fecha de atención de `OTDE-SOP-0001` intacta. Hallazgo menor: como el editor ya era idéntico al repo, el modo de prueba de correo (`sopEnviarCorreo_`) ya estaba desplegado de antes; la nota de CLAUDE.md que lo daba por "sin desplegar" estaba desactualizada. |
+| **Pendiente** | Correo (5 hojas en un proyecto). Borrar los 4 respaldos del 15 oct cuando ya no hagan falta. |
+| **Documentación actualizada** | Este checkpoint, `docs/ARCHITECTURE.md` §33, `docs/ROADMAP.md` ítem 34, `CLAUDE.md` (sección de `soporte-remoto.gs`), `docs/TABLERO-SALUD.md` (fila de Soporte). |
+| **Commits** | El de este cambio (código + documentación). |
+
+---
+
 ## CHECKPOINT — 2026-10-15 (cont. 4) · Mantenimiento: columnas por nombre y las dos hojas reordenadas por bloques
 
 | | |

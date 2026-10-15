@@ -973,11 +973,11 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     con las filas reales → pegar y Nueva versión → menú "Reordenar" → releer la hoja):
     ~~(a) **Mantenimiento**~~ — hecho el 15 oct 2026 (versión 27, 31 solicitudes y 12 reportes
     verificados en vivo);
-    (b) **Soporte**; (c) **Correo** — 5 hojas en un solo proyecto, `Seguimiento.gs` ya escribe por
+    ~~(b) **Soporte**~~ — hecho el 15 oct 2026 (versión 13); (c) **Correo** — 5 hojas en un solo proyecto, `Seguimiento.gs` ya escribe por
     nombre; conservar al final las columnas a mano (`NOTAS` ×3 en Incidencias, `OBSERVACIONES`/
     `NOTAS` en Alta, la columna sin título de Marcos) poniéndole título a la que no tiene.
-    Borrar los respaldos `*_respaldo_20261015` (Asesorías: 1; Mantenimiento: 2) cuando ya no se
-    necesiten.
+    Borrar los respaldos `*_respaldo_20261015` (Asesorías: 1; Mantenimiento: 2; Soporte: 1) cuando
+    ya no se necesiten.
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue
