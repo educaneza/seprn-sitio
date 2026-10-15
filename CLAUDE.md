@@ -908,8 +908,8 @@ arquitectura completo en `docs/ARCHITECTURE.md §16`. Resumen operativo:
   reconocido". Nota de tooling: los Apps Script Web Apps responden con un 302 a
   `script.googleusercontent.com/macros/echo?...` que hay que seguir con **GET** — `curl -L -X
   POST` reintenta el POST contra esa URL y devuelve la página de error genérica de Google
-  Drive, no la respuesta real. Falta la prueba de extremo a extremo con datos completos (fila
-  real en el Sheet, correo y Telegram reales) — ver `docs/ROADMAP.md`.
+  Drive, no la respuesta real. La prueba de extremo a extremo quedó cubierta con uso real:
+  `OTDE-CYR-0002` (8 oct 2026) llegó a "Cuenta entregada" (revisado en el Sheet el 15 oct 2026).
 - **"2FA" renombrado a "Eliminar método de autenticación" (ago 2026)**: mismo término que usa
   SIGEE (para que Jorge/Marcos mapeen 1:1 al procesar), con una aclaración en paréntesis para
   docentes ("código de seguridad extra que a veces se traba"). El identificador interno que
@@ -1337,7 +1337,8 @@ Para saber qué sistema necesita atención (y cuál se está olvidando), empezar
 `docs/TABLERO-SALUD.md`. Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/Identidad) y
 `docs/BITACORA.md` para el historial de qué ya se hizo. Resumen de lo genuinamente abierto:
 - **Mejoras de operación del 14 oct 2026 — desplegadas (15 oct 2026), sin prueba en vivo**:
-  Jorge desplegó los 3 `.gs` (Mantenimiento confirmado por `curl`). Las pruebas con modo de
+  Jorge desplegó los 3 `.gs` (Mantenimiento confirmado por `curl`; Correo y Asesorías, por sus
+  columnas nuevas en los Sheets). Las pruebas con modo de
   prueba se posponen a propósito: Jorge prefiere esperar el feedback de los usuarios. Mientras,
   revisar "Ejecuciones" de cada proyecto por si algo falla en silencio. Decidido: pila CR2032 (en
   general), el resumen semanal de Correo se queda igual, y **no** habrá `Historico_v8.5` (se

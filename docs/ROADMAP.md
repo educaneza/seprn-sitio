@@ -720,7 +720,10 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     trazabilidad manual actual, columna "NP SIGEE" en `Alta.gs`), y cualquier automatización tipo
     RPA/browser automation que llene el formulario de SIGEE por él — SIGEE sigue sin exponer
     ninguna API.
-    - **Falta además la prueba de extremo a extremo del 5º tipo ya construido**: se verificó por
+    - ~~**Falta además la prueba de extremo a extremo del 5º tipo ya construido**~~ — cubierta
+      con uso real (revisado el 15 oct 2026 en el Sheet): `OTDE-CYR-0002` (8 oct 2026) tiene fila,
+      contraseña asignada, "¿Cuenta lista?" = Sí, "Usuario enviado" = Sí y "Cuenta entregada".
+      Historia: se verificó por
       `curl` que el despliegue enruta correctamente y valida los campos en el orden esperado (sin
       escribir en el Sheet ni disparar correos/Telegram, a propósito), pero no se probó el flujo
       completo con datos reales (fila nueva en "Cambio y Eliminar Autenticación", correo
@@ -946,9 +949,12 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
 33. **Mejoras de operación del 14 oct 2026 — desplegadas (15 oct 2026), pruebas pospuestas.**
     (a) ~~desplegar los 3 `.gs`~~ — hecho por Jorge el 15 oct 2026; Mantenimiento confirmado con
     `curl` (`?action=mantenimientoPorCct` con token falso responde `no_autorizado`; la versión
-    anterior respondía `status: ok`). Correo y Asesorías no tienen un GET público que lo
-    distinga: se confirman viendo las columnas nuevas de SIGEE en las 5 hojas de Correo y con
-    "Probar verificación de mantenimiento (un CCT)" en Asesorías. (b) **pruebas con modo de
+    anterior respondía `status: ok`). Correo y Asesorías confirmados el mismo día leyendo sus
+    Sheets con el conector de Drive (ya vinculado a la cuenta de OTDE): las 5 hojas de Correo
+    tienen `Fecha subida a SIGEE`/`Fecha respuesta SIGEE`/`Motivo de rechazo`/`Rechazo notificado`,
+    y `Solicitudes` de Asesorías tiene AA `Verificación de mantenimiento` y AB `Folio de
+    mantenimiento indicado`. `Motivo de pérdida de acceso` aún no existe en "Cambio y Eliminar
+    Autenticación": `segAsegurarColumna_()` la crea con el primer envío que la traiga. (b) **pruebas con modo de
     prueba: pospuestas a propósito** — Jorge prefiere esperar el feedback de los usuarios; mientras
     tanto, revisar "Ejecuciones" de cada proyecto (los cambios están hechos para no bloquear: si
     falla la verificación o la subida de fotos, la solicitud entra igual, así que un error puede
