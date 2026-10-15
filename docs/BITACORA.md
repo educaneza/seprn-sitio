@@ -15,6 +15,19 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-10-15 (cont.) · Guía para terminar la foto grupal en Photoshop y Lightroom
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-15 |
+| **Sesión** | Fuera del código del sitio: Jorge va a terminar a mano la foto grupal unida en la sesión anterior y pidió un paso a paso. Se le entregó una guía en 3 partes: **Photoshop** para lo estructural (pasar a 16 bits, quitar la malla del edificio con Relleno generativo y la herramienta Quitar, revisar al 100 % uniones, cabezas que tocaban letras y rostros, nubes opcionales con Sustitución de cielo, maestro en TIFF de 16 bits); **Lightroom** para tono y color con valores pequeños (el JPG final ya está revelado, y volver a subir sombras, claridad o vibrance acumula un look "HDR"), HSL de piel y máscaras de cielo, rostros y suelo; y **exportación** por destino (web a 2400 px, WhatsApp a 2048 px como documento, impresión a resolución completa). La guía quedó en el archivo de plan de la sesión, fuera del repo. El repo no cambió. |
+| **Hallazgo** | Los archivos de la foto (JPG final y versión unida sin retoque) **ya no están** en la carpeta temporal de la sesión anterior (búsqueda en `/private/tmp/claude-501` sin resultados). Si Jorge no los guardó, hay que regenerarlos desde las 3 tomas originales. |
+| **Pendiente** | De esta sesión: confirmar si Jorge tiene los archivos de la foto. Si no, regenerarlos; ofrecida también una versión limpia **sin revelado** en TIFF de 16 bits para revelarla desde cero. **Sigue abierto lo de los checkpoints anteriores**: Jorge despliega los 3 `.gs` (Correo → Mantenimiento → Asesorías, con sus pasos de menú) y prueba cada uno con modo de prueba; confirmar pila CR2032, el destinatario extra del resumen semanal de Correo y la lista de `Historico_v8.5` (ROADMAP 33). |
+| **Documentación actualizada** | Solo este checkpoint. |
+| **Commits** | Solo el de este cierre. |
+
+---
+
 ## CHECKPOINT — 2026-10-15 · Foto grupal del personal SEPRN (edición fuera del sitio)
 
 | | |
