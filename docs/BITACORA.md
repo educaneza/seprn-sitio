@@ -15,6 +15,22 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-10-15 · Foto grupal del personal SEPRN (edición fuera del sitio)
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-14 / 2026-10-15 |
+| **Sesión** | Fuera del código del sitio: Jorge pidió unir y retocar la foto grupal del personal SEPRN. El fotógrafo hizo 3 tomas porque no cabían todos y quedaron desalineadas; Jorge había empezado a armarla a mano en un PSD de 16 bits. Se trabajó con Python (OpenCV/Pillow ya instalados), sin instalar nada, en la carpeta temporal de la sesión. El repo no cambió. |
+| **Unión** | `cv2.Stitcher` en modo SCANS con la última ronda de tomas (`izquierda`/`centro`/`derecha`, 10:35:59–10:36:07; las `-1`/`-2` son rondas anteriores). El modo PANORAMA curvaba la pared. Recorte al rectángulo útil: 5777 × 2753 px. Sin personas duplicadas ni cortadas. |
+| **Limpieza** | Decisiones de Jorge: borrar todas las letras de la pared, dejar el cielo limpio y dar un tono natural. Letras: el naranja del letrero no se distingue del tono de piel por color, así que se protegieron a mano (elipses) las cabezas que tocaban letras y se rellenó con un relleno de Laplace multiescala que solo usa pared limpia. Malla y alambre de púas contra el cielo: un cielo suave estimado por zona, empatado con el borde. Con el relleno hueco por hueco quedaban fantasmas claros por el halo de enfoque de la cámara. También se quitaron 2 postes y un ciprés medio transparente que dejó la unión (se movió con el viento entre tomas); este último se clonó de más arriba del mismo árbol. **No se quitó** la malla frente al edificio de la derecha: rellenarla inventaría la fachada. |
+| **Revelado** | Aclarado local de sombras con filtro bilateral (con desenfoque gaussiano salían halos tipo HDR alrededor de los árboles), compresión de luces, claridad en medios tonos, vibrance que protege piel y rosas, reducción de ruido ligera, nitidez y viñeta sutil. El balance de blancos no se tocó: la pared ya medía neutra. |
+| **Verificación** | Revisión visual con recortes ampliados de cada unión, de cada zona de letras y malla, y de los rostros. Entregables: JPG final de resolución completa con los datos EXIF de la cámara, versión unida sin retoque y comparación antes/después. |
+| **Pendiente** | De esta sesión: Jorge revisa la foto y pide ajustes (luz, tono, nubes). Si quiere quitar la malla del edificio: Relleno generativo de Photoshop o instalar LaMa (~2 GB). Los archivos están en la carpeta temporal de la sesión: hay que copiarlos. **Sigue abierto lo del checkpoint anterior**: Jorge despliega los 3 `.gs` (Correo → Mantenimiento → Asesorías, con sus pasos de menú) y prueba cada uno con modo de prueba; confirmar pila CR2032, el destinatario extra del resumen semanal de Correo y la lista de `Historico_v8.5` (ROADMAP 33). |
+| **Documentación actualizada** | Solo este checkpoint: no cambió código ni sistemas del sitio. |
+| **Commits** | Solo el de este cierre. La carpeta `Foto-grupal-SEPRN/` (~310 MB, PSD de 256 MB) estuvo sin rastrear dentro del repo; Jorge ya la movió fuera, no se comiteó. |
+
+---
+
 ## CHECKPOINT — 2026-10-14 (cont. 2) · Seis ideas de operación: SIGEE, preparación de visita, visitas administrativas, Authenticator, fotos y verificación de Asesorías
 
 | | |
