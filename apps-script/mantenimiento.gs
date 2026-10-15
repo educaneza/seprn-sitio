@@ -29,17 +29,9 @@
 //   6. Copia la URL generada y pégala en otde.html en la
 //      constante MANTENIMIENTO_APPS_SCRIPT_URL
 //
-// COLUMNAS DE LA HOJA "Solicitudes":
-//   A Fecha | B Folio | C Nombre | D Función | E CCT | F Sector
-//   G Zona | H Escuela | I Turno | J WhatsApp | K Correo
-//   L Equipos con falla | M Oficio (link Drive) | N Estatus | O Notas de revisión
-//   P Notificación de cierre enviada | Q Tipo de equipo | R Cantidad (Aula de medios)
-//   S Cantidad (Administrativas) | T Marca/Modelo | U Estado de instalación
-//   V Tipo de solicitante | W Fecha programada de visita
-//   X Notificación de fecha programada enviada | Y Técnico asignado
-//   Z Notificación a técnico enviada | AA ID de envío
-//   AB Síntoma de pila CMOS | AC Confirmó respaldo (oct 2026, al final a propósito)
-//   AD Fotos de equipos (link a la carpeta de Drive del folio, opcional)
+// COLUMNAS DE LA HOJA "Solicitudes": ver ENCABEZADOS_MAN_SOLICITUDES abajo (orden por
+// bloques del formulario, oct 2026). El código las lee y escribe por nombre, no por letra
+// de columna; "Fotos de equipos" es el link a la carpeta de Drive del folio (opcional).
 //
 // COLUMNAS DE LA HOJA "Contactos_Zona_Sector" (Jorge la llena a mano):
 //   A Sector | B Zona | C Correo | D Teléfono
@@ -105,27 +97,9 @@
 // responsable + OTDE (Zona/Sector NO se incluyen aquí — se enteran en el
 // correo de cierre ya existente).
 //
-// COLUMNAS DE LA HOJA "Reportes de visita":
-//   A Folio | B Responsable de visita | C Fecha de atención
-//   D Inicio de la visita | E Fin de la visita | F Aula en uso al llegar
-//   G Mobiliario | H Equipos atendidos | I Equipos funcionales
-//   J Equipos no funcionales | K Conectividad | L Actividades preventivas
-//   M Actividades correctivas | N Instalación realizada
-//   O Equipos administrativos | P Estado del aula | Q Seguimiento requerido
-//   R Observaciones | S PDF del reporte (link Drive)
-//   T Notificación de reporte enviada
-//   U Atención sin solicitud previa | V Modelo/marca del equipo
-//   W ¿Se atendieron equipos administrativos? | X ¿Se instaló Toolwiz Time Freeze?
-//   Y ¿Requiere segunda visita? | Z Descripción de la atención realizada
-//   AA Fotografías de evidencia (URLs, una por línea)
-//   AB Docentes de la escuela | AC Alumnos de la escuela
-//   AD Tipo de atención | AE Área administrativa atendida
-//   AF Equipos administrativos funcionales | AG Información respaldada
-//   AH Pila CMOS (oct 2026: visitas solo de equipo administrativo + pilas)
-// (U-AA agregadas al final a propósito — rediseño del formulario, sep 2026 —
-// para no correr los índices de S/T ya usados por COL_MAN_REP_PDF_URL/
-// COL_MAN_REP_NOTIFICACION, mismo criterio que las columnas agregadas al
-// final en "Solicitudes".)
+// COLUMNAS DE LA HOJA "Reportes de visita": ver ENCABEZADOS_MAN_REPORTES abajo (orden
+// por bloques del formulario, oct 2026). El código las lee y escribe por nombre, no por
+// letra de columna.
 // ============================================================
 
 const HOJA_MAN_SOLICITUDES = 'Solicitudes';
@@ -133,19 +107,31 @@ const HOJA_MAN_CONTACTOS = 'Contactos_Zona_Sector';
 const CARPETA_MAN_OFICIOS = 'Oficios de Mantenimiento';
 const MAN_TAMANO_MAX_BYTES = 8 * 1024 * 1024; // 8MB, margen sobre el límite de 5MB validado en el cliente
 
+// Orden por bloques, el mismo en que se llena mantenimiento.html (oct 2026). El código
+// lee y escribe SIEMPRE por nombre de encabezado: las filas se leen "canónicas"
+// (manFilasCanonicas_/manFilaCanonica_, en el orden de este arreglo) y se escribe con
+// manCol_(hoja, nombre). Mover o insertar columnas en la hoja ya no rompe nada; para
+// dejar una hoja vieja en este orden, menú "OTDE Mantenimiento → Reordenar columnas".
+// Una columna nueva va en el bloque donde tenga sentido (no tiene que ser al final).
 const ENCABEZADOS_MAN_SOLICITUDES = [
-  'Fecha', 'Folio', 'Nombre', 'Función', 'CCT', 'Sector', 'Zona',
-  'Escuela', 'Turno', 'WhatsApp', 'Correo', 'Equipos con falla',
-  'Oficio (link Drive)', 'Estatus', 'Notas de revisión',
-  'Notificación de cierre enviada', 'Tipo de equipo', 'Cantidad (Aula de medios)',
-  'Cantidad (Administrativas)', 'Marca/Modelo', 'Estado de instalación',
-  'Tipo de solicitante', 'Fecha programada de visita',
-  'Notificación de fecha programada enviada', 'Técnico asignado',
-  'Notificación a técnico enviada', 'ID de envío',
-  // Oct 2026, al final para no correr ninguna columna existente (se auto-completan
-  // en manObtenerHojaSolicitudes). Alimentan "Prepárate para la visita".
-  'Síntoma de pila CMOS', 'Confirmó respaldo', 'Fotos de equipos'
+  // 1. Registro
+  'Fecha', 'Folio',
+  // 2. Quién la pide
+  'Nombre', 'Función', 'Tipo de solicitante', 'WhatsApp', 'Correo',
+  // 3. Centro de trabajo
+  'CCT', 'Escuela', 'Sector', 'Zona', 'Turno',
+  // 4. Equipos y falla (lo que escribe la escuela)
+  'Tipo de equipo', 'Cantidad (Aula de medios)', 'Cantidad (Administrativas)', 'Confirmó respaldo',
+  'Marca/Modelo', 'Fotos de equipos', 'Estado de instalación', 'Síntoma de pila CMOS',
+  'Equipos con falla', 'Oficio (link Drive)',
+  // 5. Atención (la llena OTDE)
+  'Estatus', 'Notas de revisión', 'Técnico asignado', 'Fecha programada de visita',
+  // 6. Automáticas (las llena el sistema)
+  'Notificación de fecha programada enviada', 'Notificación a técnico enviada',
+  'Notificación de cierre enviada', 'ID de envío'
 ];
+// { 'Encabezado': índice 0-based } dentro de una fila canónica de Solicitudes.
+const MS = ENCABEZADOS_MAN_SOLICITUDES.reduce(function (m, h, i) { m[h] = i; return m; }, {});
 // Fotos opcionales de los equipos (oct 2026): para que el técnico sepa qué modelos
 // hay antes de ir. Ya comprimidas en el navegador; carpeta por folio en Drive.
 const CARPETA_MAN_FOTOS_EQUIPOS = 'Fotos de equipos (solicitudes)';
@@ -153,22 +139,15 @@ const MAN_MAX_FOTOS_EQUIPOS = 3;
 // Ventana del respaldo anti-duplicados para envíos sin idEnvio (páginas viejas en caché):
 // misma CCT + correo + "Equipos con falla" dentro de estos minutos = mismo envío.
 const MAN_VENTANA_DUPLICADO_MIN = 10;
-// Índice (0-based) de 'Tipo de solicitante' dentro de una fila leída con getValues() —
-// ya no es la última columna (se agregaron 2 más después, misma lógica de no correr
-// columnas existentes), así que queda fijo en vez de derivarse de .length - 1.
-const COL_MAN_TIPO_SOLICITANTE_IDX = 21;
-const COL_MAN_ESTATUS = 14;
-const COL_MAN_NOTIFICACION_CIERRE = 16;
-// Fecha programada de visita y su columna de control — agregadas al final,
-// mismo criterio, para no correr ninguna columna existente.
-const COL_MAN_FECHA_PROGRAMADA = 23;
-const COL_MAN_NOTIFICACION_PROGRAMADA = 24;
-// Técnico asignado a la visita y su columna de control — agregadas al final
-// igual que las anteriores. El aviso al técnico (ver manOnEditProgramacion)
-// solo se dispara cuando AMBAS (fecha programada y técnico asignado) ya
-// tienen valor, sin importar cuál se llenó al último.
-const COL_MAN_TECNICO_ASIGNADO = 25;
-const COL_MAN_NOTIFICACION_TECNICO = 26;
+// Posiciones 1-based DENTRO DE UNA FILA CANÓNICA (fila[COL_MAN_X - 1]), derivadas del
+// nombre. No son columnas de la hoja: para escribir en la hoja, manCol_(hoja, nombre).
+const COL_MAN_ESTATUS = MS['Estatus'] + 1;
+const COL_MAN_FECHA_PROGRAMADA = MS['Fecha programada de visita'] + 1;
+const COL_MAN_NOTIFICACION_PROGRAMADA = MS['Notificación de fecha programada enviada'] + 1;
+// El aviso al técnico (ver manOnEditProgramacion) solo se dispara cuando AMBAS (fecha
+// programada y técnico asignado) ya tienen valor, sin importar cuál se llenó al último.
+const COL_MAN_TECNICO_ASIGNADO = MS['Técnico asignado'] + 1;
+const COL_MAN_NOTIFICACION_TECNICO = MS['Notificación a técnico enviada'] + 1;
 const ESTADOS_MAN_VALIDOS = ['Pendiente de validar', 'Validado', 'En atención', 'Resuelto', 'Rechazado'];
 
 // ── Fase 2 hacia retirar v8.5: reporte técnico de la visita, en una hoja
@@ -181,60 +160,70 @@ const HOJA_MAN_REPORTES = 'Reportes de visita';
 const CARPETA_MAN_REPORTES = 'Reportes de Visita';
 const CARPETA_MAN_REPORTES_FOTOS = 'Fotos de Reportes de Visita';
 const MAN_MAX_FOTOS_REPORTE = 20;
+// Mismo criterio: orden por bloques de reporte-visita.html, lectura canónica (MR /
+// COL_MAN_REP_* sobre filas canónicas) y escritura con manCol_().
 const ENCABEZADOS_MAN_REPORTES = [
-  'Folio', 'Responsable de visita', 'Fecha de atención', 'Inicio de la visita',
-  'Fin de la visita', 'Aula en uso al llegar', 'Mobiliario', 'Equipos atendidos',
-  'Equipos funcionales', 'Equipos no funcionales', 'Conectividad',
+  // 1. Identificación
+  'Folio', 'Atención sin solicitud previa', 'Responsable de visita', 'Fecha de atención',
+  'Inicio de la visita', 'Fin de la visita',
+  // 2. Tipo de atención: "Solo equipos administrativos" = los campos del aula llegan como
+  //    "No aplica" y el PDF no los muestra
+  'Tipo de atención',
+  // 3. Al llegar a la escuela (docentes y alumnos alimentan "Beneficiarios" en la
+  //    Bitácora OTDE, ?action=reportesMes)
+  'Aula en uso al llegar', 'Mobiliario', 'Docentes de la escuela', 'Alumnos de la escuela',
+  // 4. Equipos del aula de medios
+  'Equipos atendidos', 'Equipos funcionales', 'Equipos no funcionales', 'Conectividad',
+  // 5. Equipos administrativos
+  '¿Se atendieron equipos administrativos?', 'Equipos administrativos', 'Área administrativa atendida',
+  'Equipos administrativos funcionales', 'Información respaldada',
+  // 6. Modelos y pila CMOS
+  'Modelo/marca del equipo', 'Pila CMOS',
+  // 7. Actividades realizadas
   'Actividades preventivas', 'Actividades correctivas', 'Instalación realizada',
-  'Equipos administrativos', 'Estado del aula', 'Seguimiento requerido',
-  'Observaciones', 'PDF del reporte (link Drive)', 'Notificación de reporte enviada',
-  'Atención sin solicitud previa', 'Modelo/marca del equipo',
-  '¿Se atendieron equipos administrativos?', '¿Se instaló Toolwiz Time Freeze?',
-  '¿Requiere segunda visita?', 'Descripción de la atención realizada',
-  'Fotografías de evidencia', 'Docentes de la escuela', 'Alumnos de la escuela',
-  'Tipo de atención', 'Área administrativa atendida', 'Equipos administrativos funcionales',
-  'Información respaldada', 'Pila CMOS'
+  '¿Se instaló Toolwiz Time Freeze?',
+  // 8. Resultado
+  'Estado del aula', '¿Requiere segunda visita?', 'Seguimiento requerido',
+  // 9. Evidencia y descripción
+  'Fotografías de evidencia', 'Descripción de la atención realizada', 'Observaciones',
+  // 10. Automáticas
+  'PDF del reporte (link Drive)', 'Notificación de reporte enviada'
 ];
-const COL_MAN_REP_FOLIO = 1;
-const COL_MAN_REP_RESPONSABLE = 2;
-const COL_MAN_REP_FECHA_ATENCION = 3;
-const COL_MAN_REP_INICIO_VISITA = 4;
-const COL_MAN_REP_FIN_VISITA = 5;
-const COL_MAN_REP_AULA_EN_USO = 6;
-const COL_MAN_REP_MOBILIARIO = 7;
-const COL_MAN_REP_EQUIPOS_ATENDIDOS = 8;
-const COL_MAN_REP_EQUIPOS_FUNCIONALES = 9;
-const COL_MAN_REP_EQUIPOS_NO_FUNCIONALES = 10;
-const COL_MAN_REP_CONECTIVIDAD = 11;
-const COL_MAN_REP_ACTIVIDADES_PREVENTIVAS = 12;
-const COL_MAN_REP_ACTIVIDADES_CORRECTIVAS = 13;
-const COL_MAN_REP_INSTALACION_REALIZADA = 14;
-const COL_MAN_REP_EQUIPOS_ADMIN = 15;
-const COL_MAN_REP_ESTADO_AULA = 16;
-const COL_MAN_REP_SEGUIMIENTO = 17;
-const COL_MAN_REP_OBSERVACIONES = 18;
-const COL_MAN_REP_PDF_URL = 19;
-const COL_MAN_REP_NOTIFICACION = 20;
-const COL_MAN_REP_SIN_SOLICITUD = 21;
-const COL_MAN_REP_MODELO_EQUIPO = 22;
-const COL_MAN_REP_EQUIPOS_ADMIN_SI_NO = 23;
-const COL_MAN_REP_TOOLWIZ = 24;
-const COL_MAN_REP_SEGUNDA_VISITA = 25;
-const COL_MAN_REP_DESCRIPCION_ATENCION = 26;
-const COL_MAN_REP_FOTOS_EVIDENCIA = 27;
-// Docentes y alumnos de la escuela (24 sep 2026) — al final, mismo criterio.
-// Alimentan "Beneficiarios" de la actividad que la Bitácora OTDE arma con
-// cada visita (?action=reportesMes, ver manListarReportesMes_).
-const COL_MAN_REP_DOCENTES = 28;
-const COL_MAN_REP_ALUMNOS = 29;
-// Oct 2026, al final, mismo criterio. "Tipo de atención" distingue las visitas
-// solo de equipo administrativo (Dirección/Supervisión/Sector): en esas, los
-// campos del aula llegan como "No aplica" y el PDF no los muestra.
-const COL_MAN_REP_TIPO_ATENCION = 30;
-const COL_MAN_REP_AREA_ADMIN = 31;
-const COL_MAN_REP_ADMIN_FUNCIONALES = 32;
-const COL_MAN_REP_RESPALDO = 33;
-const COL_MAN_REP_PILA_CMOS = 34;
+const MR = ENCABEZADOS_MAN_REPORTES.reduce(function (m, h, i) { m[h] = i; return m; }, {});
+// Posiciones 1-based dentro de una fila canónica de reportes (datos[COL_MAN_REP_X - 1]).
+const COL_MAN_REP_FOLIO = MR['Folio'] + 1;
+const COL_MAN_REP_RESPONSABLE = MR['Responsable de visita'] + 1;
+const COL_MAN_REP_FECHA_ATENCION = MR['Fecha de atención'] + 1;
+const COL_MAN_REP_INICIO_VISITA = MR['Inicio de la visita'] + 1;
+const COL_MAN_REP_FIN_VISITA = MR['Fin de la visita'] + 1;
+const COL_MAN_REP_AULA_EN_USO = MR['Aula en uso al llegar'] + 1;
+const COL_MAN_REP_MOBILIARIO = MR['Mobiliario'] + 1;
+const COL_MAN_REP_EQUIPOS_ATENDIDOS = MR['Equipos atendidos'] + 1;
+const COL_MAN_REP_EQUIPOS_FUNCIONALES = MR['Equipos funcionales'] + 1;
+const COL_MAN_REP_EQUIPOS_NO_FUNCIONALES = MR['Equipos no funcionales'] + 1;
+const COL_MAN_REP_CONECTIVIDAD = MR['Conectividad'] + 1;
+const COL_MAN_REP_ACTIVIDADES_PREVENTIVAS = MR['Actividades preventivas'] + 1;
+const COL_MAN_REP_ACTIVIDADES_CORRECTIVAS = MR['Actividades correctivas'] + 1;
+const COL_MAN_REP_INSTALACION_REALIZADA = MR['Instalación realizada'] + 1;
+const COL_MAN_REP_EQUIPOS_ADMIN = MR['Equipos administrativos'] + 1;
+const COL_MAN_REP_ESTADO_AULA = MR['Estado del aula'] + 1;
+const COL_MAN_REP_SEGUIMIENTO = MR['Seguimiento requerido'] + 1;
+const COL_MAN_REP_OBSERVACIONES = MR['Observaciones'] + 1;
+const COL_MAN_REP_NOTIFICACION = MR['Notificación de reporte enviada'] + 1;
+const COL_MAN_REP_SIN_SOLICITUD = MR['Atención sin solicitud previa'] + 1;
+const COL_MAN_REP_MODELO_EQUIPO = MR['Modelo/marca del equipo'] + 1;
+const COL_MAN_REP_EQUIPOS_ADMIN_SI_NO = MR['¿Se atendieron equipos administrativos?'] + 1;
+const COL_MAN_REP_TOOLWIZ = MR['¿Se instaló Toolwiz Time Freeze?'] + 1;
+const COL_MAN_REP_SEGUNDA_VISITA = MR['¿Requiere segunda visita?'] + 1;
+const COL_MAN_REP_DESCRIPCION_ATENCION = MR['Descripción de la atención realizada'] + 1;
+const COL_MAN_REP_FOTOS_EVIDENCIA = MR['Fotografías de evidencia'] + 1;
+const COL_MAN_REP_DOCENTES = MR['Docentes de la escuela'] + 1;
+const COL_MAN_REP_ALUMNOS = MR['Alumnos de la escuela'] + 1;
+const COL_MAN_REP_TIPO_ATENCION = MR['Tipo de atención'] + 1;
+const COL_MAN_REP_AREA_ADMIN = MR['Área administrativa atendida'] + 1;
+const COL_MAN_REP_ADMIN_FUNCIONALES = MR['Equipos administrativos funcionales'] + 1;
+const COL_MAN_REP_RESPALDO = MR['Información respaldada'] + 1;
+const COL_MAN_REP_PILA_CMOS = MR['Pila CMOS'] + 1;
 const MAN_TIPO_ATENCION_ADMIN = 'Solo equipos administrativos';
 // Nombre → correo, para el "cc" del correo del reporte y el selector de la
 // hoja. Mismo criterio de "no inventar" que el resto del sitio — confirmado
@@ -260,6 +249,64 @@ const MAN_ESTADOS_AULA = [
   '⚫ No se pudo trabajar — las condiciones del espacio (suciedad, abandono, sin luz o sin acceso) impidieron la intervención.',
   'No aplica — visita solo a equipos administrativos.'
 ];
+
+// ── Lectura y escritura por nombre de encabezado ──
+// { 'Encabezado': índice 0-based } de la fila de encabezados REAL de una hoja.
+function manIndicesReales_(filaEncabezados) {
+  const mapa = {};
+  filaEncabezados.forEach(function (h, i) {
+    const nombre = String(h).trim();
+    if (nombre && !(nombre in mapa)) mapa[nombre] = i;
+  });
+  return mapa;
+}
+
+// Fila real → fila canónica (en el orden de `encabezados`). Lo que falte llega vacío.
+function manACanonica_(filaReal, real, encabezados) {
+  return encabezados.map(function (h) { return h in real ? filaReal[real[h]] : ''; });
+}
+
+// Filas de datos (sin encabezado) en orden canónico. La fila i es la fila i + 2 de la hoja.
+function manFilasCanonicas_(hoja, encabezados) {
+  if (!hoja || hoja.getLastRow() < 2) return [];
+  const datos = hoja.getDataRange().getValues();
+  const real = manIndicesReales_(datos[0]);
+  return datos.slice(1).map(function (r) { return manACanonica_(r, real, encabezados); });
+}
+
+// Una sola fila (número real, 1-based) en orden canónico.
+function manFilaCanonica_(hoja, numFila, encabezados) {
+  const ancho = Math.max(hoja.getLastColumn(), 1);
+  const real = manIndicesReales_(hoja.getRange(1, 1, 1, ancho).getValues()[0]);
+  return manACanonica_(hoja.getRange(numFila, 1, 1, ancho).getValues()[0], real, encabezados);
+}
+
+// Número de columna (1-based) REAL de un encabezado, para escribir en la hoja.
+function manCol_(hoja, nombre) {
+  const enc = hoja.getRange(1, 1, 1, Math.max(hoja.getLastColumn(), 1)).getValues()[0]
+    .map(function (h) { return String(h).trim(); });
+  const i = enc.indexOf(nombre);
+  if (i === -1) throw new Error('La hoja ' + hoja.getName() + ' no tiene la columna "' + nombre + '".');
+  return i + 1;
+}
+
+// Fila real a partir de un objeto {encabezado: valor}, en el orden de la fila 1 de la
+// hoja. `base` (opcional, fila real ya existente) conserva lo que no se nombra, como
+// las columnas agregadas a mano.
+function manFilaRealDesdeObjeto_(hoja, valores, base) {
+  const enc = hoja.getRange(1, 1, 1, Math.max(hoja.getLastColumn(), 1)).getValues()[0];
+  return enc.map(function (h, i) {
+    const nombre = String(h).trim();
+    return nombre in valores ? valores[nombre] : (base ? base[i] : '');
+  });
+}
+
+// Objeto {encabezado: valor} a partir de una fila canónica.
+function manObjetoDesdeCanonica_(fila, encabezados) {
+  const o = {};
+  encabezados.forEach(function (h, i) { o[h] = fila[i]; });
+  return o;
+}
 
 // ── Modo de prueba: redirige TODOS los correos salientes (Zona/Sector +
 // cierre) a un solo correo, para probar el flujo completo sin avisar a
@@ -368,15 +415,13 @@ function manMantenimientoPorCct_(tokenRecibido, cctRecibido, folioRecibido) {
 
   const conReporte = {};
   const hojaRep = ss.getSheetByName(HOJA_MAN_REPORTES);
-  if (hojaRep && hojaRep.getLastRow() > 1) {
-    hojaRep.getRange(2, COL_MAN_REP_FOLIO, hojaRep.getLastRow() - 1, 1).getValues()
-      .forEach(function (r) { conReporte[String(r[0]).trim().toUpperCase()] = true; });
-  }
+  manFilasCanonicas_(hojaRep, ENCABEZADOS_MAN_REPORTES)
+    .forEach(function (r) { conReporte[String(r[MR['Folio']]).trim().toUpperCase()] = true; });
 
   const hoja = ss.getSheetByName(HOJA_MAN_SOLICITUDES);
   if (hoja && hoja.getLastRow() > 1) {
-    const col = n => ENCABEZADOS_MAN_SOLICITUDES.indexOf(n);
-    const filas = hoja.getRange(2, 1, hoja.getLastRow() - 1, ENCABEZADOS_MAN_SOLICITUDES.length).getValues();
+    const col = n => MS[n];
+    const filas = manFilasCanonicas_(hoja, ENCABEZADOS_MAN_SOLICITUDES);
     for (let i = filas.length - 1; i >= 0; i--) {   // la más reciente primero
       const r = filas[i];
       const folio = String(r[col('Folio')]).trim().toUpperCase();
@@ -459,25 +504,25 @@ function manListarPendientes(tokenRecibido) {
   const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_MAN_SOLICITUDES);
   if (!hoja) return manTextResponse(JSON.stringify({ status: 'ok', tramite: 'Mantenimiento', items: [] }));
 
-  const filas = hoja.getDataRange().getValues().slice(1);
-  const items = filas
-    .filter(function (r) { return r[1]; }) // folio no vacío
+  const items = manFilasCanonicas_(hoja, ENCABEZADOS_MAN_SOLICITUDES)
+    .filter(function (r) { return r[MS['Folio']]; }) // folio no vacío
     .filter(function (r) {
-      const estatus = String(r[COL_MAN_ESTATUS - 1] || '').trim();
+      const estatus = String(r[MS['Estatus']] || '').trim();
       return estatus !== 'Resuelto' && estatus !== 'Rechazado';
     })
     .map(function (r) {
+      const fecha = r[MS['Fecha']];
+      const programada = r[MS['Fecha programada de visita']];
       return {
-        folio: r[1],
-        fecha: r[0] instanceof Date ? r[0].toISOString() : String(r[0]),
-        nombre: r[2],
-        escuela: r[7],
-        sector: r[5],
-        zona: r[6],
-        estatus: String(r[COL_MAN_ESTATUS - 1] || 'Pendiente de validar').trim(),
-        notas: r[14] || '',
-        fechaProgramada: r[COL_MAN_FECHA_PROGRAMADA - 1] instanceof Date
-          ? r[COL_MAN_FECHA_PROGRAMADA - 1].toISOString() : (r[COL_MAN_FECHA_PROGRAMADA - 1] || '')
+        folio: r[MS['Folio']],
+        fecha: fecha instanceof Date ? fecha.toISOString() : String(fecha),
+        nombre: r[MS['Nombre']],
+        escuela: r[MS['Escuela']],
+        sector: r[MS['Sector']],
+        zona: r[MS['Zona']],
+        estatus: String(r[MS['Estatus']] || 'Pendiente de validar').trim(),
+        notas: r[MS['Notas de revisión']] || '',
+        fechaProgramada: programada instanceof Date ? programada.toISOString() : (programada || '')
       };
     });
 
@@ -505,15 +550,15 @@ function manListarReportesMes_(tokenRecibido, mes) {
   if (!hojaRep || !hojaSol) return manTextResponse(JSON.stringify({ status: 'ok', items: [] }));
 
   const solicitudes = {};
-  hojaSol.getDataRange().getValues().slice(1).forEach(function (r) {
-    const folio = String(r[1]).trim().toUpperCase();
+  manFilasCanonicas_(hojaSol, ENCABEZADOS_MAN_SOLICITUDES).forEach(function (r) {
+    const folio = String(r[MS['Folio']]).trim().toUpperCase();
     if (folio) solicitudes[folio] = r;
   });
 
   const tz = 'America/Mexico_City';
   const txt = function (v) { return String(v == null ? '' : v).trim(); };
   const items = [];
-  hojaRep.getDataRange().getValues().slice(1).forEach(function (r) {
+  manFilasCanonicas_(hojaRep, ENCABEZADOS_MAN_REPORTES).forEach(function (r) {
     const fecha = r[COL_MAN_REP_FECHA_ATENCION - 1];
     if (!(fecha instanceof Date)) return;
     if (Utilities.formatDate(fecha, tz, 'yyyy-MM') !== mes) return;
@@ -523,13 +568,13 @@ function manListarReportesMes_(tokenRecibido, mes) {
     items.push({
       folio: folio,
       fechaAtencion: Utilities.formatDate(fecha, tz, 'yyyy-MM-dd'),
-      cct: txt(s[4]),
-      sector: txt(s[5]),
-      zona: txt(s[6]),
-      escuela: txt(s[7]),
-      turno: txt(s[8]),
-      tipoEquipo: txt(s[16]),
-      tipoSolicitante: txt(s[COL_MAN_TIPO_SOLICITANTE_IDX]),
+      cct: txt(s[MS['CCT']]),
+      sector: txt(s[MS['Sector']]),
+      zona: txt(s[MS['Zona']]),
+      escuela: txt(s[MS['Escuela']]),
+      turno: txt(s[MS['Turno']]),
+      tipoEquipo: txt(s[MS['Tipo de equipo']]),
+      tipoSolicitante: txt(s[MS['Tipo de solicitante']]),
       equiposAtendidos: txt(r[COL_MAN_REP_EQUIPOS_ATENDIDOS - 1]),
       modeloEquipo: txt(r[COL_MAN_REP_MODELO_EQUIPO - 1]),
       actividadesPreventivas: txt(r[COL_MAN_REP_ACTIVIDADES_PREVENTIVAS - 1]),
@@ -564,18 +609,19 @@ function manConsultarFolio(folioBuscado, correoBuscado) {
   const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_MAN_SOLICITUDES);
   if (!hoja) return noEncontrado();
 
-  const filas = hoja.getDataRange().getValues().slice(1);
-  const fila = filas.find(r => String(r[1]).trim().toUpperCase() === folio);
-  if (!fila || String(fila[10]).trim().toLowerCase() !== correo) return noEncontrado();
+  const fila = manFilasCanonicas_(hoja, ENCABEZADOS_MAN_SOLICITUDES)
+    .find(r => String(r[MS['Folio']]).trim().toUpperCase() === folio);
+  if (!fila || String(fila[MS['Correo']]).trim().toLowerCase() !== correo) return noEncontrado();
 
+  const fecha = fila[MS['Fecha']];
+  const programada = fila[MS['Fecha programada de visita']];
   return manTextResponse(JSON.stringify({
     status: 'ok',
-    folio: fila[1],
-    fecha: fila[0] instanceof Date ? fila[0].toISOString() : String(fila[0]),
-    estatus: fila[COL_MAN_ESTATUS - 1],
-    notas: fila[14] || '',
-    fechaProgramada: fila[COL_MAN_FECHA_PROGRAMADA - 1] instanceof Date
-      ? fila[COL_MAN_FECHA_PROGRAMADA - 1].toISOString() : (fila[COL_MAN_FECHA_PROGRAMADA - 1] || '')
+    folio: fila[MS['Folio']],
+    fecha: fecha instanceof Date ? fecha.toISOString() : String(fecha),
+    estatus: fila[MS['Estatus']],
+    notas: fila[MS['Notas de revisión']] || '',
+    fechaProgramada: programada instanceof Date ? programada.toISOString() : (programada || '')
   }));
 }
 
@@ -635,10 +681,10 @@ function doPost(e) {
 // mantenimiento.html desde sep 2026); si no viene, por CCT + correo + "Equipos con
 // falla" dentro de MAN_VENTANA_DUPLICADO_MIN minutos. Devuelve el folio o null. ──
 function manBuscarEnvioPrevio_(hoja, datos) {
-  if (hoja.getLastRow() < 2) return null;
-  const filas = hoja.getRange(2, 1, hoja.getLastRow() - 1, hoja.getLastColumn()).getValues();
-  const iFolio = ENCABEZADOS_MAN_SOLICITUDES.indexOf('Folio');
-  const iId = ENCABEZADOS_MAN_SOLICITUDES.indexOf('ID de envío');
+  const filas = manFilasCanonicas_(hoja, ENCABEZADOS_MAN_SOLICITUDES);
+  if (!filas.length) return null;
+  const iFolio = MS['Folio'];
+  const iId = MS['ID de envío'];
   const idEnvio = String(datos.idEnvio || '').trim();
 
   if (idEnvio) {
@@ -646,10 +692,10 @@ function manBuscarEnvioPrevio_(hoja, datos) {
     if (previa) return String(previa[iFolio]);
   }
 
-  const iFecha = ENCABEZADOS_MAN_SOLICITUDES.indexOf('Fecha');
-  const iCct = ENCABEZADOS_MAN_SOLICITUDES.indexOf('CCT');
-  const iCorreo = ENCABEZADOS_MAN_SOLICITUDES.indexOf('Correo');
-  const iEquipos = ENCABEZADOS_MAN_SOLICITUDES.indexOf('Equipos con falla');
+  const iFecha = MS['Fecha'];
+  const iCct = MS['CCT'];
+  const iCorreo = MS['Correo'];
+  const iEquipos = MS['Equipos con falla'];
   const cct = String(datos.cct || '').trim().toUpperCase();
   const correo = String(datos.correo || '').trim().toLowerCase();
   const equipos = String(datos.equipos || '').trim();
@@ -669,40 +715,36 @@ function manBuscarEnvioPrevio_(hoja, datos) {
 }
 
 // ── Agrega la fila de una solicitud nueva (llamar dentro del candado) ──
+// Se arma por nombre y se acomoda en el orden REAL de la hoja (antes y después de
+// "Reordenar columnas"); lo que no se nombra (notas, fecha programada, técnico,
+// notificaciones, columnas a mano) queda en blanco.
 function manAgregarSolicitud_(hoja, datos, folio, oficioUrl) {
-  const fila = [
-    new Date(),
-    folio,
-    datos.nombre.trim(),
-    datos.funcion.trim(),
-    datos.cct.trim().toUpperCase(),
-    (datos.sector || '').trim(),
-    (datos.zona || '').toString().trim(),
-    (datos.escuela || '').trim(),
-    datos.turno.trim(),
-    datos.whatsapp.trim(),
-    (datos.correo || '').trim(),
-    datos.equipos.trim(),
-    oficioUrl,
-    'Pendiente de validar',
-    '',
-    '',
-    (datos.tipoEquipo || '').trim(),
-    (datos.cantidadAula || '').trim(),
-    (datos.cantidadAdmin || '').trim(),
-    (datos.marcaModelo || '').trim(),
-    (datos.estadoEquipo || '').trim(),
-    (datos.tipoCct || '').trim()
-  ];
-  // Las columnas de programación/técnico quedan en blanco; las que van después se
-  // colocan por nombre de encabezado.
-  while (fila.length < ENCABEZADOS_MAN_SOLICITUDES.length) fila.push('');
-  const col = n => ENCABEZADOS_MAN_SOLICITUDES.indexOf(n);
-  fila[col('ID de envío')] = String(datos.idEnvio || '').trim();
-  fila[col('Síntoma de pila CMOS')] = String(datos.sintomaCmos || '').trim();
-  fila[col('Confirmó respaldo')] = datos.confirmaRespaldo === true ? 'Sí' : '';
-  fila[col('Fotos de equipos')] = datos.fotosUrl || '';
-  hoja.appendRow(fila);
+  hoja.appendRow(manFilaRealDesdeObjeto_(hoja, {
+    'Fecha': new Date(),
+    'Folio': folio,
+    'Nombre': datos.nombre.trim(),
+    'Función': datos.funcion.trim(),
+    'Tipo de solicitante': (datos.tipoCct || '').trim(),
+    'WhatsApp': datos.whatsapp.trim(),
+    'Correo': (datos.correo || '').trim(),
+    'CCT': datos.cct.trim().toUpperCase(),
+    'Escuela': (datos.escuela || '').trim(),
+    'Sector': (datos.sector || '').trim(),
+    'Zona': (datos.zona || '').toString().trim(),
+    'Turno': datos.turno.trim(),
+    'Tipo de equipo': (datos.tipoEquipo || '').trim(),
+    'Cantidad (Aula de medios)': (datos.cantidadAula || '').trim(),
+    'Cantidad (Administrativas)': (datos.cantidadAdmin || '').trim(),
+    'Confirmó respaldo': datos.confirmaRespaldo === true ? 'Sí' : '',
+    'Marca/Modelo': (datos.marcaModelo || '').trim(),
+    'Fotos de equipos': datos.fotosUrl || '',
+    'Estado de instalación': (datos.estadoEquipo || '').trim(),
+    'Síntoma de pila CMOS': String(datos.sintomaCmos || '').trim(),
+    'Equipos con falla': datos.equipos.trim(),
+    'Oficio (link Drive)': oficioUrl,
+    'Estatus': 'Pendiente de validar',
+    'ID de envío': String(datos.idEnvio || '').trim()
+  }));
 }
 
 // ── Obtener o crear la hoja de solicitudes ──
@@ -718,20 +760,10 @@ function manObtenerHojaSolicitudes() {
           .setBackground('#56212f')
           .setFontColor('#F9F8F5');
     hoja.setFrozenRows(1);
-    hoja.setColumnWidth(3, 180);  // Nombre
-    hoja.setColumnWidth(8, 200);  // Escuela
-    hoja.setColumnWidth(12, 260); // Equipos con falla
-    hoja.setColumnWidth(13, 220); // Oficio
+    [['Nombre', 180], ['Escuela', 200], ['Equipos con falla', 260], ['Oficio (link Drive)', 220]]
+      .forEach(function (p) { hoja.setColumnWidth(MS[p[0]] + 1, p[1]); });
   } else {
-    // Hoja creada antes de agregar la columna de cierre: se completa el
-    // encabezado faltante sin tocar las columnas ni los datos ya existentes.
-    const colsActuales = hoja.getLastColumn();
-    if (colsActuales < ENCABEZADOS_MAN_SOLICITUDES.length) {
-      const faltantes = ENCABEZADOS_MAN_SOLICITUDES.slice(colsActuales);
-      hoja.getRange(1, colsActuales + 1, 1, faltantes.length)
-        .setValues([faltantes])
-        .setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
-    }
+    manCompletarEncabezados_(hoja, ENCABEZADOS_MAN_SOLICITUDES);
   }
 
   manAplicarValidacionEstatus(hoja);
@@ -750,7 +782,7 @@ function manAplicarValidacionTecnico(hoja) {
     .requireValueInList(Object.keys(MAN_TECNICOS), true)
     .setAllowInvalid(false)
     .build();
-  hoja.getRange(2, COL_MAN_TECNICO_ASIGNADO, 1000, 1).setDataValidation(regla);
+  hoja.getRange(2, manCol_(hoja, 'Técnico asignado'), 1000, 1).setDataValidation(regla);
 }
 
 // ── Dropdown de valores válidos en la columna Estatus (idempotente) ──
@@ -759,7 +791,19 @@ function manAplicarValidacionEstatus(hoja) {
     .requireValueInList(ESTADOS_MAN_VALIDOS, true)
     .setAllowInvalid(false)
     .build();
-  hoja.getRange(2, COL_MAN_ESTATUS, 1000, 1).setDataValidation(regla);
+  hoja.getRange(2, manCol_(hoja, 'Estatus'), 1000, 1).setDataValidation(regla);
+}
+
+// ── Hoja ya existente: agrega AL FINAL, por nombre, cualquier encabezado que le falte,
+// sin mover nada. Para dejarla en el orden por bloques está "Reordenar columnas". ──
+function manCompletarEncabezados_(hoja, encabezados) {
+  const ancho = Math.max(hoja.getLastColumn(), 1);
+  const reales = manIndicesReales_(hoja.getRange(1, 1, 1, ancho).getValues()[0]);
+  const faltantes = encabezados.filter(function (h) { return !(h in reales); });
+  if (!faltantes.length) return;
+  hoja.getRange(1, hoja.getLastColumn() + 1, 1, faltantes.length)
+    .setValues([faltantes])
+    .setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
 }
 
 // ── "Planchado" de la hoja: dropdowns adicionales + semáforo por color +
@@ -770,30 +814,38 @@ function manAplicarValidacionEstatus(hoja) {
 const MAN_TURNOS_VALIDOS = ['Matutino', 'Vespertino', 'Tiempo Completo', 'Discontinuo', 'No aplica (oficina)'];
 const MAN_ESTADOS_INSTALACION_VALIDOS = ['Instaladas y en uso (con falla)', 'Guardadas / sin instalar', 'Abandonadas / posible baja'];
 const MAN_TIPOS_SOLICITANTE_VALIDOS = ['escuela', 'supervision', 'jefatura', 'subdireccion'];
-const COL_MAN_TURNO = 9;
-const COL_MAN_ESTADO_INSTALACION = 21;
+// Columnas que llena solo el sistema: llevan aviso de "columna automática".
+const MAN_AUTOMATICAS_SOLICITUDES = ['Fecha', 'Folio', 'Oficio (link Drive)', 'Fotos de equipos',
+  'Notificación de fecha programada enviada', 'Notificación a técnico enviada',
+  'Notificación de cierre enviada', 'ID de envío'];
+const MAN_AUTOMATICAS_REPORTES = ['PDF del reporte (link Drive)', 'Notificación de reporte enviada'];
 
 function manConfigurarValidacionYSemaforo() {
+  manConfigurarValidacionYSemaforo_();
+  try { SpreadsheetApp.getUi().alert('Validación y semáforo aplicados en Solicitudes y Reportes de visita.'); } catch (err) {}
+}
+
+function manConfigurarValidacionYSemaforo_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const solicitudes = ss.getSheetByName(HOJA_MAN_SOLICITUDES);
+  const solicitudes = ss.getSheetByName(HOJA_MAN_SOLICITUDES) ? manObtenerHojaSolicitudes() : null;
   if (solicitudes) {
-    manAplicarValidacionListaSuave_(solicitudes, COL_MAN_TURNO, MAN_TURNOS_VALIDOS);
-    manAplicarValidacionListaSuave_(solicitudes, COL_MAN_ESTADO_INSTALACION, MAN_ESTADOS_INSTALACION_VALIDOS);
-    manAplicarValidacionListaSuave_(solicitudes, COL_MAN_TIPO_SOLICITANTE_IDX + 1, MAN_TIPOS_SOLICITANTE_VALIDOS);
-    manAplicarSemaforoPorValor_(solicitudes, COL_MAN_ESTATUS, ESTADOS_MAN_VALIDOS, MAN_COLORES_ESTATUS);
-    [1, 2, 13, COL_MAN_NOTIFICACION_CIERRE, COL_MAN_NOTIFICACION_PROGRAMADA, COL_MAN_NOTIFICACION_TECNICO]
-      .forEach(function (col) { manProtegerColumnaAutomatica_(solicitudes, col); });
+    const col = function (n) { return manCol_(solicitudes, n); };
+    manAplicarValidacionListaSuave_(solicitudes, col('Turno'), MAN_TURNOS_VALIDOS);
+    manAplicarValidacionListaSuave_(solicitudes, col('Estado de instalación'), MAN_ESTADOS_INSTALACION_VALIDOS);
+    manAplicarValidacionListaSuave_(solicitudes, col('Tipo de solicitante'), MAN_TIPOS_SOLICITANTE_VALIDOS);
+    manAplicarSemaforoPorValor_(solicitudes, col('Estatus'), ESTADOS_MAN_VALIDOS, MAN_COLORES_ESTATUS);
+    MAN_AUTOMATICAS_SOLICITUDES.forEach(function (n) { manProtegerColumnaAutomatica_(solicitudes, col(n)); });
   }
   const reportes = ss.getSheetByName(HOJA_MAN_REPORTES);
   if (reportes) {
-    manAplicarSemaforoPorValor_(reportes, COL_MAN_REP_ESTADO_AULA, MAN_ESTADOS_AULA, MAN_COLORES_ESTADO_AULA);
-    [COL_MAN_REP_SIN_SOLICITUD, COL_MAN_REP_EQUIPOS_ADMIN_SI_NO, COL_MAN_REP_SEGUNDA_VISITA]
-      .forEach(function (col) { manAplicarValidacionListaSuave_(reportes, col, ['Sí', 'No']); });
-    manAplicarValidacionListaSuave_(reportes, COL_MAN_REP_TOOLWIZ, ['Sí', 'No', 'Ya estaba instalado']);
-    [COL_MAN_REP_PDF_URL, COL_MAN_REP_NOTIFICACION]
-      .forEach(function (col) { manProtegerColumnaAutomatica_(reportes, col); });
+    manAsegurarHojaReportes(ss); // completa encabezados y sus dropdowns
+    const col = function (n) { return manCol_(reportes, n); };
+    manAplicarSemaforoPorValor_(reportes, col('Estado del aula'), MAN_ESTADOS_AULA, MAN_COLORES_ESTADO_AULA);
+    ['Atención sin solicitud previa', '¿Se atendieron equipos administrativos?', '¿Requiere segunda visita?']
+      .forEach(function (n) { manAplicarValidacionListaSuave_(reportes, col(n), ['Sí', 'No']); });
+    manAplicarValidacionListaSuave_(reportes, col('¿Se instaló Toolwiz Time Freeze?'), ['Sí', 'No', 'Ya estaba instalado']);
+    MAN_AUTOMATICAS_REPORTES.forEach(function (n) { manProtegerColumnaAutomatica_(reportes, col(n)); });
   }
-  try { SpreadsheetApp.getUi().alert('Validación y semáforo aplicados en Solicitudes y Reportes de visita.'); } catch (err) {}
 }
 
 // Dropdown "suave": marca con triángulo de aviso un valor fuera de lista en
@@ -884,44 +936,35 @@ function manAsegurarHojaReportes(ss) {
           .setBackground('#56212f')
           .setFontColor('#F9F8F5');
     hoja.setFrozenRows(1);
-    hoja.setColumnWidth(6, 200);  // Aula en uso al llegar
-    hoja.setColumnWidth(8, 200);  // Equipos atendidos
-    hoja.setColumnWidth(16, 320); // Estado del aula
-    hoja.setColumnWidth(18, 240); // Observaciones
-    hoja.setColumnWidth(26, 280); // Descripción de la atención realizada
-    hoja.setColumnWidth(27, 240); // Fotografías de evidencia
+    [['Aula en uso al llegar', 200], ['Equipos atendidos', 200], ['Estado del aula', 320], ['Observaciones', 240],
+      ['Descripción de la atención realizada', 280], ['Fotografías de evidencia', 240]]
+      .forEach(function (p) { hoja.setColumnWidth(MR[p[0]] + 1, p[1]); });
   } else {
-    const colsActuales = hoja.getLastColumn();
-    if (colsActuales < ENCABEZADOS_MAN_REPORTES.length) {
-      const faltantes = ENCABEZADOS_MAN_REPORTES.slice(colsActuales);
-      hoja.getRange(1, colsActuales + 1, 1, faltantes.length)
-        .setValues([faltantes])
-        .setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
-    }
+    manCompletarEncabezados_(hoja, ENCABEZADOS_MAN_REPORTES);
   }
 
-  hoja.getRange(2, COL_MAN_REP_RESPONSABLE, 1000, 1).setDataValidation(
+  const col = function (n) { return manCol_(hoja, n); };
+  hoja.getRange(2, col('Responsable de visita'), 1000, 1).setDataValidation(
     SpreadsheetApp.newDataValidation().requireValueInList(Object.keys(MAN_TECNICOS), true).setAllowInvalid(true).build()
   );
-  hoja.getRange(2, COL_MAN_REP_ESTADO_AULA, 1000, 1).setDataValidation(
+  hoja.getRange(2, col('Estado del aula'), 1000, 1).setDataValidation(
     SpreadsheetApp.newDataValidation().requireValueInList(MAN_ESTADOS_AULA, true).setAllowInvalid(false).build()
   );
-  [COL_MAN_REP_SIN_SOLICITUD, COL_MAN_REP_EQUIPOS_ADMIN_SI_NO, COL_MAN_REP_SEGUNDA_VISITA].forEach(function (col) {
-    hoja.getRange(2, col, 1000, 1).setDataValidation(
+  ['Atención sin solicitud previa', '¿Se atendieron equipos administrativos?', '¿Requiere segunda visita?'].forEach(function (n) {
+    hoja.getRange(2, col(n), 1000, 1).setDataValidation(
       SpreadsheetApp.newDataValidation().requireValueInList(['Sí', 'No'], true).setAllowInvalid(true).build()
     );
   });
-  hoja.getRange(2, COL_MAN_REP_TOOLWIZ, 1000, 1).setDataValidation(
+  hoja.getRange(2, col('¿Se instaló Toolwiz Time Freeze?'), 1000, 1).setDataValidation(
     SpreadsheetApp.newDataValidation().requireValueInList(['Sí', 'No', 'Ya estaba instalado'], true).setAllowInvalid(true).build()
   );
 }
 
 // ── Generar folio único ──
 function manGenerarFolio(hoja) {
-  const datos  = hoja.getDataRange().getValues();
   const prefix = 'OTDE-MAN-';
-  const maxNum = datos.slice(1)
-    .map(row => String(row[1]))
+  const maxNum = manFilasCanonicas_(hoja, ENCABEZADOS_MAN_SOLICITUDES)
+    .map(row => String(row[MS['Folio']]))
     .filter(f => f.startsWith(prefix))
     .map(f => parseInt(f.replace(prefix, ''), 10) || 0)
     .reduce((a, b) => Math.max(a, b), 0);
@@ -1028,43 +1071,29 @@ function manCrearSolicitudUrgente_(datos) {
   const zona = String(datos.urgZona || '').toString().trim();
   const escuela = String(datos.urgEscuela || '').trim();
 
-  // Mismo orden que ENCABEZADOS_MAN_SOLICITUDES — las columnas que no aplican a una visita
-  // ya realizada (WhatsApp, Equipos con falla, Oficio, Tipo de equipo, etc.) quedan en blanco.
-  // Folio + alta bajo el mismo candado que el doPost de solicitudes, para que dos altas
-  // simultáneas no calculen el mismo folio (QA-NOTES #31).
+  // Las columnas que no aplican a una visita ya realizada (WhatsApp, Equipos con falla,
+  // Oficio, Tipo de equipo, etc.) quedan en blanco. Folio + alta bajo el mismo candado que
+  // el doPost de solicitudes, para que dos altas simultáneas no calculen el mismo folio
+  // (QA-NOTES #31).
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
   let folio;
   try {
     folio = manGenerarFolio(hoja);
-    hoja.appendRow([
-      new Date(),
-      folio,
-      nombre,
-      String(datos.urgFuncion).trim(),
-      cct,
-      sector,
-      zona,
-      escuela,
-      String(datos.urgTurno).trim(),
-      '',
-      correo,
-      '',
-      '',
-      'Resuelto',
-      'Generada automáticamente desde reporte de visita urgente (sin solicitud previa registrada).',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      ''
-    ]);
+    hoja.appendRow(manFilaRealDesdeObjeto_(hoja, {
+      'Fecha': new Date(),
+      'Folio': folio,
+      'Nombre': nombre,
+      'Función': String(datos.urgFuncion).trim(),
+      'Correo': correo,
+      'CCT': cct,
+      'Escuela': escuela,
+      'Sector': sector,
+      'Zona': zona,
+      'Turno': String(datos.urgTurno).trim(),
+      'Estatus': 'Resuelto',
+      'Notas de revisión': 'Generada automáticamente desde reporte de visita urgente (sin solicitud previa registrada).'
+    }));
     SpreadsheetApp.flush();
   } finally {
     lock.releaseLock();
@@ -1295,8 +1324,9 @@ function manBloquePreparacion_(info, titulo) {
 }
 
 // Lee de una fila de Solicitudes los datos que usa el bloque de preparación.
+// `fila` en orden canónico.
 function manInfoPreparacionDeFila_(fila) {
-  const col = n => ENCABEZADOS_MAN_SOLICITUDES.indexOf(n);
+  const col = n => MS[n];
   return {
     tipoEquipo: fila[col('Tipo de equipo')],
     marcaModelo: fila[col('Marca/Modelo')],
@@ -1360,27 +1390,29 @@ function manOnEditCierre(e) {
     const hoja = e.range.getSheet();
     if (hoja.getName() !== HOJA_MAN_SOLICITUDES) return;
 
+    const colEstatus = manCol_(hoja, 'Estatus');
+    const colNotificacion = manCol_(hoja, 'Notificación de cierre enviada');
     const colInicio = e.range.getColumn();
     const colFin = e.range.getLastColumn();
-    if (COL_MAN_ESTATUS < colInicio || COL_MAN_ESTATUS > colFin) return;
+    if (colEstatus < colInicio || colEstatus > colFin) return;
 
     const filaInicio = Math.max(e.range.getRow(), 2);
     const filaFin = e.range.getRow() + e.range.getNumRows() - 1;
 
     for (let fila = filaInicio; fila <= filaFin; fila++) {
-      const estatus = String(hoja.getRange(fila, COL_MAN_ESTATUS).getValue()).trim();
+      const estatus = String(hoja.getRange(fila, colEstatus).getValue()).trim();
       if (estatus !== 'Resuelto' && estatus !== 'Rechazado') continue;
 
-      const yaNotificado = String(hoja.getRange(fila, COL_MAN_NOTIFICACION_CIERRE).getValue()).trim();
+      const yaNotificado = String(hoja.getRange(fila, colNotificacion).getValue()).trim();
       if (yaNotificado === 'Sí') continue;
 
-      const datosFila = hoja.getRange(fila, 1, 1, ENCABEZADOS_MAN_SOLICITUDES.length).getValues()[0];
+      const datosFila = manFilaCanonica_(hoja, fila, ENCABEZADOS_MAN_SOLICITUDES);
       if (estatus === 'Resuelto') {
         manNotificarCierre(datosFila);
       } else {
         manNotificarRechazo(datosFila);
       }
-      hoja.getRange(fila, COL_MAN_NOTIFICACION_CIERRE).setValue('Sí');
+      hoja.getRange(fila, colNotificacion).setValue('Sí');
     }
   } catch (err) {
     // Silencioso: un fallo aquí no debe romper la edición del Sheet
@@ -1392,15 +1424,15 @@ function manOnEditCierre(e) {
 // sueltos como antes. ──
 function manNotificarCierre(fila) {
   try {
-    const folio = fila[1];
-    const nombre = fila[2];
-    const cct = fila[4];
-    const sector = fila[5];
-    const zona = fila[6];
-    const escuela = fila[7];
-    const correo = String(fila[10] || '').trim();
-    const notas = fila[14];
-    const tipoSolicitante = String(fila[COL_MAN_TIPO_SOLICITANTE_IDX] || '').trim();
+    const folio = fila[MS['Folio']];
+    const nombre = fila[MS['Nombre']];
+    const cct = fila[MS['CCT']];
+    const sector = fila[MS['Sector']];
+    const zona = fila[MS['Zona']];
+    const escuela = fila[MS['Escuela']];
+    const correo = String(fila[MS['Correo']] || '').trim();
+    const notas = fila[MS['Notas de revisión']];
+    const tipoSolicitante = String(fila[MS['Tipo de solicitante']] || '').trim();
 
     if (!correo) return;
 
@@ -1445,15 +1477,15 @@ function manNotificarCierre(fila) {
 // parcial de una solicitud ya enviada (decisión de Jorge, sep 2026). ──
 function manNotificarRechazo(fila) {
   try {
-    const folio = fila[1];
-    const nombre = fila[2];
-    const cct = fila[4];
-    const sector = fila[5];
-    const zona = fila[6];
-    const escuela = fila[7];
-    const correo = String(fila[10] || '').trim();
-    const motivo = String(fila[14] || '').trim();
-    const tipoSolicitante = String(fila[COL_MAN_TIPO_SOLICITANTE_IDX] || '').trim();
+    const folio = fila[MS['Folio']];
+    const nombre = fila[MS['Nombre']];
+    const cct = fila[MS['CCT']];
+    const sector = fila[MS['Sector']];
+    const zona = fila[MS['Zona']];
+    const escuela = fila[MS['Escuela']];
+    const correo = String(fila[MS['Correo']] || '').trim();
+    const motivo = String(fila[MS['Notas de revisión']] || '').trim();
+    const tipoSolicitante = String(fila[MS['Tipo de solicitante']] || '').trim();
 
     if (!correo) return;
 
@@ -1504,17 +1536,19 @@ function manOnEditProgramacion(e) {
     const hoja = e.range.getSheet();
     if (hoja.getName() !== HOJA_MAN_SOLICITUDES) return;
 
+    const colFecha = manCol_(hoja, 'Fecha programada de visita');
+    const colTecnico = manCol_(hoja, 'Técnico asignado');
     const colInicio = e.range.getColumn();
     const colFin = e.range.getLastColumn();
-    const tocaFecha = COL_MAN_FECHA_PROGRAMADA >= colInicio && COL_MAN_FECHA_PROGRAMADA <= colFin;
-    const tocaTecnico = COL_MAN_TECNICO_ASIGNADO >= colInicio && COL_MAN_TECNICO_ASIGNADO <= colFin;
+    const tocaFecha = colFecha >= colInicio && colFecha <= colFin;
+    const tocaTecnico = colTecnico >= colInicio && colTecnico <= colFin;
     if (!tocaFecha && !tocaTecnico) return;
 
     const filaInicio = Math.max(e.range.getRow(), 2);
     const filaFin = e.range.getRow() + e.range.getNumRows() - 1;
 
     for (let fila = filaInicio; fila <= filaFin; fila++) {
-      const datosFila = hoja.getRange(fila, 1, 1, ENCABEZADOS_MAN_SOLICITUDES.length).getValues()[0];
+      const datosFila = manFilaCanonica_(hoja, fila, ENCABEZADOS_MAN_SOLICITUDES);
       const fechaProgramada = datosFila[COL_MAN_FECHA_PROGRAMADA - 1];
       const tecnicoAsignado = String(datosFila[COL_MAN_TECNICO_ASIGNADO - 1] || '').trim();
 
@@ -1522,7 +1556,7 @@ function manOnEditProgramacion(e) {
         const yaNotificadoFecha = String(datosFila[COL_MAN_NOTIFICACION_PROGRAMADA - 1] || '').trim();
         if (yaNotificadoFecha !== 'Sí') {
           manNotificarFechaProgramada(datosFila);
-          hoja.getRange(fila, COL_MAN_NOTIFICACION_PROGRAMADA).setValue('Sí');
+          hoja.getRange(fila, manCol_(hoja, 'Notificación de fecha programada enviada')).setValue('Sí');
         }
       }
 
@@ -1530,7 +1564,7 @@ function manOnEditProgramacion(e) {
         const yaNotificadoTecnico = String(datosFila[COL_MAN_NOTIFICACION_TECNICO - 1] || '').trim();
         if (yaNotificadoTecnico !== 'Sí') {
           manNotificarTecnicoAsignado(datosFila);
-          hoja.getRange(fila, COL_MAN_NOTIFICACION_TECNICO).setValue('Sí');
+          hoja.getRange(fila, manCol_(hoja, 'Notificación a técnico enviada')).setValue('Sí');
         }
       }
     }
@@ -1544,14 +1578,14 @@ function manOnEditProgramacion(e) {
 // patrón que manNotificarCierre. ──
 function manNotificarFechaProgramada(fila) {
   try {
-    const folio = fila[1];
-    const nombre = fila[2];
-    const cct = fila[4];
-    const sector = fila[5];
-    const zona = fila[6];
-    const escuela = fila[7];
-    const correo = String(fila[10] || '').trim();
-    const tipoSolicitante = String(fila[COL_MAN_TIPO_SOLICITANTE_IDX] || '').trim();
+    const folio = fila[MS['Folio']];
+    const nombre = fila[MS['Nombre']];
+    const cct = fila[MS['CCT']];
+    const sector = fila[MS['Sector']];
+    const zona = fila[MS['Zona']];
+    const escuela = fila[MS['Escuela']];
+    const correo = String(fila[MS['Correo']] || '').trim();
+    const tipoSolicitante = String(fila[MS['Tipo de solicitante']] || '').trim();
     const fechaProgramadaRaw = fila[COL_MAN_FECHA_PROGRAMADA - 1];
     const fechaProgramada = fechaProgramadaRaw instanceof Date
       ? Utilities.formatDate(fechaProgramadaRaw, 'America/Mexico_City', 'dd/MM/yyyy')
@@ -1600,14 +1634,14 @@ function manNotificarFechaProgramada(fila) {
 // técnico asignado — ver manOnEditProgramacion. ──
 function manNotificarTecnicoAsignado(fila) {
   try {
-    const folio = fila[1];
-    const nombre = fila[2];
-    const whatsapp = fila[9];
-    const cct = fila[4];
-    const sector = fila[5];
-    const zona = fila[6];
-    const escuela = fila[7];
-    const equipos = fila[11];
+    const folio = fila[MS['Folio']];
+    const nombre = fila[MS['Nombre']];
+    const whatsapp = fila[MS['WhatsApp']];
+    const cct = fila[MS['CCT']];
+    const sector = fila[MS['Sector']];
+    const zona = fila[MS['Zona']];
+    const escuela = fila[MS['Escuela']];
+    const equipos = fila[MS['Equipos con falla']];
     const tecnico = String(fila[COL_MAN_TECNICO_ASIGNADO - 1] || '').trim();
     const correoTecnico = MAN_TECNICOS[tecnico];
     if (!correoTecnico) return; // el texto capturado no coincide con MAN_TECNICOS
@@ -1628,8 +1662,8 @@ function manNotificarTecnicoAsignado(fila) {
         { icono: '🏢', etiqueta: 'Sector / Zona', valor: 'Sector ' + manEscapeHtml_(sector) + ' · Zona ' + manEscapeHtml_(zona) },
         { icono: '🛠️', etiqueta: 'Equipos con falla reportados', valor: manEscapeHtml_(equipos || '—') },
         { icono: '👤', etiqueta: 'Contacto en la escuela', valor: manEscapeHtml_(nombre) + (whatsapp ? ' · WhatsApp ' + manEscapeHtml_(whatsapp) : '') }
-      ].concat(fila[ENCABEZADOS_MAN_SOLICITUDES.indexOf('Fotos de equipos')]
-        ? [{ icono: '📷', etiqueta: 'Fotos de los equipos', valor: '<a href="' + fila[ENCABEZADOS_MAN_SOLICITUDES.indexOf('Fotos de equipos')] + '" style="color:#9F2241;">Ver fotos que envió la escuela</a>' }]
+      ].concat(fila[MS['Fotos de equipos']]
+        ? [{ icono: '📷', etiqueta: 'Fotos de los equipos', valor: '<a href="' + fila[MS['Fotos de equipos']] + '" style="color:#9F2241;">Ver fotos que envió la escuela</a>' }]
         : []).concat(manNecesitaPilaCmos_(manInfoPreparacionDeFila_(fila))
         ? [{ icono: '🔋', etiqueta: 'Posible pila CMOS', valor: 'La escuela reporta fecha/hora equivocada o modelo HP Mini. Lleva pilas CR2032 de repuesto por si no las consiguieron.' }]
         : []),
@@ -1670,17 +1704,17 @@ function manNotificarTecnicoAsignado(fila) {
 function manBuscarSolicitudPorFolio_(folio) {
   const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_MAN_SOLICITUDES);
   if (!hoja) return null;
-  const filas = hoja.getDataRange().getValues().slice(1);
-  const fila = filas.find(r => String(r[1]).trim().toUpperCase() === folio);
+  const fila = manFilasCanonicas_(hoja, ENCABEZADOS_MAN_SOLICITUDES)
+    .find(r => String(r[MS['Folio']]).trim().toUpperCase() === folio);
   if (!fila) return null;
   return {
-    folio: fila[1],
-    nombre: fila[2],
-    cct: fila[4],
-    sector: fila[5],
-    zona: fila[6],
-    escuela: fila[7],
-    correo: String(fila[10] || '').trim()
+    folio: fila[MS['Folio']],
+    nombre: fila[MS['Nombre']],
+    cct: fila[MS['CCT']],
+    sector: fila[MS['Sector']],
+    zona: fila[MS['Zona']],
+    escuela: fila[MS['Escuela']],
+    correo: String(fila[MS['Correo']] || '').trim()
   };
 }
 
@@ -1691,11 +1725,12 @@ function manBuscarSolicitudPorFolio_(folio) {
 // buscar solo por folio sigue siendo correcto. Para el doPost del
 // formulario del técnico usar manBuscarFilaReportePorFolioYFecha_ de abajo,
 // que además distingue por fecha (ver esa función). ──
+// `datos` en orden canónico de ENCABEZADOS_MAN_REPORTES.
 function manBuscarFilaReportePorFolio_(hoja, folio) {
-  const valores = hoja.getDataRange().getValues();
-  for (let i = 1; i < valores.length; i++) {
+  const valores = manFilasCanonicas_(hoja, ENCABEZADOS_MAN_REPORTES);
+  for (let i = 0; i < valores.length; i++) {
     if (String(valores[i][COL_MAN_REP_FOLIO - 1]).trim().toUpperCase() === folio) {
-      return { rowIndex: i + 1, datos: valores[i] };
+      return { rowIndex: i + 2, datos: valores[i] };
     }
   }
   return null;
@@ -1713,12 +1748,12 @@ function manBuscarFilaReportePorFolio_(hoja, folio) {
 // día distinto ya no hace match, así que manDoPostReporteVisita_ hace
 // appendRow en vez de sobrescribir. ──
 function manBuscarFilaReportePorFolioYFecha_(hoja, folio, fechaAtencion) {
-  const valores = hoja.getDataRange().getValues();
-  for (let i = 1; i < valores.length; i++) {
+  const valores = manFilasCanonicas_(hoja, ENCABEZADOS_MAN_REPORTES);
+  for (let i = 0; i < valores.length; i++) {
     if (String(valores[i][COL_MAN_REP_FOLIO - 1]).trim().toUpperCase() !== folio) continue;
     const fechaFila = valores[i][COL_MAN_REP_FECHA_ATENCION - 1];
     if (manMismoDiaCalendario_(fechaFila, fechaAtencion)) {
-      return { rowIndex: i + 1, datos: valores[i] };
+      return { rowIndex: i + 2, datos: valores[i] };
     }
   }
   return null;
@@ -2086,8 +2121,8 @@ function manGenerarYEnviarReporteVisita() {
   const urlPDF = manGuardarPDFReporte_(pdfBlob);
   manEnviarReporteVisita_(solicitud, filaReporte.datos, pdfBlob);
 
-  hojaReportes.getRange(filaReporte.rowIndex, COL_MAN_REP_PDF_URL).setValue(urlPDF);
-  hojaReportes.getRange(filaReporte.rowIndex, COL_MAN_REP_NOTIFICACION).setValue('Sí');
+  hojaReportes.getRange(filaReporte.rowIndex, manCol_(hojaReportes, 'PDF del reporte (link Drive)')).setValue(urlPDF);
+  hojaReportes.getRange(filaReporte.rowIndex, manCol_(hojaReportes, 'Notificación de reporte enviada')).setValue('Sí');
   ui.alert('Reporte enviado a la escuela, el técnico y OTDE.');
 }
 
@@ -2142,45 +2177,45 @@ function manDoPostReporteVisita_(datos) {
   // aunque el cliente ya lo exige (defensa en profundidad).
   const urlsFotos = manSubirFotosReporte_(folio, datos.fotos);
 
-  // Mismo orden que ENCABEZADOS_MAN_REPORTES — PDF y Notificación se llenan
-  // después de generar el reporte, abajo. Las 7 columnas nuevas del
-  // rediseño van al final (U-AA), después de esos dos placeholders.
-  const filaValores = [
-    folio,
-    String(datos.responsable || '').trim(),
-    fechaAtencion,
-    inicioVisita,
-    finVisita,
-    String(datos.aulaEnUso || '').trim(),
-    String(datos.mobiliario || '').trim(),
-    String(datos.equiposAtendidos || '').trim(),
-    String(datos.equiposFuncionales || '').trim(),
-    String(datos.equiposNoFuncionales || '').trim(),
-    String(datos.conectividad || '').trim(),
-    String(datos.actividadesPreventivas || '').trim(),
-    String(datos.actividadesCorrectivas || '').trim(),
-    String(datos.instalacionRealizada || '').trim(),
-    String(datos.equiposAdministrativos || '').trim(),
-    String(datos.estadoAula || '').trim(),
-    String(datos.seguimientoRequerido || '').trim(),
-    String(datos.observaciones || '').trim(),
-    '',
-    '',
-    String(datos.atencionSinSolicitud || '').trim(),
-    String(datos.modeloEquipo || '').trim(),
-    String(datos.equiposAdministrativosSiNo || '').trim(),
-    String(datos.toolwizTimeFreeze || '').trim(),
-    String(datos.segundaVisitaRequerida || '').trim(),
-    String(datos.descripcionAtencion || '').trim(),
-    urlsFotos.join('\n'),
-    manEnteroNoNegativo_(datos.docentes),
-    manEnteroNoNegativo_(datos.alumnos),
-    String(datos.tipoAtencion || '').trim(),
-    String(datos.areaAdministrativa || '').trim(),
-    String(datos.equiposAdminFuncionales || '').trim(),
-    String(datos.informacionRespaldada || '').trim(),
-    String(datos.pilaCmos || '').trim()
-  ];
+  // Se arma por nombre; filaValores es la fila canónica (orden de ENCABEZADOS_MAN_REPORTES)
+  // que usan la validación, el PDF y el correo. PDF y Notificación se llenan después.
+  const valores = {
+    'Folio': folio,
+    'Atención sin solicitud previa': String(datos.atencionSinSolicitud || '').trim(),
+    'Responsable de visita': String(datos.responsable || '').trim(),
+    'Fecha de atención': fechaAtencion,
+    'Inicio de la visita': inicioVisita,
+    'Fin de la visita': finVisita,
+    'Tipo de atención': String(datos.tipoAtencion || '').trim(),
+    'Aula en uso al llegar': String(datos.aulaEnUso || '').trim(),
+    'Mobiliario': String(datos.mobiliario || '').trim(),
+    'Docentes de la escuela': manEnteroNoNegativo_(datos.docentes),
+    'Alumnos de la escuela': manEnteroNoNegativo_(datos.alumnos),
+    'Equipos atendidos': String(datos.equiposAtendidos || '').trim(),
+    'Equipos funcionales': String(datos.equiposFuncionales || '').trim(),
+    'Equipos no funcionales': String(datos.equiposNoFuncionales || '').trim(),
+    'Conectividad': String(datos.conectividad || '').trim(),
+    '¿Se atendieron equipos administrativos?': String(datos.equiposAdministrativosSiNo || '').trim(),
+    'Equipos administrativos': String(datos.equiposAdministrativos || '').trim(),
+    'Área administrativa atendida': String(datos.areaAdministrativa || '').trim(),
+    'Equipos administrativos funcionales': String(datos.equiposAdminFuncionales || '').trim(),
+    'Información respaldada': String(datos.informacionRespaldada || '').trim(),
+    'Modelo/marca del equipo': String(datos.modeloEquipo || '').trim(),
+    'Pila CMOS': String(datos.pilaCmos || '').trim(),
+    'Actividades preventivas': String(datos.actividadesPreventivas || '').trim(),
+    'Actividades correctivas': String(datos.actividadesCorrectivas || '').trim(),
+    'Instalación realizada': String(datos.instalacionRealizada || '').trim(),
+    '¿Se instaló Toolwiz Time Freeze?': String(datos.toolwizTimeFreeze || '').trim(),
+    'Estado del aula': String(datos.estadoAula || '').trim(),
+    '¿Requiere segunda visita?': String(datos.segundaVisitaRequerida || '').trim(),
+    'Seguimiento requerido': String(datos.seguimientoRequerido || '').trim(),
+    'Fotografías de evidencia': urlsFotos.join('\n'),
+    'Descripción de la atención realizada': String(datos.descripcionAtencion || '').trim(),
+    'Observaciones': String(datos.observaciones || '').trim(),
+    'PDF del reporte (link Drive)': '',
+    'Notificación de reporte enviada': ''
+  };
+  const filaValores = ENCABEZADOS_MAN_REPORTES.map(function (h) { return h in valores ? valores[h] : ''; });
 
   const faltantes = manValidarDatosReporte_(filaValores);
   if (faltantes.length) {
@@ -2191,10 +2226,14 @@ function manDoPostReporteVisita_(datos) {
   const filaExistente = manBuscarFilaReportePorFolioYFecha_(hojaReportes, folio, fechaAtencion);
   let rowIndex;
   if (filaExistente) {
+    // Misma fila (mismo folio y día): se reescribe por nombre, conservando lo que no se
+    // nombra (columnas agregadas a mano).
     rowIndex = filaExistente.rowIndex;
-    hojaReportes.getRange(rowIndex, 1, 1, filaValores.length).setValues([filaValores]);
+    const ancho = hojaReportes.getLastColumn();
+    const base = hojaReportes.getRange(rowIndex, 1, 1, ancho).getValues()[0];
+    hojaReportes.getRange(rowIndex, 1, 1, ancho).setValues([manFilaRealDesdeObjeto_(hojaReportes, valores, base)]);
   } else {
-    hojaReportes.appendRow(filaValores);
+    hojaReportes.appendRow(manFilaRealDesdeObjeto_(hojaReportes, valores));
     rowIndex = hojaReportes.getLastRow();
   }
 
@@ -2202,8 +2241,8 @@ function manDoPostReporteVisita_(datos) {
   const urlPDF = manGuardarPDFReporte_(pdfBlob);
   manEnviarReporteVisita_(solicitud, filaValores, pdfBlob);
 
-  hojaReportes.getRange(rowIndex, COL_MAN_REP_PDF_URL).setValue(urlPDF);
-  hojaReportes.getRange(rowIndex, COL_MAN_REP_NOTIFICACION).setValue('Sí');
+  hojaReportes.getRange(rowIndex, manCol_(hojaReportes, 'PDF del reporte (link Drive)')).setValue(urlPDF);
+  hojaReportes.getRange(rowIndex, manCol_(hojaReportes, 'Notificación de reporte enviada')).setValue('Sí');
 
   return manTextResponse(JSON.stringify({ status: 'ok', folio: folio, urlPDF: urlPDF }));
 }
@@ -2268,6 +2307,93 @@ function manDesinstalarTriggerProgramacion() {
   try { SpreadsheetApp.getUi().alert(quitados + ' trigger(s) de programación eliminado(s).'); } catch (err) {}
 }
 
+// ============================================================
+// REORDENAR COLUMNAS (oct 2026) — mismo patrón que reordenarColumnasCursos_() de
+// formacion-docente.gs y aseReordenarColumnasSolicitudes_() de asesorias.gs. Deja
+// Solicitudes y "Reportes de visita" en el orden de sus ENCABEZADOS_* moviendo cada
+// columna con moveColumns() (se conservan formatos, dropdowns, semáforo y protecciones).
+// Antes de mover deja una copia completa "<Hoja>_respaldo_AAAAMMDD" y después compara
+// columna por columna. Las columnas que no son del sistema (agregadas a mano) se quedan al
+// final, con sus datos. Toma el mismo candado que doPost.
+// ============================================================
+function manReordenarColumnas() {
+  SpreadsheetApp.getUi().alert(manReordenarColumnas_().mensaje);
+}
+
+function manReordenarColumnas_() {
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(30000)) {
+    return { ok: false, mensaje: 'Hay una solicitud o un reporte registrándose en este momento. Intenta de nuevo en unos segundos.' };
+  }
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const solicitudes = manObtenerHojaSolicitudes(); // completa encabezados de ambas hojas
+    const reportes = ss.getSheetByName(HOJA_MAN_REPORTES);
+    SpreadsheetApp.flush();
+    const resultados = [
+      manReordenarHoja_(ss, solicitudes, ENCABEZADOS_MAN_SOLICITUDES),
+      manReordenarHoja_(ss, reportes, ENCABEZADOS_MAN_REPORTES)
+    ];
+    const fallida = resultados.filter(function (r) { return !r.ok; })[0];
+    if (fallida) return fallida;
+    manConfigurarValidacionYSemaforo_();
+    ss.setActiveSheet(solicitudes);
+    return { ok: true, mensaje: 'Listo. ' + resultados.map(function (r) { return r.mensaje; }).join(' ') };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function manReordenarHoja_(ss, hoja, encabezados) {
+  const antes = hoja.getDataRange().getValues();
+  const enc = antes[0].map(function (h) { return String(h).trim(); });
+  const nombre = hoja.getName();
+  if (encabezados.every(function (h, k) { return enc[k] === h; })) {
+    return { ok: true, mensaje: nombre + ' ya estaba en el orden nuevo.' };
+  }
+
+  const tz = 'America/Mexico_City';
+  let nombreRespaldo = nombre + '_respaldo_' + Utilities.formatDate(new Date(), tz, 'yyyyMMdd');
+  if (ss.getSheetByName(nombreRespaldo)) nombreRespaldo += '_' + Utilities.formatDate(new Date(), tz, 'HHmm');
+  const respaldo = hoja.copyTo(ss).setName(nombreRespaldo);
+  respaldo.setTabColor('#948A8E');
+  ss.setActiveSheet(respaldo);
+  ss.moveActiveSheet(ss.getNumSheets());
+
+  encabezados.forEach(function (h, k) {
+    const i = enc.indexOf(h);
+    if (i === -1 || i === k) return;
+    hoja.moveColumns(hoja.getRange(1, i + 1), k + 1);
+    enc.splice(k, 0, enc.splice(i, 1)[0]);
+  });
+  SpreadsheetApp.flush();
+
+  const despues = hoja.getDataRange().getValues();
+  const idxAntes = manIndicesReales_(antes[0]);
+  const idxDespues = manIndicesReales_(despues[0]);
+  const valor = function (v) { return v instanceof Date ? v.getTime() : String(v); };
+  const diferencias = [];
+  if (despues.length !== antes.length) diferencias.push('filas ' + antes.length + ' → ' + despues.length);
+  if (despues[0].length !== antes[0].length) diferencias.push('columnas ' + antes[0].length + ' → ' + despues[0].length);
+  Object.keys(idxAntes).forEach(function (h) {
+    if (!(h in idxDespues)) { diferencias.push('falta ' + h); return; }
+    for (let r = 1; r < antes.length; r++) {
+      if (valor(antes[r][idxAntes[h]]) !== valor((despues[r] || [])[idxDespues[h]])) {
+        diferencias.push(h + ' fila ' + (r + 1));
+        break;
+      }
+    }
+  });
+  if (diferencias.length) {
+    return { ok: false, mensaje: 'ATENCIÓN: en ' + nombre + ' la verificación encontró diferencias (' +
+      diferencias.slice(0, 5).join('; ') + '). Los datos originales están completos en la hoja "' + nombreRespaldo +
+      '". No captures nada y avisa antes de continuar.' };
+  }
+  const extras = enc.slice(encabezados.length).filter(Boolean);
+  return { ok: true, mensaje: nombre + ': ' + (antes.length - 1) + ' fila(s) verificadas columna por columna, respaldo "' +
+    nombreRespaldo + '".' + (extras.length ? ' Columnas agregadas a mano que dejé al final: ' + extras.join(', ') + '.' : '') };
+}
+
 // ── Menú del Sheet ──
 function onOpen() {
   SpreadsheetApp.getUi()
@@ -2278,6 +2404,7 @@ function onOpen() {
     .addItem('Desinstalar trigger de programación de visita', 'manDesinstalarTriggerProgramacion')
     .addItem('Generar y enviar reporte de visita', 'manGenerarYEnviarReporteVisita')
     .addItem('Aplicar validación y semáforo', 'manConfigurarValidacionYSemaforo')
+    .addItem('Reordenar columnas (Solicitudes y Reportes de visita)', 'manReordenarColumnas')
     .addToUi();
 }
 

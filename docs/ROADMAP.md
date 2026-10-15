@@ -971,12 +971,13 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     Asesorías ya está (versión 20, hoja reordenada y verificada en vivo; ver
     `docs/ARCHITECTURE.md §33`). Falta, uno por sesión y con el mismo procedimiento (simulación
     con las filas reales → pegar y Nueva versión → menú "Reordenar" → releer la hoja):
-    (a) **Mantenimiento** — `Solicitudes` y "Reportes de visita" (la más grande; también la lee
-    `bitacora.gs` vía `?action=reportesMes` y Oficios vía `oficiosOV`, ambos por JSON);
+    ~~(a) **Mantenimiento**~~ — hecho el 15 oct 2026 (versión 27, 31 solicitudes y 12 reportes
+    verificados en vivo);
     (b) **Soporte**; (c) **Correo** — 5 hojas en un solo proyecto, `Seguimiento.gs` ya escribe por
     nombre; conservar al final las columnas a mano (`NOTAS` ×3 en Incidencias, `OBSERVACIONES`/
     `NOTAS` en Alta, la columna sin título de Marcos) poniéndole título a la que no tiene.
-    Borrar `Solicitudes_respaldo_20261015` de Asesorías cuando ya no se necesite.
+    Borrar los respaldos `*_respaldo_20261015` (Asesorías: 1; Mantenimiento: 2) cuando ya no se
+    necesiten.
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue

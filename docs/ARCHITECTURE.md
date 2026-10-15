@@ -3202,7 +3202,24 @@ código pegado vía Chrome (hash comparado contra el repo antes y después), ver
 implementación, `curl` de solo lectura, "Reordenar" corrido ("2 solicitud(es) verificadas") y la
 hoja releída con el conector de Drive. Respaldo: `Solicitudes_respaldo_20261015`.
 
-**Pendiente:** Mantenimiento (`Solicitudes` + "Reportes de visita", ~33 constantes
-`COL_MAN_REP_*`), Soporte y Correo (5 hojas; columnas a mano `NOTAS`/`OBSERVACIONES` y una sin
+**Mantenimiento (15 oct 2026, versión 27).** Dos hojas: `Solicitudes` (orden de
+`mantenimiento.html`: registro → quién la pide → centro de trabajo → equipos y falla →
+atención → automáticas) y "Reportes de visita" (orden de `reporte-visita.html`: identificación →
+tipo de atención → al llegar → aula → administrativos → modelos y pila → actividades → resultado
+→ evidencia → automáticas). Para no reescribir las ~40 lecturas del PDF y de
+`manValidarDatosReporte_()`, las constantes `COL_MAN_*`/`COL_MAN_REP_*` se conservan pero se
+**derivan del nombre** (`MR['Pila CMOS'] + 1`) y solo se usan sobre filas canónicas; todo lo que
+toca la hoja usa `manCol_()`. El reporte del técnico se arma como objeto por nombre y, si
+reescribe una fila del mismo folio y día, conserva las columnas a mano
+(`manFilaRealDesdeObjeto_(hoja, valores, base)`). Simulación local con filas reales: 39
+comprobaciones, incluido el PDF real (administrativo y de aula). En producción: hash del editor
+igual al repo, versión 27, `curl` de solo lectura antes y después, "Reordenar" → 31 solicitudes y
+12 reportes verificados; hojas releídas con el conector de Drive. Al reordenar se agregaron las
+columnas del 14 oct que aún no existían (`Confirmó respaldo`, `Fotos de equipos`, `Síntoma de pila
+CMOS`, `Tipo de atención`, `Área administrativa atendida`, `Equipos administrativos funcionales`,
+`Información respaldada`, `Pila CMOS`). Respaldos: `Solicitudes_respaldo_20261015` y
+`Reportes de visita_respaldo_20261015`.
+
+**Pendiente:** Soporte y Correo (5 hojas; columnas a mano `NOTAS`/`OBSERVACIONES` y una sin
 título donde Marcos anota, que se conservan al final con título). Ver `docs/ROADMAP.md` ítem 34.
 

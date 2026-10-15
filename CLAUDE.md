@@ -396,6 +396,14 @@ ya esté expandido).
   los campos del aula (van como "No aplica"/0), columnas AD-AH en "Reportes de visita", estado
   "⚫ No se pudo trabajar". Endpoint `?action=mantenimientoPorCct` (`PANEL_TOKEN`) para la
   verificación de Asesorías, con hoja opcional `Historico_v8.5`. Ver `docs/ARCHITECTURE.md §32`.
+- **Columnas por nombre y orden por bloques (15 oct 2026, en producción y verificado en vivo,
+  versión 27)**: mismo patrón que Asesorías. `ENCABEZADOS_MAN_SOLICITUDES` y
+  `ENCABEZADOS_MAN_REPORTES` siguen el orden de `mantenimiento.html` y `reporte-visita.html`;
+  las constantes `COL_MAN_*`/`COL_MAN_REP_*` ahora se derivan del nombre (`MS`/`MR`) y solo
+  valen sobre filas canónicas (`manFilasCanonicas_()`, `manFilaCanonica_()`); para escribir en
+  la hoja, `manCol_()` y `manFilaRealDesdeObjeto_()`. Menú "Reordenar columnas (Solicitudes y
+  Reportes de visita)" (`manReordenarColumnas_()`), ya corrido en producción. Ver
+  `docs/ARCHITECTURE.md §33`.
 
 ### `apps-script/asesorias.gs`
 - **Nuevo (ago 2026)**: mismo patrón que `mantenimiento.gs` (Sheet propio con hojas

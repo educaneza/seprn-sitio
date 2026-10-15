@@ -15,6 +15,20 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-10-15 (cont. 4) · Mantenimiento: columnas por nombre y las dos hojas reordenadas por bloques
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-15 |
+| **Sesión** | Segundo trámite del reordenamiento (ROADMAP 34), mismo procedimiento que el piloto de Asesorías. |
+| **Código** | `apps-script/mantenimiento.gs`: `ENCABEZADOS_MAN_SOLICITUDES` (orden de `mantenimiento.html`) y `ENCABEZADOS_MAN_REPORTES` (orden de `reporte-visita.html`) por bloques; mapas `MS`/`MR`; `COL_MAN_*`/`COL_MAN_REP_*` derivadas del nombre y usadas solo sobre filas canónicas (así las lecturas del PDF y de la validación del reporte no cambiaron); helpers `manFilasCanonicas_()`, `manFilaCanonica_()`, `manCol_()`, `manFilaRealDesdeObjeto_()`, `manCompletarEncabezados_()`. Reescritos por nombre: alta, caso urgente, reporte del técnico (conserva columnas a mano al reescribir el mismo folio y día), consultas (Oficina Virtual, Panel, `reportesMes`, `mantenimientoPorCct`), los dos `onEdit` y sus 4 avisos, validaciones, semáforo y protecciones. Menú nuevo "Reordenar columnas (Solicitudes y Reportes de visita)". Mismos 30 y 34 encabezados que antes (comparados por nombre). |
+| **Verificación** | Simulación local con filas reales y columnas a mano: 39 de 39 comprobaciones (incluye el PDF real, administrativo y de aula, y los avisos de fecha, técnico, cierre y rechazo). En producción vía Chrome: editor idéntico al repo (SHA-256) antes y al archivo nuevo después; versión 27 en la misma implementación; `curl` de solo lectura antes y después; "Reordenar" → "Solicitudes: 31 fila(s) verificadas… Reportes de visita: 12 fila(s) verificadas", con respaldos `Solicitudes_respaldo_20261015` y `Reportes de visita_respaldo_20261015`; hojas releídas con el conector de Drive y captura con `Estatus`/`Técnico asignado` con su dropdown y color. El reordenamiento agregó las 8 columnas del 14 oct que aún no existían en las hojas reales. |
+| **Pendiente** | Soporte y Correo, uno por sesión (ROADMAP 34). Borrar los 3 respaldos del 15 oct cuando ya no hagan falta. |
+| **Documentación actualizada** | Este checkpoint, `docs/ARCHITECTURE.md` §33, `docs/ROADMAP.md` ítem 34, `CLAUDE.md` (sección de `mantenimiento.gs`), `docs/TABLERO-SALUD.md` (fila de Mantenimiento). |
+| **Commits** | El de este cambio (código + documentación). |
+
+---
+
 ## CHECKPOINT — 2026-10-15 (cont. 3) · Asesorías: columnas por nombre y hoja reordenada por bloques (piloto)
 
 | | |
