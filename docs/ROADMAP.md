@@ -507,8 +507,12 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
      `reporte-visita.html`. Lo único que sostiene a v8.5 es el reporte mensual; Jorge no está
      seguro de si ya lo saca completo de la Bitácora OTDE (`?action=reportesMes`, META 21/N.P. 7).
      Si al armar el próximo reporte mensual no abre v8.5, se puede apagar (Fase 4).
-   - **Fase 4 — no iniciada**: decidir el destino del histórico de v8.5 (380 aulas, reportes ya
-     generados — probablemente archivo de solo lectura, no migración) y el corte real.
+   - **15 oct 2026:** se borraron los activadores del proyecto "OTDE Reportes" (`onFormSubmit`,
+     `onEditDespacho`, `organizarFotosNocturno`, ninguno se había ejecutado). v8.5 ya no corre nada
+     automático; el proyecto y sus datos siguen ahí.
+   - **Fase 4 — no iniciada**: el histórico de v8.5 (380 aulas) **no** se migra ni se carga a
+     `Historico_v8.5` (Jorge, 15 oct 2026: se arranca de cero; queda como archivo de solo
+     lectura). Falta solo el corte real.
    Detalle completo del diseño de la Fase 1 y de la verificación en vivo de v8.5 que precedió la
    Fase 2 en `docs/BITACORA.md`, checkpoints 24 ago 2026 y 25 ago 2026.
 10. **Tamaño del repo — riesgo de timeout en el deploy y de tocar el límite de 1 GB de GitHub
@@ -650,8 +654,11 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     verificado en producción 16 sep 2026 — ver `docs/ARCHITECTURE.md` §"Doble registro" y
     `docs/BITACORA.md`, checkpoint 16 sep 2026 cont. 3): flujo guiado de 3 pasos, `Registro_externo`
     persistido en `Inscripciones`, `LockService` en `doPost` y recordatorio automático con
-    confirmación de un toque. Pendiente, en orden: (a) decidir si se renumera una de las dos
-    filas del folio duplicado `OTDE-CAP-0089` (datos sin tocar, ver `docs/QA-NOTES.md #31`); (b)
+    confirmación de un toque. Pendiente, en orden: ~~(a) decidir si se renumera una de las dos
+    filas del folio duplicado `OTDE-CAP-0089`~~ — resuelto 15 oct 2026: la fila registrada 1 s
+    después (fila 189, Diogenes Mendez Lopez) pasó a `OTDE-CAP-0626` (el máximo era 0625), con
+    nota en `Notas`; su curso (`ACF-2627-001`) no tiene registro externo ni constancia, así que no
+    quedaron ligas firmadas apuntando a la otra fila; (b)
     Paso 5 — reconciliar `Registro_externo` con la lista real de inscritos de Aula Digital cuando
     CoEEE la tenga disponible (hoy esa lista solo es obtenible *a veces*); (c) borrar las hojas
     de respaldo cuando ya no se necesiten: `Inscripciones_respaldo_20260916`/`..._2318` y, del
@@ -936,19 +943,22 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     real un `.docx` generado (solo se revisó con `python-docx` y unzip); (c) decidir si se enlaza
     desde `asesorias.html` (tipo "Excel básico") o desde una tarjeta de `oficina-virtual.html`
     (hoy no, por decisión de Jorge). Ver `docs/ARCHITECTURE.md §30`.
-33. **Mejoras de operación del 14 oct 2026 — desplegar los `.gs` y verificar en vivo.** Las
-    páginas ya están en producción; los 3 backends no. Falta: (a) Jorge despliega Correo
-    (`Seguimiento.gs` nuevo + 10 modificados, una sola Nueva versión, luego "Preparar columnas
-    de seguimiento SIGEE"), Mantenimiento ("Aplicar validación y semáforo") y Asesorías
-    ("Configurar conexión con Mantenimiento", "Probar verificación", "Aplicar validación y
-    semáforo"), en ese orden; (b) una prueba por sistema con modo de prueba activo (rechazo de
-    Correo y fechas de SIGEE; solicitud de Mantenimiento con fotos y equipo administrativo;
-    reporte "solo administrativo"; asesoría de Banco de Materiales); (c) confirmar con los
-    técnicos que la pila es CR2032; (d) decidir a qué correo más llega el resumen semanal de
-    Correo; (e) cuando exista, la lista de CCT del histórico de v8.5 en una hoja
-    `Historico_v8.5` del Sheet de Mantenimiento (sin cambios de código); (f) opcional: correo de
-    seguimiento a los 3 días con botón "Ya vinculé un segundo dispositivo" (patrón HMAC del
-    doble registro), cuando haya datos de "Motivo de pérdida de acceso". Ver
+33. **Mejoras de operación del 14 oct 2026 — desplegadas (15 oct 2026), pruebas pospuestas.**
+    (a) ~~desplegar los 3 `.gs`~~ — hecho por Jorge el 15 oct 2026; Mantenimiento confirmado con
+    `curl` (`?action=mantenimientoPorCct` con token falso responde `no_autorizado`; la versión
+    anterior respondía `status: ok`). Correo y Asesorías no tienen un GET público que lo
+    distinga: se confirman viendo las columnas nuevas de SIGEE en las 5 hojas de Correo y con
+    "Probar verificación de mantenimiento (un CCT)" en Asesorías. (b) **pruebas con modo de
+    prueba: pospuestas a propósito** — Jorge prefiere esperar el feedback de los usuarios; mientras
+    tanto, revisar "Ejecuciones" de cada proyecto (los cambios están hechos para no bloquear: si
+    falla la verificación o la subida de fotos, la solicitud entra igual, así que un error puede
+    pasar en silencio). Los 2 activadores de Asesorías (`aseOnEditCierre`/`aseOnEditProgramacion`)
+    no se habían ejecutado nunca al 15 oct: confirmar cuando Nancy cierre la próxima. (c) ~~pila
+    CR2032~~ — confirmado (en general; puede variar). (d) ~~destinatario extra del resumen
+    semanal~~ — se queda solo `otde.nezahualcoyotl@dee.edu.mx`. (e) ~~`Historico_v8.5`~~ —
+    descartado: se arranca de cero (la hoja sigue siendo opcional en el código). (f) opcional:
+    correo de seguimiento a los 3 días con botón "Ya vinculé un segundo dispositivo" (patrón HMAC
+    del doble registro), cuando haya datos de "Motivo de pérdida de acceso". Ver
     `docs/ARCHITECTURE.md §32`.
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver

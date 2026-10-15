@@ -3106,7 +3106,7 @@ adaptadas; 0 errores de consola y 0 peticiones externas.
 
 Seis ideas de Jorge salidas de la operación diaria, resueltas con patrones que ya existían
 (columnas al final, `PANEL_TOKEN`, compresión en el navegador, "no bloquear, señalar"). Las
-páginas están en producción desde el 14 oct 2026; los `.gs`, pendientes de desplegar (ROADMAP 33).
+páginas están en producción desde el 14 oct 2026; los `.gs`, desplegados por Jorge el 15 oct 2026 (ROADMAP 33).
 
 **Correo — seguimiento de SIGEE (`apps-script/correo/Seguimiento.gs`).** Principio: quien
 atiende no captura más de lo que ya captura; las fechas se anotan solas desde el `onEditWebform`

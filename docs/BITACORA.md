@@ -15,6 +15,23 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-10-15 (cont. 2) · Despliegue de los `.gs` confirmado, pendientes cerrados y limpieza de activadores
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-15 |
+| **Sesión** | Sin cambios de código. Jorge confirmó que ya desplegó los 3 `.gs` del 14 oct y cerró varios pendientes con decisiones; se hicieron 2 cambios en sistemas reales (Sheet de Formación Docente y activadores de la cuenta de Apps Script) vía Chrome automatizado con la cuenta de OTDE. |
+| **Despliegue del 14 oct** | Mantenimiento confirmado con `curl`: `?action=mantenimientoPorCct` con token falso responde `{"status":"no_autorizado"}` (la versión anterior respondía `status: ok`). Correo y Asesorías no tienen un GET público que lo distinga; el conector de Drive de la sesión es de la cuenta personal y no ve sus Sheets. **Pruebas con modo de prueba pospuestas a propósito**: Jorge prefiere esperar el feedback de los usuarios. Se le recordó que la prueba local fue solo simulada (Node con hojas falsas + Playwright con `fetch` interceptado) y que, como los cambios no bloquean la solicitud, un error puede pasar en silencio: revisar "Ejecuciones". |
+| **Decisiones de Jorge** | Pila CR2032 (en general). El resumen semanal de Correo se queda igual. **No** habrá `Historico_v8.5`: se arranca de cero. Oficios: consecutivos verificados, histórico importado, pruebas reales hechas y arrancado oficialmente. Bitácora: Beneficiarios de BIT-0006 a 0009 capturados y folios `OTDE-MAN-0001`/`0002` resueltos. `ACF-2627-001` ya tiene `Fecha_fin`. Jorge conservó los archivos de la foto grupal. |
+| **Folio `OTDE-CAP-0089`** | Las 2 filas eran del curso `ACF-2627-001`, registradas el 10 sep 2026 con 1 s de diferencia. La de después (fila 189, 13:57:07) pasó a `OTDE-CAP-0626` (el máximo era 0625, releído justo antes de escribir), con nota en `Notas`; la fila 190 conserva el 0089. El curso no tiene `Liga_convocatoria` ni `Liga_tutorial_constancia`, así que no hay ligas firmadas (HMAC del folio) que apunten a la fila equivocada. `PRUEBA-QA-002` ya no estaba en `Cursos`. |
+| **Activadores de Apps Script** | Revisados y, con aprobación de Jorge, borrados ~318: 203 sin proyecto "Desde el formulario" (202 "Al enviar", 1 "Al abrir"), 97 basados en el tiempo sin proyecto e inhabilitados, 7 de "OTDE Reportes" (v8.5: `onEditDespacho` ×3, `onFormSubmit` ×2, `organizarFotosNocturno` ×2) y 1 de "Proyecto sin título". Script en la página de "Mis activadores" limitado a esas 3 categorías de proyecto; el clasificador de permisos lo bloqueó una vez hasta que Jorge dio permiso. Quedan 13, todos en uso (lista en `docs/TABLERO-SALUD.md`). Hallazgo: los 2 `onEdit` de Asesorías nunca se habían ejecutado. |
+| **Verificación** | `curl` al endpoint de Mantenimiento; relectura del Sheet (`OTDE-CAP-0089` y `0626` aparecen una vez cada uno); recarga final de "Mis activadores": "Se muestra(n) 13 activadores", página 1 de 1. |
+| **Pendiente** | Revisar de vez en cuando "Ejecuciones" de Correo, Mantenimiento y Asesorías mientras llega feedback; confirmar que los `onEdit` de Asesorías corren con el próximo cierre de Nancy (ROADMAP 33). Opcional: confirmar el despliegue de Correo (columnas de SIGEE en las 5 hojas) y de Asesorías ("Probar verificación de mantenimiento"). v8.5 sin activadores: si el reporte mensual dependía de ellos, ya no se genera solo (ROADMAP 9). **Siguiente** propuesto: Oficios (recordatorios, 2C o 2E, ROADMAP 27) o capturas de su guía. |
+| **Documentación actualizada** | Este checkpoint, `docs/TABLERO-SALUD.md` (filas de Bitácora, Formación Docente, Mantenimiento, Asesorías, Correo, v8.5 y sección de activadores), `docs/ROADMAP.md` (ítems 9, 19 y 33), `CLAUDE.md` (3 notas de "pendiente de desplegar" y "Pendientes vigentes"), `docs/ARCHITECTURE.md` §32 (estado de despliegue). |
+| **Commits** | Solo el de este cierre. |
+
+---
+
 ## CHECKPOINT — 2026-10-15 (cont.) · Guía para terminar la foto grupal en Photoshop y Lightroom
 
 | | |

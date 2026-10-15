@@ -387,7 +387,7 @@ ya esté expandido).
   oficio (folio, escuela, CCT, `Equipos con falla`, link del oficio, estatus, notas) para el
   paso 2B de `apps-script/oficios.gs` (`manListarOficiosOV_`, solo lectura, columnas por nombre,
   mismo `PANEL_TOKEN`). Ver `docs/ARCHITECTURE.md §31`.
-- **Mejoras del 14 oct 2026 (páginas en producción, `.gs` pendiente de desplegar)**: casilla
+- **Mejoras del 14 oct 2026 (páginas en producción, `.gs` desplegado por Jorge el 15 oct 2026)**: casilla
   obligatoria de respaldo (equipo administrativo), nota de aula limpia, pregunta de pila CMOS y
   hasta 3 fotos opcionales de los equipos (`manSubirFotosEquipos_()`, carpeta "Fotos de equipos
   (solicitudes)/<folio>"); columnas AB-AD al final de `Solicitudes`. `manBloquePreparacion_()`
@@ -487,7 +487,7 @@ ya esté expandido).
   compara CCT + correo + tipo de asesoría + observaciones). Ver `docs/ARCHITECTURE.md §27`.
 - **`?action=oficiosOV` (8 oct 2026, en producción)**: mismo endpoint que Mantenimiento
   (`aseListarOficiosOV_`, el detalle es `Tipo de Asesoría`), para el paso 2B de oficios.
-- **Verificación del mantenimiento previo (14 oct 2026, `.gs` pendiente de desplegar)**: para
+- **Verificación del mantenimiento previo (14 oct 2026, `.gs` desplegado por Jorge el 15 oct 2026)**: para
   Banco de Materiales y Chuka, `aseVerificarMantenimiento_()` consulta Mantenimiento por CCT
   (`MAN_URL` + `PANEL_TOKEN`, menú "Configurar conexión con Mantenimiento") y escribe
   `Verificación de mantenimiento` (Verificado / En proceso / Sin verificar, con semáforo) y
@@ -1023,7 +1023,7 @@ arquitectura completo en `docs/ARCHITECTURE.md §16`. Resumen operativo:
   encabezado, para notas a mano. Al redesplegar hay que pegar **los 6** (`WebApp.gs` + los 5 tipos)
   y hacer una sola "Nueva versión". Ver `docs/ARCHITECTURE.md §27`.
 - **Seguimiento de SIGEE, rechazos y Authenticator (14 oct 2026, `correo.html` en producción,
-  `.gs` pendientes de desplegar)**: `apps-script/correo/Seguimiento.gs` (nuevo) agrega al final de
+  `.gs` desplegados por Jorge el 15 oct 2026)**: `apps-script/correo/Seguimiento.gs` (nuevo) agrega al final de
   las 5 hojas `NP SIGEE`/`Fecha subida a SIGEE`/`Fecha respuesta SIGEE` (se anotan solas) y
   `Motivo de rechazo` (elegirlo pone "Rechazada" y avisa al solicitante). El resumen semanal
   suma atoradas sin NP, tiempos y rechazos. Los correos de Alta/Eliminar/Cambio + Eliminar traen
@@ -1336,17 +1336,17 @@ de la sesión realmente volvió obsoletos.
 Para saber qué sistema necesita atención (y cuál se está olvidando), empezar por
 `docs/TABLERO-SALUD.md`. Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/Identidad) y
 `docs/BITACORA.md` para el historial de qué ya se hizo. Resumen de lo genuinamente abierto:
-- **Mejoras de operación del 14 oct 2026 — desplegar los `.gs`**: las páginas ya están en
-  producción. Jorge despliega Correo → Mantenimiento → Asesorías (con sus pasos de menú) y prueba
-  cada uno con modo de prueba. Además: confirmar pila CR2032 con los técnicos, a qué correo más
-  llega el resumen semanal de Correo, y la lista del histórico de v8.5 (`Historico_v8.5`). Ver
-  `docs/ROADMAP.md` ítem 33.
+- **Mejoras de operación del 14 oct 2026 — desplegadas (15 oct 2026), sin prueba en vivo**:
+  Jorge desplegó los 3 `.gs` (Mantenimiento confirmado por `curl`). Las pruebas con modo de
+  prueba se posponen a propósito: Jorge prefiere esperar el feedback de los usuarios. Mientras,
+  revisar "Ejecuciones" de cada proyecto por si algo falla en silencio. Decidido: pila CR2032 (en
+  general), el resumen semanal de Correo se queda igual, y **no** habrá `Historico_v8.5` (se
+  arranca de cero). Ver `docs/ROADMAP.md` ítem 33.
 - **Operación interna OTDE — Fase 1 en producción y validada (24 sep 2026)**: bitácora +
   reporte mensual (`apps-script/bitacora.gs` + `bitacora.html`), probada con las 5 actividades
   reales de septiembre y pegada en el Excel real de Planeación. **Alimentación desde Mantenimiento
-  en producción (24 sep 2026, cont.)**: las visitas llegan solas a META 21 (antes 23), N.P. 7. Pendiente
-  de Jorge: cifras de Beneficiarios en BIT-0006 a 0009 y confirmar los folios `OTDE-MAN-0001`/`0002`
-  (el arreglo del singular ya está desplegado, llegó con la versión de Asesorías). **Asesorías resueltas → N.P. 8 desplegado
+  en producción (24 sep 2026, cont.)**: las visitas llegan solas a META 21 (antes 23), N.P. 7.
+  Beneficiarios de BIT-0006 a 0009 y folios `OTDE-MAN-0001`/`0002` resueltos por Jorge (15 oct 2026). **Asesorías resueltas → N.P. 8 desplegado
   (cont. 2)**: falta importar el primer caso real, y que Nancy llene *Fecha de realización* y
   *Asistentes* al cerrar. La asesoría de IA (N.P. 9) sigue a mano. **Plan de alimentación terminado (6 oct
   2026)**: Formación Docente, Soporte y Correo en producción; falta llenar `NP_planeacion` en los
@@ -1357,9 +1357,8 @@ Para saber qué sistema necesita atención (y cuál se está olvidando), empezar
   compartido en el 2A, con 5 preguntas pendientes para Jorge en `docs/PLAN-OPERACION-INTERNA.md`.
   **Actualización 8 oct 2026:** el 2A y el 2D ya están en producción, en una **página única**
   (`oficios.html`: Tomar número · Oficios · Actividad), con guía visual para el equipo.
-  **Antes de arrancar** (Jorge): confirmar el último número de la lista de papel y corregir
-  "Último usado antes del sistema" en `Lotes` si pasó del 4831, importar el histórico, revisar
-  "N.P. planeación" en `Config`, una prueba real y fecha de arranque. El 2B (Oficina Virtual →
+  **Arrancado oficialmente en OTDE** (12 oct 2026; Jorge confirmó el 15 oct que los consecutivos
+  van bien, el histórico está importado y ya se hicieron pruebas reales). El 2B (Oficina Virtual →
   control) también quedó en producción el mismo día. Siguiente: recordatorios, 2C o 2E. Ver `docs/ROADMAP.md` ítem 27. Ver `docs/PLAN-OPERACION-INTERNA.md` y `docs/ROADMAP.md` ítem 27.
 - ~~**Formación Docente — Workspace, decidir antes del 6 oct 2026**~~ — resuelto 12 oct 2026:
   Jorge canceló la prueba. Ver `docs/ROADMAP.md` ítem 26.
@@ -1368,13 +1367,12 @@ Para saber qué sistema necesita atención (y cuál se está olvidando), empezar
   del reordenamiento del 28 sep. La revisión de "Ejecuciones" del 6-7 oct ya se hizo (12 oct
   2026): en cursos de ~190 inscritos los correos casi no salen por cuota, y Jorge decidió dejarlo
   así porque **el calendario es el aviso principal**. Ver `docs/ROADMAP.md` ítems 19 y 28.
-- **Formación Docente — doble registro, seguimiento pendiente**: decidir si se renumera una de
-  las dos filas del folio duplicado `OTDE-CAP-0089` (datos sin tocar); Paso 5 (reconciliar
-  `Registro_externo` contra la lista real de Aula Digital cuando CoEEE la tenga disponible);
-  borrar las 2 hojas de respaldo del reorden de `Inscripciones`; borrar la fila de prueba
-  `PRUEBA-QA-002` (fila 14 de `Cursos`); llenar `Fecha_fin` de `ACF-2627-001` (sin ella nunca
-  pasa al historial — la duda de por qué no aparecía quedó resuelta: `Visible_hasta` vencido, ver
-  `docs/ROADMAP.md` ítem 18). Ver `docs/ROADMAP.md` ítem 19.
+- **Formación Docente — doble registro, seguimiento pendiente**: Paso 5 (reconciliar
+  `Registro_externo` contra la lista real de Aula Digital cuando CoEEE la tenga disponible) y
+  borrar las hojas de respaldo de los reordenamientos. Resuelto el 15 oct 2026: el duplicado
+  `OTDE-CAP-0089` (la fila registrada después pasó a `OTDE-CAP-0626`, con nota en `Notas`),
+  `PRUEBA-QA-002` ya no está en `Cursos` y `ACF-2627-001` ya tiene `Fecha_fin`. Ver
+  `docs/ROADMAP.md` ítem 19.
 - **Retiro de v8.5 — Fase 3 (reducida) y Fase 4, no iniciadas** (ver `docs/ROADMAP.md` ítem 9):
   el trigger nocturno de organización de fotos de v8.5 (`organizarFotosNocturno()`) se descartó
   como pendiente el 17 sep 2026 tras leer el código real — existe solo para compensar que los
@@ -1382,8 +1380,9 @@ Para saber qué sistema necesita atención (y cuál se está olvidando), empezar
   momento del envío; `reporte-visita.html`/`manSubirFotosReporte_()` no tienen ese problema
   (escriben cada foto directo a su subcarpeta por folio en el mismo envío). Único pendiente real
   de esta fase: el reporte mensual (formato Planeación, cruce contra el catálogo de direcciones),
-  que sigue viviendo solo en v8.5. Tampoco se decidió el destino del histórico de v8.5 (380
-  aulas, reportes ya generados) ni el corte real (Fase 4). Mientras tanto, v8.5 sigue vivo en
+  que sigue viviendo solo en v8.5. El histórico de v8.5 **no** se migra (Jorge, 15 oct 2026: se
+  arranca de cero) y el proyecto "OTDE Reportes" ya no tiene activadores (se borraron el 15 oct
+  2026); falta decidir el corte real (Fase 4). Mientras tanto, v8.5 sigue vivo en
   paralelo solo para estas funciones — el resto del ciclo por-solicitud (intake, fecha
   programada, reporte técnico con PDF, cierre) ya no lo necesita.
 - **Recrear páginas eliminadas** — `gestion-escolar.html`, `investigacion-educativa.html`, `programas-educativos.html`, `servicio-profesional.html`: requieren contenido validado con la Dra. Galindo
