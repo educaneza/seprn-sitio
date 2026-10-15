@@ -105,38 +105,76 @@ const ASE_TAMANO_MAX_BYTES = 8 * 1024 * 1024; // 8MB, margen sobre el límite de
 // (sep 2026) — Nancy Yarian atiende Asesorías, decisión de Jorge.
 const ASE_CORREO_EQUIPO = 'nancy.garcia@dee.edu.mx';
 
+// Orden por bloques, en el orden en que se llena una solicitud (oct 2026). El código lee
+// y escribe SIEMPRE por nombre de encabezado (ASE.<Columna> sobre filas de
+// aseFilasCanonicas_(), aseCol_() para escribir), nunca por posición: mover o insertar
+// columnas en la hoja ya no rompe nada. Para dejar una hoja vieja en este orden, menú
+// "OTDE Asesorías → Reordenar columnas de Solicitudes". Una columna nueva va en el
+// bloque donde tenga sentido (no tiene que ser al final).
 const ENCABEZADOS_ASE_SOLICITUDES = [
-  'Fecha', 'Folio', 'Tipo de Asesoría', 'Nombre', 'Función', 'CCT', 'Sector', 'Zona',
-  'Escuela', 'Turno', 'Número de Docentes', 'WhatsApp', 'Correo',
-  'Observaciones', 'Oficio (link Drive)', 'Estatus', 'Notas de revisión',
-  'Confirmó Mantenimiento Previo', 'Notificación de cierre enviada',
-  'Tipo de solicitante', 'Fecha programada de visita',
-  'Notificación de fecha programada enviada', 'Temas de Excel',
-  'Fecha de realización', 'Asistentes', 'ID de envío',
-  // Oct 2026, al final: resultado de consultar Mantenimiento por CCT (ver
-  // aseVerificarMantenimiento_). Solo para Banco de Materiales y Chuka.
-  'Verificación de mantenimiento', 'Folio de mantenimiento indicado'
+  // 1. La solicitud
+  'Fecha', 'Folio', 'Tipo de Asesoría', 'Temas de Excel', 'Observaciones', 'Oficio (link Drive)',
+  // 2. Quién la pide
+  'Nombre', 'Función', 'Tipo de solicitante', 'WhatsApp', 'Correo',
+  // 3. Centro de trabajo
+  'CCT', 'Escuela', 'Sector', 'Zona', 'Turno', 'Número de Docentes',
+  // 4. Mantenimiento previo (solo Banco de Materiales y Chuka; la verificación la anota
+  //    aseVerificarMantenimiento_)
+  'Confirmó Mantenimiento Previo', 'Folio de mantenimiento indicado', 'Verificación de mantenimiento',
+  // 5. Atención (la llena Nancy): Fecha de realización y Asistentes al marcar Resuelto,
+  //    para la Bitácora OTDE (?action=asesoriasMes)
+  'Estatus', 'Notas de revisión', 'Fecha programada de visita', 'Fecha de realización', 'Asistentes',
+  // 6. Automáticas (las llena el sistema)
+  'Notificación de fecha programada enviada', 'Notificación de cierre enviada', 'ID de envío'
 ];
+// { 'Encabezado': índice 0-based } dentro de una fila canónica (ver aseFilasCanonicas_).
+const ASE = ENCABEZADOS_ASE_SOLICITUDES.reduce(function (m, h, i) { m[h] = i; return m; }, {});
 // Ventana del respaldo anti-duplicados para envíos sin idEnvio (páginas viejas en caché):
 // misma CCT + correo + tipo de asesoría + observaciones dentro de estos minutos = mismo envío.
 const ASE_VENTANA_DUPLICADO_MIN = 10;
-// Índice (0-based) de 'Tipo de solicitante' dentro de una fila leída con getValues() —
-// ya no es la última columna (se agregaron 2 más después, misma lógica de no correr
-// columnas existentes), así que queda fijo en vez de derivarse de .length - 1.
-const COL_ASE_TIPO_SOLICITANTE_IDX = 19;
-const COL_ASE_ESTATUS = 16;
-const COL_ASE_NOTIFICACION_CIERRE = 19;
-// Fecha programada de visita y su columna de control — agregadas al final,
-// mismo criterio, para no correr ninguna columna existente.
-const COL_ASE_FECHA_PROGRAMADA = 21;
-const COL_ASE_NOTIFICACION_PROGRAMADA = 22;
-// Fecha de realización y Asistentes (24 sep 2026): las llena Nancy a mano al
-// marcar Resuelto, para que la Bitácora OTDE registre la asesoría con la fecha
-// y el número de personas reales (?action=asesoriasMes). Al final, mismo
-// criterio de no correr columnas existentes.
-const COL_ASE_FECHA_REALIZACION = 24;
-const COL_ASE_ASISTENTES = 25;
 const ESTADOS_ASE_VALIDOS = ['Pendiente de validar', 'Validado', 'En atención', 'Resuelto', 'Rechazado'];
+
+// ── Lectura y escritura por nombre de encabezado ──
+// { 'Encabezado': índice 0-based } de la fila de encabezados REAL de la hoja.
+function aseIndicesReales_(filaEncabezados) {
+  const mapa = {};
+  filaEncabezados.forEach(function (h, i) {
+    const nombre = String(h).trim();
+    if (nombre && !(nombre in mapa)) mapa[nombre] = i;
+  });
+  return mapa;
+}
+
+// Fila real → fila canónica (en el orden de ENCABEZADOS_ASE_SOLICITUDES, se lee con
+// fila[ASE.<Columna>]). Una columna que no exista en la hoja llega vacía.
+function aseACanonica_(filaReal, real) {
+  return ENCABEZADOS_ASE_SOLICITUDES.map(function (h) { return h in real ? filaReal[real[h]] : ''; });
+}
+
+// Filas de datos (sin encabezado) de Solicitudes, en orden canónico. La fila i
+// del arreglo es la fila i + 2 de la hoja.
+function aseFilasCanonicas_(hoja) {
+  if (!hoja || hoja.getLastRow() < 2) return [];
+  const datos = hoja.getDataRange().getValues();
+  const real = aseIndicesReales_(datos[0]);
+  return datos.slice(1).map(function (r) { return aseACanonica_(r, real); });
+}
+
+// Una sola fila de la hoja (número real, 1-based) en orden canónico.
+function aseFilaCanonica_(hoja, numFila) {
+  const ancho = Math.max(hoja.getLastColumn(), 1);
+  const real = aseIndicesReales_(hoja.getRange(1, 1, 1, ancho).getValues()[0]);
+  return aseACanonica_(hoja.getRange(numFila, 1, 1, ancho).getValues()[0], real);
+}
+
+// Número de columna (1-based) REAL de un encabezado, para escribir en la hoja.
+function aseCol_(hoja, nombre) {
+  const enc = hoja.getRange(1, 1, 1, Math.max(hoja.getLastColumn(), 1)).getValues()[0]
+    .map(function (h) { return String(h).trim(); });
+  const i = enc.indexOf(nombre);
+  if (i === -1) throw new Error('La hoja ' + hoja.getName() + ' no tiene la columna "' + nombre + '".');
+  return i + 1;
+}
 
 // ── Modo de prueba: redirige TODOS los correos salientes (Zona/Sector +
 // cierre) a un solo correo, para probar el flujo completo sin avisar a
@@ -201,7 +239,7 @@ function aseVerificarMantenimiento_(cct, folioDado) {
 
 // Color por cómo empieza el texto (el detalle del folio cambia en cada fila).
 function aseAplicarSemaforoVerificacion_(hoja) {
-  const col = ENCABEZADOS_ASE_SOLICITUDES.indexOf('Verificación de mantenimiento') + 1;
+  const col = aseCol_(hoja, 'Verificación de mantenimiento');
   const rango = hoja.getRange(2, col, 1000, 1);
   const otras = hoja.getConditionalFormatRules().filter(function (r) {
     return r.getRanges().every(function (rg) { return rg.getColumn() !== col; });
@@ -323,25 +361,25 @@ function aseListarPendientes(tokenRecibido) {
   const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_ASE_SOLICITUDES);
   if (!hoja) return aseTextResponse(JSON.stringify({ status: 'ok', tramite: 'Asesorías', items: [] }));
 
-  const filas = hoja.getDataRange().getValues().slice(1);
-  const items = filas
-    .filter(function (r) { return r[1]; }) // folio no vacío
+  const items = aseFilasCanonicas_(hoja)
+    .filter(function (r) { return r[ASE['Folio']]; }) // folio no vacío
     .filter(function (r) {
-      const estatus = String(r[COL_ASE_ESTATUS - 1] || '').trim();
+      const estatus = String(r[ASE['Estatus']] || '').trim();
       return estatus !== 'Resuelto' && estatus !== 'Rechazado';
     })
     .map(function (r) {
+      const fecha = r[ASE['Fecha']];
+      const programada = r[ASE['Fecha programada de visita']];
       return {
-        folio: r[1],
-        fecha: r[0] instanceof Date ? r[0].toISOString() : String(r[0]),
-        nombre: r[3],
-        escuela: r[8],
-        sector: r[6],
-        zona: r[7],
-        estatus: String(r[COL_ASE_ESTATUS - 1] || 'Pendiente de validar').trim(),
-        notas: r[16] || '',
-        fechaProgramada: r[COL_ASE_FECHA_PROGRAMADA - 1] instanceof Date
-          ? r[COL_ASE_FECHA_PROGRAMADA - 1].toISOString() : (r[COL_ASE_FECHA_PROGRAMADA - 1] || '')
+        folio: r[ASE['Folio']],
+        fecha: fecha instanceof Date ? fecha.toISOString() : String(fecha),
+        nombre: r[ASE['Nombre']],
+        escuela: r[ASE['Escuela']],
+        sector: r[ASE['Sector']],
+        zona: r[ASE['Zona']],
+        estatus: String(r[ASE['Estatus']] || 'Pendiente de validar').trim(),
+        notas: r[ASE['Notas de revisión']] || '',
+        fechaProgramada: programada instanceof Date ? programada.toISOString() : (programada || '')
       };
     });
 
@@ -367,26 +405,26 @@ function aseListarResueltasMes_(tokenRecibido, mes) {
   const tz = 'America/Mexico_City';
   const txt = function (v) { return String(v == null ? '' : v).trim(); };
   const items = [];
-  hoja.getDataRange().getValues().slice(1).forEach(function (r) {
-    if (!txt(r[1]) || txt(r[COL_ASE_ESTATUS - 1]) !== 'Resuelto') return;
-    const realizada = r[COL_ASE_FECHA_REALIZACION - 1];
-    const programada = r[COL_ASE_FECHA_PROGRAMADA - 1];
+  aseFilasCanonicas_(hoja).forEach(function (r) {
+    if (!txt(r[ASE['Folio']]) || txt(r[ASE['Estatus']]) !== 'Resuelto') return;
+    const realizada = r[ASE['Fecha de realización']];
+    const programada = r[ASE['Fecha programada de visita']];
     const fecha = realizada instanceof Date ? realizada : (programada instanceof Date ? programada : null);
     if (!fecha || Utilities.formatDate(fecha, tz, 'yyyy-MM') !== mes) return;
     items.push({
-      folio: txt(r[1]).toUpperCase(),
+      folio: txt(r[ASE['Folio']]).toUpperCase(),
       fecha: Utilities.formatDate(fecha, tz, 'yyyy-MM-dd'),
       fechaFuente: realizada instanceof Date ? 'realizacion' : 'programada',
-      tipoAsesoria: txt(r[COL_ASE_TIPO_ASESORIA - 1]),
-      cct: txt(r[5]),
-      sector: txt(r[6]),
-      zona: txt(r[7]),
-      escuela: txt(r[8]),
-      turno: txt(r[9]),
-      tipoSolicitante: txt(r[COL_ASE_TIPO_SOLICITANTE_IDX]),
-      numeroSolicitado: txt(r[10]),
-      asistentes: txt(r[COL_ASE_ASISTENTES - 1]),
-      temasExcel: txt(r[22])
+      tipoAsesoria: txt(r[ASE['Tipo de Asesoría']]),
+      cct: txt(r[ASE['CCT']]),
+      sector: txt(r[ASE['Sector']]),
+      zona: txt(r[ASE['Zona']]),
+      escuela: txt(r[ASE['Escuela']]),
+      turno: txt(r[ASE['Turno']]),
+      tipoSolicitante: txt(r[ASE['Tipo de solicitante']]),
+      numeroSolicitado: txt(r[ASE['Número de Docentes']]),
+      asistentes: txt(r[ASE['Asistentes']]),
+      temasExcel: txt(r[ASE['Temas de Excel']])
     });
   });
   return aseTextResponse(JSON.stringify({ status: 'ok', items: items }));
@@ -408,18 +446,18 @@ function aseConsultarFolio(folioBuscado, correoBuscado) {
   const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_ASE_SOLICITUDES);
   if (!hoja) return noEncontrado();
 
-  const filas = hoja.getDataRange().getValues().slice(1);
-  const fila = filas.find(r => String(r[1]).trim().toUpperCase() === folio);
-  if (!fila || String(fila[12]).trim().toLowerCase() !== correo) return noEncontrado();
+  const fila = aseFilasCanonicas_(hoja).find(r => String(r[ASE['Folio']]).trim().toUpperCase() === folio);
+  if (!fila || String(fila[ASE['Correo']]).trim().toLowerCase() !== correo) return noEncontrado();
 
+  const fecha = fila[ASE['Fecha']];
+  const programada = fila[ASE['Fecha programada de visita']];
   return aseTextResponse(JSON.stringify({
     status: 'ok',
-    folio: fila[1],
-    fecha: fila[0] instanceof Date ? fila[0].toISOString() : String(fila[0]),
-    estatus: fila[COL_ASE_ESTATUS - 1],
-    notas: fila[16] || '',
-    fechaProgramada: fila[COL_ASE_FECHA_PROGRAMADA - 1] instanceof Date
-      ? fila[COL_ASE_FECHA_PROGRAMADA - 1].toISOString() : (fila[COL_ASE_FECHA_PROGRAMADA - 1] || '')
+    folio: fila[ASE['Folio']],
+    fecha: fecha instanceof Date ? fecha.toISOString() : String(fecha),
+    estatus: fila[ASE['Estatus']],
+    notas: fila[ASE['Notas de revisión']] || '',
+    fechaProgramada: programada instanceof Date ? programada.toISOString() : (programada || '')
   }));
 }
 
@@ -478,10 +516,10 @@ function doPost(e) {
 // asesorias.html desde sep 2026); si no viene, por CCT + correo + tipo de asesoría +
 // observaciones dentro de ASE_VENTANA_DUPLICADO_MIN minutos. Devuelve el folio o null. ──
 function aseBuscarEnvioPrevio_(hoja, datos) {
-  if (hoja.getLastRow() < 2) return null;
-  const filas = hoja.getRange(2, 1, hoja.getLastRow() - 1, hoja.getLastColumn()).getValues();
-  const iFolio = ENCABEZADOS_ASE_SOLICITUDES.indexOf('Folio');
-  const iId = ENCABEZADOS_ASE_SOLICITUDES.indexOf('ID de envío');
+  const filas = aseFilasCanonicas_(hoja);
+  if (!filas.length) return null;
+  const iFolio = ASE['Folio'];
+  const iId = ASE['ID de envío'];
   const idEnvio = String(datos.idEnvio || '').trim();
 
   if (idEnvio) {
@@ -489,11 +527,11 @@ function aseBuscarEnvioPrevio_(hoja, datos) {
     if (previa) return String(previa[iFolio]);
   }
 
-  const iFecha = ENCABEZADOS_ASE_SOLICITUDES.indexOf('Fecha');
-  const iTipo = ENCABEZADOS_ASE_SOLICITUDES.indexOf('Tipo de Asesoría');
-  const iCct = ENCABEZADOS_ASE_SOLICITUDES.indexOf('CCT');
-  const iCorreo = ENCABEZADOS_ASE_SOLICITUDES.indexOf('Correo');
-  const iObs = ENCABEZADOS_ASE_SOLICITUDES.indexOf('Observaciones');
+  const iFecha = ASE['Fecha'];
+  const iTipo = ASE['Tipo de Asesoría'];
+  const iCct = ASE['CCT'];
+  const iCorreo = ASE['Correo'];
+  const iObs = ASE['Observaciones'];
   const tipo = String(datos.tipoAsesoria || '').trim();
   const cct = String(datos.cct || '').trim().toUpperCase();
   const correo = String(datos.correo || '').trim().toLowerCase();
@@ -515,40 +553,41 @@ function aseBuscarEnvioPrevio_(hoja, datos) {
 }
 
 // ── Agrega la fila de una solicitud nueva (llamar dentro del candado) ──
+// La fila se arma por nombre de encabezado y se acomoda en el orden REAL de la hoja:
+// funciona igual antes y después de "Reordenar columnas", y deja en blanco cualquier
+// columna que el equipo haya agregado a mano. Lo que no se nombra aquí (Notas de
+// revisión, fechas, Asistentes, notificaciones) queda en blanco para Nancy o el sistema.
 function aseAgregarSolicitud_(hoja, datos, folio, oficioUrl) {
-  const fila = [
-    new Date(),
-    folio,
-    datos.tipoAsesoria.trim(),
-    datos.nombre.trim(),
-    datos.funcion.trim(),
-    datos.cct.trim().toUpperCase(),
-    (datos.sector || '').trim(),
-    (datos.zona || '').toString().trim(),
-    (datos.escuela || '').trim(),
-    datos.turno.trim(),
-    datos.numDocentes.toString().trim(),
-    datos.whatsapp.trim(),
-    (datos.correo || '').trim(),
-    (datos.observaciones || '').trim(),
-    oficioUrl,
-    'Pendiente de validar',
-    '',
-    datos.tipoAsesoria.trim() === 'Banco de Materiales y Chuka' ? (datos.confirmaMantenimiento ? 'Sí' : 'No') : 'N/A',
-    '',
-    (datos.tipoCct || '').trim(),
-    '',  // Fecha programada de visita — la llena aseOnEditProgramacion()
-    '',  // Notificación de fecha programada enviada — la llena aseOnEditProgramacion()
-    (datos.temasExcel || '').trim()
-  ];
-  // Fecha de realización / Asistentes quedan en blanco (las llena Nancy); las columnas
-  // posteriores se colocan por nombre de encabezado.
-  while (fila.length < ENCABEZADOS_ASE_SOLICITUDES.length) fila.push('');
-  const col = n => ENCABEZADOS_ASE_SOLICITUDES.indexOf(n);
-  fila[col('ID de envío')] = String(datos.idEnvio || '').trim();
-  fila[col('Verificación de mantenimiento')] = datos.verificacionMantenimiento || '';
-  fila[col('Folio de mantenimiento indicado')] = datos.folioMantenimiento || '';
-  hoja.appendRow(fila);
+  const valores = {
+    'Fecha': new Date(),
+    'Folio': folio,
+    'Tipo de Asesoría': datos.tipoAsesoria.trim(),
+    'Temas de Excel': (datos.temasExcel || '').trim(),
+    'Observaciones': (datos.observaciones || '').trim(),
+    'Oficio (link Drive)': oficioUrl,
+    'Nombre': datos.nombre.trim(),
+    'Función': datos.funcion.trim(),
+    'Tipo de solicitante': (datos.tipoCct || '').trim(),
+    'WhatsApp': datos.whatsapp.trim(),
+    'Correo': (datos.correo || '').trim(),
+    'CCT': datos.cct.trim().toUpperCase(),
+    'Escuela': (datos.escuela || '').trim(),
+    'Sector': (datos.sector || '').trim(),
+    'Zona': (datos.zona || '').toString().trim(),
+    'Turno': datos.turno.trim(),
+    'Número de Docentes': datos.numDocentes.toString().trim(),
+    'Confirmó Mantenimiento Previo': datos.tipoAsesoria.trim() === 'Banco de Materiales y Chuka'
+      ? (datos.confirmaMantenimiento ? 'Sí' : 'No') : 'N/A',
+    'Folio de mantenimiento indicado': datos.folioMantenimiento || '',
+    'Verificación de mantenimiento': datos.verificacionMantenimiento || '',
+    'Estatus': 'Pendiente de validar',
+    'ID de envío': String(datos.idEnvio || '').trim()
+  };
+  const encabezados = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0];
+  hoja.appendRow(encabezados.map(function (h) {
+    const nombre = String(h).trim();
+    return nombre in valores ? valores[nombre] : '';
+  }));
 }
 
 // ── Obtener o crear la hoja de solicitudes ──
@@ -564,17 +603,17 @@ function aseObtenerHojaSolicitudes() {
           .setBackground('#56212f')
           .setFontColor('#F9F8F5');
     hoja.setFrozenRows(1);
-    hoja.setColumnWidth(4, 180);  // Nombre
-    hoja.setColumnWidth(9, 200);  // Escuela
-    hoja.setColumnWidth(14, 260); // Observaciones
-    hoja.setColumnWidth(15, 220); // Oficio
+    [['Nombre', 180], ['Escuela', 200], ['Observaciones', 260], ['Oficio (link Drive)', 220]]
+      .forEach(function (p) { hoja.setColumnWidth(ASE[p[0]] + 1, p[1]); });
   } else {
-    // Hoja creada antes de agregar esta columna: se completa el encabezado
-    // faltante sin tocar las columnas ni los datos ya existentes.
-    const colsActuales = hoja.getLastColumn();
-    if (colsActuales < ENCABEZADOS_ASE_SOLICITUDES.length) {
-      const faltantes = ENCABEZADOS_ASE_SOLICITUDES.slice(colsActuales);
-      hoja.getRange(1, colsActuales + 1, 1, faltantes.length)
+    // Hoja ya existente: se agrega AL FINAL, por nombre, cualquier encabezado que le
+    // falte, sin mover nada. Para dejarla en el orden por bloques está el menú
+    // "Reordenar columnas de Solicitudes".
+    const colsActuales = Math.max(hoja.getLastColumn(), 1);
+    const reales = aseIndicesReales_(hoja.getRange(1, 1, 1, colsActuales).getValues()[0]);
+    const faltantes = ENCABEZADOS_ASE_SOLICITUDES.filter(function (h) { return !(h in reales); });
+    if (faltantes.length) {
+      hoja.getRange(1, hoja.getLastColumn() + 1, 1, faltantes.length)
         .setValues([faltantes])
         .setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
     }
@@ -592,7 +631,7 @@ function aseAplicarValidacionEstatus(hoja) {
     .requireValueInList(ESTADOS_ASE_VALIDOS, true)
     .setAllowInvalid(false)
     .build();
-  hoja.getRange(2, COL_ASE_ESTATUS, 1000, 1).setDataValidation(regla);
+  hoja.getRange(2, aseCol_(hoja, 'Estatus'), 1000, 1).setDataValidation(regla);
 }
 
 // ── "Planchado" de la hoja: dropdowns adicionales + semáforo por color +
@@ -605,31 +644,33 @@ const ASE_TIPOS_ASESORIA_VALIDOS = ['Banco de Materiales y Chuka', 'Excel básic
 const ASE_TURNOS_VALIDOS = ['Matutino', 'Vespertino', 'Tiempo Completo', 'Discontinuo', 'No aplica (oficina)'];
 const ASE_CONFIRMO_MANTENIMIENTO_VALIDOS = ['Sí', 'No', 'N/A'];
 const ASE_TIPOS_SOLICITANTE_VALIDOS = ['escuela', 'supervision', 'jefatura', 'subdireccion'];
-const COL_ASE_TIPO_ASESORIA = 3;
-const COL_ASE_TURNO = 10;
-const COL_ASE_CONFIRMO_MANTENIMIENTO = 18;
+// Columnas que llena solo el sistema: llevan aviso de "columna automática".
+const ASE_COLUMNAS_AUTOMATICAS = ['Fecha', 'Folio', 'Oficio (link Drive)', 'Verificación de mantenimiento',
+  'Notificación de fecha programada enviada', 'Notificación de cierre enviada', 'ID de envío'];
 
 function aseConfigurarValidacionYSemaforo() {
-  // aseObtenerHojaSolicitudes() también completa encabezados faltantes
-  // (Fecha de realización / Asistentes en una hoja ya creada).
-  const solicitudes = aseObtenerHojaSolicitudes();
-  if (solicitudes) {
-    solicitudes.getRange(2, COL_ASE_FECHA_REALIZACION, 1000, 1).setDataValidation(
-      SpreadsheetApp.newDataValidation().requireDate().setAllowInvalid(true)
-        .setHelpText('Día en que se dio la asesoría. Llénala al marcar Resuelto.').build());
-    solicitudes.getRange(2, COL_ASE_ASISTENTES, 1000, 1).setDataValidation(
-      SpreadsheetApp.newDataValidation().requireNumberGreaterThanOrEqualTo(0).setAllowInvalid(true)
-        .setHelpText('Personas que asistieron (según la lista de asistencia).').build());
-    aseAplicarValidacionListaSuave_(solicitudes, COL_ASE_TIPO_ASESORIA, ASE_TIPOS_ASESORIA_VALIDOS);
-    aseAplicarValidacionListaSuave_(solicitudes, COL_ASE_TURNO, ASE_TURNOS_VALIDOS);
-    aseAplicarValidacionListaSuave_(solicitudes, COL_ASE_CONFIRMO_MANTENIMIENTO, ASE_CONFIRMO_MANTENIMIENTO_VALIDOS);
-    aseAplicarValidacionListaSuave_(solicitudes, COL_ASE_TIPO_SOLICITANTE_IDX + 1, ASE_TIPOS_SOLICITANTE_VALIDOS);
-    aseAplicarSemaforoPorValor_(solicitudes, COL_ASE_ESTATUS, ESTADOS_ASE_VALIDOS, ASE_COLORES_ESTATUS);
-    aseAplicarSemaforoVerificacion_(solicitudes);
-    [1, 2, 15, COL_ASE_NOTIFICACION_CIERRE, COL_ASE_NOTIFICACION_PROGRAMADA]
-      .forEach(function (col) { aseProtegerColumnaAutomatica_(solicitudes, col); });
-  }
+  aseConfigurarValidacionYSemaforo_();
   try { SpreadsheetApp.getUi().alert('Validación y semáforo aplicados en Solicitudes.'); } catch (err) {}
+}
+
+function aseConfigurarValidacionYSemaforo_() {
+  // aseObtenerHojaSolicitudes() también completa encabezados faltantes.
+  const solicitudes = aseObtenerHojaSolicitudes();
+  if (!solicitudes) return;
+  const col = function (nombre) { return aseCol_(solicitudes, nombre); };
+  solicitudes.getRange(2, col('Fecha de realización'), 1000, 1).setDataValidation(
+    SpreadsheetApp.newDataValidation().requireDate().setAllowInvalid(true)
+      .setHelpText('Día en que se dio la asesoría. Llénala al marcar Resuelto.').build());
+  solicitudes.getRange(2, col('Asistentes'), 1000, 1).setDataValidation(
+    SpreadsheetApp.newDataValidation().requireNumberGreaterThanOrEqualTo(0).setAllowInvalid(true)
+      .setHelpText('Personas que asistieron (según la lista de asistencia).').build());
+  aseAplicarValidacionListaSuave_(solicitudes, col('Tipo de Asesoría'), ASE_TIPOS_ASESORIA_VALIDOS);
+  aseAplicarValidacionListaSuave_(solicitudes, col('Turno'), ASE_TURNOS_VALIDOS);
+  aseAplicarValidacionListaSuave_(solicitudes, col('Confirmó Mantenimiento Previo'), ASE_CONFIRMO_MANTENIMIENTO_VALIDOS);
+  aseAplicarValidacionListaSuave_(solicitudes, col('Tipo de solicitante'), ASE_TIPOS_SOLICITANTE_VALIDOS);
+  aseAplicarSemaforoPorValor_(solicitudes, col('Estatus'), ESTADOS_ASE_VALIDOS, ASE_COLORES_ESTATUS);
+  aseAplicarSemaforoVerificacion_(solicitudes);
+  ASE_COLUMNAS_AUTOMATICAS.forEach(function (nombre) { aseProtegerColumnaAutomatica_(solicitudes, col(nombre)); });
 }
 
 // Dropdown "suave": marca con triángulo de aviso un valor fuera de lista en
@@ -700,10 +741,9 @@ function aseAsegurarHojaContactos(ss) {
 
 // ── Generar folio único ──
 function aseGenerarFolio(hoja) {
-  const datos  = hoja.getDataRange().getValues();
   const prefix = 'OTDE-ASE-';
-  const maxNum = datos.slice(1)
-    .map(row => String(row[1]))
+  const maxNum = aseFilasCanonicas_(hoja)
+    .map(row => String(row[ASE['Folio']]))
     .filter(f => f.startsWith(prefix))
     .map(f => parseInt(f.replace(prefix, ''), 10) || 0)
     .reduce((a, b) => Math.max(a, b), 0);
@@ -994,23 +1034,24 @@ function aseOnEditCierre(e) {
     const hoja = e.range.getSheet();
     if (hoja.getName() !== HOJA_ASE_SOLICITUDES) return;
 
+    const colEstatus = aseCol_(hoja, 'Estatus');
+    const colNotificacion = aseCol_(hoja, 'Notificación de cierre enviada');
     const colInicio = e.range.getColumn();
     const colFin = e.range.getLastColumn();
-    if (COL_ASE_ESTATUS < colInicio || COL_ASE_ESTATUS > colFin) return;
+    if (colEstatus < colInicio || colEstatus > colFin) return;
 
     const filaInicio = Math.max(e.range.getRow(), 2);
     const filaFin = e.range.getRow() + e.range.getNumRows() - 1;
 
     for (let fila = filaInicio; fila <= filaFin; fila++) {
-      const estatus = String(hoja.getRange(fila, COL_ASE_ESTATUS).getValue()).trim();
+      const estatus = String(hoja.getRange(fila, colEstatus).getValue()).trim();
       if (estatus !== 'Resuelto') continue;
 
-      const yaNotificado = String(hoja.getRange(fila, COL_ASE_NOTIFICACION_CIERRE).getValue()).trim();
+      const yaNotificado = String(hoja.getRange(fila, colNotificacion).getValue()).trim();
       if (yaNotificado === 'Sí') continue;
 
-      const datosFila = hoja.getRange(fila, 1, 1, ENCABEZADOS_ASE_SOLICITUDES.length).getValues()[0];
-      aseNotificarCierre(datosFila);
-      hoja.getRange(fila, COL_ASE_NOTIFICACION_CIERRE).setValue('Sí');
+      aseNotificarCierre(aseFilaCanonica_(hoja, fila));
+      hoja.getRange(fila, colNotificacion).setValue('Sí');
     }
   } catch (err) {
     // Silencioso: un fallo aquí no debe romper la edición del Sheet
@@ -1020,18 +1061,19 @@ function aseOnEditCierre(e) {
 // ── Avisa que el ticket se resolvió: un solo correo (to = solicitante,
 // cc = Zona/Sector si hay contacto(s) registrados) en vez de 2 avisos
 // sueltos como antes. ──
+// `fila` en orden canónico (aseFilaCanonica_).
 function aseNotificarCierre(fila) {
   try {
-    const folio = fila[1];
-    const tipo = fila[2];
-    const nombre = fila[3];
-    const cct = fila[5];
-    const sector = fila[6];
-    const zona = fila[7];
-    const escuela = fila[8];
-    const correo = String(fila[12] || '').trim();
-    const notas = fila[16];
-    const tipoSolicitante = String(fila[COL_ASE_TIPO_SOLICITANTE_IDX] || '').trim();
+    const folio = fila[ASE['Folio']];
+    const tipo = fila[ASE['Tipo de Asesoría']];
+    const nombre = fila[ASE['Nombre']];
+    const cct = fila[ASE['CCT']];
+    const sector = fila[ASE['Sector']];
+    const zona = fila[ASE['Zona']];
+    const escuela = fila[ASE['Escuela']];
+    const correo = String(fila[ASE['Correo']] || '').trim();
+    const notas = fila[ASE['Notas de revisión']];
+    const tipoSolicitante = String(fila[ASE['Tipo de solicitante']] || '').trim();
 
     if (!correo) return;
 
@@ -1079,23 +1121,24 @@ function aseOnEditProgramacion(e) {
     const hoja = e.range.getSheet();
     if (hoja.getName() !== HOJA_ASE_SOLICITUDES) return;
 
+    const colFecha = aseCol_(hoja, 'Fecha programada de visita');
+    const colNotificacion = aseCol_(hoja, 'Notificación de fecha programada enviada');
     const colInicio = e.range.getColumn();
     const colFin = e.range.getLastColumn();
-    if (COL_ASE_FECHA_PROGRAMADA < colInicio || COL_ASE_FECHA_PROGRAMADA > colFin) return;
+    if (colFecha < colInicio || colFecha > colFin) return;
 
     const filaInicio = Math.max(e.range.getRow(), 2);
     const filaFin = e.range.getRow() + e.range.getNumRows() - 1;
 
     for (let fila = filaInicio; fila <= filaFin; fila++) {
-      const fechaProgramada = hoja.getRange(fila, COL_ASE_FECHA_PROGRAMADA).getValue();
+      const fechaProgramada = hoja.getRange(fila, colFecha).getValue();
       if (!fechaProgramada) continue;
 
-      const yaNotificado = String(hoja.getRange(fila, COL_ASE_NOTIFICACION_PROGRAMADA).getValue()).trim();
+      const yaNotificado = String(hoja.getRange(fila, colNotificacion).getValue()).trim();
       if (yaNotificado === 'Sí') continue;
 
-      const datosFila = hoja.getRange(fila, 1, 1, ENCABEZADOS_ASE_SOLICITUDES.length).getValues()[0];
-      aseNotificarFechaProgramada(datosFila);
-      hoja.getRange(fila, COL_ASE_NOTIFICACION_PROGRAMADA).setValue('Sí');
+      aseNotificarFechaProgramada(aseFilaCanonica_(hoja, fila));
+      hoja.getRange(fila, colNotificacion).setValue('Sí');
     }
   } catch (err) {
     // Silencioso: un fallo aquí no debe romper la edición del Sheet
@@ -1105,18 +1148,19 @@ function aseOnEditProgramacion(e) {
 // ── Avisa que ya hay fecha de visita programada: un solo correo (to =
 // solicitante, cc = Zona/Sector si hay contacto(s) registrados), mismo
 // patrón que aseNotificarCierre. ──
+// `fila` en orden canónico (aseFilaCanonica_).
 function aseNotificarFechaProgramada(fila) {
   try {
-    const folio = fila[1];
-    const tipo = fila[2];
-    const nombre = fila[3];
-    const cct = fila[5];
-    const sector = fila[6];
-    const zona = fila[7];
-    const escuela = fila[8];
-    const correo = String(fila[12] || '').trim();
-    const tipoSolicitante = String(fila[COL_ASE_TIPO_SOLICITANTE_IDX] || '').trim();
-    const fechaProgramadaRaw = fila[COL_ASE_FECHA_PROGRAMADA - 1];
+    const folio = fila[ASE['Folio']];
+    const tipo = fila[ASE['Tipo de Asesoría']];
+    const nombre = fila[ASE['Nombre']];
+    const cct = fila[ASE['CCT']];
+    const sector = fila[ASE['Sector']];
+    const zona = fila[ASE['Zona']];
+    const escuela = fila[ASE['Escuela']];
+    const correo = String(fila[ASE['Correo']] || '').trim();
+    const tipoSolicitante = String(fila[ASE['Tipo de solicitante']] || '').trim();
+    const fechaProgramadaRaw = fila[ASE['Fecha programada de visita']];
     const fechaProgramada = fechaProgramadaRaw instanceof Date
       ? Utilities.formatDate(fechaProgramadaRaw, 'America/Mexico_City', 'dd/MM/yyyy')
       : String(fechaProgramadaRaw || '');
@@ -1206,6 +1250,87 @@ function aseDesinstalarTriggerProgramacion() {
   try { SpreadsheetApp.getUi().alert(quitados + ' trigger(s) de programación eliminado(s).'); } catch (err) {}
 }
 
+// ============================================================
+// REORDENAR COLUMNAS DE SOLICITUDES (oct 2026) — mismo patrón que
+// reordenarColumnasCursos_() de formacion-docente.gs. Mueve cada columna con
+// moveColumns() (se conservan formatos, dropdowns, semáforo y notas) al orden de
+// ENCABEZADOS_ASE_SOLICITUDES. Antes de mover deja una copia completa
+// "Solicitudes_respaldo_AAAAMMDD" y después compara columna por columna. Las
+// columnas que no son del sistema (agregadas a mano) se quedan al final, con sus datos.
+// Toma el mismo candado que doPost, para no cruzarse con un envío a la mitad.
+// ============================================================
+function aseReordenarColumnasSolicitudes() {
+  SpreadsheetApp.getUi().alert(aseReordenarColumnasSolicitudes_().mensaje);
+}
+
+function aseReordenarColumnasSolicitudes_() {
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(30000)) {
+    return { ok: false, mensaje: 'Hay una solicitud registrándose en este momento. Intenta de nuevo en unos segundos.' };
+  }
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const hoja = aseObtenerHojaSolicitudes(); // agrega al final los encabezados que falten
+    SpreadsheetApp.flush();
+    const antes = hoja.getDataRange().getValues();
+    const enc = antes[0].map(function (h) { return String(h).trim(); });
+
+    const yaOrdenada = ENCABEZADOS_ASE_SOLICITUDES.every(function (h, k) { return enc[k] === h; });
+    if (yaOrdenada) return { ok: true, mensaje: 'Solicitudes ya está en el orden nuevo. No se cambió nada.' };
+
+    // Respaldo completo antes de mover nada.
+    const tz = 'America/Mexico_City';
+    let nombreRespaldo = HOJA_ASE_SOLICITUDES + '_respaldo_' + Utilities.formatDate(new Date(), tz, 'yyyyMMdd');
+    if (ss.getSheetByName(nombreRespaldo)) nombreRespaldo += '_' + Utilities.formatDate(new Date(), tz, 'HHmm');
+    const respaldo = hoja.copyTo(ss).setName(nombreRespaldo);
+    respaldo.setTabColor('#948A8E');
+    ss.setActiveSheet(respaldo);
+    ss.moveActiveSheet(ss.getNumSheets());
+
+    // Mover cada columna a su lugar, de izquierda a derecha.
+    ENCABEZADOS_ASE_SOLICITUDES.forEach(function (h, k) {
+      const i = enc.indexOf(h);
+      if (i === -1 || i === k) return;
+      hoja.moveColumns(hoja.getRange(1, i + 1), k + 1);
+      enc.splice(k, 0, enc.splice(i, 1)[0]);
+    });
+    SpreadsheetApp.flush();
+
+    // Verificación: mismas filas y, columna por columna, los mismos valores
+    // (incluidas las columnas agregadas a mano, que solo se recorren).
+    const despues = hoja.getDataRange().getValues();
+    const idxAntes = aseIndicesReales_(antes[0]);
+    const idxDespues = aseIndicesReales_(despues[0]);
+    const valor = function (v) { return v instanceof Date ? v.getTime() : String(v); };
+    const diferencias = [];
+    if (despues.length !== antes.length) diferencias.push('filas ' + antes.length + ' → ' + despues.length);
+    if (despues[0].length !== antes[0].length) diferencias.push('columnas ' + antes[0].length + ' → ' + despues[0].length);
+    Object.keys(idxAntes).forEach(function (h) {
+      if (!(h in idxDespues)) { diferencias.push('falta ' + h); return; }
+      for (let r = 1; r < antes.length; r++) {
+        if (valor(antes[r][idxAntes[h]]) !== valor((despues[r] || [])[idxDespues[h]])) {
+          diferencias.push(h + ' fila ' + (r + 1));
+          break;
+        }
+      }
+    });
+    if (diferencias.length) {
+      return { ok: false, mensaje: 'ATENCIÓN: la verificación encontró diferencias (' + diferencias.slice(0, 5).join('; ') +
+        '). Los datos originales están completos en la hoja "' + nombreRespaldo + '". No captures nada y avisa antes de continuar.' };
+    }
+
+    aseConfigurarValidacionYSemaforo_();
+    ss.setActiveSheet(hoja);
+    const extras = enc.slice(ENCABEZADOS_ASE_SOLICITUDES.length).filter(Boolean);
+    return { ok: true, respaldo: nombreRespaldo,
+      mensaje: 'Listo: Solicitudes quedó en el orden nuevo (' + (antes.length - 1) +
+        ' solicitud(es) verificadas columna por columna). Respaldo: "' + nombreRespaldo + '".' +
+        (extras.length ? ' Columnas agregadas a mano que dejé al final: ' + extras.join(', ') + '.' : '') };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 // ── Menú del Sheet ──
 function onOpen() {
   SpreadsheetApp.getUi()
@@ -1215,6 +1340,7 @@ function onOpen() {
     .addItem('Instalar trigger de programación de visita', 'aseInstalarTriggerProgramacion')
     .addItem('Desinstalar trigger de programación de visita', 'aseDesinstalarTriggerProgramacion')
     .addItem('Aplicar validación y semáforo', 'aseConfigurarValidacionYSemaforo')
+    .addItem('Reordenar columnas de Solicitudes', 'aseReordenarColumnasSolicitudes')
     .addItem('Configurar conexión con Mantenimiento', 'aseConfigurarConexionMantenimientoMenu')
     .addItem('Probar verificación de mantenimiento (un CCT)', 'aseProbarVerificacionMenu')
     .addToUi();

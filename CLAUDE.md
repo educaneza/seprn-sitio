@@ -493,6 +493,15 @@ ya esté expandido).
   `Verificación de mantenimiento` (Verificado / En proceso / Sin verificar, con semáforo) y
   `Folio de mantenimiento indicado` al final de `Solicitudes`. **No bloquea** la solicitud
   (decisión de Jorge). Folio opcional en `asesorias.html`. Ver `docs/ARCHITECTURE.md §32`.
+- **Columnas por nombre y orden por bloques (15 oct 2026, en producción y verificado en vivo,
+  versión 20)**: piloto del reordenamiento de las bases de trámites. `asesorias.gs` ya no usa
+  `COL_ASE_*`: lee con `aseFilasCanonicas_()`/`aseFilaCanonica_()` (`fila[ASE['Estatus']]`) y
+  escribe con `aseCol_()`; la fila nueva se arma por nombre en el orden real de la hoja.
+  `ENCABEZADOS_ASE_SOLICITUDES` está por bloques (solicitud → quién la pide → centro de trabajo
+  → mantenimiento previo → atención → automáticas). Menú "Reordenar columnas de Solicitudes"
+  (`aseReordenarColumnasSolicitudes_()`, respaldo + verificación, columnas a mano al final), ya
+  corrido en producción. Una columna nueva va en su bloque, no al final. Ver
+  `docs/ARCHITECTURE.md §33`.
 
 ### `apps-script/formacion-docente.gs`
 **Desplegado en producción desde jul 2026** (Spreadsheet real `Formacion_Docente_2026_2027`, URL real ya pegada en `APPS_SCRIPT_URL` de `formacion-docente.html`; la extinta `jornada-verano-2026.html` compartió este mismo backend hasta su eliminación el 13 jul 2026).

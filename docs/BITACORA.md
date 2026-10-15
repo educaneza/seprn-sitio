@@ -15,6 +15,20 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-10-15 (cont. 3) · Asesorías: columnas por nombre y hoja reordenada por bloques (piloto)
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-15 |
+| **Sesión** | Jorge pidió reacomodar las columnas de las bases en un orden que siga el flujo de llenado. Hallazgo: los 4 backends de trámite leen y escriben por posición, así que mover columnas sin cambiar código rompería estatus, avisos y la Oficina Virtual. Decisiones de Jorge: piloto con Asesorías y luego uno por sesión; las columnas hechas a mano se conservan al final. |
+| **Código** | `apps-script/asesorias.gs`: `ENCABEZADOS_ASE_SOLICITUDES` por bloques + mapa `ASE`; `aseFilasCanonicas_()`/`aseFilaCanonica_()`/`aseCol_()`; se retiraron todas las `COL_ASE_*`; alta armada por nombre en el orden real de la hoja; auto-heal por nombre; validación y semáforo por nombre (`aseConfigurarValidacionYSemaforo_()`, ahora también avisa en `Verificación de mantenimiento` e `ID de envío`); menú nuevo "Reordenar columnas de Solicitudes" (`aseReordenarColumnasSolicitudes_()`, mismo patrón que `reordenarColumnasCursos_()`). Patrón documentado en `docs/ARCHITECTURE.md §33`. |
+| **Verificación** | Simulación local en Node con un Sheet falso y las 2 filas reales + una columna a mano: 28 de 28 comprobaciones. En producción, vía Chrome: el código del editor era idéntico al repo (SHA-256) antes de pegar e idéntico al archivo nuevo después; versión 20 en la misma implementación; `curl` de solo lectura (servicio, consulta de `OTDE-ASE-0001`/`0002`, token falso) antes y después; "Reordenar" → "2 solicitud(es) verificadas columna por columna", respaldo `Solicitudes_respaldo_20261015`; hoja releída con el conector de Drive (orden nuevo, datos intactos) y captura con `Estatus` en U con su dropdown y color. |
+| **Pendiente** | Mantenimiento, Soporte y Correo con el mismo procedimiento, uno por sesión (ROADMAP 34). Borrar el respaldo de Asesorías cuando ya no haga falta. |
+| **Documentación actualizada** | Este checkpoint, `docs/ARCHITECTURE.md` §33 (nueva), `docs/ROADMAP.md` ítem 34 (nuevo), `CLAUDE.md` (sección de `asesorias.gs`), `docs/TABLERO-SALUD.md` (fila de Asesorías). |
+| **Commits** | El de este cambio (código + documentación). |
+
+---
+
 ## CHECKPOINT — 2026-10-15 (cont. 2) · Despliegue de los `.gs` confirmado, pendientes cerrados y limpieza de activadores
 
 | | |

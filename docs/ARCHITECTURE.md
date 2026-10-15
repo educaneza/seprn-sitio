@@ -3170,3 +3170,39 @@ en vivo desde la página, para no exponer en un endpoint público qué escuelas 
 resumen; Asesorías: 9 casos) y Playwright local con el `fetch` interceptado para los 4
 formularios. Sin pruebas contra Apps Script real todavía.
 
+## 33. Bases de trámites por nombre de encabezado y orden por bloques (oct 2026)
+
+Tras las mejoras del 14 oct, las hojas de los trámites quedaron con columnas agregadas al final
+"para no correr las existentes", porque los 4 backends leían y escribían **por posición**
+(`COL_MAN_ESTATUS = 14`, `COL_ASE_ESTATUS = 16`, `COL_ALTA_ESTADO = 24`...). Mover una columna
+habría mandado el estatus, los avisos de cierre y la Oficina Virtual a la columna equivocada.
+Se adopta el patrón que Formación Docente ya usa en `Cursos`/`Inscripciones` (§12):
+
+- **Un solo arreglo de encabezados, por bloques** en el orden en que se llena el trámite, y un
+  mapa `{encabezado: índice}` derivado de él (en Asesorías, `ASE`).
+- **Lectura canónica**: la fila real se reacomoda al orden del arreglo por nombre
+  (`aseFilasCanonicas_()`, `aseFilaCanonica_()`); el código usa `fila[ASE['Estatus']]`. Una
+  columna que falte llega vacía.
+- **Escritura por nombre**: `aseCol_(hoja, 'Estatus')` da la columna real; la fila nueva se arma
+  como objeto `{encabezado: valor}` y se acomoda en el orden de la fila 1 real, así que funciona
+  antes y después de reordenar y deja en blanco las columnas agregadas a mano.
+- **Auto-heal por nombre**: un encabezado que falte se agrega al final, sin mover nada.
+- **Menú "Reordenar columnas"**: bajo el mismo `LockService` que `doPost`; copia completa
+  `<Hoja>_respaldo_AAAAMMDD`; `moveColumns()` de izquierda a derecha (conserva dropdowns,
+  semáforo y protecciones); verificación columna por columna (incluidas las columnas a mano);
+  vuelve a aplicar validaciones por nombre. Las columnas que no son del sistema quedan al final.
+- **Orden de despliegue**: primero el `.gs` (Nueva versión), después el menú. Al revés, la
+  versión vieja escribiría por posición sobre la hoja ya reordenada. Ojo: los activadores
+  instalables `onEdit` corren el código **guardado**, no la versión publicada.
+
+**Piloto: Asesorías (15 oct 2026, versión 20).** Simulación local con las 2 filas reales (28
+comprobaciones: alta antes y después de reordenar, duplicados con y sin ID, consulta, Panel,
+`asesoriasMes`, `oficiosOV`, avisos de cierre y fecha programada, validaciones). En producción:
+código pegado vía Chrome (hash comparado contra el repo antes y después), versión 20 en la misma
+implementación, `curl` de solo lectura, "Reordenar" corrido ("2 solicitud(es) verificadas") y la
+hoja releída con el conector de Drive. Respaldo: `Solicitudes_respaldo_20261015`.
+
+**Pendiente:** Mantenimiento (`Solicitudes` + "Reportes de visita", ~33 constantes
+`COL_MAN_REP_*`), Soporte y Correo (5 hojas; columnas a mano `NOTAS`/`OBSERVACIONES` y una sin
+título donde Marcos anota, que se conservan al final con título). Ver `docs/ROADMAP.md` ítem 34.
+
