@@ -15,6 +15,21 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-10-15 (cont. 6) · Correo: columnas por nombre y las 5 hojas reordenadas — reordenamiento completo
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-15 |
+| **Sesión** | Último trámite del reordenamiento (ROADMAP 34). Con esto, las 4 bases de trámites quedan por bloques y leídas por nombre. |
+| **Código** | `apps-script/correo/` (9 de 11 archivos): `Config.gs` gana `encabezadosCorreo_()`, `idxEncabezado_()` (exacto antes que normalizado), `colCorreo_()`, `filaRealDesdeObjeto_()`, `completarEncabezadosCorreo_()`, `crearHojaCorreo_()`, `siguienteFolioCorreo_()` y el menú "Reordenar columnas de las 5 hojas" (`reordenarColumnasCorreo_()`, verificación por posición). `WebApp.gs`: `registrarSolicitudSinDuplicar_(hoja, valores, estadoInicial, generarFolio, idEnvio)` por nombre. Los 5 tipos arman su alta como objeto, sin `COL_*`. `Seguimiento.gs`: el folio ya no se asume en la columna B. `GenerarResumenSIGEE.gs`: menú con "Aplicar validación y semáforo" y el reordenamiento. |
+| **Verificación** | Simulación local de las 5 hojas con su estructura real (incluidas las columnas de Marcos): 47 de 47. En producción vía Chrome: los 11 archivos del editor idénticos al repo antes de tocar nada; los 9 pegados uno por uno con su hash y el conjunto de 11 verificado antes de guardar; versión 28 en la misma implementación; `curl` de solo lectura de los 5 tipos antes y después; "Reordenar" → Alta 62, Cambio de Contraseña 11, Reset 2FA 26, Cambio y Eliminar 2, Incidencias 6 filas verificadas, 5 respaldos; las 5 hojas releídas con el conector de Drive y captura de Alta con `Estado general` y las columnas de Marcos al final. |
+| **Decisiones** | Las columnas de Marcos se conservan al final, en su orden (decisión de Jorge); la sin título de "Cambio y Eliminar Autenticación" (con "atendida") ahora se llama `NOTAS`. |
+| **Pendiente** | Borrar los 9 respaldos del 15 oct (Correo 5, Mantenimiento 2, Asesorías 1, Soporte 1) cuando Jorge confirme que todo sigue bien. Avisar a Marcos, Nancy y Alejandro que cambió el orden de sus hojas (los datos no). |
+| **Documentación actualizada** | Este checkpoint, `docs/ARCHITECTURE.md` §33, `docs/ROADMAP.md` ítem 34 (cerrado), `CLAUDE.md` (sección de Correo), `docs/TABLERO-SALUD.md` (fila de Correo). |
+| **Commits** | El de este cambio (código + documentación). |
+
+---
+
 ## CHECKPOINT — 2026-10-15 (cont. 5) · Soporte: columnas por nombre y hoja reordenada por bloques
 
 | | |

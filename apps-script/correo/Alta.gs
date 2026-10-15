@@ -35,32 +35,29 @@ function manejarAlta(datos) {
   altaValidarCampos(datos);
 
   const hoja = altaObtenerHoja();
-  const fila = [
-    '',  // Fecha — la llena registrarSolicitudSinDuplicar_() (WebApp.gs)
-    '',  // Folio — ídem
-    datos.cct.trim().toUpperCase(),
-    (datos.sector || '').trim(),
-    (datos.zona || '').toString().trim(),
-    (datos.escuela || '').trim(),
-    datos.dominio.trim(),
-    datos.tipoCuenta.trim(),
-    datos.nombre.trim(),
-    datos.apellidoPaterno.trim(),
-    datos.apellidoMaterno.trim(),
-    datos.rfc.trim().toUpperCase(),
-    datos.curp.trim().toUpperCase(),
-    datos.funcion.trim(),
-    datos.correoPersonal.trim(),
-    datos.telefono.trim(),
-    (datos.observaciones || '').trim(),
-    '',   // NP SIGEE — Marcos la llena a mano
-    '', '', '', '', '',
-    'Solicitud recibida'
-  ];
+  // Por nombre de columna (ver encabezadosCorreo_ en Config.gs). Fecha, Folio e ID de envío
+  // los pone registrarSolicitudSinDuplicar_(); lo que llena Marcos queda en blanco.
+  const valores = {
+    'CCT': datos.cct.trim().toUpperCase(),
+    'Sector': (datos.sector || '').trim(),
+    'Zona': (datos.zona || '').toString().trim(),
+    'Escuela': (datos.escuela || '').trim(),
+    'Dominio': datos.dominio.trim(),
+    'Tipo de Cuenta': datos.tipoCuenta.trim(),
+    'Nombre': datos.nombre.trim(),
+    'Apellido Paterno': datos.apellidoPaterno.trim(),
+    'Apellido Materno': datos.apellidoMaterno.trim(),
+    'RFC': datos.rfc.trim().toUpperCase(),
+    'CURP': datos.curp.trim().toUpperCase(),
+    'Función': datos.funcion.trim(),
+    'Correo Personal': datos.correoPersonal.trim(),
+    'Teléfono': datos.telefono.trim(),
+    'Observaciones': (datos.observaciones || '').trim()
+  };
 
   // Candado + "ID de envío": un reintento devuelve el mismo folio sin volver a notificar
-  // (QA-NOTES #44). Columnas capturadas por el solicitante: A-Q: de Fecha a Observaciones.
-  const registro = registrarSolicitudSinDuplicar_(hoja, fila, 17, altaGenerarFolio, datos.idEnvio);
+  // (QA-NOTES #44). Sin ID, se compara todo lo que capturó el solicitante (`valores`).
+  const registro = registrarSolicitudSinDuplicar_(hoja, valores, 'Solicitud recibida', altaGenerarFolio, datos.idEnvio);
   if (registro.duplicado) return respuestaDuplicado_(registro.folio);
   const folio = registro.folio;
 
@@ -79,22 +76,7 @@ function altaObtenerHoja() {
   let hoja = ss.getSheetByName(HOJA_ALTA);
 
   if (!hoja) {
-    hoja = ss.insertSheet(HOJA_ALTA);
-    hoja.appendRow([
-      'Fecha', 'Folio', 'CCT', 'Sector', 'Zona', 'Escuela', 'Dominio', 'Tipo de Cuenta',
-      'Nombre', 'Apellido Paterno', 'Apellido Materno', 'RFC', 'CURP', 'Función',
-      'Correo Personal', 'Teléfono', 'Observaciones', 'NP SIGEE',
-      'Usuario asignado', 'Contraseña asignada', '¿Cuenta lista?', 'Usuario enviado',
-      'Fecha de entrega', 'Estado general'
-    ]);
-    const header = hoja.getRange(1, 1, 1, 24);
-    header.setFontWeight('bold')
-          .setBackground('#56212f')
-          .setFontColor('#F9F8F5');
-    hoja.setFrozenRows(1);
-    hoja.setColumnWidth(6, 200);  // Escuela
-    hoja.setColumnWidth(9, 150);  // Nombre
-    hoja.setColumnWidth(17, 220); // Observaciones
+    hoja = crearHojaCorreo_(ss, HOJA_ALTA, { 'Escuela': 200, 'Nombre': 150, 'Observaciones': 220 });
   }
 
   altaAplicarValidacionEstado(hoja);
@@ -109,21 +91,16 @@ function altaObtenerHoja() {
 // Usuario asignado/Contraseña asignada (las que Marcos llena a mano para
 // disparar el correo de credenciales) y NP SIGEE se dejan libres a
 // propósito. Utilidades compartidas en Config.gs. ──
-const COL_ALTA_DOMINIO = 7;
-const COL_ALTA_TIPO_CUENTA = 8;
-const COL_ALTA_CUENTA_LISTA = 21;
-const COL_ALTA_USUARIO_ENVIADO = 22;
-const COL_ALTA_FECHA_ENTREGA = 23;
-const COL_ALTA_ESTADO = 24;
 const ALTA_TIPOS_CUENTA_VALIDOS = ['oficina', 'personal', 'N/A'];
 const ALTA_COLORES_ESTADO = { 'Solicitud recibida': '#e5e7eb', 'Cuenta entregada': '#d1fae5', 'Rechazada': '#fee2e2' };
 
 function altaAplicarSemaforoYProteccion_(hoja) {
-  aplicarValidacionListaSuave_(hoja, COL_ALTA_TIPO_CUENTA, ALTA_TIPOS_CUENTA_VALIDOS);
-  aplicarValidacionListaSuave_(hoja, COL_ALTA_CUENTA_LISTA, ['Sí', 'No']);
-  aplicarSemaforoPorValor_(hoja, COL_ALTA_ESTADO, ALTA_COLORES_ESTADO);
-  [1, 2, COL_ALTA_DOMINIO, COL_ALTA_USUARIO_ENVIADO, COL_ALTA_FECHA_ENTREGA, COL_ALTA_ESTADO]
-    .forEach(function (col) { protegerColumnaAutomatica_(hoja, col); });
+  const col = function (n) { return colCorreo_(hoja, n); };
+  aplicarValidacionListaSuave_(hoja, col('Tipo de Cuenta'), ALTA_TIPOS_CUENTA_VALIDOS);
+  aplicarValidacionListaSuave_(hoja, col('¿Cuenta lista?'), ['Sí', 'No']);
+  aplicarSemaforoPorValor_(hoja, col('Estado general'), ALTA_COLORES_ESTADO);
+  ['Fecha', 'Folio', 'Dominio', 'Usuario enviado', 'Fecha de entrega', 'Estado general']
+    .forEach(function (n) { protegerColumnaAutomatica_(hoja, col(n)); });
 }
 
 // ── Dropdown en "Estado general" (protector, no cambia la lógica de arriba):
@@ -137,19 +114,12 @@ function altaAplicarValidacionEstado(hoja) {
     .requireValueInList(['Solicitud recibida', 'Cuenta entregada', 'Rechazada'], true)
     .setAllowInvalid(false)
     .build();
-  hoja.getRange(2, 24, 1000, 1).setDataValidation(regla);
+  hoja.getRange(2, colCorreo_(hoja, 'Estado general'), 1000, 1).setDataValidation(regla);
 }
 
 // ── Generar folio único ──
 function altaGenerarFolio(hoja) {
-  const datos  = hoja.getDataRange().getValues();
-  const prefix = 'OTDE-ALT-';
-  const maxNum = datos.slice(1)
-    .map(row => String(row[1]))
-    .filter(f => f.startsWith(prefix))
-    .map(f => parseInt(f.replace(prefix, ''), 10) || 0)
-    .reduce((a, b) => Math.max(a, b), 0);
-  return prefix + String(maxNum + 1).padStart(4, '0');
+  return siguienteFolioCorreo_(hoja, 'OTDE-ALT-');
 }
 
 // ── Validar campos requeridos ──

@@ -246,13 +246,14 @@ function doPost(e) {
 // este proyecto:
 //   - LockService alrededor de buscar duplicado + generar folio + agregar fila.
 //   - Busca primero por "ID de envío" (lo manda correo.html); si no viene (página vieja en
-//     caché), por las columnas que llena el solicitante — de CCT en adelante, las primeras
-//     `nCapturadas` — idénticas dentro de los últimos 10 minutos.
-//   - La columna "ID de envío" se agrega sola al final de la hoja si no existe (estas hojas
-//     no tienen auto-heal de encabezados), sin mover ninguna columna existente.
-// `fila` es la fila completa con Fecha/Folio en blanco; los llena esta función.
-// Devuelve { folio, duplicado }. Quien llama solo notifica si duplicado === false.
-function registrarSolicitudSinDuplicar_(hoja, fila, nCapturadas, generarFolio, idEnvio) {
+//     caché), por todo lo que capturó el solicitante (las llaves de `valores`) idéntico
+//     dentro de los últimos 10 minutos.
+//   - Todo por nombre de columna (oct 2026): funciona igual con la hoja en cualquier orden.
+//   - La columna "ID de envío" y las de seguimiento SIGEE se agregan solas si faltan.
+// `valores` = {encabezado: valor} de lo capturado; Fecha, Folio, Estado general e ID de
+// envío los pone esta función. Devuelve { folio, duplicado }. Quien llama solo notifica si
+// duplicado === false.
+function registrarSolicitudSinDuplicar_(hoja, valores, estadoInicial, generarFolio, idEnvio) {
   const VENTANA_DUPLICADO_MIN = 10;
   const lock = LockService.getScriptLock();
   try {
@@ -261,36 +262,38 @@ function registrarSolicitudSinDuplicar_(hoja, fila, nCapturadas, generarFolio, i
     throw new Error('El sistema está ocupado, intenta de nuevo en unos segundos.');
   }
   try {
-    const colId = asegurarColumnaIdEnvio_(hoja);
-    segPrepararColumnas_(hoja);   // columnas de seguimiento SIGEE al final (Seguimiento.gs)
+    asegurarColumnaIdEnvio_(hoja);
+    segPrepararColumnas_(hoja);   // columnas de seguimiento SIGEE (Seguimiento.gs)
     const id = String(idEnvio || '').trim();
-    const ultimaFila = hoja.getLastRow();
-    const filas = ultimaFila > 1 ? hoja.getRange(2, 1, ultimaFila - 1, colId).getValues() : [];
+    const datos = hoja.getDataRange().getValues();
+    const enc = datos[0];
+    const filas = datos.slice(1);
+    const iFolio = idxEncabezado_(enc, 'Folio');
+    const iFecha = idxEncabezado_(enc, 'Fecha');
+    const iId = idxEncabezado_(enc, 'ID de envío');
 
     if (id) {
-      const previa = filas.find(function (r) { return String(r[colId - 1] || '') === id; });
-      if (previa) return { folio: String(previa[1]), duplicado: true };
+      const previa = filas.find(function (r) { return String(r[iId] || '') === id; });
+      if (previa) return { folio: String(previa[iFolio]), duplicado: true };
     }
 
     const norm = function (v) { return String(v == null ? '' : v).trim().toLowerCase(); };
+    const capturadas = Object.keys(valores).map(function (n) { return [n, idxEncabezado_(enc, n)]; })
+      .filter(function (p) { return p[1] !== -1; });
     const limite = Date.now() - VENTANA_DUPLICADO_MIN * 60 * 1000;
     for (let i = filas.length - 1; i >= 0; i--) {
       const r = filas[i];
-      const fecha = r[0] instanceof Date ? r[0].getTime() : 0;
+      const fecha = r[iFecha] instanceof Date ? r[iFecha].getTime() : 0;
       if (fecha < limite) continue;
-      let iguales = true;
-      for (let c = 2; c < nCapturadas; c++) {
-        if (norm(r[c]) !== norm(fila[c])) { iguales = false; break; }
-      }
-      if (iguales) return { folio: String(r[1]), duplicado: true };
+      const iguales = capturadas.every(function (p) { return norm(r[p[1]]) === norm(valores[p[0]]); });
+      if (iguales) return { folio: String(r[iFolio]), duplicado: true };
     }
 
     const folio = generarFolio(hoja);
-    fila[0] = new Date();
-    fila[1] = folio;
-    while (fila.length < colId - 1) fila.push('');
-    fila[colId - 1] = id;
-    hoja.appendRow(fila);
+    const completos = Object.assign({}, valores, {
+      'Fecha': new Date(), 'Folio': folio, 'Estado general': estadoInicial, 'ID de envío': id
+    });
+    hoja.appendRow(filaRealDesdeObjeto_(hoja, completos));
     SpreadsheetApp.flush();
     return { folio: folio, duplicado: false };
   } finally {

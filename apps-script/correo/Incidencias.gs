@@ -21,25 +21,23 @@ function manejarIncidencia(datos) {
   incidenciaValidarCampos(datos);
 
   const hoja = incidenciaObtenerHoja();
-  const fila = [
-    '',  // Fecha — la llena registrarSolicitudSinDuplicar_() (WebApp.gs)
-    '',  // Folio — ídem
-    datos.cct.trim().toUpperCase(),
-    (datos.sector || '').trim(),
-    (datos.zona || '').toString().trim(),
-    (datos.escuela || '').trim(),
-    datos.correoInstitucional.trim().toLowerCase(),
-    datos.nombre.trim(),
-    datos.correoPersonal.trim(),
-    datos.telefono.trim(),
-    datos.queProblema.trim(),
-    '', '', '', '', '',
-    'Solicitud recibida'
-  ];
+  // Por nombre de columna (ver encabezadosCorreo_ en Config.gs). Fecha, Folio e ID de envío
+  // los pone registrarSolicitudSinDuplicar_(); lo que llena Marcos queda en blanco.
+  const valores = {
+    'CCT': datos.cct.trim().toUpperCase(),
+    'Sector': (datos.sector || '').trim(),
+    'Zona': (datos.zona || '').toString().trim(),
+    'Escuela': (datos.escuela || '').trim(),
+    'Correo Institucional Afectado': datos.correoInstitucional.trim().toLowerCase(),
+    'Nombre': datos.nombre.trim(),
+    'Correo Personal': datos.correoPersonal.trim(),
+    'Teléfono': datos.telefono.trim(),
+    'Qué problema presentas': datos.queProblema.trim()
+  };
 
   // Candado + "ID de envío": un reintento devuelve el mismo folio sin volver a notificar
-  // (QA-NOTES #44). Columnas capturadas por el solicitante: A-K: de Fecha a Qué problema presentas.
-  const registro = registrarSolicitudSinDuplicar_(hoja, fila, 11, incidenciaGenerarFolio, datos.idEnvio);
+  // (QA-NOTES #44). Sin ID, se compara todo lo que capturó el solicitante (`valores`).
+  const registro = registrarSolicitudSinDuplicar_(hoja, valores, 'Solicitud recibida', incidenciaGenerarFolio, datos.idEnvio);
   if (registro.duplicado) return respuestaDuplicado_(registro.folio);
   const folio = registro.folio;
 
@@ -81,19 +79,7 @@ function incidenciaObtenerHoja() {
   let hoja = ss.getSheetByName(HOJA_INCIDENCIAS);
 
   if (!hoja) {
-    hoja = ss.insertSheet(HOJA_INCIDENCIAS);
-    hoja.appendRow([
-      'Fecha', 'Folio', 'CCT', 'Sector', 'Zona', 'Escuela', 'Correo Institucional Afectado',
-      'Nombre', 'Correo Personal', 'Teléfono', 'Qué problema presentas',
-      'Usuario asignado', 'Contraseña asignada', '¿Cuenta lista?', 'Usuario enviado',
-      'Fecha de entrega', 'Estado general'
-    ]);
-    const header = hoja.getRange(1, 1, 1, 17);
-    header.setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
-    hoja.setFrozenRows(1);
-    hoja.setColumnWidth(6, 200);  // Escuela
-    hoja.setColumnWidth(8, 150);  // Nombre
-    hoja.setColumnWidth(11, 260); // Qué problema presentas
+    hoja = crearHojaCorreo_(ss, HOJA_INCIDENCIAS, { 'Escuela': 200, 'Nombre': 150, 'Qué problema presentas': 260 });
   }
 
   incidenciaAplicarValidacionEstado(hoja);
@@ -107,17 +93,14 @@ function incidenciaObtenerHoja() {
 // enviado/Fecha de entrega/Estado general. Usuario asignado/Contraseña
 // asignada (las que Marcos llena a mano para disparar el correo) se dejan
 // libres a propósito. Utilidades compartidas en Config.gs. ──
-const COL_INCIDENCIA_CUENTA_LISTA = 14;
-const COL_INCIDENCIA_USUARIO_ENVIADO = 15;
-const COL_INCIDENCIA_FECHA_ENTREGA = 16;
-const COL_INCIDENCIA_ESTADO = 17;
 const INCIDENCIA_COLORES_ESTADO = { 'Solicitud recibida': '#e5e7eb', 'Incidencia resuelta': '#d1fae5', 'Rechazada': '#fee2e2' };
 
 function incidenciaAplicarSemaforoYProteccion_(hoja) {
-  aplicarValidacionListaSuave_(hoja, COL_INCIDENCIA_CUENTA_LISTA, ['Sí', 'No']);
-  aplicarSemaforoPorValor_(hoja, COL_INCIDENCIA_ESTADO, INCIDENCIA_COLORES_ESTADO);
-  [1, 2, COL_INCIDENCIA_USUARIO_ENVIADO, COL_INCIDENCIA_FECHA_ENTREGA, COL_INCIDENCIA_ESTADO]
-    .forEach(function (col) { protegerColumnaAutomatica_(hoja, col); });
+  const col = function (n) { return colCorreo_(hoja, n); };
+  aplicarValidacionListaSuave_(hoja, col('¿Cuenta lista?'), ['Sí', 'No']);
+  aplicarSemaforoPorValor_(hoja, col('Estado general'), INCIDENCIA_COLORES_ESTADO);
+  ['Fecha', 'Folio', 'Usuario enviado', 'Fecha de entrega', 'Estado general']
+    .forEach(function (n) { protegerColumnaAutomatica_(hoja, col(n)); });
 }
 
 // ── Dropdown en "Estado general" (protector, mismo criterio que
@@ -127,18 +110,11 @@ function incidenciaAplicarValidacionEstado(hoja) {
     .requireValueInList(['Solicitud recibida', 'Incidencia resuelta', 'Rechazada'], true)
     .setAllowInvalid(false)
     .build();
-  hoja.getRange(2, 17, 1000, 1).setDataValidation(regla);
+  hoja.getRange(2, colCorreo_(hoja, 'Estado general'), 1000, 1).setDataValidation(regla);
 }
 
 function incidenciaGenerarFolio(hoja) {
-  const datos  = hoja.getDataRange().getValues();
-  const prefix = 'OTDE-INC-';
-  const maxNum = datos.slice(1)
-    .map(row => String(row[1]))
-    .filter(f => f.startsWith(prefix))
-    .map(f => parseInt(f.replace(prefix, ''), 10) || 0)
-    .reduce((a, b) => Math.max(a, b), 0);
-  return prefix + String(maxNum + 1).padStart(4, '0');
+  return siguienteFolioCorreo_(hoja, 'OTDE-INC-');
 }
 
 function incidenciaValidarCampos(d) {

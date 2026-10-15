@@ -82,6 +82,207 @@ function indexOfHeaderAlias(headers, alias) {
   return -1;
 }
 
+// ============================================================
+// COLUMNAS POR NOMBRE Y ORDEN POR BLOQUES (oct 2026)
+// Las 5 hojas siguen el orden en que se llena correo.html: registro → quién la pide →
+// centro de trabajo → la solicitud → atención (Marcos, flujo SIGEE) → automáticas. El
+// código lee por encabezado (indexOfHeader) y escribe con colCorreo_() /
+// filaRealDesdeObjeto_(), nunca por posición, así que mover o insertar columnas no rompe
+// nada. Menú "OTDE Correos → Reordenar columnas de las 5 hojas". Se arma dentro de una
+// función (no const de nivel superior) porque usa HOJA_* de otros archivos (ver WebApp.gs).
+// ============================================================
+function encabezadosCorreo_(nombreHoja) {
+  const seguimiento = ['NP SIGEE', 'Fecha subida a SIGEE'];
+  const cierre = ['Usuario enviado', 'Fecha de entrega', 'Estado general', 'Rechazo notificado', 'ID de envío'];
+  const solicitante = ['Nombre', 'Correo Personal', 'Teléfono'];
+  const centro = ['CCT', 'Escuela', 'Sector', 'Zona'];
+  switch (nombreHoja) {
+    case HOJA_ALTA:
+      return ['Fecha', 'Folio',
+        'Nombre', 'Apellido Paterno', 'Apellido Materno', 'RFC', 'CURP', 'Función', 'Correo Personal', 'Teléfono']
+        .concat(centro, ['Dominio', 'Tipo de Cuenta', 'Observaciones'], seguimiento,
+          ['Usuario asignado', 'Contraseña asignada', 'Fecha respuesta SIGEE', '¿Cuenta lista?', 'Motivo de rechazo'], cierre);
+    case HOJA_CAMBIO:
+      return ['Fecha', 'Folio'].concat(solicitante, centro, ['Correo Institucional', 'Dominio', 'Observaciones'], seguimiento,
+        ['Contraseña asignada', 'Fecha respuesta SIGEE', '¿Cuenta lista?', 'Motivo de rechazo'], cierre);
+    case HOJA_CAMBIO_RESET:
+      return ['Fecha', 'Folio'].concat(solicitante, centro,
+        ['Correo Institucional', 'Dominio', 'Motivo de pérdida de acceso', 'Observaciones'], seguimiento,
+        ['Contraseña asignada', 'Fecha respuesta SIGEE', '¿Cuenta lista?', 'Motivo de rechazo'], cierre);
+    case HOJA_RESET:
+      return ['Fecha', 'Folio'].concat(solicitante, centro,
+        ['Correo Institucional', 'Motivo de pérdida de acceso', 'Observaciones'], seguimiento,
+        ['¿Reset listo?', 'Fecha respuesta SIGEE', 'Motivo de rechazo'], cierre);
+    case HOJA_INCIDENCIAS:
+      return ['Fecha', 'Folio'].concat(solicitante, centro, ['Correo Institucional Afectado', 'Qué problema presentas'],
+        seguimiento, ['Usuario asignado', 'Contraseña asignada', 'Fecha respuesta SIGEE', '¿Cuenta lista?', 'Motivo de rechazo'], cierre);
+  }
+  return null;
+}
+
+// Índice 0-based de un encabezado: primero exacto (así "Observaciones" del sistema no
+// se confunde con la columna "OBSERVACIONES" que agregó Marcos), si no, sin acentos ni
+// mayúsculas (indexOfHeader).
+function idxEncabezado_(encabezados, nombre) {
+  const limpios = encabezados.map(function (h) { return String(h == null ? '' : h).trim(); });
+  const exacto = limpios.indexOf(nombre);
+  return exacto !== -1 ? exacto : indexOfHeader(limpios, nombre);
+}
+
+function encabezadosHoja_(hoja) {
+  return hoja.getRange(1, 1, 1, Math.max(hoja.getLastColumn(), 1)).getValues()[0];
+}
+
+// Número de columna (1-based) real de un encabezado, para escribir en la hoja.
+function colCorreo_(hoja, nombre) {
+  const i = idxEncabezado_(encabezadosHoja_(hoja), nombre);
+  if (i === -1) throw new Error('La hoja ' + hoja.getName() + ' no tiene la columna "' + nombre + '".');
+  return i + 1;
+}
+
+// Fila real a partir de {encabezado: valor}, en el orden de la fila 1 de la hoja. Lo que
+// no se nombra (columnas de Marcos, columnas a mano) queda en blanco.
+function filaRealDesdeObjeto_(hoja, valores) {
+  const enc = encabezadosHoja_(hoja);
+  const fila = enc.map(function () { return ''; });
+  Object.keys(valores).forEach(function (nombre) {
+    const i = idxEncabezado_(enc, nombre);
+    if (i !== -1) fila[i] = valores[nombre];
+  });
+  return fila;
+}
+
+// Hoja ya existente: agrega AL FINAL, por nombre, cualquier encabezado del orden por
+// bloques que le falte, sin mover nada.
+function completarEncabezadosCorreo_(hoja) {
+  const canon = encabezadosCorreo_(hoja.getName());
+  if (!canon) return;
+  const enc = encabezadosHoja_(hoja);
+  const faltantes = canon.filter(function (h) { return idxEncabezado_(enc, h) === -1; });
+  if (!faltantes.length) return;
+  hoja.getRange(1, hoja.getLastColumn() + 1, 1, faltantes.length).setValues([faltantes])
+    .setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
+}
+
+// Hoja nueva: encabezados en el orden por bloques.
+function crearHojaCorreo_(ss, nombreHoja, anchos) {
+  const hoja = ss.insertSheet(nombreHoja);
+  const canon = encabezadosCorreo_(nombreHoja);
+  hoja.appendRow(canon);
+  hoja.getRange(1, 1, 1, canon.length).setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
+  hoja.setFrozenRows(1);
+  Object.keys(anchos || {}).forEach(function (n) { hoja.setColumnWidth(canon.indexOf(n) + 1, anchos[n]); });
+  return hoja;
+}
+
+// Mayor número de folio con ese prefijo (columna "Folio" por nombre) + 1.
+function siguienteFolioCorreo_(hoja, prefix) {
+  const datos = hoja.getDataRange().getValues();
+  const iFolio = idxEncabezado_(datos[0], 'Folio');
+  const maxNum = datos.slice(1)
+    .map(function (row) { return String(row[iFolio]); })
+    .filter(function (f) { return f.indexOf(prefix) === 0; })
+    .map(function (f) { return parseInt(f.replace(prefix, ''), 10) || 0; })
+    .reduce(function (a, b) { return Math.max(a, b); }, 0);
+  return prefix + String(maxNum + 1).padStart(4, '0');
+}
+
+// ── Menú "Reordenar columnas de las 5 hojas". Por hoja: completa encabezados, pone
+// título "NOTAS" a una columna sin título que tenga datos (la de Marcos en Cambio y
+// Eliminar Autenticación), deja una copia completa "<hoja>_respaldo_AAAAMMDD", mueve
+// con moveColumns() (conserva dropdowns, semáforo y protecciones) y verifica COLUMNA POR
+// COLUMNA POR POSICIÓN — no por nombre, porque hay encabezados repetidos (NOTAS ×3 en
+// Incidencias, Observaciones/OBSERVACIONES en Alta). Las columnas que no son del sistema
+// quedan al final, en el mismo orden entre ellas. Mismo candado que los envíos. ──
+function reordenarColumnasCorreo() {
+  SpreadsheetApp.getUi().alert(reordenarColumnasCorreo_().mensaje);
+}
+
+function reordenarColumnasCorreo_() {
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(30000)) {
+    return { ok: false, mensaje: 'Hay una solicitud registrándose en este momento. Intenta de nuevo en unos segundos.' };
+  }
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const mensajes = [];
+    const hojas = [HOJA_ALTA, HOJA_CAMBIO, HOJA_RESET, HOJA_CAMBIO_RESET, HOJA_INCIDENCIAS];
+    for (let n = 0; n < hojas.length; n++) {
+      const hoja = ss.getSheetByName(hojas[n]);
+      if (!hoja) continue;
+      const r = reordenarHojaCorreo_(ss, hoja);
+      if (!r.ok) return r;
+      mensajes.push(r.mensaje);
+    }
+    configurarValidacionYSemaforo_();
+    hojas.forEach(function (nombre) { const h = ss.getSheetByName(nombre); if (h) segPrepararColumnas_(h); });
+    return { ok: true, mensaje: 'Listo. ' + mensajes.join(' ') };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function reordenarHojaCorreo_(ss, hoja) {
+  const nombre = hoja.getName();
+  const canon = encabezadosCorreo_(nombre);
+  completarEncabezadosCorreo_(hoja);
+  SpreadsheetApp.flush();
+
+  // Título a columnas sin encabezado que sí tienen datos (si no, quedarían "invisibles").
+  const datos0 = hoja.getDataRange().getValues();
+  datos0[0].forEach(function (h, i) {
+    if (String(h).trim()) return;
+    const conDatos = datos0.slice(1).some(function (r) { return String(r[i] == null ? '' : r[i]).trim() !== ''; });
+    if (conDatos) hoja.getRange(1, i + 1).setValue('NOTAS').setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
+  });
+  SpreadsheetApp.flush();
+
+  const antes = hoja.getDataRange().getValues();
+  const enc = antes[0].map(function (h) { return String(h).trim(); });
+  // orig[k] = columna original (0-based) que hoy está en la posición k.
+  const orig = enc.map(function (_, i) { return i; });
+  const enOrden = canon.every(function (h, k) { return idxEncabezado_(enc, h) === k; });
+  if (enOrden) return { ok: true, mensaje: nombre + ' ya estaba en el orden nuevo.' };
+
+  const tz = 'America/Mexico_City';
+  let nombreRespaldo = nombre + '_respaldo_' + Utilities.formatDate(new Date(), tz, 'yyyyMMdd');
+  if (ss.getSheetByName(nombreRespaldo)) nombreRespaldo += '_' + Utilities.formatDate(new Date(), tz, 'HHmm');
+  const respaldo = hoja.copyTo(ss).setName(nombreRespaldo);
+  respaldo.setTabColor('#948A8E');
+  ss.setActiveSheet(respaldo);
+  ss.moveActiveSheet(ss.getNumSheets());
+
+  canon.forEach(function (h, k) {
+    const i = idxEncabezado_(enc, h);
+    if (i === -1 || i === k) return;
+    hoja.moveColumns(hoja.getRange(1, i + 1), k + 1);
+    enc.splice(k, 0, enc.splice(i, 1)[0]);
+    orig.splice(k, 0, orig.splice(i, 1)[0]);
+  });
+  SpreadsheetApp.flush();
+
+  const despues = hoja.getDataRange().getValues();
+  const valor = function (v) { return v instanceof Date ? v.getTime() : String(v == null ? '' : v); };
+  const diferencias = [];
+  if (despues.length !== antes.length) diferencias.push('filas ' + antes.length + ' → ' + despues.length);
+  if (despues[0].length !== antes[0].length) diferencias.push('columnas ' + antes[0].length + ' → ' + despues[0].length);
+  for (let k = 0; k < orig.length && diferencias.length < 5; k++) {
+    for (let r = 0; r < antes.length; r++) {
+      if (valor(antes[r][orig[k]]) !== valor((despues[r] || [])[k])) {
+        diferencias.push(String(antes[0][orig[k]] || '(sin título)') + ' fila ' + (r + 1));
+        break;
+      }
+    }
+  }
+  if (diferencias.length) {
+    return { ok: false, mensaje: 'ATENCIÓN: en ' + nombre + ' la verificación encontró diferencias (' + diferencias.join('; ') +
+      '). Los datos originales están completos en la hoja "' + nombreRespaldo + '". No captures nada y avisa antes de continuar.' };
+  }
+  const extras = enc.slice(canon.length).filter(Boolean);
+  return { ok: true, mensaje: nombre + ': ' + (antes.length - 1) + ' fila(s) verificadas columna por columna, respaldo "' +
+    nombreRespaldo + '".' + (extras.length ? ' Columnas de Marcos al final: ' + extras.join(', ') + '.' : '') };
+}
+
 // ── Respuesta de texto plano (evita preflight CORS) ──
 function textResponse(text) {
   return ContentService
@@ -197,20 +398,24 @@ function protegerColumnaAutomatica_(hoja, columna) {
 // doPost — esta función es solo para ponerse al día de inmediato sin
 // esperar una solicitud nueva. ──
 function configurarValidacionYSemaforo() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const alta = ss.getSheetByName(HOJA_ALTA);
-  if (alta) altaAplicarSemaforoYProteccion_(alta);
-  const cambio = ss.getSheetByName(HOJA_CAMBIO);
-  if (cambio) cambioAplicarSemaforoYProteccion_(cambio);
-  const reset = ss.getSheetByName(HOJA_RESET);
-  if (reset) resetAplicarSemaforoYProteccion_(reset);
-  const cambioReset = ss.getSheetByName(HOJA_CAMBIO_RESET);
-  if (cambioReset) cambioResetAplicarSemaforoYProteccion_(cambioReset);
-  const incidencias = ss.getSheetByName(HOJA_INCIDENCIAS);
-  if (incidencias) incidenciaAplicarSemaforoYProteccion_(incidencias);
+  configurarValidacionYSemaforo_();
   try {
     SpreadsheetApp.getUi().alert('Validación y semáforo aplicados en Alta/Cambio de Contraseña/Reset 2FA/Cambio y Eliminar Autenticación/Incidencias.');
   } catch (err) {}
+}
+
+function configurarValidacionYSemaforo_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const alta = ss.getSheetByName(HOJA_ALTA);
+  if (alta) { altaAplicarValidacionEstado(alta); altaAplicarSemaforoYProteccion_(alta); }
+  const cambio = ss.getSheetByName(HOJA_CAMBIO);
+  if (cambio) { cambioAplicarValidacionEstado(cambio); cambioAplicarSemaforoYProteccion_(cambio); }
+  const reset = ss.getSheetByName(HOJA_RESET);
+  if (reset) { resetAplicarValidacionEstado(reset); resetAplicarSemaforoYProteccion_(reset); }
+  const cambioReset = ss.getSheetByName(HOJA_CAMBIO_RESET);
+  if (cambioReset) { cambioResetAplicarValidacionEstado(cambioReset); cambioResetAplicarSemaforoYProteccion_(cambioReset); }
+  const incidencias = ss.getSheetByName(HOJA_INCIDENCIAS);
+  if (incidencias) { incidenciaAplicarValidacionEstado(incidencias); incidenciaAplicarSemaforoYProteccion_(incidencias); }
 }
 
 // ── Recuadro "Vincula 2 celulares" (oct 2026) para los correos que piden configurar

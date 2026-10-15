@@ -43,6 +43,8 @@ function onOpen() {
     .addItem('Generar resumen para SIGEE (fila activa)', 'generarResumenSIGEE')
     .addItem('Preparar columnas de seguimiento SIGEE', 'prepararSeguimientoSIGEE')
     .addItem('Enviar resumen semanal ahora', 'resumenSemanal')
+    .addItem('Aplicar validación y semáforo', 'configurarValidacionYSemaforo')
+    .addItem('Reordenar columnas de las 5 hojas', 'reordenarColumnasCorreo')
     .addToUi();
 }
 

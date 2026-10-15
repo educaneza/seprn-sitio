@@ -101,7 +101,7 @@ function segAnotarEnFolio_(hoja, folio, encabezado, valor) {
   if (!texto) return;
   try {
     const col = segAsegurarColumna_(hoja, encabezado);
-    const folios = hoja.getRange(1, 2, hoja.getLastRow(), 1).getValues();
+    const folios = hoja.getRange(1, colCorreo_(hoja, 'Folio'), hoja.getLastRow(), 1).getValues();
     for (let i = folios.length - 1; i >= 1; i--) {
       if (String(folios[i][0]).trim() === folio) {
         hoja.getRange(i + 1, col).setValue(texto);

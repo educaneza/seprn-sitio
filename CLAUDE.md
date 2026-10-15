@@ -1043,8 +1043,8 @@ arquitectura completo en `docs/ARCHITECTURE.md §16`. Resumen operativo:
   capturadas idénticas en 10 min). Un reintento devuelve el mismo folio sin volver a mandar correo
   ni Telegram. Casos reales previos: `OTDE-CAM-0008`/`0009`, `OTDE-2FA-0012`/`0013`. Como estas
   hojas no tienen auto-heal, `asegurarColumnaIdEnvio_()` agrega "ID de envío" después de la
-  última columna con datos. En `Cambio de Contraseña` quedó en S porque Marcos usa la R, sin
-  encabezado, para notas a mano. Al redesplegar hay que pegar **los 6** (`WebApp.gs` + los 5 tipos)
+  última columna con datos. (Desde el 15 oct 2026 las hojas están por bloques y las columnas de
+  notas de Marcos van al final, con título.) Al redesplegar hay que pegar **los 6** (`WebApp.gs` + los 5 tipos)
   y hacer una sola "Nueva versión". Ver `docs/ARCHITECTURE.md §27`.
 - **Seguimiento de SIGEE, rechazos y Authenticator (14 oct 2026, `correo.html` en producción,
   `.gs` desplegados por Jorge el 15 oct 2026)**: `apps-script/correo/Seguimiento.gs` (nuevo) agrega al final de
@@ -1055,6 +1055,21 @@ arquitectura completo en `docs/ARCHITECTURE.md §16`. Resumen operativo:
   "¿Qué pasó?" (`Motivo de pérdida de acceso`). Infografía `images/authenticator-2-celulares.png`.
   Al redesplegar, pegar `Seguimiento.gs` **y** los 10 modificados en una sola Nueva versión, y
   correr "Preparar columnas de seguimiento SIGEE". Ver `docs/ARCHITECTURE.md §32`.
+- **Columnas por nombre y orden por bloques (15 oct 2026, en producción y verificado en vivo,
+  versión 28)**: último trámite del reordenamiento. `encabezadosCorreo_(nombreHoja)` (en
+  `Config.gs`, dentro de una función porque usa `HOJA_*` de otros archivos) define el orden de las
+  5 hojas: registro → quién la pide → centro de trabajo → la solicitud → atención de Marcos (NP
+  SIGEE → fechas → usuario/contraseña o "¿Reset listo?" → motivo de rechazo) → automáticas. Las
+  altas se arman como objeto por nombre (`registrarSolicitudSinDuplicar_(hoja, valores,
+  estadoInicial, generarFolio, idEnvio)`, `filaRealDesdeObjeto_()`), los folios con
+  `siguienteFolioCorreo_()` y las validaciones con `colCorreo_()`; ya no hay `COL_ALTA_*`/
+  `COL_CAMBIO_*`/etc. `idxEncabezado_()` busca primero el nombre exacto, para no confundir
+  `Observaciones` (sistema) con `OBSERVACIONES` (Marcos). Menú "OTDE Correos → Reordenar columnas
+  de las 5 hojas" (`reordenarColumnasCorreo_()`, verificación por posición porque hay encabezados
+  repetidos: NOTAS ×3 en Incidencias), ya corrido en producción. Las columnas de Marcos quedaron al
+  final; la que no tenía título (Cambio y Eliminar Autenticación) ahora se llama `NOTAS`. Al
+  redesplegar Correo, pegar los archivos modificados y una sola Nueva versión. Ver
+  `docs/ARCHITECTURE.md §33`.
 
 ### Mantenimiento (página propia desde el 27 ago 2026, ver `mantenimiento.html`)
 Ya no es solo texto ("solicita por oficio y vía estructura") — formulario "Solicitar

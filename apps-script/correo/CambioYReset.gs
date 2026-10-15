@@ -29,26 +29,24 @@ function manejarCambioContrasenaYReset(datos) {
     : 'aulamexiquense.mx';
 
   const hoja = cambioResetObtenerHoja();
-  const fila = [
-    '',  // Fecha — la llena registrarSolicitudSinDuplicar_() (WebApp.gs)
-    '',  // Folio — ídem
-    datos.cct.trim().toUpperCase(),
-    (datos.sector || '').trim(),
-    (datos.zona || '').toString().trim(),
-    (datos.escuela || '').trim(),
-    datos.correoInstitucional.trim().toLowerCase(),
-    dominio,
-    datos.nombre.trim(),
-    datos.correoPersonal.trim(),
-    datos.telefono.trim(),
-    (datos.observaciones || '').trim(),
-    '', '', '', '',
-    'Solicitud recibida'
-  ];
+  // Por nombre de columna (ver encabezadosCorreo_ en Config.gs). Fecha, Folio e ID de envío
+  // los pone registrarSolicitudSinDuplicar_(); lo que llena Marcos queda en blanco.
+  const valores = {
+    'CCT': datos.cct.trim().toUpperCase(),
+    'Sector': (datos.sector || '').trim(),
+    'Zona': (datos.zona || '').toString().trim(),
+    'Escuela': (datos.escuela || '').trim(),
+    'Correo Institucional': datos.correoInstitucional.trim().toLowerCase(),
+    'Dominio': dominio,
+    'Nombre': datos.nombre.trim(),
+    'Correo Personal': datos.correoPersonal.trim(),
+    'Teléfono': datos.telefono.trim(),
+    'Observaciones': (datos.observaciones || '').trim()
+  };
 
   // Candado + "ID de envío": un reintento devuelve el mismo folio sin volver a notificar
-  // (QA-NOTES #44). Columnas capturadas por el solicitante: A-L: de Fecha a Observaciones.
-  const registro = registrarSolicitudSinDuplicar_(hoja, fila, 12, cambioResetGenerarFolio, datos.idEnvio);
+  // (QA-NOTES #44). Sin ID, se compara todo lo que capturó el solicitante (`valores`).
+  const registro = registrarSolicitudSinDuplicar_(hoja, valores, 'Solicitud recibida', cambioResetGenerarFolio, datos.idEnvio);
   if (registro.duplicado) return respuestaDuplicado_(registro.folio);
   const folio = registro.folio;
   segAnotarEnFolio_(hoja, folio, SEG_COL_MOTIVO_PERDIDA, datos.motivoPerdida);
@@ -88,17 +86,7 @@ function cambioResetObtenerHoja() {
   let hoja = ss.getSheetByName(HOJA_CAMBIO_RESET);
 
   if (!hoja) {
-    hoja = ss.insertSheet(HOJA_CAMBIO_RESET);
-    hoja.appendRow([
-      'Fecha', 'Folio', 'CCT', 'Sector', 'Zona', 'Escuela', 'Correo Institucional',
-      'Dominio', 'Nombre', 'Correo Personal', 'Teléfono', 'Observaciones',
-      'Contraseña asignada', '¿Cuenta lista?', 'Usuario enviado', 'Fecha de entrega', 'Estado general'
-    ]);
-    const header = hoja.getRange(1, 1, 1, 17);
-    header.setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
-    hoja.setFrozenRows(1);
-    hoja.setColumnWidth(6, 200); // Escuela
-    hoja.setColumnWidth(9, 150); // Nombre
+    hoja = crearHojaCorreo_(ss, HOJA_CAMBIO_RESET, { 'Escuela': 200, 'Nombre': 150 });
   }
 
   cambioResetAplicarValidacionEstado(hoja);
@@ -113,18 +101,14 @@ function cambioResetObtenerHoja() {
 // Usuario enviado/Fecha de entrega/Estado general. Contraseña asignada (la
 // que Marcos llena a mano para disparar el correo) se deja libre a
 // propósito. Utilidades compartidas en Config.gs. ──
-const COL_CAMBIORESET_DOMINIO = 8;
-const COL_CAMBIORESET_CUENTA_LISTA = 14;
-const COL_CAMBIORESET_USUARIO_ENVIADO = 15;
-const COL_CAMBIORESET_FECHA_ENTREGA = 16;
-const COL_CAMBIORESET_ESTADO = 17;
 const CAMBIORESET_COLORES_ESTADO = { 'Solicitud recibida': '#e5e7eb', 'Cuenta entregada': '#d1fae5', 'Rechazada': '#fee2e2' };
 
 function cambioResetAplicarSemaforoYProteccion_(hoja) {
-  aplicarValidacionListaSuave_(hoja, COL_CAMBIORESET_CUENTA_LISTA, ['Sí', 'No']);
-  aplicarSemaforoPorValor_(hoja, COL_CAMBIORESET_ESTADO, CAMBIORESET_COLORES_ESTADO);
-  [1, 2, COL_CAMBIORESET_DOMINIO, COL_CAMBIORESET_USUARIO_ENVIADO, COL_CAMBIORESET_FECHA_ENTREGA, COL_CAMBIORESET_ESTADO]
-    .forEach(function (col) { protegerColumnaAutomatica_(hoja, col); });
+  const col = function (n) { return colCorreo_(hoja, n); };
+  aplicarValidacionListaSuave_(hoja, col('¿Cuenta lista?'), ['Sí', 'No']);
+  aplicarSemaforoPorValor_(hoja, col('Estado general'), CAMBIORESET_COLORES_ESTADO);
+  ['Fecha', 'Folio', 'Dominio', 'Usuario enviado', 'Fecha de entrega', 'Estado general']
+    .forEach(function (n) { protegerColumnaAutomatica_(hoja, col(n)); });
 }
 
 // ── Dropdown en "Estado general" (protector, mismo criterio que
@@ -134,18 +118,11 @@ function cambioResetAplicarValidacionEstado(hoja) {
     .requireValueInList(['Solicitud recibida', 'Cuenta entregada', 'Rechazada'], true)
     .setAllowInvalid(false)
     .build();
-  hoja.getRange(2, 17, 1000, 1).setDataValidation(regla);
+  hoja.getRange(2, colCorreo_(hoja, 'Estado general'), 1000, 1).setDataValidation(regla);
 }
 
 function cambioResetGenerarFolio(hoja) {
-  const datos  = hoja.getDataRange().getValues();
-  const prefix = 'OTDE-CYR-';
-  const maxNum = datos.slice(1)
-    .map(row => String(row[1]))
-    .filter(f => f.startsWith(prefix))
-    .map(f => parseInt(f.replace(prefix, ''), 10) || 0)
-    .reduce((a, b) => Math.max(a, b), 0);
-  return prefix + String(maxNum + 1).padStart(4, '0');
+  return siguienteFolioCorreo_(hoja, 'OTDE-CYR-');
 }
 
 function cambioResetValidarCampos(d) {

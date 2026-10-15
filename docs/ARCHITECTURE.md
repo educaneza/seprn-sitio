@@ -3228,6 +3228,22 @@ antes y después, "Reordenar columnas" sin diferencias (respaldo
 `Solicitudes_Soporte_2026_respaldo_20261015`) y captura con `Estatus` y sus dropdowns en su
 lugar.
 
-**Pendiente:** Correo (5 hojas; columnas a mano `NOTAS`/`OBSERVACIONES` y una sin
-título donde Marcos anota, que se conservan al final con título). Ver `docs/ROADMAP.md` ítem 34.
+**Correo (15 oct 2026, versión 28).** 5 hojas en un solo proyecto (9 de 11 archivos tocados).
+Ya leía casi todo por encabezado (`indexOfHeader`); por posición quedaban las altas, los folios y
+las validaciones. `encabezadosCorreo_()` define el orden por bloques de cada hoja; los flujos de
+Marcos (credenciales, reset, rechazo, fechas de SIGEE) ya eran por nombre y no cambiaron.
+Particularidades: `indexOfHeader` no distingue mayúsculas, así que `idxEncabezado_()` busca primero
+el nombre exacto (Alta tiene `Observaciones` del sistema y `OBSERVACIONES` de Marcos), y la
+verificación del reordenamiento es **por posición** (sigue cada columna original con la misma
+permutación de `moveColumns`) porque hay encabezados repetidos (`NOTAS` ×3). Una columna sin título
+con datos recibe el título `NOTAS` antes de mover. `segAnotarEnFolio_()` ya no asume el folio en la
+columna B. Simulación local: 47 comprobaciones en las 5 hojas (altas, duplicados, credenciales,
+reset, rechazo, NP SIGEE, consulta, `correoMes`). En producción: los 11 archivos del editor iguales
+al repo antes; los 9 pegados verificados uno por uno y el conjunto completo después; versión 28;
+`curl` de solo lectura de los 5 tipos antes y después; "Reordenar" → Alta 62, Cambio 11, Reset 26,
+Cambio y Eliminar 2 e Incidencias 6 filas verificadas, con 5 respaldos `*_respaldo_20261015`.
+
+**Pendiente:** ninguno del reordenamiento. Borrar los 9 respaldos del 15 oct cuando ya no hagan
+falta (Correo 5, Mantenimiento 2, Asesorías 1, Soporte 1).
+
 

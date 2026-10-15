@@ -967,7 +967,9 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     del doble registro), cuando haya datos de "Motivo de pérdida de acceso". Ver
     `docs/ARCHITECTURE.md §32`.
 
-34. **Bases de trámites: columnas por nombre y orden por bloques (piloto hecho, 15 oct 2026).**
+34. ~~**Bases de trámites: columnas por nombre y orden por bloques**~~ — **completo el 15 oct 2026**
+    (Asesorías v20, Mantenimiento v27, Soporte v13, Correo v28; todas verificadas en vivo). Solo
+    queda borrar los 9 respaldos `*_respaldo_20261015` cuando ya no hagan falta. Historia:
     Asesorías ya está (versión 20, hoja reordenada y verificada en vivo; ver
     `docs/ARCHITECTURE.md §33`). Falta, uno por sesión y con el mismo procedimiento (simulación
     con las filas reales → pegar y Nueva versión → menú "Reordenar" → releer la hoja):
