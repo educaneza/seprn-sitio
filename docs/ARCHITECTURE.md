@@ -2855,7 +2855,7 @@ sale del navegador y **debe funcionar sin internet** (descargada y abierta con d
 - **JSZip 2.6.1 en lugar de PizZip.** PizZip no está en cdnjs; es un fork de JSZip 2 con la misma
   API síncrona, y docxtemplater 3.71 funciona con JSZip 2.6.1 (verificado generando `.docx`).
   No usar JSZip 3: su API es asíncrona.
-- **Sin Google Fonts** (pila `system-ui`) y nada de `fetch` a archivos locales: el archivo de
+- **Tipografía:** desde el 16 oct 2026 Montserrat de Google Fonts (identidad institucional, ver §34), con caída a `system-ui` sin conexión; es lo único que se pide a internet. Nada de `fetch` a archivos locales: el archivo de
   práctica (`descargarPractica()`) y la plantilla Word de ejemplo (`descargarPlantillaEjemplo()`)
   se generan en el navegador.
 - **Separador de fórmulas:** las fórmulas se escriben con `§` y `F()` lo cambia por `,` (Excel de
@@ -3246,4 +3246,42 @@ Cambio y Eliminar 2 e Incidencias 6 filas verificadas, con 5 respaldos `*_respal
 **Pendiente:** ninguno del reordenamiento. Borrar los 9 respaldos del 15 oct cuando ya no hagan
 falta (Correo 5, Mantenimiento 2, Asesorías 1, Soporte 1).
 
+## 34. Crea tu app educativa: generador de prompts y Banco de Materiales 2.0 (oct 2026)
 
+**Origen:** proyecto de OTDE para talleres en los que los docentes crean apps educativas con IA
+(HTML de un solo archivo, sin internet) y, con ellas, un Banco de Materiales nuevo que reemplace
+al actual (recursos en Flash). `crea-tu-app.html` es la herramienta del taller;
+`apps-educativas/` guarda las apps publicadas (hoy, 3 de muestra).
+
+**El generador no llama a ninguna IA.** Solo arma texto en el navegador (`construir()`), que el
+docente copia y pega en Arena, Gemini, ChatGPT o Claude. Costo cero, sin claves ni backend. El
+prompt siempre agrega las reglas técnicas (un solo archivo, sin CDN ni fuentes externas, sin
+datos de alumnos ni `localStorage`, botones ≥48 px, Pointer Events para arrastrar, crédito al
+pie con licencia) y pide a la IA la lista del contenido usado para que el docente lo revise.
+Cada tipo de app (`TIPOS`) aporta su párrafo de mecánica y su unidad (preguntas, parejas, retos…).
+Si el docente edita el prompt a mano, el formulario deja de sobrescribirlo hasta "Volver a
+generarlo".
+
+**Catálogo SEP incrustado (`CATALOGO_SEP`).** 246 contenidos y 1,339 PDA de las Fases 3-5, en
+formato compacto `{fase: {campo: [[contenido, [PDA grado impar], [PDA grado par]]]}}` (~268 KB).
+Se generó desde `programa_sintetico_unificado.json` del proyecto personal `programa-sintetico-nem`
+(texto oficial de los programas sintéticos; nació como proyecto de OTDE) sin los colores ni la
+estructura original. `sincronizarCatalogo()` reconstruye la lista solo cuando cambian fase o
+campo (para no perder lo marcado) y vuelve a pintar los PDA cuando cambia el grado o el contenido
+(`pintarPDA()`). El buscador (`filtrarContenidos()`) ignora acentos y busca también dentro de los
+PDA. Para actualizar el catálogo a otra versión del programa, regenerar el literal con el mismo
+formato.
+
+**Identidad institucional, copiada dentro del archivo.** `crea-tu-app.html` y `excel-facil.html`
+llevan el encabezado, el hero midnight y el pie del sitio como un bloque CSS con prefijo `inst-`
+(`.inst-header`, `.inst-hero`, `.inst-footer`, más el script del menú móvil) en vez de ligar
+`styles.css`, para seguir funcionando solas y sin internet. Los enlaces usan la URL absoluta del
+sitio para que sirvan desde una copia guardada. Si cambia el encabezado o el pie del sitio, hay
+que actualizar estas dos copias. En Excel fácil el hero solo se muestra en `#inicio`
+(`heroInst` en `mostrarVista()`), porque cada cambio de módulo regresa al inicio de la página.
+
+**Apps educativas: sin estilo institucional.** Son para niños y son obra de cada docente: diseño
+libre, solo el sello de crédito al pie (autor, escuela, "Banco de Materiales OTDE
+Nezahualcóyotl", licencia). Las 3 de muestra comparten un patrón mínimo: pantallas
+inicio/juego/final con `hidden`, sonido con Web Audio y botón para silenciar, voz con
+`speechSynthesis` (el botón se oculta si no hay), y "Volver a empezar" siempre visible.

@@ -981,6 +981,19 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     Borrar los respaldos `*_respaldo_20261015` (Asesorías: 1; Mantenimiento: 2; Soporte: 1) cuando
     ya no se necesiten.
 
+35. **Crea tu app educativa / Banco de Materiales 2.0** (abierto 16 oct 2026). Ya en producción:
+    `crea-tu-app.html` (generador con catálogo SEP) y 3 apps de muestra en `apps-educativas/`;
+    propuesta en Claude Docs (https://claude.ai/code/artifact/4393629e-a5b8-4e58-901c-10851079defc).
+    Pendiente de Jorge: (a) comparar 10-15 PDA del catálogo contra el PDF oficial de la SEP y
+    confirmar que es la versión vigente; (b) revisar el contenido de las 3 apps, sobre todo
+    `derechos-de-la-ninez.html`; (c) decidir la licencia (hoy CC BY-NC-SA 4.0 en todo); (d)
+    validar la propuesta con la Dra. Galindo y elegir la zona piloto (revisar `Conectividad` en
+    "Reportes de visita" para la sede). Siguiente construcción: (e) carta descriptiva del taller
+    (3 sesiones); (f) ficha técnica por app; (g) catálogo del Banco 2.0 en el sitio y paquete ZIP
+    para instalar en las aulas dentro de la imagen congelada (Time Freeze); (h) inventario de los
+    recursos del banco actual que sí se usan. Mejora menor: en `plato-del-bien-comer.html`, en
+    celular los grupos quedan abajo y hay que desplazarse. Ver `docs/ARCHITECTURE.md §34`.
+
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue
 abierto de esa entrega (decisión de notificación de cierre de ticket, limpieza de función

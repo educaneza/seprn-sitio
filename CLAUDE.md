@@ -1388,6 +1388,10 @@ de la sesión realmente volvió obsoletos.
 Para saber qué sistema necesita atención (y cuál se está olvidando), empezar por
 `docs/TABLERO-SALUD.md`. Ver `docs/ROADMAP.md` para el detalle completo (deuda técnica, Fase 3 Premium/Identidad) y
 `docs/BITACORA.md` para el historial de qué ya se hizo. Resumen de lo genuinamente abierto:
+- **Crea tu app educativa / Banco de Materiales 2.0 (16 oct 2026)**: generador y 3 apps de
+  muestra en producción. Falta que Jorge revise PDA y apps, decida la licencia y valide con la
+  Dra. Galindo; después, carta descriptiva del taller, ficha técnica y catálogo del banco. Ver
+  `docs/ROADMAP.md` ítem 35.
 - **Mejoras de operación del 14 oct 2026 — desplegadas (15 oct 2026), sin prueba en vivo**:
   Jorge desplegó los 3 `.gs` (Mantenimiento confirmado por `curl`; Correo y Asesorías, por sus
   columnas nuevas en los Sheets). Las pruebas con modo de

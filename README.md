@@ -83,6 +83,8 @@ seprn-sitio/
 ├── ceremonias-civicas.html       # Ceremonias Cívicas (ago 2026) — reserva de visitas SEPRN-wide (no un trámite de OTDE), histórico y cobertura
 ├── ficha-ceremonias-civicas.html # Ficha post-visita de Ceremonias Cívicas, localizada por folio — sin entrada en nav/footer, link directo
 ├── estrategias-nacionales.html   # Estrategias Nacionales (sep 2026) — selección mensual de escuelas por estrategia, 1 escuela = 1 estrategia por ciclo; se llega desde academica.html
+├── crea-tu-app.html              # Crea tu app educativa (oct 2026) — generador de prompts con catálogo SEP incrustado; un solo archivo, sin internet; link directo
+├── apps-educativas/              # Banco de Materiales 2.0 — apps educativas de un solo archivo (hoy 3 de muestra)
 ├── excel-facil.html              # Excel fácil (oct 2026) — herramienta 100% local de 6 módulos (duplicados, filtros, validar RFC/CURP/CCT, Word, fórmulas, IA); un solo archivo con librerías incrustadas, funciona sin internet; link directo
 ├── oficios.html                  # Oficina interna OTDE (oct 2026) — página única: Tomar número (lotes) · Oficios (recibidos y pendientes) · Actividad (bitácora integrada); con clave, link directo
 ├── 404.html                      # Página de error personalizada

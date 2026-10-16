@@ -15,7 +15,7 @@ funciona, con pendientes abiertos o algo en paralelo. **Rojo** = falla, o algo e
 afecta a usuarios. **Prueba en vivo** = última vez que Jorge o una prueba contra producción
 confirmó que funciona (no la fecha del último cambio de código).
 
-Actualizado: **15 oct 2026**.
+Actualizado: **16 oct 2026**.
 
 ## Sistemas en uso
 
@@ -32,7 +32,8 @@ Actualizado: **15 oct 2026**.
 | Ceremonias Cívicas (`ceremonias-civicas.html`, `ficha-…`, `visitas-jefes.gs`) | ~20 jefes de la Subdirección | Verde | 14 oct 2026 (las 4 mejoras del 20 sep) | Ninguno. El panel de cobertura queda público sin clave (decisión de Jorge, 14 oct 2026) |
 | Estrategias Nacionales (`estrategias-nacionales.html`, `.gs`) | Programas Educativos | Verde | 29 sep 2026 | Al cambiar de ciclo: Sheet nueva y `MESES_EN_CICLO` |
 | CTE (`cte.html`) | Docentes y directivos | Verde | 21 sep 2026 | Publicar cada sesión nueva cuando llegue |
-| Excel fácil (`excel-facil.html`) | Docentes y administrativos | Verde | 6 oct 2026 | Ninguno |
+| Excel fácil (`excel-facil.html`) | Docentes y administrativos | Verde | 6 oct 2026 | Ninguno. Identidad institucional el 16 oct 2026 (probada en local y publicada; sin cambios en sus módulos) |
+| Crea tu app educativa (`crea-tu-app.html`, `apps-educativas/`) | Docentes (talleres) | Amarillo | 16 oct 2026 (publicado; probado en local con Playwright) | Revisar PDA contra el PDF de la SEP y el contenido de las 3 apps, decidir licencia, validar con la Dra. Galindo (ROADMAP 35) |
 | Protocolos (`protocolos.html`) | Escuelas | Verde | ago 2026 | Ninguno |
 | Páginas de área (`academica.html`, `personal.html`…) | Público | Amarillo | — | 4 páginas eliminadas por recrear con contenido validado por la Dra. Galindo |
 

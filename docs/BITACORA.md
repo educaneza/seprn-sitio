@@ -15,6 +15,24 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-10-16 · Proyecto "Crea tu app educativa" / Banco de Materiales 2.0: generador, catálogo SEP, 3 apps de muestra e identidad institucional
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-16 |
+| **Sesión** | Jorge trajo una idea surgida de una conferencia de UNETE: talleres para que los docentes creen apps educativas con IA (HTML de un solo archivo, sin internet) y, con ellas, un Banco de Materiales nuevo que reemplace al actual (en Flash). Se evaluó la viabilidad y se decidió dónde sembrarla. |
+| **Decisión OTDE vs Aulia** | Jorge preguntó si llevarla a su proyecto personal Aulia. Tras revisar Aulia (sprint hasta el 5 nov, 1 suscriptor, anonimato ante el gremio, precedente de Excel fácil del 12 oct), se decidió **OTDE**: en Aulia solo cabría la pieza más débil (un generador, ya gratis en Gemini/ChatGPT/Claude/Arena) y ambas versiones a la vez romperían el anonimato. Si Aulia sigue, la única variante con sentido sería distinta y desde cero ("recurso interactivo desde tu planeación"). |
+| **Documento de proyecto** | Claude Docs "Crea tu app educativa con IA — Banco de Materiales 2.0" (https://claude.ai/code/artifact/4393629e-a5b8-4e58-901c-10851079defc), para validar con la Dra. Galindo: problema, propuesta, 4 fases con puertas de decisión (diagrama), piezas de OTDE que se reutilizan, riesgos, indicadores y siguientes pasos. Quedó una pregunta en comentario sobre la licencia. |
+| **Generador** | `crea-tu-app.html` (nuevo): 5 pasos → prompt con reglas técnicas fijas (un solo archivo, sin internet, sin datos de alumnos, celular), 9 tipos de app (`TIPOS`), guía para guardar, 8 frases de corrección (`CORRECCIONES`) y lista de calidad. No llama a ninguna IA. **Catálogo SEP incrustado** (`CATALOGO_SEP`, 246 contenidos y 1,339 PDA): al principio se dejó fuera por cautela; Jorge preguntó y se confirmó que el JSON del proyecto personal `programa-sintetico-nem` (idéntico por MD5 al de Aulia) es texto oficial de los programas sintéticos y nació como proyecto de OTDE, así que se incrustó en formato compacto propio. Lista con buscador (`filtrarContenidos()`, busca también en PDA) y PDA del grado como casillas (`sincronizarCatalogo()`/`pintarPDA()`). |
+| **Apps de muestra** | `apps-educativas/fracciones-pizza.html` (3°, manipulable, 10 retos), `plato-del-bien-comer.html` (2°, clasificar con arrastre o toque), `derechos-de-la-ninez.html` (5°, cuestionario con explicación y voz). Escritas por Claude siguiendo las reglas del prompt (no generadas en Arena). Crédito "OTDE (app de muestra)" y CC BY-NC-SA 4.0. |
+| **Identidad institucional** | A petición de Jorge, `excel-facil.html` y `crea-tu-app.html` llevan encabezado, hero midnight y pie del sitio, copiados dentro de cada archivo (prefijo `inst-`, enlaces absolutos, Montserrat con caída sin conexión) para seguir funcionando solos. En Excel fácil el hero solo aparece en `#inicio` (`heroInst` en `mostrarVista()`). Las apps educativas **no** llevan estilo institucional (regla en `CLAUDE.md`). |
+| **Verificación** | Playwright sobre servidor local: flujo completo del generador (validaciones, catálogo, cambio de grado/fase, reinicio), las 3 apps de punta a punta (incluye arrastre real con Pointer Events), escritorio y 375-390 px sin scroll horizontal, menú móvil, cero errores de consola (salvo `favicon.ico` del servidor local). En producción: run de Pages en `success` para `44e12b2` y las 4 páginas con HTTP 200 por `curl`; run de `9630d9c` en `success` y `curl` confirma el bloque `inst-hero` en las dos herramientas. |
+| **Pendiente** | Jorge: comparar 10-15 PDA contra el PDF oficial de la SEP (versión vigente), revisar el contenido de las 3 apps (sobre todo derechos), contestar lo de la licencia en el documento y validar la propuesta con la Dra. Galindo. Siguiente entregable: carta descriptiva del taller (3 sesiones), ficha técnica por app y catálogo del Banco 2.0. Ver ROADMAP 35. |
+| **Documentación actualizada** | Este checkpoint, `docs/ARCHITECTURE.md` §30 (tipografía) y §34 (nuevo), `docs/ROADMAP.md` ítem 35, `README.md` (estructura), `CLAUDE.md` (páginas nuevas, regla de identidad, pendientes), `docs/TABLERO-SALUD.md`. |
+| **Commits** | `44e12b2` (generador + catálogo + apps), `9630d9c` (identidad institucional), y el de este cierre. |
+
+---
+
 ## CHECKPOINT — 2026-10-15 (cont. 6) · Correo: columnas por nombre y las 5 hojas reordenadas — reordenamiento completo
 
 | | |
