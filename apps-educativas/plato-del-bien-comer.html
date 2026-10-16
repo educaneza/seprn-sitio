@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clasifica tu plato · Plato del Bien Comer · 2° primaria</title>
+<!--
+  App de muestra del Banco de Materiales OTDE Nezahualcóyotl.
+  Grado: 2° (Fase 3) · Campo formativo: De lo Humano y lo Comunitario.
+  Tema: grupos de alimentos del Plato del Bien Comer (NOM-043-SSA2-2012).
+  Un solo archivo, sin internet, sin datos de alumnos.
+-->
+<style>
+:root {
+  --fondo: #fffaf2; --tinta: #2b2622; --tinta-2: #5d554d; --tarjeta: #ffffff; --borde: #e7dccd;
+  --verde: #2f8a3e; --verde-suave: #e3f3e5; --amarillo: #b9770e; --amarillo-suave: #fdf0d5;
+  --rojo: #c0392b; --rojo-suave: #fbe3df; --acento: #9F2241; --ok: #1e7a34; --mal: #b3261e;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--fondo); color: var(--tinta); font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif; font-size: 20px; line-height: 1.4; min-height: 100vh; display: flex; flex-direction: column; }
+button { font: inherit; cursor: pointer; }
+:focus-visible { outline: 4px solid var(--acento); outline-offset: 3px; }
+.barra { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; flex-wrap: wrap; }
+.barra h1 { font-size: 1.2rem; margin: 0; }
+.ctrl { display: flex; gap: 8px; }
+.btn { min-height: 48px; padding: 10px 18px; border-radius: 14px; border: 2px solid var(--borde); background: var(--tarjeta); color: var(--tinta); font-weight: 700; }
+.btn-grande { background: var(--acento); border-color: var(--acento); color: #fff; font-size: 1.3rem; padding: 14px 32px; }
+main { flex: 1; width: 100%; max-width: 1100px; margin: 0 auto; padding: 8px 16px 16px; }
+.pantalla[hidden] { display: none !important; }
+.inicio { text-align: center; padding: 24px 0; }
+.inicio h2 { font-size: 2rem; margin: 8px 0 12px; }
+.inicio p { max-width: 640px; margin: 0 auto 16px; color: var(--tinta-2); }
+.plato-svg { width: 220px; height: 220px; margin: 8px auto 16px; display: block; }
+.estado { text-align: center; font-weight: 700; margin: 4px 0 12px; min-height: 1.5em; }
+.estado.ok { color: var(--ok); }
+.estado.mal { color: var(--mal); }
+.mesa { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding: 14px; border: 3px dashed var(--borde); border-radius: 18px; min-height: 84px; margin-bottom: 16px; background: #fff; }
+.mesa:empty::after { content: "¡Ya no quedan alimentos!"; color: var(--tinta-2); align-self: center; }
+.alimento { min-height: 56px; padding: 12px 18px; border-radius: 14px; border: 2px solid var(--borde); background: var(--tarjeta); font-weight: 700; font-size: 1.15rem; touch-action: none; user-select: none; -webkit-user-select: none; box-shadow: 0 2px 0 var(--borde); }
+.alimento.elegido { border-color: var(--acento); box-shadow: 0 0 0 3px var(--acento); }
+.alimento.sacude { animation: sacude .4s; }
+@keyframes sacude { 25% { transform: translateX(-8px); } 50% { transform: translateX(8px); } 75% { transform: translateX(-4px); } }
+.fantasma { position: fixed; z-index: 99; pointer-events: none; opacity: .9; transform: translate(-50%, -50%) rotate(-3deg); }
+.grupos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.grupo { border-radius: 18px; padding: 12px; min-height: 180px; border: 3px solid; display: flex; flex-direction: column; gap: 8px; text-align: left; color: var(--tinta); }
+.grupo h3 { margin: 0 0 4px; font-size: 1.15rem; display: flex; align-items: center; gap: 8px; }
+.grupo .punto { width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0; }
+.grupo .nota { font-size: .95rem; color: var(--tinta-2); margin: 0; font-weight: 400; }
+.grupo ul { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.grupo li { background: #fff; border-radius: 10px; padding: 4px 10px; font-size: 1rem; font-weight: 600; }
+.grupo li::before { content: "✓ "; color: var(--ok); }
+.g-verduras { border-color: var(--verde); background: var(--verde-suave); }
+.g-verduras .punto { background: var(--verde); }
+.g-cereales { border-color: var(--amarillo); background: var(--amarillo-suave); }
+.g-cereales .punto { background: var(--amarillo); }
+.g-leguminosas { border-color: var(--rojo); background: var(--rojo-suave); }
+.g-leguminosas .punto { background: var(--rojo); }
+.grupo.encima { outline: 4px solid var(--acento); outline-offset: 2px; }
+.pista { text-align: center; color: var(--tinta-2); margin: 0 0 10px; }
+.final { text-align: center; padding: 24px 0; }
+.final h2 { font-size: 2rem; margin: 8px 0; }
+.medalla { font-size: 1.4rem; font-weight: 700; color: var(--acento); }
+footer { text-align: center; font-size: .78rem; color: var(--tinta-2); padding: 12px 16px 16px; }
+@media (max-width: 720px) {
+  body { font-size: 18px; }
+  .grupos { grid-template-columns: 1fr; }
+  .grupo { min-height: 0; }
+}
+</style>
+</head>
+<body>
+<div class="barra">
+  <h1>Clasifica tu plato</h1>
+  <div class="ctrl">
+    <button class="btn" id="btn-sonido" aria-pressed="true">Sonido: sí</button>
+    <button class="btn" id="btn-reiniciar">Volver a empezar</button>
+  </div>
+</div>
+
+<main>
+  <section class="pantalla inicio" id="p-inicio">
+    <svg class="plato-svg" viewBox="0 0 200 200" role="img" aria-label="Plato del Bien Comer dividido en tres grupos: verde, amarillo y rojo">
+      <circle cx="100" cy="100" r="96" fill="#fff" stroke="#e7dccd" stroke-width="4"/>
+      <path d="M100 100 L100 8 A92 92 0 0 1 179.7 146 Z" fill="#2f8a3e"/>
+      <path d="M100 100 L179.7 146 A92 92 0 0 1 20.3 146 Z" fill="#c0392b"/>
+      <path d="M100 100 L20.3 146 A92 92 0 0 1 100 8 Z" fill="#e2a019"/>
+      <circle cx="100" cy="100" r="30" fill="#fff"/>
+    </svg>
+    <h2>¿En qué grupo va cada alimento?</h2>
+    <p>El Plato del Bien Comer tiene tres grupos de alimentos. Lleva cada alimento a su grupo: arrástralo con el dedo o con el ratón, o tócalo y después toca el grupo.</p>
+    <button class="btn btn-grande" id="btn-comenzar">Comenzar</button>
+  </section>
+
+  <section class="pantalla" id="p-juego" hidden>
+    <p class="estado" id="estado" role="status" aria-live="polite">Elige un alimento.</p>
+    <div class="mesa" id="mesa" aria-label="Alimentos por clasificar"></div>
+    <p class="pista" id="pista"></p>
+    <div class="grupos">
+      <button class="grupo g-verduras" data-grupo="verduras" aria-label="Grupo verde: verduras y frutas">
+        <h3><span class="punto" aria-hidden="true"></span>Verduras y frutas</h3>
+        <p class="nota">Vitaminas y minerales</p>
+        <ul></ul>
+      </button>
+      <button class="grupo g-cereales" data-grupo="cereales" aria-label="Grupo amarillo: cereales">
+        <h3><span class="punto" aria-hidden="true"></span>Cereales</h3>
+        <p class="nota">Energía para jugar y aprender</p>
+        <ul></ul>
+      </button>
+      <button class="grupo g-leguminosas" data-grupo="leguminosas" aria-label="Grupo rojo: leguminosas y alimentos de origen animal">
+        <h3><span class="punto" aria-hidden="true"></span>Leguminosas y alimentos de origen animal</h3>
+        <p class="nota">Proteínas para crecer</p>
+        <ul></ul>
+      </button>
+    </div>
+  </section>
+
+  <section class="pantalla final" id="p-final" hidden>
+    <h2>¡Plato completo!</h2>
+    <p class="medalla" id="resultado"></p>
+    <p id="mensaje"></p>
+    <p>Recuerda: en cada comida combina alimentos de los tres grupos y toma agua simple.</p>
+    <button class="btn btn-grande" id="btn-otra">Jugar de nuevo</button>
+  </section>
+</main>
+
+<footer>Elaborada por: OTDE Nezahualcóyotl (app de muestra) · Con apoyo de inteligencia artificial · Banco de Materiales OTDE Nezahualcóyotl · Licencia CC BY-NC-SA 4.0</footer>
+
+<script>
+(function () {
+  'use strict';
+  var ALIMENTOS = [
+    { n: 'Jitomate', g: 'verduras', p: 'El jitomate es una verdura: va en el grupo verde.' },
+    { n: 'Nopal', g: 'verduras', p: 'El nopal es una verdura: va en el grupo verde.' },
+    { n: 'Zanahoria', g: 'verduras', p: 'La zanahoria es una verdura: va en el grupo verde.' },
+    { n: 'Plátano', g: 'verduras', p: 'El plátano es una fruta: va en el grupo verde.' },
+    { n: 'Naranja', g: 'verduras', p: 'La naranja es una fruta: va en el grupo verde.' },
+    { n: 'Tortilla', g: 'cereales', p: 'La tortilla se hace con maíz, que es un cereal.' },
+    { n: 'Arroz', g: 'cereales', p: 'El arroz es un cereal: va en el grupo amarillo.' },
+    { n: 'Avena', g: 'cereales', p: 'La avena es un cereal: va en el grupo amarillo.' },
+    { n: 'Elote', g: 'cereales', p: 'El elote es maíz, y el maíz es un cereal.' },
+    { n: 'Papa', g: 'cereales', p: 'La papa es un tubérculo; da energía como los cereales y va con ellos.' },
+    { n: 'Frijoles', g: 'leguminosas', p: 'El frijol es una leguminosa: va en el grupo rojo.' },
+    { n: 'Lentejas', g: 'leguminosas', p: 'Las lentejas son leguminosas: van en el grupo rojo.' },
+    { n: 'Huevo', g: 'leguminosas', p: 'El huevo es de origen animal: va en el grupo rojo.' },
+    { n: 'Pollo', g: 'leguminosas', p: 'El pollo es de origen animal: va en el grupo rojo.' },
+    { n: 'Leche', g: 'leguminosas', p: 'La leche viene de un animal: va en el grupo rojo.' }
+  ];
+  var $ = function (id) { return document.getElementById(id); };
+  var mesa = $('mesa');
+  var elegido = null, errores = 0, colocados = 0, sonido = true, audio = null;
+
+  function sonar(ok) {
+    if (!sonido) return;
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      var o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime;
+      o.type = ok ? 'triangle' : 'sine';
+      o.frequency.setValueAtTime(ok ? 660 : 220, t);
+      if (ok) o.frequency.setValueAtTime(880, t + 0.1);
+      g.gain.setValueAtTime(0.18, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+      o.connect(g); g.connect(audio.destination); o.start(t); o.stop(t + 0.36);
+    } catch (e) { /* sin audio disponible */ }
+  }
+
+  function barajar(a) {
+    a = a.slice();
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+
+  function mostrar(id) {
+    ['p-inicio', 'p-juego', 'p-final'].forEach(function (p) { $(p).hidden = p !== id; });
+  }
+
+  function estado(texto, clase) {
+    var e = $('estado');
+    e.textContent = texto;
+    e.className = 'estado' + (clase ? ' ' + clase : '');
+  }
+
+  function iniciar() {
+    mesa.innerHTML = '';
+    document.querySelectorAll('.grupo ul').forEach(function (u) { u.innerHTML = ''; });
+    errores = 0; colocados = 0; elegido = null;
+    $('pista').textContent = '';
+    barajar(ALIMENTOS).forEach(function (a) {
+      var b = document.createElement('button');
+      b.className = 'alimento';
+      b.textContent = a.n;
+      b.dataset.grupo = a.g;
+      b.dataset.pista = a.p;
+      mesa.appendChild(b);
+      prepararArrastre(b);
+    });
+    estado('Elige un alimento.');
+    mostrar('p-juego');
+  }
+
+  function elegir(b) {
+    if (elegido) elegido.classList.remove('elegido');
+    elegido = b;
+    if (b) { b.classList.add('elegido'); estado('¿En qué grupo va "' + b.textContent + '"? Toca el grupo.'); }
+  }
+
+  function colocar(b, grupo) {
+    if (b.dataset.grupo === grupo) {
+      var li = document.createElement('li');
+      li.textContent = b.textContent;
+      document.querySelector('.grupo[data-grupo="' + grupo + '"] ul').appendChild(li);
+      b.remove();
+      elegido = null;
+      colocados++;
+      sonar(true);
+      estado('¡Muy bien! ' + b.textContent + ' va ahí.', 'ok');
+      $('pista').textContent = '';
+      if (colocados === ALIMENTOS.length) setTimeout(terminar, 700);
+    } else {
+      errores++;
+      sonar(false);
+      estado('Casi. Intenta con otro grupo.', 'mal');
+      $('pista').textContent = 'Pista: ' + b.dataset.pista;
+      b.classList.remove('sacude'); void b.offsetWidth; b.classList.add('sacude');
+    }
+  }
+
+  function terminar() {
+    $('resultado').textContent = 'Clasificaste ' + ALIMENTOS.length + ' alimentos con ' + errores + (errores === 1 ? ' error.' : ' errores.');
+    $('mensaje').textContent = errores === 0 ? '¡Perfecto! Conoces muy bien los grupos de alimentos.' : (errores <= 4 ? '¡Muy bien! Ya casi los dominas.' : 'Buen trabajo. Juega otra vez para practicar.');
+    mostrar('p-final');
+  }
+
+  // Arrastre con Pointer Events (ratón y dedo); un toque sin moverse cuenta como elegir.
+  function prepararArrastre(b) {
+    var inicio = null, fantasma = null, encima = null;
+    b.addEventListener('pointerdown', function (e) {
+      inicio = { x: e.clientX, y: e.clientY };
+      b.setPointerCapture(e.pointerId);
+    });
+    b.addEventListener('pointermove', function (e) {
+      if (!inicio) return;
+      if (!fantasma && Math.hypot(e.clientX - inicio.x, e.clientY - inicio.y) > 8) {
+        fantasma = b.cloneNode(true);
+        fantasma.classList.add('fantasma');
+        document.body.appendChild(fantasma);
+        b.style.opacity = '.35';
+      }
+      if (fantasma) {
+        fantasma.style.left = e.clientX + 'px';
+        fantasma.style.top = e.clientY + 'px';
+        var el = document.elementFromPoint(e.clientX, e.clientY);
+        var g = el && el.closest('.grupo');
+        if (encima && encima !== g) encima.classList.remove('encima');
+        if (g) g.classList.add('encima');
+        encima = g;
+      }
+    });
+    function soltar(e, cancelado) {
+      if (!inicio) return;
+      inicio = null;
+      if (fantasma) {
+        fantasma.remove(); fantasma = null;
+        b.style.opacity = '';
+        if (encima) { encima.classList.remove('encima'); if (!cancelado) colocar(b, encima.dataset.grupo); }
+        encima = null;
+      } else if (!cancelado) {
+        elegir(b);
+      }
+    }
+    b.addEventListener('pointerup', function (e) { soltar(e, false); });
+    b.addEventListener('pointercancel', function (e) { soltar(e, true); });
+    b.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); elegir(b); } });
+  }
+
+  document.querySelectorAll('.grupo').forEach(function (g) {
+    g.addEventListener('click', function () {
+      if (elegido) colocar(elegido, g.dataset.grupo);
+      else estado('Primero elige un alimento.');
+    });
+  });
+
+  $('btn-comenzar').addEventListener('click', iniciar);
+  $('btn-otra').addEventListener('click', iniciar);
+  $('btn-reiniciar').addEventListener('click', function () { mostrar('p-inicio'); });
+  $('btn-sonido').addEventListener('click', function () {
+    sonido = !sonido;
+    this.textContent = 'Sonido: ' + (sonido ? 'sí' : 'no');
+    this.setAttribute('aria-pressed', String(sonido));
+  });
+})();
+</script>
+</body>
+</html>

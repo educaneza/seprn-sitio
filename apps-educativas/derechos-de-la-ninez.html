@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mis derechos · Derechos de niñas y niños · 5° primaria</title>
+<!--
+  App de muestra del Banco de Materiales OTDE Nezahualcóyotl.
+  Grado: 5° (Fase 5) · Campo formativo: Ética, Naturaleza y Sociedades.
+  Tema: derechos de niñas y niños y quién los protege.
+  Un solo archivo, sin internet, sin datos de alumnos.
+-->
+<style>
+:root {
+  --fondo: #f4f7fb; --tinta: #1f2733; --tinta-2: #536072; --tarjeta: #ffffff; --borde: #d6dee8;
+  --acento: #9F2241; --azul: #1f5fa8; --ok: #1e7a34; --ok-suave: #e1f3e5; --mal: #b3261e; --mal-suave: #fbe4e1;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--fondo); color: var(--tinta); font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif; font-size: 20px; line-height: 1.45; min-height: 100vh; display: flex; flex-direction: column; }
+button { font: inherit; cursor: pointer; }
+:focus-visible { outline: 4px solid var(--acento); outline-offset: 3px; }
+.barra { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; flex-wrap: wrap; }
+.barra h1 { font-size: 1.2rem; margin: 0; }
+.ctrl { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { min-height: 48px; padding: 10px 18px; border-radius: 14px; border: 2px solid var(--borde); background: var(--tarjeta); color: var(--tinta); font-weight: 700; }
+.btn-grande { background: var(--acento); border-color: var(--acento); color: #fff; font-size: 1.3rem; padding: 14px 32px; }
+main { flex: 1; width: 100%; max-width: 820px; margin: 0 auto; padding: 8px 16px 16px; }
+.pantalla[hidden] { display: none !important; }
+.centro { text-align: center; padding: 20px 0; }
+.centro h2 { font-size: 2rem; margin: 8px 0 12px; }
+.centro p { color: var(--tinta-2); }
+.ilustra { width: 180px; height: 150px; display: block; margin: 0 auto 8px; }
+.progreso { height: 14px; background: #e3e9f1; border-radius: 999px; overflow: hidden; margin: 8px 0 6px; }
+.progreso span { display: block; height: 100%; background: var(--azul); width: 0; transition: width .3s; }
+.contador { display: flex; justify-content: space-between; font-size: .95rem; color: var(--tinta-2); font-weight: 600; }
+.nivel { display: inline-block; background: #e6eef8; color: var(--azul); border-radius: 999px; padding: 2px 12px; font-size: .9rem; font-weight: 700; margin-top: 14px; }
+.pregunta { font-size: 1.6rem; font-weight: 700; margin: 10px 0 18px; line-height: 1.3; display: flex; gap: 10px; align-items: flex-start; }
+.voz { flex-shrink: 0; min-height: 48px; min-width: 48px; border-radius: 50%; border: 2px solid var(--borde); background: #fff; display: grid; place-items: center; padding: 0; }
+.voz svg { width: 24px; height: 24px; }
+.opciones { display: grid; gap: 10px; }
+.opcion { text-align: left; min-height: 60px; padding: 14px 18px; border-radius: 14px; border: 2px solid var(--borde); background: var(--tarjeta); font-size: 1.15rem; font-weight: 600; display: flex; gap: 10px; align-items: center; }
+.opcion:hover:not(:disabled) { border-color: var(--azul); }
+.opcion .marca { margin-left: auto; font-weight: 800; }
+.opcion.correcta { border-color: var(--ok); background: var(--ok-suave); }
+.opcion.incorrecta { border-color: var(--mal); background: var(--mal-suave); }
+.opcion:disabled { cursor: default; color: var(--tinta); }
+.explica { margin-top: 14px; padding: 14px 16px; border-radius: 14px; background: #fff; border-left: 6px solid var(--azul); }
+.explica strong { display: block; margin-bottom: 2px; }
+.siguiente { margin-top: 14px; text-align: right; }
+.resultado { font-size: 3rem; font-weight: 800; color: var(--acento); margin: 0; }
+footer { text-align: center; font-size: .78rem; color: var(--tinta-2); padding: 12px 16px 16px; }
+@media (max-width: 600px) { body { font-size: 18px; } .pregunta { font-size: 1.3rem; } }
+</style>
+</head>
+<body>
+<div class="barra">
+  <h1>Mis derechos</h1>
+  <div class="ctrl">
+    <button class="btn" id="btn-sonido" aria-pressed="true">Sonido: sí</button>
+    <button class="btn" id="btn-reiniciar">Volver a empezar</button>
+  </div>
+</div>
+
+<main>
+  <section class="pantalla centro" id="p-inicio">
+    <svg class="ilustra" viewBox="0 0 180 150" role="img" aria-label="Dos niños tomados de la mano bajo un escudo">
+      <path d="M90 8 L150 30 V70 C150 105 124 128 90 142 C56 128 30 105 30 70 V30 Z" fill="#e6eef8" stroke="#1f5fa8" stroke-width="4"/>
+      <circle cx="70" cy="62" r="11" fill="#9F2241"/>
+      <circle cx="110" cy="62" r="11" fill="#1f5fa8"/>
+      <path d="M58 112 V88 a12 12 0 0 1 24 0 V112 Z" fill="#9F2241"/>
+      <path d="M98 112 V88 a12 12 0 0 1 24 0 V112 Z" fill="#1f5fa8"/>
+      <path d="M80 92 H100" stroke="#1f2733" stroke-width="5" stroke-linecap="round"/>
+    </svg>
+    <h2>¿Cuánto sabes de tus derechos?</h2>
+    <p>Responde 10 preguntas en 3 niveles. Después de cada respuesta verás una explicación.</p>
+    <button class="btn btn-grande" id="btn-comenzar">Comenzar</button>
+  </section>
+
+  <section class="pantalla" id="p-juego" hidden>
+    <div class="progreso" aria-hidden="true"><span id="barra"></span></div>
+    <div class="contador"><span id="num"></span><span id="aciertos"></span></div>
+    <span class="nivel" id="nivel"></span>
+    <h2 class="pregunta"><button class="voz" id="btn-voz" aria-label="Escuchar la pregunta" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg></button><span id="pregunta"></span></h2>
+    <div class="opciones" id="opciones"></div>
+    <div class="explica" id="explica" hidden role="status" aria-live="polite"></div>
+    <div class="siguiente"><button class="btn btn-grande" id="btn-siguiente" hidden>Siguiente</button></div>
+  </section>
+
+  <section class="pantalla centro" id="p-final" hidden>
+    <h2>¡Terminaste!</h2>
+    <p class="resultado" id="resultado"></p>
+    <p id="mensaje"></p>
+    <p>Tener derechos también significa respetar los derechos de los demás.</p>
+    <button class="btn btn-grande" id="btn-otra">Jugar de nuevo</button>
+  </section>
+</main>
+
+<footer>Elaborada por: OTDE Nezahualcóyotl (app de muestra) · Con apoyo de inteligencia artificial · Banco de Materiales OTDE Nezahualcóyotl · Licencia CC BY-NC-SA 4.0</footer>
+
+<script>
+(function () {
+  'use strict';
+  // c = índice de la opción correcta (antes de barajar).
+  var PREGUNTAS = [
+    { nivel: 1, q: 'Todas las niñas y todos los niños tienen derechos. ¿Quiénes?',
+      o: ['Todas y todos, sin importar de dónde son, qué lengua hablan o si tienen una discapacidad', 'Solo quienes van a la escuela', 'Solo quienes se portan bien'], c: 0,
+      e: 'Los derechos son para todas las niñas y todos los niños, sin discriminación.' },
+    { nivel: 1, q: '¿Qué documento prueba tu derecho a tener un nombre y una nacionalidad?',
+      o: ['El acta de nacimiento', 'La boleta de calificaciones', 'La credencial de la biblioteca'], c: 0,
+      e: 'El acta de nacimiento registra tu nombre, tu nacionalidad y quiénes son tu familia: es tu derecho a la identidad.' },
+    { nivel: 1, q: 'Descansar, jugar y divertirte...',
+      o: ['También es un derecho', 'Es una pérdida de tiempo', 'Solo se permite en vacaciones'], c: 0,
+      e: 'El juego y el descanso son derechos: ayudan a crecer sano y a aprender.' },
+    { nivel: 2, q: 'Mateo tiene 10 años y trabaja todo el día en lugar de ir a la escuela. ¿Qué derecho no se está cumpliendo?',
+      o: ['El derecho a la educación', 'El derecho a tener un nombre', 'El derecho a votar'], c: 0,
+      e: 'Toda niña y todo niño tiene derecho a ir a la escuela. Ningún trabajo debe impedirlo.' },
+    { nivel: 2, q: 'Cuando te vacunan en el centro de salud, se cumple tu derecho a...',
+      o: ['La salud', 'El juego', 'La participación'], c: 0,
+      e: 'Las vacunas y la atención médica protegen tu derecho a la salud.' },
+    { nivel: 2, q: 'En tu salón van a decidir las reglas de convivencia y te preguntan qué opinas. ¿Qué derecho ejerces?',
+      o: ['El derecho a la participación y a expresar tu opinión', 'El derecho a la alimentación', 'El derecho a la identidad'], c: 0,
+      e: 'Tienes derecho a dar tu opinión en los asuntos que te afectan y a que se tome en cuenta.' },
+    { nivel: 2, q: 'Si alguien te lastima o te hace sentir incómodo, ¿qué es lo mejor que puedes hacer?',
+      o: ['Contárselo a una persona adulta de confianza', 'Guardar el secreto', 'Pensar que fue tu culpa'], c: 0,
+      e: 'Nunca es tu culpa. Habla con alguien de confianza: tu familia, tu maestra o maestro. Tienes derecho a vivir sin violencia.' },
+    { nivel: 3, q: '¿Qué documento aprobó la Organización de las Naciones Unidas en 1989 para proteger los derechos de la niñez en todo el mundo?',
+      o: ['La Convención sobre los Derechos del Niño', 'La Declaración de Independencia', 'El Reglamento escolar'], c: 0,
+      e: 'La Convención sobre los Derechos del Niño fue aprobada por la ONU en 1989. México la firmó y se comprometió a cumplirla.' },
+    { nivel: 3, q: 'Además de las familias, ¿quién tiene la obligación de garantizar que se cumplan los derechos de niñas y niños?',
+      o: ['Las autoridades del gobierno', 'Solo las niñas y los niños', 'Nadie más'], c: 0,
+      e: 'Las familias, la comunidad y, sobre todo, las autoridades del gobierno tienen la obligación de proteger tus derechos.' },
+    { nivel: 3, q: 'En México, ¿qué institución apoya a las familias y protege a niñas y niños cuando sus derechos están en riesgo?',
+      o: ['El Sistema DIF', 'El Banco de México', 'El Servicio Postal Mexicano'], c: 0,
+      e: 'El Sistema para el Desarrollo Integral de la Familia (DIF) tiene oficinas en cada municipio y ayuda a proteger a la niñez.' }
+  ];
+  var NIVELES = { 1: 'Nivel 1 · Fácil', 2: 'Nivel 2 · Intermedio', 3: 'Nivel 3 · Reto' };
+  var $ = function (id) { return document.getElementById(id); };
+  var orden = [], i = 0, aciertos = 0, sonido = true, audio = null;
+  var hayVoz = 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
+
+  function sonar(ok) {
+    if (!sonido) return;
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      var o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime;
+      o.type = ok ? 'triangle' : 'sine';
+      o.frequency.setValueAtTime(ok ? 660 : 220, t);
+      if (ok) o.frequency.setValueAtTime(880, t + 0.1);
+      g.gain.setValueAtTime(0.18, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+      o.connect(g); g.connect(audio.destination); o.start(t); o.stop(t + 0.36);
+    } catch (e) { /* sin audio disponible */ }
+  }
+
+  function barajar(a) {
+    a = a.slice();
+    for (var k = a.length - 1; k > 0; k--) { var j = Math.floor(Math.random() * (k + 1)); var t = a[k]; a[k] = a[j]; a[j] = t; }
+    return a;
+  }
+
+  function mostrar(id) { ['p-inicio', 'p-juego', 'p-final'].forEach(function (p) { $(p).hidden = p !== id; }); }
+
+  function iniciar() {
+    // Barajar dentro de cada nivel, manteniendo el orden fácil → reto.
+    orden = [1, 2, 3].reduce(function (acc, n) {
+      return acc.concat(barajar(PREGUNTAS.filter(function (p) { return p.nivel === n; })));
+    }, []);
+    i = 0; aciertos = 0;
+    mostrar('p-juego');
+    pintar();
+  }
+
+  function pintar() {
+    var p = orden[i];
+    $('barra').style.width = (i / orden.length * 100) + '%';
+    $('num').textContent = 'Pregunta ' + (i + 1) + ' de ' + orden.length;
+    $('aciertos').textContent = 'Aciertos: ' + aciertos;
+    $('nivel').textContent = NIVELES[p.nivel];
+    $('pregunta').textContent = p.q;
+    $('explica').hidden = true;
+    $('btn-siguiente').hidden = true;
+    var cont = $('opciones');
+    cont.innerHTML = '';
+    barajar(p.o.map(function (texto, k) { return { texto: texto, ok: k === p.c }; })).forEach(function (op) {
+      var b = document.createElement('button');
+      b.className = 'opcion';
+      b.innerHTML = '<span></span><span class="marca" aria-hidden="true"></span>';
+      b.firstChild.textContent = op.texto;
+      b.dataset.ok = op.ok ? '1' : '';
+      b.addEventListener('click', function () { responder(b); });
+      cont.appendChild(b);
+    });
+    $('btn-voz').hidden = !hayVoz;
+    cont.querySelector('.opcion').focus({ preventScroll: true });
+  }
+
+  function responder(b) {
+    var p = orden[i];
+    var ok = b.dataset.ok === '1';
+    document.querySelectorAll('.opcion').forEach(function (x) {
+      x.disabled = true;
+      if (x.dataset.ok === '1') { x.classList.add('correcta'); x.querySelector('.marca').textContent = '✓ Correcta'; }
+    });
+    if (!ok) { b.classList.add('incorrecta'); b.querySelector('.marca').textContent = '✗'; }
+    if (ok) aciertos++;
+    sonar(ok);
+    $('aciertos').textContent = 'Aciertos: ' + aciertos;
+    var ex = $('explica');
+    ex.innerHTML = '<strong></strong><span></span>';
+    ex.firstChild.textContent = ok ? '¡Correcto!' : 'La respuesta correcta está marcada en verde.';
+    ex.lastChild.textContent = p.e;
+    ex.hidden = false;
+    var sig = $('btn-siguiente');
+    sig.textContent = i === orden.length - 1 ? 'Ver resultado' : 'Siguiente';
+    sig.hidden = false;
+    sig.focus({ preventScroll: true });
+  }
+
+  function siguiente() {
+    if (hayVoz) speechSynthesis.cancel();
+    i++;
+    if (i < orden.length) { pintar(); return; }
+    $('barra').style.width = '100%';
+    $('resultado').textContent = aciertos + ' de ' + orden.length;
+    $('mensaje').textContent = aciertos >= 9 ? '¡Excelente! Conoces muy bien tus derechos.' : (aciertos >= 6 ? '¡Muy bien! Sigue aprendiendo sobre tus derechos.' : 'Buen intento. Juega otra vez y lee con calma las explicaciones.');
+    mostrar('p-final');
+  }
+
+  function leer() {
+    if (!hayVoz) return;
+    speechSynthesis.cancel();
+    var p = orden[i];
+    var texto = p.q + '. ' + Array.prototype.map.call(document.querySelectorAll('.opcion > span:first-child'), function (s, k) { return 'Opción ' + (k + 1) + ': ' + s.textContent; }).join('. ');
+    var u = new SpeechSynthesisUtterance(texto);
+    u.lang = 'es-MX';
+    var voces = speechSynthesis.getVoices();
+    var v = voces.filter(function (x) { return x.lang === 'es-MX'; })[0] || voces.filter(function (x) { return /^es/.test(x.lang); })[0];
+    if (v) u.voice = v;
+    u.rate = 0.95;
+    speechSynthesis.speak(u);
+  }
+
+  $('btn-comenzar').addEventListener('click', iniciar);
+  $('btn-otra').addEventListener('click', iniciar);
+  $('btn-siguiente').addEventListener('click', siguiente);
+  $('btn-voz').addEventListener('click', leer);
+  $('btn-reiniciar').addEventListener('click', function () { if (hayVoz) speechSynthesis.cancel(); mostrar('p-inicio'); });
+  $('btn-sonido').addEventListener('click', function () {
+    sonido = !sonido;
+    this.textContent = 'Sonido: ' + (sonido ? 'sí' : 'no');
+    this.setAttribute('aria-pressed', String(sonido));
+  });
+})();
+</script>
+</body>
+</html>

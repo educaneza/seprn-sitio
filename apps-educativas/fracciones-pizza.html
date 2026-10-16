@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La pizza de las fracciones · Fracciones 1/2, 1/4 y 1/8 · 3° primaria</title>
+<!--
+  App de muestra del Banco de Materiales OTDE Nezahualcóyotl.
+  Grado: 3° (Fase 4) · Campo formativo: Saberes y Pensamiento Científico.
+  Tema: fracciones 1/2, 1/4 y 1/8 en situaciones de reparto.
+  Un solo archivo, sin internet, sin datos de alumnos.
+-->
+<style>
+:root {
+  --fondo: #fff8ef; --tinta: #2b2420; --tinta-2: #62574e; --tarjeta: #ffffff; --borde: #ecdcc8;
+  --masa: #f3cf8b; --orilla: #d99a4e; --salsa: #d9442b; --acento: #9F2241; --ok: #1e7a34; --ok-suave: #e1f3e5; --mal: #a8341c; --mal-suave: #fde7df;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--fondo); color: var(--tinta); font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif; font-size: 20px; line-height: 1.4; min-height: 100vh; display: flex; flex-direction: column; }
+button { font: inherit; cursor: pointer; }
+:focus-visible { outline: 4px solid var(--acento); outline-offset: 3px; }
+.barra { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; flex-wrap: wrap; }
+.barra h1 { font-size: 1.2rem; margin: 0; }
+.ctrl { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { min-height: 48px; padding: 10px 18px; border-radius: 14px; border: 2px solid var(--borde); background: var(--tarjeta); color: var(--tinta); font-weight: 700; }
+.btn-grande { background: var(--acento); border-color: var(--acento); color: #fff; font-size: 1.25rem; padding: 14px 28px; }
+.btn-sec { font-size: 1.1rem; }
+main { flex: 1; width: 100%; max-width: 1100px; margin: 0 auto; padding: 8px 16px 16px; }
+.pantalla[hidden] { display: none !important; }
+.centro { text-align: center; padding: 16px 0; }
+.centro h2 { font-size: 2rem; margin: 8px 0 12px; }
+.centro p { color: var(--tinta-2); max-width: 640px; margin: 0 auto 16px; }
+.botones-inicio { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.juego { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: center; }
+.pizza-caja { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+svg.pizza { width: min(100%, 420px); height: auto; touch-action: manipulation; }
+svg.pizza path.reb { cursor: pointer; transition: fill .15s; }
+svg.pizza path.reb:focus-visible { outline: none; stroke: var(--acento); stroke-width: 6; }
+.partir { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; align-items: center; }
+.partir[hidden] { display: none; }
+.partir .lbl { font-weight: 700; color: var(--tinta-2); }
+.partir button[aria-pressed="true"] { background: var(--acento); border-color: var(--acento); color: #fff; }
+.fraccion { display: flex; align-items: center; gap: 14px; font-weight: 700; color: var(--tinta-2); }
+.frac { display: inline-flex; flex-direction: column; align-items: center; font-size: 2.4rem; line-height: 1; color: var(--tinta); }
+.frac span:first-child { border-bottom: 4px solid var(--tinta); padding: 0 8px 4px; }
+.frac span:last-child { padding-top: 4px; }
+.panel { background: var(--tarjeta); border: 2px solid var(--borde); border-radius: 18px; padding: 20px; }
+.progreso { height: 12px; background: #f1e6d6; border-radius: 999px; overflow: hidden; margin-bottom: 8px; }
+.progreso span { display: block; height: 100%; background: var(--acento); width: 0; transition: width .3s; }
+.contador { display: flex; justify-content: space-between; font-size: .95rem; color: var(--tinta-2); font-weight: 600; }
+.nivel { display: inline-block; background: #fbe9ee; color: var(--acento); border-radius: 999px; padding: 2px 12px; font-size: .9rem; font-weight: 700; margin-top: 12px; }
+.reto { font-size: 1.5rem; font-weight: 700; margin: 10px 0 16px; line-height: 1.3; display: flex; gap: 10px; align-items: flex-start; }
+.voz { flex-shrink: 0; min-height: 48px; min-width: 48px; border-radius: 50%; border: 2px solid var(--borde); background: #fff; display: grid; place-items: center; padding: 0; }
+.voz svg { width: 24px; height: 24px; }
+.opciones { display: grid; gap: 10px; margin-bottom: 12px; }
+.opcion { min-height: 56px; border-radius: 14px; border: 2px solid var(--borde); background: #fff; font-size: 1.3rem; font-weight: 700; }
+.opcion[aria-pressed="true"] { border-color: var(--acento); box-shadow: 0 0 0 3px var(--acento); }
+.retro { margin: 12px 0; padding: 12px 14px; border-radius: 14px; font-weight: 600; }
+.retro.ok { background: var(--ok-suave); color: var(--ok); }
+.retro.mal { background: var(--mal-suave); color: var(--mal); }
+.acciones { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+.libre-ayuda { color: var(--tinta-2); }
+.resultado { font-size: 3rem; font-weight: 800; color: var(--acento); margin: 0; }
+footer { text-align: center; font-size: .78rem; color: var(--tinta-2); padding: 12px 16px 16px; }
+@media (max-width: 760px) {
+  body { font-size: 18px; }
+  .juego { grid-template-columns: 1fr; gap: 12px; }
+  .reto { font-size: 1.25rem; }
+  svg.pizza { width: min(100%, 320px); }
+}
+</style>
+</head>
+<body>
+<div class="barra">
+  <h1>La pizza de las fracciones</h1>
+  <div class="ctrl">
+    <button class="btn" id="btn-sonido" aria-pressed="true">Sonido: sí</button>
+    <button class="btn" id="btn-reiniciar">Volver a empezar</button>
+  </div>
+</div>
+
+<main>
+  <section class="pantalla centro" id="p-inicio">
+    <h2>Repartir en partes iguales</h2>
+    <p>Parte la pizza en 2, 4 u 8 rebanadas iguales y toca las rebanadas para colorearlas. Primero explora, después resuelve 10 retos.</p>
+    <div class="botones-inicio">
+      <button class="btn btn-grande" id="btn-retos">Resolver retos</button>
+      <button class="btn btn-sec" id="btn-libre">Explorar libremente</button>
+    </div>
+  </section>
+
+  <section class="pantalla" id="p-juego" hidden>
+    <div class="juego">
+      <div class="pizza-caja">
+        <svg class="pizza" id="pizza" viewBox="0 0 320 320" role="group" aria-label="Pizza dividida en rebanadas. Toca una rebanada para colorearla."></svg>
+        <div class="partir" id="partir">
+          <span class="lbl">Partir en:</span>
+          <button class="btn" data-n="2" aria-pressed="false">2</button>
+          <button class="btn" data-n="4" aria-pressed="false">4</button>
+          <button class="btn" data-n="8" aria-pressed="false">8</button>
+        </div>
+        <div class="fraccion" aria-live="polite"><span>Coloreaste</span><span class="frac" aria-hidden="true"><span id="f-num">0</span><span id="f-den">2</span></span><span class="sr" id="f-texto" style="position:absolute;left:-9999px"></span></div>
+      </div>
+
+      <div class="panel" id="panel-retos">
+        <div class="progreso" aria-hidden="true"><span id="barra"></span></div>
+        <div class="contador"><span id="num"></span><span id="aciertos"></span></div>
+        <span class="nivel" id="nivel"></span>
+        <h2 class="reto"><button class="voz" id="btn-voz" aria-label="Escuchar el reto" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg></button><span id="reto"></span></h2>
+        <div class="opciones" id="opciones" hidden></div>
+        <div class="retro" id="retro" hidden role="status" aria-live="polite"></div>
+        <div class="acciones">
+          <button class="btn" id="btn-limpiar">Borrar colores</button>
+          <button class="btn btn-grande" id="btn-revisar">Revisar</button>
+          <button class="btn btn-grande" id="btn-siguiente" hidden>Siguiente</button>
+        </div>
+      </div>
+
+      <div class="panel" id="panel-libre" hidden>
+        <h2 class="reto">Explora</h2>
+        <p class="libre-ayuda">Parte la pizza en 2, 4 u 8 y colorea rebanadas. Observa la fracción. Prueba:</p>
+        <ul class="libre-ayuda">
+          <li>¿Cuántos octavos necesitas para tener media pizza?</li>
+          <li>¿Qué es más grande, 1/4 o 1/8?</li>
+          <li>¿Cuántos cuartos forman una pizza entera?</li>
+        </ul>
+        <div class="acciones">
+          <button class="btn" id="btn-limpiar-libre">Borrar colores</button>
+          <button class="btn btn-grande" id="btn-a-retos">Ir a los retos</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pantalla centro" id="p-final" hidden>
+    <h2>¡Terminaste los retos!</h2>
+    <p class="resultado" id="resultado"></p>
+    <p id="mensaje"></p>
+    <p>Recuerda: entre más partes iguales tiene la pizza, más pequeña es cada rebanada.</p>
+    <button class="btn btn-grande" id="btn-otra">Jugar de nuevo</button>
+  </section>
+</main>
+
+<footer>Elaborada por: OTDE Nezahualcóyotl (app de muestra) · Con apoyo de inteligencia artificial · Banco de Materiales OTDE Nezahualcóyotl · Licencia CC BY-NC-SA 4.0</footer>
+
+<script>
+(function () {
+  'use strict';
+  // tipo 'pintar': n = rebanadas fijas (null = el alumno elige), meta = {n, k}. tipo 'elegir': opciones + correcta.
+  var RETOS = [
+    { nivel: 1, tipo: 'pintar', n: 2, meta: { n: 2, k: 1 }, texto: 'Una pizza se reparte entre 2 niñas en partes iguales. Colorea lo que le toca a una.', ok: 'A cada una le toca 1/2: la mitad de la pizza.' },
+    { nivel: 1, tipo: 'pintar', n: 4, meta: { n: 4, k: 1 }, texto: 'Ahora la pizza está partida en 4 partes iguales. Colorea 1/4.', ok: '1/4 es una de cuatro partes iguales.' },
+    { nivel: 1, tipo: 'pintar', n: 8, meta: { n: 8, k: 1 }, texto: 'La pizza está en 8 partes iguales. Colorea 1/8.', ok: '1/8 es una de ocho partes iguales.' },
+    { nivel: 2, tipo: 'pintar', n: null, meta: { n: 4, k: 1 }, texto: 'Vas a repartir la pizza entre 4 amigos. Pártela en las rebanadas que necesitas y colorea lo que le toca a uno.', ok: 'Para 4 amigos se parte en 4. A cada uno le toca 1/4.' },
+    { nivel: 2, tipo: 'pintar', n: 4, meta: { n: 4, k: 3 }, texto: 'Colorea 3/4 de la pizza.', ok: '3/4 son tres de cuatro partes iguales.' },
+    { nivel: 2, tipo: 'pintar', n: 8, meta: { n: 8, k: 5 }, texto: 'Colorea 5/8 de la pizza.', ok: '5/8 son cinco de ocho partes iguales.' },
+    { nivel: 2, tipo: 'elegir', texto: '¿Qué rebanada es más grande?', opciones: ['1/2 de pizza', '1/8 de pizza'], correcta: 0, ok: 'Entre más partes iguales, más pequeña es cada una. Por eso 1/2 es más grande que 1/8.', mal: 'Fíjate: si partes la pizza en 8, cada rebanada es más pequeña que si la partes en 2.' },
+    { nivel: 3, tipo: 'pintar', n: 8, meta: { n: 8, k: 4 }, texto: 'La pizza está en octavos. Colorea la misma cantidad que 1/2.', ok: '4/8 es lo mismo que 1/2: media pizza.' },
+    { nivel: 3, tipo: 'pintar', n: 8, meta: { n: 8, k: 2 }, texto: 'La pizza está en octavos. Colorea la misma cantidad que 1/4.', ok: '2/8 es lo mismo que 1/4.' },
+    { nivel: 3, tipo: 'elegir', texto: 'Una pizza tenía 8 rebanadas iguales y se comieron 3. ¿Qué fracción de la pizza queda?', opciones: ['5/8', '3/8', '8/3'], correcta: 0, ok: 'Quedan 5 de 8 rebanadas: 5/8 de la pizza.', mal: 'Cuenta las rebanadas que quedan: 8 menos 3.' }
+  ];
+  var NIVELES = { 1: 'Nivel 1 · Fácil', 2: 'Nivel 2 · Intermedio', 3: 'Nivel 3 · Reto' };
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  var $ = function (id) { return document.getElementById(id); };
+  var n = 2, pintadas = [], modo = 'retos', i = 0, aciertos = 0, intentoFallido = false, elegida = null, sonido = true, audio = null;
+  var hayVoz = 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
+
+  function sonar(ok) {
+    if (!sonido) return;
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      var o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime;
+      o.type = ok ? 'triangle' : 'sine';
+      o.frequency.setValueAtTime(ok ? 660 : 220, t);
+      if (ok) o.frequency.setValueAtTime(880, t + 0.1);
+      g.gain.setValueAtTime(0.18, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+      o.connect(g); g.connect(audio.destination); o.start(t); o.stop(t + 0.36);
+    } catch (e) { /* sin audio disponible */ }
+  }
+
+  function mostrar(id) { ['p-inicio', 'p-juego', 'p-final'].forEach(function (p) { $(p).hidden = p !== id; }); }
+
+  // Dibuja la pizza en n rebanadas.
+  function dibujar() {
+    var svg = $('pizza');
+    svg.innerHTML = '';
+    var cx = 160, cy = 160, r = 140;
+    var orilla = document.createElementNS(SVGNS, 'circle');
+    orilla.setAttribute('cx', cx); orilla.setAttribute('cy', cy); orilla.setAttribute('r', r + 10);
+    orilla.setAttribute('fill', 'var(--orilla)');
+    svg.appendChild(orilla);
+    for (var s = 0; s < n; s++) {
+      var a0 = -Math.PI / 2 + s * 2 * Math.PI / n, a1 = a0 + 2 * Math.PI / n;
+      var x0 = cx + r * Math.cos(a0), y0 = cy + r * Math.sin(a0), x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+      var p = document.createElementNS(SVGNS, 'path');
+      p.setAttribute('d', 'M' + cx + ' ' + cy + ' L' + x0.toFixed(2) + ' ' + y0.toFixed(2) + ' A' + r + ' ' + r + ' 0 ' + (n === 1 ? 1 : 0) + ' 1 ' + x1.toFixed(2) + ' ' + y1.toFixed(2) + ' Z');
+      p.setAttribute('class', 'reb');
+      p.setAttribute('fill', pintadas[s] ? 'var(--salsa)' : 'var(--masa)');
+      p.setAttribute('stroke', '#7a4a1e');
+      p.setAttribute('stroke-width', '3');
+      p.setAttribute('tabindex', '0');
+      p.setAttribute('role', 'button');
+      p.setAttribute('aria-pressed', pintadas[s] ? 'true' : 'false');
+      p.setAttribute('aria-label', 'Rebanada ' + (s + 1) + ' de ' + n + (pintadas[s] ? ', coloreada' : ''));
+      (function (idx) {
+        p.addEventListener('click', function () { alternar(idx); });
+        p.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); alternar(idx); } });
+      })(s);
+      svg.appendChild(p);
+    }
+    actualizarFraccion();
+  }
+
+  function alternar(idx) {
+    if (bloqueado()) return;
+    pintadas[idx] = !pintadas[idx];
+    dibujar();
+    var reb = $('pizza').querySelectorAll('path.reb')[idx];
+    if (reb) reb.focus({ preventScroll: true });
+  }
+
+  function bloqueado() { return modo === 'retos' && !$('btn-siguiente').hidden; }
+
+  function contar() { return pintadas.filter(Boolean).length; }
+
+  function actualizarFraccion() {
+    $('f-num').textContent = contar();
+    $('f-den').textContent = n;
+    $('f-texto').textContent = 'Coloreaste ' + contar() + ' de ' + n + ' rebanadas';
+    document.querySelectorAll('#partir button').forEach(function (b) { b.setAttribute('aria-pressed', String(Number(b.dataset.n) === n)); });
+  }
+
+  function partir(nuevo) {
+    n = nuevo;
+    pintadas = new Array(n).fill(false);
+    dibujar();
+  }
+
+  function limpiar() { if (bloqueado()) return; pintadas = new Array(n).fill(false); dibujar(); }
+
+  // Retos
+  function iniciarRetos() {
+    modo = 'retos'; i = 0; aciertos = 0;
+    $('panel-retos').hidden = false;
+    $('panel-libre').hidden = true;
+    mostrar('p-juego');
+    pintarReto();
+  }
+
+  function iniciarLibre() {
+    modo = 'libre';
+    $('panel-retos').hidden = true;
+    $('panel-libre').hidden = false;
+    $('partir').hidden = false;
+    $('btn-siguiente').hidden = true;
+    partir(4);
+    mostrar('p-juego');
+  }
+
+  function pintarReto() {
+    var r = RETOS[i];
+    intentoFallido = false;
+    elegida = null;
+    $('barra').style.width = (i / RETOS.length * 100) + '%';
+    $('num').textContent = 'Reto ' + (i + 1) + ' de ' + RETOS.length;
+    $('aciertos').textContent = 'Aciertos: ' + aciertos;
+    $('nivel').textContent = NIVELES[r.nivel];
+    $('reto').textContent = r.texto;
+    $('retro').hidden = true;
+    $('btn-siguiente').hidden = true;
+    $('btn-revisar').hidden = false;
+    $('btn-voz').hidden = !hayVoz;
+    var ops = $('opciones');
+    ops.innerHTML = '';
+    if (r.tipo === 'elegir') {
+      ops.hidden = false;
+      $('btn-limpiar').hidden = true;
+      $('partir').hidden = false;
+      r.opciones.forEach(function (t, k) {
+        var b = document.createElement('button');
+        b.className = 'opcion';
+        b.textContent = t;
+        b.setAttribute('aria-pressed', 'false');
+        b.addEventListener('click', function () {
+          if (bloqueado()) return;
+          elegida = k;
+          ops.querySelectorAll('.opcion').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+        });
+        ops.appendChild(b);
+      });
+      partir(8);
+    } else {
+      ops.hidden = true;
+      $('btn-limpiar').hidden = false;
+      $('partir').hidden = r.n !== null;
+      partir(r.n || 2);
+    }
+  }
+
+  function retro(texto, ok) {
+    var e = $('retro');
+    e.textContent = texto;
+    e.className = 'retro ' + (ok ? 'ok' : 'mal');
+    e.hidden = false;
+  }
+
+  function revisar() {
+    var r = RETOS[i], ok;
+    if (r.tipo === 'elegir') {
+      if (elegida === null) { retro('Elige una respuesta.', false); return; }
+      ok = elegida === r.correcta;
+      if (!ok) { intentoFallido = true; retro(r.mal, false); sonar(false); return; }
+    } else {
+      ok = n === r.meta.n && contar() === r.meta.k;
+      if (!ok) {
+        intentoFallido = true;
+        sonar(false);
+        if (n !== r.meta.n) retro('Piensa en cuántas partes iguales necesitas para repartir entre todos.', false);
+        else retro('Coloreaste ' + contar() + '/' + n + '. Necesitas ' + r.meta.k + '/' + r.meta.n + '. Toca las rebanadas para corregir.', false);
+        return;
+      }
+    }
+    if (!intentoFallido) aciertos++;
+    sonar(true);
+    retro('¡Muy bien! ' + r.ok, true);
+    $('aciertos').textContent = 'Aciertos: ' + aciertos;
+    $('btn-revisar').hidden = true;
+    var sig = $('btn-siguiente');
+    sig.textContent = i === RETOS.length - 1 ? 'Ver resultado' : 'Siguiente';
+    sig.hidden = false;
+    sig.focus({ preventScroll: true });
+  }
+
+  function siguiente() {
+    if (hayVoz) speechSynthesis.cancel();
+    i++;
+    if (i < RETOS.length) { pintarReto(); return; }
+    $('resultado').textContent = aciertos + ' de ' + RETOS.length + ' al primer intento';
+    $('mensaje').textContent = aciertos >= 9 ? '¡Excelente! Ya dominas los medios, cuartos y octavos.' : (aciertos >= 6 ? '¡Muy bien! Practica un poco más los octavos.' : 'Buen trabajo. Explora la pizza y vuelve a intentarlo.');
+    mostrar('p-final');
+  }
+
+  function leer() {
+    if (!hayVoz) return;
+    speechSynthesis.cancel();
+    var texto = RETOS[i].texto.replace(/(\d)\/(\d)/g, function (m, a, b) { var uno = { '2': 'medio', '4': 'cuarto', '8': 'octavo' }, varios = { '2': 'medios', '4': 'cuartos', '8': 'octavos' }; return a === '1' ? 'un ' + (uno[b] || ('entre ' + b)) : a + ' ' + (varios[b] || ('entre ' + b)); });
+    var u = new SpeechSynthesisUtterance(texto);
+    u.lang = 'es-MX';
+    var voces = speechSynthesis.getVoices();
+    var v = voces.filter(function (x) { return x.lang === 'es-MX'; })[0] || voces.filter(function (x) { return /^es/.test(x.lang); })[0];
+    if (v) u.voice = v;
+    u.rate = 0.95;
+    speechSynthesis.speak(u);
+  }
+
+  document.querySelectorAll('#partir button').forEach(function (b) {
+    b.addEventListener('click', function () { if (!bloqueado()) partir(Number(b.dataset.n)); });
+  });
+  $('btn-retos').addEventListener('click', iniciarRetos);
+  $('btn-a-retos').addEventListener('click', iniciarRetos);
+  $('btn-libre').addEventListener('click', iniciarLibre);
+  $('btn-otra').addEventListener('click', iniciarRetos);
+  $('btn-revisar').addEventListener('click', revisar);
+  $('btn-siguiente').addEventListener('click', siguiente);
+  $('btn-limpiar').addEventListener('click', limpiar);
+  $('btn-limpiar-libre').addEventListener('click', limpiar);
+  $('btn-voz').addEventListener('click', leer);
+  $('btn-reiniciar').addEventListener('click', function () { if (hayVoz) speechSynthesis.cancel(); mostrar('p-inicio'); });
+  $('btn-sonido').addEventListener('click', function () {
+    sonido = !sonido;
+    this.textContent = 'Sonido: ' + (sonido ? 'sí' : 'no');
+    this.setAttribute('aria-pressed', String(sonido));
+  });
+})();
+</script>
+</body>
+</html>
