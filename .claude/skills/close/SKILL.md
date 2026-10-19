@@ -66,7 +66,13 @@ feature como desplegado en una línea y como pendiente 460 líneas después.
 Mismo criterio de "solo lo que quedó obsoleto", respetando el tono/nivel de detalle que ya
 tiene cada archivo, sin inventar secciones estructurales nuevas que no encajen con su
 convención existente (ej. `docs/ARCHITECTURE.md` usa secciones numeradas `## N. Título`;
-`CLAUDE.md` usa `## \`archivo.html\` — Descripción`).
+`docs/SISTEMAS.md` usa `## \`archivo.html\` — Descripción` y `### \`apps-script/x.gs\``).
+
+**`CLAUDE.md` vs `docs/SISTEMAS.md`:** el detalle de una página o backend (versiones, fechas de
+despliegue, decisiones, bugs) va en su sección de `docs/SISTEMAS.md`. En `CLAUDE.md` solo se
+toca el resumen (tabla de páginas, "Resumen por backend", reglas comunes, pendientes) si una
+regla o trampa que hay que saber siempre cambió. Nunca agregar historial a `CLAUDE.md`: debe
+quedar por debajo de ~60k caracteres (`wc -c CLAUDE.md`); si lo pasa, avisar a Jorge.
 
 ## 5b. Actualizar `docs/TABLERO-SALUD.md`
 
