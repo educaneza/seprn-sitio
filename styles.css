@@ -1267,6 +1267,10 @@ footer {
     color: #333;
     margin-bottom: 15px;
 }
+/* Celular: con 35px de cada lado a 375px solo quedaban 261px de contenido (oct 2026). */
+@media (max-width: 600px) {
+    .content-block { padding: 22px 18px; }
+}
 
 /* ── Navegación de trámite: regreso a Oficina Virtual + links a otros trámites ── */
 /* Agregado ago 2026 — ninguna de las 4 páginas propias de trámite tenía forma de
