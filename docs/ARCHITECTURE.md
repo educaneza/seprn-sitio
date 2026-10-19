@@ -3316,3 +3316,48 @@ libre, solo el sello de crédito al pie (autor, escuela, "Banco de Materiales OT
 Nezahualcóyotl", licencia). Las 3 de muestra comparten un patrón mínimo: pantallas
 inicio/juego/final con `hidden`, sonido con Web Audio y botón para silenciar, voz con
 `speechSynthesis` (el botón se oculta si no hay), y "Volver a empezar" siempre visible.
+
+## 35. Despliegue de Apps Script desde la terminal con clasp (oct 2026)
+
+**Origen:** desplegar era copiar el `.gs`, pegarlo en el editor (a veces vía Chrome, con hash
+antes/después) y crear la Nueva versión a mano. Correo exigía pegar cada archivo modificado y
+una sola versión. `apps-script/desplegar.sh` lo hace con [clasp](https://github.com/google/clasp)
+3.4.1, corrido con `npx` en versión fija (sin instalación global ni `package.json` en el repo).
+
+**Uso:**
+```
+apps-script/desplegar.sh <proyecto>                       # vista previa: diff contra lo publicado
+apps-script/desplegar.sh <proyecto> --publicar "motivo"   # push + Nueva versión en la misma URL
+```
+
+**Configuración (`apps-script/proyectos-clasp.json`):** por proyecto, `archivos` (rutas dentro de
+`apps-script/`), `scriptId` (Configuración del proyecto o la URL `/projects/<id>/edit` del
+editor), `deploymentId` (el `AKfycb...` de la URL `/exec` que usa el sitio, no cambia al
+publicar) y `nombresRemotos`: el código de cada backend se pegó desde siempre en el `Código.gs`
+por defecto, así que `mantenimiento.gs` del repo es `Código.gs` en Apps Script. Correo conserva
+sus 11 nombres. Los congelados/apagados (`conferencia-ia`, `cursos-coeee-2026`, `panel-otde`)
+no están a propósito. Los proyectos están ligados a sus Sheets, por eso `clasp list-scripts` no
+los muestra (solo lista proyectos sueltos): los IDs se sacaron de script.google.com/home/all.
+Los IDs viven en el repo público a propósito: sin una sesión de Google con permiso de edición no
+dan acceso, y las URLs `/exec` ya son públicas en el HTML.
+
+**Protecciones (todas abortan sin tocar nada):**
+- El proyecto remoto tiene un `.gs`/`.html` que no está en `archivos` → `clasp push` lo borraría.
+- `appsscript.json` sin `webapp.access = ANYONE_ANONYMOUS` (`docs/QA-NOTES.md #49`). El manifest
+  remoto se sube intacto, nunca se edita desde el repo.
+- Un archivo no pasa `node --check`.
+- Tras publicar, vuelve a bajar el proyecto y compara byte a byte contra el repo.
+
+**Cosas que siguen igual:** pasos posteriores al redeploy que pide cada backend (p. ej. Formación
+Docente: "Instalar recordatorios automáticos" desde el menú de la hoja). Los activadores `onEdit`
+instalables corren el código guardado, y `clasp push` sí lo actualiza. Si el código se cambió a
+mano en el editor, la vista previa lo muestra como diff: decidir antes de publicar, porque
+`--publicar` lo pisa con el repo.
+
+**Requisitos (una vez por máquina):** API de Apps Script activada en
+script.google.com/home/usersettings y `npx -y @google/clasp@3.4.1 login` con
+otde.nezahualcoyotl@gmail.com (credenciales en `~/.clasprc.json`, fuera del repo).
+
+**Primer uso real (19 oct 2026):** la vista previa de los 9 proyectos encontró 8 idénticos al
+repo y Oficios con una línea sin publicar (cargo del Dr. Pacheco: "Computación **y**
+Electrónica"); se publicó como versión 10 y la verificación confirmó código idéntico.

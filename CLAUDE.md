@@ -174,9 +174,14 @@ Las apps educativas **no** llevan estilo institucional, solo el sello de crédit
 Detalle completo de cada backend en `docs/SISTEMAS.md`; arquitectura en `docs/ARCHITECTURE.md`.
 
 ### Reglas comunes a todos los backends
-- **Desplegar**: pegar el `.gs` completo en el editor y **Administrar implementaciones → Editar →
-  Nueva versión** (misma URL), con acceso "Cualquier usuario". Solo "Guardar" no publica nada.
-  Si no tiene "Cualquier usuario", responde "Acceso denegado" (`docs/QA-NOTES.md #49`).
+- **Desplegar desde la terminal** (desde el 19 oct 2026): `apps-script/desplegar.sh <proyecto>`
+  muestra el diff contra lo publicado; con `--publicar "motivo"` sube con clasp y crea Nueva
+  versión en la misma URL, y luego verifica que lo publicado sea idéntico al repo. Proyectos, IDs
+  y nombres remotos en `apps-script/proyectos-clasp.json` (el código vive en `Código.gs` dentro
+  de cada proyecto, salvo Correo). Requiere `clasp login` con la cuenta OTDE. Detalle en
+  `docs/ARCHITECTURE.md §35`. Respaldo manual: pegar en el editor y **Administrar
+  implementaciones → Editar → Nueva versión**; solo "Guardar" no publica nada. Sin acceso
+  "Cualquier usuario" responde "Acceso denegado" (`docs/QA-NOTES.md #49`; el script lo revisa).
 - **Probar con `curl` o un navegador escribe de verdad** (el sandbox tiene red real): `doPost`
   guarda en Sheets y manda Telegram/correo. Interceptar con `page.route()` o usar el modo de
   prueba del backend (`xxxActivarModoPrueba('correo')`), y CCT ficticios.

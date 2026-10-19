@@ -104,7 +104,9 @@ seprn-sitio/
 │   ├── panel-otde.gs             # Panel único de solicitudes pendientes (ago 2026) — Sheet aparte, agrega los 4 backends con folio
 │   ├── visitas-jefes.gs          # Backend Ceremonias Cívicas (ago 2026) — SEPRN-wide, no un trámite de OTDE; folio SEPRN-CC-NNNN, sin correo/Telegram a propósito
 │   ├── estrategias-nacionales.gs # Backend Estrategias Nacionales (sep 2026) — folio SEPRN-EN-NNNN, bloqueo duro por ciclo, sin correo/Telegram
-│   └── oficios.gs                # Backend Control de oficios (oct 2026) — lotes de números, oficios recibidos OF-NNNN, PDF a Drive
+│   ├── oficios.gs                # Backend Control de oficios (oct 2026) — lotes de números, oficios recibidos OF-NNNN, PDF a Drive
+│   ├── desplegar.sh              # Publica un backend con clasp desde la terminal: vista previa o --publicar (oct 2026, docs/ARCHITECTURE.md §35)
+│   └── proyectos-clasp.json      # scriptId, deploymentId y nombre remoto de cada proyecto que publica desplegar.sh
 │
 ├── descargas/                    # Instaladores/ejecutables descargables
 │   ├── Instalador_Office_2019_OTDE.exe

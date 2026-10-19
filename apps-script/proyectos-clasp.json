@@ -1,0 +1,100 @@
+{
+  "_nota": "Proyectos de Apps Script que publica apps-script/desplegar.sh. deploymentId = el AKfycb... de la URL /exec que usa el sitio (no cambia al publicar). scriptId = Configuración del proyecto -> ID de la secuencia de comandos. Congelados/apagados (conferencia-ia, cursos-coeee-2026, panel-otde) no están a propósito. nombresRemotos = cómo se llama el archivo dentro del proyecto de Apps Script cuando no es su nombre en el repo (el código se pegó en el Código.gs por defecto).",
+  "mantenimiento": {
+    "archivos": [
+      "mantenimiento.gs"
+    ],
+    "scriptId": "15rVJxwea61Fn0Rrn3tRRUUK-QMKAm3AM1T8GOLIvaj7TK-WATqS0Z2BT",
+    "deploymentId": "AKfycbxxhyMUI8VuuxC29fWgkMWULwLdB7OhNJ-XawgtdseZY5hgV9P6I9uHFfiCMbAJzZb1",
+    "nombresRemotos": {
+      "mantenimiento.gs": "Código.gs"
+    }
+  },
+  "asesorias": {
+    "archivos": [
+      "asesorias.gs"
+    ],
+    "scriptId": "1BYe3RLYa4_FORVBUa8CUyT4xMnK8Tc7OUuLiPo-kO4qneiHbT2Pa2VEP",
+    "deploymentId": "AKfycbxwJFE7d9P4b2e7lVYvBx7FK9bBws53T9V6Q3yU7W-NboeecvnZCvWdkJG0nL8Pmz8q",
+    "nombresRemotos": {
+      "asesorias.gs": "Código.gs"
+    }
+  },
+  "soporte-remoto": {
+    "archivos": [
+      "soporte-remoto.gs"
+    ],
+    "scriptId": "1pjCAliS48bQTPlEs6KOmSo6pHnGSrbJJVxGQ0VcvyWBdN2cSpLJLy5mj",
+    "deploymentId": "AKfycbynU6hEtN7W-Q2MsTEbRZJeGH946n3YcQptGiW6w6fMzgZ98J6mu33bEqSoK_1Oxtk",
+    "nombresRemotos": {
+      "soporte-remoto.gs": "Código.gs"
+    }
+  },
+  "correo": {
+    "archivos": [
+      "correo/Alta.gs",
+      "correo/CambioContrasena.gs",
+      "correo/CambioYReset.gs",
+      "correo/Config.gs",
+      "correo/GenerarResumenSIGEE.gs",
+      "correo/Incidencias.gs",
+      "correo/OnEdit.gs",
+      "correo/Reset2FA.gs",
+      "correo/ResumenSemanal.gs",
+      "correo/Seguimiento.gs",
+      "correo/WebApp.gs"
+    ],
+    "scriptId": "1sF9rKH6fIsX08ZufsOnAgVpgwa5yr5lAYmJlb-m83GeAB3_bbzerAmP8",
+    "deploymentId": "AKfycbwjy-jx1J0riVAlcAkuwAqKq9LMQVIxs4R_ikBIRPXXntO3FwMkGTPBf90W5A8FPAD7"
+  },
+  "formacion-docente": {
+    "archivos": [
+      "formacion-docente.gs"
+    ],
+    "scriptId": "1iRP2mt6uxbyVE5xWLvHPK7jVDpn6g2K44i6gBHQrWTcJ3uISaqt1DEva",
+    "deploymentId": "AKfycbz5UWWzv58tbGxqPaFc9LP-e5JHBhzsZsh_j-Ao7QOCucoiLiTnS96Fsfl7upp9S8E",
+    "nombresRemotos": {
+      "formacion-docente.gs": "Código.gs"
+    }
+  },
+  "bitacora": {
+    "archivos": [
+      "bitacora.gs"
+    ],
+    "scriptId": "1bgUowJblrAIVpMBy5KGhdGCU9Fc6yJhRi7tpXjc5F6Azb81BUh5Gbv29",
+    "deploymentId": "AKfycbzjWhSUllX0vjy7L5codWnYJwXlJiHay3caZ6oNjB7WPY0lxdDb52eV5BY7psVKqiyd",
+    "nombresRemotos": {
+      "bitacora.gs": "Código.gs"
+    }
+  },
+  "oficios": {
+    "archivos": [
+      "oficios.gs"
+    ],
+    "scriptId": "1zMRhlUYo0sOia5Vl_GM_8mRzuShkfLgkQgnyck24YxOCZEXLDqiNqf9K",
+    "deploymentId": "AKfycbzWKPpkmYKCFniWWvSsN_rkG3UCFvUW9CaMqq-BhZseLokvScYHxn-BCH6B5Cg3GBQ2",
+    "nombresRemotos": {
+      "oficios.gs": "Código.gs"
+    }
+  },
+  "visitas-jefes": {
+    "archivos": [
+      "visitas-jefes.gs"
+    ],
+    "scriptId": "1nnQ3GfZXR3DSkJagd0g5VAwSFExaw2XBo0aHQNBy4I2pfMZ7Pr6EfgrG",
+    "deploymentId": "AKfycbwt8sh5UhCm9L68TP95l9PHl_rDVeyUZ6SmkhqsO-Q31hOmPcdPGAdsy8xEZygb_z8",
+    "nombresRemotos": {
+      "visitas-jefes.gs": "Código.gs"
+    }
+  },
+  "estrategias-nacionales": {
+    "archivos": [
+      "estrategias-nacionales.gs"
+    ],
+    "scriptId": "1Xv8lLmVrxCw1-3sqckfRmjks-A04nDWhLGGeEjLj9uTS1DVRF_vvdesi",
+    "deploymentId": "AKfycbysR0hDySFf-dsG3a6fRSEqSeVjz-GH9h5irHmZi7jcD1rohrzyXxcIVJw8gEItnAo",
+    "nombresRemotos": {
+      "estrategias-nacionales.gs": "Código.gs"
+    }
+  }
+}
