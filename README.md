@@ -114,6 +114,7 @@ seprn-sitio/
 │   ├── ARCHITECTURE.md           # Arquitectura, componentes, convenciones
 │   ├── BITACORA.md               # Bitácora cronológica: qué se hizo y cuándo (checkpoints por sesión)
 │   ├── ROADMAP.md                # Solo lo pendiente/futuro — el historial vive en BITACORA.md
+│   ├── SISTEMAS.md               # Detalle e historial por página y por backend (CLAUDE.md solo trae el resumen)
 │   ├── DESIGN_SYSTEM.md          # Tokens/patrones del rediseño premium de Formación Docente
 │   ├── QA-NOTES.md               # Bugs reales ya cazados, con causa raíz — consultar antes de fetch()/appendRow() nuevos
 │   ├── manual-sistema-registro.html    # Manual de uso interno del sistema de registro (Conferencia IA)

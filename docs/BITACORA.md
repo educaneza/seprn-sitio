@@ -7,11 +7,28 @@ Complementa, no duplica, a los demás docs:
 - `docs/ROADMAP.md` responde "¿qué falta?" — solo pendientes genuinamente futuros.
 - `docs/ARCHITECTURE.md` responde "¿cómo está construido?" — modelo mental vigente, sin fechas.
 - `CLAUDE.md` responde "¿cómo trabajo en este proyecto?" — convenciones y guía operativa.
+- `docs/SISTEMAS.md` responde "¿qué hay que saber de este sistema?" — detalle e historial por página y por backend.
 
 Se actualiza automáticamente al cerrar sesión vía el skill `/close`
 (`.claude/skills/close/SKILL.md`) — ver la tabla "Ritual de cierre de sesión" en `CLAUDE.md`
 para qué otro documento tocar además de este. Al abrir sesión, el skill `/open`
 (`.claude/skills/open/SKILL.md`) lee solo el checkpoint más reciente y retoma su fila **Pendiente**.
+
+---
+
+## CHECKPOINT — 2026-10-19 · `CLAUDE.md` adelgazado de 153k a 31.5k caracteres; el detalle pasa a `docs/SISTEMAS.md`
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-19 |
+| **Sesión** | Claude Code avisaba "CLAUDE.md is over the 150.0k-char limit (150.6k chars)". El archivo se carga completo en cada sesión (~37k tokens), y casi todo era historial (versiones, fechas de despliegue, bugs), no reglas. |
+| **`docs/SISTEMAS.md` (nuevo)** | Recibe, palabra por palabra (copiado con script, no reescrito), la tabla completa de páginas, las secciones de los 11 backends sueltos, las secciones de cada página (trámites, Oficina Virtual, Protocolos, Formación Docente, Ceremonias Cívicas, `cct-db.js`) y los pendientes ya resueltos. Sin pérdida de información. |
+| **`CLAUDE.md` resumido** | Se conservan intactos contexto, paleta, sistema de diseño, CTE, reglas de desarrollo y ritual. Nuevo: "Reglas comunes a todos los backends" (trampas que estaban dispersas: Nueva versión, `curl` escribe de verdad, 302 con GET, `appendRow([''])`, columnas por nombre, triggers, Telegram), tabla "Resumen por backend", patrón de los trámites y pendientes solo abiertos. Prefijos de folio y constantes citadas verificados con `grep`. |
+| **Para que no vuelva a crecer** | El ritual de cierre (`CLAUDE.md`) y el skill `/close` dicen ahora que el historial va a `docs/SISTEMAS.md` y que `CLAUDE.md` se mantiene por debajo de ~60k caracteres. |
+| **Verificación** | `wc -c`: `CLAUDE.md` 153,332 → 31,513; `docs/SISTEMAS.md` 132,097. `git diff --stat` de `c17874c`: `CLAUDE.md` 176 inserciones, 1,324 eliminaciones. |
+| **Pendiente** | Sin pendientes nuevos. Confirmar al abrir la siguiente sesión que el aviso de tamaño desapareció. Los pendientes de producto siguen siendo los del checkpoint del 16 oct (Crea tu app, ROADMAP 35). |
+| **Documentación actualizada** | Este checkpoint, `CLAUDE.md`, `docs/SISTEMAS.md` (nuevo), `.claude/skills/close/SKILL.md`, `README.md` (estructura de `docs/`). Sin cambios de sistemas, así que `TABLERO-SALUD.md` no se toca. |
+| **Commits** | `c17874c` y el de este cierre. |
 
 ---
 
