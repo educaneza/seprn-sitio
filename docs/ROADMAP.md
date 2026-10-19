@@ -870,8 +870,7 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     **2C en producción (19 oct 2026):** "Redactar oficio (Word)" para todo número que no es
     comisión (ver `docs/ARCHITECTURE.md §31`). Falta: que Jorge capture los 13 supervisores en
     `Config` ("Sector / área" · "Supervisor" · "Cargo del supervisor"), la primera prueba con un
-    oficio real y volver a pegar `oficios.gs` (el desplegado tiene el cargo del CoEEE sin "y"; la
-    celda de `Config` ya la corrigió Jorge, así que no afecta los oficios).
+    oficio real. (El cargo del CoEEE con "y" ya se publicó en `oficios.gs` el 19 oct 2026, v10.)
     **Siguiente** (Jorge elige): recordatorios de eventos (el dolor de origen) o 2E (archivo digital).
     Sigue sin verificar si la licencia M365 de `@dee.edu.mx` incluye Power Automate.
 

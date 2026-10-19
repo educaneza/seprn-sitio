@@ -538,7 +538,8 @@ diseño libre para niños, solo el sello de crédito al pie.
   `bitRenumerarMetas_()`, ver `docs/ARCHITECTURE.md §26`
   con las celdas combinadas del Excel de Planeación) · Preparar hojas y cargar planeación
   (idempotente; también agrega y llena "Nombre corto" si falta) · Configurar clave de captura
-- Para cambios: pegar el `.gs` completo y **Administrar implementaciones → Editar → Nueva
+- Para cambios: `apps-script/desplegar.sh <proyecto> --publicar "motivo"` (`docs/ARCHITECTURE.md §35`);
+  a mano: pegar el `.gs` completo y **Administrar implementaciones → Editar → Nueva
   versión** (misma URL). Si el cambio toca hojas, correr "Preparar hojas" después
 - **Alimentación automática desde Mantenimiento (24 sep 2026, en producción)**: menús "Traer
   visitas de Mantenimiento" y "Configurar conexión con Mantenimiento" (Script Properties
@@ -639,8 +640,8 @@ diseño libre para niños, solo el sello de crédito al pie.
   "Contenido del oficio"; catálogo "Sector / área" en `Config` (13 sectores, que Jorge captura, +
   CoEEE con el Dr. Elpidio Pacheco Ojeda). Al configurar la plantilla salió "le faltan estos
   campos: INICIALES": Word había partido el campo al guardarla; lo resuelve `ofUnirCampos_()`
-  (`docs/QA-NOTES.md #54`). El `.gs` desplegado tiene el cargo del CoEEE sin "y": volver a pegarlo
-  (la celda de `Config` ya está corregida). Ver `docs/ARCHITECTURE.md §31`
+  (`docs/QA-NOTES.md #54`). El cargo del CoEEE con "y" se publicó el 19 oct 2026 (versión 10,
+  primer despliegue con `apps-script/desplegar.sh`). Ver `docs/ARCHITECTURE.md §31`
 - Si cambia la interfaz de `oficios.html`/`bitacora.html`, las capturas de
   `images/manual-oficios/` quedan desfasadas (las 02-05 de Tomar número desde el 12 oct; la 06, 10 y 13 desde la simplificación del 14 oct, y la 07 ya no se usa). Se generaron con un script de Playwright sobre la
   página real con los dos `.gs` en una simulación de Sheets: **ese script no está en el repo**
@@ -704,7 +705,8 @@ diseño libre para niños, solo el sello de crédito al pie.
   ocupadas con motivo. Solo cancelar el folio libera la escuela
 - El ciclo lo define la Sheet: el ciclo siguiente usa una Sheet nueva y se actualiza
   `MESES_EN_CICLO`. Sin correo ni Telegram. Menú "SEPRN Estrategias" → resumen estrategia × mes
-- Para cambios: pegar el `.gs` completo y **Administrar implementaciones → Editar → Nueva
+- Para cambios: `apps-script/desplegar.sh <proyecto> --publicar "motivo"` (`docs/ARCHITECTURE.md §35`);
+  a mano: pegar el `.gs` completo y **Administrar implementaciones → Editar → Nueva
   versión**, con acceso "Cualquier usuario" (si no, responde "Acceso denegado", ver
   `docs/QA-NOTES.md #49`). Probar con curl: el `POST` escribe de verdad; usar CCT ficticios y
   cancelarlos. Detalle en `docs/ARCHITECTURE.md §28`

@@ -16,6 +16,22 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-10-19 (cont. 2) · Herramientas de Claude Code: hook que revisa cada `git push` y despliegue de Apps Script desde la terminal con clasp
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-19 |
+| **Sesión** | Jorge pidió recomendaciones de automatización para Claude Code (`/claude-code-setup`) y eligió montar dos: el hook de `git push` y el despliegue de `.gs` desde la terminal. |
+| **Hook de `git push`** | `.claude/hooks/revisar-push.sh` (72 líneas) conectado en `.claude/settings.json` (PreToolUse, Bash). Bloquea si la cuenta activa de `gh` no es `educaneza`, si `origin/main` tiene commits que faltan en local o si un archivo nuevo/modificado pesa 100 MB o más; pide confirmación desde 80 MB por archivo o 800 MB publicados en total (umbrales de `CLAUDE.md` regla 4). Compara `HEAD` contra `origin/main`. Ojo: el remoto es el alias SSH `github-educaneza:`, así que `git push` usa la llave SSH y no la cuenta de `gh`; esa revisión protege los `gh run list` de verificación, no el push en sí. |
+| **Despliegue con clasp** | `apps-script/desplegar.sh` (131 líneas) + `apps-script/proyectos-clasp.json` (9 proyectos; fuera `conferencia-ia`, `cursos-coeee-2026` y `panel-otde`). clasp 3.4.1 por `npx` (la instalación global pedía permisos de administrador). Vista previa por default; `--publicar "motivo"` hace push + Nueva versión en la misma URL y luego vuelve a bajar y compara byte a byte. Aborta si el remoto tiene archivos fuera del repo, si el Web App no tiene acceso "Cualquier usuario" o si un `.gs` no pasa `node --check`. Detalle en `docs/ARCHITECTURE.md §35`. |
+| **Hallazgos** | Los proyectos están ligados a sus Sheets: `clasp list-scripts` solo mostró "Control Instalador OTDE"; los `scriptId` salieron de script.google.com/home/all con Chrome (la extensión bloquea leerlos con JavaScript; sí aparecen en la URL del tab al abrir cada proyecto). El código de cada backend vive en `Código.gs` dentro de Apps Script (salvo Correo, con sus 11 nombres): lo detectó la protección de archivos fuera del repo y se resolvió con `nombresRemotos`. Los IDs se quedan en el repo público por decisión de Jorge (sin sesión con permiso de edición no dan acceso). |
+| **Verificación** | Hook: simulaciones de push limpio, cuenta equivocada (gh falso), local atrasado y archivo de 85 MB en un worktree temporal, cada una con la respuesta esperada. clasp: los 22 `.gs` pasan `node --check`; vista previa de los 9 proyectos: 8 idénticos al repo, todos con `ANYONE_ANONYMOUS`; Oficios con una línea sin publicar ("Computación **y** Electrónica"), publicada como **versión 10** con verificación idéntica y `curl` al `/exec` respondiendo `{"status":"ok"}` (sin clave, sin escritura). Run de Pages de `d6782a3` en `success`. `git diff --shortstat cacc47f..d6782a3`: 7 archivos, 375 inserciones, 4 eliminaciones. |
+| **Pendiente** | Sin cambios respecto del checkpoint anterior, salvo que ya no hay que volver a pegar `oficios.gs`: Jorge captura los 13 supervisores en `Config` y prueba un oficio de salida real; prueba de Mantenimiento con modo de prueba fuera de horario (ROADMAP 22); decidir enlace de Excel fácil (ROADMAP 32c); siguiente de la Fase 2: recordatorios o 2E (ROADMAP 27). Las demás recomendaciones de automatización (hook de `.gs`/emojis al editar, skills `/cte-sesion` y `/verificar-deploy`, subagente `gs-reviewer`) quedan como ideas, no pendientes. |
+| **Documentación actualizada** | Este checkpoint, `CLAUDE.md` (regla "Desplegar"), `README.md` (árbol de `apps-script/`), `docs/ARCHITECTURE.md §35`, `docs/SISTEMAS.md` (`oficios.gs` v10 y "Para cambios" de bitácora y estrategias), `docs/ROADMAP.md` (ítem 27), `docs/TABLERO-SALUD.md` (fila de Oficios). |
+| **Commits** | `4e5c350` (hook), `d6782a3` (clasp + docs), y el de este cierre. |
+
+---
+
 ## CHECKPOINT — 2026-10-19 (cont.) · Pendientes fáciles (deuda técnica, celular, WhatsApp) y paso 2C de Oficios: oficio de salida en Word
 
 | | |
