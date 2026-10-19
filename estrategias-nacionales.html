@@ -42,7 +42,7 @@
         .vis-pend-filtros > div { flex: 1 1 150px; min-width: 0; }
         .vis-pend-filtros select, .vis-pend-filtros input { width: 100%; padding: 9px 12px; border: 1px solid #d6d1ca; border-radius: 8px; font-family: inherit; font-size: 14px; background: white; }
         .vis-pend-contador { margin: 16px 0 4px; font-size: 14px; color: #56212f; }
-        .vis-pend-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-top: 10px; }
+        .vis-pend-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); gap: 12px; margin-top: 10px; }
         .vis-pend-card { border: 1px solid #d6d1ca; border-left: 4px solid #9F2241; border-radius: 8px; padding: 12px 14px; background: white; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: #333; }
         .vis-pend-card h4 { margin: 0; font-size: 14px; color: #56212f; }
         .vis-pend-meta { font-size: 12px; color: #977e5b; }
@@ -68,6 +68,17 @@
         .en-resultado li { margin: 2px 0; }
         .en-btn-secundario { background: white; color: #56212f; border: 1.5px solid #56212f; }
         .form-button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .content-block .en-desliza { display: none; font-size: 12px; color: #977e5b; margin: 12px 0 -8px; }
+        @media (max-width: 600px) {
+            /* En celular las tablas se deslizan de lado: se avisa y la primera columna se queda fija. */
+            .content-block { padding: 22px 18px; }
+            .content-block .en-desliza { display: block; }
+            .vis-tabla td:first-child, .vis-tabla th:first-child { position: sticky; left: 0; z-index: 1; box-shadow: 1px 0 0 #d6d1ca; }
+            .vis-tabla td:first-child { background: white; }
+            .vis-tabla th:first-child { z-index: 2; }
+            .en-fila-total td:first-child { background: #F0EDE7; }
+            .en-matriz td:first-child, .en-matriz th:first-child { white-space: normal; min-width: 120px; max-width: 140px; }
+        }
     </style>
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="SEPRN">
@@ -114,6 +125,7 @@
     <div class="content-block">
         <h3>Avance del ciclo</h3>
         <p class="en-cobertura" id="en-cobertura">Cargando…</p>
+        <p class="en-desliza" aria-hidden="true">Desliza la tabla de lado para ver todas las columnas →</p>
         <div class="vis-tabla-wrap">
             <table class="vis-tabla en-matriz" id="en-matriz"></table>
         </div>
@@ -211,6 +223,7 @@
             </div>
         </div>
         <p class="vis-pend-contador" id="en-r-contador"></p>
+        <p class="en-desliza" aria-hidden="true">Desliza la tabla de lado para ver todas las columnas →</p>
         <div class="vis-tabla-wrap">
             <table class="vis-tabla" id="en-r-tabla">
                 <thead>
@@ -586,10 +599,8 @@
         }
         if (!valido) return false;
 
-        var btn = document.getElementById('en-btn-enviar');
-        btn.disabled = true;
-        btn.querySelector('span').textContent = 'Registrando…';
-        document.getElementById('en-msg').className = 'soporte-submit-msg';
+        var espera = esperaConProgreso(document.getElementById('en-btn-enviar'), document.getElementById('en-msg'),
+            { boton: 'Registrando…', texto: 'Revisando qué escuelas siguen disponibles…' });
 
         // Refresca antes de enviar: alguien pudo tomar una escuela mientras esta página estaba abierta.
         // El servidor igual lo valida bajo candado; esto solo avisa antes.
@@ -606,12 +617,14 @@
             })
         };
 
+        espera.etapa('Registrando ' + payload.escuelas.length + ' escuela' + (payload.escuelas.length === 1 ? '' : 's') + '…');
         try {
             var data = await fetchJsonConTimeout(ESTRATEGIAS_APPS_SCRIPT_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain' },
                 body: JSON.stringify(payload)
             });
+            espera.fin();
             if (!data || data.status !== 'ok') throw new Error((data && data.mensaje) || 'No se pudo registrar.');
 
             var html = '';
@@ -629,10 +642,10 @@
             await enCargarSelecciones();
             enRenderTodo();
         } catch (err) {
+            espera.fin();
             enMostrarMsg('en-msg', 'error', 'No se pudo registrar la selección: ' + enEsc(err.name === 'AbortError' ? 'el servidor tardó demasiado, revisa la tabla antes de reintentar.' : err.message));
         } finally {
-            btn.disabled = false;
-            btn.querySelector('span').textContent = 'Registrar selección';
+            espera.fin();
         }
         return false;
     }
@@ -643,8 +656,8 @@
         var valido = ['en-c-folio', 'en-c-motivo'].map(enCampoRequerido).every(Boolean);
         if (!valido) return false;
 
-        var btn = document.getElementById('en-btn-cancelar');
-        btn.disabled = true;
+        var espera = esperaConProgreso(document.getElementById('en-btn-cancelar'), document.getElementById('en-c-msg'),
+            { boton: 'Cancelando…', texto: 'Cancelando la selección…' });
         try {
             var data = await fetchJsonConTimeout(ESTRATEGIAS_APPS_SCRIPT_URL, {
                 method: 'POST',
@@ -655,6 +668,7 @@
                     motivo: document.getElementById('en-c-motivo').value.trim()
                 })
             });
+            espera.fin();
             if (data && data.status === 'ok') {
                 enMostrarMsg('en-c-msg', 'ok', 'Folio <strong>' + enEsc(data.folio) + '</strong> cancelado. ' + enEsc(data.escuela) + ' vuelve a estar disponible.');
                 document.getElementById('en-cancelar-form').reset();
@@ -664,9 +678,10 @@
                 enMostrarMsg('en-c-msg', data && data.status === 'ya_cancelada' ? 'ok' : 'error', enEsc((data && data.mensaje) || 'No se pudo cancelar.'));
             }
         } catch (err) {
+            espera.fin();
             enMostrarMsg('en-c-msg', 'error', 'No se pudo cancelar. Intenta de nuevo en un momento.');
         } finally {
-            btn.disabled = false;
+            espera.fin();
         }
         return false;
     }
