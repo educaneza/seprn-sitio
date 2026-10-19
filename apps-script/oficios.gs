@@ -91,7 +91,9 @@ const ENCABEZADOS_OF_NUMEROS = ['Número', 'Consecutivo', 'Año', 'Tomado', 'Ela
   'Tipo de documento', 'Persona comisionada', 'Lugar / destino', 'Fecha del evento', 'Horario',
   'Resumen del cuerpo', 'Fecha límite', 'Tanda', 'Historial',
   'CCT destino', 'Dirección destino', 'Modalidad', 'Km (ida y vuelta)',
-  'RFC', 'Cargo', 'Destino completo', 'Oficio generado'];
+  'RFC', 'Cargo', 'Destino completo', 'Oficio generado',
+  // 19 oct 2026 (paso 2C): destinatarios y cuerpo del oficio de salida, en JSON, para volver a generarlo.
+  'Contenido del oficio'];
 const OF_ESTATUS_NUMERO = ['Asignado', 'Cancelado'];
 const OF_TIPO_COMISION = 'Comisión';
 const OF_TIPO_DIFUSION = 'Difusión de información';
@@ -120,6 +122,25 @@ const OF_PERSONAL_INICIAL = [
 // mapa (más de 20 km) es la impresión de Google Maps que hace el equipo.
 const OF_CARPETA_COMISIONES = 'Oficios de comisión OTDE';
 const OF_FIRMA_INICIALES = 'AGC/JABT';
+// Oficio de salida en Word (paso 2C, 19 oct 2026): plantilla .docx hecha del
+// MACHOTE.docx real (Script Property OF_PLANTILLA_OFICIO_ID). El cuerpo completo
+// se escribe en la página. Tres formas de dirigirlo a sectores (Jorge): todos o
+// algunos en un solo oficio, o un oficio por sector con su propio cuerpo (mismo
+// número y asunto, distintos datos de escuelas o docentes); o a otra persona.
+const OF_CARPETA_OFICIOS_SALIDA = 'Oficios de salida OTDE';
+const OF_SECTORES = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII'];
+const OF_MODOS_OFICIO = ['todos', 'algunos', 'porSector', 'otro'];
+const OF_MAX_CUERPO = 12000;
+// Catálogo de destinatarios (Config, alineado por renglón): los 13 supervisores
+// y el jefe del CoEEE, con grado y cargo como van en el oficio. Lo llena Jorge;
+// vacío, la página deja escribirlo. Los oficios a Toluca / CoEEE abren con el
+// renglón "CoEEE" ya puesto (normalmente van a él, Jorge, 19 oct 2026).
+const OF_COL_SECTOR = 'Sector / área';
+const OF_AREA_COEEE = 'CoEEE';
+const OF_DESTINATARIO_COEEE = ['DR. ELPIDIO PACHECO OJEDA',
+  'JEFE DEL DEPARTAMENTO DE COMPUTACIÓN Y ELECTRÓNICA EN LA EDUCACIÓN ELEMENTAL'];
+const OF_COL_SUPERVISOR = 'Supervisor';
+const OF_COL_CARGO_SUPERVISOR = 'Cargo del supervisor';
 
 const ENCABEZADOS_OF_OFICIOS = ['ID', 'N.P.', 'Ciclo', 'Folio de Oficialía de Partes', 'Fecha de recepción',
   'No. de oficio del remitente', 'Fecha de elaboración', 'Remitente', 'Asunto', 'Tipo de oficio',
@@ -182,6 +203,7 @@ function onOpen() {
     .addItem('Aplicar validación y semáforo', 'ofAplicarValidacion')
     .addItem('Configurar clave de captura', 'ofConfigurarClave')
     .addItem('Configurar plantilla de comisión', 'ofConfigurarPlantillaComision')
+    .addItem('Configurar plantilla de oficio de salida', 'ofConfigurarPlantillaOficio')
     .addToUi();
 }
 
@@ -423,10 +445,30 @@ function ofAsegurarColumnasPersonal_() {
     'RFC, cargo e iniciales en el mismo renglón. Las iniciales de quien elabora van al pie (AGC/JABT/…).');
 }
 
+// Config sin catálogo de destinatarios (antes del 19 oct 2026): agrega las 3
+// columnas juntas en las primeras libres, con los 13 sectores (nombres a mano) y el CoEEE.
+function ofAsegurarColumnasSupervisores_() {
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_OF_CONFIG);
+  if (!hoja || hoja.getLastRow() < 1) return;
+  const enc = hoja.getRange(1, 1, 1, Math.max(hoja.getLastColumn(), 1)).getValues()[0]
+    .map(function (v) { return String(v).trim(); });
+  if (enc.indexOf(OF_COL_SUPERVISOR) !== -1) return;
+  let col = 1;
+  while (enc[col - 1]) col++;
+  hoja.getRange(1, col, 1, 3).setValues([[OF_COL_SECTOR, OF_COL_SUPERVISOR, OF_COL_CARGO_SUPERVISOR]])
+    .setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
+  const filas = OF_SECTORES.map(function (s) { return [s, '', 'SUPERVISOR GENERAL DEL SECTOR EDUCATIVO ' + s]; })
+    .concat([[OF_AREA_COEEE].concat(OF_DESTINATARIO_COEEE)]);
+  hoja.getRange(2, col, filas.length, 3).setValues(filas);
+  hoja.getRange(1, col + 1).setNote('Como va en el oficio de salida: grado y nombre completo (ej. "LIC. EN E. F. JOSÉ LUIS …"). ' +
+    'Si es supervisora, corrige también el cargo.');
+}
+
 function ofLeerConfig_() {
   const res = { elabora: OF_ELABORA_INICIALES.slice(), destinos: OF_DESTINOS_INICIALES.slice(), tipos: OF_TIPOS_INICIALES.slice(),
     npPorTipo: Object.assign({}, OF_NP_POR_TIPO), npLleganSolas: OF_NP_LLEGAN_SOLAS.slice(),
-    modalidades: OF_MODALIDADES_INICIALES.slice(), personal: [] };
+    modalidades: OF_MODALIDADES_INICIALES.slice(), personal: [], supervisores: [],
+    coeee: { nombre: OF_DESTINATARIO_COEEE[0], cargo: OF_DESTINATARIO_COEEE[1] } };
   const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_OF_CONFIG);
   if (!hoja || hoja.getLastRow() < 2) return res;
   const idx = ofIndices_(hoja);
@@ -449,6 +491,15 @@ function ofLeerConfig_() {
         res.personal.push({ nombre: nombre, rfc: col(r, OF_COL_PERSONAL_RFC),
           cargo: col(r, OF_COL_PERSONAL_CARGO), iniciales: col(r, OF_COL_PERSONAL_INICIALES) });
       }
+    });
+  }
+  if (idx[OF_COL_SECTOR] !== undefined && idx[OF_COL_SUPERVISOR] !== undefined) {
+    filas.forEach(function (r) {
+      const sector = String(r[idx[OF_COL_SECTOR]]).trim().toUpperCase();
+      const d = { nombre: String(r[idx[OF_COL_SUPERVISOR]]).trim(),
+        cargo: idx[OF_COL_CARGO_SUPERVISOR] === undefined ? '' : String(r[idx[OF_COL_CARGO_SUPERVISOR]]).trim() };
+      if (sector === OF_AREA_COEEE.toUpperCase()) res.coeee = d;
+      else if (OF_SECTORES.indexOf(sector) !== -1) res.supervisores.push(Object.assign({ sector: sector }, d));
     });
   }
   // {tipo: N.P.} leído renglón por renglón (el N.P. va junto a su tipo).
@@ -597,6 +648,7 @@ function ofDatosInicio_() {
   ofAsegurarColumnaNp_();
   ofAsegurarColumnaModalidades_();
   ofAsegurarColumnasPersonal_();
+  ofAsegurarColumnasSupervisores_();
   const anio = ofAnioActual_();
   const hojaNum = ss.getSheetByName(HOJA_OF_NUMEROS);
   const hojaOf = ss.getSheetByName(HOJA_OF_OFICIOS);
@@ -636,8 +688,14 @@ function ofNumeroParaPagina_(r, i) {
     resumen: v('Resumen del cuerpo'), fechaLimite: v('Fecha límite'), tanda: v('Tanda'),
     reasignado: !!v('Historial').trim(),
     cct: v('CCT destino'), direccion: v('Dirección destino'), modalidad: v('Modalidad'), km: v('Km (ida y vuelta)'),
-    cargo: v('Cargo'), destinoCompleto: v('Destino completo'), oficioGenerado: v('Oficio generado')
+    cargo: v('Cargo'), destinoCompleto: v('Destino completo'), oficioGenerado: v('Oficio generado'),
+    contenido: ofContenidoGuardado_(v('Contenido del oficio'))
   };
+}
+
+function ofContenidoGuardado_(texto) {
+  if (!texto) return null;
+  try { return JSON.parse(texto); } catch (err) { return null; }
 }
 
 function ofOficioParaPagina_(r, i) {
@@ -694,6 +752,15 @@ function doPost(e) {
   if (datos.accion === 'generarComision') {
     try {
       return ofRespuesta_(ofGenerarComision_(datos));
+    } catch (err) {
+      return ofRespuesta_({ status: 'error', mensaje: err.message });
+    }
+  }
+
+  // El oficio de salida, igual: lee su fila, escribe en Drive y anota el resultado en esa fila.
+  if (datos.accion === 'generarOficio') {
+    try {
+      return ofRespuesta_(ofGenerarOficio_(datos));
     } catch (err) {
       return ofRespuesta_({ status: 'error', mensaje: err.message });
     }
@@ -1569,35 +1636,45 @@ function ofCompletarPersonal_(docs) {
 }
 
 function ofConfigurarPlantillaComision() {
+  ofConfigurarPlantilla_('OF_PLANTILLA_COMISION_ID', 'Plantilla del oficio de comisión', 'PLANTILLA-COMISION.docx', OF_CAMPOS_PLANTILLA);
+}
+
+function ofConfigurarPlantillaOficio() {
+  ofConfigurarPlantilla_('OF_PLANTILLA_OFICIO_ID', 'Plantilla del oficio de salida', 'PLANTILLA-OFICIO.docx', OF_CAMPOS_PLANTILLA_OFICIO);
+}
+
+function ofConfigurarPlantilla_(propiedad, titulo, archivoLocal, campos) {
   const ui = SpreadsheetApp.getUi();
   const props = PropertiesService.getScriptProperties();
-  const actual = props.getProperty('OF_PLANTILLA_COMISION_ID');
-  const r = ui.prompt('Plantilla del oficio de comisión',
-    'Sube PLANTILLA-COMISION.docx a tu Drive (como Word, sin convertir a Documentos de Google) y pega aquí su enlace.' +
+  const actual = props.getProperty(propiedad);
+  const r = ui.prompt(titulo,
+    'Sube ' + archivoLocal + ' a tu Drive (como Word, sin convertir a Documentos de Google) y pega aquí su enlace.' +
     (actual ? '\n\nActual: ' + actual : ''), ui.ButtonSet.OK_CANCEL);
   if (r.getSelectedButton() !== ui.Button.OK) return;
   const m = r.getResponseText().match(/[-\w]{25,}/);
   if (!m) { ui.alert('No encontré el ID del archivo en ese enlace. No se guardó nada.'); return; }
   let archivo;
   try { archivo = DriveApp.getFileById(m[0]); } catch (err) { ui.alert('No pude abrir ese archivo: ' + err.message); return; }
-  const faltan = ofCamposFaltantesPlantilla_(archivo.getBlob());
+  const faltan = ofCamposFaltantesPlantilla_(archivo.getBlob(), campos);
   if (faltan === null) { ui.alert('Ese archivo no es un Word (.docx). Súbelo sin convertir a Documentos de Google.'); return; }
   if (faltan.length) { ui.alert('A la plantilla le faltan estos campos: ' + faltan.join(', ') + '. No se guardó.'); return; }
-  props.setProperty('OF_PLANTILLA_COMISION_ID', m[0]);
+  props.setProperty(propiedad, m[0]);
   ui.alert('Plantilla guardada: ' + archivo.getName() + '.');
 }
 
 const OF_CAMPOS_PLANTILLA = ['FECHA_OFICIO', 'NOMBRE', 'RFC', 'NUMERO', 'ANIO', 'MES', 'DESTINO', 'FECHA_COMISION',
   'MOTIVO', 'KM', 'MODALIDAD', 'NOMBRE_FIRMA', 'CARGO', 'INICIALES'];
+const OF_CAMPOS_PLANTILLA_OFICIO = ['FECHA_OFICIO', 'NUMERO', 'ANIO', 'ASUNTO', 'DESTINATARIO', 'CARGO_DESTINATARIO',
+  'CUERPO', 'INICIALES'];
 
-function ofCamposFaltantesPlantilla_(blob) {
+function ofCamposFaltantesPlantilla_(blob, campos) {
   let doc;
   try {
     doc = Utilities.unzip(blob.setContentType('application/zip')).find(function (b) { return b.getName() === 'word/document.xml'; });
   } catch (err) { return null; }
   if (!doc) return null;
-  const xml = doc.getDataAsString('UTF-8');
-  return OF_CAMPOS_PLANTILLA.filter(function (c) { return xml.indexOf('{{' + c + '}}') === -1; });
+  const xml = ofUnirCampos_(doc.getDataAsString('UTF-8'));
+  return (campos || OF_CAMPOS_PLANTILLA).filter(function (c) { return xml.indexOf('{{' + c + '}}') === -1; });
 }
 
 const OF_MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre',
@@ -1660,16 +1737,6 @@ function ofGenerarComision_(x) {
     hoja.getRange(e.i + 2, idx['Km (ida y vuelta)'] + 1).setValue(correcciones[n]);
   });
 
-  const archivos = Utilities.unzip(DriveApp.getFileById(idPlantilla).getBlob().setContentType('application/zip'));
-  const porNombre = {};
-  archivos.forEach(function (b) { porNombre[b.getName()] = b; });
-  const docXml = porNombre['word/document.xml'].getDataAsString('UTF-8');
-  const iBody = docXml.indexOf('<w:body>') + '<w:body>'.length;
-  const iSect = docXml.lastIndexOf('<w:sectPr');
-  const cuerpo = docXml.slice(iBody, iSect);
-
-  const salto = '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
-  let docPr = 1000;
   const paginas = elegidas.map(function (e) {
     const r = e.r;
     const v = function (h) { return idx[h] === undefined ? '' : r[idx[h]]; };
@@ -1677,7 +1744,7 @@ function ofGenerarComision_(x) {
     const fechaOf = v('Fecha de elaboración') instanceof Date ? v('Fecha de elaboración') : new Date();
     const nombre = ofTxt_(v('Persona comisionada'));
     const km = v('Km (ida y vuelta)');
-    const campos = {
+    return { campos: {
       FECHA_OFICIO: ofFechaLarga_(fechaOf), NOMBRE: nombre, RFC: ofTxt_(v('RFC')),
       NUMERO: String(v('Consecutivo')), ANIO: String(v('Año')),
       MES: fechaCom ? OF_MESES[Number(Utilities.formatDate(fechaCom, OF_ZONA, 'M')) - 1].replace(/^./, function (c) { return c.toUpperCase(); }) : '',
@@ -1686,25 +1753,16 @@ function ofGenerarComision_(x) {
       KM: km === '' ? '____' : String(km), MODALIDAD: ofTxt_(v('Modalidad')),
       NOMBRE_FIRMA: nombre.toUpperCase(), CARGO: ofTxt_(v('Cargo')).toUpperCase(),
       INICIALES: ofIniciales_(ofTxt_(v('Elabora')), personal)
-    };
-    const pag = cuerpo.replace(/\{\{([A-Z_]+)\}\}/g, function (m0, c) { return c in campos ? ofXml_(campos[c]) : m0; });
-    // Varias copias del mismo cuerpo: ids de dibujo únicos y sin ids de párrafo repetidos.
-    return pag.replace(/(<wp:docPr\b[^>]*\bid=")(\d+)"/g, function (m0, a) { return a + (++docPr) + '"'; })
-      .replace(/ w14:paraId="[0-9A-F]+"/g, '').replace(/ w14:textId="[0-9A-F]+"/g, '')
-      .replace(/ wp14:anchorId="[0-9A-F]+"/g, '');
+    } };
   });
-
-  const nuevoDoc = docXml.slice(0, iBody) + paginas.join(salto) + docXml.slice(iSect);
-  porNombre['word/document.xml'] = Utilities.newBlob(nuevoDoc, 'application/xml', 'word/document.xml');
 
   const primero = elegidas[0].r;
   const ultimo = elegidas[elegidas.length - 1].r;
   const nombreArchivo = 'Comisión ' + primero[idx['Consecutivo']] +
     (elegidas.length > 1 ? '-' + ultimo[idx['Consecutivo']] : '') + ' — ' + ofTxt_(primero[idx['Asunto']]).slice(0, 50) + '.docx';
-  const zip = Utilities.zip(Object.keys(porNombre).map(function (n) { return porNombre[n].setName(n); }), nombreArchivo)
-    .setContentType('application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+  const zip = ofArmarDocx_(idPlantilla, paginas, nombreArchivo);
   const mes = Utilities.formatDate(primero[idx['Fecha de elaboración']] instanceof Date ? primero[idx['Fecha de elaboración']] : new Date(), OF_ZONA, 'yyyy-MM');
-  const archivo = ofCarpetaComisiones_(mes).createFile(zip);
+  const archivo = ofCarpetaPorMes_(OF_CARPETA_COMISIONES, mes).createFile(zip);
   const url = archivo.getUrl();
   if (idx['Oficio generado'] !== undefined) {
     elegidas.forEach(function (e) { hoja.getRange(e.i + 2, idx['Oficio generado'] + 1).setValue(url); });
@@ -1713,13 +1771,138 @@ function ofGenerarComision_(x) {
     oficios: elegidas.length, km: correcciones };
 }
 
-function ofCarpetaComisiones_(mes) {
-  const raiz = DriveApp.getFoldersByName(OF_CARPETA_COMISIONES);
+// Un .docx con una página por elemento de `paginas` ({campos, cuerpo}), a
+// partir de la plantilla: repite el cuerpo de word/document.xml, con salto de
+// página entre copias. Mismo armado para comisiones y oficios de salida.
+function ofArmarDocx_(idPlantilla, paginas, nombreArchivo) {
+  const archivos = Utilities.unzip(DriveApp.getFileById(idPlantilla).getBlob().setContentType('application/zip'));
+  const porNombre = {};
+  archivos.forEach(function (b) { porNombre[b.getName()] = b; });
+  const docXml = porNombre['word/document.xml'].getDataAsString('UTF-8');
+  porNombre['word/document.xml'] = Utilities.newBlob(ofDocumentoXml_(docXml, paginas), 'application/xml', 'word/document.xml');
+  return Utilities.zip(Object.keys(porNombre).map(function (n) { return porNombre[n].setName(n); }), nombreArchivo)
+    .setContentType('application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+}
+
+// Al editar y guardar la plantilla, Word puede partir un campo en varios runs
+// ("{{" | "INICIALES" | "}}", por el corrector ortográfico; pasó el 19 oct 2026).
+// Se vuelve a unir quitando las etiquetas de en medio: el campo empieza y termina
+// dentro de un <w:t>, así que lo que se quita siempre cierra y abre en pareja.
+function ofUnirCampos_(xml) {
+  return xml.replace(/\{\{((?:[A-Z_]|<[^>]*>)+?)\}\}/g, function (m0, dentro) {
+    const nombre = dentro.replace(/<[^>]*>/g, '');
+    return /^[A-Z_]+$/.test(nombre) ? '{{' + nombre + '}}' : m0;
+  });
+}
+
+// Solo texto (sin servicios de Apps Script), para poder probarlo fuera del editor.
+function ofDocumentoXml_(docXml, paginas) {
+  docXml = ofUnirCampos_(docXml);
+  const iBody = docXml.indexOf('<w:body>') + '<w:body>'.length;
+  const iSect = docXml.lastIndexOf('<w:sectPr');
+  const cuerpo = docXml.slice(iBody, iSect);
+  const salto = '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+  let docPr = 1000;
+  const xml = paginas.map(function (p) {
+    let pag = cuerpo.replace(/\{\{([A-Z_]+)\}\}/g, function (m0, c) { return c in p.campos ? ofXml_(p.campos[c]) : m0; });
+    if (p.cuerpo != null) pag = ofLlenarCuerpo_(pag, p.cuerpo);
+    // Varias copias del mismo cuerpo: ids de dibujo únicos y sin ids de párrafo repetidos.
+    return pag.replace(/(<wp:docPr\b[^>]*\bid=")(\d+)"/g, function (m0, a) { return a + (++docPr) + '"'; })
+      .replace(/ w14:paraId="[0-9A-F]+"/g, '').replace(/ w14:textId="[0-9A-F]+"/g, '')
+      .replace(/ wp14:anchorId="[0-9A-F]+"/g, '');
+  });
+  return docXml.slice(0, iBody) + xml.join(salto) + docXml.slice(iSect);
+}
+
+// El párrafo con {{CUERPO}} se repite por cada párrafo del texto (separados por
+// una línea en blanco), con un renglón vacío entre ellos como en el machote. Un
+// salto de línea simple queda como salto dentro del párrafo y **así** sale en negritas.
+function ofLlenarCuerpo_(xml, texto) {
+  const mPar = xml.match(/<w:p\b(?:(?!<w:p\b)[\s\S])*?\{\{CUERPO\}\}[\s\S]*?<\/w:p>/);
+  if (!mPar) return xml;
+  const par = mPar[0];
+  const run = par.match(/<w:r\b(?:(?!<w:r\b)[\s\S])*?\{\{CUERPO\}\}[\s\S]*?<\/w:r>/)[0];
+  const rPr = (run.match(/<w:rPr>[\s\S]*?<\/w:rPr>/) || ['<w:rPr></w:rPr>'])[0];
+  const rPrNegrita = /<w:rFonts\b[^>]*\/>/.test(rPr) ? rPr.replace(/(<w:rFonts\b[^>]*\/>)/, '$1<w:b/><w:bCs/>')
+    : rPr.replace('<w:rPr>', '<w:rPr><w:b/><w:bCs/>');
+  const parrafos = String(texto).replace(/\r/g, '').split(/\n[ \t]*\n/)
+    .map(function (t) { return t.trim(); }).filter(String);
+  const runs = function (t) {
+    return t.split('**').map(function (seg, k) {
+      const formato = k % 2 ? rPrNegrita : rPr;
+      return seg.split('\n').map(function (linea, n) {
+        return (n ? '<w:r>' + formato + '<w:br/></w:r>' : '') +
+          (linea ? '<w:r>' + formato + '<w:t xml:space="preserve">' + ofXml_(linea) + '</w:t></w:r>' : '');
+      }).join('');
+    }).join('');
+  };
+  const vacio = par.replace(run, '');
+  return xml.replace(par, function () {
+    return parrafos.map(function (t) { return par.replace(run, function () { return runs(t); }); }).join(vacio);
+  });
+}
+
+// Oficio de salida en Word (paso 2C): x = {numero, modo, sectores, paginas: [{sector, destinatario, cargo, cuerpo}]}.
+// Guarda lo escrito en "Contenido del oficio" para volver a generarlo después.
+function ofGenerarOficio_(x) {
+  const numero = ofTxt_(x.numero);
+  if (!numero) throw new Error('No llegó el número.');
+  const idPlantilla = PropertiesService.getScriptProperties().getProperty('OF_PLANTILLA_OFICIO_ID');
+  if (!idPlantilla) throw new Error('Falta la plantilla del oficio de salida. Jorge la configura en el Sheet: OTDE Oficios → Configurar plantilla de oficio de salida.');
+  const modo = OF_MODOS_OFICIO.indexOf(ofTxt_(x.modo)) !== -1 ? ofTxt_(x.modo) : 'otro';
+  const sectores = (Array.isArray(x.sectores) ? x.sectores : []).map(function (v) { return ofTxt_(v).toUpperCase(); })
+    .filter(function (v) { return OF_SECTORES.indexOf(v) !== -1; });
+  const paginas = (Array.isArray(x.paginas) ? x.paginas : []).map(function (p) {
+    return { sector: ofTxt_(p && p.sector).toUpperCase(), destinatario: ofTxt_(p && p.destinatario), cargo: ofTxt_(p && p.cargo),
+      cuerpo: String(p && p.cuerpo != null ? p.cuerpo : '').replace(/\r/g, '').trim() };
+  });
+  if (!paginas.length) throw new Error('Escribe a quién va dirigido y el cuerpo del oficio.');
+  if (paginas.length > OF_SECTORES.length) throw new Error('Máximo ' + OF_SECTORES.length + ' páginas por oficio.');
+  paginas.forEach(function (p) {
+    const pre = paginas.length > 1 ? 'Sector ' + p.sector + ': ' : '';
+    if (!p.destinatario) throw new Error(pre + 'escribe a quién va dirigido.');
+    if (!p.cuerpo) throw new Error(pre + 'escribe el cuerpo del oficio.');
+    if (p.cuerpo.length > OF_MAX_CUERPO) throw new Error(pre + 'el cuerpo pasa de ' + OF_MAX_CUERPO + ' caracteres.');
+  });
+  const contenido = JSON.stringify({ modo: modo, sectores: sectores, paginas: paginas });
+  if (contenido.length > 45000) throw new Error('El oficio es demasiado largo para guardarlo en el Sheet. Acorta el texto.');
+
+  const hoja = ofObtenerHoja_(HOJA_OF_NUMEROS, ENCABEZADOS_OF_NUMEROS);
+  const idx = ofIndices_(hoja);
+  const filas = ofFilas_(hoja);
+  const i = filas.findIndex(function (r) { return String(r[idx['Número']]) === numero; });
+  if (i === -1) throw new Error('No encontré el número ' + numero + '.');
+  const r = filas[i];
+  if (String(r[idx['Estatus']]) === 'Cancelado') throw new Error('El número ' + numero + ' está cancelado.');
+  if (String(r[idx['Tipo de documento']]) === OF_TIPO_COMISION) throw new Error('El número ' + numero + ' es de comisión: usa "Generar oficio (Word)".');
+
+  const fechaOf = r[idx['Fecha de elaboración']] instanceof Date ? r[idx['Fecha de elaboración']] : new Date();
+  const asunto = ofTxt_(r[idx['Asunto']]);
+  const comunes = {
+    FECHA_OFICIO: ofFechaLarga_(fechaOf), NUMERO: String(r[idx['Consecutivo']]), ANIO: String(r[idx['Año']]),
+    ASUNTO: asunto.toUpperCase(), INICIALES: ofIniciales_(ofTxt_(r[idx['Elabora']]), ofLeerConfig_().personal)
+  };
+  const docs = paginas.map(function (p) {
+    return { campos: Object.assign({}, comunes, { DESTINATARIO: p.destinatario.toUpperCase(), CARGO_DESTINATARIO: p.cargo.toUpperCase() }),
+      cuerpo: p.cuerpo };
+  });
+  const nombreArchivo = 'Oficio ' + comunes.NUMERO + ' — ' + asunto.replace(/[\/\\:*?"<>|]/g, '-').slice(0, 50) + '.docx';
+  const archivo = ofCarpetaPorMes_(OF_CARPETA_OFICIOS_SALIDA, Utilities.formatDate(fechaOf, OF_ZONA, 'yyyy-MM'))
+    .createFile(ofArmarDocx_(idPlantilla, docs, nombreArchivo));
+  const url = archivo.getUrl();
+  hoja.getRange(i + 2, idx['Contenido del oficio'] + 1).setValue(contenido);
+  hoja.getRange(i + 2, idx['Oficio generado'] + 1).setValue(url);
+  return { status: 'ok', url: url, nombre: nombreArchivo, descarga: 'https://drive.google.com/uc?export=download&id=' + archivo.getId(),
+    paginas: docs.length, contenido: JSON.parse(contenido) };
+}
+
+function ofCarpetaPorMes_(nombre, mes) {
+  const raiz = DriveApp.getFoldersByName(nombre);
   let carpeta;
   if (raiz.hasNext()) {
     carpeta = raiz.next();
   } else {
-    carpeta = DriveApp.createFolder(OF_CARPETA_COMISIONES);
+    carpeta = DriveApp.createFolder(nombre);
     // Mismo criterio que "Oficios OTDE": el equipo abre los archivos desde el
     // celular sin entrar a esta cuenta; la liga solo aparece detrás de la clave.
     carpeta.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);

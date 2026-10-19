@@ -242,6 +242,14 @@
     .generado { margin-top: .6rem; background: #ecfdf5; border: 1.5px solid #a7f3d0; color: #065f46;
       border-radius: 8px; padding: .7rem .85rem; font-size: .85rem; }
     .generado a { color: #065f46; font-weight: 700; }
+    .red-datos { font-size: .84rem; margin: -.3rem 0 1rem; line-height: 1.4; }
+    .red-sectores { display: grid; grid-template-columns: repeat(auto-fill, minmax(4.2rem, 1fr)); gap: .4rem; }
+    .red-sectores label { border: 1.5px solid var(--border); border-radius: 8px; padding: .35rem .5rem; font-size: .82rem;
+      cursor: pointer; background: #fff; text-align: center; }
+    .red-sectores input { accent-color: var(--guinda-ac); margin-right: .25rem; }
+    .red-sectores label:has(input:checked) { border-color: var(--guinda-ac); background: #fdf2f4; }
+    .red-todos { font-size: .78rem; margin-top: .4rem; }
+    .red-sector { border: 1px solid var(--border); border-radius: 10px; padding: .7rem .75rem .2rem; margin-bottom: .7rem; background: #fff; }
     .dias { margin-bottom: 1rem; }
     .dia { border: 1px solid var(--border); border-radius: 10px; padding: .6rem .7rem; margin-bottom: .55rem; background: #fff; }
     .dia .campo { margin-bottom: .55rem; }
@@ -413,9 +421,55 @@
           <div class="envio-error" id="generar-error"></div>
           <div class="generado hidden" id="generar-ok"></div>
         </div>
+        <button type="button" class="btn hidden" id="btn-ir-redactar">Redactar el oficio (Word)</button>
         <div class="botones">
           <button type="button" class="btn" id="btn-copiar">Copiar número completo</button>
           <button type="button" class="btn btn-sec" id="btn-otro-numero">Tomar otro número</button>
+        </div>
+      </div>
+
+      <!-- Oficio de salida en Word (paso 2C): destinatarios + cuerpo, con la plantilla del machote -->
+      <div class="card hidden" id="redactor">
+        <h2 id="red-titulo">Redactar oficio</h2>
+        <p class="red-datos" id="red-datos"></p>
+        <div class="campo">
+          <span class="etq">¿A quién va dirigido? <span class="req">*</span></span>
+          <div class="opciones" role="radiogroup" aria-label="A quién va dirigido">
+            <label class="opcion"><input type="radio" name="red-modo" value="todos">Todos los sectores<small>Un solo oficio para los 13 supervisores</small></label>
+            <label class="opcion"><input type="radio" name="red-modo" value="algunos">Algunos sectores<small>Un solo oficio, mismo texto</small></label>
+            <label class="opcion"><input type="radio" name="red-modo" value="porSector">Un oficio por sector<small>Mismo número; el texto cambia en cada uno</small></label>
+            <label class="opcion"><input type="radio" name="red-modo" value="otro" checked>Otra persona<small>Toluca, CoEEE, una escuela…</small></label>
+          </div>
+        </div>
+        <div class="campo hidden" id="red-sectores-campo">
+          <span class="etq">Sectores <span class="req">*</span></span>
+          <div class="red-sectores" id="red-sectores"></div>
+          <button type="button" class="link-btn red-todos" id="btn-red-todos">marcar todos</button>
+          <div class="error-msg" id="err-red-sectores">Marca al menos un sector.</div>
+        </div>
+        <div id="red-unico">
+          <div class="campo">
+            <label for="red-destinatario">Dirigido a <span class="req">*</span></label>
+            <input type="text" id="red-destinatario" placeholder="Grado y nombre, o el grupo (ej. SUPERVISORES GENERALES…)">
+            <div class="error-msg" id="err-red-destinatario">Escribe a quién va dirigido.</div>
+          </div>
+          <div class="campo">
+            <label for="red-cargo">Cargo <span class="opcional">(opcional)</span></label>
+            <input type="text" id="red-cargo" placeholder="Ej. JEFE DEL DEPARTAMENTO DE…">
+          </div>
+          <div class="campo">
+            <label for="red-cuerpo">Cuerpo del oficio <span class="req">*</span></label>
+            <textarea id="red-cuerpo" rows="12"></textarea>
+            <div class="error-msg" id="err-red-cuerpo">Escribe el cuerpo del oficio.</div>
+          </div>
+        </div>
+        <div id="red-por-sector" class="hidden"></div>
+        <p class="hint">Separa los párrafos con una línea en blanco. Lo que escribas entre **dos asteriscos** sale en negritas. La despedida ("Sin otro particular…"), la firma de la Dra. Galindo, el C.c.p. y las iniciales ya vienen en la plantilla.</p>
+        <button type="button" class="btn" id="btn-redactar">Generar el oficio (Word)</button>
+        <div class="envio-error" id="redactar-error"></div>
+        <div class="generado hidden" id="redactar-ok"></div>
+        <div class="botones">
+          <button type="button" class="btn btn-sec" id="btn-cerrar-redactor">Cerrar</button>
         </div>
       </div>
 
@@ -1402,6 +1456,7 @@ function mostrarResultado(numeros, titulo, detalle) {
   }
   $('btn-copiar').textContent = numeros.length > 1 ? 'Copiar todos' : 'Copiar número completo';
   const comision = numeros.every(function (n) { return n.tipo === TIPO_COMISION; });
+  $('btn-ir-redactar').classList.toggle('hidden', numeros.length !== 1 || comision);
   $('ok-generar').classList.toggle('hidden', !comision);
   pintarRutas(comision ? numeros : []);
   $('generar-ok').classList.add('hidden');
@@ -1439,6 +1494,10 @@ $('btn-copiar').addEventListener('click', function () {
   copiarTexto(texto, this);
 });
 $('btn-otro-numero').addEventListener('click', reiniciarNumero);
+$('btn-ir-redactar').addEventListener('click', function () {
+  const n = ultimoResultado[0];
+  abrirRedactor(estado.numeros.find(function (x) { return x.numero === n.numero; }) || n);
+});
 
 // Una tarjeta por destino distinto de la tanda: liga a la ruta en Google Maps y
 // el kilometraje (editable) que llevarán sus oficios.
@@ -1573,6 +1632,11 @@ function pintarNumeros() {
         acc.appendChild(g);
         item.appendChild(ok);
         item.appendChild(er);
+      } else {
+        const w = el('button', 'btn-mini', n.oficioGenerado ? 'Editar y volver a generar el oficio' : 'Redactar oficio (Word)');
+        w.type = 'button';
+        w.addEventListener('click', function () { abrirRedactor(n); });
+        acc.appendChild(w);
       }
       const r = el('button', 'btn-mini', 'Reasignar / corregir');
       r.type = 'button';
@@ -1587,6 +1651,207 @@ function pintarNumeros() {
     lista.appendChild(item);
   });
 }
+
+// ── Oficio de salida (paso 2C). Tres formas de dirigirlo a sectores: todos o
+// algunos en un solo oficio, o un oficio por sector con su propio texto (mismo
+// número y asunto). Lo escrito queda en el Sheet para volver a generarlo. ──
+const SECTORES = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII'];
+const GRUPO_SUPERVISORES = 'SUPERVISORES GENERALES DE LOS SECTORES EDUCATIVOS';
+let redactando = null; // {n, porSector: {sector: {destinatario, cargo, cuerpo}}, volverA}
+
+function supervisorDe(sector) {
+  const s = ((estado.config && estado.config.supervisores) || []).find(function (x) { return x.sector === sector; });
+  return { destinatario: (s && s.nombre) || '', cargo: (s && s.cargo) || 'SUPERVISOR GENERAL DEL SECTOR EDUCATIVO ' + sector };
+}
+
+function listaSectores(sectores) {
+  return sectores.length > 1 ? sectores.slice(0, -1).join(', ') + ' Y ' + sectores[sectores.length - 1] : sectores.join('');
+}
+
+function modoRedactor() {
+  const r = document.querySelector('input[name="red-modo"]:checked');
+  return r ? r.value : 'otro';
+}
+
+function sectoresMarcados() {
+  return SECTORES.filter(function (s) { return $('red-sec-' + s).checked; });
+}
+
+// Destinatario sugerido para "todos"/"algunos" mientras nadie lo haya escrito a mano.
+function sugerirDestinatario() {
+  const modo = modoRedactor();
+  if (modo !== 'todos' && modo !== 'algunos') return;
+  if ($('red-destinatario').dataset.aMano) return;
+  const sec = sectoresMarcados();
+  if (sec.length === 1) {
+    const s = supervisorDe(sec[0]);
+    $('red-destinatario').value = s.destinatario;
+    $('red-cargo').value = s.cargo;
+  } else {
+    $('red-destinatario').value = GRUPO_SUPERVISORES;
+    $('red-cargo').value = listaSectores(sec);
+  }
+}
+
+function guardarBloquesSector() {
+  document.querySelectorAll('#red-por-sector .red-sector').forEach(function (b) {
+    redactando.porSector[b.dataset.sector] = {
+      destinatario: b.querySelector('.rs-dest').value, cargo: b.querySelector('.rs-cargo').value, cuerpo: b.querySelector('.rs-cuerpo').value
+    };
+  });
+}
+
+function pintarBloquesSector() {
+  guardarBloquesSector();
+  const caja = $('red-por-sector');
+  caja.innerHTML = '';
+  sectoresMarcados().forEach(function (s) {
+    const previo = redactando.porSector[s] || Object.assign(supervisorDe(s), { cuerpo: $('red-cuerpo').value });
+    const b = el('div', 'red-sector');
+    b.dataset.sector = s;
+    b.appendChild(el('p', 'subtit', 'Sector ' + s));
+    const dest = el('input', 'rs-dest'); dest.type = 'text'; dest.value = previo.destinatario;
+    dest.placeholder = 'Grado y nombre del supervisor';
+    const cargo = el('input', 'rs-cargo'); cargo.type = 'text'; cargo.value = previo.cargo;
+    const cuerpo = el('textarea', 'rs-cuerpo'); cuerpo.rows = 8; cuerpo.value = previo.cuerpo;
+    b.appendChild(campo('Dirigido a *', dest, 'Escribe a quién va dirigido.'));
+    b.appendChild(campo('Cargo', cargo));
+    b.appendChild(campo('Cuerpo del oficio para el sector ' + s + ' *', cuerpo, 'Escribe el cuerpo del oficio.'));
+    caja.appendChild(b);
+  });
+}
+
+function aplicarModoRedactor() {
+  const modo = modoRedactor();
+  const conSectores = modo !== 'otro';
+  $('red-sectores-campo').classList.toggle('hidden', !conSectores);
+  $('red-unico').classList.toggle('hidden', modo === 'porSector');
+  $('red-por-sector').classList.toggle('hidden', modo !== 'porSector');
+  if (modo === 'todos') SECTORES.forEach(function (s) { $('red-sec-' + s).checked = true; });
+  SECTORES.forEach(function (s) { $('red-sec-' + s).disabled = modo === 'todos'; });
+  $('btn-red-todos').classList.toggle('hidden', modo === 'todos');
+  marcarError('red-sectores', false);
+  if (modo === 'porSector') pintarBloquesSector();
+  sugerirDestinatario();
+}
+
+function abrirRedactor(n) {
+  const c = n.contenido || null;
+  redactando = { n: n, porSector: {}, volverA: $('numero-ok').classList.contains('hidden') ? 'form-numero' : 'numero-ok' };
+  $('red-titulo').textContent = 'Redactar el oficio ' + n.consecutivo;
+  $('red-datos').textContent = n.numero + ' · ' + n.asunto + (n.elaboracion ? ' · ' + fechaCorta(n.elaboracion) : '');
+  const caja = $('red-sectores');
+  if (!caja.children.length) {
+    SECTORES.forEach(function (s) {
+      const l = el('label');
+      const i = el('input'); i.type = 'checkbox'; i.id = 'red-sec-' + s; i.value = s;
+      i.addEventListener('change', function () {
+        marcarError('red-sectores', false);
+        if (modoRedactor() === 'porSector') pintarBloquesSector(); else sugerirDestinatario();
+      });
+      l.appendChild(i);
+      l.appendChild(document.createTextNode(s));
+      caja.appendChild(l);
+    });
+  }
+  $('red-por-sector').innerHTML = '';
+  const modo = c ? c.modo : (n.destino === 'Sectores' ? 'todos' : 'otro');
+  document.querySelector('input[name="red-modo"][value="' + modo + '"]').checked = true;
+  SECTORES.forEach(function (s) { $('red-sec-' + s).checked = !!(c && c.sectores.indexOf(s) !== -1); });
+  // Toluca / CoEEE: normalmente va al jefe del CoEEE (renglón "CoEEE" de Config).
+  const coeee = !c && n.tipo === TIPO_SUBE ? (estado.config && estado.config.coeee) || {} : {};
+  const p0 = (c && c.paginas[0]) || { destinatario: coeee.nombre, cargo: coeee.cargo };
+  $('red-destinatario').value = p0.destinatario || '';
+  $('red-cargo').value = p0.cargo || '';
+  $('red-cuerpo').value = p0.cuerpo || n.resumen || '';
+  if (c) $('red-destinatario').dataset.aMano = '1'; else delete $('red-destinatario').dataset.aMano;
+  if (c && c.modo === 'porSector') {
+    c.paginas.forEach(function (p) { redactando.porSector[p.sector] = p; });
+  }
+  ['red-destinatario', 'red-cuerpo'].forEach(function (id) { marcarError(id, false); });
+  $('redactar-error').classList.remove('visible');
+  $('redactar-ok').classList.add('hidden');
+  $('btn-redactar').disabled = false;
+  $('btn-redactar').textContent = n.oficioGenerado ? 'Volver a generar el oficio (Word)' : 'Generar el oficio (Word)';
+  aplicarModoRedactor();
+  $('form-numero').classList.add('hidden');
+  $('numero-ok').classList.add('hidden');
+  $('redactor').classList.remove('hidden');
+  $('redactor').scrollIntoView({ block: 'start' });
+}
+
+function cerrarRedactor() {
+  $('redactor').classList.add('hidden');
+  $(redactando && redactando.volverA === 'numero-ok' ? 'numero-ok' : 'form-numero').classList.remove('hidden');
+  redactando = null;
+}
+
+// Arma las páginas y marca cada campo que falte (cada uno con su propio error).
+function leerRedactor() {
+  const modo = modoRedactor();
+  const sectores = modo === 'otro' ? [] : sectoresMarcados();
+  let ok = true;
+  if (modo !== 'otro' && !sectores.length) { marcarError('red-sectores', true); ok = false; }
+  let paginas;
+  if (modo === 'porSector') {
+    guardarBloquesSector();
+    paginas = [];
+    document.querySelectorAll('#red-por-sector .red-sector').forEach(function (b) {
+      const dest = b.querySelector('.rs-dest'), cuerpo = b.querySelector('.rs-cuerpo');
+      if (!dest.value.trim()) { errorEnCampo(dest, true); ok = false; }
+      if (!cuerpo.value.trim()) { errorEnCampo(cuerpo, true); ok = false; }
+      paginas.push({ sector: b.dataset.sector, destinatario: dest.value.trim(), cargo: b.querySelector('.rs-cargo').value.trim(), cuerpo: cuerpo.value });
+    });
+  } else {
+    const dest = $('red-destinatario').value.trim(), cuerpo = $('red-cuerpo').value;
+    if (!dest) { marcarError('red-destinatario', true); ok = false; }
+    if (!cuerpo.trim()) { marcarError('red-cuerpo', true); ok = false; }
+    paginas = [{ sector: '', destinatario: dest, cargo: $('red-cargo').value.trim(), cuerpo: cuerpo }];
+  }
+  return ok ? { modo: modo, sectores: sectores, paginas: paginas } : null;
+}
+
+document.querySelectorAll('input[name="red-modo"]').forEach(function (r) { r.addEventListener('change', aplicarModoRedactor); });
+$('btn-red-todos').addEventListener('click', function () {
+  SECTORES.forEach(function (s) { $('red-sec-' + s).checked = true; });
+  marcarError('red-sectores', false);
+  if (modoRedactor() === 'porSector') pintarBloquesSector(); else sugerirDestinatario();
+});
+$('red-destinatario').addEventListener('input', function () { this.dataset.aMano = '1'; marcarError('red-destinatario', false); });
+$('red-cuerpo').addEventListener('input', function () { marcarError('red-cuerpo', false); });
+$('btn-cerrar-redactor').addEventListener('click', cerrarRedactor);
+
+$('btn-redactar').addEventListener('click', async function () {
+  const datos = leerRedactor();
+  $('redactar-error').classList.remove('visible');
+  if (!datos) {
+    mostrarError('redactar-error', 'Revisa los campos marcados.');
+    return;
+  }
+  const boton = this, n = redactando.n;
+  const etiqueta = boton.textContent;
+  const parar = contadorEnBoton(boton, datos.paginas.length > 1 ? 'Armando ' + datos.paginas.length + ' oficios…' : 'Armando el oficio…');
+  try {
+    const d = await post(Object.assign({ accion: 'generarOficio', numero: n.numero }, datos));
+    if (d.status !== 'ok') throw new Error(errorDeEstado(d));
+    const ok = $('redactar-ok');
+    ok.innerHTML = '';
+    ok.appendChild(el('div', null, 'Listo: ' + (d.paginas === 1 ? '1 página.' : d.paginas + ' páginas, una por sector.')));
+    const a = el('a', null, 'Descargar ' + d.nombre);
+    a.href = d.descarga; a.target = '_blank'; a.rel = 'noopener';
+    ok.appendChild(a);
+    ok.appendChild(el('div', 'hint', 'También queda en Drive, en la carpeta "Oficios de salida OTDE". Ábrelo en Word, revísalo e imprímelo.'));
+    ok.classList.remove('hidden');
+    estado.numeros.forEach(function (x) { if (x.numero === n.numero) { x.oficioGenerado = d.url; x.contenido = d.contenido; } });
+    n.oficioGenerado = d.url;
+    n.contenido = d.contenido;
+    pintarNumeros();
+    parar('Volver a generar el oficio (Word)');
+  } catch (e) {
+    mostrarError('redactar-error', mensajeDeFallo(e));
+    parar(etiqueta);
+  }
+});
 
 // Cancelar sin diálogos del navegador: un campo de motivo en la misma tarjeta.
 function abrirCancelar(contenedor, n) {
