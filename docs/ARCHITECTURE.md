@@ -3088,6 +3088,37 @@ claridad" tras el primer día de uso real.
   navegador a 375 y 1280 px con la red desviada al arnés (0 errores, 0 llamadas a producción).
   En vivo: Jorge probó un interno y uno de Oficialía.
 
+**Oficio de salida en Word (paso 2C, 19 oct 2026).** Para todo número que no es comisión:
+"Redactar oficio (Word)" en la lista y en el resultado de Tomar número (`abrirRedactor()` en
+`oficios.html`, `doPost generarOficio` → `ofGenerarOficio_()`, fuera del candado como la comisión).
+- **Plantilla:** `PLANTILLA-OFICIO.docx`, hecha del `MACHOTE.docx` real cambiando solo textos por
+  8 campos (`OF_CAMPOS_PLANTILLA_OFICIO`) y quitando la combinación de correspondencia (apuntaba
+  a `SUPERVISORES.accdb` de otra computadora). Copia local en `docs/insumos/` (`.gitignore`); en
+  Drive, Script Property `OF_PLANTILLA_OFICIO_ID`, menú "Configurar plantilla de oficio de
+  salida" (`ofConfigurarPlantilla_()`, la misma que usa la de comisión). La firma (Dra. Galindo),
+  la despedida, el C.c.p. y el pie viven en la plantilla, no en el código.
+- **Cuatro formas de dirigirlo** (`OF_MODOS_OFICIO`): todos los sectores o algunos, en un solo
+  oficio ("SUPERVISORES GENERALES DE LOS SECTORES EDUCATIVOS" + "I, IV Y XI"; con un solo sector,
+  su supervisor); un oficio por sector, con mismo número y asunto pero destinatario y cuerpo
+  propios (una página por sector, porque cada uno cita sus escuelas o docentes); u otra persona.
+  Toluca / CoEEE abre con el renglón "CoEEE" de `Config`.
+- **Catálogo de destinatarios en `Config`:** "Sector / área" · "Supervisor" · "Cargo del
+  supervisor" (`ofAsegurarColumnasSupervisores_()`, 13 sectores + CoEEE). Son nombres de
+  funcionarios, se mandan a la página (a diferencia del RFC del personal).
+- **Cuerpo completo desde la página:** párrafos separados por una línea en blanco; `**texto**` en
+  negritas. `ofLlenarCuerpo_()` repite el párrafo de `{{CUERPO}}` por cada párrafo, con un renglón
+  vacío entre ellos como el machote. Lo escrito no se sustituye (un `{{NUMERO}}` tecleado queda
+  literal). Se guarda en JSON en `Numeros` → "Contenido del oficio", y "Editar y volver a generar"
+  lo precarga. Salida en la carpeta de Drive `OF_CARPETA_OFICIOS_SALIDA`, por mes.
+- **Armado compartido:** `ofArmarDocx_()` (Drive/zip) + `ofDocumentoXml_()` (solo texto, probado
+  fuera del editor) sirven a comisión y oficio de salida; el Word de comisión salió idéntico byte
+  por byte al de antes del cambio. `ofUnirCampos_()` vuelve a unir un campo que Word partió en
+  varios runs al guardar la plantilla (`docs/QA-NOTES.md #54`).
+- Verificación: Node con el `.gs` real (paridad de comisión, XML bien formado, negritas, saltos,
+  `&`/`<`) + Playwright a 1280 y 375 px con el backend simulado (las 4 formas, errores por campo,
+  reabrir lo guardado) + servidor local en que Jorge probó la página y abrió los Word generados por
+  el `ofGenerarOficio_()` real con Sheet y Drive en memoria. Desplegado por Jorge el mismo día.
+
 **Guía de uso:** `docs/manual-oficios.html` (18 capturas en `images/manual-oficios/`, generadas
 con Playwright sobre la página real, con `oficios.gs` y `bitacora.gs` en una simulación de
 Sheets y datos de ejemplo; enlazada desde `oficios.html`; la 16, de la Oficina Virtual, se agregó

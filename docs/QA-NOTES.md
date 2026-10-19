@@ -1437,3 +1437,24 @@ de **cada** commit termine en `success`. Un run en "failure" o en `queued` por m
 significa que hay que cancelarlo y volver a desplegar. Confirmar en vivo con `curl` un cambio de
 cada commit publicado, no solo del primero. Ojo: `gh` en esta Mac tiene dos cuentas, así que hay
 que confirmar con `gh auth status` que la activa sea `educaneza`.
+
+## 54. "A la plantilla le faltan estos campos: INICIALES" con una plantilla que sí los tenía
+
+**Síntoma (19 oct 2026):** al configurar `PLANTILLA-OFICIO.docx` con "OTDE Oficios → Configurar
+plantilla de oficio de salida", el menú respondió que faltaba `INICIALES`, aunque la plantilla
+recién generada traía `{{INICIALES}}` dos veces (cuadro de texto del pie y su respaldo VML).
+
+**Causa raíz:** Jorge abrió la plantilla en Word para acomodar la firma y la guardó. Word partió
+el campo en tres runs (`{{` | `INICIALES` | `}}`) separados por marcas del corrector ortográfico
+(`<w:proofErr>`), así que `indexOf('{{INICIALES}}')` ya no lo encontraba. Los otros 7 campos
+quedaron enteros: depende de dónde caiga la marca, no se puede predecir.
+
+**Fix:** `ofUnirCampos_()` en `oficios.gs`, antes de revisar y antes de llenar cualquier plantilla:
+une `{{…}}` quitando las etiquetas de en medio cuando lo que queda es un nombre de campo en
+mayúsculas. Como el campo empieza y termina dentro de un `<w:t>`, lo que se quita siempre cierra y
+abre en pareja y el XML sigue bien formado. La plantilla de comisión no cambia (se comprobó).
+
+**Regla:** cualquier plantilla `.docx` con `{{CAMPOS}}` puede romperse en cuanto alguien la edite
+en Word. No buscar los campos con `indexOf` sobre el XML crudo: pasarlo antes por `ofUnirCampos_()`.
+Regenerar la plantilla con script borraría los cambios que se hicieron a propósito en Word (aquí,
+la firma en tres renglones), así que primero se compara el texto de las dos versiones.

@@ -632,6 +632,15 @@ diseño libre para niños, solo el sello de crédito al pie.
   `direccionDeducida()` de la página), "Más datos (opcional)" siempre visible, chips de filtro y
   un solo botón principal por oficio. Un payload sin `origen` sigue siendo Oficialía (compatible).
   Ver `docs/ARCHITECTURE.md §31`
+- **Paso 2C — oficio de salida en Word (19 oct 2026, desplegado por Jorge):** "Redactar oficio
+  (Word)" en todo número que no es comisión; plantilla `PLANTILLA-OFICIO.docx` (del machote real)
+  en Script Property `OF_PLANTILLA_OFICIO_ID`; todos/algunos sectores en un solo oficio, un oficio
+  por sector con texto propio, u otra persona; cuerpo escrito en la página y guardado en
+  "Contenido del oficio"; catálogo "Sector / área" en `Config` (13 sectores, que Jorge captura, +
+  CoEEE con el Dr. Elpidio Pacheco Ojeda). Al configurar la plantilla salió "le faltan estos
+  campos: INICIALES": Word había partido el campo al guardarla; lo resuelve `ofUnirCampos_()`
+  (`docs/QA-NOTES.md #54`). El `.gs` desplegado tiene el cargo del CoEEE sin "y": volver a pegarlo
+  (la celda de `Config` ya está corregida). Ver `docs/ARCHITECTURE.md §31`
 - Si cambia la interfaz de `oficios.html`/`bitacora.html`, las capturas de
   `images/manual-oficios/` quedan desfasadas (las 02-05 de Tomar número desde el 12 oct; la 06, 10 y 13 desde la simplificación del 14 oct, y la 07 ya no se usa). Se generaron con un script de Playwright sobre la
   página real con los dos `.gs` en una simulación de Sheets: **ese script no está en el repo**
@@ -699,6 +708,10 @@ diseño libre para niños, solo el sello de crédito al pie.
   versión**, con acceso "Cualquier usuario" (si no, responde "Acceso denegado", ver
   `docs/QA-NOTES.md #49`). Probar con curl: el `POST` escribe de verdad; usar CCT ficticios y
   cancelarlos. Detalle en `docs/ARCHITECTURE.md §28`
+- **Página, 19 oct 2026:** Registrar y Cancelar usan `esperaConProgreso()` (botón ocupado y caja
+  de avance); en celular (≤600 px) las dos tablas avisan "Desliza la tabla" y fijan la primera
+  columna, y la lista de escuelas ya no se desborda a 320 px. Mensajes en singular con 1 escuela.
+  Jorge lo confirmó en su celular
 
 
 ## `otde.html` — Oficina de Tecnología (OTDE)

@@ -16,6 +16,25 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-10-19 (cont.) · Pendientes fáciles (deuda técnica, celular, WhatsApp) y paso 2C de Oficios: oficio de salida en Word
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-19 |
+| **Sesión** | Jorge pidió ir por lo fácil y luego eligió el 2C de la operación interna. La prueba de Mantenimiento con modo de prueba (ROADMAP 22) se pospuso a propósito: en horario laboral, una solicitud real que llegara mientras el modo está activo mandaría sus correos al buzón de prueba. |
+| **Deuda técnica** | La tabla de `docs/ROADMAP.md` estaba desfasada. Única fila real: los 67 `style=""` de la sección Cobertura de `index.html` pasaron a clases (`.cobertura-*`, `.mapa-*`, `.municipio-*`); capturas idénticas byte por byte a 1280, 768 y 375 px. Filas 7 y 8 ya estaban resueltas desde la Fase 1; 2-6 quedan "Aceptado" por reglas de `CLAUDE.md` (nav/footer duplicados: sin build step solo se compartirían por JS). |
+| **Celular y avisos** | `estrategias-nacionales.html`: `esperaConProgreso()` en Registrar y Cancelar (cierra ROADMAP 31), tablas con aviso "Desliza la tabla" y primera columna fija, lista que ya no se desborda a 320 px. `styles.css`: `.content-block` con 22/18 px de padding en ≤600 px (antes 35 px dejaban 261 px de contenido a 375 px), en las 8 páginas que lo usan; a 1280 px las capturas no cambian. `og:*` y favicon PNG en `excel-facil.html` y `crea-tu-app.html` (las otras 25 páginas públicas ya los tenían). Mensajes en singular con 1 ("Se registró 1 escuela", "Se generó 1 documento"…) en Estrategias, Excel fácil y Formación Docente. |
+| **Confirmado por Jorge en dispositivo real** | WhatsApp muestra ícono y vista previa, la "Fecha planeada" ya no se desborda en iPhone y Estrategias Nacionales se ve bien en su celular (ROADMAP 15 y 29a). |
+| **Decisiones** | Identidad gráfica: se queda Montserrat y no se agrega el Escudo ni la pleca de logos del Gobierno del Estado de México (las 3 tipografías de la guía son de pago y 2 no sirven para "Nezahualcóyotl"). Anotado en `CLAUDE.md` para no reabrirlo. |
+| **Paso 2C — oficio de salida** | "Redactar oficio (Word)" para todo número que no es comisión. Jorge eligió: cuerpo completo escrito en la página; tres formas para sectores (todos o algunos en un solo oficio, o un oficio por sector con mismo número y texto propio, porque cada uno cita sus escuelas o docentes) más "otra persona"; firma siempre de la Dra. Galindo. Plantilla `PLANTILLA-OFICIO.docx` hecha del `MACHOTE.docx` real con 8 campos y sin la combinación de correspondencia (apuntaba a `SUPERVISORES.accdb` de otra PC). Catálogo "Sector / área" en `Config` (13 sectores + CoEEE con el Dr. Elpidio Pacheco Ojeda, "JEFE DEL DEPARTAMENTO DE COMPUTACIÓN Y ELECTRÓNICA EN LA EDUCACIÓN ELEMENTAL"). El armado del Word quedó compartido con la comisión (`ofArmarDocx_()`/`ofDocumentoXml_()`). |
+| **Bug al configurar** | "A la plantilla le faltan estos campos: INICIALES": Jorge acomodó la firma en Word y al guardar Word partió el campo en 3 runs. Se resolvió con `ofUnirCampos_()` sin regenerar la plantilla, para conservar su cambio (`docs/QA-NOTES.md #54`). |
+| **Verificación** | Node con el `.gs` real: Word de comisión idéntico byte por byte antes y después del cambio; oficio con XML bien formado, negritas, saltos y `&`/`<`; los 8 campos encontrados en la plantilla editada por Jorge. Playwright a 1280 y 375 px con backend simulado: las 4 formas, errores por campo, envío, reabrir lo guardado, botón tras tomar número; 0 errores, sin scroll horizontal. Jorge lo probó en un servidor local (página real + `ofGenerarOficio_()` real con Sheet y Drive en memoria) y abrió los Word; luego desplegó el `.gs`, configuró la plantilla y corrigió la celda del CoEEE en `Config`. Cada commit con su run de Pages en `success` y `curl` confirmando el cambio en producción. `git diff --stat 609fe36..251e386`: 9 archivos, 628 inserciones, 130 eliminaciones. |
+| **Pendiente** | Jorge: capturar los 13 supervisores en `Config` ("Supervisor", y el cargo si es supervisora) y probar un oficio de salida real; volver a pegar `oficios.gs` (el desplegado tiene el cargo del CoEEE sin "y"; no afecta porque manda `Config`). Prueba de Mantenimiento con modo de prueba fuera de horario (ROADMAP 22, plan escrito ahí). Decidir si Excel fácil se enlaza desde `asesorias.html`, `oficina-virtual.html` o solo con link directo (ROADMAP 32c). Siguiente de la Fase 2: recordatorios o 2E (ROADMAP 27). |
+| **Documentación actualizada** | Este checkpoint, `CLAUDE.md` (identidad decidida, resumen de `oficios.gs`, pendientes), `docs/ROADMAP.md` (tabla de deuda, ítems 15, 22, 27, 29, 31 y logomark), `docs/ARCHITECTURE.md §31` (2C), `docs/SISTEMAS.md` (`oficios.gs` y `estrategias-nacionales.gs`), `docs/QA-NOTES.md #54`, `docs/TABLERO-SALUD.md`. |
+| **Commits** | `1e2c076` (deuda técnica), `53a2701` (Estrategias Nacionales), `9b6ec22` (padding en celular y `og:*`), `fdd31b2` (singular), `251e386` (2C), y el de este cierre. |
+
+---
+
 ## CHECKPOINT — 2026-10-19 · `CLAUDE.md` adelgazado de 153k a 31.5k caracteres; el detalle pasa a `docs/SISTEMAS.md`
 
 | | |

@@ -387,6 +387,9 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
    Tampoco se confirmó si la página necesita mostrar el Escudo de Armas/logo Gobierno del Estado
    de México reales en algún lugar (hoy el footer solo los menciona en texto) — el documento
    revisado es de redes sociales, no el manual de identidad gráfica completo.
+   **Cerrado el 19 oct 2026 (decisión de Jorge): se descartan las dos cosas.** El sitio se queda
+   en Montserrat (las 3 tipografías de la guía son de pago y 2 no sirven para "Nezahualcóyotl") y
+   no se agrega el Escudo ni la pleca de logos del Gobierno del Estado de México.
 3. ~~**Barra CTE desactualizada**~~ — resuelto 10 ago 2026: `.update-banner` de `index.html`
    ahora dice "Fase Intensiva 2026-2027 ya disponible" (antes decía "Octava Sesión Ordinaria
    2025-2026 ya disponible", el ciclo cerrado).
@@ -582,7 +585,10 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     abajo, y no se leía como algo clicable) se resolvió por otra vía: el formulario ahora empieza
     expandido por defecto y se agregó una guía "paso a paso" antes del formulario — ver
     `docs/ARCHITECTURE.md §22`.
-15. **Dos fixes de la sesión del 30 ago 2026 (cont.) sin verificar en dispositivo real** (ver
+15. ~~**Dos fixes de la sesión del 30 ago 2026 (cont.) sin verificar en dispositivo real**~~ —
+    **resuelto el 19 oct 2026: Jorge confirmó los dos en dispositivo real** (la fecha ya no se
+    desborda en iPhone y WhatsApp muestra ícono y vista previa). Ese día se agregó además el
+    bloque `og:*` y el favicon PNG a `excel-facil.html` y `crea-tu-app.html`, que no los tenían. (ver
     `docs/ARCHITECTURE.md §22`-`§23`): (a) el fix de "Fecha planeada" desbordada en móvil
     (`#vis-fecha` en `ceremonias-civicas.html`) se aplicó a ciegas — no se pudo reproducir el bug
     en Chrome ni en headless de este equipo, así que sigue pendiente que Jorge confirme en un
@@ -701,6 +707,11 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     de rechazo efectivamente llegue con el motivo de "Notas de revisión"; que un segundo reporte
     del mismo folio en otro día agregue una fila nueva en vez de sobrescribir la del día anterior;
     y revisar visualmente en un cliente de correo real que el botón CTA ya se lea en blanco.
+    **19 oct 2026: pospuesta a propósito para fuera de horario laboral** (Jorge: mientras el modo de
+    prueba está activo, una solicitud real que llegara mandaría sus correos al buzón de prueba).
+    Plan listo: fila `OTDE-MAN-TEST4`, Rechazado a mano en el Sheet (así sí corre `manOnEditCierre`)
+    y dos reportes desde `reporte-visita.html` con distinta fecha de atención; al final, limpiar
+    filas, fotos y PDF de Drive y `manDesactivarModoPrueba()`.
 
 23. **SIGEE se modernizó — dos modalidades de Correo Institucional quedan pendientes de empatar**
     (investigado en vivo 21 sep 2026, ver `docs/ARCHITECTURE.md` §16 y `docs/BITACORA.md`):
@@ -856,10 +867,12 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     capturas 02-06, 10 y 13 de `images/manual-oficios/` (cambiaron Tomar número, el registro, la
     lista y "Marcar como atendido"; `07-registrar-b.png` ya no se usa; el script de capturas no
     está en el repo); en reasignar, la "Otra persona" conserva su RFC solo si no cambia de nombre.
-    **Siguiente** (Jorge elige): recordatorios de eventos (el dolor de origen), resto del 2C
-    (redacción de oficios de salida que no son comisión, con plantilla) o 2E (archivo digital).
-    Para el resto del 2C ya están `MACHOTE.docx` y la técnica de plantilla `.docx` con
-    `{{CAMPOS}}` de las comisiones.
+    **2C en producción (19 oct 2026):** "Redactar oficio (Word)" para todo número que no es
+    comisión (ver `docs/ARCHITECTURE.md §31`). Falta: que Jorge capture los 13 supervisores en
+    `Config` ("Sector / área" · "Supervisor" · "Cargo del supervisor"), la primera prueba con un
+    oficio real y volver a pegar `oficios.gs` (el desplegado tiene el cargo del CoEEE sin "y"; la
+    celda de `Config` ya la corrigió Jorge, así que no afecta los oficios).
+    **Siguiente** (Jorge elige): recordatorios de eventos (el dolor de origen) o 2E (archivo digital).
     Sigue sin verificar si la licencia M365 de `@dee.edu.mx` incluye Power Automate.
 
 28. **Formación Docente — calendario y cuota "a quien alcance": verificación en uso real**
@@ -908,7 +921,9 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     filas siempre quedan al final. Valorar usar `ordenarParaEnvio_()` como en los avisos por lote.
 29. **Estrategias Nacionales — pendientes tras el despliegue** (en producción desde el 29 sep
     2026, ver `docs/ARCHITECTURE.md §28` y `docs/BITACORA.md`). Falta:
-    (a) Revisar `estrategias-nacionales.html` en celular (lista con casillas, carrito, matriz).
+    ~~(a) Revisar `estrategias-nacionales.html` en celular~~ — resuelto el 19 oct 2026: aviso
+    "Desliza la tabla", primera columna fija y lista que ya no se desborda a 320 px; Jorge lo
+    confirmó en su celular.
     (b) Correr una vez el menú "SEPRN Estrategias → Actualizar resumen por estrategia y mes" con
     datos reales; no se
     probó.
@@ -923,7 +938,9 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     reemplazar el `.exe` en `descargas/`, actualizar el texto y el tamaño de la tarjeta de
     descarga y la guía paso a paso (aparece el selector 2016/2019 y la descarga de ~830 MB), y
     avisar que Windows 7 ya no está soportado.
-31. **"Que se note que sigue trabajando" — extender al resto de formularios.** El 5 oct 2026
+31. ~~**"Que se note que sigue trabajando" — extender al resto de formularios.**~~ — **resuelto el
+    19 oct 2026**: `estrategias-nacionales.html` (Registrar y Cancelar) ya usa `esperaConProgreso()`;
+    `asistencia.html` se retiró. El 5 oct 2026
     nació en `js/tramites-shared.js` + `styles.css` el componente `botonOcupado()/botonLibre()`
     (spinner en el botón) y `mostrarProgreso()/detalleProgreso()/ocultarProgreso()` (caja de
     estado con barra y texto vivo). Origen: al enviar una ficha de Ceremonias Cívicas con fotos
