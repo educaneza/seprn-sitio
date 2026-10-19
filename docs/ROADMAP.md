@@ -1010,6 +1010,22 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     para instalar en las aulas dentro de la imagen congelada (Time Freeze); (h) inventario de los
     recursos del banco actual que sí se usan. Mejora menor: en `plato-del-bien-comer.html`, en
     celular los grupos quedan abajo y hay que desplazarse. Ver `docs/ARCHITECTURE.md §34`.
+    **Propuesta de modalidad de los talleres (19 oct 2026, para la carta descriptiva y para
+    validar con la Dra. Galindo en (d)):** mixta según la herramienta, no presencial bajo
+    solicitud como única vía (OTDE son 4 personas para más de 400 escuelas, y en el aula de
+    medios la conectividad suele fallar).
+    - **Crea tu app:** primero un piloto pequeño (1-2 escuelas, presencial o virtual síncrono)
+      para ver dónde se atoran; después cohortes virtuales síncronas de 3 sesiones, cuya tarea
+      final es entregar una app para revisión (es la evidencia de que terminó el taller y lo que
+      alimenta el Banco); el autogestivo va al final, con las grabaciones de las cohortes. No
+      empezar en autogestivo: sin acompañamiento muchos abandonan en la primera app que falla, y
+      sin revisión el Banco se llenaría de apps sin validar (PDA, errores, datos de alumnos).
+    - **Excel fácil** (también aplica a ROADMAP 32): autogestivo (la herramienta ya explica cada
+      módulo y funciona sin internet) más una sesión virtual de dudas al mes, de 45-60 min,
+      registrada en `formacion-docente.html`; lo presencial sigue por el tipo "Excel básico" de
+      `asesorias.html`.
+    - Por resolver: si un autogestivo puede dar constancia (hoy solo los cursos con
+      `Liga_tutorial_constancia` de UNETE la tienen); sin ella la participación suele ser baja.
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue
