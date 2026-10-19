@@ -195,32 +195,50 @@
         }
         .map-wrapper { position: relative; }
 
+        .cobertura-section { padding: 80px 50px; background: #f9f8f6; }
+        .cobertura-inner { max-width: 1100px; margin: 0 auto; }
+        .cobertura-intro { text-align: center; margin-bottom: 50px; }
+        .cobertura-titulo { font-size: 36px; font-weight: 700; color: #56212f; margin-bottom: 15px; }
+        .cobertura-lead { font-size: 17px; color: #666; max-width: 600px; margin: 0 auto; line-height: 1.7; }
+        .cobertura-lead strong { color: #9F2241; }
+        .cobertura-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: start; }
+        .mapa-card { background: white; border-radius: 18px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+        .mapa-label { text-align: center; font-size: 13px; color: #977e5b; margin-bottom: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .mapa-hint { text-align: center; font-size: 12px; color: #aaa; margin-bottom: 15px; }
+        .mapa-svg { width: 100%; height: auto; }
+        .map-tooltip-sector { font-weight: 400; font-size: 11px; opacity: 0.85; }
+        .municipios-label { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #9F2241; margin-bottom: 20px; }
+        .municipios-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .municipio-card { background: white; border-radius: 10px; padding: 12px 15px; border-left: 3px solid #9F2241; }
+        .municipio-nombre { font-size: 13px; font-weight: 700; color: #56212f; margin: 0; }
+        .municipio-sector { font-size: 11px; color: #977e5b; margin: 0; }
+
         @media (max-width: 768px) {
-            #cobertura-section { padding: 50px 20px !important; }
-            #cobertura-grid { grid-template-columns: 1fr !important; gap: 30px !important; }
+            .cobertura-section { padding: 50px 20px; }
+            .cobertura-grid { grid-template-columns: 1fr; gap: 30px; }
         }
         @media (max-width: 480px) {
-            #municipios-grid { grid-template-columns: 1fr !important; }
+            .municipios-grid { grid-template-columns: 1fr; }
         }
     </style>
 
     <!-- Cobertura -->
-    <section id="cobertura-section" style="padding: 80px 50px; background: #f9f8f6;">
-        <div style="max-width: 1100px; margin: 0 auto;">
-            <div style="text-align: center; margin-bottom: 50px;">
-                <h2 style="font-size: 36px; font-weight: 700; color: #56212f; margin-bottom: 15px;">Nuestra Cobertura</h2>
-                <p style="font-size: 17px; color: #666; max-width: 600px; margin: 0 auto; line-height: 1.7;">Atendemos <strong style="color:#9F2241;">18 municipios</strong> del oriente y suroriente del Estado de México, organizados en <strong style="color:#9F2241;">13 sectores educativos</strong>.</p>
+    <section id="cobertura-section" class="cobertura-section">
+        <div class="cobertura-inner">
+            <div class="cobertura-intro">
+                <h2 class="cobertura-titulo">Nuestra Cobertura</h2>
+                <p class="cobertura-lead">Atendemos <strong>18 municipios</strong> del oriente y suroriente del Estado de México, organizados en <strong>13 sectores educativos</strong>.</p>
             </div>
 
-            <div id="cobertura-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: start;">
+            <div id="cobertura-grid" class="cobertura-grid">
 
                 <!-- SVG Map -->
-                <div style="background: white; border-radius: 18px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.06);">
-                    <p style="text-align:center; font-size:13px; color:#977e5b; margin-bottom:15px; font-weight:600; text-transform:uppercase; letter-spacing:1px;">Estado de México — Región Oriente</p>
-                    <p style="text-align:center; font-size:12px; color:#aaa; margin-bottom:15px;">Pasa el cursor o toca un municipio</p>
+                <div class="mapa-card">
+                    <p class="mapa-label">Estado de México — Región Oriente</p>
+                    <p class="mapa-hint">Pasa el cursor o toca un municipio</p>
                     <div class="map-wrapper">
                         <div class="map-tooltip" id="map-tooltip"></div>
-                        <svg viewBox="0 0 400 420" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:auto;">
+                        <svg viewBox="0 0 400 420" xmlns="http://www.w3.org/2000/svg" class="mapa-svg">
                             <rect width="400" height="420" fill="#f0ede8" rx="12"/>
 
                             <!-- Zonas fuera de jurisdicción -->
@@ -265,7 +283,7 @@
                             var touchTimer = null;
 
                             function showTooltip(nombre, sector) {
-                                tooltip.innerHTML = '<strong>' + nombre + '</strong><br><span style="font-weight:400;font-size:11px;opacity:0.85">' + sector + '</span>';
+                                tooltip.innerHTML = '<strong>' + nombre + '</strong><br><span class="map-tooltip-sector">' + sector + '</span>';
                                 tooltip.style.opacity = '1';
                             }
 
@@ -303,79 +321,79 @@
 
                 <!-- Municipios List -->
                 <div>
-                    <p style="font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #9F2241; margin-bottom: 20px;">Municipios y Sectores</p>
-                    <div id="municipios-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
-                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Amecameca</p>
-                            <p style="font-size:11px; color:#977e5b; margin:0;">Sector I</p>
+                    <p class="municipios-label">Municipios y Sectores</p>
+                    <div id="municipios-grid" class="municipios-grid">
+                        <div class="municipio-card">
+                            <p class="municipio-nombre">Amecameca</p>
+                            <p class="municipio-sector">Sector I</p>
                         </div>
-                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
-                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Atlautla</p>
-                            <p style="font-size:11px; color:#977e5b; margin:0;">Sector I</p>
+                        <div class="municipio-card">
+                            <p class="municipio-nombre">Atlautla</p>
+                            <p class="municipio-sector">Sector I</p>
                         </div>
-                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
-                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Ayapango</p>
-                            <p style="font-size:11px; color:#977e5b; margin:0;">Sector I</p>
+                        <div class="municipio-card">
+                            <p class="municipio-nombre">Ayapango</p>
+                            <p class="municipio-sector">Sector I</p>
                         </div>
-                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
-                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Chalco</p>
-                            <p style="font-size:11px; color:#977e5b; margin:0;">Sectores II, VIII, XIII</p>
+                        <div class="municipio-card">
+                            <p class="municipio-nombre">Chalco</p>
+                            <p class="municipio-sector">Sectores II, VIII, XIII</p>
                         </div>
-                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
-                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Chicoloapan</p>
-                            <p style="font-size:11px; color:#977e5b; margin:0;">Sectores IV, XI</p>
+                        <div class="municipio-card">
+                            <p class="municipio-nombre">Chicoloapan</p>
+                            <p class="municipio-sector">Sectores IV, XI</p>
                         </div>
-                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
-                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Chimalhuacán</p>
-                            <p style="font-size:11px; color:#977e5b; margin:0;">Sector XI</p>
+                        <div class="municipio-card">
+                            <p class="municipio-nombre">Chimalhuacán</p>
+                            <p class="municipio-sector">Sector XI</p>
                         </div>
-                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
-                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Cocotitlán</p>
-                            <p style="font-size:11px; color:#977e5b; margin:0;">Sector VIII</p>
+                        <div class="municipio-card">
+                            <p class="municipio-nombre">Cocotitlán</p>
+                            <p class="municipio-sector">Sector VIII</p>
                         </div>
-                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
-                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Ixtapaluca</p>
-                            <p style="font-size:11px; color:#977e5b; margin:0;">Sectores II, XIII</p>
+                        <div class="municipio-card">
+                            <p class="municipio-nombre">Ixtapaluca</p>
+                            <p class="municipio-sector">Sectores II, XIII</p>
                         </div>
-                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
-                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Juchitepec</p>
-                            <p style="font-size:11px; color:#977e5b; margin:0;">Sector I</p>
+                        <div class="municipio-card">
+                            <p class="municipio-nombre">Juchitepec</p>
+                            <p class="municipio-sector">Sector I</p>
                         </div>
-                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
-                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">La Paz</p>
-                            <p style="font-size:11px; color:#977e5b; margin:0;">Sector IV</p>
+                        <div class="municipio-card">
+                            <p class="municipio-nombre">La Paz</p>
+                            <p class="municipio-sector">Sector IV</p>
                         </div>
-                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
-                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Nezahualcóyotl</p>
-                            <p style="font-size:11px; color:#977e5b; margin:0;">Sectores V, VI, VII, IX, X, XII</p>
+                        <div class="municipio-card">
+                            <p class="municipio-nombre">Nezahualcóyotl</p>
+                            <p class="municipio-sector">Sectores V, VI, VII, IX, X, XII</p>
                         </div>
-                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
-                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Ozumba</p>
-                            <p style="font-size:11px; color:#977e5b; margin:0;">Sector I</p>
+                        <div class="municipio-card">
+                            <p class="municipio-nombre">Ozumba</p>
+                            <p class="municipio-sector">Sector I</p>
                         </div>
-                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
-                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Temamatla</p>
-                            <p style="font-size:11px; color:#977e5b; margin:0;">Sectores I, VIII</p>
+                        <div class="municipio-card">
+                            <p class="municipio-nombre">Temamatla</p>
+                            <p class="municipio-sector">Sectores I, VIII</p>
                         </div>
-                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
-                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Tenango del Aire</p>
-                            <p style="font-size:11px; color:#977e5b; margin:0;">Sector I</p>
+                        <div class="municipio-card">
+                            <p class="municipio-nombre">Tenango del Aire</p>
+                            <p class="municipio-sector">Sector I</p>
                         </div>
-                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
-                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Tepetlixpa</p>
-                            <p style="font-size:11px; color:#977e5b; margin:0;">Sector I</p>
+                        <div class="municipio-card">
+                            <p class="municipio-nombre">Tepetlixpa</p>
+                            <p class="municipio-sector">Sector I</p>
                         </div>
-                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
-                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Texcoco</p>
-                            <p style="font-size:11px; color:#977e5b; margin:0;">Sector III</p>
+                        <div class="municipio-card">
+                            <p class="municipio-nombre">Texcoco</p>
+                            <p class="municipio-sector">Sector III</p>
                         </div>
-                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
-                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Tlalmanalco</p>
-                            <p style="font-size:11px; color:#977e5b; margin:0;">Sector I</p>
+                        <div class="municipio-card">
+                            <p class="municipio-nombre">Tlalmanalco</p>
+                            <p class="municipio-sector">Sector I</p>
                         </div>
-                        <div style="background:white; border-radius:10px; padding:12px 15px; border-left:3px solid #9F2241;">
-                            <p style="font-size:13px; font-weight:700; color:#56212f; margin:0;">Valle de Chalco Solidaridad</p>
-                            <p style="font-size:11px; color:#977e5b; margin:0;">Sectores II, VIII</p>
+                        <div class="municipio-card">
+                            <p class="municipio-nombre">Valle de Chalco Solidaridad</p>
+                            <p class="municipio-sector">Sectores II, VIII</p>
                         </div>
                     </div>
                 </div>

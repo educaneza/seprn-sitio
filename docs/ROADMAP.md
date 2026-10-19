@@ -337,14 +337,14 @@ BAJO IMPACTO / BAJO ESFUERZO         BAJO IMPACTO / ALTO ESFUERZO
 
 | # | Problema | Archivo(s) | Severidad |
 |---|----------|-----------|-----------|
-| 1 | Estilos inline masivos en `index.html` (sección cobertura) | `index.html` | Media |
-| 2 | Estilos de página en `<style>` bloques locales vs `styles.css` | Múltiples | Media |
-| 3 | Footer duplicado en 16 archivos (cambio de dirección = 16 ediciones) | Todos | Media |
-| 4 | Nav duplicado en 16 archivos | Todos | Media |
-| 5 | `script.js` tiene solo la lógica de hamburger; JS de páginas sigue inline | Múltiples | Baja |
-| 6 | Archivos PDF con acentos en el nombre (riesgo en algunos servidores) | `pdfs/cte/` | Baja |
-| 7 | Sección cobertura sin breakpoint mobile | `index.html` | Alta |
-| 8 | `<div onclick>` en acordeones (no semántico) | `cte.html` | Alta |
+| ~~1~~ | ~~Estilos inline masivos en `index.html` (sección cobertura)~~ — resuelto 19 oct 2026: los 67 `style=""` pasaron a clases en el `<style>` de la página (`.cobertura-*`, `.mapa-*`, `.municipio-*`); capturas antes/después idénticas a 1280, 768 y 375 px | `index.html` | ✅ |
+| 2 | Estilos de página en `<style>` bloques locales vs `styles.css` — **aceptado**: es la regla 2 de `CLAUDE.md` (global → `styles.css`, de página → `<style>` inline) | Múltiples | Aceptado |
+| 3 | Footer duplicado en 24 archivos — **aceptado** (19 oct 2026): sin build step, la única forma de compartirlo es inyectarlo por JS, lo que lo rompe sin JS, para buscadores y en las herramientas que funcionan sin internet. Regla 3 de `CLAUDE.md` | Todos | Aceptado |
+| 4 | Nav duplicado en 24 archivos — **aceptado**, mismo motivo que la fila 3 | Todos | Aceptado |
+| 5 | `script.js` tiene solo la lógica de hamburger; JS de páginas sigue inline — **aceptado**: misma convención que la fila 2 | Múltiples | Aceptado |
+| 6 | Archivos PDF con acentos en el nombre (19 al 19 oct 2026) — **aceptado**: la regla 6 de `CLAUDE.md` los pide así (href con `%C3%B3`) y GitHub Pages los sirve bien | `pdfs/cte/` | Aceptado |
+| ~~7~~ | ~~Sección cobertura sin breakpoint mobile~~ — ya resuelto (Fase 1, ítem 1.2): `@media` 768 y 480 px en el `<style>` de `index.html`; tachado el 19 oct 2026 | `index.html` | ✅ |
+| ~~8~~ | ~~`<div onclick>` en acordeones~~ — ya resuelto (Fase 1, ítem 1.5): los 16 encabezados son `<button type="button" aria-expanded>`; tachado el 19 oct 2026 | `cte.html` | ✅ |
 | ~~9~~ | ~~Sin `aria-current` en ninguna página~~ — resuelto Fase 1, ver `docs/ARCHITECTURE.md` (P6, `fd707cf`) | Todos | ✅ |
 | ~~10~~ | ~~Sin favicon en ninguna página~~ — resuelto Fase 1, ver `docs/ARCHITECTURE.md` (P8, `fd707cf`) | Todos | ✅ |
 
