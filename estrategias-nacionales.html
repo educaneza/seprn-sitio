@@ -628,12 +628,12 @@
 
             var html = '';
             if (data.registradas.length) {
-                html += '<p style="margin:0 0 6px;"><strong>Se registraron ' + data.registradas.length + ' escuela' + (data.registradas.length === 1 ? '' : 's') +
+                html += '<p style="margin:0 0 6px;"><strong>' + (data.registradas.length === 1 ? 'Se registró 1 escuela' : 'Se registraron ' + data.registradas.length + ' escuelas') +
                     '</strong> en "' + enEsc(payload.estrategia) + '" · ' + enMesLegible(payload.mes) + ':</p><ul class="en-resultado">' +
                     data.registradas.map(function (r) { return '<li><strong>' + enEsc(r.folio) + '</strong> — ' + enEsc(r.escuela) + ' (' + enEsc(r.cct) + ')</li>'; }).join('') + '</ul>';
             }
             if (data.rechazadas.length) {
-                html += '<p style="margin:10px 0 6px;"><strong>No se registraron ' + data.rechazadas.length + '</strong> porque ya tienen estrategia:</p><ul class="en-resultado">' +
+                html += '<p style="margin:10px 0 6px;"><strong>' + (data.rechazadas.length === 1 ? 'No se registró 1</strong> porque ya tiene' : 'No se registraron ' + data.rechazadas.length + '</strong> porque ya tienen') + ' estrategia:</p><ul class="en-resultado">' +
                     data.rechazadas.map(function (r) { return '<li>' + enEsc(r.escuela) + ' (' + enEsc(r.cct) + '): ' + enEsc(r.motivo) + '</li>'; }).join('') + '</ul>';
             }
             enMostrarMsg('en-msg', data.registradas.length ? 'ok' : 'error', html);

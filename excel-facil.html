@@ -1376,7 +1376,7 @@ function iniciarFiltrar() {
     paso(4);
     var idx = filasHasta(filtros.length);
     var desc = activos.map(function (f) { return tabla.encabezados[f.col] + ': ' + Array.from(f.sel).map(function (v) { return v || '(vacío)'; }).slice(0, 5).join(', ') + (f.sel.size > 5 ? '…' : ''); }).join(' · ');
-    p4.innerHTML = '<div class="panel"><h2>Resultado</h2><p style="font-size:1.15rem" aria-live="polite"><strong>Se encontraron ' + fmt(idx.length) + ' de ' + fmt(tabla.filas.length) + ' registros.</strong></p>' +
+    p4.innerHTML = '<div class="panel"><h2>Resultado</h2><p style="font-size:1.15rem" aria-live="polite"><strong>' + (idx.length === 1 ? 'Se encontró' : 'Se encontraron') + ' ' + fmt(idx.length) + ' de ' + fmt(tabla.filas.length) + ' registros.</strong></p>' +
       '<p style="color:var(--texto-2)">' + esc(desc) + '</p>' +
       '<div class="botones"><button type="button" class="btn btn-primario" data-desc' + (idx.length ? '' : ' disabled') + '>' + ICO.descargar + ' Descargar resultado (.xlsx)</button></div>' +
       '<h3 style="margin-top:20px">Vista previa</h3><div data-tabla></div></div>';
@@ -1831,7 +1831,7 @@ function iniciarCombinar() {
         prog.poner(95, 'Empaquetando el .zip...'); await ceder();
         descargarBlob(salida.generate({ type: 'blob', compression: 'STORE' }), base + '_documentos.zip');
       }
-      cont.innerHTML = aviso('ok', '<p><strong>¡Listo!</strong> Se generaron ' + plural(n, 'documento', 'documentos') + '. Revisa tu carpeta de Descargas.' + (modo === 'zip' ? ' Para abrir el .zip en Windows, haz clic derecho sobre él y elige «Extraer todo».' : '') + '</p>');
+      cont.innerHTML = aviso('ok', '<p><strong>¡Listo!</strong> ' + (n === 1 ? 'Se generó' : 'Se generaron') + ' ' + plural(n, 'documento', 'documentos') + '. Revisa tu carpeta de Descargas.' + (modo === 'zip' ? ' Para abrir el .zip en Windows, haz clic derecho sobre él y elige «Extraer todo».' : '') + '</p>');
     } catch (e) {
       cont.innerHTML = e && e.properties ? errorHumano(traducirErrorPlantilla(e)) : errorHumano('<p>No se pudieron generar los documentos. Si son muchos, intenta con menos registros (filtra tu Excel primero) o cierra otras pestañas y vuelve a intentarlo.</p>');
     }

@@ -2484,7 +2484,7 @@
       // obtenidos (bug real cazado en QA: ago 2026).
       const total = resultados.length + fallo.pendientes.length;
       tituloEl.textContent = 'Registro parcial con OTDE';
-      subtituloEl.textContent = 'Se registraron ' + resultados.length + ' de ' + total + ' cursos seleccionados.';
+      subtituloEl.textContent = (resultados.length === 1 ? 'Se registró' : 'Se registraron') + ' ' + resultados.length + ' de ' + total + ' cursos seleccionados.';
 
       const aviso = document.createElement('div');
       aviso.style.cssText = 'font-size:.85rem;color:var(--danger);background:var(--danger-bg);border-left:3px solid var(--danger);border-radius:var(--radius-sm);padding:.85rem 1.1rem;text-align:left;margin:0 auto 1.5rem;max-width:42ch;line-height:1.5;';
