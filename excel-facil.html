@@ -779,6 +779,12 @@ function cajaFormula(formulaConMarcas) {
   return '<div class="caja-formula"><span class="formula" data-f="' + esc(formulaConMarcas) + '">' + esc(F(formulaConMarcas)) + '</span>' +
     '<button type="button" class="btn btn-sec btn-chico" data-copiar-formula>' + ICO.copiar + ' Copiar</button></div>';
 }
+/* Pasos con los menús de Excel (sin fórmulas), plegados. Los pasos son HTML ya escapado. */
+function pasosMenu(resumen, pasos, nota) {
+  return '<details style="margin-top:16px"><summary>' + resumen + '</summary><ol>' +
+    pasos.map(function (p) { return '<li>' + p + '</li>'; }).join('') + '</ol>' +
+    (nota ? '<p>' + nota + '</p>' : '') + '</details>';
+}
 document.addEventListener('click', function (e) {
   var b = e.target.closest('[data-copiar-formula]');
   if (b) { copiarTexto(b.parentNode.querySelector('.formula').textContent, b); return; }
@@ -1259,7 +1265,11 @@ function iniciarDuplicados() {
       '<p>Escribe esta fórmula en la celda <strong>' + libre + ini + '</strong> (la primera columna vacía a la derecha de tus datos) y arrástrala hacia abajo hasta la fila ' + fin + ':</p>' +
       cajaFormula(formula) +
       '<ul class="partes">' + partes.map(function (p) { return '<li><code class="formula" data-f="' + esc(p[0]) + '">' + esc(F(p[0])) + '</code><span>' + esc(p[1]) + '</span></li>'; }).join('') + '</ul>' +
-      '<p class="ayuda" style="color:var(--texto-3)">Nota: en Excel la fórmula no ignora espacios ni acentos como lo hace esta herramienta. Si tus datos tienen espacios de más, primero usa la tarea <a href="#formulas" data-tarea="espacios">«Quitar espacios sobrantes»</a>.</p></div>';
+      '<p class="ayuda" style="color:var(--texto-3)">Nota: en Excel la fórmula no ignora espacios ni acentos como lo hace esta herramienta. Si tus datos tienen espacios de más, primero usa la tarea <a href="#formulas" data-tarea="espacios">«Quitar espacios sobrantes»</a>.</p>' +
+      pasosMenu('Sin fórmulas: con los menús de Excel', [
+        '<strong>Para solo ver los repetidos:</strong> selecciona la columna ' + tabla.letras[r.cols[0]] + (r.cols.length > 1 ? ' (el formato condicional revisa una columna a la vez, no la combinación)' : '') + ' y ve a <strong>Inicio</strong> &rarr; <strong>Formato condicional</strong> &rarr; <strong>Reglas para resaltar celdas</strong> &rarr; <strong>Valores duplicados</strong>. Excel los pinta de color; no borra nada.',
+        '<strong>Para borrarlos:</strong> primero guarda una copia del archivo. Selecciona una celda dentro de tus datos y ve a <strong>Datos</strong> &rarr; <strong>Quitar duplicados</strong>. Marca solo las columnas que definen la repetición (por ejemplo, solo CURP) y acepta. Excel conserva la primera aparición y te dice cuántas filas quitó.'
+      ], 'Ojo: Excel no reconoce como repetidos los que tienen espacios de más (por ejemplo «ABCD850312…» y «ABCD850312… »). Esta herramienta sí, porque los compara ya limpios.') + '</div>';
   }
 }
 
@@ -1379,7 +1389,13 @@ function iniciarFiltrar() {
     p4.innerHTML = '<div class="panel"><h2>Resultado</h2><p style="font-size:1.15rem" aria-live="polite"><strong>' + (idx.length === 1 ? 'Se encontró' : 'Se encontraron') + ' ' + fmt(idx.length) + ' de ' + fmt(tabla.filas.length) + ' registros.</strong></p>' +
       '<p style="color:var(--texto-2)">' + esc(desc) + '</p>' +
       '<div class="botones"><button type="button" class="btn btn-primario" data-desc' + (idx.length ? '' : ' disabled') + '>' + ICO.descargar + ' Descargar resultado (.xlsx)</button></div>' +
-      '<h3 style="margin-top:20px">Vista previa</h3><div data-tabla></div></div>';
+      '<h3 style="margin-top:20px">Vista previa</h3><div data-tabla></div></div>' +
+      '<div class="panel"><h2>Aprende a hacerlo tú en Excel</h2><ol>' +
+      '<li>Haz clic en cualquier título de tu tabla (fila ' + tabla.filaEncabezado + ').</li>' +
+      '<li>Ve a <strong>Datos</strong> &rarr; <strong>Filtro</strong> (o presiona <strong>Ctrl + Mayús + L</strong>). Aparece una flecha en cada título.</li>' +
+      '<li>Abre la flecha de ' + activos.map(function (f) { return '«' + esc(tabla.encabezados[f.col]) + '» (columna ' + tabla.letras[f.col] + ')'; }).join(' y luego la de ') + ', quita la marca de <strong>(Seleccionar todo)</strong> y marca solo los valores que quieres.</li>' +
+      '<li>Para llevarte el resultado a otro archivo: selecciona las filas que quedaron, cópialas (<strong>Ctrl + C</strong>; Excel copia solo las visibles) y pégalas en un libro nuevo.</li>' +
+      '<li>Para volver a ver todo: <strong>Datos</strong> &rarr; <strong>Borrar</strong>. Los filtros solo ocultan filas, no borran nada.</li></ol></div>';
     tablaPaginada($('[data-tabla]', p4), ['Fila en Excel'].concat(tabla.encabezados), idx.length, function (k) {
       var i = idx[k];
       return { celdas: [{ html: '<span class="num-fila">' + tabla.numFila[i] + '</span>' }].concat(tabla.filas[i].map(function (v) { return String(v).slice(0, 80); })) };
@@ -1613,7 +1629,14 @@ function iniciarValidar() {
     h += '<ul class="partes"><li><code>LARGO(' + L0 + ')</code><span>Cuenta cuántos caracteres tiene la celda, incluidos los espacios.</span></li>' +
       '<li><code>=' + largos[tipos[0]] + '</code><span>Compara con la longitud correcta: CURP 18, RFC 13 (persona), CCT 10.</span></li>' +
       '<li><code>SI(...)</code><span>Escribe «Correcto» si la longitud coincide y «Revisar» si no.</span></li></ul>' +
-      '<p>Para saber si una celda tiene espacios sobrantes, compara <code class="formula" data-f="LARGO(' + L0 + ')">' + esc('LARGO(' + L0 + ')') + '</code> con <code class="formula" data-f="LARGO(ESPACIOS(' + L0 + '))">LARGO(ESPACIOS(' + L0 + '))</code>: si son distintos, sobran espacios.</p></div>';
+      '<p>Para saber si una celda tiene espacios sobrantes, compara <code class="formula" data-f="LARGO(' + L0 + ')">' + esc('LARGO(' + L0 + ')') + '</code> con <code class="formula" data-f="LARGO(ESPACIOS(' + L0 + '))">LARGO(ESPACIOS(' + L0 + '))</code>: si son distintos, sobran espacios.</p>' +
+      pasosMenu('Para que ya no se capturen mal: Validación de datos', [
+        'Selecciona ' + (tipos.length > 1 ? 'una por una las columnas ' : 'la columna ') + esc(tipos.map(function (t) { return tabla.letras[cols[t]]; }).sort().join(', ')) + ' (o solo las celdas donde se va a capturar). Cada clave lleva su propia regla.',
+        'Ve a <strong>Datos</strong> &rarr; <strong>Validación de datos</strong>. En <strong>Permitir</strong> elige <strong>Longitud del texto</strong>, en <strong>Datos</strong> elige <strong>igual a</strong> y escribe la longitud (CURP 18, RFC 13, CCT 10).',
+        'En la pestaña <strong>Mensaje de entrada</strong> escribe una guía, por ejemplo: «Escribe la CURP completa, 18 caracteres».',
+        'En la pestaña <strong>Mensaje de error</strong> deja el estilo <strong>Detener</strong> para que Excel no acepte un dato con otra longitud.',
+        'Para marcar los que ya estaban mal: <strong>Datos</strong> &rarr; flecha de <strong>Validación de datos</strong> &rarr; <strong>Rodear con un círculo datos no válidos</strong>.'
+      ], 'La validación revisa la longitud al capturar, no la estructura: una CURP con la letra O en lugar de un cero tiene 18 caracteres y Excel la acepta. Para eso usa esta herramienta.') + '</div>';
     return h;
   }
 }
@@ -1861,18 +1884,20 @@ function descargarPlantillaEjemplo() {
 /* =========================================================================
    Archivo de práctica (datos inventados, generados en el navegador)
    ========================================================================= */
+/* CCT, Escuela, Zona, Sector, Subdirección (hoja «Personal») · Turno, Colonia, Alumnos, Grupos (hoja «Escuelas») */
+var ESCUELAS_PRACTICA = [
+  ['15XPR0001A', 'Escuela Ficticia Uno', '005', '01', 'Subdirección A', 'Matutino', 'Colonia Imaginaria', 412, 12],
+  ['15XPR0002B', 'Escuela Ficticia Dos', '005', '01', 'Subdirección A', 'Vespertino', 'Colonia Imaginaria', 268, 9],
+  ['15XPR0003C', 'Escuela de Práctica Tres', '012', '02', 'Subdirección A', 'Matutino', 'Colonia Inventada', 530, 15],
+  ['15XPR0004D', 'Escuela de Práctica Cuatro', '012', '02', 'Subdirección B', 'Vespertino', 'Colonia Inventada', 187, 6],
+  ['15XPR0005E', 'Escuela Inventada Cinco', '027', '03', 'Subdirección B', 'Matutino', 'Colonia de Prueba', 356, 12],
+  ['15XPR0006F', 'Escuela Inventada Seis', '031', '04', 'Subdirección B', 'Matutino', 'Colonia de Prueba', 298, 10]
+];
 function datosPractica() {
   var nombres = ['Ana', 'Luis', 'María', 'José', 'Carmen', 'Jorge', 'Rosa', 'Pedro', 'Elena', 'Raúl', 'Sofía', 'Diego', 'Laura', 'Miguel', 'Patricia', 'Arturo'];
   var apellidos = ['Prueba', 'Ejemplo', 'Ficticio', 'Simulado', 'Demostración', 'Muestra'];
   var funciones = ['Docente', 'Docente', 'Docente', 'Director(a)', 'Subdirector(a)', 'ATP'];
-  var escuelas = [
-    ['15XPR0001A', 'Escuela Ficticia Uno', '005', '01', 'Subdirección A'],
-    ['15XPR0002B', 'Escuela Ficticia Dos', '005', '01', 'Subdirección A'],
-    ['15XPR0003C', 'Escuela de Práctica Tres', '012', '02', 'Subdirección A'],
-    ['15XPR0004D', 'Escuela de Práctica Cuatro', '012', '02', 'Subdirección B'],
-    ['15XPR0005E', 'Escuela Inventada Cinco', '027', '03', 'Subdirección B'],
-    ['15XPR0006F', 'Escuela Inventada Seis', '031', '04', 'Subdirección B']
-  ];
+  var escuelas = ESCUELAS_PRACTICA;
   var cons = 'BCDFGHJKLMNPRSTVZ', filas = [];
   function pad(n) { return (n < 10 ? '0' : '') + n; }
   for (var i = 0; i < 58; i++) {
@@ -1915,12 +1940,25 @@ function descargarPractica() {
     ['Archivo de práctica — Excel fácil (OTDE Nezahualcóyotl)'], [''],
     ['Todos los datos de este archivo son inventados. Úsalo para probar la herramienta sin arriesgar datos reales.'],
     ['La hoja «Personal» tiene los títulos en la fila 3 (arriba hay un título), como muchos formatos reales.'],
-    ['Tiene errores a propósito: CURP en minúsculas, con espacios, con letra O en lugar de cero, fechas imposibles, RFC sin homoclave o con guiones, CCT incompletos y registros repetidos.']
+    ['Tiene errores a propósito: CURP en minúsculas, con espacios, con letra O en lugar de cero, fechas imposibles, RFC sin homoclave o con guiones, CCT incompletos y registros repetidos.'],
+    ['La hoja «Escuelas» es un catálogo de las 6 escuelas: úsala para practicar BUSCARV (traer un dato de otra tabla).'],
+    [''],
+    ['RETOS (primero intenta hacerlo en Excel, después compáralo con Excel fácil)'],
+    ['1. Filtros: ¿cuántas personas trabajan en la Zona 012?'],
+    ['2. Filtros con dos condiciones: ¿cuántos ATP hay en la Subdirección B?'],
+    ['3. Fórmulas: con CONTAR.SI, ¿cuántas personas tienen la función «Docente»?'],
+    ['4. Cazador de errores: en «Personal» hay 13 claves (RFC, CURP o CCT) mal capturadas y 1 vacía. ¿Cuántas encuentras en 10 minutos?'],
+    ['5. Duplicados: ¿qué personas están capturadas más de una vez? Cuidado: no todas se ven iguales.'],
+    ['6. BUSCARV: en una columna nueva de «Personal», trae el Turno de cada persona desde «Escuelas» usando su CCT. ¿Qué filas dicen «No encontrado» y por qué?'],
+    ['7. Reto final: en «Escuelas», ¿cómo sacas el CCT si solo conoces el nombre de la escuela? (BUSCARV no puede: el CCT está a la izquierda)']
   ]);
   inst['!cols'] = [{ wch: 110 }];
   var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, inst, 'Instrucciones');
   XLSX.utils.book_append_sheet(wb, ws, 'Personal');
+  var hojaEsc = XLSX.utils.aoa_to_sheet([['CCT', 'Escuela', 'Turno', 'Colonia', 'Alumnos', 'Grupos']].concat(ESCUELAS_PRACTICA.map(function (e) { return [e[0], e[1], e[5], e[6], e[7], e[8]]; })));
+  hojaEsc['!cols'] = [{ wch: 13 }, { wch: 28 }, { wch: 11 }, { wch: 20 }, { wch: 9 }, { wch: 8 }];
+  XLSX.utils.book_append_sheet(wb, hojaEsc, 'Escuelas');
   var datos = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
   descargarBlob(new Blob([datos], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), 'archivo_de_practica_excel_facil.xlsx');
 }
@@ -1964,7 +2002,7 @@ var TAREAS = [
     formula: function (v) { var h = /[^A-Za-z0-9_]/.test(v.hoja) ? "'" + v.hoja + "'" : v.hoja; return '=SI.ERROR(BUSCARV(' + v.busca + '§' + h + '!$' + v.colIni + '$2:$' + v.colFin + '$' + v.fin + '§' + v.num + '§FALSO)§"No encontrado")'; },
     partes: function (v) { return [['BUSCARV', 'Busca un valor en la primera columna de una tabla y te trae otro dato de la misma fila.'], [v.busca, 'Lo que buscas.'], [v.hoja + '!$' + v.colIni + '$2:$' + v.colFin + '$' + v.fin, 'La tabla donde buscar. Lo que buscas debe estar en su PRIMERA columna (' + v.colIni + ').'], [v.num, 'Qué columna traer: 1 es la ' + v.colIni + ', 2 la siguiente, etc.'], ['FALSO', 'Busca coincidencia exacta. Siempre úsalo así con claves.'], ['SI.ERROR(...§"No encontrado")', 'Si no lo encuentra, escribe «No encontrado» en vez de #N/D.']]; },
     ejemplo: { enc: ['', 'A (CURP)', 'B (fórmula: trae el correo)'], filas: [['2', 'PXEA850312MMCRJN09', 'ana.prueba@ejemplo.test'], ['3', 'ZZZZ000000HMCXXX00', 'No encontrado']] },
-    consejo: 'Si el dato que buscas no está en la primera columna de la otra tabla, usa la tarea «Buscar cuando la clave no está en la primera columna».'
+    consejo: 'Si el dato que buscas no está en la primera columna de la otra tabla, usa la tarea «Buscar cuando la clave no está en la primera columna». ¿Y BUSCARX? Es más cómoda, pero solo existe en Microsoft 365 y Excel 2021 o posterior: en Excel 2019 (el que instala OTDE) marca #¿NOMBRE?. Si vas a compartir el archivo con escuelas o supervisiones, quédate con BUSCARV.'
   },
   {
     id: 'indice', titulo: 'Buscar cuando la clave no está en la primera columna',
@@ -2043,7 +2081,7 @@ var ERRORES_COMUNES = [
   ['#N/D', 'No encontró lo que buscabas (BUSCARV, COINCIDIR).', 'Revisa que el dato exista en la otra tabla exactamente igual: sin espacios de más y con el mismo formato (texto vs. número). Envuelve la fórmula en SI.ERROR(...§"No encontrado").'],
   ['#¡VALOR!', 'La fórmula espera un número y encontró texto, o al revés.', 'Revisa que la celda no tenga letras o espacios donde va un número. Usa ESPACIOS() para limpiar.'],
   ['#REF!', 'La fórmula apunta a una celda que ya no existe (borraste filas, columnas u hojas).', 'Deshaz con Ctrl+Z o vuelve a escribir la fórmula con las celdas correctas. En BUSCARV, revisa que el número de columna no sea mayor que las columnas de la tabla.'],
-  ['#¿NOMBRE?', 'Excel no reconoce el nombre de una función.', 'Revisa que esté bien escrita y en español (CONTAR.SI, no COUNTIF). Si tu Excel es en inglés, las funciones tienen otro nombre. También pasa si olvidaste las comillas en un texto.'],
+  ['#¿NOMBRE?', 'Excel no reconoce el nombre de una función.', 'Revisa que esté bien escrita y en español (CONTAR.SI, no COUNTIF). Si tu Excel es en inglés, las funciones tienen otro nombre. También pasa si olvidaste las comillas en un texto, o si el archivo usa BUSCARX, FILTRAR o UNICOS (solo existen en Microsoft 365 y Excel 2021 o posterior, no en Excel 2019).'],
   ['Excel dice «Hay un problema con esta fórmula»', 'El separador no coincide con la configuración de tu Excel.', 'Activa arriba la opción «Mi Excel usa punto y coma (;)» y vuelve a copiar la fórmula.'],
   ['La fórmula aparece como texto', 'La celda tiene formato de Texto, así que Excel no la calcula.', 'Cambia el formato de la celda a «General», haz doble clic en ella y presiona Enter.']
 ];
