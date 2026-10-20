@@ -94,6 +94,10 @@ const ENCABEZADOS_OF_NUMEROS = ['Número', 'Consecutivo', 'Año', 'Tomado', 'Ela
   'RFC', 'Cargo', 'Destino completo', 'Oficio generado',
   // 19 oct 2026 (paso 2C): destinatarios y cuerpo del oficio de salida, en JSON, para volver a generarlo.
   'Contenido del oficio'];
+// "Fecha límite" se retiró de la página el 20 oct 2026 (nada la usaba); la
+// columna se queda con lo ya capturado. Desde ese día una Difusión puede
+// convocar a una actividad presencial: usa Fecha del evento, Horario y
+// Lugar / destino, igual que una comisión, y entra al resumen diario.
 const OF_ESTATUS_NUMERO = ['Asignado', 'Cancelado'];
 const OF_TIPO_COMISION = 'Comisión';
 const OF_TIPO_DIFUSION = 'Difusión de información';
@@ -204,6 +208,11 @@ function onOpen() {
     .addItem('Configurar clave de captura', 'ofConfigurarClave')
     .addItem('Configurar plantilla de comisión', 'ofConfigurarPlantillaComision')
     .addItem('Configurar plantilla de oficio de salida', 'ofConfigurarPlantillaOficio')
+    .addSeparator()
+    .addItem('Probar recordatorios de hoy', 'ofProbarRecordatorios')
+    .addItem('Configurar Telegram de recordatorios', 'ofConfigurarTelegram')
+    .addItem('Configurar conexión con Formación Docente', 'ofConfigurarConexionFormacion')
+    .addItem('Instalar recordatorios diarios (7 am)', 'ofInstalarRecordatorios')
     .addToUi();
 }
 
@@ -685,7 +694,7 @@ function ofNumeroParaPagina_(r, i) {
     elaboracion: v('Fecha de elaboración'), estatus: v('Estatus'), vinculo: v('Vínculo'),
     tipo: v('Tipo de documento') || OF_TIPO_OTRO, persona: v('Persona comisionada'),
     lugar: v('Lugar / destino'), fechaEvento: v('Fecha del evento'), horario: v('Horario'),
-    resumen: v('Resumen del cuerpo'), fechaLimite: v('Fecha límite'), tanda: v('Tanda'),
+    resumen: v('Resumen del cuerpo'), tanda: v('Tanda'),
     reasignado: !!v('Historial').trim(),
     cct: v('CCT destino'), direccion: v('Dirección destino'), modalidad: v('Modalidad'), km: v('Km (ida y vuelta)'),
     cargo: v('Cargo'), destinoCompleto: v('Destino completo'), oficioGenerado: v('Oficio generado'),
@@ -805,12 +814,14 @@ function ofParsearFecha_(valor) {
 function ofNormalizarDocumento_(x) {
   const tipo = OF_TIPOS_DOCUMENTO.indexOf(ofTxt_(x.tipo)) !== -1 ? ofTxt_(x.tipo) : OF_TIPO_OTRO;
   const fechaOpcional = function (v) { return ofTxt_(v) ? ofParsearFecha_(v) : ''; };
+  // Comisión, o Difusión que convoca a una actividad presencial (20 oct 2026).
+  const conEvento = tipo === OF_TIPO_COMISION || tipo === OF_TIPO_DIFUSION;
   return {
     tipo: tipo, asunto: ofTxt_(x.asunto), destino: ofTxt_(x.destino),
     persona: tipo === OF_TIPO_COMISION ? ofTxt_(x.persona) : '',
-    lugar: tipo === OF_TIPO_COMISION ? ofTxt_(x.lugar) : '',
-    fechaEvento: tipo === OF_TIPO_COMISION ? fechaOpcional(x.fechaEvento) : '',
-    horario: tipo === OF_TIPO_COMISION ? ofTxt_(x.horario) : '',
+    lugar: conEvento ? ofTxt_(x.lugar) : '',
+    fechaEvento: conEvento ? fechaOpcional(x.fechaEvento) : '',
+    horario: conEvento ? ofTxt_(x.horario) : '',
     cct: tipo === OF_TIPO_COMISION ? ofTxt_(x.cct).toUpperCase() : '',
     direccion: tipo === OF_TIPO_COMISION ? ofTxt_(x.direccion) : '',
     modalidad: tipo === OF_TIPO_COMISION ? ofTxt_(x.modalidad) : '',
@@ -818,8 +829,7 @@ function ofNormalizarDocumento_(x) {
     rfc: tipo === OF_TIPO_COMISION ? ofTxt_(x.rfc).toUpperCase() : '',
     cargo: tipo === OF_TIPO_COMISION ? ofTxt_(x.cargo) : '',
     destinoCompleto: tipo === OF_TIPO_COMISION ? ofTxt_(x.destinoCompleto) : '',
-    resumen: tipo === OF_TIPO_DIFUSION || tipo === OF_TIPO_SUBE ? ofTxt_(x.resumen) : '',
-    fechaLimite: tipo === OF_TIPO_DIFUSION ? fechaOpcional(x.fechaLimite) : ''
+    resumen: tipo === OF_TIPO_DIFUSION || tipo === OF_TIPO_SUBE ? ofTxt_(x.resumen) : ''
   };
 }
 
@@ -875,14 +885,18 @@ function ofValidarDocumento_(d, n) {
   if ((d.tipo === OF_TIPO_DIFUSION || d.tipo === OF_TIPO_SUBE) && !d.resumen) {
     throw new Error(pre + 'escribe el resumen del cuerpo del oficio.');
   }
-  if (d.fechaEvento === null || d.fechaLimite === null) throw new Error(pre + 'hay una fecha no válida.');
+  if (d.tipo === OF_TIPO_DIFUSION && d.fechaEvento) {
+    if (!d.horario) throw new Error(pre + 'indica el horario de la actividad presencial.');
+    if (!d.lugar) throw new Error(pre + 'escribe el lugar de la actividad presencial.');
+  }
+  if (d.fechaEvento === null) throw new Error(pre + 'hay una fecha no válida.');
 }
 
 function ofValoresDocumento_(d) {
   return {
     'Tipo de documento': d.tipo, 'Asunto': d.asunto, 'Destino': d.destino,
     'Persona comisionada': d.persona, 'Lugar / destino': d.lugar, 'Fecha del evento': d.fechaEvento,
-    'Horario': d.horario, 'Resumen del cuerpo': d.resumen, 'Fecha límite': d.fechaLimite,
+    'Horario': d.horario, 'Resumen del cuerpo': d.resumen,
     'CCT destino': d.cct, 'Dirección destino': d.direccion, 'Modalidad': d.modalidad, 'Km (ida y vuelta)': d.km,
     'RFC': d.rfc, 'Cargo': d.cargo, 'Destino completo': d.destinoCompleto
   };
@@ -1909,6 +1923,260 @@ function ofCarpetaPorMes_(nombre, mes) {
   }
   const sub = carpeta.getFoldersByName(mes);
   return sub.hasNext() ? sub.next() : carpeta.createFolder(mes);
+}
+
+// ============================================================
+// RESUMEN DIARIO POR TELEGRAM (paso 2D, 20 oct 2026)
+// Cada mañana manda a Jorge y Nancy lo que cae hoy, mañana o en 3 días:
+//   · actividades presenciales convocadas por oficio (Difusión con Fecha del
+//     evento), cada una seguida de un mensaje aparte con el texto de
+//     WhatsApp listo para reenviar a los grupos;
+//   · comisiones del equipo (quién sale y a dónde);
+//   · fechas de los cursos de Formación Docente (cierre de inscripción,
+//     inicio, sesiones, mitad de los cursos largos y fin), de
+//     ?action=agendaCursos, para seguirlos aunque no se esté inscrito.
+// Los cursos en línea no se convocan aquí: ya viven en Formación Docente.
+// Texto plano, sin parse_mode (QA-NOTES #24: un "_" suelto tumba el envío).
+// Script Properties: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_IDS (separados por
+// coma), OF_FD_URL y PANEL_TOKEN (el mismo de la Oficina Virtual).
+// OF_ULTIMO_RECORDATORIO evita mandar dos veces el resumen del mismo día.
+// ============================================================
+
+const OF_DIAS_AVISO = [0, 1, 3];
+const OF_TITULO_DIA = { 0: 'HOY', 1: 'MAÑANA', 3: 'EN 3 DÍAS' };
+const OF_DIAS_SEMANA = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
+const OF_TIPOS_AGENDA = { cierre: 'Cierra inscripción', inicio: 'Inicia', sesion: 'Sesión', mitad: 'Va a la mitad', fin: 'Termina' };
+const OF_MAX_MENSAJE = 3800; // Telegram corta en 4096
+
+// "lunes 20 de octubre"
+function ofFechaConDia_(f) {
+  return OF_DIAS_SEMANA[Number(Utilities.formatDate(f, OF_ZONA, 'u')) - 1] + ' ' +
+    Number(Utilities.formatDate(f, OF_ZONA, 'd')) + ' de ' + OF_MESES[Number(Utilities.formatDate(f, OF_ZONA, 'M')) - 1];
+}
+
+function ofIsoMasDias_(hoy, dias) {
+  return Utilities.formatDate(new Date(hoy.getTime() + dias * 86400000), OF_ZONA, 'yyyy-MM-dd');
+}
+
+function ofAgendaFormacion_(desde, hasta) {
+  const props = PropertiesService.getScriptProperties();
+  const url = props.getProperty('OF_FD_URL');
+  const token = props.getProperty('PANEL_TOKEN');
+  if (!url || !token) return { items: [], error: 'falta configurar la conexión (menú OTDE Oficios → Configurar conexión con Formación Docente)' };
+  try {
+    const resp = UrlFetchApp.fetch(url + '?action=agendaCursos&token=' + encodeURIComponent(token) +
+      '&desde=' + desde + '&hasta=' + hasta, { muteHttpExceptions: true });
+    const d = JSON.parse(resp.getContentText());
+    if (d.status !== 'ok') throw new Error(d.status === 'no_autorizado' ? 'token no autorizado' : (d.mensaje || d.status));
+    // Una versión sin el endpoint responde el catálogo, que no trae "items".
+    if (!Array.isArray(d.items)) throw new Error('la versión desplegada aún no tiene ?action=agendaCursos');
+    return { items: d.items, error: '' };
+  } catch (err) {
+    return { items: [], error: /Unexpected token|JSON/.test(err.message) ? 'la versión desplegada aún no tiene ?action=agendaCursos' : err.message };
+  }
+}
+
+// {dias: {0|1|3: {fecha, presenciales, comisiones, cursos}}, errorFormacion}
+function ofRecordatoriosDelDia_(hoy) {
+  const diaDe = {};
+  const dias = {};
+  OF_DIAS_AVISO.forEach(function (d) {
+    const iso = ofIsoMasDias_(hoy, d);
+    diaDe[iso] = d;
+    dias[d] = { fecha: ofParsearFecha_(iso), presenciales: [], comisiones: [], cursos: [] };
+  });
+
+  const hoja = ofObtenerHoja_(HOJA_OF_NUMEROS, ENCABEZADOS_OF_NUMEROS);
+  const idx = ofIndices_(hoja);
+  const porGrupo = {};
+  ofFilas_(hoja).forEach(function (r) {
+    const v = function (h) { return idx[h] === undefined ? '' : ofTxt_(r[idx[h]]); };
+    if (v('Estatus') === 'Cancelado' || idx['Fecha del evento'] === undefined) return;
+    const dia = diaDe[ofFechaIso_(r[idx['Fecha del evento']])];
+    if (dia === undefined) return;
+    if (v('Tipo de documento') === OF_TIPO_DIFUSION) {
+      dias[dia].presenciales.push({ numero: v('Número'), asunto: v('Asunto'), destino: v('Destino'),
+        horario: v('Horario'), lugar: v('Lugar / destino') });
+    } else if (v('Tipo de documento') === OF_TIPO_COMISION) {
+      // Un oficio por persona y por día: se juntan las personas que van al mismo lugar.
+      const clave = dia + '|' + v('Lugar / destino') + '|' + v('Horario') + '|' + v('Asunto');
+      if (!porGrupo[clave]) {
+        porGrupo[clave] = { personas: [], lugar: v('Lugar / destino'), horario: v('Horario'), asunto: v('Asunto') };
+        dias[dia].comisiones.push(porGrupo[clave]);
+      }
+      if (v('Persona comisionada') && porGrupo[clave].personas.indexOf(v('Persona comisionada')) === -1) {
+        porGrupo[clave].personas.push(v('Persona comisionada'));
+      }
+    }
+  });
+
+  const agenda = ofAgendaFormacion_(ofIsoMasDias_(hoy, 0), ofIsoMasDias_(hoy, Math.max.apply(null, OF_DIAS_AVISO)));
+  agenda.items.forEach(function (it) {
+    const dia = diaDe[it.fecha];
+    // La mitad de un curso es para darle seguimiento ese día, no se anuncia antes.
+    if (dia === undefined || (it.tipo === 'mitad' && dia !== 0)) return;
+    dias[dia].cursos.push(it);
+  });
+  return { dias: dias, errorFormacion: agenda.error };
+}
+
+function ofTextoWhatsApp_(act, dia, fecha) {
+  return 'Recordatorio: ' + act.asunto + '.\n' +
+    'Fecha: ' + (dia === 0 ? 'hoy, ' : dia === 1 ? 'mañana, ' : '') + ofFechaConDia_(fecha) + '.\n' +
+    'Horario: ' + act.horario + '.\n' +
+    'Lugar: ' + act.lugar + '.\n' +
+    'Oficio ' + act.numero + '.';
+}
+
+// Arma [resumen, textoWhatsApp1, textoWhatsApp2, …]. Sin nada que avisar → [].
+function ofMensajesRecordatorio_(r, hoy, prueba) {
+  const secciones = [];
+  const whatsapp = [];
+  OF_DIAS_AVISO.forEach(function (d) {
+    const dia = r.dias[d];
+    if (!dia.presenciales.length && !dia.comisiones.length && !dia.cursos.length) return;
+    const lineas = [OF_TITULO_DIA[d] + ' · ' + ofFechaConDia_(dia.fecha)];
+    if (dia.presenciales.length) {
+      lineas.push('Actividades presenciales:');
+      dia.presenciales.forEach(function (a) {
+        lineas.push('- ' + a.asunto + '. ' + a.horario + ', ' + a.lugar + '. Dirigido a: ' + a.destino + '. Oficio ' + a.numero + '.');
+        whatsapp.push(ofTextoWhatsApp_(a, d, dia.fecha));
+      });
+    }
+    if (dia.comisiones.length) {
+      lineas.push('Comisiones:');
+      dia.comisiones.forEach(function (c) {
+        lineas.push('- ' + (c.personas.join(', ') || '(sin persona)') + ': ' + c.lugar + (c.horario ? ' (' + c.horario + ')' : '') +
+          (c.asunto ? '. ' + c.asunto : '') + '.');
+      });
+    }
+    if (dia.cursos.length) {
+      lineas.push('Formación Docente:');
+      dia.cursos.forEach(function (c) {
+        const detalle = [c.hora, c.modalidad].filter(Boolean).join(', ');
+        lineas.push('- ' + (OF_TIPOS_AGENDA[c.tipo] || c.tipo) + ': ' + c.nombre + (detalle ? ' (' + detalle + ')' : '') +
+          (c.tipo === 'cierre' && c.liga ? '\n  ' + c.liga : ''));
+      });
+    }
+    secciones.push(lineas.join('\n'));
+  });
+  if (r.errorFormacion) secciones.push('No se pudo consultar Formación Docente: ' + r.errorFormacion + '.');
+  if (!secciones.length) return prueba ? ['PRUEBA · Agenda OTDE del ' + ofFechaConDia_(hoy) + '\n\nNo hay nada que avisar hoy.'] : [];
+
+  let resumen = (prueba ? 'PRUEBA · ' : '') + 'Agenda OTDE del ' + ofFechaConDia_(hoy) + '\n\n' + secciones.join('\n\n');
+  if (whatsapp.length) {
+    resumen += '\n\nEnseguida va el texto de WhatsApp de ' +
+      (whatsapp.length === 1 ? 'la actividad presencial' : 'cada actividad presencial, uno por mensaje') + '.';
+  }
+  return ofPartirMensaje_(resumen).concat(whatsapp);
+}
+
+// Corta en renglones completos para no pasar del límite de Telegram.
+function ofPartirMensaje_(texto) {
+  if (texto.length <= OF_MAX_MENSAJE) return [texto];
+  const partes = [];
+  let actual = '';
+  texto.split('\n').forEach(function (linea) {
+    if (actual && (actual + '\n' + linea).length > OF_MAX_MENSAJE) { partes.push(actual); actual = ''; }
+    actual = actual ? actual + '\n' + linea : linea.slice(0, OF_MAX_MENSAJE);
+  });
+  if (actual) partes.push(actual);
+  return partes;
+}
+
+// Devuelve a cuántos chats llegó.
+function ofEnviarTelegram_(texto) {
+  const props = PropertiesService.getScriptProperties();
+  const token = props.getProperty('TELEGRAM_BOT_TOKEN');
+  const chats = String(props.getProperty('TELEGRAM_CHAT_IDS') || '').split(',').map(ofTxt_).filter(String);
+  if (!token || !chats.length) return 0;
+  let llegaron = 0;
+  chats.forEach(function (chat) {
+    try {
+      const resp = UrlFetchApp.fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
+        method: 'post',
+        payload: { chat_id: chat, text: texto, disable_web_page_preview: 'true' },
+        muteHttpExceptions: true
+      });
+      if (resp.getResponseCode() === 200) llegaron++;
+      else console.error('Telegram a ' + chat + ': ' + resp.getContentText());
+    } catch (err) {
+      console.error('Telegram a ' + chat + ': ' + err.message);
+    }
+  });
+  return llegaron;
+}
+
+function ofEnviarRecordatorios_(hoy, prueba) {
+  const props = PropertiesService.getScriptProperties();
+  const hoyIso = ofIsoMasDias_(hoy, 0);
+  if (!prueba && props.getProperty('OF_ULTIMO_RECORDATORIO') === hoyIso) {
+    return { enviados: 0, mensaje: 'El resumen de hoy ya se había mandado.' };
+  }
+  if (!props.getProperty('TELEGRAM_BOT_TOKEN') || !props.getProperty('TELEGRAM_CHAT_IDS')) {
+    return { enviados: 0, mensaje: 'Falta configurar Telegram: menú OTDE Oficios → Configurar Telegram de recordatorios.' };
+  }
+  const mensajes = ofMensajesRecordatorio_(ofRecordatoriosDelDia_(hoy), hoy, prueba);
+  let enviados = 0, fallidos = 0;
+  mensajes.forEach(function (m) { if (ofEnviarTelegram_(m)) enviados++; else fallidos++; });
+  if (!prueba && !fallidos) props.setProperty('OF_ULTIMO_RECORDATORIO', hoyIso);
+  if (!mensajes.length) return { enviados: 0, mensaje: 'No hay nada que avisar hoy.' };
+  return { enviados: enviados, mensaje: enviados + (enviados === 1 ? ' mensaje enviado' : ' mensajes enviados') +
+    (fallidos ? '; ' + fallidos + ' no llegaron (revisa Ejecuciones)' : '') + '.' };
+}
+
+function ofRecordatoriosAutomatico() {
+  const r = ofEnviarRecordatorios_(new Date(), false);
+  console.log(r.mensaje);
+}
+
+function ofProbarRecordatorios() {
+  SpreadsheetApp.getUi().alert(ofEnviarRecordatorios_(new Date(), true).mensaje);
+}
+
+function ofInstalarRecordatorios() {
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    if (t.getHandlerFunction() === 'ofRecordatoriosAutomatico') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('ofRecordatoriosAutomatico').timeBased().everyDays(1).atHour(7).inTimezone(OF_ZONA).create();
+  try { SpreadsheetApp.getUi().alert('Listo: el resumen sale todos los días entre 7 y 8 am. Confírmalo en Activadores.'); } catch (err) {}
+}
+
+// Los datos se piden con un cuadro de diálogo: ▶️ Ejecutar dejaría vacío un
+// argumento (QA-NOTES #14) y en el código quedarían a la vista.
+function ofConfigurarTelegram() {
+  const ui = SpreadsheetApp.getUi();
+  const props = PropertiesService.getScriptProperties();
+  const t = ui.prompt('Telegram: token del bot', 'Pega el TELEGRAM_BOT_TOKEN (el mismo bot de Asesorías y Mantenimiento). Vacío = dejar el actual.' +
+    (props.getProperty('TELEGRAM_BOT_TOKEN') ? '\n\nActual: (configurado)' : ''), ui.ButtonSet.OK_CANCEL);
+  if (t.getSelectedButton() !== ui.Button.OK) return;
+  const c = ui.prompt('Telegram: a quién le llega', 'Escribe los chat ID separados por coma (Jorge y Nancy). Vacío = dejar los actuales.' +
+    (props.getProperty('TELEGRAM_CHAT_IDS') ? '\n\nActual: ' + props.getProperty('TELEGRAM_CHAT_IDS') : ''), ui.ButtonSet.OK_CANCEL);
+  if (c.getSelectedButton() !== ui.Button.OK) return;
+  const token = t.getResponseText().trim();
+  const chats = c.getResponseText().replace(/\s+/g, '');
+  if (chats && !/^-?\d+(,-?\d+)*$/.test(chats)) { ui.alert('Los chat ID son números separados por coma. No se guardó nada.'); return; }
+  if (token) props.setProperty('TELEGRAM_BOT_TOKEN', token);
+  if (chats) props.setProperty('TELEGRAM_CHAT_IDS', chats);
+  ui.alert('Guardado. Usa "Probar recordatorios de hoy" para confirmar que llega.');
+}
+
+function ofConfigurarConexionFormacion() {
+  const ui = SpreadsheetApp.getUi();
+  const props = PropertiesService.getScriptProperties();
+  const actual = props.getProperty('OF_FD_URL');
+  const u = ui.prompt('Conexión con Formación Docente', 'Pega la URL de la aplicación web de Formación Docente (termina en /exec). Vacío = dejar la actual.' +
+    (actual ? '\n\nActual: ' + actual : ''), ui.ButtonSet.OK_CANCEL);
+  if (u.getSelectedButton() !== ui.Button.OK) return;
+  const url = u.getResponseText().trim() || actual || '';
+  if (!/^https:\/\/script\.google\.com\/.+\/exec$/.test(url)) {
+    ui.alert('La URL no parece de Apps Script (https://script.google.com/…/exec). No se guardó nada.');
+    return;
+  }
+  props.setProperty('OF_FD_URL', url);
+  ui.alert(props.getProperty('PANEL_TOKEN')
+    ? 'Conexión guardada. Usa el mismo PANEL_TOKEN de la Oficina Virtual. Pruébala con "Probar recordatorios de hoy".'
+    : 'URL guardada, pero falta el PANEL_TOKEN: captúralo en "Configurar conexión con la Oficina Virtual".');
 }
 
 function ofRespuesta_(obj) {

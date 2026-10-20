@@ -84,6 +84,13 @@
     .campo label, .campo .etq { display: block; font-size: .82rem; font-weight: 600; margin-bottom: .35rem; }
     .req { color: var(--guinda-ac); }
     .opcional { font-weight: 400; color: var(--muted); }
+    .presencial { margin-bottom: 1rem; }
+    .casilla { display: block; border: 1.5px solid var(--border); border-radius: 8px; padding: .6rem .75rem; cursor: pointer;
+      font-weight: 600; font-size: .9rem; background: #fff; }
+    .casilla input { accent-color: var(--guinda-ac); margin-right: .45rem; }
+    .casilla small { display: block; font-weight: 400; color: var(--muted); font-size: .78rem; margin-top: .25rem; line-height: 1.4; }
+    .casilla:has(input:checked) { border-color: var(--guinda-ac); background: #fdf2f4; }
+    #presencial-campos { margin-top: .75rem; }
     .fila-2 { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
 
     input[type="text"], input[type="date"], input[type="password"], input[type="search"], select, textarea {
@@ -373,9 +380,28 @@
           <textarea id="num-resumen" rows="3" placeholder="De qué trata el oficio y qué se pide, en pocas líneas."></textarea>
           <div class="error-msg" id="err-num-resumen">Escribe el resumen del cuerpo.</div>
         </div>
-        <div class="campo" data-solo="Difusión de información">
-          <label for="num-fecha-limite">Fecha límite <span class="opcional">(opcional)</span></label>
-          <input type="date" id="num-fecha-limite">
+        <div class="presencial" data-solo="Difusión de información">
+          <label class="casilla"><input type="checkbox" id="num-presencial">Convoca a una actividad presencial
+            <small>Reunión, taller o visita con fecha y lugar. Entra al resumen diario por Telegram (3 días antes, 1 día antes y el mismo día) con el texto de WhatsApp listo para los grupos. Los cursos en línea van en Formación Docente.</small></label>
+          <div id="presencial-campos" class="hidden">
+            <div class="fila-2">
+              <div class="campo">
+                <label for="num-ev-fecha">Fecha de la actividad <span class="req">*</span></label>
+                <input type="date" id="num-ev-fecha">
+                <div class="error-msg" id="err-num-ev-fecha">Indica la fecha de la actividad.</div>
+              </div>
+              <div class="campo">
+                <label for="num-ev-horario">Horario <span class="req">*</span></label>
+                <input type="text" id="num-ev-horario" placeholder="Ej. 10:00 a 13:00">
+                <div class="error-msg" id="err-num-ev-horario">Indica el horario.</div>
+              </div>
+            </div>
+            <div class="campo">
+              <label for="num-ev-lugar">Lugar <span class="req">*</span></label>
+              <input type="text" id="num-ev-lugar" list="destinos-catalogo" placeholder="Ej. Auditorio de la SEPRN, o CCT de una escuela">
+              <div class="error-msg" id="err-num-ev-lugar">Escribe el lugar.</div>
+            </div>
+          </div>
         </div>
         <div class="fila-2">
           <div class="campo">
@@ -877,7 +903,8 @@ DESTINO_POR_TIPO[TIPO_DIFUSION] = 'Sectores';
 DESTINO_POR_TIPO[TIPO_SUBE] = 'CoEEE';
 const MAX_TANDA = 20;
 const MAX_FILAS = 10;
-const CAMPOS_NUMERO = ['num-asunto', 'num-modalidad', 'num-resumen', 'num-destino', 'num-elabora', 'num-fecha', 'num-motivo'];
+const CAMPOS_NUMERO = ['num-asunto', 'num-modalidad', 'num-resumen', 'num-ev-fecha', 'num-ev-horario', 'num-ev-lugar',
+  'num-destino', 'num-elabora', 'num-fecha', 'num-motivo'];
 let reasignando = null; // número de estado.numeros que se está reasignando
 let ultimoResultado = [];
 
@@ -1175,6 +1202,15 @@ function textoBotonNumero() {
   return n > 1 ? 'Tomar ' + n + ' números' : 'Tomar número';
 }
 
+// Difusión que convoca a una actividad presencial (20 oct 2026): fecha, horario
+// y lugar entran al resumen diario por Telegram (oficios.gs, paso 2D).
+function aplicarPresencial() {
+  const visible = $('num-presencial').checked;
+  $('presencial-campos').classList.toggle('hidden', !visible);
+  if (!visible) ['num-ev-fecha', 'num-ev-horario', 'num-ev-lugar'].forEach(function (id) { marcarError(id, false); });
+}
+$('num-presencial').addEventListener('change', function () { idEnvioNumero = null; aplicarPresencial(); });
+
 $('btn-agregar-persona').addEventListener('click', function () {
   idEnvioNumero = null;
   const input = agregarPersona(null);
@@ -1230,7 +1266,14 @@ function leerFormularioNumero() {
   } else if (tipo === TIPO_DIFUSION || tipo === TIPO_SUBE) {
     base.resumen = val('num-resumen');
     req('num-resumen', !!base.resumen);
-    if (tipo === TIPO_DIFUSION) base.fechaLimite = $('num-fecha-limite').value;
+    if (tipo === TIPO_DIFUSION && $('num-presencial').checked) {
+      base.fechaEvento = $('num-ev-fecha').value;
+      base.horario = val('num-ev-horario');
+      base.lugar = val('num-ev-lugar');
+      req('num-ev-fecha', !!base.fechaEvento);
+      req('num-ev-horario', !!base.horario);
+      req('num-ev-lugar', !!base.lugar);
+    }
   }
   return ok ? docs : null;
 }
@@ -1260,6 +1303,7 @@ function reiniciarNumero() {
   agregarDia({ fecha: hoyISO() });
   ponerTipo(TIPO_OTRO);
   aplicarTipo();
+  aplicarPresencial();
   CAMPOS_NUMERO.forEach(function (id) { marcarError(id, false); });
   $('numero-error').classList.remove('visible');
   idEnvioNumero = null;
@@ -1312,7 +1356,11 @@ function reasignarNumero(n) {
   $('num-destino').value = n.destino || '';
   if (n.modalidad) llenarModalidades(n.modalidad);
   $('num-resumen').value = n.resumen || '';
-  $('num-fecha-limite').value = n.fechaLimite || '';
+  $('num-presencial').checked = n.tipo === TIPO_DIFUSION && !!n.fechaEvento;
+  $('num-ev-fecha').value = $('num-presencial').checked ? n.fechaEvento : '';
+  $('num-ev-horario').value = $('num-presencial').checked ? n.horario || '' : '';
+  $('num-ev-lugar').value = $('num-presencial').checked ? n.lugar || '' : '';
+  aplicarPresencial();
   if (n.elabora && tieneOpcion($('num-elabora'), n.elabora)) $('num-elabora').value = n.elabora;
   if (/^\d{4}-\d{2}-\d{2}$/.test(n.elaboracion || '')) $('num-fecha').value = n.elaboracion;
   $('reasignar-txt').textContent = n.consecutivo + ' (' + n.numero + ')';
@@ -1423,6 +1471,11 @@ async function enviarReasignacion(doc) {
 function detalleComision(n) {
   return [n.persona, n.fechaEvento ? fechaCorta(n.fechaEvento) : '', n.lugar,
     n.km !== '' && n.km != null ? n.km + ' km ida y vuelta' : ''].filter(Boolean).join(' · ');
+}
+
+// "Presencial · 20/10/2026 · 10:00 a 13:00 · Auditorio de la SEPRN"
+function detallePresencial(n) {
+  return ['Presencial', fechaCorta(n.fechaEvento), n.horario, n.lugar].filter(Boolean).join(' · ');
 }
 
 function mostrarResultado(numeros, titulo, detalle) {
@@ -1616,7 +1669,8 @@ function pintarNumeros() {
     if (n.reasignado) tit.appendChild(el('span', 'badge reasignado', 'Reasignado'));
     item.appendChild(tit);
     item.appendChild(el('div', 'txt', n.asunto));
-    const com = n.tipo === TIPO_COMISION ? detalleComision(n) : '';
+    const com = n.tipo === TIPO_COMISION ? detalleComision(n)
+      : n.tipo === TIPO_DIFUSION && n.fechaEvento ? detallePresencial(n) : '';
     if (com) item.appendChild(el('div', 'txt', com));
     item.appendChild(el('div', 'meta', n.elabora + ' · ' + fechaCorta(n.tomado) +
       (n.tanda ? ' · tanda ' + n.tanda : '') + (n.vinculo ? ' · responde ' + n.vinculo : '')));

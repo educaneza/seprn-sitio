@@ -317,6 +317,11 @@ function doGet(e) {
   if (params.action === 'cursosMes') {
     return textResponse(JSON.stringify(fdListarCursosMes_(params.token, params.mes)));
   }
+  // Control de oficios (apps-script/oficios.gs): agenda de fechas para el
+  // resumen diario por Telegram. Solo lectura.
+  if (params.action === 'agendaCursos') {
+    return textResponse(JSON.stringify(fdAgendaCursos_(params.token, params.desde, params.hasta)));
+  }
   try {
     const hoja  = obtenerHojaCursos();
     const datos = valoresCursos_(hoja).slice(1);
@@ -1082,6 +1087,65 @@ function fdListarCursosMes_(tokenRecibido, mes) {
     if (c.conConstancia && celda(row, 'Constancia_recibida') === 'Sí') c.constancias++;
   });
   return { status: 'ok', items: cursos };
+}
+
+// ============================================================
+// CONTROL DE OFICIOS — ?action=agendaCursos&desde=AAAA-MM-DD&hasta=AAAA-MM-DD&token=… (20 oct 2026)
+// El resumen diario de oficios.gs avisa por Telegram a OTDE de las fechas
+// de cada curso aunque nadie del equipo esté inscrito (el calendario y los
+// correos de aquí solo le llegan a los inscritos). Una fecha por evento:
+// cierre de inscripción (solo si hay Fecha_limite_inscripcion), inicio,
+// cada sesión de Fechas_sesion (menos la del inicio), mitad de los cursos
+// de DIAS_MINIMOS_CURSO_LARGO o más (mismo cálculo que el recordatorio
+// "Vas a la mitad") y fin (si es otro día que el inicio). Solo cursos con
+// Activo=TRUE y sin Ocultar_historial. Mismo PANEL_TOKEN que cursosMes.
+// ============================================================
+function fdAgendaCursos_(tokenRecibido, desde, hasta) {
+  const tokenEsperado = PropertiesService.getScriptProperties().getProperty('PANEL_TOKEN');
+  if (!tokenEsperado || tokenRecibido !== tokenEsperado) return { status: 'no_autorizado' };
+  const aFecha = v => {
+    const m = String(v || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : null;
+  };
+  const ini = aFecha(desde), fin = aFecha(hasta);
+  if (!ini || !fin || fin < ini || (fin - ini) / 86400000 > 62) {
+    return { status: 'error', mensaje: 'Rango no válido (desde y hasta en AAAA-MM-DD, máximo 62 días).' };
+  }
+
+  const txt = v => String(v == null ? '' : v).trim();
+  const iso = d => Utilities.formatDate(d, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  const hhmm = v => { const h = v ? horaYMinutos_(v) : null; return h ? ('0' + h.h).slice(-2) + ':' + ('0' + h.m).slice(-2) : ''; };
+  const desdeIso = iso(ini), hastaIso = iso(fin);
+
+  const items = [];
+  valoresCursos_(obtenerHojaCursos()).slice(1).forEach(row => {
+    const id = txt(row[CUR.ID_Curso]).toUpperCase();
+    if (!id || txt(row[CUR.Activo]).toUpperCase() !== 'TRUE' || txt(row[CUR.Ocultar_historial]).toUpperCase() === 'TRUE') return;
+    const base = { idCurso: id, nombre: txt(row[CUR.Nombre]), modalidad: txt(row[CUR.Modalidad]), liga: txt(row[CUR.Liga_convocatoria]) };
+    const agregar = (fecha, tipo, hora) => {
+      if (!fecha) return;
+      const f = typeof fecha === 'string' ? fecha : iso(fecha);
+      if (f >= desdeIso && f <= hastaIso) items.push(Object.assign({ fecha: f, tipo: tipo, hora: hora || '' }, base));
+    };
+    const inicio = parseFechaSegura_(row[CUR.Fecha_inicio]);
+    const finCurso = parseFechaSegura_(row[CUR.Fecha_fin]);
+    const horaInicio = hhmm(row[COL_HORA_INICIO]);
+
+    agregar(parseFechaSegura_(row[CUR.Fecha_limite_inscripcion]), 'cierre', hhmm(row[COL_HORA_LIMITE_INSCRIPCION]));
+    agregar(inicio, 'inicio', horaInicio);
+    fechasSesion_(row[COL_FECHAS_SESION], row[CUR.Fecha_inicio]).forEach(f => {
+      if (!inicio || f !== iso(inicio)) agregar(f, 'sesion', horaInicio);
+    });
+    if (inicio && finCurso && finCurso > inicio) {
+      if (Math.round((finCurso - inicio) / 86400000) >= DIAS_MINIMOS_CURSO_LARGO) {
+        agregar(soloFecha(new Date(inicio.getTime() + (finCurso - inicio) / 2)), 'mitad', '');
+      }
+      agregar(finCurso, 'fin', hhmm(row[COL_HORA_FIN]));
+    }
+  });
+  const orden = ['cierre', 'inicio', 'sesion', 'mitad', 'fin'];
+  items.sort((a, b) => a.fecha.localeCompare(b.fecha) || orden.indexOf(a.tipo) - orden.indexOf(b.tipo) || a.nombre.localeCompare(b.nombre));
+  return { status: 'ok', items: items };
 }
 
 // ── Respuesta de texto plano (evita preflight CORS) ──
