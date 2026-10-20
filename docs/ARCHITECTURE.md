@@ -3142,6 +3142,14 @@ actividades presenciales, que solo se avisaban por oficio.
   (`fechasSesion_()`, sin repetir el inicio), `mitad` (cursos de `DIAS_MINIMOS_CURSO_LARGO` o
   más) y `fin` (si es otro día). Rango máximo de 62 días. Separado de `cursosMes`, que filtra por
   mes de desarrollo.
+- **Visitas de Mantenimiento y Asesorías (20 oct 2026):** `ofAgendaVisitas_()` recorre
+  `OF_FUENTES_OV` y pide `?action=agendaVisitas&desde&hasta` (`manAgendaVisitas_()` /
+  `aseAgendaVisitas_()`: `{folio, fecha, cct, escuela, detalle, responsable}` de las solicitudes
+  con `Fecha programada de visita` en el rango, sin Rechazadas). Para no avisar dos veces la
+  misma salida, cada comisión agrupada guarda su `CCT destino`; una visita del mismo CCT y día
+  se anota dentro de ella (`ofTextoVisita_()`, sin técnico porque ya salen las personas) y una
+  sin comisión va a "Visitas sin oficio de comisión" (con técnico). Si una fuente falla, el
+  resumen lleva una línea "No se pudieron consultar las visitas".
 
 **Guía de uso:** `docs/manual-oficios.html` (18 capturas en `images/manual-oficios/`, generadas
 con Playwright sobre la página real, con `oficios.gs` y `bitacora.gs` en una simulación de

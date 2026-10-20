@@ -308,6 +308,9 @@ diseño libre para niños, solo el sello de crédito al pie.
   la hoja, `manCol_()` y `manFilaRealDesdeObjeto_()`. Menú "Reordenar columnas (Solicitudes y
   Reportes de visita)" (`manReordenarColumnas_()`), ya corrido en producción. Ver
   `docs/ARCHITECTURE.md §33`.
+- **Versión 28 (20 oct 2026)**: `?action=agendaVisitas&desde&hasta&token`
+  (`manAgendaVisitas_()`, mismo contrato que Asesorías, más `Técnico asignado`) para el
+  resumen diario de `oficios.gs`.
 
 ### `apps-script/asesorias.gs`
 - **Nuevo (ago 2026)**: mismo patrón que `mantenimiento.gs` (Sheet propio con hojas
@@ -414,6 +417,11 @@ diseño libre para niños, solo el sello de crédito al pie.
   (`aseReordenarColumnasSolicitudes_()`, respaldo + verificación, columnas a mano al final), ya
   corrido en producción. Una columna nueva va en su bloque, no al final. Ver
   `docs/ARCHITECTURE.md §33`.
+- **Versión 21 (20 oct 2026)**: `?action=agendaVisitas&desde&hasta&token`
+  (`aseAgendaVisitas_()`, `PANEL_TOKEN`, solo lectura) para el resumen diario de `oficios.gs`:
+  solicitudes con `Fecha programada de visita` en el rango, menos Rechazadas. El correo de fecha
+  programada ya no dice "visita técnica" (texto heredado de Mantenimiento; observación de
+  Jorge): "Ya se programó la fecha de tu asesoría", etiqueta "Fecha de la asesoría".
 
 ### `apps-script/formacion-docente.gs`
 **Desplegado en producción desde jul 2026** (Spreadsheet real `Formacion_Docente_2026_2027`, URL real ya pegada en `APPS_SCRIPT_URL` de `formacion-docente.html`; la extinta `jornada-verano-2026.html` compartió este mismo backend hasta su eliminación el 13 jul 2026).
@@ -654,6 +662,13 @@ diseño libre para niños, solo el sello de crédito al pie.
   comisiones y fechas de Formación Docente (`OF_FD_URL` → `?action=agendaCursos`). Menú: probar,
   configurar Telegram, conexión con Formación Docente, instalar el activador. Primera corrida
   automática: 21 oct 2026. Ver `docs/ARCHITECTURE.md §31`
+- **Visitas en el resumen diario (20 oct 2026, versión 12):** entran las visitas programadas de
+  Mantenimiento y Asesorías (`?action=agendaVisitas`, mismas `OV_MAN_URL`/`OV_ASE_URL` de la
+  Oficina Virtual, sin configuración nueva). Jorge pidió no duplicar: el equipo hace oficio de
+  comisión por cada salida, a veces de un día para otro. Se cruzan por **CCT destino + fecha**:
+  con comisión, la visita se anota dentro de esa comisión (folio y tipo); sin comisión, sale en
+  "Visitas sin oficio de comisión", que sirve de recordatorio para hacerlo. Una comisión con el
+  lugar escrito a mano (sin CCT) no cruza y la visita sale en las dos secciones
 - Si cambia la interfaz de `oficios.html`/`bitacora.html`, las capturas de
   `images/manual-oficios/` quedan desfasadas (las 02-05 de Tomar número desde el 12 oct; la 06, 10 y 13 desde la simplificación del 14 oct, y la 07 ya no se usa). Se generaron con un script de Playwright sobre la
   página real con los dos `.gs` en una simulación de Sheets: **ese script no está en el repo**

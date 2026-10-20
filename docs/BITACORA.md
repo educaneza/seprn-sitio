@@ -16,6 +16,23 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-10-20 (cont.) · Visitas de Mantenimiento y Asesorías en el resumen diario, sin duplicar las comisiones
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-20 |
+| **Sesión** | Jorge agendó asesorías de Banco de Materiales y Chuka y notó que el correo de fecha programada decía "visita técnica". Preguntó además si esas visitas le llegarían por Telegram: no, el resumen 2D solo traía presenciales, comisiones y Formación Docente. |
+| **Decisión de Jorge** | Agregar las visitas al resumen, pero sin duplicar: cada salida ya lleva su oficio de comisión, a veces hecho de un día para otro. Se cruzan por **CCT destino + fecha**: con comisión, la visita se anota dentro de ella (tipo y folio); sin comisión, sale en "Visitas sin oficio de comisión", que funciona también como recordatorio de hacer el oficio. |
+| **`asesorias.gs` (v21)** | `?action=agendaVisitas` (`aseAgendaVisitas_()`, `PANEL_TOKEN`, solo lectura; sin Rechazadas). Correo de fecha: "Ya se programó la fecha de tu asesoría", asunto "Tu solicitud de asesoría ya tiene fecha", etiqueta "Fecha de la asesoría" (el texto venía copiado de Mantenimiento). |
+| **`mantenimiento.gs` (v28)** | `?action=agendaVisitas` (`manAgendaVisitas_()`), mismo contrato más `Técnico asignado`. |
+| **`oficios.gs` (v12)** | `ofAgendaVisitas_()` sobre `OF_FUENTES_OV` (URLs ya configuradas para la Oficina Virtual), cruce en `ofRecordatoriosDelDia_()` con el `CCT destino` de cada comisión agrupada, `ofTextoVisita_()`, sección nueva y línea de error si una fuente falla. Limitación conocida: comisión con lugar escrito a mano (sin CCT) no cruza. |
+| **Verificación** | Node con `oficios.gs` real y Sheet/UrlFetch simulados: comisión de dos personas + visita del mismo CCT → una sola línea con el folio; comisión sin visita intacta; asesoría sin comisión a 3 días → sección nueva. `desplegar.sh` de los tres con verificación idéntica al repo (Asesorías @21, Mantenimiento @28, Oficios @12); `curl` a `?action=agendaVisitas` sin token → `no_autorizado` en los dos (antes respondía el `status:ok` genérico). **Sin prueba con datos reales**: no se corrió "Probar recordatorios". `git diff --stat`: 3 `.gs`, 143 inserciones, 11 eliminaciones. |
+| **Pendiente** | Jorge: "Probar recordatorios" desde el menú de Oficios para ver sus asesorías agendadas (si caen en 0/1/3 días) y, mañana 21 oct después de las 8 am, confirmar la primera corrida automática en "Ejecuciones" (`ofRecordatoriosAutomatico`) y que a Nancy le llega. Al capturar comisiones, buscar la escuela en el catálogo (sin CCT no cruza). Lo demás sigue igual que el checkpoint anterior: `PANEL_TOKEN` (ROADMAP 36), 13 supervisores en `Config`, ROADMAP 22, 32c, siguiente 2E (ROADMAP 27). |
+| **Documentación actualizada** | Este checkpoint, `CLAUDE.md` (resumen de `mantenimiento.gs`, `asesorias.gs` y `oficios.gs`), `docs/ARCHITECTURE.md §31`, `docs/SISTEMAS.md` (los tres backends), `docs/TABLERO-SALUD.md` (Oficios, Mantenimiento y Asesorías). |
+| **Commits** | El de este cierre. |
+
+---
+
 ## CHECKPOINT — 2026-10-20 · Oficios 2D: resumen diario por Telegram de actividades presenciales, comisiones y cursos de Formación Docente
 
 | | |

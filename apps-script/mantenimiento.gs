@@ -386,6 +386,9 @@ function doGet(e) {
   if (accion === 'oficiosOV') {
     return manListarOficiosOV_(e.parameter.token, e.parameter.desde);
   }
+  if (accion === 'agendaVisitas') {
+    return manAgendaVisitas_(e.parameter.token, e.parameter.desde, e.parameter.hasta);
+  }
   if (accion === 'mantenimientoPorCct') {
     return manTextResponse(JSON.stringify(manMantenimientoPorCct_(e.parameter.token, e.parameter.cct, e.parameter.folio)));
   }
@@ -488,6 +491,42 @@ function manListarOficiosOV_(tokenRecibido, desde) {
         notas: String(v(r, 'Notas de revisión'))
       };
     });
+  return manTextResponse(JSON.stringify({ status: 'ok', tramite: 'Mantenimiento', items: items }));
+}
+
+// ── Visitas programadas para el resumen diario (?action=agendaVisitas, 20 oct 2026) ──
+// apps-script/oficios.gs las cruza por CCT + fecha contra los oficios de comisión
+// para no avisar dos veces la misma salida. Solicitudes con "Fecha programada de
+// visita" entre `desde` y `hasta` (AAAA-MM-DD, ambos incluidos), menos las
+// Rechazadas. Mismo PANEL_TOKEN que ?action=oficiosOV. Solo lectura.
+function manAgendaVisitas_(tokenRecibido, desde, hasta) {
+  const tokenEsperado = PropertiesService.getScriptProperties().getProperty('PANEL_TOKEN');
+  if (!tokenEsperado || tokenRecibido !== tokenEsperado) {
+    return manTextResponse(JSON.stringify({ status: 'no_autorizado' }));
+  }
+  const formato = /^\d{4}-\d{2}-\d{2}$/;
+  if (!formato.test(String(desde)) || !formato.test(String(hasta))) {
+    return manTextResponse(JSON.stringify({ status: 'error', mensaje: 'Parámetros desde/hasta no válidos (AAAA-MM-DD).' }));
+  }
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_MAN_SOLICITUDES);
+  if (!hoja || hoja.getLastRow() < 2) return manTextResponse(JSON.stringify({ status: 'ok', tramite: 'Mantenimiento', items: [] }));
+  const datos = hoja.getDataRange().getValues();
+  const idx = {};
+  datos[0].forEach(function (h, i) { idx[String(h).trim()] = i; });
+  const v = function (r, h) { return idx[h] === undefined ? '' : r[idx[h]]; };
+  const items = [];
+  datos.slice(1).forEach(function (r) {
+    const programada = v(r, 'Fecha programada de visita');
+    if (!v(r, 'Folio') || !(programada instanceof Date)) return;
+    if (String(v(r, 'Estatus')).trim() === 'Rechazado') return;
+    const fecha = Utilities.formatDate(programada, 'America/Mexico_City', 'yyyy-MM-dd');
+    if (fecha < desde || fecha > hasta) return;
+    items.push({
+      folio: String(v(r, 'Folio')), fecha: fecha,
+      cct: String(v(r, 'CCT')).trim().toUpperCase(), escuela: String(v(r, 'Escuela')),
+      detalle: 'Mantenimiento', responsable: String(v(r, 'Técnico asignado')).trim()
+    });
+  });
   return manTextResponse(JSON.stringify({ status: 'ok', tramite: 'Mantenimiento', items: items }));
 }
 

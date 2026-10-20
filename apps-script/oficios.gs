@@ -1934,7 +1934,14 @@ function ofCarpetaPorMes_(nombre, mes) {
 //   · comisiones del equipo (quién sale y a dónde);
 //   · fechas de los cursos de Formación Docente (cierre de inscripción,
 //     inicio, sesiones, mitad de los cursos largos y fin), de
-//     ?action=agendaCursos, para seguirlos aunque no se esté inscrito.
+//     ?action=agendaCursos, para seguirlos aunque no se esté inscrito;
+//   · visitas programadas de Mantenimiento y Asesorías (?action=agendaVisitas,
+//     mismas OV_MAN_URL/OV_ASE_URL de la Oficina Virtual). Una visita con
+//     oficio de comisión del mismo CCT y el mismo día se anota en esa
+//     comisión (no se avisa dos veces la misma salida); sin comisión todavía
+//     sale en "Visitas sin oficio de comisión", que sirve de recordatorio para
+//     hacerlo. Si la comisión se capturó con el lugar escrito a mano (sin CCT)
+//     no hay con qué cruzarla y la visita sale en las dos secciones.
 // Los cursos en línea no se convocan aquí: ya viven en Formación Docente.
 // Texto plano, sin parse_mode (QA-NOTES #24: un "_" suelto tumba el envío).
 // Script Properties: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_IDS (separados por
@@ -1976,14 +1983,44 @@ function ofAgendaFormacion_(desde, hasta) {
   }
 }
 
-// {dias: {0|1|3: {fecha, presenciales, comisiones, cursos}}, errorFormacion}
+// [{folio, fecha, cct, escuela, detalle, responsable}] de Mantenimiento y Asesorías.
+function ofAgendaVisitas_(desde, hasta) {
+  const props = PropertiesService.getScriptProperties();
+  const token = props.getProperty('PANEL_TOKEN');
+  const items = [];
+  const errores = [];
+  OF_FUENTES_OV.forEach(function (fuente) {
+    const url = props.getProperty(fuente.prop);
+    if (!url || !token) { errores.push(fuente.nombre + ': falta configurar la conexión (menú OTDE Oficios → Configurar conexión con la Oficina Virtual)'); return; }
+    try {
+      const resp = UrlFetchApp.fetch(url + '?action=agendaVisitas&token=' + encodeURIComponent(token) +
+        '&desde=' + desde + '&hasta=' + hasta, { muteHttpExceptions: true });
+      const d = JSON.parse(resp.getContentText());
+      if (d.status !== 'ok') throw new Error(d.status === 'no_autorizado' ? 'token no autorizado' : (d.mensaje || d.status));
+      // Una versión sin el endpoint responde {status:'ok', servicio}, sin "items".
+      if (!Array.isArray(d.items)) throw new Error('la versión desplegada aún no tiene ?action=agendaVisitas');
+      d.items.forEach(function (it) { items.push(it); });
+    } catch (err) {
+      errores.push(fuente.nombre + ': ' + (/Unexpected token|JSON/.test(err.message) ? 'la versión desplegada aún no tiene ?action=agendaVisitas' : err.message));
+    }
+  });
+  return { items: items, error: errores.join('; ') };
+}
+
+// "Asesoría Chuka · OTDE-ASE-0012". Dentro de una comisión el técnico sobra:
+// ya salen las personas comisionadas.
+function ofTextoVisita_(it, conResponsable) {
+  return it.detalle + ' · ' + it.folio + (conResponsable && it.responsable ? ' (técnico: ' + it.responsable + ')' : '');
+}
+
+// {dias: {0|1|3: {fecha, presenciales, comisiones, cursos, visitas}}, errorFormacion, errorVisitas}
 function ofRecordatoriosDelDia_(hoy) {
   const diaDe = {};
   const dias = {};
   OF_DIAS_AVISO.forEach(function (d) {
     const iso = ofIsoMasDias_(hoy, d);
     diaDe[iso] = d;
-    dias[d] = { fecha: ofParsearFecha_(iso), presenciales: [], comisiones: [], cursos: [] };
+    dias[d] = { fecha: ofParsearFecha_(iso), presenciales: [], comisiones: [], cursos: [], visitas: [] };
   });
 
   const hoja = ofObtenerHoja_(HOJA_OF_NUMEROS, ENCABEZADOS_OF_NUMEROS);
@@ -2001,7 +2038,8 @@ function ofRecordatoriosDelDia_(hoy) {
       // Un oficio por persona y por día: se juntan las personas que van al mismo lugar.
       const clave = dia + '|' + v('Lugar / destino') + '|' + v('Horario') + '|' + v('Asunto');
       if (!porGrupo[clave]) {
-        porGrupo[clave] = { personas: [], lugar: v('Lugar / destino'), horario: v('Horario'), asunto: v('Asunto') };
+        porGrupo[clave] = { personas: [], lugar: v('Lugar / destino'), horario: v('Horario'), asunto: v('Asunto'),
+          cct: v('CCT destino').toUpperCase(), visitas: [] };
         dias[dia].comisiones.push(porGrupo[clave]);
       }
       if (v('Persona comisionada') && porGrupo[clave].personas.indexOf(v('Persona comisionada')) === -1) {
@@ -2017,7 +2055,16 @@ function ofRecordatoriosDelDia_(hoy) {
     if (dia === undefined || (it.tipo === 'mitad' && dia !== 0)) return;
     dias[dia].cursos.push(it);
   });
-  return { dias: dias, errorFormacion: agenda.error };
+
+  const visitas = ofAgendaVisitas_(ofIsoMasDias_(hoy, 0), ofIsoMasDias_(hoy, Math.max.apply(null, OF_DIAS_AVISO)));
+  visitas.items.forEach(function (it) {
+    const dia = diaDe[it.fecha];
+    if (dia === undefined) return;
+    const comision = it.cct && dias[dia].comisiones.find(function (c) { return c.cct === it.cct; });
+    if (comision) comision.visitas.push(it);
+    else dias[dia].visitas.push(it);
+  });
+  return { dias: dias, errorFormacion: agenda.error, errorVisitas: visitas.error };
 }
 
 function ofTextoWhatsApp_(act, dia, fecha) {
@@ -2034,7 +2081,7 @@ function ofMensajesRecordatorio_(r, hoy, prueba) {
   const whatsapp = [];
   OF_DIAS_AVISO.forEach(function (d) {
     const dia = r.dias[d];
-    if (!dia.presenciales.length && !dia.comisiones.length && !dia.cursos.length) return;
+    if (!dia.presenciales.length && !dia.comisiones.length && !dia.cursos.length && !dia.visitas.length) return;
     const lineas = [OF_TITULO_DIA[d] + ' · ' + ofFechaConDia_(dia.fecha)];
     if (dia.presenciales.length) {
       lineas.push('Actividades presenciales:');
@@ -2047,7 +2094,13 @@ function ofMensajesRecordatorio_(r, hoy, prueba) {
       lineas.push('Comisiones:');
       dia.comisiones.forEach(function (c) {
         lineas.push('- ' + (c.personas.join(', ') || '(sin persona)') + ': ' + c.lugar + (c.horario ? ' (' + c.horario + ')' : '') +
-          (c.asunto ? '. ' + c.asunto : '') + '.');
+          (c.asunto ? '. ' + c.asunto : '') + '.' + (c.visitas.length ? ' ' + c.visitas.map(function (it) { return ofTextoVisita_(it, false); }).join('; ') + '.' : ''));
+      });
+    }
+    if (dia.visitas.length) {
+      lineas.push('Visitas sin oficio de comisión:');
+      dia.visitas.forEach(function (it) {
+        lineas.push('- ' + ofTextoVisita_(it, true) + ': ' + (it.escuela || '(sin escuela)') + (it.cct ? ' (' + it.cct + ')' : '') + '.');
       });
     }
     if (dia.cursos.length) {
@@ -2061,6 +2114,7 @@ function ofMensajesRecordatorio_(r, hoy, prueba) {
     secciones.push(lineas.join('\n'));
   });
   if (r.errorFormacion) secciones.push('No se pudo consultar Formación Docente: ' + r.errorFormacion + '.');
+  if (r.errorVisitas) secciones.push('No se pudieron consultar las visitas: ' + r.errorVisitas + '.');
   if (!secciones.length) return prueba ? ['PRUEBA · Agenda OTDE del ' + ofFechaConDia_(hoy) + '\n\nNo hay nada que avisar hoy.'] : [];
 
   let resumen = (prueba ? 'PRUEBA · ' : '') + 'Agenda OTDE del ' + ofFechaConDia_(hoy) + '\n\n' + secciones.join('\n\n');

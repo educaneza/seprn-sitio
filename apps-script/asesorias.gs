@@ -306,6 +306,9 @@ function doGet(e) {
   if (accion === 'oficiosOV') {
     return aseListarOficiosOV_(e.parameter.token, e.parameter.desde);
   }
+  if (accion === 'agendaVisitas') {
+    return aseAgendaVisitas_(e.parameter.token, e.parameter.desde, e.parameter.hasta);
+  }
   return aseTextResponse(JSON.stringify({ status: 'ok', servicio: 'OTDE Solicitudes de Asesoría' }));
 }
 
@@ -346,6 +349,42 @@ function aseListarOficiosOV_(tokenRecibido, desde) {
         notas: String(v(r, 'Notas de revisión'))
       };
     });
+  return aseTextResponse(JSON.stringify({ status: 'ok', tramite: 'Asesorías', items: items }));
+}
+
+// ── Visitas programadas para el resumen diario (?action=agendaVisitas, 20 oct 2026) ──
+// apps-script/oficios.gs las cruza por CCT + fecha contra los oficios de comisión
+// para no avisar dos veces la misma salida. Solicitudes con "Fecha programada de
+// visita" entre `desde` y `hasta` (AAAA-MM-DD, ambos incluidos), menos las
+// Rechazadas. Mismo PANEL_TOKEN que ?action=oficiosOV. Solo lectura.
+function aseAgendaVisitas_(tokenRecibido, desde, hasta) {
+  const tokenEsperado = PropertiesService.getScriptProperties().getProperty('PANEL_TOKEN');
+  if (!tokenEsperado || tokenRecibido !== tokenEsperado) {
+    return aseTextResponse(JSON.stringify({ status: 'no_autorizado' }));
+  }
+  const formato = /^\d{4}-\d{2}-\d{2}$/;
+  if (!formato.test(String(desde)) || !formato.test(String(hasta))) {
+    return aseTextResponse(JSON.stringify({ status: 'error', mensaje: 'Parámetros desde/hasta no válidos (AAAA-MM-DD).' }));
+  }
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_ASE_SOLICITUDES);
+  if (!hoja || hoja.getLastRow() < 2) return aseTextResponse(JSON.stringify({ status: 'ok', tramite: 'Asesorías', items: [] }));
+  const datos = hoja.getDataRange().getValues();
+  const idx = {};
+  datos[0].forEach(function (h, i) { idx[String(h).trim()] = i; });
+  const v = function (r, h) { return idx[h] === undefined ? '' : r[idx[h]]; };
+  const items = [];
+  datos.slice(1).forEach(function (r) {
+    const programada = v(r, 'Fecha programada de visita');
+    if (!v(r, 'Folio') || !(programada instanceof Date)) return;
+    if (String(v(r, 'Estatus')).trim() === 'Rechazado') return;
+    const fecha = Utilities.formatDate(programada, 'America/Mexico_City', 'yyyy-MM-dd');
+    if (fecha < desde || fecha > hasta) return;
+    items.push({
+      folio: String(v(r, 'Folio')), fecha: fecha,
+      cct: String(v(r, 'CCT')).trim().toUpperCase(), escuela: String(v(r, 'Escuela')),
+      detalle: 'Asesoría ' + String(v(r, 'Tipo de Asesoría')), responsable: ''
+    });
+  });
   return aseTextResponse(JSON.stringify({ status: 'ok', tramite: 'Asesorías', items: items }));
 }
 
@@ -1170,14 +1209,14 @@ function aseNotificarFechaProgramada(fila) {
     const contactos = aseFiltrarContactosPorTipo(
       aseBuscarContactosZonaSector(sector, zona), tipoSolicitante);
     const cc = contactos.map(c => c.correo).join(',');
-    const asunto = 'Tu solicitud de asesoría ya tiene fecha de visita — ' + folio;
+    const asunto = 'Tu solicitud de asesoría ya tiene fecha — ' + folio;
     const html = aseCorreoHtml_({
-      titulo: 'Fecha de visita programada',
-      introHtml: '<p style="margin:0 0 16px 0;font-size:15px;color:#333333;line-height:1.7;">Ya se programó la fecha de la visita técnica para tu solicitud de asesoría.</p>',
+      titulo: 'Fecha de asesoría programada',
+      introHtml: '<p style="margin:0 0 16px 0;font-size:15px;color:#333333;line-height:1.7;">Ya se programó la fecha de tu asesoría.</p>',
       filas: [
         { icono: '🎫', etiqueta: 'Folio', valor: folio },
         { icono: '📋', etiqueta: 'Tipo', valor: aseEscapeHtml_(tipo) },
-        { icono: '📅', etiqueta: 'Fecha de visita', valor: aseEscapeHtml_(fechaProgramada) },
+        { icono: '📅', etiqueta: 'Fecha de la asesoría', valor: aseEscapeHtml_(fechaProgramada) },
         { icono: '🏫', etiqueta: 'Escuela / CCT', valor: aseEscapeHtml_(escuela || '') + ' — ' + aseEscapeHtml_(cct) },
         { icono: '👤', etiqueta: 'Solicitó', valor: aseEscapeHtml_(nombre) }
       ],
