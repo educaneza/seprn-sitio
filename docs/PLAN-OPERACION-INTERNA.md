@@ -119,7 +119,10 @@ Así lo que ya queda registrado no se vuelve a capturar.
   - **2B · Oficina Virtual → control:** las solicitudes que traen oficio entran solas (patrón `?action=…Mes` + `PANEL_TOKEN`). *En producción el 8 oct 2026: ver abajo.*
   - **2C · Redacción:** plantilla de Google Docs con membrete y consecutivo automático; borrador del oficio de salida para revisar, firmar y escanear. La firma y el sello siguen a mano.
   - **2D · Atendido → bitácora + recordatorios** (lo de arriba). *Atendido → bitácora en producción
-    el 8 oct 2026; recordatorios pendientes.*
+    el 8 oct 2026; recordatorios en producción el 20 oct 2026, acotados por Jorge a actividades
+    presenciales (Difusión con fecha, horario y lugar), comisiones y fechas de Formación Docente:
+    resumen diario por Telegram a Jorge y Nancy, 3 días antes, 1 día antes y el mismo día, con el
+    texto de WhatsApp listo (`docs/ARCHITECTURE.md §31`). Sin correo a directores.*
   - **2E · Archivo digital:** carpetas en Drive por ciclo y mes, búsqueda por remitente, asunto o folio.
 - **Insumos para el 2A:** el Excel de control, 1-2 oficios reales (uno que baja y uno que sube), un oficio de salida con membrete y el formato del consecutivo, y la verificación de Power Automate.
 - **2A en producción (8 oct 2026):** `apps-script/oficios.gs` + `oficios.html` (guía

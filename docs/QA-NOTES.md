@@ -608,6 +608,8 @@ endpoint no es el que se comparte públicamente), pero conviene, cuando haya tie
 `_fijarTokenPanel()` del editor de `WebApp.gs`, y (2) regenerar `PANEL_TOKEN` con un valor largo
 y aleatorio en los 4 backends + `panel-otde.gs` (mismo secreto compartido entre los 5
 proyectos, ver `docs/ARCHITECTURE.md §20`).
+**20 oct 2026:** sigue sin cambiarse. Hoy lo usan también Formación Docente (`cursosMes`,
+`agendaCursos`), la Bitácora y Oficios, que lo consultan: cambiarlo en todos a la vez. ROADMAP ítem 36.
 
 **Dónde puede volver a pasar:** cualquier función de un solo uso ejecutada desde el editor de
 Apps Script (▶️ Ejecutar) para fijar una Script Property — bórrala del archivo en cuanto la

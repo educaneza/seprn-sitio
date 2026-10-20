@@ -836,7 +836,7 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     quitarlos. Pendientes del arranque: confirmar el último número de papel (corregir `Lotes` si
     pasó del 4831), revisar "N.P. planeación" en `Config`, una prueba real con un documento, misma
     clave en los dos Sheets y fecha de arranque; reevaluar tras 1-2 semanas de uso si de verdad
-    simplifica. Faltan los **recordatorios** (eran parte del 2D en el plan).
+    simplifica. Los **recordatorios** salieron el 20 oct 2026 (ver abajo).
     **2B en producción (8 oct 2026, cont. 2):** las solicitudes nuevas de Mantenimiento y
     Asesorías entran solas a Oficios (con su PDF y "Falta folio de Oficialía", porque OTDE debe
     imprimirlas y llevarlas a Oficialía), se completan con "Anotar folio de Oficialía" y se cierran
@@ -871,8 +871,14 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     comisión (ver `docs/ARCHITECTURE.md §31`). Falta: que Jorge capture los 13 supervisores en
     `Config` ("Sector / área" · "Supervisor" · "Cargo del supervisor"), la primera prueba con un
     oficio real. (El cargo del CoEEE con "y" ya se publicó en `oficios.gs` el 19 oct 2026, v10.)
-    **Siguiente** (Jorge elige): recordatorios de eventos (el dolor de origen) o 2E (archivo digital).
-    Sigue sin verificar si la licencia M365 de `@dee.edu.mx` incluye Power Automate.
+    **Recordatorios del 2D en producción (20 oct 2026):** resumen diario por Telegram a Jorge y
+    Nancy (hoy, mañana y en 3 días) con las actividades presenciales convocadas por oficio (casilla
+    nueva en Difusión, con el texto de WhatsApp aparte), las comisiones y las fechas de Formación
+    Docente (`?action=agendaCursos`); "Fecha límite" se quitó (`docs/ARCHITECTURE.md §31`).
+    Configurado y probado por Jorge. Falta: confirmar la primera corrida automática (21 oct, 7-8 am,
+    en "Ejecuciones"), que Nancy confirme que le llega y la primera actividad presencial real.
+    **Siguiente:** 2E (archivo digital). Sigue sin verificar si la licencia M365 de `@dee.edu.mx`
+    incluye Power Automate.
 
 28. **Formación Docente — calendario y cuota "a quien alcance": verificación en uso real**
     (construido, desplegado y verificado en vivo el 28 sep 2026, ver `docs/ARCHITECTURE.md §12` y
@@ -1025,6 +1031,15 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
       `asesorias.html`.
     - Por resolver: si un autogestivo puede dar constancia (hoy solo los cursos con
       `Liga_tutorial_constancia` de UNETE la tienen); sin ella la participación suele ser baja.
+
+36. **Cambiar `PANEL_TOKEN` por uno largo** (conocido desde el 1 sep 2026, `docs/QA-NOTES.md #25`;
+    vuelto a ver el 20 oct 2026). Es de 4 caracteres y fácil de adivinar en los proyectos revisados
+    (Asesorías, Formación Docente, Oficios) y las URL `/exec` están en el repo público.
+    Protege solo endpoints de lectura (`oficiosOV`, `cursosMes`, `agendaCursos`, `reportesMes`…),
+    pero cualquiera con la URL puede leer nombres de escuelas, folios y cursos. Cambiarlo en
+    **todos** los proyectos que lo usan a la vez (backends y quienes los consultan: Bitácora y
+    Oficios), porque es el mismo en todos; con uno distinto, la Bitácora y Oficios dejan de traer
+    datos. Después, `curl` de lectura con el token nuevo y con el viejo (debe dar `no_autorizado`).
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue

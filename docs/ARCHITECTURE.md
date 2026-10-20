@@ -3119,6 +3119,30 @@ claridad" tras el primer día de uso real.
   reabrir lo guardado) + servidor local en que Jorge probó la página y abrió los Word generados por
   el `ofGenerarOficio_()` real con Sheet y Drive en memoria. Desplegado por Jorge el mismo día.
 
+**Resumen diario por Telegram (paso 2D, 20 oct 2026).** Cierra los "recordatorios" del plan,
+acotados por Jorge: los cursos en línea ya los cubre Formación Docente; el hueco eran las
+actividades presenciales, que solo se avisaban por oficio.
+- **Captura:** una Difusión con la casilla "Convoca a una actividad presencial" guarda fecha,
+  horario y lugar en `Fecha del evento`/`Horario`/`Lugar / destino` de `Numeros` (las mismas de
+  la comisión; `ofNormalizarDocumento_()` las acepta para los dos tipos y `ofValidarDocumento_()`
+  exige horario y lugar si hay fecha). Presencial = Difusión con `Fecha del evento`. La "Fecha
+  límite" se retiró de la página (la columna queda con lo capturado).
+- **Envío:** activador diario `ofRecordatoriosAutomatico` (7-8 am, `ofInstalarRecordatorios()`).
+  `ofRecordatoriosDelDia_()` junta lo que cae a `OF_DIAS_AVISO` (0, 1 y 3 días): presenciales,
+  comisiones agrupadas por lugar/horario/motivo (un oficio por persona y día) y la agenda de
+  Formación Docente (`?action=agendaCursos`, URL en `OF_FD_URL` + `PANEL_TOKEN`; la "mitad"
+  solo el mismo día). Un mensaje-resumen y, aparte, uno por presencial con solo el texto de
+  WhatsApp (`ofTextoWhatsApp_()`), para copiarlo de un toque. Texto plano sin `parse_mode`
+  (`docs/QA-NOTES.md #24`), a cada chat de `TELEGRAM_CHAT_IDS` (Jorge y Nancy) con el bot de
+  siempre; si falla Formación Docente, el resumen sale con una línea que lo dice.
+  `OF_ULTIMO_RECORDATORIO` evita repetir el día; "Probar recordatorios de hoy" manda con
+  "PRUEBA" sin tocarla. Sin nada que avisar no manda nada.
+- **Agenda de Formación Docente:** `fdAgendaCursos_()` (cursos `Activo=TRUE` sin
+  `Ocultar_historial`): `cierre` (solo con `Fecha_limite_inscripcion`), `inicio`, `sesion`
+  (`fechasSesion_()`, sin repetir el inicio), `mitad` (cursos de `DIAS_MINIMOS_CURSO_LARGO` o
+  más) y `fin` (si es otro día). Rango máximo de 62 días. Separado de `cursosMes`, que filtra por
+  mes de desarrollo.
+
 **Guía de uso:** `docs/manual-oficios.html` (18 capturas en `images/manual-oficios/`, generadas
 con Playwright sobre la página real, con `oficios.gs` y `bitacora.gs` en una simulación de
 Sheets y datos de ejemplo; enlazada desde `oficios.html`; la 16, de la Oficina Virtual, se agregó

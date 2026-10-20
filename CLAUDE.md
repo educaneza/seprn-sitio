@@ -216,7 +216,7 @@ Detalle completo de cada backend en `docs/SISTEMAS.md`; arquitectura en `docs/AR
 | `formacion-docente.gs` | `Formacion_Docente_2026_2027` (`Docentes`/`Cursos`/`Inscripciones`), `OTDE-CAP-NNNN` | Ver sección abajo |
 | `panel-otde.gs` | "Panel OTDE" | **Apagado** el 14 oct 2026 (el código y el Sheet se quedan) |
 | `bitacora.gs` | "Bitácora OTDE 2026-2027" | Reporte mensual de Planeación (METAS 21/23). Se alimenta solo de Mantenimiento (N.P. 7), Asesorías (N.P. 8), Formación Docente (`NP_planeacion`), Soporte y Correo (resúmenes regenerables). URLs + `PANEL_TOKEN` en Script Properties. Tras cambiar hojas, correr "Preparar hojas" |
-| `oficios.gs` | "Control de oficios OTDE" | Consecutivo de oficios por lotes (formato `228C0101110500T/<n>/<año>`), nunca reutiliza un número. Oficios recibidos (llave = folio de Oficialía + año), `OF-NNNN`. Comisiones = un oficio por persona y por día, `.docx` desde plantilla. Oficio de salida (2C): `.docx` desde la plantilla del machote, cuerpo escrito en la página, destinatarios del catálogo "Sector / área" de `Config`; los campos se buscan con `ofUnirCampos_()` porque Word los parte al guardar (`docs/QA-NOTES.md #54`). **El RFC del personal nunca sale del Sheet ni va en el código** (repo público). Las capturas de `images/manual-oficios/` están desfasadas y el script que las generó no está en el repo |
+| `oficios.gs` | "Control de oficios OTDE" | Consecutivo de oficios por lotes (formato `228C0101110500T/<n>/<año>`), nunca reutiliza un número. Oficios recibidos (llave = folio de Oficialía + año), `OF-NNNN`. Comisiones = un oficio por persona y por día, `.docx` desde plantilla. Oficio de salida (2C): `.docx` desde la plantilla del machote, cuerpo escrito en la página, destinatarios del catálogo "Sector / área" de `Config`; los campos se buscan con `ofUnirCampos_()` porque Word los parte al guardar (`docs/QA-NOTES.md #54`). Resumen diario por Telegram (2D) a Jorge y Nancy: actividades presenciales (Difusión con fecha), comisiones y fechas de Formación Docente (`?action=agendaCursos`), 3/1/0 días antes, texto plano sin `parse_mode`. **El RFC del personal nunca sale del Sheet ni va en el código** (repo público). Las capturas de `images/manual-oficios/` están desfasadas y el script que las generó no está en el repo |
 | `visitas-jefes.gs` | `Seguimiento_Ceremonias_Cívicas_26-27`, `SEPRN-CC-NNNN` | Sin correo ni Telegram a propósito. Bloqueo por CCT+semana con `LockService`. `Reservas` tiene un filtro: `deleteRow()` no borra filas ocultas, usar `visConFiltroQuitado_()` (`docs/QA-NOTES.md #48`). Panel de cobertura público sin clave (decisión de Jorge) |
 | `estrategias-nacionales.gs` | `Estrategias_Nacionales_26-27`, `SEPRN-EN-NNNN` | 1 escuela = 1 estrategia por ciclo, bloqueo duro en el servidor. Ciclo nuevo = Sheet nueva + `MESES_EN_CICLO` |
 
@@ -343,7 +343,9 @@ ya resueltos al final de `docs/SISTEMAS.md`. Lo genuinamente abierto:
   que Jorge capture los 13 supervisores en `Config` y pruebe un oficio de salida real, importar
   el primer caso real de Asesorías resueltas (Nancy llena *Fecha de realización* y *Asistentes*),
   llenar `NP_planeacion` en cursos nuevos, revisión de Jorge del "N.P. planeación" por tipo de
-  oficio, y siguiente paso (recordatorios o 2E). `docs/PLAN-OPERACION-INTERNA.md` y ROADMAP ítem 27.
+  oficio, confirmar la primera corrida del resumen diario por Telegram (21 oct), y siguiente paso
+  (2E). `docs/PLAN-OPERACION-INTERNA.md` y ROADMAP ítem 27.
+- **`PANEL_TOKEN` débil** (4 caracteres, fácil de adivinar): cambiarlo en todos los proyectos a la vez. ROADMAP ítem 36.
 - **Formación Docente — calendario**: iPhone y computadora confirmados; falta Android y Outlook.
   Compartir la liga `?calendario=ACF-2627-001`. Los correos casi no salen en cursos grandes por
   cuota; decidido así (el calendario es el aviso principal). ROADMAP ítems 19 y 28.

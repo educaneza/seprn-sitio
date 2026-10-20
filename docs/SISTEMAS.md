@@ -514,6 +514,10 @@ diseño libre para niños, solo el sello de crédito al pie.
   `..` (caso real `vero_130171@hotmail.com.`). Constancias UNETE: el formulario de carga cierra
   a los 7 días de la conferencia (`DIAS_LIMITE_CONSTANCIA`, antes 2). Activador diario movido a
   las **9am** (antes 8am). Ver `docs/QA-NOTES.md #40`.
+- **Agenda para Oficios (20 oct 2026, versión 29):** `?action=agendaCursos&desde&hasta&token`
+  (`fdAgendaCursos_()`, solo lectura, `PANEL_TOKEN`): cierre de inscripción, inicio, sesiones,
+  mitad de cursos largos y fin, para el resumen diario por Telegram de `oficios.gs`, que avisa a
+  OTDE aunque nadie del equipo esté inscrito. Ver `docs/ARCHITECTURE.md §31`
 - Para cambios: copiar el `.gs` completo en Apps Script y re-desplegar como aplicación web (Cualquier usuario) — recordar **Administrar implementaciones → Nueva versión**, no solo "Guardar" en el editor, o el sitio sigue sirviendo la versión anterior
 
 ### `apps-script/panel-otde.gs` (nuevo, ago 2026 — apagado el 14 oct 2026)
@@ -599,7 +603,7 @@ diseño libre para niños, solo el sello de crédito al pie.
   sin fila nueva, para no duplicar el reporte), *capturar la actividad* (pestaña Actividad
   precargada; al guardar, el oficio queda Atendido con su BIT-ID) o *solo conocimiento*. La hoja
   `Config` tiene "N.P. planeación" por tipo de oficio (propuesta de Claude, **pendiente de
-  revisión de Jorge**). Recordatorios de eventos: pendientes (eran parte del 2D en el plan)
+  revisión de Jorge**). Los recordatorios del 2D salieron el 20 oct 2026 (ver abajo)
 - **Paso 2B (8 oct 2026, en producción):** las solicitudes nuevas de Mantenimiento y Asesorías
   entran solas (`ofSincronizarOV_`, cada 30 min + menú; jala `?action=oficiosOV` de los dos
   backends con `PANEL_TOKEN`; URLs en Script Properties `OV_MAN_URL`/`OV_ASE_URL`, configuradas
@@ -642,6 +646,14 @@ diseño libre para niños, solo el sello de crédito al pie.
   campos: INICIALES": Word había partido el campo al guardarla; lo resuelve `ofUnirCampos_()`
   (`docs/QA-NOTES.md #54`). El cargo del CoEEE con "y" se publicó el 19 oct 2026 (versión 10,
   primer despliegue con `apps-script/desplegar.sh`). Ver `docs/ARCHITECTURE.md §31`
+- **Paso 2D — resumen diario por Telegram (20 oct 2026, versión 11, configurado y probado por
+  Jorge):** una Difusión puede marcar "Convoca a una actividad presencial" (fecha, horario y
+  lugar en las columnas de la comisión); "Fecha límite" se quitó de la página. Activador diario
+  `ofRecordatoriosAutomatico` (7-8 am) a Jorge y Nancy (`TELEGRAM_CHAT_IDS`, mismo bot): hoy,
+  mañana y en 3 días, con presenciales (más un mensaje aparte con el texto de WhatsApp),
+  comisiones y fechas de Formación Docente (`OF_FD_URL` → `?action=agendaCursos`). Menú: probar,
+  configurar Telegram, conexión con Formación Docente, instalar el activador. Primera corrida
+  automática: 21 oct 2026. Ver `docs/ARCHITECTURE.md §31`
 - Si cambia la interfaz de `oficios.html`/`bitacora.html`, las capturas de
   `images/manual-oficios/` quedan desfasadas (las 02-05 de Tomar número desde el 12 oct; la 06, 10 y 13 desde la simplificación del 14 oct, y la 07 ya no se usa). Se generaron con un script de Playwright sobre la
   página real con los dos `.gs` en una simulación de Sheets: **ese script no está en el repo**

@@ -15,15 +15,15 @@ funciona, con pendientes abiertos o algo en paralelo. **Rojo** = falla, o algo e
 afecta a usuarios. **Prueba en vivo** = última vez que Jorge o una prueba contra producción
 confirmó que funciona (no la fecha del último cambio de código).
 
-Actualizado: **19 oct 2026**.
+Actualizado: **20 oct 2026**.
 
 ## Sistemas en uso
 
 | Sistema | Quién lo usa | Estado | Prueba en vivo | Pendiente principal |
 |---|---|---|---|---|
-| Oficios (`oficios.html`, `oficios.gs`) | Equipo OTDE | Verde | 14 oct 2026 | 2C (oficio de salida en Word) desplegado el 19 oct, sin prueba con un oficio real todavía: Jorge captura los 13 supervisores en `Config` (el `.gs` con el cargo del CoEEE corregido ya está publicado, v10 del 19 oct). Rehacer capturas 02-06, 10 y 13 de la guía. Siguiente: recordatorios o 2E (ROADMAP 27) |
+| Oficios (`oficios.html`, `oficios.gs`) | Equipo OTDE | Verde | 20 oct 2026 (Jorge recibió la prueba del resumen diario por Telegram) | 2D: resumen diario por Telegram (v11): confirmar la primera corrida automática del 21 oct en "Ejecuciones" y que a Nancy le llega. 2C sin prueba con un oficio real: Jorge captura los 13 supervisores en `Config`. Rehacer capturas 02-06, 10 y 13 de la guía. Siguiente: 2E (ROADMAP 27) |
 | Bitácora OTDE (`bitacora.html`, `bitacora.gs`) | Jorge y Nancy | Verde | 6 oct 2026 | Ninguno que afecte a usuarios (Beneficiarios y folios MAN resueltos por Jorge, 15 oct 2026). Llenar `NP_planeacion` en los cursos nuevos al darlos de alta (ROADMAP 27) |
-| Formación Docente (`formacion-docente.html`, `formacion-docente.gs`) | Docentes | Amarillo | 14 oct 2026 (calendario en iPhone y computadora) | Android sin probar; borrar las hojas de respaldo; Paso 5 contra Aula Digital (ROADMAP 19 y 28). Los correos casi no salen por cuota: el calendario es el aviso principal (decisión de Jorge). Folio duplicado `OTDE-CAP-0089` resuelto el 15 oct 2026 (→ `OTDE-CAP-0626`) |
+| Formación Docente (`formacion-docente.html`, `formacion-docente.gs`) | Docentes | Amarillo | 14 oct 2026 (calendario en iPhone y computadora) | Android sin probar; borrar las hojas de respaldo; Paso 5 contra Aula Digital (ROADMAP 19 y 28). Los correos casi no salen por cuota: el calendario es el aviso principal (decisión de Jorge). Folio duplicado `OTDE-CAP-0089` resuelto el 15 oct 2026 (→ `OTDE-CAP-0626`). `?action=agendaCursos` para Oficios desde el 20 oct (v29); activadores reinstalados ese día |
 | Mantenimiento (`mantenimiento.html`, `reporte-visita.html`, `mantenimiento.gs`) | Escuelas, Alejandro | Amarillo | 25 sep 2026 | `.gs` del 14 oct desplegado el 15 oct (confirmado con `curl`); columnas por nombre y las dos hojas reordenadas por bloques el 15 oct (versión 27, verificado en vivo, ROADMAP 34); sin prueba con modo de prueba, a propósito: Jorge espera el feedback de los usuarios; la prueba de los fixes del 21 sep (ROADMAP 22) queda para fuera de horario laboral (19 oct). Revisar "Ejecuciones" (ROADMAP 33). v8.5 sigue vivo en paralelo, ya sin activadores (ROADMAP 9) |
 | Asesorías (`asesorias.html`, `asesorias.gs`) | Escuelas, Nancy | Amarillo | 25 sep 2026 | `.gs` del 14 oct desplegado el 15 oct (columnas confirmadas en el Sheet); columnas por nombre y hoja reordenada por bloques el 15 oct (versión 20, verificado en vivo, ROADMAP 34). Sin prueba de la verificación de mantenimiento (Jorge espera feedback). Sus 2 activadores `onEdit` nunca se habían ejecutado al 15 oct: confirmar con el próximo cierre (ROADMAP 33). Que Nancy llene Fecha de realización y Asistentes al cerrar |
 | Soporte remoto (`soporte.html`, `soporte-remoto.gs`) | Escuelas, Alejandro | Verde | 25 sep 2026 | Ninguno que afecte a usuarios. Columnas por nombre y hoja reordenada por bloques el 15 oct (versión 13, verificado en vivo, ROADMAP 34) |
