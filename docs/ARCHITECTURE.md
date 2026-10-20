@@ -2862,6 +2862,14 @@ sale del navegador y **debe funcionar sin internet** (descargada y abierta con d
   México) o `;` según el interruptor "Mi Excel usa punto y coma".
 - **Sin `localStorage`**: todo vive en memoria.
 
+**Archivo de práctica y asesoría (20 oct 2026):** además de `Personal` (59 registros con 13
+errores de clave y 1 vacía sembrados, 4 grupos de duplicados), trae la hoja `Escuelas`
+(`ESCUELAS_PRACTICA`, 6 escuelas) para practicar BUSCARV, y 7 retos en `Instrucciones`. Es el
+material común de la asesoría "Excel básico"; la clave de respuestas vive en la carta descriptiva
+(local, `docs/insumos/`). "Aprende a hacerlo tú" muestra también la ruta de menú de Excel con
+`pasosMenu()` (módulos 1, 2 y 3), no solo la fórmula. Si cambian los datos sembrados, actualizar
+la clave de respuestas de la carta.
+
 **Piezas compartidas (dentro del mismo archivo):** `crearCargador()` (pasos 1-2: carga, hoja con
 más datos y fila de títulos autodetectada con vista previa; todo se lee como texto para conservar
 ceros y no crear fechas), `porLotes()` (procesa en lotes de 2,000 cediendo el hilo, con barra),

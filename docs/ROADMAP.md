@@ -967,7 +967,11 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     español una muestra de las fórmulas del módulo 5 (no se pudo automatizar); (b) abrir en Word
     real un `.docx` generado (solo se revisó con `python-docx` y unzip); (c) decidir si se enlaza
     desde `asesorias.html` (tipo "Excel básico") o desde una tarjeta de `oficina-virtual.html`
-    (hoy no, por decisión de Jorge). Ver `docs/ARCHITECTURE.md §30`.
+    (hoy no, por decisión de Jorge); (d) la lista de detalles que Jorge quiere pulir (20 oct
+    2026); (e) materiales de la asesoría "Excel básico" en `docs/insumos/Asesoría-Excel-2627/`
+    (local): revisar en PowerPoint las 3 `*-SEPRN.pptx` y en Word la carta descriptiva, y
+    reemplazar las imágenes con texto en inglés (portada de BUSCARV, paso 1 de Combinar). Ver
+    `docs/ARCHITECTURE.md §30`.
 33. **Mejoras de operación del 14 oct 2026 — desplegadas (15 oct 2026), pruebas pospuestas.**
     (a) ~~desplegar los 3 `.gs`~~ — hecho por Jorge el 15 oct 2026; Mantenimiento confirmado con
     `curl` (`?action=mantenimientoPorCct` con token falso responde `no_autorizado`; la versión

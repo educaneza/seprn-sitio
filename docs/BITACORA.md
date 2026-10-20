@@ -16,6 +16,22 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-10-20 (cont. 2) · Asesoría Excel básico: Excel fácil alineado con las presentaciones, carta descriptiva para ponentes
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-20 |
+| **Sesión** | Jorge dejó en `docs/insumos/Asesoría-Excel-2627/` tres presentaciones para la asesoría "Excel básico" (Uso de Excel, BUSCARV vs BUSCARX, Combinar correspondencia) y pidió ver cómo se complementan con Excel fácil, pulir la herramienta, una carta descriptiva para los ponentes y una duración sugerida. |
+| **Decisión** | Las presentaciones son el contenido principal; Excel fácil las complementa (archivo de práctica común, atajo para el trabajo pesado y referencia para llevarse). La idea de Jorge de "hacerlo difícil y luego Excel fácil" se aplica **por bloque**: explicar → reto a mano contra reloj → Excel fácil → "Aprende a hacerlo tú". Duración recomendada **3 h** con receso (variantes de 2 y 4 h). Hallazgo: el instalador de OTDE es Office 2019, así que BUSCARX da `#¿NOMBRE?` en las escuelas; la "regla de oro" de la PPT se invirtió para la región. |
+| **`excel-facil.html`** | Archivo de práctica (`descargarPractica()`) con hoja nueva **«Escuelas»** (`ESCUELAS_PRACTICA`: CCT, Escuela, Turno, Colonia, Alumnos, Grupos) para practicar BUSCARV, y 7 retos en «Instrucciones». "Aprende a hacerlo tú" con ruta de menú (`pasosMenu()`): Formato condicional / Quitar duplicados (módulo 1), filtros con Ctrl+Mayús+L (módulo 2, no tenía sección) y Validación de datos con "Rodear con un círculo datos no válidos" (módulo 3). Aviso de BUSCARX en la tarea `buscarv` del módulo 5 y en `#¿NOMBRE?` de errores comunes. |
+| **Materiales locales (no se publican, `docs/insumos/` está en `.gitignore`)** | Copias `*-SEPRN.pptx` de las 3 presentaciones con ejemplos escolares (CCT, CURP, RFC y escuelas del archivo de práctica en lugar de SKU, "Nova S.A.", "ventas por región"), numeración corregida, `,` como separador y `#N/D`. `Carta-descriptiva-Asesoria-Excel-2627.docx`: datos generales, enfoque, requerimientos, preparación del ponente, secuencia de 180 min, variantes, evaluación, problemas frecuentes y anexos (clave de respuestas y hoja de retos). |
+| **Verificación** | Playwright con la red externa bloqueada (solo la fuente de Google pidió red): `__autoprueba()` 28 casos correctos; con el archivo de práctica nuevo, filtro Zona 012 → 21 de 59, duplicados por CURP → 4 grupos, validación → 13 con error + 1 vacía (con `LARGO` solo salen 8 de 14), 3 CCT que BUSCARV no encuentra. Carta: la secuencia suma 180 min. PPT: todas las partes XML válidas; **sin render visual** (no hay LibreOffice). Publicado: run de `f00428a` en `success` y `curl` confirma los cambios en vivo. `git diff --stat`: 1 archivo, 52 inserciones, 14 eliminaciones. |
+| **Pendiente** | Jorge: abrir las 3 `*-SEPRN.pptx` en PowerPoint (las tablas de ejemplo ahora llevan CCT más largos) y la carta completa en Word; reemplazar las imágenes con texto en inglés (portada de BUSCARV, paso 1 de Combinar); pasar su lista de detalles para pulir Excel fácil. Lo del checkpoint anterior sigue igual (primera corrida del resumen diario el 21 oct, `PANEL_TOKEN`, supervisores en `Config`). |
+| **Documentación actualizada** | Este checkpoint, `docs/ARCHITECTURE.md §30`, `docs/SISTEMAS.md` (Excel fácil), `docs/ROADMAP.md` ítem 32, `docs/TABLERO-SALUD.md` (Excel fácil). |
+| **Commits** | `f00428a` (Excel fácil) y el de este cierre. |
+
+---
+
 ## CHECKPOINT — 2026-10-20 (cont.) · Visitas de Mantenimiento y Asesorías en el resumen diario, sin duplicar las comisiones
 
 | | |

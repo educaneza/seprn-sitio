@@ -32,7 +32,7 @@ Actualizado: **20 oct 2026**.
 | Ceremonias Cívicas (`ceremonias-civicas.html`, `ficha-…`, `visitas-jefes.gs`) | ~20 jefes de la Subdirección | Verde | 19 oct 2026 (Jorge: la fecha ya no se desborda en iPhone) | Ninguno. El panel de cobertura queda público sin clave (decisión de Jorge, 14 oct 2026) |
 | Estrategias Nacionales (`estrategias-nacionales.html`, `.gs`) | Programas Educativos | Verde | 19 oct 2026 (Jorge, en su celular: indicador de progreso y tablas) | Correr una vez el menú del resumen con datos reales (ROADMAP 29b). Al cambiar de ciclo: Sheet nueva y `MESES_EN_CICLO` |
 | CTE (`cte.html`) | Docentes y directivos | Verde | 21 sep 2026 | Publicar cada sesión nueva cuando llegue |
-| Excel fácil (`excel-facil.html`) | Docentes y administrativos | Verde | 6 oct 2026 | Ninguno. Identidad institucional el 16 oct 2026 (probada en local y publicada; sin cambios en sus módulos) |
+| Excel fácil (`excel-facil.html`) | Docentes y administrativos | Verde | 6 oct 2026 | Hoja «Escuelas», retos y rutas de menú publicados el 20 oct 2026 (probado en local con Playwright, `curl` en vivo). Falta la lista de detalles de Jorge y revisar los materiales de la asesoría (ROADMAP 32) |
 | Crea tu app educativa (`crea-tu-app.html`, `apps-educativas/`) | Docentes (talleres) | Amarillo | 16 oct 2026 (publicado; probado en local con Playwright) | Revisar PDA contra el PDF de la SEP y el contenido de las 3 apps, decidir licencia, validar con la Dra. Galindo (ROADMAP 35) |
 | Protocolos (`protocolos.html`) | Escuelas | Verde | ago 2026 | Ninguno |
 | Páginas de área (`academica.html`, `personal.html`…) | Público | Amarillo | — | 4 páginas eliminadas por recrear con contenido validado por la Dra. Galindo |
