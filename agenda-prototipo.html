@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="Prototipo de la Agenda SEPRN: actividades del día, la semana y el mes de todas las oficinas de la Subdirección.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agenda SEPRN (prototipo) - SEPRN</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* ── Agenda SEPRN · prototipo (prefijo ag-) ── */
+        .ag-proto-strip {
+            background: #fff4d6;
+            border-bottom: 1px solid #e8d49a;
+            color: #6b5a44;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            padding: 9px 16px;
+        }
+        .ag-wrap { max-width: 1180px; margin: 0 auto; padding: 40px 24px 80px; }
+
+        /* Barra de simulación */
+        .ag-sim {
+            display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px;
+            background: var(--off-white); border: 1px dashed var(--caramelo);
+            border-radius: 12px; padding: 14px 18px; margin-bottom: 28px; font-size: 13px;
+        }
+        .ag-sim-title { font-weight: 700; color: var(--caramelo-oscuro); text-transform: uppercase; letter-spacing: 1.2px; font-size: 11px; }
+        .ag-sim label { display: inline-flex; align-items: center; gap: 8px; color: var(--texto-muted); font-weight: 500; }
+        .ag-sim input[type="date"] { font-family: inherit; font-size: 13px; padding: 5px 8px; border: 1px solid var(--arena); border-radius: 6px; }
+        .ag-sim input[type="range"] { width: 160px; accent-color: var(--guinda-acento); }
+        .ag-sim-hora { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--guinda); min-width: 44px; }
+
+        /* Pestañas */
+        .ag-tabs { display: flex; gap: 6px; border-bottom: 2px solid var(--arena); margin-bottom: 28px; overflow-x: auto; }
+        .ag-tab {
+            font-family: inherit; font-size: 14px; font-weight: 600; color: var(--texto-muted);
+            background: none; border: none; padding: 12px 18px; cursor: pointer; white-space: nowrap;
+            border-bottom: 3px solid transparent; margin-bottom: -2px;
+        }
+        .ag-tab:hover { color: var(--guinda); }
+        .ag-tab[aria-selected="true"] { color: var(--guinda-acento); border-bottom-color: var(--guinda-acento); }
+        .ag-panel[hidden] { display: none; }
+
+        .ag-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+        .ag-toolbar h2 { font-size: 22px; font-weight: 700; color: var(--guinda); margin: 0; }
+        .ag-toolbar-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .ag-btn {
+            font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+            border-radius: 8px; padding: 9px 16px; border: 1.5px solid var(--guinda); background: #fff; color: var(--guinda);
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .ag-btn:hover { background: var(--off-white); }
+        .ag-btn-solid { background: var(--guinda); color: #fff; }
+        .ag-btn-solid:hover { background: var(--guinda-acento); border-color: var(--guinda-acento); }
+        .ag-btn svg { width: 16px; height: 16px; }
+        .ag-select { font-family: inherit; font-size: 13px; padding: 8px 10px; border: 1px solid var(--arena); border-radius: 8px; background: #fff; color: var(--texto); }
+
+        /* ── Tablero tipo aeropuerto ── */
+        .ag-board { background: var(--midnight); border-radius: 16px; padding: 22px 22px 14px; color: #fff; box-shadow: 0 18px 40px rgba(12,26,46,.18); }
+        .ag-board-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 10px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,.12); }
+        .ag-board-label { font-size: 11px; letter-spacing: 3px; font-weight: 700; color: var(--caramelo-claro); text-transform: uppercase; }
+        .ag-board-date { font-size: 22px; font-weight: 700; margin-top: 4px; }
+        .ag-clock { font-size: 40px; font-weight: 700; font-variant-numeric: tabular-nums; color: #ffd27a; letter-spacing: 1px; line-height: 1; }
+        .ag-board-table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+        .ag-board-table th {
+            text-align: left; font-size: 10.5px; letter-spacing: 1.6px; text-transform: uppercase; color: rgba(255,255,255,.5);
+            font-weight: 700; padding: 12px 10px 8px;
+        }
+        .ag-board-table td { padding: 13px 10px; border-top: 1px solid rgba(255,255,255,.07); vertical-align: top; font-size: 14px; }
+        .ag-board-table tr.ag-row { cursor: pointer; }
+        .ag-board-table tr.ag-row:hover td { background: rgba(255,255,255,.04); }
+        .ag-row-time { font-variant-numeric: tabular-nums; font-weight: 700; color: #ffd27a; white-space: nowrap; font-size: 15px; }
+        .ag-row-time small { display: block; color: rgba(255,255,255,.45); font-weight: 500; font-size: 12px; }
+        .ag-row-name { font-weight: 600; line-height: 1.35; }
+        .ag-row-name small { display: block; color: rgba(255,255,255,.5); font-weight: 500; font-size: 12px; margin-top: 2px; }
+        .ag-row-muted { color: rgba(255,255,255,.75); font-size: 13px; line-height: 1.4; }
+        .ag-row.is-cancelada .ag-row-name, .ag-row.is-cancelada .ag-row-time { text-decoration: line-through; opacity: .55; }
+        .ag-row.is-concluida td { opacity: .5; }
+        .ag-chip-ofi { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: rgba(255,255,255,.85); }
+        .ag-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; display: inline-block; box-shadow: 0 0 0 1.5px rgba(255,255,255,.4); }
+        .ag-choque-flag { display: inline-flex; align-items: center; gap: 4px; margin-top: 5px; font-size: 11px; font-weight: 700; color: #ff9b8a; letter-spacing: .3px; }
+        .ag-choque-flag svg { width: 13px; height: 13px; }
+        .ag-empty { text-align: center; padding: 40px 10px; color: rgba(255,255,255,.55); font-size: 15px; }
+
+        /* Estados */
+        .ag-estado { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; padding: 5px 10px; border-radius: 6px; white-space: nowrap; }
+        .ag-e-programada { background: rgba(255,255,255,.1); color: #dfe6f0; }
+        .ag-e-proxima { background: #ffd27a; color: #3a2a00; animation: ag-blink 1.4s ease-in-out infinite; }
+        .ag-e-encurso { background: #2fae74; color: #fff; }
+        .ag-e-concluida { background: transparent; color: rgba(255,255,255,.6); border: 1px solid rgba(255,255,255,.25); }
+        .ag-e-reprogramada { background: #e8a33c; color: #2b1a00; }
+        .ag-e-cancelada { background: #c0392b; color: #fff; }
+        @keyframes ag-blink { 50% { opacity: .55; } }
+        @media (prefers-reduced-motion: reduce) { .ag-e-proxima { animation: none; } }
+        .ag-legend { display: flex; flex-wrap: wrap; gap: 10px 16px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.55); }
+        .ag-legend span { display: inline-flex; align-items: center; gap: 6px; }
+
+        .ag-next { margin-top: 22px; }
+        .ag-next h3 { font-size: 15px; font-weight: 700; color: var(--guinda); margin-bottom: 10px; }
+        .ag-next-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+
+        /* Tarjeta compacta (semana, mes, próximos) */
+        .ag-card {
+            display: block; width: 100%; text-align: left; font-family: inherit; cursor: pointer;
+            background: #fff; border: 1px solid #e6e1da; border-left: 4px solid var(--ofi, var(--guinda));
+            border-radius: 8px; padding: 9px 11px; font-size: 12.5px; color: var(--texto); line-height: 1.35;
+        }
+        .ag-card:hover { box-shadow: 0 4px 14px rgba(86,33,47,.12); }
+        .ag-card b { display: block; font-weight: 600; color: var(--guinda); font-size: 13px; }
+        .ag-card .ag-card-time { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--guinda-acento); font-size: 12px; }
+        .ag-card .ag-card-meta { color: var(--texto-muted); font-size: 11.5px; margin-top: 2px; }
+        .ag-card.is-cancelada b { text-decoration: line-through; opacity: .6; }
+        .ag-card.has-choque { box-shadow: inset 0 0 0 1.5px #e0796a; }
+        .ag-mini-tag { display: inline-block; font-size: 9.5px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; margin-top: 4px; }
+        .ag-mini-tag.choque { background: #fde8e4; color: #a0301f; }
+        .ag-mini-tag.cancelada { background: #f6dcd8; color: #8a1f12; }
+        .ag-mini-tag.reprogramada { background: #fbecd2; color: #7a4c00; }
+
+        /* Semana */
+        .ag-week { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+        .ag-week-col { background: var(--off-white); border-radius: 10px; padding: 10px; min-height: 220px; }
+        .ag-week-col.is-hoy { outline: 2px solid var(--guinda-acento); }
+        .ag-week-day { font-size: 12px; font-weight: 700; color: var(--caramelo-oscuro); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .ag-week-day span { display: block; font-size: 22px; color: var(--guinda); letter-spacing: 0; }
+        .ag-week-col .ag-card + .ag-card { margin-top: 8px; }
+        .ag-week-none { font-size: 12px; color: #999; font-style: italic; }
+        .ag-inhabil { font-size: 11px; font-weight: 700; color: #8a1f12; background: #f6dcd8; border-radius: 6px; padding: 6px 8px; }
+
+        /* Mes */
+        .ag-month { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border: 1px solid #e6e1da; border-radius: 12px; overflow: hidden; }
+        .ag-month-h { background: var(--guinda); color: #fff; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; text-align: center; padding: 9px 4px; }
+        .ag-month-cell { min-height: 116px; border-top: 1px solid #ece7e0; border-left: 1px solid #ece7e0; padding: 6px; background: #fff; }
+        .ag-month-cell:nth-child(7n+1) { border-left: none; }
+        .ag-month-cell.is-out { background: #faf9f7; }
+        .ag-month-cell.is-weekend { background: #f6f4f0; }
+        .ag-month-cell.is-hoy { box-shadow: inset 0 0 0 2px var(--guinda-acento); }
+        .ag-month-num { font-size: 12px; font-weight: 700; color: var(--guinda); background: none; border: none; font-family: inherit; cursor: pointer; padding: 0 2px; }
+        .ag-month-num:hover { text-decoration: underline; }
+        .ag-month-pill {
+            display: block; width: 100%; text-align: left; font-family: inherit; cursor: pointer; margin-top: 4px;
+            font-size: 11px; line-height: 1.25; padding: 3px 5px; border-radius: 4px; border: none;
+            background: color-mix(in srgb, var(--ofi) 12%, #fff); color: #2a2a2a; border-left: 3px solid var(--ofi);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .ag-month-pill.is-cancelada { text-decoration: line-through; opacity: .55; }
+        .ag-month-pill.has-choque { box-shadow: inset 0 0 0 1px #e0796a; }
+        .ag-month-more { font-size: 11px; color: var(--guinda-acento); font-weight: 600; background: none; border: none; cursor: pointer; font-family: inherit; padding: 3px 2px; }
+        .ag-month-list { display: none; }
+
+        .ag-ofi-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 16px; font-size: 12px; color: var(--texto-muted); }
+        .ag-ofi-legend span { display: inline-flex; align-items: center; gap: 6px; }
+
+        /* Planeación */
+        .ag-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 26px; }
+        .ag-kpi { background: var(--off-white); border-radius: 12px; padding: 16px 18px; }
+        .ag-kpi strong { display: block; font-size: 30px; font-weight: 800; color: var(--guinda-acento); line-height: 1.1; font-variant-numeric: tabular-nums; }
+        .ag-kpi span { font-size: 12px; color: var(--texto-muted); font-weight: 600; }
+        .ag-two { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+        .ag-box { border: 1px solid #e6e1da; border-radius: 12px; padding: 18px 20px; background: #fff; }
+        .ag-box h3 { font-size: 16px; font-weight: 700; color: var(--guinda); margin-bottom: 4px; }
+        .ag-box p.ag-hint { font-size: 12.5px; color: var(--texto-muted); margin-bottom: 14px; line-height: 1.5; }
+        .ag-corte-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 0; border-top: 1px solid #f0ece6; font-size: 13.5px; }
+        .ag-corte-row:first-of-type { border-top: none; }
+        .ag-sem { font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 20px; white-space: nowrap; }
+        .ag-sem.ok { background: #dff3e8; color: #1d6b45; }
+        .ag-sem.pend { background: #fde8e4; color: #a0301f; }
+        .ag-choque-item { border-top: 1px solid #f0ece6; padding: 11px 0; font-size: 13px; line-height: 1.5; }
+        .ag-choque-item:first-of-type { border-top: none; }
+        .ag-choque-item strong { color: #a0301f; }
+        .ag-choque-item button { font-family: inherit; font-size: 13px; background: none; border: none; padding: 0; color: var(--guinda); font-weight: 600; cursor: pointer; text-align: left; text-decoration: underline; text-decoration-color: var(--arena); }
+
+        /* Captura */
+        .ag-form { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 22px; }
+        .ag-field { display: flex; flex-direction: column; gap: 6px; }
+        .ag-field.full { grid-column: 1 / -1; }
+        .ag-field label, .ag-field legend { font-size: 13px; font-weight: 600; color: var(--guinda); }
+        .ag-field small { font-size: 12px; color: var(--texto-muted); }
+        .ag-field input[type="text"], .ag-field input[type="date"], .ag-field input[type="time"], .ag-field select, .ag-field textarea {
+            font-family: inherit; font-size: 14px; padding: 10px 12px; border: 1.5px solid var(--arena); border-radius: 8px; background: #fff; color: var(--texto);
+        }
+        .ag-field textarea { min-height: 80px; resize: vertical; }
+        .ag-field input:focus, .ag-field select:focus, .ag-field textarea:focus { outline: none; border-color: var(--guinda-acento); }
+        .ag-field.has-error input, .ag-field.has-error select, .ag-field.has-error textarea { border-color: #c0392b; }
+        .ag-err { font-size: 12px; color: #c0392b; font-weight: 600; display: none; }
+        .ag-field.has-error .ag-err { display: block; }
+        fieldset.ag-field { border: none; padding: 0; margin: 0; }
+        .ag-checks { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px 14px; }
+        .ag-checks label, .ag-radios label { font-weight: 500; color: var(--texto); font-size: 13.5px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+        .ag-checks input, .ag-radios input { accent-color: var(--guinda-acento); width: 16px; height: 16px; }
+        .ag-radios { display: flex; flex-wrap: wrap; gap: 8px 22px; }
+        .ag-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .ag-sueltos { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .ag-calc {
+            grid-column: 1 / -1; background: var(--off-white); border-left: 4px solid var(--caramelo);
+            border-radius: 8px; padding: 14px 16px; font-size: 13.5px; line-height: 1.6;
+        }
+        .ag-calc b { color: var(--guinda); }
+        .ag-calc .ag-calc-choque { color: #a0301f; font-weight: 600; margin-top: 6px; }
+        .ag-calc .ag-calc-ok { color: #1d6b45; font-weight: 600; margin-top: 6px; }
+        .ag-form-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .ag-form-msg { font-size: 13px; font-weight: 600; color: #1d6b45; }
+
+        /* Ficha (modal) */
+        .ag-modal { position: fixed; inset: 0; background: rgba(12,26,46,.6); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 16px; }
+        .ag-modal.open { display: flex; }
+        .ag-modal-box { background: #fff; border-radius: 16px; max-width: 620px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 60px rgba(0,0,0,.3); }
+        .ag-modal-head { background: var(--midnight); color: #fff; padding: 20px 24px; border-radius: 16px 16px 0 0; position: relative; }
+        .ag-modal-head .ag-chip-ofi { font-size: 12px; }
+        .ag-modal-head h3 { font-size: 20px; font-weight: 700; margin: 8px 40px 8px 0; line-height: 1.3; }
+        .ag-modal-close { position: absolute; top: 14px; right: 14px; background: rgba(255,255,255,.12); border: none; color: #fff; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; font-size: 20px; line-height: 1; font-family: inherit; }
+        .ag-modal-body { padding: 8px 24px 22px; }
+        .ag-dl { display: grid; grid-template-columns: 150px 1fr; gap: 0 14px; }
+        .ag-dl dt { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--caramelo-oscuro); padding: 12px 0; border-top: 1px solid #f0ece6; }
+        .ag-dl dd { font-size: 14px; padding: 11px 0; border-top: 1px solid #f0ece6; margin: 0; line-height: 1.5; }
+        .ag-dl dt:first-of-type, .ag-dl dd:first-of-type { border-top: none; }
+        .ag-modal-alert { background: #fde8e4; color: #8a1f12; border-radius: 8px; padding: 10px 12px; font-size: 13px; margin-top: 14px; line-height: 1.5; }
+        .ag-modal-alert.warn { background: #fbecd2; color: #6b4300; }
+
+        /* Modo pantalla (TV) */
+        .ag-tv { position: fixed; inset: 0; z-index: 3000; background: var(--midnight); color: #fff; display: none; flex-direction: column; padding: 3vh 3vw; overflow: hidden; }
+        .ag-tv.open { display: flex; }
+        .ag-tv-head { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid rgba(255,255,255,.15); padding-bottom: 2vh; }
+        .ag-tv-brand { display: flex; align-items: center; gap: 16px; }
+        .ag-tv-brand .ag-board-label { font-size: 1.1vw; }
+        .ag-tv-brand .ag-board-date { font-size: 2.2vw; }
+        .ag-tv .ag-clock { font-size: 4.6vw; }
+        .ag-tv-body { flex: 1; overflow: hidden; margin-top: 1vh; }
+        .ag-tv .ag-board-table th { font-size: .95vw; padding: 1.4vh .8vw 1vh; }
+        .ag-tv .ag-board-table td { font-size: 1.35vw; padding: 1.5vh .8vw; }
+        .ag-tv .ag-row-time { font-size: 1.7vw; }
+        .ag-tv .ag-row-time small, .ag-tv .ag-row-name small { font-size: 1vw; }
+        .ag-tv .ag-row-muted, .ag-tv .ag-chip-ofi { font-size: 1.15vw; }
+        .ag-tv .ag-estado { font-size: 1vw; padding: .6vh .7vw; }
+        /* En la TV, como en el aeropuerto, lo que ya concluyó sale del tablero. */
+        .ag-tv .ag-row.is-concluida { display: none; }
+        .ag-tv-foot { border-top: 1px solid rgba(255,255,255,.15); padding-top: 1.5vh; font-size: 1.1vw; color: rgba(255,255,255,.7); white-space: nowrap; overflow: hidden; }
+        .ag-tv-foot b { color: var(--caramelo-claro); letter-spacing: 1.5px; margin-right: 1vw; }
+        .ag-tv-close { position: absolute; top: 12px; right: 14px; background: rgba(255,255,255,.1); border: none; color: rgba(255,255,255,.7); font-family: inherit; font-size: 12px; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+
+        .ag-note { margin-top: 36px; background: var(--off-white); border-radius: 12px; padding: 20px 22px; font-size: 13.5px; line-height: 1.7; color: var(--texto-muted); }
+        .ag-note h3 { font-size: 15px; color: var(--guinda); margin-bottom: 8px; }
+        .ag-note ul { margin: 6px 0 0 18px; }
+
+        .ag-print { display: none; }
+
+        @media (max-width: 900px) {
+            .ag-kpis { grid-template-columns: repeat(2, 1fr); }
+            .ag-two { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 760px) {
+            .ag-wrap { padding: 28px 16px 60px; }
+            .ag-board { padding: 16px 14px 10px; }
+            .ag-clock { font-size: 30px; }
+            .ag-board-table thead { display: none; }
+            .ag-board-table, .ag-board-table tbody, .ag-board-table tr, .ag-board-table td { display: block; width: 100%; }
+            .ag-board-table tr.ag-row { border-top: 1px solid rgba(255,255,255,.1); padding: 12px 0; position: relative; }
+            .ag-board-table td { border: none; padding: 2px 0; }
+            .ag-board-table td.ag-td-estado { position: absolute; top: 12px; right: 0; width: auto; }
+            .ag-board-table td.ag-td-sede::before { content: 'Sede: '; color: rgba(255,255,255,.45); }
+            .ag-board-table td.ag-td-fig::before { content: 'Convoca a: '; color: rgba(255,255,255,.45); }
+            .ag-week { grid-template-columns: 1fr; }
+            .ag-week-col { min-height: 0; }
+            .ag-month { display: none; }
+            .ag-month-list { display: block; }
+            .ag-month-list-day { margin-bottom: 16px; }
+            .ag-month-list-day h4 { font-size: 13px; font-weight: 700; color: var(--guinda); margin-bottom: 6px; text-transform: capitalize; }
+            .ag-month-list-day .ag-card + .ag-card { margin-top: 6px; }
+            .ag-form { grid-template-columns: 1fr; }
+            .ag-dl { grid-template-columns: 1fr; }
+            .ag-dl dt { padding-bottom: 0; }
+            .ag-dl dd { border-top: none; padding-top: 2px; }
+            .ag-kpi strong { font-size: 24px; }
+        }
+
+        @media print {
+            header, footer, .hero, .ag-proto-strip, .ag-sim, .ag-tabs, .ag-panel, .ag-note, .skip-link { display: none !important; }
+            .ag-wrap { padding: 0; max-width: none; }
+            .ag-print { display: block; font-size: 10.5px; }
+            .ag-print h2 { font-size: 16px; color: var(--guinda); margin-bottom: 8px; }
+            .ag-print table { width: 100%; border-collapse: collapse; }
+            .ag-print th, .ag-print td { border: 1px solid #bbb; padding: 4px 5px; text-align: left; vertical-align: top; }
+            .ag-print th { background: #eee; }
+        }
+    </style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Saltar al contenido principal</a>
+    <!-- Header -->
+    <header>
+        <nav>
+            <div class="logo"><svg class="logo-icon" width="34" height="34" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="12" fill="#56212f"/><text x="32" y="27" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#d6d1ca" letter-spacing="-1">NE</text><text x="32" y="53" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#d6d1ca" letter-spacing="-1">ZA</text></svg><span class="logo-text">SEPRN</span></div>
+        <button class="nav-toggle" aria-label="Abrir menú" aria-expanded="false">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+            <ul>
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="nosotros.html">Nosotros</a></li>
+                <li><a href="areas.html">Áreas</a></li>
+                <li><a href="cte.html">CTE</a></li>
+                <li><a href="contacto.html">Contacto</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="ag-proto-strip">PROTOTIPO para revisión con la Subjefatura de Planeación · Todas las actividades son datos de ejemplo · Nada de lo que se captura se guarda</div>
+
+    <section class="hero hero-sm">
+        <div class="hero-inner">
+            <span class="hero-badge">AGENDA INSTITUCIONAL · SEPRN</span>
+            <h1>Agenda SEPRN</h1>
+            <p>Las actividades de todas las oficinas de la Subdirección: hoy, esta semana y este mes, en un solo lugar.</p>
+        </div>
+        <div class="hero-glow" aria-hidden="true"></div>
+    </section>
+
+    <section class="ag-wrap" id="main-content" role="main">
+
+        <div class="ag-sim" aria-label="Controles de simulación del prototipo">
+            <span class="ag-sim-title">Simulación</span>
+            <label>Día <input type="date" id="simFecha" min="2026-11-01" max="2026-11-30" value="2026-11-10"></label>
+            <label>Hora <input type="range" id="simHora" min="420" max="1200" step="5" value="630"> <span class="ag-sim-hora" id="simHoraTxt">10:30</span></label>
+            <button type="button" class="ag-btn" id="simPlay">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span>Correr el reloj</span>
+            </button>
+        </div>
+
+        <div class="ag-tabs" role="tablist">
+            <button class="ag-tab" role="tab" aria-selected="true" data-tab="hoy">Hoy</button>
+            <button class="ag-tab" role="tab" aria-selected="false" data-tab="semana">Semana</button>
+            <button class="ag-tab" role="tab" aria-selected="false" data-tab="mes">Mes</button>
+            <button class="ag-tab" role="tab" aria-selected="false" data-tab="planeacion">Planeación</button>
+            <button class="ag-tab" role="tab" aria-selected="false" data-tab="captura">Capturar actividad</button>
+        </div>
+
+        <!-- HOY -->
+        <div class="ag-panel" id="panel-hoy" role="tabpanel">
+            <div class="ag-toolbar">
+                <h2>Tablero del día</h2>
+                <div class="ag-toolbar-actions">
+                    <button type="button" class="ag-btn ag-btn-solid" id="btnTv">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Modo pantalla
+                    </button>
+                </div>
+            </div>
+            <div class="ag-board">
+                <div class="ag-board-head">
+                    <div>
+                        <div class="ag-board-label">Actividades de hoy</div>
+                        <div class="ag-board-date" id="boardFecha"></div>
+                    </div>
+                    <div class="ag-clock" id="boardReloj" aria-live="off"></div>
+                </div>
+                <div id="boardBody"></div>
+                <div class="ag-legend">
+                    <span><i class="ag-estado ag-e-programada">Programada</i></span>
+                    <span><i class="ag-estado ag-e-proxima">Por iniciar</i> menos de 1 h</span>
+                    <span><i class="ag-estado ag-e-encurso">En curso</i></span>
+                    <span><i class="ag-estado ag-e-concluida">Concluida</i></span>
+                    <span><i class="ag-estado ag-e-reprogramada">Reprogramada</i></span>
+                    <span><i class="ag-estado ag-e-cancelada">Cancelada</i></span>
+                </div>
+            </div>
+            <div class="ag-next">
+                <h3>Próximos días hábiles</h3>
+                <div class="ag-next-list" id="nextList"></div>
+            </div>
+        </div>
+
+        <!-- SEMANA -->
+        <div class="ag-panel" id="panel-semana" role="tabpanel" hidden>
+            <div class="ag-toolbar">
+                <h2 id="semanaTitulo"></h2>
+                <div class="ag-toolbar-actions">
+                    <button type="button" class="ag-btn" id="semPrev" aria-label="Semana anterior">&larr;</button>
+                    <button type="button" class="ag-btn" id="semNext" aria-label="Semana siguiente">&rarr;</button>
+                    <select class="ag-select filtro-ofi" aria-label="Filtrar por oficina"></select>
+                    <select class="ag-select filtro-fig" aria-label="Filtrar por figura convocada"></select>
+                </div>
+            </div>
+            <div class="ag-week" id="semanaGrid"></div>
+            <div class="ag-ofi-legend legend-ofi"></div>
+        </div>
+
+        <!-- MES -->
+        <div class="ag-panel" id="panel-mes" role="tabpanel" hidden>
+            <div class="ag-toolbar">
+                <h2>Noviembre 2026</h2>
+                <div class="ag-toolbar-actions">
+                    <select class="ag-select filtro-ofi" aria-label="Filtrar por oficina"></select>
+                    <select class="ag-select filtro-fig" aria-label="Filtrar por figura convocada"></select>
+                    <button type="button" class="ag-btn" id="btnImprimir">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Imprimir agenda
+                    </button>
+                </div>
+            </div>
+            <div class="ag-month" id="mesGrid"></div>
+            <div class="ag-month-list" id="mesLista"></div>
+            <div class="ag-ofi-legend legend-ofi"></div>
+        </div>
+
+        <!-- PLANEACIÓN -->
+        <div class="ag-panel" id="panel-planeacion" role="tabpanel" hidden>
+            <div class="ag-toolbar">
+                <h2>Vista de Planeación · noviembre 2026</h2>
+                <div class="ag-toolbar-actions">
+                    <button type="button" class="ag-btn ag-btn-solid" id="btnExportar">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Descargar en Excel (CSV)
+                    </button>
+                </div>
+            </div>
+            <div class="ag-kpis" id="kpis"></div>
+            <div class="ag-two">
+                <div class="ag-box">
+                    <h3>Corte de captura</h3>
+                    <p class="ag-hint">Qué oficinas ya subieron sus actividades del mes. Fecha límite de ejemplo para la agenda de diciembre: <b>viernes 27 de noviembre</b>.</p>
+                    <div id="corte"></div>
+                </div>
+                <div class="ag-box">
+                    <h3>Posibles choques</h3>
+                    <p class="ag-hint">Actividades que convocan a la misma figura, o que usan la misma sede, el mismo día y en horarios que se cruzan.</p>
+                    <div id="choques"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CAPTURA -->
+        <div class="ag-panel" id="panel-captura" role="tabpanel" hidden>
+            <div class="ag-toolbar">
+                <h2>Capturar una actividad</h2>
+            </div>
+            <p style="font-size:13.5px;color:var(--texto-muted);margin:-6px 0 22px;line-height:1.6">En la versión real, cada oficina entra con su clave y solo ve y edita sus propias actividades. En este prototipo nada se guarda: el botón <b>Probar en el tablero</b> agrega la actividad a la vista solo mientras la página siga abierta.</p>
+            <form class="ag-form" id="formCaptura" novalidate>
+                <div class="ag-field full" data-campo="nombre">
+                    <label for="fNombre">Nombre de la actividad</label>
+                    <input type="text" id="fNombre" maxlength="140" placeholder="Ej. Reunión de seguimiento al PEMC con directores del Sector 3">
+                    <span class="ag-err">Escribe el nombre de la actividad.</span>
+                </div>
+                <div class="ag-field" data-campo="oficina">
+                    <label for="fOficina">Oficina que convoca</label>
+                    <select id="fOficina"></select>
+                    <small>En la versión real se llena sola con la clave de la oficina.</small>
+                    <span class="ag-err">Elige la oficina que convoca.</span>
+                </div>
+                <fieldset class="ag-field" data-campo="modalidad">
+                    <legend>Modalidad</legend>
+                    <div class="ag-radios">
+                        <label><input type="radio" name="fModalidad" value="Presencial" checked> Presencial</label>
+                        <label><input type="radio" name="fModalidad" value="En línea"> En línea</label>
+                        <label><input type="radio" name="fModalidad" value="Mixta"> Mixta</label>
+                    </div>
+                </fieldset>
+                <fieldset class="ag-field full" data-campo="periodo">
+                    <legend>Fechas</legend>
+                    <div class="ag-radios">
+                        <label><input type="radio" name="fTipoFecha" value="uno" checked> Un día</label>
+                        <label><input type="radio" name="fTipoFecha" value="rango"> Varios días seguidos</label>
+                        <label><input type="radio" name="fTipoFecha" value="sueltos"> Días sueltos</label>
+                    </div>
+                    <div class="ag-row2" id="fFechasRango">
+                        <div class="ag-field"><label for="fDesde" id="fDesdeLbl">Fecha</label><input type="date" id="fDesde" min="2026-11-01" max="2026-12-31"></div>
+                        <div class="ag-field" id="fHastaWrap" hidden><label for="fHasta">Hasta</label><input type="date" id="fHasta" min="2026-11-01" max="2026-12-31"></div>
+                    </div>
+                    <div class="ag-sueltos" id="fSueltos" hidden></div>
+                    <span class="ag-err" id="errFechas">Revisa las fechas.</span>
+                </fieldset>
+                <div class="ag-field" data-campo="horas">
+                    <div class="ag-row2">
+                        <div class="ag-field"><label for="fIni">Hora de inicio</label><input type="time" id="fIni" value="09:00" step="900"></div>
+                        <div class="ag-field"><label for="fFin">Hora de término</label><input type="time" id="fFin" value="13:00" step="900"></div>
+                    </div>
+                    <span class="ag-err">La hora de término debe ser después de la de inicio.</span>
+                </div>
+                <div class="ag-field" data-campo="sede">
+                    <label for="fSede">Sede o lugar</label>
+                    <select id="fSede"></select>
+                    <input type="text" id="fSedeOtra" placeholder="Escribe la sede (escuela, dirección, liga...)" hidden>
+                    <span class="ag-err">Indica la sede o el lugar.</span>
+                </div>
+                <fieldset class="ag-field full" data-campo="figuras">
+                    <legend>Figuras que se convocan</legend>
+                    <div class="ag-checks" id="fFiguras"></div>
+                    <input type="text" id="fAlcance" placeholder="Alcance (opcional). Ej. Sectores 1 a 4, Zona 12, toda la región" style="margin-top:8px;font-family:inherit;font-size:14px;padding:10px 12px;border:1.5px solid var(--arena);border-radius:8px">
+                    <span class="ag-err">Marca al menos una figura.</span>
+                </fieldset>
+                <div class="ag-field full" data-campo="proposito">
+                    <label for="fProposito">Propósito</label>
+                    <textarea id="fProposito" maxlength="400" placeholder="¿Para qué se hace la actividad? Ej. Que los directores identifiquen las prioridades de su PEMC a partir de los resultados del diagnóstico."></textarea>
+                    <span class="ag-err">Escribe el propósito.</span>
+                </div>
+                <div class="ag-field full" data-campo="descripcion">
+                    <label for="fDescripcion">Breve descripción</label>
+                    <textarea id="fDescripcion" maxlength="600" placeholder="¿Cómo se va a desarrollar? Ej. Exposición de 30 min, trabajo por zonas y plenaria."></textarea>
+                    <span class="ag-err">Escribe una breve descripción.</span>
+                </div>
+                <div class="ag-calc" id="fCalc" aria-live="polite"></div>
+                <div class="ag-form-actions">
+                    <button type="submit" class="ag-btn ag-btn-solid">Probar en el tablero</button>
+                    <button type="reset" class="ag-btn">Limpiar</button>
+                    <span class="ag-form-msg" id="fMsg"></span>
+                </div>
+            </form>
+        </div>
+
+        <div class="ag-note">
+            <h3>Qué se puede revisar con este prototipo</h3>
+            <ul>
+                <li><b>Hoy:</b> el tablero tipo aeropuerto. Mueve el día y la hora en la barra de simulación, o "Corre el reloj", y ve cómo cambian los estados. "Modo pantalla" es la vista para una TV en la entrada o en las oficinas.</li>
+                <li><b>Semana y Mes:</b> la agenda completa, con filtros por oficina y por figura convocada. Al dar clic en cualquier actividad se abre su ficha con todos los datos que pide Planeación.</li>
+                <li><b>Planeación:</b> qué oficinas ya capturaron, qué actividades chocan y la descarga para Excel.</li>
+                <li><b>Capturar actividad:</b> el formulario. La duración y el periodo se calculan solos, y el sistema avisa de un choque antes de guardar.</li>
+            </ul>
+        </div>
+
+        <div class="ag-print" id="printArea"></div>
+    </section>
+
+    <!-- Ficha -->
+    <div class="ag-modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+        <div class="ag-modal-box">
+            <div class="ag-modal-head">
+                <button type="button" class="ag-modal-close" id="modalCerrar" aria-label="Cerrar">&times;</button>
+                <span class="ag-chip-ofi" id="modalOfi"></span>
+                <h3 id="modalTitulo"></h3>
+                <span id="modalEstado"></span>
+            </div>
+            <div class="ag-modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Modo pantalla -->
+    <div class="ag-tv" id="tv" aria-label="Tablero en modo pantalla">
+        <button type="button" class="ag-tv-close" id="tvCerrar">Salir (Esc)</button>
+        <div class="ag-tv-head">
+            <div class="ag-tv-brand">
+                <svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true" style="width:4vw;height:4vw"><rect width="64" height="64" rx="12" fill="#56212f"/><text x="32" y="27" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#d6d1ca" letter-spacing="-1">NE</text><text x="32" y="53" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#d6d1ca" letter-spacing="-1">ZA</text></svg>
+                <div>
+                    <div class="ag-board-label">Agenda SEPRN · Actividades de hoy</div>
+                    <div class="ag-board-date" id="tvFecha"></div>
+                </div>
+            </div>
+            <div class="ag-clock" id="tvReloj"></div>
+        </div>
+        <div class="ag-tv-body" id="tvBody"></div>
+        <div class="ag-tv-foot" id="tvFoot"></div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-grid">
+            <div class="footer-col">
+                <p class="footer-brand"><svg class="logo-icon" width="30" height="30" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="12" fill="#F9F8F5"/><text x="32" y="27" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#56212f" letter-spacing="-1">NE</text><text x="32" y="53" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#56212f" letter-spacing="-1">ZA</text></svg>SEPRN</p>
+                <p class="footer-desc">Subdirección de Educación Primaria<br>en la Región de Nezahualcóyotl</p>
+                <p class="footer-meta">Av. Texcoco #116, Col. Juárez Pantitlán<br>Nezahualcóyotl, Estado de México, C.P. 57460</p>
+                <p class="footer-meta">Lunes a Viernes · 08:30 – 15:30 h</p>
+            </div>
+            <div class="footer-col">
+                <p class="footer-col-title">Sitio</p>
+                <ul class="footer-links">
+                    <li><a href="index.html">Inicio</a></li>
+                    <li><a href="nosotros.html">Nosotros</a></li>
+                    <li><a href="areas.html">Áreas</a></li>
+                    <li><a href="cte.html">CTE</a></li>
+                    <li><a href="contacto.html">Contacto</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <p class="footer-col-title">Áreas</p>
+                <ul class="footer-links">
+                    <li><a href="academica.html">Subjefatura Académica</a></li>
+                    <li><a href="personal.html">Subjefatura de Personal</a></li>
+                    <li><a href="planeacion.html">Subjefatura de Planeación</a></li>
+                    <li><a href="recursos.html">Subjefatura de Recursos</a></li>
+                    <li><a href="otde.html">OTDE</a></li>
+                    <li><a href="oeve.html">OEVE</a></li>
+                    <li><a href="juridico.html">Asuntos Jurídicos</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="social-links">
+                <a href="https://www.facebook.com/SubNeza" target="_blank" rel="noopener noreferrer" title="Facebook">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                </a>
+                <a href="https://www.youtube.com/channel/UCvDb2DPSJxFyhH3bCPd5D2Q" target="_blank" rel="noopener noreferrer" title="YouTube">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                </a>
+            </div>
+            <div class="copyright">
+                © 2026 SEPRN · Subdirección de Educación Primaria en la Región de Nezahualcóyotl<br>
+                Órgano desconcentrado de SEIEM · Gobierno del Estado de México
+            </div>
+        </div>
+    </footer>
+    <script src="script.js" defer></script>
+    <script>
+    (function () {
+        'use strict';
+
+        // ── Catálogos (de ejemplo; se cierran con Planeación) ──
+        const OFICINAS = {
+            DES: { nombre: 'Despacho de la Subdirección', color: '#3d6fa8' },
+            ACA: { nombre: 'Subjefatura Académica', color: '#9F2241' },
+            PER: { nombre: 'Subjefatura de Personal', color: '#4a5a7a' },
+            PLA: { nombre: 'Subjefatura de Planeación', color: '#2f6b6b' },
+            REC: { nombre: 'Subjefatura de Recursos', color: '#6b7a2f' },
+            OTDE: { nombre: 'OTDE', color: '#56212f' },
+            OEVE: { nombre: 'OEVE', color: '#977e5b' },
+            JUR: { nombre: 'Asuntos Jurídicos', color: '#8a5a2b' }
+        };
+        const FIGURAS = ['Jefes de Sector', 'Supervisores Escolares', 'Directores', 'Subdirectores', 'Docentes', 'ATP / Asesores', 'Personal administrativo', 'Personal SEPRN', 'Padres de familia', 'Alumnos'];
+        const SEDES = ['Sede SEPRN · Auditorio', 'Sede SEPRN · Sala de juntas', 'Sede SEPRN · Aula de cómputo OTDE', 'En línea (videollamada)', 'Escuela sede', 'Supervisión escolar', 'Sede por confirmar'];
+        // Sedes que no cuentan para choque de lugar (no son un solo salón).
+        const SEDES_SIN_CHOQUE = ['En línea (videollamada)', 'Escuela sede', 'Supervisión escolar', 'Sede por confirmar'];
+        const INHABILES = { '2026-11-16': 'Día inhábil · Aniversario de la Revolución Mexicana' };
+
+        // ── Fechas ──
+        const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+        const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+        function aFecha(s) { const p = s.split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); }
+        function aTexto(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+        function sumarDias(s, n) { const d = aFecha(s); d.setDate(d.getDate() + n); return aTexto(d); }
+        function esHabil(s) { const w = aFecha(s).getDay(); return w !== 0 && w !== 6 && !INHABILES[s]; }
+        function fechaLarga(s) { const d = aFecha(s); return DIAS[d.getDay()] + ' ' + d.getDate() + ' de ' + MESES[d.getMonth()]; }
+        function mayus(t) { return t.charAt(0).toUpperCase() + t.slice(1); }
+        function fechaCorta(s) { const d = aFecha(s); return d.getDate() + ' ' + MESES[d.getMonth()].slice(0, 3); }
+        function rango(desde, hasta) { const r = []; for (let s = desde; s <= hasta; s = sumarDias(s, 1)) if (esHabil(s)) r.push(s); return r; }
+        function aMin(h) { const p = h.split(':').map(Number); return p[0] * 60 + p[1]; }
+        function aHora(m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }
+        function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+        // ── Actividades de ejemplo (noviembre 2026) ──
+        let ACT = [
+            { id: 'A01', of: 'PLA', nombre: 'Reunión mensual de jefes de oficina', fechas: ['2026-11-03'], ini: '09:00', fin: '11:00', sede: 'Sede SEPRN · Sala de juntas', modalidad: 'Presencial', figuras: ['Personal SEPRN'], alcance: 'Jefes de oficina de la Subdirección', proposito: 'Dar seguimiento al avance de metas del mes anterior y acordar prioridades del mes.', descripcion: 'Revisión del reporte mensual por oficina y acuerdos.' },
+            { id: 'A02', of: 'OTDE', nombre: 'Asesoría Banco de Materiales y Chuka', fechas: ['2026-11-04'], ini: '09:00', fin: '12:00', sede: 'Escuela sede', modalidad: 'Presencial', figuras: ['Docentes'], alcance: 'Escuela Primaria de la Zona 12', proposito: 'Que los docentes usen el Banco de Materiales y Chuka en su planeación.', descripcion: 'Demostración guiada y práctica en el aula de medios de la escuela.' },
+            { id: 'A03', of: 'ACA', nombre: 'Taller regional de lectura, escritura y matemáticas', fechas: rango('2026-11-05', '2026-11-06'), ini: '09:00', fin: '13:00', sede: 'Sede SEPRN · Auditorio', modalidad: 'Presencial', figuras: ['ATP / Asesores', 'Docentes'], alcance: 'Un ATP y un docente por zona', proposito: 'Fortalecer estrategias didácticas de la Estrategia Nacional de lectura y matemáticas.', descripcion: 'Dos sesiones de taller con réplica posterior en cada zona.' },
+            { id: 'A04', of: 'DES', nombre: 'Reunión de trabajo con Jefes de Sector', fechas: ['2026-11-09'], ini: '10:00', fin: '13:00', sede: 'Sede SEPRN · Sala de juntas', modalidad: 'Presencial', figuras: ['Jefes de Sector'], alcance: 'Toda la región', proposito: 'Acordar líneas de trabajo del mes con las jefaturas de sector.', descripcion: 'Informe de la Subdirección, asuntos por sector y acuerdos.' },
+            { id: 'A05', of: 'OTDE', nombre: 'Curso Excel básico para personal administrativo', fechas: ['2026-11-10'], ini: '08:30', fin: '10:30', sede: 'Sede SEPRN · Aula de cómputo OTDE', modalidad: 'Presencial', figuras: ['Personal administrativo'], alcance: 'Personal de oficinas de la SEPRN', proposito: 'Que el personal administrativo elabore listas y concentrados en Excel.', descripcion: 'Práctica guiada con el archivo de ejercicios de Excel fácil.' },
+            { id: 'A06', of: 'ACA', nombre: 'Seguimiento a la Fase Intensiva y Primera Sesión de CTE', fechas: ['2026-11-10'], ini: '09:00', fin: '13:00', sede: 'Sede SEPRN · Auditorio', modalidad: 'Presencial', figuras: ['Directores', 'Supervisores Escolares'], alcance: 'Sectores 1 a 4', proposito: 'Recuperar los acuerdos de CTE y su relación con el PEMC de cada escuela.', descripcion: 'Exposición, trabajo por zona y plenaria de acuerdos.' },
+            { id: 'A07', of: 'PLA', nombre: 'Validación de estadística de inicio de ciclo (911)', fechas: ['2026-11-10'], ini: '11:00', fin: '13:00', sede: 'Sede SEPRN · Aula de cómputo OTDE', modalidad: 'Presencial', figuras: ['Directores'], alcance: 'Escuelas con observaciones en la 911', proposito: 'Corregir las inconsistencias detectadas en la estadística 911 de inicio de ciclo.', descripcion: 'Revisión escuela por escuela con el sistema de captura.' },
+            { id: 'A08', of: 'JUR', nombre: 'Orientación sobre protocolos de actuación', fechas: ['2026-11-10'], ini: '10:00', fin: '12:00', sede: 'En línea (videollamada)', modalidad: 'En línea', figuras: ['Subdirectores'], alcance: 'Toda la región', proposito: 'Dar a conocer los protocolos de actuación vigentes del Estado de México.', descripcion: 'Presentación de los tres protocolos y sesión de preguntas.', estado: 'reprogramada', nota: 'Se mueve al jueves 12 de noviembre, 10:00 h, a petición de las supervisiones.' },
+            { id: 'A09', of: 'OTDE', nombre: 'Visita de mantenimiento preventivo', fechas: ['2026-11-10'], ini: '12:00', fin: '14:00', sede: 'Escuela sede', modalidad: 'Presencial', figuras: ['Directores'], alcance: 'Escuela Primaria del Sector 5', proposito: 'Dar mantenimiento preventivo al equipo de cómputo de la escuela.', descripcion: 'Limpieza, actualización y revisión de red.', estado: 'cancelada', nota: 'La escuela suspendió labores ese día.' },
+            { id: 'A10', of: 'OEVE', nombre: 'Reunión con Comités de Participación Escolar', fechas: ['2026-11-10'], ini: '13:30', fin: '15:00', sede: 'Escuela sede', modalidad: 'Presencial', figuras: ['Padres de familia', 'Directores'], alcance: 'Sector 2', proposito: 'Informar a los comités sobre los programas de vinculación del ciclo.', descripcion: 'Presentación de programas y registro de comités interesados.' },
+            { id: 'A11', of: 'PLA', nombre: 'Taller de Programa Escolar de Mejora Continua (PEMC)', fechas: rango('2026-11-11', '2026-11-13'), ini: '09:00', fin: '13:00', sede: 'Sede SEPRN · Auditorio', modalidad: 'Presencial', figuras: ['Directores', 'Supervisores Escolares'], alcance: 'Un sector por día', proposito: 'Que cada escuela ajuste su PEMC con base en el diagnóstico del ciclo.', descripcion: 'Taller por sector: análisis del diagnóstico, priorización y metas.' },
+            { id: 'A12', of: 'OTDE', nombre: 'Asesoría Excel básico', fechas: ['2026-11-12'], ini: '10:00', fin: '12:00', sede: 'Supervisión escolar', modalidad: 'Presencial', figuras: ['Directores'], alcance: 'Zona 7', proposito: 'Que los directores elaboren concentrados de asistencia y calificaciones.', descripcion: 'Taller práctico con equipo de la supervisión.' },
+            { id: 'A13', of: 'JUR', nombre: 'Orientación sobre protocolos de actuación', fechas: ['2026-11-12'], ini: '10:00', fin: '12:00', sede: 'En línea (videollamada)', modalidad: 'En línea', figuras: ['Subdirectores'], alcance: 'Toda la región', proposito: 'Dar a conocer los protocolos de actuación vigentes del Estado de México.', descripcion: 'Presentación de los tres protocolos y sesión de preguntas.', nota: 'Fecha nueva de la actividad del 10 de noviembre.' },
+            { id: 'A14', of: 'ACA', nombre: 'Reunión de Supervisores: Estrategias Nacionales', fechas: ['2026-11-18'], ini: '10:00', fin: '13:00', sede: 'Sede SEPRN · Sala de juntas', modalidad: 'Presencial', figuras: ['Supervisores Escolares', 'Jefes de Sector'], alcance: 'Toda la región', proposito: 'Revisar la selección mensual de escuelas por estrategia y su seguimiento.', descripcion: 'Informe por estrategia y acuerdos de acompañamiento.' },
+            { id: 'A15', of: 'OTDE', nombre: 'Curso en línea: Inteligencia artificial en el aula', fechas: ['2026-11-19', '2026-11-26'], ini: '17:00', fin: '19:00', sede: 'En línea (videollamada)', modalidad: 'En línea', figuras: ['Docentes'], alcance: 'Inscripción abierta en Formación Docente', proposito: 'Que los docentes usen herramientas de IA para planear y evaluar.', descripcion: 'Dos sesiones sincrónicas con actividades entre sesiones.' },
+            { id: 'A16', of: 'OEVE', nombre: 'Ceremonia cívica del 20 de noviembre', fechas: ['2026-11-20'], ini: '08:00', fin: '09:30', sede: 'Escuela sede', modalidad: 'Presencial', figuras: ['Alumnos', 'Docentes', 'Directores'], alcance: 'Escuela sede del Sector 1', proposito: 'Conmemorar el aniversario de la Revolución Mexicana.', descripcion: 'Honores a la bandera, efemérides y participación de alumnos.' },
+            { id: 'A17', of: 'DES', nombre: 'Reunión regional con Jefes de Sector y Supervisores', fechas: ['2026-11-23'], ini: '09:00', fin: '14:00', sede: 'Sede SEPRN · Auditorio', modalidad: 'Presencial', figuras: ['Jefes de Sector', 'Supervisores Escolares'], alcance: 'Toda la región', proposito: 'Balance del primer trimestre del ciclo y prioridades de diciembre.', descripcion: 'Mensaje de la Subdirección, informes por subjefatura y acuerdos.' },
+            { id: 'A18', of: 'PLA', nombre: 'Revisión del reporte mensual de metas', fechas: ['2026-11-25'], ini: '09:00', fin: '11:00', sede: 'Sede SEPRN · Sala de juntas', modalidad: 'Presencial', figuras: ['Personal SEPRN'], alcance: 'Enlaces de planeación de cada oficina', proposito: 'Revisar redacción y metas del reporte mensual antes de su envío.', descripcion: 'Revisión por oficina con retroalimentación de Planeación.' },
+            { id: 'A19', of: 'OEVE', nombre: 'Feria regional de lectura', fechas: rango('2026-11-26', '2026-11-27'), ini: '09:00', fin: '14:00', sede: 'Sede por confirmar', modalidad: 'Presencial', figuras: ['Alumnos', 'Docentes', 'Padres de familia'], alcance: 'Toda la región', proposito: 'Promover la lectura entre alumnos y familias.', descripcion: 'Stands por sector, lectura en voz alta y presentación de libros.' }
+        ];
+        // Oficinas que en el ejemplo aún no capturan su mes (para el corte).
+        const PENDIENTES_DE_EJEMPLO = ['PER', 'REC'];
+
+        // ── Cálculos ──
+        function duracion(a) {
+            const h = (aMin(a.fin) - aMin(a.ini)) / 60;
+            const n = a.fechas.length;
+            const hTxt = (h % 1 === 0 ? h : h.toFixed(1)) + ' h';
+            if (n === 1) return { tiempo: hTxt, periodo: 'Un día · ' + fechaLarga(a.fechas[0]) };
+            const seguidos = a.fechas.every((f, i) => i === 0 || rango(a.fechas[i - 1], f).length === 2);
+            const total = h * n;
+            const tiempo = hTxt + ' por día · ' + (total % 1 === 0 ? total : total.toFixed(1)) + ' h en total';
+            const periodo = seguidos
+                ? n + ' días seguidos · del ' + fechaCorta(a.fechas[0]) + ' al ' + fechaCorta(a.fechas[n - 1])
+                : n + ' días sueltos · ' + a.fechas.map(fechaCorta).join(', ');
+            return { tiempo, periodo };
+        }
+
+        function estado(a, dia, ahora) {
+            if (a.estado === 'cancelada') return 'cancelada';
+            if (a.estado === 'reprogramada') return 'reprogramada';
+            const ini = aMin(a.ini), fin = aMin(a.fin);
+            if (ahora >= fin) return 'concluida';
+            if (ahora >= ini) return 'encurso';
+            if (ini - ahora <= 60) return 'proxima';
+            return 'programada';
+        }
+        const ESTADO_TXT = { programada: 'Programada', proxima: 'Por iniciar', encurso: 'En curso', concluida: 'Concluida', reprogramada: 'Reprogramada', cancelada: 'Cancelada' };
+
+        function choquesDe(lista) {
+            const vivas = lista.filter(a => !a.estado);
+            const out = [];
+            for (let i = 0; i < vivas.length; i++) {
+                for (let j = i + 1; j < vivas.length; j++) {
+                    const a = vivas[i], b = vivas[j];
+                    const dias = a.fechas.filter(f => b.fechas.includes(f));
+                    if (!dias.length) continue;
+                    if (!(aMin(a.ini) < aMin(b.fin) && aMin(b.ini) < aMin(a.fin))) continue;
+                    const figs = a.figuras.filter(f => b.figuras.includes(f));
+                    const sede = a.sede === b.sede && !SEDES_SIN_CHOQUE.includes(a.sede) ? a.sede : null;
+                    if (figs.length || sede) out.push({ a, b, dias, figs, sede });
+                }
+            }
+            return out;
+        }
+        let CHOQUES = [];
+        function idsConChoque() { const s = new Set(); CHOQUES.forEach(c => { s.add(c.a.id); s.add(c.b.id); }); return s; }
+        function recalcular() { CHOQUES = choquesDe(ACT); }
+
+        // ── Estado de la página ──
+        const st = { dia: '2026-11-10', min: 630, corriendo: null, semana: '2026-11-09', fOfi: '', fFig: '' };
+        const $ = id => document.getElementById(id);
+
+        function filtradas() {
+            return ACT.filter(a => (!st.fOfi || a.of === st.fOfi) && (!st.fFig || a.figuras.includes(st.fFig)));
+        }
+        function delDia(dia, lista) {
+            return (lista || ACT).filter(a => a.fechas.includes(dia)).sort((x, y) => aMin(x.ini) - aMin(y.ini));
+        }
+        function chipOfi(of) { const o = OFICINAS[of]; return '<span class="ag-chip-ofi"><i class="ag-dot" style="background:' + o.color + '"></i>' + esc(o.nombre) + '</span>'; }
+        const SVG_ALERTA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>';
+
+        // ── Tablero ──
+        function tablaTablero(dia) {
+            const lista = delDia(dia);
+            if (INHABILES[dia]) return '<div class="ag-empty">' + esc(INHABILES[dia]) + '</div>';
+            if (!lista.length) return '<div class="ag-empty">Sin actividades registradas para este día.</div>';
+            const conChoque = idsConChoque();
+            let h = '<table class="ag-board-table"><thead><tr><th>Horario</th><th>Actividad</th><th>Convoca</th><th>Sede</th><th>Se convoca a</th><th>Estado</th></tr></thead><tbody>';
+            lista.forEach(a => {
+                const e = estado(a, dia, st.min);
+                const n = a.fechas.length, k = a.fechas.indexOf(dia) + 1;
+                const sub = n > 1 ? 'Día ' + k + ' de ' + n : a.modalidad;
+                h += '<tr class="ag-row is-' + e + '" data-id="' + a.id + '" tabindex="0">' +
+                    '<td class="ag-row-time">' + a.ini + '<small>a ' + a.fin + '</small></td>' +
+                    '<td class="ag-row-name">' + esc(a.nombre) + '<small>' + esc(sub) + '</small>' +
+                    (conChoque.has(a.id) ? '<span class="ag-choque-flag">' + SVG_ALERTA + 'Choque de horario</span>' : '') + '</td>' +
+                    '<td>' + chipOfi(a.of) + '</td>' +
+                    '<td class="ag-row-muted ag-td-sede">' + esc(a.sede) + '</td>' +
+                    '<td class="ag-row-muted ag-td-fig">' + esc(a.figuras.join(', ')) + '</td>' +
+                    '<td class="ag-td-estado"><span class="ag-estado ag-e-' + e + '">' + ESTADO_TXT[e] + '</span></td></tr>';
+            });
+            return h + '</tbody></table>';
+        }
+        function proximosHabiles(desde, n) { const r = []; let s = desde; while (r.length < n) { s = sumarDias(s, 1); if (esHabil(s)) r.push(s); if (s > '2026-12-31') break; } return r; }
+
+        function tarjeta(a, conFecha) {
+            const conChoque = idsConChoque().has(a.id);
+            const tag = a.estado ? '<span class="ag-mini-tag ' + a.estado + '">' + ESTADO_TXT[a.estado] + '</span>' : (conChoque ? '<span class="ag-mini-tag choque">Choque</span>' : '');
+            return '<button type="button" class="ag-card' + (a.estado === 'cancelada' ? ' is-cancelada' : '') + (conChoque ? ' has-choque' : '') + '" style="--ofi:' + OFICINAS[a.of].color + '" data-id="' + a.id + '">' +
+                '<span class="ag-card-time">' + (conFecha ? esc(conFecha) + ' · ' : '') + a.ini + '–' + a.fin + '</span>' +
+                '<b>' + esc(a.nombre) + '</b><span class="ag-card-meta">' + esc(OFICINAS[a.of].nombre) + ' · ' + esc(a.sede) + '</span>' + tag + '</button>';
+        }
+
+        function pintarHoy() {
+            $('boardFecha').textContent = mayus(fechaLarga(st.dia)) + ' de 2026';
+            $('boardReloj').textContent = aHora(st.min);
+            $('boardBody').innerHTML = tablaTablero(st.dia);
+            let h = '';
+            proximosHabiles(st.dia, 3).forEach(d => delDia(d).forEach(a => { h += tarjeta(a, fechaLarga(d)); }));
+            $('nextList').innerHTML = h || '<p style="font-size:13px;color:#888">Sin actividades en los próximos días.</p>';
+            if ($('tv').classList.contains('open')) pintarTv();
+        }
+
+        function pintarTv() {
+            $('tvFecha').textContent = mayus(fechaLarga(st.dia)) + ' de 2026';
+            $('tvReloj').textContent = aHora(st.min);
+            $('tvBody').innerHTML = tablaTablero(st.dia);
+            const sig = proximosHabiles(st.dia, 1)[0];
+            const l = sig ? delDia(sig).filter(a => a.estado !== 'cancelada') : [];
+            $('tvFoot').innerHTML = '<b>MAÑANA</b>' + (l.length ? l.map(a => esc(a.ini + ' ' + a.nombre + ' (' + OFICINAS[a.of].nombre + ')')).join('  ·  ') : 'Sin actividades registradas');
+        }
+
+        // ── Semana ──
+        function pintarSemana() {
+            const lun = st.semana, vie = sumarDias(lun, 4);
+            $('semanaTitulo').textContent = 'Semana del ' + fechaCorta(lun) + ' al ' + fechaCorta(vie);
+            const lista = filtradas();
+            let h = '';
+            for (let i = 0; i < 5; i++) {
+                const d = sumarDias(lun, i), dt = aFecha(d);
+                const acts = delDia(d, lista);
+                h += '<div class="ag-week-col' + (d === st.dia ? ' is-hoy' : '') + '"><div class="ag-week-day">' + DIAS[dt.getDay()] + '<span>' + dt.getDate() + '</span></div>' +
+                    (INHABILES[d] ? '<div class="ag-inhabil">' + esc(INHABILES[d]) + '</div>' : '') +
+                    (acts.length ? acts.map(a => tarjeta(a)).join('') : (INHABILES[d] ? '' : '<div class="ag-week-none">Sin actividades</div>')) + '</div>';
+            }
+            $('semanaGrid').innerHTML = h;
+        }
+
+        // ── Mes ──
+        function pintarMes() {
+            const lista = filtradas();
+            const conChoque = idsConChoque();
+            let h = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map(d => '<div class="ag-month-h">' + d + '</div>').join('');
+            // Noviembre 2026 empieza en domingo: la cuadrícula arranca el lunes 26 de octubre.
+            let s = '2026-10-26';
+            for (let i = 0; i < 42; i++, s = sumarDias(s, 1)) {
+                const dt = aFecha(s), fuera = dt.getMonth() !== 10, finde = dt.getDay() === 0 || dt.getDay() === 6;
+                if (i >= 35 && i % 7 === 0 && fuera) break;
+                const acts = fuera ? [] : delDia(s, lista);
+                let pills = acts.slice(0, 3).map(a => '<button type="button" class="ag-month-pill' + (a.estado === 'cancelada' ? ' is-cancelada' : '') + (conChoque.has(a.id) ? ' has-choque' : '') + '" style="--ofi:' + OFICINAS[a.of].color + '" data-id="' + a.id + '" title="' + esc(a.ini + ' ' + a.nombre) + '">' + a.ini + ' ' + esc(a.nombre) + '</button>').join('');
+                if (acts.length > 3) pills += '<button type="button" class="ag-month-more" data-dia="' + s + '">+' + (acts.length - 3) + ' más</button>';
+                if (INHABILES[s]) pills += '<div class="ag-inhabil" style="margin-top:4px;font-size:10px">Día inhábil</div>';
+                h += '<div class="ag-month-cell' + (fuera ? ' is-out' : '') + (finde ? ' is-weekend' : '') + (s === st.dia ? ' is-hoy' : '') + '">' +
+                    (fuera ? '<span class="ag-month-num" style="color:#bbb">' + dt.getDate() + '</span>' : '<button type="button" class="ag-month-num" data-dia="' + s + '">' + dt.getDate() + '</button>') + pills + '</div>';
+            }
+            $('mesGrid').innerHTML = h;
+            // Lista para celular
+            let l = '';
+            for (let d = '2026-11-01'; d <= '2026-11-30'; d = sumarDias(d, 1)) {
+                const acts = delDia(d, lista);
+                if (acts.length) l += '<div class="ag-month-list-day"><h4>' + fechaLarga(d) + '</h4>' + acts.map(a => tarjeta(a)).join('') + '</div>';
+            }
+            $('mesLista').innerHTML = l || '<p>Sin actividades con estos filtros.</p>';
+        }
+
+        // ── Planeación ──
+        function pintarPlaneacion() {
+            const vivas = ACT.filter(a => a.estado !== 'cancelada');
+            const dias = new Set(); vivas.forEach(a => a.fechas.forEach(f => dias.add(f)));
+            const capturaron = Object.keys(OFICINAS).filter(k => ACT.some(a => a.of === k));
+            $('kpis').innerHTML =
+                '<div class="ag-kpi"><strong>' + vivas.length + '</strong><span>actividades vigentes</span></div>' +
+                '<div class="ag-kpi"><strong>' + dias.size + '</strong><span>días hábiles con actividad</span></div>' +
+                '<div class="ag-kpi"><strong>' + capturaron.length + ' de ' + Object.keys(OFICINAS).length + '</strong><span>oficinas con agenda capturada</span></div>' +
+                '<div class="ag-kpi"><strong>' + CHOQUES.length + '</strong><span>posibles choques</span></div>';
+            $('corte').innerHTML = Object.keys(OFICINAS).map(k => {
+                const n = ACT.filter(a => a.of === k).length;
+                const ok = n > 0 && !PENDIENTES_DE_EJEMPLO.includes(k);
+                return '<div class="ag-corte-row">' + chipOfi(k).replace('ag-chip-ofi', 'ag-chip-ofi" style="color:var(--texto)') +
+                    '<span class="ag-sem ' + (ok ? 'ok">' + n + ' actividad' + (n === 1 ? '' : 'es') : 'pend">Sin captura') + '</span></div>';
+            }).join('');
+            $('choques').innerHTML = CHOQUES.length ? CHOQUES.map(c => {
+                const motivo = [c.figs.length ? 'convocan a <strong>' + esc(c.figs.join(', ')) + '</strong>' : '', c.sede ? 'usan <strong>' + esc(c.sede) + '</strong>' : ''].filter(Boolean).join(' y ');
+                return '<div class="ag-choque-item"><b>' + c.dias.map(fechaLarga).join(', ') + '</b>: ambas ' + motivo + '.<br>' +
+                    '<button type="button" data-id="' + c.a.id + '">' + esc(c.a.nombre) + '</button> (' + esc(OFICINAS[c.a.of].nombre) + ', ' + c.a.ini + '–' + c.a.fin + ')<br>' +
+                    '<button type="button" data-id="' + c.b.id + '">' + esc(c.b.nombre) + '</button> (' + esc(OFICINAS[c.b.of].nombre) + ', ' + c.b.ini + '–' + c.b.fin + ')</div>';
+            }).join('') : '<p style="font-size:13px;color:#1d6b45;font-weight:600">Sin choques en el mes.</p>';
+        }
+
+        function filasExport() {
+            return ACT.slice().sort((x, y) => (x.fechas[0] + x.ini).localeCompare(y.fechas[0] + y.ini)).map(a => {
+                const d = duracion(a);
+                return [a.nombre, a.fechas.map(fechaCorta).join(', '), a.ini, a.fin, d.tiempo, d.periodo, OFICINAS[a.of].nombre, a.sede, a.modalidad, a.figuras.join(', '), a.alcance || '', a.proposito, a.descripcion, a.estado ? ESTADO_TXT[a.estado] : 'Programada', a.nota || ''];
+            });
+        }
+        const ENCABEZADOS_EXPORT = ['Actividad', 'Fecha(s)', 'Hora de inicio', 'Hora de término', 'Duración', 'Periodo', 'Oficina que convoca', 'Sede', 'Modalidad', 'Figuras convocadas', 'Alcance', 'Propósito', 'Descripción', 'Estado', 'Nota'];
+
+        function exportarCsv() {
+            const csv = [ENCABEZADOS_EXPORT].concat(filasExport()).map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\r\n');
+            const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url; link.download = 'Agenda_SEPRN_noviembre_2026_EJEMPLO.csv';
+            document.body.appendChild(link); link.click(); link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        function imprimir() {
+            const filas = filasExport();
+            $('printArea').innerHTML = '<h2>Agenda SEPRN · noviembre 2026 (ejemplo)</h2><table><thead><tr>' +
+                [0, 1, 2, 3, 4, 6, 7, 9, 11].map(i => '<th>' + ENCABEZADOS_EXPORT[i] + '</th>').join('') + '</tr></thead><tbody>' +
+                filas.map(r => '<tr>' + [0, 1, 2, 3, 4, 6, 7, 9, 11].map(i => '<td>' + esc(r[i]) + '</td>').join('') + '</tr>').join('') + '</tbody></table>';
+            window.print();
+        }
+
+        // ── Ficha ──
+        function abrirFicha(id) {
+            const a = ACT.find(x => x.id === id);
+            if (!a) return;
+            const d = duracion(a);
+            $('modalOfi').innerHTML = chipOfi(a.of);
+            $('modalTitulo').textContent = a.nombre;
+            $('modalEstado').innerHTML = a.estado ? '<span class="ag-estado ag-e-' + a.estado + '">' + ESTADO_TXT[a.estado] + '</span>' : '';
+            const filas = [
+                ['Fecha(s)', a.fechas.map(fechaLarga).join(' · ')],
+                ['Horario', a.ini + ' a ' + a.fin + ' h'],
+                ['Duración', d.tiempo],
+                ['Periodo', d.periodo],
+                ['Oficina que convoca', OFICINAS[a.of].nombre],
+                ['Sede o lugar', a.sede + ' (' + a.modalidad.toLowerCase() + ')'],
+                ['Figuras convocadas', a.figuras.join(', ') + (a.alcance ? ' · ' + a.alcance : '')],
+                ['Propósito', a.proposito],
+                ['Descripción', a.descripcion]
+            ];
+            let h = '<dl class="ag-dl">' + filas.map(f => '<dt>' + f[0] + '</dt><dd>' + esc(f[1]) + '</dd>').join('') + '</dl>';
+            if (a.nota) h += '<div class="ag-modal-alert warn">' + esc(a.nota) + '</div>';
+            CHOQUES.filter(c => c.a.id === id || c.b.id === id).forEach(c => {
+                const otra = c.a.id === id ? c.b : c.a;
+                h += '<div class="ag-modal-alert"><b>Posible choque</b> con "' + esc(otra.nombre) + '" (' + esc(OFICINAS[otra.of].nombre) + ', ' + otra.ini + '–' + otra.fin + ')' +
+                    (c.figs.length ? ': ambas convocan a ' + esc(c.figs.join(', ')) : '') + (c.sede ? (c.figs.length ? ' y usan ' : ': ambas usan ') + esc(c.sede) : '') + '.</div>';
+            });
+            $('modalBody').innerHTML = h;
+            $('modal').classList.add('open');
+            $('modalCerrar').focus();
+        }
+        function cerrarFicha() { $('modal').classList.remove('open'); }
+
+        // ── Pestañas ──
+        function mostrar(tab) {
+            document.querySelectorAll('.ag-tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
+            document.querySelectorAll('.ag-panel').forEach(p => { p.hidden = p.id !== 'panel-' + tab; });
+            pintarTodo();
+        }
+        function pintarTodo() { recalcular(); pintarHoy(); pintarSemana(); pintarMes(); pintarPlaneacion(); }
+
+        function lunesDe(s) { const w = aFecha(s).getDay(); return sumarDias(s, w === 0 ? -6 : 1 - w); }
+
+        // ── Captura ──
+        function poblarCaptura() {
+            $('fOficina').innerHTML = '<option value="">Elige una oficina…</option>' + Object.keys(OFICINAS).map(k => '<option value="' + k + '">' + esc(OFICINAS[k].nombre) + '</option>').join('');
+            $('fSede').innerHTML = '<option value="">Elige una sede…</option>' + SEDES.map(s => '<option>' + esc(s) + '</option>').join('') + '<option value="__otra">Otra…</option>';
+            $('fFiguras').innerHTML = FIGURAS.map(f => '<label><input type="checkbox" value="' + esc(f) + '"> ' + esc(f) + '</label>').join('');
+            pintarSueltos(['']);
+        }
+        function pintarSueltos(valores) {
+            $('fSueltos').innerHTML = valores.map(v => '<input type="date" class="fSuelto" min="2026-11-01" max="2026-12-31" value="' + v + '" style="font-family:inherit;font-size:14px;padding:9px 10px;border:1.5px solid var(--arena);border-radius:8px">').join('') +
+                '<button type="button" class="ag-btn" id="fAgregarDia">+ Otro día</button>';
+        }
+        function tipoFecha() { return document.querySelector('input[name="fTipoFecha"]:checked').value; }
+
+        function leerCaptura() {
+            const t = tipoFecha();
+            let fechas = [];
+            if (t === 'uno') fechas = $('fDesde').value ? [$('fDesde').value] : [];
+            else if (t === 'rango') fechas = $('fDesde').value && $('fHasta').value && $('fHasta').value > $('fDesde').value ? rango($('fDesde').value, $('fHasta').value) : [];
+            else fechas = Array.from(document.querySelectorAll('.fSuelto')).map(i => i.value).filter(Boolean).filter((v, i, arr) => arr.indexOf(v) === i).sort();
+            const sede = $('fSede').value === '__otra' ? $('fSedeOtra').value.trim() : $('fSede').value;
+            return {
+                id: 'N' + Date.now(), of: $('fOficina').value, nombre: $('fNombre').value.trim(), fechas,
+                ini: $('fIni').value, fin: $('fFin').value, sede,
+                modalidad: document.querySelector('input[name="fModalidad"]:checked').value,
+                figuras: Array.from(document.querySelectorAll('#fFiguras input:checked')).map(i => i.value),
+                alcance: $('fAlcance').value.trim(), proposito: $('fProposito').value.trim(), descripcion: $('fDescripcion').value.trim()
+            };
+        }
+
+        function actualizarCalc() {
+            const a = leerCaptura();
+            const horasOk = a.ini && a.fin && aMin(a.fin) > aMin(a.ini);
+            if (!a.fechas.length || !horasOk) {
+                $('fCalc').innerHTML = '<b>Duración y periodo:</b> se calculan solos al elegir fechas y horario.';
+                return;
+            }
+            const d = duracion(a);
+            let h = '<b>Duración:</b> ' + esc(d.tiempo) + '<br><b>Periodo:</b> ' + esc(d.periodo);
+            const inh = a.fechas.filter(f => !esHabil(f));
+            if (inh.length) h += '<div class="ag-calc-choque">Ojo: ' + inh.map(fechaLarga).join(', ') + ' no es día hábil.</div>';
+            if (a.figuras.length || a.sede) {
+                const ch = choquesDe([a].concat(ACT)).filter(c => c.a === a || c.b === a);
+                h += ch.length
+                    ? '<div class="ag-calc-choque">Posible choque con: ' + ch.map(c => { const o = c.a === a ? c.b : c.a; return '"' + esc(o.nombre) + '" (' + esc(OFICINAS[o.of].nombre) + ', ' + fechaCorta(c.dias[0]) + ' ' + o.ini + '–' + o.fin + ')'; }).join('; ') + '. Se puede guardar de todos modos; Planeación lo verá marcado.</div>'
+                    : '<div class="ag-calc-ok">Sin choques con la agenda capturada.</div>';
+            }
+            $('fCalc').innerHTML = h;
+        }
+
+        function validarCaptura(a) {
+            const errores = {
+                nombre: !a.nombre, oficina: !a.of, periodo: !a.fechas.length,
+                horas: !(a.ini && a.fin && aMin(a.fin) > aMin(a.ini)), sede: !a.sede,
+                figuras: !a.figuras.length, proposito: !a.proposito, descripcion: !a.descripcion
+            };
+            if (errores.periodo) {
+                const t = tipoFecha();
+                $('errFechas').textContent = t === 'rango' ? 'Elige la fecha de inicio y una fecha de término posterior.' : (t === 'sueltos' ? 'Elige al menos un día.' : 'Elige la fecha.');
+            }
+            let primero = null;
+            Object.keys(errores).forEach(k => {
+                const el = document.querySelector('.ag-field[data-campo="' + k + '"]');
+                el.classList.toggle('has-error', errores[k]);
+                if (errores[k] && !primero) primero = el;
+            });
+            if (primero) primero.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return !primero;
+        }
+
+        // ── Eventos ──
+        document.addEventListener('DOMContentLoaded', () => {
+            const opOfi = '<option value="">Todas las oficinas</option>' + Object.keys(OFICINAS).map(k => '<option value="' + k + '">' + esc(OFICINAS[k].nombre) + '</option>').join('');
+            const opFig = '<option value="">Todas las figuras</option>' + FIGURAS.map(f => '<option>' + esc(f) + '</option>').join('');
+            document.querySelectorAll('.filtro-ofi').forEach(s => { s.innerHTML = opOfi; s.addEventListener('change', () => { st.fOfi = s.value; document.querySelectorAll('.filtro-ofi').forEach(o => { o.value = s.value; }); pintarTodo(); }); });
+            document.querySelectorAll('.filtro-fig').forEach(s => { s.innerHTML = opFig; s.addEventListener('change', () => { st.fFig = s.value; document.querySelectorAll('.filtro-fig').forEach(o => { o.value = s.value; }); pintarTodo(); }); });
+            document.querySelectorAll('.legend-ofi').forEach(l => { l.innerHTML = Object.keys(OFICINAS).map(k => '<span><i class="ag-dot" style="background:' + OFICINAS[k].color + '"></i>' + esc(OFICINAS[k].nombre) + '</span>').join(''); });
+
+            document.querySelectorAll('.ag-tab').forEach(b => b.addEventListener('click', () => mostrar(b.dataset.tab)));
+
+            $('simFecha').addEventListener('change', e => { if (e.target.value) { st.dia = e.target.value; st.semana = lunesDe(st.dia); pintarTodo(); } });
+            $('simHora').addEventListener('input', e => { st.min = Number(e.target.value); $('simHoraTxt').textContent = aHora(st.min); pintarHoy(); });
+            $('simPlay').addEventListener('click', () => {
+                if (st.corriendo) { clearInterval(st.corriendo); st.corriendo = null; $('simPlay').querySelector('span').textContent = 'Correr el reloj'; return; }
+                $('simPlay').querySelector('span').textContent = 'Detener el reloj';
+                st.corriendo = setInterval(() => {
+                    st.min = st.min >= 1200 ? 420 : st.min + 5;
+                    $('simHora').value = st.min; $('simHoraTxt').textContent = aHora(st.min);
+                    pintarHoy();
+                }, 700);
+            });
+
+            $('semPrev').addEventListener('click', () => { if (st.semana > '2026-10-26') { st.semana = sumarDias(st.semana, -7); pintarSemana(); } });
+            $('semNext').addEventListener('click', () => { if (st.semana < '2026-11-30') { st.semana = sumarDias(st.semana, 7); pintarSemana(); } });
+
+            // Clic en cualquier actividad abre su ficha; en un número de día del mes, lo lleva al tablero.
+            document.addEventListener('click', e => {
+                const act = e.target.closest('[data-id]');
+                if (act && !e.target.closest('#tv')) { abrirFicha(act.dataset.id); return; }
+                const dia = e.target.closest('[data-dia]');
+                if (dia) { st.dia = dia.dataset.dia; st.semana = lunesDe(st.dia); $('simFecha').value = st.dia; mostrar('hoy'); window.scrollTo({ top: $('main-content').offsetTop - 20, behavior: 'smooth' }); }
+            });
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Enter' && e.target.matches('tr.ag-row') && !e.target.closest('#tv')) abrirFicha(e.target.dataset.id);
+                if (e.key === 'Escape') { cerrarFicha(); cerrarTv(); }
+            });
+            $('modalCerrar').addEventListener('click', cerrarFicha);
+            $('modal').addEventListener('click', e => { if (e.target === $('modal')) cerrarFicha(); });
+
+            function cerrarTv() {
+                if (!$('tv').classList.contains('open')) return;
+                $('tv').classList.remove('open');
+                document.body.style.overflow = '';
+                try { if (document.fullscreenElement) document.exitFullscreen(); } catch (err) { /* sin pantalla completa */ }
+            }
+            $('btnTv').addEventListener('click', () => {
+                $('tv').classList.add('open');
+                document.body.style.overflow = 'hidden';
+                pintarTv();
+                try { const p = $('tv').requestFullscreen && $('tv').requestFullscreen(); if (p && p.catch) p.catch(() => {}); } catch (err) { /* sin pantalla completa */ }
+            });
+            $('tvCerrar').addEventListener('click', cerrarTv);
+            document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) cerrarTv(); });
+
+            $('btnExportar').addEventListener('click', exportarCsv);
+            $('btnImprimir').addEventListener('click', imprimir);
+
+            // Captura
+            poblarCaptura();
+            const form = $('formCaptura');
+            form.addEventListener('change', e => {
+                if (e.target.name === 'fTipoFecha') {
+                    const t = tipoFecha();
+                    $('fFechasRango').hidden = t === 'sueltos';
+                    $('fSueltos').hidden = t !== 'sueltos';
+                    $('fHastaWrap').hidden = t !== 'rango';
+                    $('fDesdeLbl').textContent = t === 'rango' ? 'Desde' : 'Fecha';
+                }
+                if (e.target.id === 'fSede') $('fSedeOtra').hidden = e.target.value !== '__otra';
+                const campo = e.target.closest('.ag-field[data-campo]');
+                if (campo) campo.classList.remove('has-error');
+                actualizarCalc();
+            });
+            form.addEventListener('input', e => { const c = e.target.closest('.ag-field.has-error'); if (c) c.classList.remove('has-error'); actualizarCalc(); });
+            form.addEventListener('click', e => {
+                if (e.target.id === 'fAgregarDia') {
+                    const vals = Array.from(document.querySelectorAll('.fSuelto')).map(i => i.value);
+                    pintarSueltos(vals.concat(['']));
+                }
+            });
+            form.addEventListener('reset', () => {
+                setTimeout(() => {
+                    form.querySelectorAll('.has-error').forEach(el => el.classList.remove('has-error'));
+                    $('fFechasRango').hidden = false; $('fSueltos').hidden = true; $('fHastaWrap').hidden = true; $('fDesdeLbl').textContent = 'Fecha';
+                    $('fSedeOtra').hidden = true; pintarSueltos(['']); $('fMsg').textContent = ''; actualizarCalc();
+                }, 0);
+            });
+            form.addEventListener('submit', e => {
+                e.preventDefault();
+                const a = leerCaptura();
+                if (!validarCaptura(a)) return;
+                ACT.push(a);
+                pintarTodo();
+                $('fMsg').textContent = 'Agregada a la vista. Búscala en Semana o en Mes (no se guarda al cerrar la página).';
+            });
+
+            actualizarCalc();
+            pintarTodo();
+        });
+    })();
+    </script>
+</body>
+</html>
