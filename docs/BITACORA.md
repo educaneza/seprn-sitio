@@ -16,6 +16,21 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-10-21 (cont.) · Agenda SEPRN: prototipo del tablero tipo aeropuerto para Planeación
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-21 |
+| **Sesión** | En una reunión del 20 oct, la Subjefatura de Planeación (recibe los reportes mensuales) dio retroalimentación de redacción y selección de metas (Jorge traerá las precisiones) y pidió proponer algo que sustituya al calendario compartido de Outlook para la agenda mensual de todas las áreas. Su idea: una pantalla tipo "vuelos" de aeropuerto con las actividades del día, la semana y el mes. Campos que piden (preliminar): nombre, fecha(s), hora inicio/fin, duración en tiempo y periodo, oficina que convoca, sede, figuras convocadas, propósito y breve descripción. |
+| **Decisiones de Jorge** | Es sistema SEPRN-wide (como Ceremonias Cívicas), no de OTDE. Cada oficina captura lo suyo con su clave y Planeación revisa y edita todo. Tablero público (`noindex`) sin datos personales. Ligar actividades a metas del reporte mensual queda para fase 2. Empezar por un prototipo sin backend para validar con Planeación antes de construir. |
+| **`agenda-prototipo.html`** | Página nueva, fuera de nav/footer, `noindex`, franja "PROTOTIPO". Datos de ejemplo de noviembre 2026 incrustados (`ACT`, 19 actividades, catálogos `OFICINAS`/`FIGURAS`/`SEDES`). Pestañas: **Hoy** (tablero midnight con estados por hora: Programada, Por iniciar, En curso, Concluida, más Reprogramada/Cancelada a mano; barra de simulación de día y hora; "Modo pantalla" para TV que oculta lo concluido y muestra lo de mañana), **Semana**, **Mes** (filtros por oficina y figura; ficha con todos los campos; imprimir), **Planeación** (corte de captura por oficina, choques por figura o sede con horario cruzado `choquesDe()`, descarga CSV) y **Capturar actividad** (validación por campo; duración y periodo calculados con `duracion()`; aviso de choque antes de guardar; "Probar en el tablero" solo en memoria). Agrega dos campos que Planeación no pidió: modalidad y alcance. |
+| **Verificación** | Playwright en local (escritorio 1280 y celular 390): 0 errores de consola, sin scroll horizontal, 6 filas en el tablero del 10 nov, 2 choques detectados, captura con choque detectado y errores por campo, modo pantalla. Corregidos en la prueba: mayúsculas en la fecha, contraste de los puntos de color sobre midnight, columnas del mes desbordadas (`minmax(0, 1fr)`). Publicado: run de `436581d` en `success`, `curl` confirma la página en vivo. 1085 líneas. |
+| **Pendiente** | Jorge manda a Planeación la liga con el mensaje redactado en la sesión (con propuesta de 20 min para mostrarlo) y trae sus respuestas: campos (¿modalidad y alcance?), catálogos de oficinas/figuras/sedes, quién captura y fecha límite de corte. Con eso se construye la versión real (ROADMAP 37). También pendientes las precisiones de Planeación sobre redacción y metas del reporte mensual. Lo del checkpoint anterior sigue igual. |
+| **Documentación actualizada** | Este checkpoint, `docs/ROADMAP.md` ítem 37, `docs/SISTEMAS.md` (tabla de páginas), `CLAUDE.md` (tabla de páginas y pendientes), `docs/TABLERO-SALUD.md` (fila nueva). |
+| **Commits** | `436581d` (prototipo) y el de este cierre. |
+
+---
+
 ## CHECKPOINT — 2026-10-21 · Primera corrida del resumen diario confirmada y formato HTML en Telegram
 
 | | |

@@ -153,6 +153,7 @@ Tabla completa, con el historial de cada página, en `docs/SISTEMAS.md`.
 | `protocolos.html` | 3 protocolos oficiales del Edomex/SEIEM |
 | `ceremonias-civicas.html` / `ficha-ceremonias-civicas.html` | Reserva y ficha post-visita de Ceremonias Cívicas (SEPRN-wide, no OTDE) |
 | `estrategias-nacionales.html` | Selección mensual de escuelas por estrategia (Programas Educativos). Se llega desde `academica.html` |
+| `agenda-prototipo.html` | Agenda SEPRN: **prototipo sin backend** (datos de ejemplo) del tablero tipo aeropuerto para Planeación. `noindex`, liga directa. ROADMAP ítem 37 |
 
 **Herramientas OTDE autónomas (`excel-facil.html`, `crea-tu-app.html`):** llevan encabezado,
 hero midnight y pie del sitio **copiados dentro de cada archivo** (CSS con prefijo `inst-`), no
@@ -345,6 +346,9 @@ ya resueltos al final de `docs/SISTEMAS.md`. Lo genuinamente abierto:
   llenar `NP_planeacion` en cursos nuevos, revisión de Jorge del "N.P. planeación" por tipo de
   oficio, confirmar la primera corrida del resumen diario por Telegram (21 oct), y siguiente paso
   (2E). `docs/PLAN-OPERACION-INTERNA.md` y ROADMAP ítem 27.
+- **Agenda SEPRN** (sustituir el calendario de Outlook de Planeación): prototipo publicado en
+  `agenda-prototipo.html` el 21 oct 2026; falta que Planeación valide campos, catálogos, quién
+  captura y fecha de corte antes de construir la versión real. `docs/ROADMAP.md` ítem 37.
 - **`PANEL_TOKEN` débil** (4 caracteres, fácil de adivinar): cambiarlo en todos los proyectos a la vez. ROADMAP ítem 36.
 - **Formación Docente — calendario**: iPhone y computadora confirmados; falta Android y Outlook.
   Compartir la liga `?calendario=ACF-2627-001`. Los correos casi no salen en cursos grandes por

@@ -34,6 +34,7 @@ Actualizado: **21 oct 2026**.
 | CTE (`cte.html`) | Docentes y directivos | Verde | 21 sep 2026 | Publicar cada sesión nueva cuando llegue |
 | Excel fácil (`excel-facil.html`) | Docentes y administrativos | Verde | 6 oct 2026 | Hoja «Escuelas», retos y rutas de menú publicados el 20 oct 2026 (probado en local con Playwright, `curl` en vivo). Falta la lista de detalles de Jorge y revisar los materiales de la asesoría (ROADMAP 32) |
 | Crea tu app educativa (`crea-tu-app.html`, `apps-educativas/`) | Docentes (talleres) | Amarillo | 16 oct 2026 (publicado; probado en local con Playwright) | Revisar PDA contra el PDF de la SEP y el contenido de las 3 apps, decidir licencia, validar con la Dra. Galindo (ROADMAP 35) |
+| Agenda SEPRN (`agenda-prototipo.html`) | Planeación y todas las oficinas (aún nadie: es prototipo) | Amarillo | 21 oct 2026 (publicado; probado en local con Playwright) | Prototipo sin backend. Esperar la respuesta de Planeación sobre campos, catálogos y corte; después construir la versión real (ROADMAP 37) |
 | Protocolos (`protocolos.html`) | Escuelas | Verde | ago 2026 | Ninguno |
 | Páginas de área (`academica.html`, `personal.html`…) | Público | Amarillo | — | 4 páginas eliminadas por recrear con contenido validado por la Dra. Galindo |
 

@@ -1045,6 +1045,17 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     Oficios), porque es el mismo en todos; con uno distinto, la Bitácora y Oficios dejan de traer
     datos. Después, `curl` de lectura con el token nuevo y con el viejo (debe dar `no_autorizado`).
 
+37. **Agenda SEPRN: sustituir el calendario de Outlook de Planeación** (abierto 21 oct 2026).
+    Prototipo sin backend publicado en `agenda-prototipo.html` para validarlo con la Subjefatura
+    de Planeación. Falta su respuesta sobre campos (incluidos modalidad y alcance, que se
+    agregaron), catálogos de oficinas/figuras/sedes, quién captura y fecha límite de corte.
+    Versión real acordada con Jorge: Sheet + Apps Script (`agenda-seprn.gs`) en el patrón de
+    Ceremonias Cívicas, clave por oficina (Planeación ve y edita todo), tablero público sin datos
+    personales, `LockService` + `idEnvio`, columnas por nombre, suscripción `.ics`
+    (`ContentService.MimeType.ICAL`) para quien siga en Outlook. Fase 2: ligar cada actividad a
+    una meta del reporte mensual y llenar sola la agenda de OTDE con comisiones y visitas
+    (`?action=agendaVisitas`). Al tener la versión real, retirar o reemplazar el prototipo.
+
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue
 abierto de esa entrega (decisión de notificación de cierre de ticket, limpieza de función
