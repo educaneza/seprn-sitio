@@ -524,6 +524,7 @@ function manAgendaVisitas_(tokenRecibido, desde, hasta) {
     items.push({
       folio: String(v(r, 'Folio')), fecha: fecha,
       cct: String(v(r, 'CCT')).trim().toUpperCase(), escuela: String(v(r, 'Escuela')),
+      sector: String(v(r, 'Sector')).trim(), zona: String(v(r, 'Zona')).trim(),
       detalle: 'Mantenimiento', responsable: String(v(r, 'Técnico asignado')).trim()
     });
   });

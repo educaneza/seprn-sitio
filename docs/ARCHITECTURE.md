@@ -3146,7 +3146,10 @@ actividades presenciales, que solo se avisaban por oficio.
   de las hojas pasa por `ofHtml_()`, que escapa `&`, `<`, `>`); Markdown no, por
   `docs/QA-NOTES.md #24`. Si Telegram responde 400 al HTML, `ofEnviarTelegram_()` reenvía
   `ofSinHtml_(texto)` en texto plano y lo anota en Ejecuciones. Los textos de WhatsApp van sin
-  `parse_mode`. A cada chat de `TELEGRAM_CHAT_IDS` (Jorge y Nancy) con el bot de siempre; si falla Formación Docente, el resumen sale con una línea que lo dice.
+  `parse_mode`. Comisiones y visitas llevan "Sector / Zona" (`ofSectorZona_()`; en comisiones
+  `ofSectorZonaDeDestino_()` lee el `Destino completo`, las visitas lo traen de
+  `agendaVisitas`). Las comisiones de `OF_MAPS_PERSONAS` llevan `<a>` "Cómo llegar" (Google
+  Maps con la `Dirección destino`). A cada chat de `TELEGRAM_CHAT_IDS` (Jorge y Nancy) con el bot de siempre; si falla Formación Docente, el resumen sale con una línea que lo dice.
   `OF_ULTIMO_RECORDATORIO` evita repetir el día; "Probar recordatorios de hoy" manda con
   "PRUEBA" sin tocarla. Sin nada que avisar no manda nada.
 - **Agenda de Formación Docente:** `fdAgendaCursos_()` (cursos `Activo=TRUE` sin

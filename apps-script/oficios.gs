@@ -1944,8 +1944,9 @@ function ofCarpetaPorMes_(nombre, mes) {
 //     no hay con qué cruzarla y la visita sale en las dos secciones.
 // Los cursos en línea no se convocan aquí: ya viven en Formación Docente.
 // El resumen va con parse_mode HTML (negritas, folios en <code>): todo dato de
-// las hojas pasa por ofHtml_(). Markdown no (QA-NOTES #24: un "_" suelto tumba
-// el envío). Si Telegram rechaza el formato, se reenvía en texto plano. Los
+// las hojas pasa por ofHtml_(); en las comisiones de OF_MAPS_PERSONAS, liga
+// "Cómo llegar" de Google Maps con la Dirección destino. Markdown no
+// (QA-NOTES #24: un "_" suelto tumba el envío). Si Telegram rechaza el formato, se reenvía en texto plano. Los
 // textos de WhatsApp van sin parse_mode, con *negritas* de WhatsApp.
 // Script Properties: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_IDS (separados por
 // coma), OF_FD_URL y PANEL_TOKEN (el mismo de la Oficina Virtual).
@@ -1957,6 +1958,9 @@ const OF_TITULO_DIA = { 0: 'HOY', 1: 'MAÑANA', 3: 'EN 3 DÍAS' };
 const OF_DIAS_SEMANA = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
 const OF_TIPOS_AGENDA = { cierre: 'Cierra inscripción', inicio: 'Inicia', sesion: 'Sesión', mitad: 'Va a la mitad', fin: 'Termina' };
 const OF_MAX_MENSAJE = 3800; // Telegram corta en 4096
+// Comisiones que llevan liga de Google Maps en el resumen: las de quien tenga
+// alguno de estos textos en "Persona comisionada" (Jorge, 21 oct 2026).
+const OF_MAPS_PERSONAS = ['Bonilla'];
 
 // "lunes 20 de octubre"
 function ofFechaConDia_(f) {
@@ -2016,8 +2020,23 @@ function ofHtml_(s) {
 }
 
 // Inverso de ofHtml_() con las etiquetas quitadas, para el reenvío en texto plano.
+// Una liga queda como "Cómo llegar: https://…".
 function ofSinHtml_(s) {
-  return String(s).replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+  return String(s).replace(/<a href="([^"]*)">([^<]*)<\/a>/g, '$2: $1').replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+}
+
+// "Sector XI / Zona 53". Las comisiones lo sacan del "Destino completo" que arma
+// la página desde el catálogo (…de la Zona Escolar No. 53, perteneciente al
+// Sector Educativo XI…); las visitas lo traen de Mantenimiento y Asesorías.
+function ofSectorZona_(sector, zona) {
+  return [sector ? 'Sector ' + sector : '', zona ? 'Zona ' + zona : ''].filter(String).join(' / ');
+}
+
+function ofSectorZonaDeDestino_(destinoCompleto) {
+  const t = String(destinoCompleto || '');
+  const zona = t.match(/Zona Escolar No\. (\w+)/);
+  const sector = t.match(/Sector Educativo (\w+)/);
+  return ofSectorZona_(sector ? sector[1] : '', zona ? zona[1] : '');
 }
 
 // "Asesoría Chuka · <code>OTDE-ASE-0012</code>" (HTML). Dentro de una comisión
@@ -2053,7 +2072,8 @@ function ofRecordatoriosDelDia_(hoy) {
       const clave = dia + '|' + v('Lugar / destino') + '|' + v('Horario') + '|' + v('Asunto');
       if (!porGrupo[clave]) {
         porGrupo[clave] = { personas: [], lugar: v('Lugar / destino'), horario: v('Horario'), asunto: v('Asunto'),
-          cct: v('CCT destino').toUpperCase(), visitas: [] };
+          cct: v('CCT destino').toUpperCase(), sectorZona: ofSectorZonaDeDestino_(v('Destino completo')),
+          direccion: v('Dirección destino'), visitas: [] };
         dias[dia].comisiones.push(porGrupo[clave]);
       }
       if (v('Persona comisionada') && porGrupo[clave].personas.indexOf(v('Persona comisionada')) === -1) {
@@ -2110,16 +2130,23 @@ function ofMensajesRecordatorio_(r, hoy, prueba) {
     if (dia.comisiones.length) {
       lineas.push('', '<i>Comisiones</i>');
       dia.comisiones.forEach(function (c) {
+        const sz = c.sectorZona || (c.visitas[0] ? ofSectorZona_(c.visitas[0].sector, c.visitas[0].zona) : '');
+        const conMapa = c.direccion && c.personas.some(function (p) {
+          return OF_MAPS_PERSONAS.some(function (m) { return p.toUpperCase().indexOf(m.toUpperCase()) !== -1; });
+        });
         lineas.push('• <b>' + ofHtml_(c.personas.join(', ') || '(sin persona)') + '</b>: ' + ofHtml_(c.lugar) +
-          (c.horario ? ' (' + ofHtml_(c.horario) + ')' : '') + (c.asunto ? '. ' + ofHtml_(c.asunto) : '') + '.' +
-          (c.visitas.length ? ' ' + c.visitas.map(function (it) { return ofTextoVisita_(it, false); }).join('; ') + '.' : ''));
+          (sz ? ', ' + ofHtml_(sz) : '') + (c.horario ? ' (' + ofHtml_(c.horario) + ')' : '') +
+          (c.asunto ? '. ' + ofHtml_(c.asunto) : '') + '.' +
+          (c.visitas.length ? ' ' + c.visitas.map(function (it) { return ofTextoVisita_(it, false); }).join('; ') + '.' : '') +
+          (conMapa ? ' <a href="' + ofHtml_('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(c.direccion)) + '">Cómo llegar</a>' : ''));
       });
     }
     if (dia.visitas.length) {
       lineas.push('', '<i>Visitas sin oficio de comisión</i>');
       dia.visitas.forEach(function (it) {
+        const sz = ofSectorZona_(it.sector, it.zona);
         lineas.push('• ' + ofTextoVisita_(it, true) + ': ' + ofHtml_(it.escuela || '(sin escuela)') +
-          (it.cct ? ' (' + ofHtml_(it.cct) + ')' : '') + '.');
+          (it.cct || sz ? ' (' + ofHtml_([it.cct, sz].filter(Boolean).join(', ')) + ')' : '') + '.');
       });
     }
     if (dia.cursos.length) {

@@ -676,6 +676,12 @@ diseño libre para niños, solo el sello de crédito al pie.
   rechaza, y los textos de WhatsApp llevan `*negritas*` de WhatsApp. Jorge corrió "Probar
   recordatorios" y se ve bien. El bot es el mismo de Soporte (`soporteotdeneza_bot`); Jorge le
   cambia solo el nombre visible en @BotFather (el usuario no se cambia)
+- **Sector/Zona y "Cómo llegar" (21 oct 2026, versión 14; Mantenimiento v29, Asesorías v22):**
+  cada comisión muestra "Sector XI / Zona 53", sacado del `Destino completo` con
+  `ofSectorZonaDeDestino_()` (si el lugar se escribió a mano no hay; si cruza con una visita, se
+  toma de ella), y las visitas traen `sector`/`zona` en `?action=agendaVisitas`. Las comisiones
+  de quien coincida con `OF_MAPS_PERSONAS` (hoy "Bonilla", a petición de Jorge) llevan liga
+  "Cómo llegar" de Google Maps con la `Dirección destino`; en el reenvío plano queda la URL
 - Si cambia la interfaz de `oficios.html`/`bitacora.html`, las capturas de
   `images/manual-oficios/` quedan desfasadas (las 02-05 de Tomar número desde el 12 oct; la 06, 10 y 13 desde la simplificación del 14 oct, y la 07 ya no se usa). Se generaron con un script de Playwright sobre la
   página real con los dos `.gs` en una simulación de Sheets: **ese script no está en el repo**
