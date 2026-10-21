@@ -1943,7 +1943,10 @@ function ofCarpetaPorMes_(nombre, mes) {
 //     hacerlo. Si la comisión se capturó con el lugar escrito a mano (sin CCT)
 //     no hay con qué cruzarla y la visita sale en las dos secciones.
 // Los cursos en línea no se convocan aquí: ya viven en Formación Docente.
-// Texto plano, sin parse_mode (QA-NOTES #24: un "_" suelto tumba el envío).
+// El resumen va con parse_mode HTML (negritas, folios en <code>): todo dato de
+// las hojas pasa por ofHtml_(). Markdown no (QA-NOTES #24: un "_" suelto tumba
+// el envío). Si Telegram rechaza el formato, se reenvía en texto plano. Los
+// textos de WhatsApp van sin parse_mode, con *negritas* de WhatsApp.
 // Script Properties: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_IDS (separados por
 // coma), OF_FD_URL y PANEL_TOKEN (el mismo de la Oficina Virtual).
 // OF_ULTIMO_RECORDATORIO evita mandar dos veces el resumen del mismo día.
@@ -2007,10 +2010,21 @@ function ofAgendaVisitas_(desde, hasta) {
   return { items: items, error: errores.join('; ') };
 }
 
-// "Asesoría Chuka · OTDE-ASE-0012". Dentro de una comisión el técnico sobra:
-// ya salen las personas comisionadas.
+// Escapa lo que Telegram interpreta en parse_mode HTML.
+function ofHtml_(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Inverso de ofHtml_() con las etiquetas quitadas, para el reenvío en texto plano.
+function ofSinHtml_(s) {
+  return String(s).replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+}
+
+// "Asesoría Chuka · <code>OTDE-ASE-0012</code>" (HTML). Dentro de una comisión
+// el técnico sobra: ya salen las personas comisionadas.
 function ofTextoVisita_(it, conResponsable) {
-  return it.detalle + ' · ' + it.folio + (conResponsable && it.responsable ? ' (técnico: ' + it.responsable + ')' : '');
+  return ofHtml_(it.detalle) + ' · <code>' + ofHtml_(it.folio) + '</code>' +
+    (conResponsable && it.responsable ? ' (técnico: ' + ofHtml_(it.responsable) + ')' : '');
 }
 
 // {dias: {0|1|3: {fecha, presenciales, comisiones, cursos, visitas}}, errorFormacion, errorVisitas}
@@ -2067,62 +2081,69 @@ function ofRecordatoriosDelDia_(hoy) {
   return { dias: dias, errorFormacion: agenda.error, errorVisitas: visitas.error };
 }
 
+// Con *negritas* de WhatsApp: se copia de Telegram y se pega en los grupos.
 function ofTextoWhatsApp_(act, dia, fecha) {
-  return 'Recordatorio: ' + act.asunto + '.\n' +
-    'Fecha: ' + (dia === 0 ? 'hoy, ' : dia === 1 ? 'mañana, ' : '') + ofFechaConDia_(fecha) + '.\n' +
-    'Horario: ' + act.horario + '.\n' +
-    'Lugar: ' + act.lugar + '.\n' +
-    'Oficio ' + act.numero + '.';
+  return '*Recordatorio:* ' + act.asunto + '.\n' +
+    '*Fecha:* ' + (dia === 0 ? 'hoy, ' : dia === 1 ? 'mañana, ' : '') + ofFechaConDia_(fecha) + '.\n' +
+    '*Horario:* ' + act.horario + '.\n' +
+    '*Lugar:* ' + act.lugar + '.\n' +
+    '*Oficio:* ' + act.numero + '.';
 }
 
-// Arma [resumen, textoWhatsApp1, textoWhatsApp2, …]. Sin nada que avisar → [].
+// Arma [{texto, html}]: el resumen (HTML, partido si es largo) y un mensaje
+// de texto plano por cada texto de WhatsApp. Sin nada que avisar → [].
 function ofMensajesRecordatorio_(r, hoy, prueba) {
   const secciones = [];
   const whatsapp = [];
   OF_DIAS_AVISO.forEach(function (d) {
     const dia = r.dias[d];
     if (!dia.presenciales.length && !dia.comisiones.length && !dia.cursos.length && !dia.visitas.length) return;
-    const lineas = [OF_TITULO_DIA[d] + ' · ' + ofFechaConDia_(dia.fecha)];
+    const lineas = ['<b>' + OF_TITULO_DIA[d] + ' · ' + ofFechaConDia_(dia.fecha) + '</b>'];
     if (dia.presenciales.length) {
-      lineas.push('Actividades presenciales:');
+      lineas.push('', '<i>Actividades presenciales</i>');
       dia.presenciales.forEach(function (a) {
-        lineas.push('- ' + a.asunto + '. ' + a.horario + ', ' + a.lugar + '. Dirigido a: ' + a.destino + '. Oficio ' + a.numero + '.');
+        lineas.push('• <b>' + ofHtml_(a.asunto) + '</b>. ' + ofHtml_(a.horario) + ', ' + ofHtml_(a.lugar) +
+          '. Dirigido a: ' + ofHtml_(a.destino) + '. Oficio <code>' + ofHtml_(a.numero) + '</code>.');
         whatsapp.push(ofTextoWhatsApp_(a, d, dia.fecha));
       });
     }
     if (dia.comisiones.length) {
-      lineas.push('Comisiones:');
+      lineas.push('', '<i>Comisiones</i>');
       dia.comisiones.forEach(function (c) {
-        lineas.push('- ' + (c.personas.join(', ') || '(sin persona)') + ': ' + c.lugar + (c.horario ? ' (' + c.horario + ')' : '') +
-          (c.asunto ? '. ' + c.asunto : '') + '.' + (c.visitas.length ? ' ' + c.visitas.map(function (it) { return ofTextoVisita_(it, false); }).join('; ') + '.' : ''));
+        lineas.push('• <b>' + ofHtml_(c.personas.join(', ') || '(sin persona)') + '</b>: ' + ofHtml_(c.lugar) +
+          (c.horario ? ' (' + ofHtml_(c.horario) + ')' : '') + (c.asunto ? '. ' + ofHtml_(c.asunto) : '') + '.' +
+          (c.visitas.length ? ' ' + c.visitas.map(function (it) { return ofTextoVisita_(it, false); }).join('; ') + '.' : ''));
       });
     }
     if (dia.visitas.length) {
-      lineas.push('Visitas sin oficio de comisión:');
+      lineas.push('', '<i>Visitas sin oficio de comisión</i>');
       dia.visitas.forEach(function (it) {
-        lineas.push('- ' + ofTextoVisita_(it, true) + ': ' + (it.escuela || '(sin escuela)') + (it.cct ? ' (' + it.cct + ')' : '') + '.');
+        lineas.push('• ' + ofTextoVisita_(it, true) + ': ' + ofHtml_(it.escuela || '(sin escuela)') +
+          (it.cct ? ' (' + ofHtml_(it.cct) + ')' : '') + '.');
       });
     }
     if (dia.cursos.length) {
-      lineas.push('Formación Docente:');
+      lineas.push('', '<i>Formación Docente</i>');
       dia.cursos.forEach(function (c) {
         const detalle = [c.hora, c.modalidad].filter(Boolean).join(', ');
-        lineas.push('- ' + (OF_TIPOS_AGENDA[c.tipo] || c.tipo) + ': ' + c.nombre + (detalle ? ' (' + detalle + ')' : '') +
-          (c.tipo === 'cierre' && c.liga ? '\n  ' + c.liga : ''));
+        lineas.push('• ' + ofHtml_(OF_TIPOS_AGENDA[c.tipo] || c.tipo) + ': <i>' + ofHtml_(c.nombre) + '</i>' +
+          (detalle ? ' (' + ofHtml_(detalle) + ')' : '') + (c.tipo === 'cierre' && c.liga ? '\n  ' + ofHtml_(c.liga) : ''));
       });
     }
     secciones.push(lineas.join('\n'));
   });
-  if (r.errorFormacion) secciones.push('No se pudo consultar Formación Docente: ' + r.errorFormacion + '.');
-  if (r.errorVisitas) secciones.push('No se pudieron consultar las visitas: ' + r.errorVisitas + '.');
-  if (!secciones.length) return prueba ? ['PRUEBA · Agenda OTDE del ' + ofFechaConDia_(hoy) + '\n\nNo hay nada que avisar hoy.'] : [];
+  if (r.errorFormacion) secciones.push('No se pudo consultar Formación Docente: ' + ofHtml_(r.errorFormacion) + '.');
+  if (r.errorVisitas) secciones.push('No se pudieron consultar las visitas: ' + ofHtml_(r.errorVisitas) + '.');
+  const titulo = '<b>' + (prueba ? 'PRUEBA · ' : '') + 'Agenda OTDE del ' + ofFechaConDia_(hoy) + '</b>';
+  if (!secciones.length) return prueba ? [{ texto: titulo + '\n\nNo hay nada que avisar hoy.', html: true }] : [];
 
-  let resumen = (prueba ? 'PRUEBA · ' : '') + 'Agenda OTDE del ' + ofFechaConDia_(hoy) + '\n\n' + secciones.join('\n\n');
+  let resumen = titulo + '\n\n' + secciones.join('\n\n');
   if (whatsapp.length) {
     resumen += '\n\nEnseguida va el texto de WhatsApp de ' +
       (whatsapp.length === 1 ? 'la actividad presencial' : 'cada actividad presencial, uno por mensaje') + '.';
   }
-  return ofPartirMensaje_(resumen).concat(whatsapp);
+  return ofPartirMensaje_(resumen).map(function (t) { return { texto: t, html: true }; })
+    .concat(whatsapp.map(function (t) { return { texto: t, html: false }; }));
 }
 
 // Corta en renglones completos para no pasar del límite de Telegram.
@@ -2138,8 +2159,8 @@ function ofPartirMensaje_(texto) {
   return partes;
 }
 
-// Devuelve a cuántos chats llegó.
-function ofEnviarTelegram_(texto) {
+// m = {texto, html}. Devuelve a cuántos chats llegó.
+function ofEnviarTelegram_(m) {
   const props = PropertiesService.getScriptProperties();
   const token = props.getProperty('TELEGRAM_BOT_TOKEN');
   const chats = String(props.getProperty('TELEGRAM_CHAT_IDS') || '').split(',').map(ofTxt_).filter(String);
@@ -2147,11 +2168,18 @@ function ofEnviarTelegram_(texto) {
   let llegaron = 0;
   chats.forEach(function (chat) {
     try {
-      const resp = UrlFetchApp.fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
-        method: 'post',
-        payload: { chat_id: chat, text: texto, disable_web_page_preview: 'true' },
-        muteHttpExceptions: true
-      });
+      const enviar = function (payload) {
+        payload.chat_id = chat;
+        payload.disable_web_page_preview = 'true';
+        return UrlFetchApp.fetch('https://api.telegram.org/bot' + token + '/sendMessage',
+          { method: 'post', payload: payload, muteHttpExceptions: true });
+      };
+      let resp = m.html ? enviar({ text: m.texto, parse_mode: 'HTML' }) : enviar({ text: m.texto });
+      // 400 con HTML = formato que Telegram no entendió: mejor el aviso sin formato que ninguno.
+      if (m.html && resp.getResponseCode() === 400) {
+        console.error('Telegram a ' + chat + ' rechazó el formato, se reenvía sin él: ' + resp.getContentText());
+        resp = enviar({ text: ofSinHtml_(m.texto) });
+      }
       if (resp.getResponseCode() === 200) llegaron++;
       else console.error('Telegram a ' + chat + ': ' + resp.getContentText());
     } catch (err) {

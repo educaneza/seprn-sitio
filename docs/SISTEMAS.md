@@ -669,6 +669,13 @@ diseño libre para niños, solo el sello de crédito al pie.
   con comisión, la visita se anota dentro de esa comisión (folio y tipo); sin comisión, sale en
   "Visitas sin oficio de comisión", que sirve de recordatorio para hacerlo. Una comisión con el
   lugar escrito a mano (sin CCT) no cruza y la visita sale en las dos secciones
+- **Formato del resumen (21 oct 2026, versión 13):** la primera corrida automática salió bien
+  (7:48 am, "1 mensaje enviado", les llegó a Jorge y a Nancy). A petición de Jorge, el resumen
+  pasa a `parse_mode: 'HTML'` (negritas en días, personas y asunto; cursivas en secciones y
+  cursos; folios en monoespaciado; viñetas `•`), con reenvío en texto plano si Telegram lo
+  rechaza, y los textos de WhatsApp llevan `*negritas*` de WhatsApp. Jorge corrió "Probar
+  recordatorios" y se ve bien. El bot es el mismo de Soporte (`soporteotdeneza_bot`); Jorge le
+  cambia solo el nombre visible en @BotFather (el usuario no se cambia)
 - Si cambia la interfaz de `oficios.html`/`bitacora.html`, las capturas de
   `images/manual-oficios/` quedan desfasadas (las 02-05 de Tomar número desde el 12 oct; la 06, 10 y 13 desde la simplificación del 14 oct, y la 07 ya no se usa). Se generaron con un script de Playwright sobre la
   página real con los dos `.gs` en una simulación de Sheets: **ese script no está en el repo**

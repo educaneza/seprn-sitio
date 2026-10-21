@@ -3140,9 +3140,13 @@ actividades presenciales, que solo se avisaban por oficio.
   comisiones agrupadas por lugar/horario/motivo (un oficio por persona y día) y la agenda de
   Formación Docente (`?action=agendaCursos`, URL en `OF_FD_URL` + `PANEL_TOKEN`; la "mitad"
   solo el mismo día). Un mensaje-resumen y, aparte, uno por presencial con solo el texto de
-  WhatsApp (`ofTextoWhatsApp_()`), para copiarlo de un toque. Texto plano sin `parse_mode`
-  (`docs/QA-NOTES.md #24`), a cada chat de `TELEGRAM_CHAT_IDS` (Jorge y Nancy) con el bot de
-  siempre; si falla Formación Docente, el resumen sale con una línea que lo dice.
+  WhatsApp (`ofTextoWhatsApp_()`, con `*negritas*` de WhatsApp), para copiarlo de un toque.
+  `ofMensajesRecordatorio_()` devuelve `[{texto, html}]`: el resumen va con `parse_mode: 'HTML'`
+  (`<b>` día, personas y asunto; `<i>` secciones y cursos; `<code>` folios y oficios; todo dato
+  de las hojas pasa por `ofHtml_()`, que escapa `&`, `<`, `>`); Markdown no, por
+  `docs/QA-NOTES.md #24`. Si Telegram responde 400 al HTML, `ofEnviarTelegram_()` reenvía
+  `ofSinHtml_(texto)` en texto plano y lo anota en Ejecuciones. Los textos de WhatsApp van sin
+  `parse_mode`. A cada chat de `TELEGRAM_CHAT_IDS` (Jorge y Nancy) con el bot de siempre; si falla Formación Docente, el resumen sale con una línea que lo dice.
   `OF_ULTIMO_RECORDATORIO` evita repetir el día; "Probar recordatorios de hoy" manda con
   "PRUEBA" sin tocarla. Sin nada que avisar no manda nada.
 - **Agenda de Formación Docente:** `fdAgendaCursos_()` (cursos `Activo=TRUE` sin

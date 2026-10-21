@@ -16,6 +16,22 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-10-21 · Primera corrida del resumen diario confirmada y formato HTML en Telegram
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-21 |
+| **Sesión** | Apertura con `/open`: vencía la confirmación de la primera corrida automática del resumen diario de Oficios (2D). Jorge eligió revisarla antes que la rotación o Excel fácil. |
+| **Confirmación** | Por Chrome, en Ejecuciones de "Control de oficios OTDE": `ofRecordatoriosAutomatico` corrió a las 7:48:40 am, Completada en ~13 s, log "1 mensaje enviado." y sin líneas de error por chat. Jorge confirmó que les llegó a él y a Nancy. |
+| **`oficios.gs` (v13)** | Jorge pidió negritas para leerlo rápido. El resumen va con `parse_mode: 'HTML'` y no Markdown (`docs/QA-NOTES.md #24`): `ofHtml_()` escapa `&`, `<`, `>` de todo dato de las hojas; `<b>` en título, día, personas y asunto; `<i>` en secciones y cursos; `<code>` en folios y números de oficio; viñetas `•` y línea en blanco entre secciones. `ofMensajesRecordatorio_()` devuelve `[{texto, html}]`; `ofEnviarTelegram_()` reenvía `ofSinHtml_(texto)` en plano si Telegram responde 400. `ofTextoWhatsApp_()` con `*negritas*` de WhatsApp (va sin `parse_mode`). |
+| **Bot de Telegram** | Jorge preguntó si se puede cambiar el nombre del chat ("Soporte técnico remoto - OTDE Neza", `soporteotdeneza_bot`). Es el mismo bot de los demás sistemas: decidió cambiar solo el nombre visible en @BotFather (`/setname`), a uno general. El usuario del bot no se cambia. |
+| **Verificación** | Node con `oficios.gs` real y UrlFetch/Properties simulados: etiquetas balanceadas y solo `b`/`i`/`code`, datos con `<`, `&`, `_`, `*` escapados, día vacío → `[]`, 2 chats con HTML, rechazo 400 → reenvío plano a los 2, WhatsApp sin `parse_mode`. `desplegar.sh oficios --publicar` → @13, código idéntico al repo. Jorge corrió "Probar recordatorios": se ve bien. `git diff --stat`: 1 archivo, 61 inserciones, 33 eliminaciones. |
+| **Pendiente** | Jorge: cambiar el nombre visible del bot en @BotFather. Ver en un día real el cruce de visitas con comisiones (al capturar comisiones, buscar la escuela en el catálogo para que lleve CCT). Siguen: abrir las 3 `*-SEPRN.pptx` y la carta de Excel básico, lista de detalles de Excel fácil (ROADMAP 32), `PANEL_TOKEN` (ROADMAP 36), 13 supervisores en `Config`, ROADMAP 22. Toca rotación: Mantenimiento/Asesorías (prueba en vivo 25 sep). Siguiente de la Fase 2: 2E (ROADMAP 27). |
+| **Documentación actualizada** | Este checkpoint, `CLAUDE.md` (resumen de `oficios.gs`), `docs/ARCHITECTURE.md §31`, `docs/SISTEMAS.md` (`oficios.gs`), `docs/TABLERO-SALUD.md` (Oficios). |
+| **Commits** | El de este cierre. |
+
+---
+
 ## CHECKPOINT — 2026-10-20 (cont. 2) · Asesoría Excel básico: Excel fácil alineado con las presentaciones, carta descriptiva para ponentes
 
 | | |
