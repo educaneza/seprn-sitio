@@ -341,14 +341,15 @@ ya resueltos al final de `docs/SISTEMAS.md`. Lo genuinamente abierto:
   `Historico_v8.5`. `docs/ROADMAP.md` ítem 33.
 - **Operación interna OTDE**: Fase 1 (bitácora + reporte mensual) y Fase 2 pasos 2A, 2B, 2C y 2D
   en producción (`oficios.html`, arrancado oficialmente el 12 oct 2026; 2C el 19 oct). Falta:
-  que Jorge capture los 13 supervisores en `Config` y pruebe un oficio de salida real, importar
+  que Jorge pruebe un oficio de salida real, importar
   el primer caso real de Asesorías resueltas (Nancy llena *Fecha de realización* y *Asistentes*),
   llenar `NP_planeacion` en cursos nuevos, revisión de Jorge del "N.P. planeación" por tipo de
-  oficio, confirmar la primera corrida del resumen diario por Telegram (21 oct), y siguiente paso
-  (2E). `docs/PLAN-OPERACION-INTERNA.md` y ROADMAP ítem 27.
+  oficio, y siguiente paso (2E). `docs/PLAN-OPERACION-INTERNA.md` y ROADMAP ítem 27.
 - **Agenda SEPRN** (sustituir el calendario de Outlook de Planeación): prototipo publicado en
   `agenda-prototipo.html` el 21 oct 2026; falta que Planeación valide campos, catálogos, quién
   captura y fecha de corte antes de construir la versión real. `docs/ROADMAP.md` ítem 37.
+- **Evidencias y difusión** (idea de Jorge, sin pedido de nadie): solo diagnóstico, sin construir.
+  Plantilla, entrevistas y criterio de decisión en `docs/DIAGNOSTICO-DIFUSION.md`. ROADMAP ítem 38.
 - **`PANEL_TOKEN` débil** (4 caracteres, fácil de adivinar): cambiarlo en todos los proyectos a la vez. ROADMAP ítem 36.
 - **Formación Docente — calendario**: iPhone y computadora confirmados; falta Android y Outlook.
   Compartir la liga `?calendario=ACF-2627-001`. Los correos casi no salen en cursos grandes por

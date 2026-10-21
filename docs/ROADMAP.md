@@ -868,9 +868,8 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     lista y "Marcar como atendido"; `07-registrar-b.png` ya no se usa; el script de capturas no
     está en el repo); en reasignar, la "Otra persona" conserva su RFC solo si no cambia de nombre.
     **2C en producción (19 oct 2026):** "Redactar oficio (Word)" para todo número que no es
-    comisión (ver `docs/ARCHITECTURE.md §31`). Falta: que Jorge capture los 13 supervisores en
-    `Config` ("Sector / área" · "Supervisor" · "Cargo del supervisor"), la primera prueba con un
-    oficio real. (El cargo del CoEEE con "y" ya se publicó en `oficios.gs` el 19 oct 2026, v10.)
+    comisión (ver `docs/ARCHITECTURE.md §31`). Supervisores ya capturados en `Config` (Jorge,
+    21 oct 2026). Falta la primera prueba con un oficio real. (El cargo del CoEEE con "y" ya se publicó en `oficios.gs` el 19 oct 2026, v10.)
     **Recordatorios del 2D en producción (20 oct 2026):** resumen diario por Telegram a Jorge y
     Nancy (hoy, mañana y en 3 días) con las actividades presenciales convocadas por oficio (casilla
     nueva en Difusión, con el texto de WhatsApp aparte), las comisiones y las fechas de Formación
@@ -1055,6 +1054,11 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     (`ContentService.MimeType.ICAL`) para quien siga en Outlook. Fase 2: ligar cada actividad a
     una meta del reporte mensual y llenar sola la agenda de OTDE con comisiones y visitas
     (`?action=agendaVisitas`). Al tener la versión real, retirar o reemplazar el prototipo.
+38. **Evidencias de actividades y difusión en redes** (abierto 21 oct 2026). Idea de Jorge, nadie
+    la ha pedido. Etapa de diagnóstico en `docs/DIAGNOSTICO-DIFUSION.md`: validar la plantilla de
+    criterios mínimos con el community manager, entrevistar a las 4 personas del grupo de
+    WhatsApp de la Dra. Galindo y decidir con la regla del documento (plataforma solo si 2 de 4
+    repiten trabajo o pierden información; si no, basta la plantilla para las áreas).
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue

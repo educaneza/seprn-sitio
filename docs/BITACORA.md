@@ -16,6 +16,21 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-10-21 (cont. 3) · Diagnóstico del flujo de evidencias y difusión
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-21 |
+| **Sesión** | Conversación sin código. Jorge pidió una valoración honesta: siente que no se valoran los sistemas y duda si trabaja en la forma y no en el fondo. Lectura acordada: el cuello de botella ya no es construir sino la adopción (varios sistemas esperan validación o prueba en vivo). Sugerencia que queda en el aire, sin compromiso: un reporte de impacto de una página, con cifras reales de los Sheets, para la Dra. Galindo. |
+| **Idea nueva** | Centralizar las evidencias de actividades. Hoy la auxiliar de la Dra. Galindo manda fotos y reporte a un grupo de WhatsApp (Oficina Particular, Planeación, community manager) y cada quien toma lo suyo; aparte, las áreas mandan a Jorge fotos con descripciones que no alcanzan para publicar en Facebook. Nadie lo ha pedido (idea de Jorge). |
+| **Decisión de Jorge** | Solo diagnóstico, sin construir. Nuevo `docs/DIAGNOSTICO-DIFUSION.md`: lectura de un reporte real de la auxiliar (el formato ya es bueno; le faltan hora, crédito de fotos, aviso de menores y versión corta para redes), borrador de plantilla de criterios mínimos para las áreas, guía de entrevista de 15 min por rol, tabla de vaciado y criterio de decisión (plataforma solo si 2 de las 4 personas repiten trabajo o pierden información; si se hace, convive con WhatsApp). `js/cct-db.js` no tiene domicilio ni turno de la escuela. |
+| **Corrección** | Jorge confirma que los supervisores generales ya están capturados en `Config` de Oficios; se quitó ese pendiente. |
+| **Pendiente** | Jorge muestra la plantilla al community manager y hace las 4 entrevistas; con las respuestas se decide si hay plataforma (ROADMAP 38). Lo del checkpoint anterior (Agenda SEPRN con Planeación) sigue igual. |
+| **Documentación actualizada** | Este checkpoint, `docs/DIAGNOSTICO-DIFUSION.md` (nuevo), `docs/ROADMAP.md` (ítem 38 y supervisores en ítem 27), `CLAUDE.md` (pendientes), `docs/TABLERO-SALUD.md` (fila de Oficios). |
+| **Commits** | El de este cierre. |
+
+---
+
 ## CHECKPOINT — 2026-10-21 (cont.) · Agenda SEPRN: prototipo del tablero tipo aeropuerto para Planeación
 
 | | |
