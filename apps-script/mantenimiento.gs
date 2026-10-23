@@ -615,6 +615,7 @@ function manListarReportesMes_(tokenRecibido, mes) {
       turno: txt(s[MS['Turno']]),
       tipoEquipo: txt(s[MS['Tipo de equipo']]),
       tipoSolicitante: txt(s[MS['Tipo de solicitante']]),
+      tipoAtencion: txt(r[COL_MAN_REP_TIPO_ATENCION - 1]),
       equiposAtendidos: txt(r[COL_MAN_REP_EQUIPOS_ATENDIDOS - 1]),
       modeloEquipo: txt(r[COL_MAN_REP_MODELO_EQUIPO - 1]),
       actividadesPreventivas: txt(r[COL_MAN_REP_ACTIVIDADES_PREVENTIVAS - 1]),

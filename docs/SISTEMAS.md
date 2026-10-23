@@ -582,6 +582,11 @@ diseño libre para niños, solo el sello de crédito al pie.
   las 5 hojas con "Fecha de entrega" en el mes; una fila de resumen regenerable (`CORREO:<mes>`)
   en el N.P. 12 / META 23. "Generar reporte del mes" trae las 5 fuentes. Ver
   `docs/ARCHITECTURE.md §26`.
+- **Visitas de solo equipos administrativos (23 oct 2026, v14; Mantenimiento v30)**:
+  `?action=reportesMes` manda `tipoAtencion`; si todas las visitas de un folio son "Solo equipos
+  administrativos" (`bitManSoloAdmin_()`), la actividad va con `BIT_TIPO_MAN_ADMIN` y cuenta
+  "Equipos administrativos". Los reportes sin ese campo se redactan como antes
+  (`docs/QA-NOTES.md #57`). Las filas ya importadas no se regeneran: borrarlas y volver a traer.
 - **La planeación se edita en el Sheet** (hoja `Planeacion`) y se ve al instante en el formulario.
   Se pueden agregar filas con N.P. único y meta 21/23, y el "Nombre corto" va a mano. No insertar
   ni reordenar columnas antes de "Nombre corto" (lectura por posición) ni renumerar los N.P. 7/8.
@@ -1000,6 +1005,16 @@ arquitectura completo en `docs/ARCHITECTURE.md §16`. Resumen operativo:
   final; la que no tenía título (Cambio y Eliminar Autenticación) ahora se llama `NOTAS`. Al
   redesplegar Correo, pegar los archivos modificados y una sola Nueva versión. Ver
   `docs/ARCHITECTURE.md §33`.
+- **Concentrado mensual, evidencia del N.P. 12 (23 oct 2026, v29 y v30)**: `ConcentradoMensual.gs`,
+  menú "OTDE Correos → Generar concentrado del mes (evidencia N.P. 12)". Arma la pestaña
+  `Concentrado AAAA-MM` (cifras del mes, gráficas por tipo y por sector, folios atendidos con NP
+  SIGEE; los que no lo tienen, en rojo) sin nombre, RFC, CURP, correos, teléfono, usuario ni
+  contraseña. "Atendida" = mismo criterio que `listarAtendidasMesCorreo_` (cuadra con la fila
+  `CORREO:<mes>` de la bitácora). El PDF lo genera el script (`concGuardarPdf_()`, export con
+  `ScriptApp.getOAuthToken()`) y lo guarda en la carpeta `Evidencias Correo institucional`, junto
+  al Sheet (`concCarpeta_()`, ID en la Script Property `CONC_CARPETA_ID`); el del mismo mes se
+  reemplaza. No se usa una liga directa a `/export` (`docs/QA-NOTES.md #55`). El permiso de Drive
+  se autoriza desde el editor, no desde el menú (`#56`).
 
 ### Mantenimiento (página propia desde el 27 ago 2026, ver `mantenimiento.html`)
 Ya no es solo texto ("solicita por oficio y vía estructura") — formulario "Solicitar

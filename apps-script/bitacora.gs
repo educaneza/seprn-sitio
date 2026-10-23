@@ -160,6 +160,10 @@ const BIT_NP_MANTENIMIENTO = '7';
 const BIT_TIPO_MAN_AULA = 'Rehabilitación del Aula de Medios mediante mantenimiento preventivo y correctivo a equipos de cómputo.';
 const BIT_TIPO_MAN_ADMIN = 'Mantenimiento preventivo y correctivo a equipos de cómputo de uso administrativo.';
 const BIT_CAPTURO_MAN = 'Mantenimiento (auto)';
+// "Tipo de atención" del reporte de visita (oct 2026): en una visita de solo
+// equipos administrativos los campos del aula llegan en 0 o vacíos y la cuenta
+// está en "Equipos administrativos".
+const BIT_MAN_SOLO_ADMIN = 'Solo equipos administrativos';
 
 // Asesorías (N.P. 8). Los dos tipos del formulario de asesorias.html.
 const BIT_NP_ASESORIAS = '8';
@@ -1388,10 +1392,14 @@ function bitAgruparVisitasMan_(items, mes) {
       g[k] = String(p[k] || '').trim();
     });
     g.tipoCct = bitManTipoCct_(g.tipoSolicitante, g.cct);
-    g.admin = g.tipoCct !== 'escuela' ||
+    g.admin = g.tipoCct !== 'escuela' || g.visitas.every(bitManSoloAdmin_) ||
       (/Administrativa/.test(g.tipoEquipo) && !/Aula de medios/.test(g.tipoEquipo));
     return g;
   });
+}
+
+function bitManSoloAdmin_(v) {
+  return String(v.tipoAtencion || '').trim() === BIT_MAN_SOLO_ADMIN;
 }
 
 // El tipo de solicitante de la solicitud manda; si viene vacío (solicitudes
@@ -1431,8 +1439,13 @@ function bitManDescripcion_(g) {
   const suma = function (campo) {
     return g.visitas.reduce(function (t, v) { return t + (Number(v[campo]) || 0); }, 0);
   };
-  const atendidos = suma('equiposAtendidos');
+  // Una visita de solo equipos administrativos no suma equipos del aula. Si todas
+  // lo son, la cuenta es la de administrativos; si no (supervisiones de antes de
+  // "Tipo de atención"), se queda "Equipos atendidos" como hasta ahora.
   const admin = suma('equiposAdministrativos');
+  const atendidos = g.visitas.every(bitManSoloAdmin_) ? admin : g.visitas.reduce(function (t, v) {
+    return t + (bitManSoloAdmin_(v) ? 0 : Number(v.equiposAtendidos) || 0);
+  }, 0);
   const modelos = unicos('modeloEquipo', /[;,]\s*/);
   const trabajos = unicos('actividadesPreventivas').concat(unicos('actividadesCorrectivas'));
   const instalado = unicos('instalacionRealizada');

@@ -1059,6 +1059,17 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     criterios mínimos con el community manager, entrevistar a las 4 personas del grupo de
     WhatsApp de la Dra. Galindo y decidir con la regla del documento (plataforma solo si 2 de 4
     repiten trabajo o pierden información; si no, basta la plantilla para las áreas).
+39. **Bitácora: revisar qué falta del mes antes de entregar el reporte** (abierto 23 oct 2026).
+    La revisión del reporte de octubre se hizo a mano leyendo los Sheets (`docs/BITACORA.md`,
+    23 oct). Cada fuente deja fuera, sin aviso, lo que no cumple su filtro: visitas sin reporte de
+    visita o con folio que no existe, asesorías no marcadas "Resuelto", soporte sin resolver,
+    correo sin "Fecha de entrega"; y Oficios no alimenta la bitácora, así que una comisión sin
+    actividad capturada no aparece. Propuesta: menú "Revisar qué falta del mes" en
+    `bitacora.gs` que pida a cada backend sus pendientes del mes (endpoints nuevos de solo
+    lectura con `PANEL_TOKEN`) y cruce las comisiones de Oficios (`Numeros`, tipo Comisión, con
+    fecha del evento) contra `Actividades`; resultado en una pestaña "Revisión AAAA-MM", sin
+    escribir en las fuentes. Toca 6 proyectos: desplegar primero los backends y al final la
+    bitácora.
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue

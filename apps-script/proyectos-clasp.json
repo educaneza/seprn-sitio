@@ -35,6 +35,7 @@
       "correo/Alta.gs",
       "correo/CambioContrasena.gs",
       "correo/CambioYReset.gs",
+      "correo/ConcentradoMensual.gs",
       "correo/Config.gs",
       "correo/GenerarResumenSIGEE.gs",
       "correo/Incidencias.gs",

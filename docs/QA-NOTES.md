@@ -1460,3 +1460,58 @@ abre en pareja y el XML sigue bien formado. La plantilla de comisión no cambia 
 en Word. No buscar los campos con `indexOf` sobre el XML crudo: pasarlo antes por `ofUnirCampos_()`.
 Regenerar la plantilla con script borraría los cambios que se hicieron a propósito en Word (aquí,
 la firma en tres renglones), así que primero se compara el texto de las dos versiones.
+
+## 55. Liga directa a `/export` de un Sheet: "Documentos de Google detectó un error"
+
+**Síntoma (23 oct 2026):** el diálogo del concentrado de Correo daba una liga
+`…/spreadsheets/d/<id>/export?format=pdf&gid=…`. Al darle clic, Jorge obtuvo la página genérica
+"Documentos de Google detectó un error".
+
+**Causa raíz:** la liga no dice con qué cuenta abrirse. Con varias cuentas de Google en el
+navegador (OTDE, Aulia, personal), Google usa la principal; si esa no tiene acceso al Sheet,
+`/export` no dice "no tienes permiso": muestra esa página genérica.
+
+**Fix:** el PDF lo genera el propio script con `UrlFetchApp` y `ScriptApp.getOAuthToken()` y lo
+guarda en Drive (`concGuardarPdf_()` en `correo/ConcentradoMensual.gs`); el diálogo liga al
+archivo de Drive.
+
+**Regla:** no darle al usuario ligas a `/export`. Si un menú produce un PDF, que lo genere el
+script con su token y lo deje en Drive.
+
+## 56. Permiso nuevo en un script ya autorizado: el menú del Sheet no lo pide
+
+**Síntoma (23 oct 2026):** tras publicar `ConcentradoMensual.gs` (primer uso de `DriveApp` en el
+proyecto de Correo), Jorge corrió el menú y no le pidió autorización. El script falló en
+`DriveApp.getFileById` con "No cuentas con el permiso para llamar a DriveApp.getFileById.
+Permisos necesarios: …/auth/drive.readonly || …/auth/drive". El export con
+`getOAuthToken()` sí había funcionado.
+
+**Causa raíz:** el proyecto ya estaba autorizado con sus permisos anteriores. Al agregar uno, la
+ejecución desde el menú no volvió a mostrar la pantalla de autorización y el permiso faltante solo
+se detecta cuando el código llega a esa llamada. Por lo mismo, `doGet`/`doPost` del Web App (que no
+usan Drive) siguieron funcionando: `curl` a `?action=correoMes` respondió normal.
+
+**Fix:** autorizarlo desde el editor: elegir una función pública (aquí
+`generarConcentradoMesCorreo`) y ▶️ Ejecutar → Revisar permisos → Permitir. Que después truene
+por `getUi` desde el editor es normal.
+
+**Regla:** cuando un cambio agrega un servicio que el proyecto no usaba (Drive, Gmail, Calendar…),
+avisar antes de publicar que hay que autorizar desde el editor, no esperar que el menú lo pida.
+
+## 57. Bitácora: visita de "Solo equipos administrativos" reportada como aula con 0 equipos
+
+**Síntoma (23 oct 2026, revisión del reporte de octubre):** BIT-0028 (MAN-0022) decía
+"Rehabilitación del Aula de Medios… se atendieron 0 equipos" y BIT-0029 (MAN-0021) "Equipos
+totales: 0", aunque los reportes de visita traían 3 y 4 equipos administrativos.
+
+**Causa raíz:** `reporte-visita.html` agregó "Tipo de atención"; con "Solo equipos
+administrativos" los campos del aula llegan en 0 y la cuenta va en "Equipos administrativos".
+`?action=reportesMes` no mandaba ese campo y la bitácora decidía aula/administrativo solo por el
+tipo de solicitante y el tipo de equipo de la solicitud, y contaba "Equipos atendidos".
+
+**Fix:** `reportesMes` manda `tipoAtencion` (Mantenimiento v30); en `bitacora.gs` (v14)
+`bitManSoloAdmin_()` hace que esas visitas usen `BIT_TIPO_MAN_ADMIN` y cuenten los equipos
+administrativos. Las filas ya importadas no cambian solas.
+
+**Regla:** si cambia un formulario que alimenta la bitácora, revisar en el mismo cambio el
+endpoint `?action=*Mes` y la redacción en `bitacora.gs`.

@@ -42,6 +42,7 @@ function onOpen() {
     .createMenu('OTDE Correos')
     .addItem('Generar resumen para SIGEE (fila activa)', 'generarResumenSIGEE')
     .addItem('Preparar columnas de seguimiento SIGEE', 'prepararSeguimientoSIGEE')
+    .addItem('Generar concentrado del mes (evidencia N.P. 12)', 'generarConcentradoMesCorreo')
     .addItem('Enviar resumen semanal ahora', 'resumenSemanal')
     .addItem('Aplicar validación y semáforo', 'configurarValidacionYSemaforo')
     .addItem('Reordenar columnas de las 5 hojas', 'reordenarColumnasCorreo')
