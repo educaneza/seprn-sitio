@@ -16,6 +16,21 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-10-23 (cont.) · Formato S36 del SNTE llenado desde la plantilla D-III-5 (caso para Excel fácil)
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-23 |
+| **Sesión** | Trámite administrativo de Jorge, sin cambios al sitio. Lo planteó como caso real para probar Excel fácil, pero decidió que en esta sesión **solo se llenara el archivo**. |
+| **Qué se hizo** | En `docs/insumos/` (ignorado por git, datos personales): de `D-III-5_GENERAL_SNTE PLANTILLA.xlsx` (149 filas, una por clave presupuestal) se llenó `S36_MIEMBROS ACTIVOS y JUBILADOS.xlsx` con una fila por persona: 84 personas agrupadas por RFC, en el orden de la plantilla; todas las claves en la misma celda, una por renglón (decisión de Jorge); nombre paterno-materno-nombre; sexo con "X"; ingreso armado desde DIA/MES/AÑO (año de 2 dígitos: 00-26 → 20xx, 82-99 → 19xx). Se borró el dato suelto de la fila 14 (RFC que no está en la plantilla) y el encabezado quedó sin tocar (decisión de Jorge). Como el formato solo traía 33 filas, se agregaron las que faltaban y el bloque de firmas bajó a la fila 98. Resultado: `S36_MIEMBROS ACTIVOS - D-III-5 (llenado).xlsx`; los dos originales sin cambios. Script de un solo uso (openpyxl) en el scratchpad, no en el repo. |
+| **Hallazgo para Excel fácil** | Faltan dos capacidades: (1) "una fila por persona", es decir, agrupar por RFC y juntar las claves en una celda; (2) avisar cuando un dato cambia entre las claves de la misma persona: pasa en 17 de 84 (PLAZA/HORAS, DOCENTE/PAAE/AUTORIDAD, ARTÍCULO/CLAVE BASIFICADA). El S36 no pide esos campos, pero otro formato sí podría pedirlos. Por ahora es solo una idea, no un ítem de ROADMAP. |
+| **Verificación** | Se releyó el archivo generado: 84 filas, 149 claves, 84 RFC únicos, sin el RFC suelto, ingresos entre 1982 y 2025, firmas completas debajo de la última persona; se compararon a mano tres casos (1, 2 y 5 claves) contra la plantilla. Falta que Jorge revise la vista de impresión. |
+| **Pendiente** | **Jorge:** revisar el S36 llenado (sobre todo los años de ingreso y cómo se ve impreso) antes de entregarlo. Si se retoma: módulo "Una fila por persona" en Excel fácil, con este par de archivos como prueba. **Siguen todos los pendientes del checkpoint de abajo** (2026-10-23): permiso de Drive para el concentrado de Correo, correcciones del reporte de octubre, NP SIGEE de Marcos, ROADMAP 39 y la rotación a Mantenimiento/Asesorías (ROADMAP 22). |
+| **Documentación actualizada** | Solo este checkpoint (el sitio y los backends no cambiaron). |
+| **Commits** | El de este cierre (solo docs). |
+
+---
+
 ## CHECKPOINT — 2026-10-23 · Revisión del reporte de octubre, concentrado de Correo y visitas de solo equipos administrativos
 
 | | |
