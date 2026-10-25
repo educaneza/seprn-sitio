@@ -1515,3 +1515,18 @@ administrativos. Las filas ya importadas no cambian solas.
 
 **Regla:** si cambia un formulario que alimenta la bitácora, revisar en el mismo cambio el
 endpoint `?action=*Mes` y la redacción en `bitacora.gs`.
+
+## 58. CTE: el opening de la sesión abierta sale en blanco
+
+**Síntoma (25 oct 2026, al publicar la Segunda Sesión):** en `cte.html`, la sesión que abre por
+defecto (entonces la Primera Sesión 2026-2027) mostraba el recuadro del video vacío; solo
+aparecía si se cerraba y se volvía a abrir el acordeón.
+
+**Causa raíz:** su iframe usaba `data-src`, igual que las sesiones colapsadas. `toggleSesion()`
+es lo único que pasa `data-src` a `src`, y solo corre al hacer clic; ni `cte.html` ni
+`script.js` lo hacen al cargar.
+
+**Fix:** la sesión abierta usa `src` directo; las colapsadas conservan `data-src` (lazy loading).
+
+**Regla:** al rotar la sesión activa, cambiar `data-src` → `src` en la nueva y `src` → `data-src`
+en la que se colapsa.

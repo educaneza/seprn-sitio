@@ -16,6 +16,24 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-10-24/25 · Opening de la 2da Sesión CTE, 2da Sesión publicada y proyecto propio de openings
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-24 y 2026-10-25 |
+| **Sesión** | Jorge pidió replicar o mejorar su opening de la 1ra Sesión (`docs/insumos/Openings-CTE/1ra-sesion-2627/`) para la 2da Sesión Ordinaria, con fotos suyas y un guion de SEP en `.md`. Terminó en: video hecho por Claude, subido y programado en YouTube, sesión publicada en `cte.html`, limpieza de `docs/insumos/` y un proyecto aparte para los siguientes openings. |
+| **Opening 2da Sesión** | Se analizó el video de referencia cuadro por cuadro y se transcribió su narración con `whisper-cli` (Homebrew `whisper-cpp`): **sí trae voz en off** bajo la música; el primer análisis (silencios con ffmpeg) dijo que no y Jorge corrigió. El guion de SEP pedía 3:45 y 10 escenas; Jorge eligió ~2:30 en 7 bloques + interludio, sin fotos de eventos del SNTE ni comidas de jubilación (35 de 444 fotos), y confirmó que el Acuerdo 09/09/26 y el Compromiso Presidencial 27 vienen de las orientaciones. Voz: ElevenLabs, "Luisa" (Jorge pegó el texto, un MP3 por bloque). Música: Pixabay, "Piano and Strings Motivational". Render con Python + Pillow + ffmpeg (2:15, 1080p). Jorge notó **"efecto gelatina"**: `zoompan` de ffmpeg redondea a pixeles enteros; se cambió a transformación afín cuadro por cuadro (variación entre cuadros de 0.70 a 0.01). |
+| **YouTube** | Subido al canal de la Subdirección desde Chrome (Jorge arrastró el MP4: la herramienta solo sube ≤10 MB). Título con palabras clave al inicio, descripción con 9 capítulos, etiquetas, playlist "CTE 2026-2027", no es para niños, miniatura propia (subida desde el scratchpad) y **programado para el lun 26 oct 2026, 9:00** (GMT-6). ID `jtJ31LCm4po`. |
+| **`cte.html` (commit `7fd9ee1`)** | Segunda Sesión abierta con NUEVO, opening, 19 PDFs con título legible (Consulta Nacional, Educación Básica 1-6, Primaria, Multigrado 1-5, Preescolar 1-2, Inicial 1-2) y ZIP de 17 MB; carpeta renombrada de `Insumos-CTE-2da-Sesión-Octubre-2026` a `cte-segunda-sesión`. Primera Sesión colapsada. Bug corregido: el iframe de la sesión abierta con `data-src` salía en blanco (`docs/QA-NOTES.md #58`). Títulos de materiales ya no se cortan con "…" en escritorio. La sesión de SEP es el **30 oct**. En el cierre, el `.update-banner` de `index.html` pasó a anunciar la Segunda Sesión. |
+| **`docs/insumos/`** | Ordenado en `Openings-CTE/`, `Oficios/`, `Planeacion/`, `Comunicados/`, `SNTE-S36/` (520 → 239 MB); 409 fotos sin usar a la Papelera de la Mac. Rutas de `PLANTILLA-COMISION.docx` corregidas en `docs/ARCHITECTURE.md` y `docs/SISTEMAS.md` (mismo commit). |
+| **Proyecto `openings-seprn`** | Jorge decidió separar los openings del sitio (fotos de niñas y niños fuera de un repo público; el sitio solo recibe el ID). `~/Proyectos/trabajo/openings-seprn/`, git local sin remoto, commit `30875d2`, medios fuera de git. Nivel 1 de calidad implementado y probado con la 2da Sesión: encuadre por caras (Vision de macOS), cortes al pulso de la música (99 BPM), color parejo, movimiento suave, subtítulos `.srt` (texto del guion + tiempos de whisper), capítulos para YouTube y hojas de curaduría con marcas. Niveles 2 y 3 descritos en su `CLAUDE.md`. |
+| **Verificación** | Deploy de `7fd9ee1` en `success`; `curl` a `cte.html` publicado (encuentra la sesión y el ID), al ZIP (206) y a un PDF (200). 20 ligas nuevas apuntan a archivos existentes; vista en Playwright local. Publicado: 557 MB, archivo más grande del commit 17 MB (sin cruzar umbrales, ROADMAP 10). Pipeline nuevo: `todo` en 3 min, 25 subtítulos. |
+| **Pendiente** | **Lun 26 oct después de las 9:00:** confirmar que el opening se reproduce en `cte.html`. **Jorge:** comparar el video con Nivel 1 (`openings-seprn/sesiones/2627-s2/salida/`) contra el publicado; decidir si se sube el `.srt` al video programado y si `openings-seprn` va a un repo privado en GitHub. Siguen los pendientes de los dos checkpoints del 23 oct. |
+| **Documentación actualizada** | Este checkpoint; `CLAUDE.md` (tabla de sesiones CTE, regla `src`/`data-src`, openings fuera del repo, tamaño publicado); `docs/SISTEMAS.md`; `docs/QA-NOTES.md #58`; `docs/TABLERO-SALUD.md` (fila CTE); `docs/ROADMAP.md` ítem 10 (557 MB). |
+| **Commits** | `7fd9ee1` (sesión + docs de insumos) y el de este cierre (docs + banner de `index.html`). |
+
+---
+
 ## CHECKPOINT — 2026-10-23 (cont.) · Formato S36 del SNTE llenado desde la plantilla D-III-5 (caso para Excel fácil)
 
 | | |

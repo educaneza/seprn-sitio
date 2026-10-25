@@ -74,7 +74,7 @@ Todas las páginas de área siguen este patrón:
 4. Cada sección usa `.section-header` + `.section-eyebrow` + `.section-title` en lugar de `.seccion-titulo`
 5. Las tarjetas de oficinas usan `class="oficina-card fade-item"` para animación al scroll
 
-## CTE — Sesiones publicadas (al 10 ago 2026)
+## CTE — Sesiones publicadas (al 25 oct 2026)
 **Ojo:** "Taller Intensivo de Cierre 2025-2026" (jul 2026) y "Taller Intensivo CTE 2025-2026" (ene 2026) son **dos eventos distintos** — no confundirlos ni fusionar su contenido.
 
 **Estructura por ciclo (ago 2026):** `cte.html` ya no es una lista plana única — se divide en un
@@ -96,6 +96,7 @@ conocida, no corregida a propósito (decisión de Jorge).
 
 | Sesión | Ciclo | Opening YT | Grabación | Materiales | ZIP |
 |---|---|---|---|---|---|
+| Segunda Sesión Ordinaria 2026-2027 (30 oct) | 2026-2027 (actual) | `jtJ31LCm4po` | — | 19 PDFs (Consulta Nacional + temas por nivel, `pdfs/cte/cte-2026-2027/cte-segunda-sesión/`) | ✅ (`cte-segunda-sesión-completa.zip`) |
 | Primera Sesión Ordinaria 2026-2027 | 2026-2027 (actual) | `vhuipmEOEuY` | — | 5 materiales (PPTX + 4 PDFs, `pdfs/cte/cte-2026-2027/cte-primera-sesión/`) | ✅ (`cte-primera-sesión-completa.zip`) |
 | Fase Intensiva 2026-2027 | 2026-2027 (actual) | `bXq_TtMf_pc` | — | 9 PDFs (`pdfs/cte/cte-2026-2027/cte-fase-intensiva/`) | ✅ (`cte-fase-intensiva-completa.zip`) |
 | Taller Intensivo de Cierre (16-17 jul 2026) | 2025-2026 (archivo) | `1PXPphhZd9s` | — (evento no ocurrió) | 5 materiales (`pdfs/cte/cte-2025-2026/taller-intensivo-docentes/`) | ✅ |
@@ -121,10 +122,16 @@ un documento oficial de SEP, pero Jorge confirmó incluirlo como lectura complem
 (así se etiqueta en el `span` del material, distinto a "Fase Intensiva • PDF" del resto).
 
 Dentro de cada bloque de ciclo, la sesión más reciente siempre debe ser el acordeón
-activo/abierto al cargar la página, con badge NUEVO. Las sesiones anteriores se colapsan y sus
-iframes usan `data-src` (lazy loading) — incluidas las que están dentro de `.ciclo-archivo`, que
+activo/abierto al cargar la página, con badge NUEVO, y su iframe usa **`src`** (con `data-src` el
+video sale en blanco: `toggleSesion()` solo lo carga al abrir, `docs/QA-NOTES.md #58`). Las
+sesiones anteriores se colapsan y sus iframes usan `data-src` (lazy loading) — incluidas las que están dentro de `.ciclo-archivo`, que
 no se cargan hasta que esa sesión específica se abre (independiente de que el bloque de archivo
 ya esté expandido).
+
+**Los videos opening se producen fuera de este repo** (desde el 25 oct 2026), en
+`~/Proyectos/trabajo/openings-seprn/` (fotos de niñas y niños: no deben acercarse a un repo
+público). Aquí solo entra el ID de YouTube. El material de las dos primeras sesiones del ciclo
+quedó en `docs/insumos/Openings-CTE/` (ignorado por git).
 
 ## Páginas del sitio
 Tabla completa, con el historial de cada página, en `docs/SISTEMAS.md`.
@@ -290,7 +297,7 @@ Patrón compartido (detalle en `docs/SISTEMAS.md` y `docs/ARCHITECTURE.md §21`)
    - **Antes de comitear material pesado nuevo** (ZIPs/PPTX de sesiones CTE, sobre todo):
      revisar contra los umbrales de `docs/ROADMAP.md` ítem 10 (contenido publicado total y
      tamaño del archivo más grande del commit) y **avisar a Jorge de inmediato si se cruzan** —
-     no esperar al cierre de sesión. Estado al 21 sep 2026: 514 MB publicados (umbral de aviso
+     no esperar al cierre de sesión. Estado al 25 oct 2026: 557 MB publicados (umbral de aviso
      800 MB), archivos individuales hasta 80 MB (umbral de aviso 80 MB, límite duro de GitHub
      100 MB). Git LFS no es viable aquí — GitHub Pages no resuelve sus punteros, serviría el
      archivo de puntero en vez del PDF/ZIP real (confirmado ese mismo día, ver ROADMAP).

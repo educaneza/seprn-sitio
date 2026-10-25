@@ -543,7 +543,7 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     - **Umbrales para retomar esto sin esperar a que colapse** (Jorge pidió que se le avise
       proactivamente al acercarse, en vez de descubrirlo con un fallo real):
       - Contenido publicado (sin `.git`) ≥ **800 MB** (80% del límite recomendado de 1 GB de
-        GitHub Pages) — hoy en 514 MB (~51%).
+        GitHub Pages) — hoy en 557 MB (~56%, 25 oct 2026).
       - Cualquier archivo nuevo ≥ **80 MB** (se acerca al límite duro de 100 MB por archivo).
       - Un deploy de GitHub Pages falla por timeout una segunda vez (la primera, ago 2026, se
         resolvió solo con un reintento — la segunda ya no se trataría como ruido).

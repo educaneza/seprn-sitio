@@ -1319,6 +1319,15 @@ Los 506 registros se enriquecieron con `municipio` (18 municipios) cruzando por 
   `pdfs/cte/cte-2026-2027/cte-primera-sesión/`). Primera Sesión Ordinaria pasó a ser el
   acordeón activo/NUEVO del ciclo; Fase Intensiva se colapsó debajo, sin perder su badge de
   sesión del ciclo actual. Banner de `index.html` actualizado al mismo texto.
+- ~~**Segunda Sesión Ordinaria 2026-2027**~~ — publicada 25 oct 2026 (commit `7fd9ee1`): opening
+  `jtJ31LCm4po` (programado en YouTube para el lun 26 oct 9:00; la sesión es el 30 oct), 19 PDFs
+  de SEP en `pdfs/cte/cte-2026-2027/cte-segunda-sesión/` (Consulta Nacional con sus 2 anexos;
+  Educación Básica temas 1-6; Primaria; Multigrado 1-5; Preescolar 1-2; Inicial 1-2) con título
+  legible y el grupo en el `span`, y ZIP de 17 MB. Jorge dejó la carpeta como
+  `Insumos-CTE-2da-Sesión-Octubre-2026`; se renombró a `cte-segunda-sesión` como la primera.
+  Primera Sesión pasó a colapsada. Dos arreglos de paso: la sesión abierta usa `src` en el
+  iframe (`docs/QA-NOTES.md #58`) y `.material-info strong` ya no corta con "…" en escritorio
+  (baja de línea, como ya pasaba en celular). Banner de `index.html` actualizado al mismo texto.
 - ~~**Centro de Formación Docente** — dar de alta los primeros cursos propios del ciclo
   26-27~~ — resuelto 10 sep 2026: primer curso dado de alta (`ACF-2627-001`, "Formación
   Docente en Inteligencia Artificial", Fundación Televisa) y tarjeta reactivada en
