@@ -3044,7 +3044,7 @@ de comisiones que no se realizaron y se perdían al cancelarlos).
   (`OF_CAMPOS_PLANTILLA`), convertida con un script que solo cambió el texto de los runs
   (verificado: estructura idéntica salvo textos). Vive en Drive (Script Property
   `OF_PLANTILLA_COMISION_ID`, menú "Configurar plantilla de comisión", que valida los campos con
-  `ofCamposFaltantesPlantilla_()`); la copia local está en `docs/insumos/PLANTILLA-COMISION.docx`
+  `ofCamposFaltantesPlantilla_()`); la copia local está en `docs/insumos/Oficios/PLANTILLA-COMISION.docx`
   (`.gitignore`). Por tanda: `Utilities.unzip` → repite el cuerpo de `word/document.xml` una vez
   por oficio (renumera `wp:docPr`, quita `w14:paraId`/`textId`/`wp14:anchorId`), salto de página
   entre oficios → `Utilities.zip` → carpeta `OF_CARPETA_COMISIONES` por mes, compartida con liga.
@@ -3101,7 +3101,7 @@ claridad" tras el primer día de uso real.
 `oficios.html`, `doPost generarOficio` → `ofGenerarOficio_()`, fuera del candado como la comisión).
 - **Plantilla:** `PLANTILLA-OFICIO.docx`, hecha del `MACHOTE.docx` real cambiando solo textos por
   8 campos (`OF_CAMPOS_PLANTILLA_OFICIO`) y quitando la combinación de correspondencia (apuntaba
-  a `SUPERVISORES.accdb` de otra computadora). Copia local en `docs/insumos/` (`.gitignore`); en
+  a `SUPERVISORES.accdb` de otra computadora). Copia local en `docs/insumos/Oficios/` (`.gitignore`); en
   Drive, Script Property `OF_PLANTILLA_OFICIO_ID`, menú "Configurar plantilla de oficio de
   salida" (`ofConfigurarPlantilla_()`, la misma que usa la de comisión). La firma (Dra. Galindo),
   la despedida, el C.c.p. y el pie viven en la plantilla, no en el código.

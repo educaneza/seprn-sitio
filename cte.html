@@ -213,9 +213,8 @@
             font-weight: 600;
             color: #56212f;
             margin-bottom: 2px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            line-height: 1.35;
+            word-break: break-word;
         }
         .material-info span {
             font-size: 12px;
@@ -435,11 +434,225 @@
     <h2 class="section-title">2026-2027</h2>
 </div>
 
-<!-- Primera Sesión Ordinaria 2026-2027 (ABIERTA POR DEFECTO) -->
+<!-- Segunda Sesión Ordinaria 2026-2027 (ABIERTA POR DEFECTO) -->
 <div class="sesion-accordion active">
     <button class="sesion-header" type="button" onclick="toggleSesion(this)" aria-expanded="true">
         <div class="sesion-header-text">
-            <h2>Primera Sesión Ordinaria 2026-2027 <span style="display: inline-block; background: #ff3b3b; color: white; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 6px; margin-left: 10px; vertical-align: middle;">NUEVO</span></h2>
+            <h2>Segunda Sesión Ordinaria 2026-2027 <span style="display: inline-block; background: #ff3b3b; color: white; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 6px; margin-left: 10px; vertical-align: middle;">NUEVO</span></h2>
+            <p>Opening, materiales de la Consulta Nacional y temas por nivel de la segunda sesión del Consejo Técnico Escolar del ciclo 2026-2027 (30 de octubre de 2026)</p>
+        </div>
+        <div class="sesion-toggle"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+    </button>
+
+    <div class="sesion-content">
+<div class="sesion-content-inner">
+
+        <!-- Opening (sesión abierta: src directo, no data-src) -->
+        <div class="video-container">
+            <h3>Opening de la Sesión</h3>
+            <div class="video-wrapper">
+                <iframe
+                    width="560"
+                    height="315"
+                    src="https://www.youtube.com/embed/jtJ31LCm4po"
+                    title="Opening Segunda Sesión Ordinaria CTE"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerpolicy="strict-origin-when-cross-origin"
+                    allowfullscreen>
+                </iframe>
+            </div>
+        </div>
+
+        <!-- Materiales -->
+        <div class="materiales-section">
+            <h3>Materiales Individuales</h3>
+
+            <div class="materiales-grid">
+                <a href="pdfs/cte/cte-2026-2027/cte-segunda-sesi%C3%B3n/2627_s2_doc0_materiales_consulta.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Consulta Nacional — Material de Apoyo</strong>
+                        <span>Consulta Nacional • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/cte-2026-2027/cte-segunda-sesi%C3%B3n/2627_s2_doc1_anexo1_cuestionario_diagnostico.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Resultados del Cuestionario Diagnóstico</strong>
+                        <span>Consulta Nacional • Anexo 1 • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/cte-2026-2027/cte-segunda-sesi%C3%B3n/2627_s2_doc2_anexo2_carpeta_trabajo.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Carpeta de Trabajo de la Consulta Nacional</strong>
+                        <span>Consulta Nacional • Anexo 2 • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/cte-2026-2027/cte-segunda-sesi%C3%B3n/2627_s2_eb_tema1_plano_didactico_nem.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Apuntes sobre el Plano Didáctico en la NEM</strong>
+                        <span>Educación Básica • Tema 1 • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/cte-2026-2027/cte-segunda-sesi%C3%B3n/2627_s2_eb_tema2_ambientes_escolares.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Estrategias para Ambientes Escolares Pacíficos</strong>
+                        <span>Educación Básica • Tema 2 • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/cte-2026-2027/cte-segunda-sesi%C3%B3n/2627_s2_eb_tema3_ajustes_atencion_nna.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Ajustes Razonables: Discapacidad y Aptitudes Sobresalientes</strong>
+                        <span>Educación Básica • Tema 3 • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/cte-2026-2027/cte-segunda-sesi%C3%B3n/2627_s2_eb_tema4_uso_pantallas_nna_eb.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Uso de Pantallas, Redes Sociales e Inteligencia Artificial</strong>
+                        <span>Educación Básica • Tema 4 • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/cte-2026-2027/cte-segunda-sesi%C3%B3n/2627_s2_eb_tema5_infancias_adolecencias_no_binarias.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Infancias y Adolescencias Trans y No Binarias</strong>
+                        <span>Educación Básica • Tema 5 • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/cte-2026-2027/cte-segunda-sesi%C3%B3n/2627_s2_eb_tema6_bienestar_social_emocional.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Cuidarnos para Enseñar y Convivir: Bienestar Socioemocional Docente</strong>
+                        <span>Educación Básica • Tema 6 • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/cte-2026-2027/cte-segunda-sesi%C3%B3n/2627_s2_prim_educacion_financiera_bienestar_persolal_nem.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Educación Financiera para el Bienestar</strong>
+                        <span>Educación Primaria • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/cte-2026-2027/cte-segunda-sesi%C3%B3n/2627_s2_multi_trayectorias_arendizaje_aulas.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Trayectorias de Aprendizaje en Aulas Multigrado</strong>
+                        <span>Escuelas Multigrado • Tema 1 • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/cte-2026-2027/cte-segunda-sesi%C3%B3n/2627_s2_multi_interculturalidad_escuelas_multigrado.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Interculturalidad Crítica, Lenguas y Saberes</strong>
+                        <span>Escuelas Multigrado • Tema 2 • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/cte-2026-2027/cte-segunda-sesi%C3%B3n/2627_s2_multi_autonomias_nna_aula_multigrado.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Autonomía de Niñas, Niños y Adolescentes en el Aula Multigrado</strong>
+                        <span>Escuelas Multigrado • Tema 3 • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/cte-2026-2027/cte-segunda-sesi%C3%B3n/2627_s2_multi_organizacion_tiempo_aula_multigrado.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Organización del Tiempo y del Aula Multigrado</strong>
+                        <span>Escuelas Multigrado • Tema 4 • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/cte-2026-2027/cte-segunda-sesi%C3%B3n/2627_s2_multi_integracion_comunidad_aula_multigrado.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Integración de la Comunidad en las Aulas Multigrado</strong>
+                        <span>Escuelas Multigrado • Tema 5 • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/cte-2026-2027/cte-segunda-sesi%C3%B3n/2627_s2_prees_juego_campos_formativos2.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>El Juego para Vincular los Campos Formativos</strong>
+                        <span>Educación Preescolar • Tema 1 • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/cte-2026-2027/cte-segunda-sesi%C3%B3n/2627_s2_prees_pensa_cient_curio_explora.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Pensamiento Científico desde la Curiosidad y la Exploración</strong>
+                        <span>Educación Preescolar • Tema 2 • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/cte-2026-2027/cte-segunda-sesi%C3%B3n/2627_s2_ini_procesos_adaptacion_separacion.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Procesos de Adaptación y Separación</strong>
+                        <span>Educación Inicial • Tema 1 • PDF</span>
+                    </div>
+                </a>
+
+                <a href="pdfs/cte/cte-2026-2027/cte-segunda-sesi%C3%B3n/2627_s2_ini_fortalecimiento_explora_investiga.pdf" class="material-item" download>
+                    <div class="material-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F2241" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+                    <div class="material-info">
+                        <strong>Exploración e Investigación del Mundo</strong>
+                        <span>Educación Inicial • Tema 2 • PDF</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Descargar Todo -->
+        <div class="download-all-section">
+            <div class="download-all-text">
+                <h4>Descargar Paquete Completo</h4>
+                <p>Descarga todos los materiales de esta sesión en un solo archivo ZIP</p>
+            </div>
+            <a href="pdfs/cte/cte-2026-2027/cte-segunda-sesi%C3%B3n/cte-segunda-sesi%C3%B3n-completa.zip" class="download-all-btn" download>
+                Descargar Todo
+            </a>
+        </div>
+
+        <!-- Link SEP -->
+        <div class="link-sep">
+            <div class="link-sep-text">
+                <h4>Recursos Adicionales SEP</h4>
+                <p>Insumos y materiales complementarios oficiales</p>
+            </div>
+            <a href="https://gestion.cte.sep.gob.mx/insumos/" target="_blank" rel="noopener noreferrer">
+                Ir al Portal SEP <span>→</span>
+            </a>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- Primera Sesión Ordinaria 2026-2027 -->
+<div class="sesion-accordion">
+    <button class="sesion-header" type="button" onclick="toggleSesion(this)" aria-expanded="false">
+        <div class="sesion-header-text">
+            <h2>Primera Sesión Ordinaria 2026-2027</h2>
             <p>Materiales, presentaciones y video de la primera sesión del Consejo Técnico Escolar del ciclo 2026-2027</p>
         </div>
         <div class="sesion-toggle"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>

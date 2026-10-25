@@ -640,7 +640,7 @@ diseño libre para niños, solo el sello de crédito al pie.
   nunca sale del Sheet ni va en el código** (el repo es público). **Oficio de comisión en Word**
   (`generarComision`): `.docx` (no Google Doc: Gotham y cuadros de texto) a partir de la plantilla
   en Drive (`OF_PLANTILLA_COMISION_ID`, menú "Configurar plantilla de comisión"; copia local en
-  `docs/insumos/PLANTILLA-COMISION.docx`, ignorada por git), un oficio por página. **La hoja del
+  `docs/insumos/Oficios/PLANTILLA-COMISION.docx`, ignorada por git), un oficio por página. **La hoja del
   mapa NO se genera**: Viáticos exige la impresión de Google Maps tal cual; la página da "Abrir la
   ruta en Google Maps" (`urlRutaMaps()`) y el km editable antes de generar. "Reasignar /
   corregir" conserva el número y deja lo anterior en `Historial`. Al tocar el `.gs`, Maps puede
