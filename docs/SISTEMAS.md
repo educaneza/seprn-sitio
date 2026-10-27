@@ -1328,6 +1328,9 @@ Los 506 registros se enriquecieron con `municipio` (18 municipios) cruzando por 
   Primera Sesión pasó a colapsada. Dos arreglos de paso: la sesión abierta usa `src` en el
   iframe (`docs/QA-NOTES.md #58`) y `.material-info strong` ya no corta con "…" en escritorio
   (baja de línea, como ya pasaba en celular). Banner de `index.html` actualizado al mismo texto.
+  El 27 oct 2026 (commit `82018cb`) se agregó la presentación de la Subdirección
+  (`SUB Segunda Sesión Ordinaria CTE 2026-2027.pptx`, 5.1 MB) como primer material ("Presentación
+  SEPRN", igual que en la Primera Sesión) y dentro del ZIP, que subió a 22 MB.
 - ~~**Centro de Formación Docente** — dar de alta los primeros cursos propios del ciclo
   26-27~~ — resuelto 10 sep 2026: primer curso dado de alta (`ACF-2627-001`, "Formación
   Docente en Inteligencia Artificial", Fundación Televisa) y tarjeta reactivada en

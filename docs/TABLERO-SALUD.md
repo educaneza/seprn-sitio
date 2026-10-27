@@ -15,7 +15,7 @@ funciona, con pendientes abiertos o algo en paralelo. **Rojo** = falla, o algo e
 afecta a usuarios. **Prueba en vivo** = última vez que Jorge o una prueba contra producción
 confirmó que funciona (no la fecha del último cambio de código).
 
-Actualizado: **25 oct 2026**.
+Actualizado: **27 oct 2026**.
 
 ## Sistemas en uso
 
@@ -31,7 +31,7 @@ Actualizado: **25 oct 2026**.
 | Oficina Virtual (`oficina-virtual.html`) | Escuelas | Verde | 10 ago 2026 (consulta de los 7 prefijos con `curl`) | Ninguno |
 | Ceremonias Cívicas (`ceremonias-civicas.html`, `ficha-…`, `visitas-jefes.gs`) | ~20 jefes de la Subdirección | Verde | 19 oct 2026 (Jorge: la fecha ya no se desborda en iPhone) | Ninguno. El panel de cobertura queda público sin clave (decisión de Jorge, 14 oct 2026) |
 | Estrategias Nacionales (`estrategias-nacionales.html`, `.gs`) | Programas Educativos | Verde | 19 oct 2026 (Jorge, en su celular: indicador de progreso y tablas) | Correr una vez el menú del resumen con datos reales (ROADMAP 29b). Al cambiar de ciclo: Sheet nueva y `MESES_EN_CICLO` |
-| CTE (`cte.html`) | Docentes y directivos | Verde | 25 oct 2026 (2da Sesión publicada, verificada con `curl`) | El opening `jtJ31LCm4po` se activa el lun 26 oct 9:00: confirmar que se reproduce en la página. |
+| CTE (`cte.html`) | Docentes y directivos | Verde | 27 oct 2026 (PPTX de la 2da Sesión publicado, verificado con `curl`) | Confirmar que el opening `jtJ31LCm4po` (programado para el 26 oct 9:00) se reproduce en la página: no se ha revisado. |
 | Excel fácil (`excel-facil.html`) | Docentes y administrativos | Verde | 6 oct 2026 | Hoja «Escuelas», retos y rutas de menú publicados el 20 oct 2026 (probado en local con Playwright, `curl` en vivo). Falta la lista de detalles de Jorge y revisar los materiales de la asesoría (ROADMAP 32) |
 | Crea tu app educativa (`crea-tu-app.html`, `apps-educativas/`) | Docentes (talleres) | Amarillo | 16 oct 2026 (publicado; probado en local con Playwright) | Revisar PDA contra el PDF de la SEP y el contenido de las 3 apps, decidir licencia, validar con la Dra. Galindo (ROADMAP 35) |
 | Agenda SEPRN (`agenda-prototipo.html`) | Planeación y todas las oficinas (aún nadie: es prototipo) | Amarillo | 21 oct 2026 (publicado; probado en local con Playwright) | Prototipo sin backend. Esperar la respuesta de Planeación sobre campos, catálogos y corte; después construir la versión real (ROADMAP 37) |

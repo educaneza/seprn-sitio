@@ -297,7 +297,7 @@ Patrón compartido (detalle en `docs/SISTEMAS.md` y `docs/ARCHITECTURE.md §21`)
    - **Antes de comitear material pesado nuevo** (ZIPs/PPTX de sesiones CTE, sobre todo):
      revisar contra los umbrales de `docs/ROADMAP.md` ítem 10 (contenido publicado total y
      tamaño del archivo más grande del commit) y **avisar a Jorge de inmediato si se cruzan** —
-     no esperar al cierre de sesión. Estado al 25 oct 2026: 557 MB publicados (umbral de aviso
+     no esperar al cierre de sesión. Estado al 27 oct 2026: 567 MB publicados (umbral de aviso
      800 MB), archivos individuales hasta 80 MB (umbral de aviso 80 MB, límite duro de GitHub
      100 MB). Git LFS no es viable aquí — GitHub Pages no resuelve sus punteros, serviría el
      archivo de puntero en vez del PDF/ZIP real (confirmado ese mismo día, ver ROADMAP).

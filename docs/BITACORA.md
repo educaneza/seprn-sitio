@@ -16,6 +16,21 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-10-27 · PPTX de la Segunda Sesión CTE y texto de difusión para WhatsApp
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-27 |
+| **Sesión** | Corta. Jorge dejó la presentación de la Subdirección para la 2da Sesión Ordinaria y pidió agregarla a `cte.html`. |
+| **`cte.html` (commit `82018cb`)** | `SUB Segunda Sesión Ordinaria CTE 2026-2027.pptx` (5.1 MB) entra como primer material de la Segunda Sesión, con el mismo ícono y título que la Primera ("Presentación SEPRN", `span` "Segunda Sesión Ordinaria • PPTX"). También se agregó al ZIP completo con `zip -j -X` (sin `__MACOSX`): 20 archivos, 17 → 22 MB. Tabla de sesiones de `CLAUDE.md` actualizada a "PPTX + 19 PDFs". |
+| **Difusión** | Texto para el canal de WhatsApp (sesión del 30 oct, opening, presentación, Consulta Nacional, temas por nivel, ZIP y liga a `cte.html`). Solo se entregó en el chat; no se guardó en el repo. |
+| **Verificación** | Run de Pages de `82018cb` en `success` (1m34s). Con `curl` contra producción: `cte.html` trae la liga nueva, el PPTX responde 200 con 5106648 bytes y el ZIP 200 con 21981597 bytes (la versión nueva). Publicado: 567 MB, archivo más grande del commit 22 MB (sin cruzar umbrales, ROADMAP 10). |
+| **Pendiente** | Confirmar que el opening `jtJ31LCm4po` se reproduce en `cte.html` (estaba programado para el 26 oct 9:00 y no se ha revisado). Siguen los pendientes de Jorge del checkpoint del 24-25 oct (comparar el video con Nivel 1, `.srt`, repo privado para `openings-seprn`) y los de los dos checkpoints del 23 oct. |
+| **Documentación actualizada** | Este checkpoint; `docs/SISTEMAS.md` (entrada de la Segunda Sesión); `docs/TABLERO-SALUD.md` (fila CTE); `docs/ROADMAP.md` ítem 10 y `CLAUDE.md` (567 MB publicados). |
+| **Commits** | `82018cb` (PPTX + ZIP + tabla de `CLAUDE.md`) y el de este cierre. |
+
+---
+
 ## CHECKPOINT — 2026-10-24/25 · Opening de la 2da Sesión CTE, 2da Sesión publicada y proyecto propio de openings
 
 | | |
