@@ -96,7 +96,7 @@ conocida, no corregida a propósito (decisión de Jorge).
 
 | Sesión | Ciclo | Opening YT | Grabación | Materiales | ZIP |
 |---|---|---|---|---|---|
-| Segunda Sesión Ordinaria 2026-2027 (30 oct) | 2026-2027 (actual) | `jtJ31LCm4po` | — | 19 PDFs (Consulta Nacional + temas por nivel, `pdfs/cte/cte-2026-2027/cte-segunda-sesión/`) | ✅ (`cte-segunda-sesión-completa.zip`) |
+| Segunda Sesión Ordinaria 2026-2027 (30 oct) | 2026-2027 (actual) | `jtJ31LCm4po` | — | PPTX + 19 PDFs (Consulta Nacional + temas por nivel, `pdfs/cte/cte-2026-2027/cte-segunda-sesión/`) | ✅ (`cte-segunda-sesión-completa.zip`) |
 | Primera Sesión Ordinaria 2026-2027 | 2026-2027 (actual) | `vhuipmEOEuY` | — | 5 materiales (PPTX + 4 PDFs, `pdfs/cte/cte-2026-2027/cte-primera-sesión/`) | ✅ (`cte-primera-sesión-completa.zip`) |
 | Fase Intensiva 2026-2027 | 2026-2027 (actual) | `bXq_TtMf_pc` | — | 9 PDFs (`pdfs/cte/cte-2026-2027/cte-fase-intensiva/`) | ✅ (`cte-fase-intensiva-completa.zip`) |
 | Taller Intensivo de Cierre (16-17 jul 2026) | 2025-2026 (archivo) | `1PXPphhZd9s` | — (evento no ocurrió) | 5 materiales (`pdfs/cte/cte-2025-2026/taller-intensivo-docentes/`) | ✅ |
