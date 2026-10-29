@@ -16,6 +16,21 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-10-29 · Cambio de responsables de área
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-29 |
+| **Sesión** | Corta. Jorge avisó 4 cambios de responsables de área. |
+| **Responsables (commit `da1c2e6`)** | Personal: Mtra. Angélica Edith Miramontes Olvera (antes Lic. Laura Gilda Mejía García) en `nosotros.html`, `areas.html` y `personal.html`. Oficina de Investigación Educativa: Dra. Mareana Espíritu Espinoza (antes Mtro. Edilberto Cortes Mendoza) en `academica.html`. Secretaría Particular (antes Mtra. Angélica López Ramírez) y OEVE (antes Mtro. José Chino Montiel) se quedan sin titular. 6 archivos, 12 líneas. |
+| **Decisión: no "Vacante"** | Jorge corrigió el término: estos cargos no se concursan, se asignan por acuerdo entre SEIEM y la Sección 36. Todo cargo sin titular va como `— — —` (antes solo la tarjeta de Planeación en `nosotros.html` lo usaba). Planeación también dejó de decir "Vacante" en `areas.html` y `planeacion.html`. Los cargos sin titular quedan con género neutro: "Secretario(a) Particular", "Jefe(a) de Oficina OEVE". Quedó guardado en la memoria de Claude. |
+| **Verificación** | `grep` sin resultados para los 4 nombres anteriores ni para "Vacante" en `*.html` (la única excepción es "vacantes, promociones" de `personal.html`, que es otro texto). Run de Pages de `da1c2e6` en `success` (1m42s). Con `curl` contra producción, los nombres nuevos y `— — —` aparecen en las 6 páginas (nosotros 4, areas 3, las demás 1), y "Vacante", "Chino Montiel" y "Laura Gilda" ya no salen en ninguna. |
+| **Pendiente** | Sin pendientes nuevos. Siguen los del checkpoint del 27 oct: revisar que el opening `jtJ31LCm4po` se reproduzca en `cte.html`. |
+| **Documentación actualizada** | Solo este checkpoint. |
+| **Commits** | `da1c2e6` (responsables) y el de este cierre. |
+
+---
+
 ## CHECKPOINT — 2026-10-27 · PPTX de la Segunda Sesión CTE y texto de difusión para WhatsApp
 
 | | |
