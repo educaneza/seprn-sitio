@@ -852,6 +852,13 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     vacía en `OF-0060`; dar de alta en Mantenimiento/Asesorías los oficios de papel para que
     tengan folio y se cierren solos; escanear los PDF; ligar números a su oficio con "para
     responder". Jorge pidió **simplificar**: el flujo le resultó confuso el primer día.
+    **Afinación hecha (30 oct 2026, datos en el Sheet):** importados del ciclo cerrados, fechas de
+    `OF-0041`/`0050`/`0052`/`0059` y forma de `OF-0060` corregidas; `OF-0057` no repetía a
+    `OF-0031` (reuso del oficio 193). Los oficios de papel previos al arranque se ligaron a su
+    folio MAN/ASE en Vínculo (13 ya resueltos → Atendido; los demás se cierran a mano con "ya
+    llega sola", porque `ofSincronizarOV_()` solo cierra los que entraron por la conexión).
+    Duplicados `OF-0048`/`0068` y `OF-0079`/`0081` cerrados. "N.P. planeación" de `Config`
+    revisado con Jorge (nuevo tipo para el N.P. 2). Queda: escanear los PDF.
     **Simplificación en producción (13-14 oct 2026):** origen "Interno" sin folio, baja/sube
     deducido, chips Por atender / Falta folio / Todos y un "Siguiente paso" con un solo botón por
     oficio (`docs/ARCHITECTURE.md §31`). Jorge lo probó en vivo. Reevaluar con el equipo tras unos

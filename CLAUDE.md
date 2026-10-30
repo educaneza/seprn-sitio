@@ -350,8 +350,8 @@ ya resueltos al final de `docs/SISTEMAS.md`. Lo genuinamente abierto:
   en producción (`oficios.html`, arrancado oficialmente el 12 oct 2026; 2C el 19 oct). Falta:
   que Jorge pruebe un oficio de salida real, importar
   el primer caso real de Asesorías resueltas (Nancy llena *Fecha de realización* y *Asistentes*),
-  llenar `NP_planeacion` en cursos nuevos, revisión de Jorge del "N.P. planeación" por tipo de
-  oficio, y siguiente paso (2E). `docs/PLAN-OPERACION-INTERNA.md` y ROADMAP ítem 27.
+  llenar `NP_planeacion` en cada curso nuevo (sin él, el curso no sale en el reporte mensual), y
+  siguiente paso (2E). `docs/PLAN-OPERACION-INTERNA.md` y ROADMAP ítem 27.
 - **Agenda SEPRN** (sustituir el calendario de Outlook de Planeación): prototipo publicado en
   `agenda-prototipo.html` el 21 oct 2026; falta que Planeación valide campos, catálogos, quién
   captura y fecha de corte antes de construir la versión real. `docs/ROADMAP.md` ítem 37.

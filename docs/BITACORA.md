@@ -16,6 +16,25 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-10-30 · Opening de la 2da Sesión CTE verificado y limpieza de datos de la Oficina interna
+
+| | |
+|---|---|
+| **Fecha** | 2026-10-30 |
+| **Sesión** | Sin cambios al repo: todo fue verificación en producción y correcciones de datos en los Sheets (conector de Google Sheets, con aprobación de Jorge en cada bloque). |
+| **Opening CTE** | Pendiente vencido del 26 oct cerrado: en `cte.html` de producción la Segunda Sesión es el acordeón activo con badge NUEVO y su iframe usa `src` directo a `jtJ31LCm4po`. El oEmbed de YouTube responde (video público e incrustable, canal @subneza). Sin prueba en navegador. |
+| **Control de oficios: fechas y huecos** | OF-0041 recepción 18/6/1904 → 20/8/2026; OF-0052 elaboración 24/1/1900 → 24/9/2026; OF-0050 recepción 18/9 → 21/9 (era anterior a la elaboración); OF-0059 recepción 12/10 → 8/10 (lote de folios del 8/10); OF-0060 Forma de atención → Acción; OF-0085 sin Fecha de atención → 30/10. Fechas deducidas del folio de Oficialía y del número de oficio, no de un documento: confirmar con el papel si hay duda. Cada cambio deja `[Corregido 30/10/2026 por Jorge: …]` en Observaciones. |
+| **Control de oficios: importados** | 12 importados del ciclo 2026-2027 (OF-0038 a 0051, salvo 0048 y 0050) pasan de "Recibido" a "Atendido", como los 37 del ciclo anterior. |
+| **Oficios de papel previos al arranque** | Hallazgo: los oficios que Nancy capturó el 12 oct (OF-0054 a 0073) son las copias impresas de solicitudes de la Oficina Virtual de septiembre (OTDE-MAN-0001 a 0030, ASE-0001/0002). `ofSincronizarOV_()` solo cierra filas con ID de envío `OV:<folio>` y solicitudes desde `OF_OV_DESDE`, así que nunca se iban a cerrar solos. Cruce por CCT: 13 ya estaban Resueltos → "Atendido" con su folio en Vínculo y nota de la visita (no duplica la bitácora, las visitas ya llegaron desde Mantenimiento); los pendientes quedan en "Recibido" ligados a su folio, para cerrarse con "ya llega sola" en `oficios.html`. OF-0057 no era duplicado de OF-0031: la escuela reusó su oficio 193 de junio para MAN-0023. |
+| **Duplicados (confirmados por Jorge)** | OF-0048 → duplicado de OF-0068 (MAN-0025), cerrado como "Solo conocimiento". OF-0079 (papel) → duplicado de OF-0081 (Oficina Virtual, MAN-0035), cerrado igual; el folio de Oficialía 3877 pasó a OF-0081, que se cerrará solo. Revisado en `oficios.gs`: el folio repetido solo se valida al registrar uno nuevo, no rompe nada. Ninguna fila borrada. |
+| **N.P. de planeación** | `Cursos` de Formación Docente tenía `NP_planeacion` solo en 2 de 14 cursos, y por eso 4 cursos de octubre no salían en el reporte: ACF-2627-001 → 5, ACF-2627-002 y 003 → 10, CNF-2627-002 → 13 (los de agosto quedan vacíos, son anteriores a la planeación). En `Config` de Oficios: nuevo tipo "CERTIFICACIONES GOOGLE Y CANVA" → N.P. 2; los 6 tipos sin número se quedan vacíos (decisión de Jorge). Extra: el cargo del supervisor del Sector V decía "SECTOR EDUCATIVO VI" (habría salido mal en un oficio de salida 2C), corregido a V. |
+| **Verificación** | Relectura de cada celda escrita con `get_values`; las fechas quedaron como número de fecha (no texto), comparadas con las filas vecinas. |
+| **Pendiente** | Jorge: en la bitácora, volver a traer los cursos o regenerar el reporte de octubre y confirmar que salen ACF-001/002/003 y CNF-002. Cerrar con "ya llega sola" los 7 oficios ligados que no se cierran solos (OF-0055, 0056, 0066, 0068, 0071, 0072, 0073) cuando su solicitud quede Resuelta (OF-0081 se cierra solo). OF-0078 (Académica, curso de salud mental): registrar a alguien de OTDE. Sigue la primera prueba de un oficio de salida real (2C). |
+| **Documentación actualizada** | Este checkpoint, `docs/TABLERO-SALUD.md` (CTE, Oficios, Formación Docente), `docs/ROADMAP.md` ítem 27 y la línea de Operación interna en "Pendientes vigentes" de `CLAUDE.md`. |
+| **Commits** | Solo el de este cierre. |
+
+---
+
 ## CHECKPOINT — 2026-10-29 · Cambio de responsables de área
 
 | | |
