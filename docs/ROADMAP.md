@@ -1107,6 +1107,22 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     - Si no se alcanza: para el 11 dic, generar 2026-11 y 2026-12 y mover a mano las filas del 25
       al 30 nov.
 
+41. **Aulas de medios: mantenimiento por semáforo de equipo** (abierto 4 nov 2026). Escuelas
+    reportan equipos más lentos tras el mantenimiento. Ya hecho: `docs/guia-aulas-de-medios.html`,
+    `descargas/diagnostico-equipo.bat/.ps1` y documento para la Dra. (detalle en BITACORA, 4 nov).
+    Falta:
+    - Probar `diagnostico-equipo.bat` en una PC con Windows (sin probar: no hay PowerShell en la
+      Mac); después ligarlo desde algún lugar visible para los técnicos.
+    - Rehacer las imágenes de disco por modelo desde una instalación limpia (guía §6).
+    - Probar Ruffle con el Banco de Materiales: 231 materiales AS1/2 deberían funcionar, 216 AS3
+      hay que probarlos. Si funciona, quitar Flash Player y el Firefox viejo de la receta.
+    - Cambiar Toolwiz Time Freeze por Reboot Restore Rx en las imágenes nuevas.
+    - Segunda fase: campos nuevos en `reporte-visita.html` + `mantenimiento.gs` (equipos por
+      semáforo, RAM, tipo de disco, sistema instalado, congelado sí/no, tiempo de arranque).
+      Columnas en su bloque de `ENCABEZADOS_MAN_REPORTES`; publicar `.html` antes que `.gs`.
+    - Seguimiento del kit de mantenimiento: fuera del repo, en
+      `~/Proyectos/trabajo/aulas-medios-incidente/NOTAS.md`.
+
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue
 abierto de esa entrega (decisión de notificación de cierre de ticket, limpieza de función

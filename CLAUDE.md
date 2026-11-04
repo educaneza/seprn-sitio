@@ -340,6 +340,10 @@ de la sesión realmente volvió obsoletos.
 Para saber qué sistema necesita atención (y cuál se está olvidando), empezar por
 `docs/TABLERO-SALUD.md`. Detalle en `docs/ROADMAP.md`; historial en `docs/BITACORA.md`; pendientes
 ya resueltos al final de `docs/SISTEMAS.md`. Lo genuinamente abierto:
+- **Aulas de medios (4 nov 2026)**: primero el seguimiento del kit de mantenimiento, que vive
+  **fuera del repo** (`~/Proyectos/trabajo/aulas-medios-incidente/NOTAS.md`; no copiar detalles
+  aquí, el repo es público). Después: probar `descargas/diagnostico-equipo.bat` en Windows,
+  revisar `docs/guia-aulas-de-medios.html` con los técnicos, Ruffle para el Banco. ROADMAP 41.
 - **Crea tu app educativa / Banco de Materiales 2.0**: falta que Jorge revise PDA y apps, decida
   la licencia y valide con la Dra. Galindo; después, carta descriptiva del taller, ficha técnica y
   catálogo del banco. `docs/ROADMAP.md` ítem 35.

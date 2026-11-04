@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Guía de campo · Aulas de medios OTDE</title>
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --guinda:   #56212f;
+      --acento:   #9F2241;
+      --midnight: #0C1A2E;
+      --arena:    #d6d1ca;
+      --caramelo: #977e5b;
+      --off:      #F9F8F5;
+      --text:     #1f2937;
+      --muted:    #6b7280;
+      --border:   #e5e7eb;
+      --ambar:    #f59e0b;
+      --verde:    #d1fae5;
+      --verde-b:  #059669;
+      --amarillo: #fef3c7;
+      --amarillo-b: #d97706;
+      --rojo:     #fee2e2;
+      --rojo-b:   #dc2626;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f6f4f1;
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    /* ── Portada ── */
+    .cover { background: var(--midnight); color: var(--off); padding: 2.75rem 1.25rem 2.25rem; text-align: center; }
+    .cover .org { font-size: .75rem; letter-spacing: .15em; text-transform: uppercase; color: var(--caramelo); margin-bottom: .75rem; }
+    .cover .badge {
+      display: inline-block; background: var(--acento); color: #fff; font-size: .7rem; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase; padding: .25rem .8rem; border-radius: 999px; margin-bottom: 1rem;
+    }
+    .cover h1 { font-size: clamp(1.5rem, 5vw, 2.1rem); font-weight: 800; line-height: 1.2; margin-bottom: .6rem; }
+    .cover p { font-size: .95rem; opacity: .85; max-width: 36rem; margin: 0 auto; }
+
+    .wrapper { max-width: 880px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+
+    /* ── Índice ── */
+    .toc { background: #fff; border-radius: 14px; padding: 1.1rem 1.25rem; margin-bottom: 2.25rem; border: 1px solid var(--border); }
+    .toc h2 { font-size: .75rem; text-transform: uppercase; letter-spacing: .1em; color: var(--guinda); margin-bottom: .6rem; }
+    .toc ol { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: .35rem 1.25rem; padding-left: 1.2rem; }
+    .toc a { color: var(--guinda); text-decoration: none; font-size: .9rem; }
+    .toc a:hover { text-decoration: underline; }
+
+    /* ── Secciones ── */
+    .section { margin-bottom: 3rem; scroll-margin-top: 1rem; }
+    .section-header { display: flex; align-items: center; gap: .75rem; margin-bottom: 1.1rem; }
+    .section-num {
+      flex: none; background: var(--guinda); color: #fff; width: 38px; height: 38px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.05rem;
+    }
+    .section-header h2 { font-size: 1.3rem; color: var(--guinda); line-height: 1.2; }
+    .section-header .cuando { display: block; font-size: .8rem; font-weight: 500; color: var(--muted); }
+    .lead { font-size: 1rem; margin-bottom: 1.1rem; }
+    .section p + p { margin-top: .7rem; }
+    h3 { font-size: 1.05rem; color: var(--guinda); margin: 1.4rem 0 .6rem; }
+
+    .card { background: #fff; border-radius: 16px; padding: 1.25rem; box-shadow: 0 2px 12px rgba(0,0,0,.05); margin-bottom: 1rem; }
+
+    /* ── Reglas de oro ── */
+    .reglas { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8rem; }
+    .regla { background: #fff; border-radius: 14px; padding: 1.1rem; border-top: 5px solid var(--acento); box-shadow: 0 2px 10px rgba(0,0,0,.05); }
+    .regla .num { font-size: 1.6rem; font-weight: 800; color: var(--acento); line-height: 1; margin-bottom: .4rem; }
+    .regla strong { display: block; font-size: 1rem; color: var(--guinda); margin-bottom: .25rem; line-height: 1.25; }
+    .regla span { font-size: .87rem; color: var(--muted); }
+
+    /* ── Semáforo ── */
+    .semaforo { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8rem; }
+    .semaforo.dos { grid-template-columns: repeat(2, 1fr); }
+    .luz { border-radius: 14px; padding: 1.1rem; border: 2px solid; }
+    .luz.v { background: var(--verde); border-color: var(--verde-b); }
+    .luz.a { background: var(--amarillo); border-color: var(--amarillo-b); }
+    .luz.r { background: var(--rojo); border-color: var(--rojo-b); }
+    .luz .tag { display: inline-block; font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #fff; padding: .2rem .6rem; border-radius: 999px; margin-bottom: .55rem; }
+    .luz.v .tag { background: var(--verde-b); } .luz.a .tag { background: var(--amarillo-b); } .luz.r .tag { background: var(--rojo-b); }
+    .luz .es { font-size: .85rem; font-weight: 700; margin-bottom: .45rem; }
+    .luz ul { padding-left: 1.1rem; font-size: .87rem; }
+    .luz li { margin-bottom: .25rem; }
+
+    /* ── Pasos numerados ── */
+    .pasos { list-style: none; }
+    .pasos li { display: grid; grid-template-columns: 30px 1fr; gap: .65rem; margin-bottom: .85rem; font-size: .95rem; }
+    .pasos .n {
+      width: 30px; height: 30px; border-radius: 50%; background: var(--ambar); color: #1a1a2e; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; font-size: .95rem;
+    }
+    .pasos b { color: var(--guinda); }
+    .pasos small { display: block; color: var(--muted); font-size: .84rem; margin-top: .15rem; }
+    .ruta { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .84rem; background: var(--off); border: 1px solid var(--border); border-radius: 6px; padding: .05rem .35rem; white-space: normal; overflow-wrap: anywhere; }
+
+    /* ── Tablas sí / no ── */
+    .tabla-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .88rem; background: #fff; border-radius: 12px; overflow: hidden; }
+    th, td { text-align: left; padding: .6rem .75rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { background: var(--guinda); color: #fff; font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; }
+    td.no { color: var(--rojo-b); font-weight: 700; white-space: nowrap; }
+    td.si { color: var(--verde-b); font-weight: 700; white-space: nowrap; }
+
+    /* ── Avisos ── */
+    .tip, .ojo, .bien {
+      display: grid; grid-template-columns: 26px 1fr; gap: .6rem; align-items: start;
+      border-radius: 12px; padding: .85rem 1rem; font-size: .9rem; margin: 1rem 0;
+    }
+    .tip { background: #eef2ff; border: 1px solid #c7d2fe; }
+    .ojo { background: #fff7ed; border: 1px solid #fed7aa; }
+    .bien { background: var(--verde); border: 1px solid #6ee7b7; }
+    .tip svg, .ojo svg, .bien svg { width: 24px; height: 24px; }
+    .tip svg { color: #4f46e5; } .ojo svg { color: #ea580c; } .bien svg { color: #059669; }
+
+    .checklist { list-style: none; }
+    .checklist li { padding: .35rem 0 .35rem 1.9rem; position: relative; font-size: .93rem; border-bottom: 1px dashed var(--border); }
+    .checklist li::before { content: ''; position: absolute; left: 0; top: .5rem; width: 16px; height: 16px; border: 2px solid var(--guinda); border-radius: 4px; }
+
+    .descarga { display: inline-block; background: var(--acento); color: #fff; text-decoration: none; font-weight: 700; padding: .6rem 1.1rem; border-radius: 10px; font-size: .92rem; margin: .3rem .4rem .3rem 0; }
+    .descarga:hover { background: #b52a4c; }
+
+    footer { text-align: center; font-size: .8rem; color: var(--muted); padding: 1.5rem 1rem 2.5rem; }
+
+    @media (max-width: 720px) {
+      .reglas, .semaforo, .semaforo.dos { grid-template-columns: 1fr; }
+      .section-header h2 { font-size: 1.15rem; }
+    }
+
+    @media print {
+      body { background: #fff; }
+      .cover { padding: 1.5rem; }
+      .toc, .descarga { display: none; }
+      .section { break-inside: avoid-page; }
+      .card, .regla, .luz { box-shadow: none; border: 1px solid var(--border); }
+      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="cover">
+  <div class="org">Oficina de Tecnología para el Desarrollo Educativo · SEPRN</div>
+  <span class="badge">Guía de campo</span>
+  <h1>Mantenimiento de aulas de medios</h1>
+  <p>Qué revisar, qué instalar y qué ya no, para que una computadora vieja quede rápida y siga rápida después de la visita.</p>
+</header>
+
+<main class="wrapper">
+
+  <nav class="toc" aria-label="Contenido">
+    <h2>Contenido</h2>
+    <ol>
+      <li><a href="#reglas">Las 6 reglas de oro</a></li>
+      <li><a href="#por-que">Por qué quedan lentas</a></li>
+      <li><a href="#diagnostico">Antes de tocar: medir</a></li>
+      <li><a href="#semaforo">El semáforo de equipo</a></li>
+      <li><a href="#kit">El kit: qué sí y qué ya no</a></li>
+      <li><a href="#imagen">La imagen maestra</a></li>
+      <li><a href="#windows">Aligerar Windows 10</a></li>
+      <li><a href="#congelador">El congelador</a></li>
+      <li><a href="#banco">Banco de Materiales</a></li>
+      <li><a href="#piezas">Piezas, RAM y bajas</a></li>
+      <li><a href="#cierre">Antes de irte de la escuela</a></li>
+    </ol>
+  </nav>
+
+  <!-- 1. REGLAS -->
+  <section class="section" id="reglas">
+    <div class="section-header"><div class="section-num">1</div><h2>Las 6 reglas de oro</h2></div>
+    <div class="reglas">
+      <div class="regla"><div class="num">1</div><strong>Mide antes de instalar</strong><span>Cada máquina recibe lo que aguanta, no lo mismo para todas.</span></div>
+      <div class="regla"><div class="num">2</div><strong>Nada crackeado, nada pirata</strong><span>Activadores y "programas con contraseña" son la forma más común de meter virus.</span></div>
+      <div class="regla"><div class="num">3</div><strong>Un solo antivirus: el de Windows</strong><span>Windows Defender ya viene y es gratis. 360, Avast o similares alentan la máquina.</span></div>
+      <div class="regla"><div class="num">4</div><strong>Menos es más rápido</strong><span>Cada programa que se abre solo al encender le roba memoria a la clase.</span></div>
+      <div class="regla"><div class="num">5</div><strong>Congela al final, nunca antes</strong><span>Primero que Windows termine de actualizarse, después congelas.</span></div>
+      <div class="regla"><div class="num">6</div><strong>Diez buenas valen más que veinte lentas</strong><span>Si una máquina no da, sus piezas pueden salvar a otra.</span></div>
+    </div>
+  </section>
+
+  <!-- 2. POR QUÉ -->
+  <section class="section" id="por-que">
+    <div class="section-header"><div class="section-num">2</div><h2>Por qué una máquina queda más lenta después del mantenimiento</h2></div>
+    <p class="lead">Las escuelas nos dicen que algunas máquinas quedaron igual o peor. Casi siempre es una de estas cinco cosas, no un error del técnico:</p>
+    <div class="card">
+      <ol class="pasos">
+        <li><span class="n">1</span><div><b>Congelador + internet.</b> Con el congelador puesto, cada vez que se apaga la máquina se borra lo que Windows descargó. Al encender lo vuelve a descargar. Resultado: el disco trabaja al 100% toda la clase.</div></li>
+        <li><span class="n">2</span><div><b>Windows 10 en 2 GB de RAM y disco mecánico.</b> Windows 10 pide en la práctica 4 GB. Con 2 GB usa el disco como memoria, y el disco mecánico es muy lento para eso.</div></li>
+        <li><span class="n">3</span><div><b>El "primer arranque".</b> Después de instalar, Windows pasa horas (a veces días) terminando actualizaciones e índices. Si nos vamos antes, la escuela encuentra la máquina lenta la semana siguiente.</div></li>
+        <li><span class="n">4</span><div><b>Programas pesados o dañinos.</b> Antivirus extra, "optimizadores", activadores piratas y Flash Player viejo consumen memoria o traen virus escondidos.</div></li>
+        <li><span class="n">5</span><div><b>Todo para todas.</b> Office completo + juegos + Banco de Materiales + servidor local en una máquina de 2 GB es demasiado para ella.</div></li>
+      </ol>
+    </div>
+    <div class="tip">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></svg>
+      <div>Windows 10 dejó de recibir parches de seguridad gratuitos el <b>14 de octubre de 2025</b>. Sigue funcionando, pero es otra razón para no navegar por internet con la máquina sin antivirus o con programas viejos.</div>
+    </div>
+  </section>
+
+  <!-- 3. DIAGNÓSTICO -->
+  <section class="section" id="diagnostico">
+    <div class="section-header"><div class="section-num">3</div><h2>Antes de tocar: medir<span class="cuando">5 minutos por máquina, al llegar al aula</span></h2></div>
+    <p class="lead">El diagnóstico te dice qué tiene cada máquina y de qué color del semáforo es. No tienes que interpretar nada.</p>
+    <div class="card">
+      <ol class="pasos">
+        <li><span class="n">1</span><div><b>Copia los dos archivos de diagnóstico a tu USB</b> (en la misma carpeta).<small>Solo la primera vez.</small>
+          <div><a class="descarga" href="../descargas/diagnostico-equipo.bat" download>diagnostico-equipo.bat</a><a class="descarga" href="../descargas/diagnostico-equipo.ps1" download>diagnostico-equipo.ps1</a></div></div></li>
+        <li><span class="n">2</span><div>En cada máquina, abre la USB y da <b>doble clic en <span class="ruta">diagnostico-equipo.bat</span></b>.<small>Si Windows pregunta "¿Deseas permitir…?", di que sí.</small></div></li>
+        <li><span class="n">3</span><div>Escribe la <b>CCT</b> y el <b>número de la máquina</b> (el que tenga pegado, o el que le pongas tú).</div></li>
+        <li><span class="n">4</span><div>La pantalla te muestra el <b>color</b> (verde, amarillo o rojo) y qué hacer. Todo se guarda solo en <span class="ruta">inventario-equipos.csv</span> en tu USB.<small>Ese archivo se abre con Excel. Al regresar a la oficina se le entrega a Jorge.</small></div></li>
+      </ol>
+    </div>
+    <div class="ojo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17h.01"/></svg>
+      <div>Si la máquina no enciende o no llega a Windows, no hay diagnóstico. Anótala a mano como <b>roja</b> con lo que observaste (no da imagen, pita, no prende).</div>
+    </div>
+  </section>
+
+  <!-- 4. SEMÁFORO -->
+  <section class="section" id="semaforo">
+    <div class="section-header"><div class="section-num">4</div><h2>El semáforo de equipo</h2></div>
+    <p class="lead">Cada color dice qué instalar. Esto evita meterle a una máquina más de lo que aguanta.</p>
+    <div class="semaforo">
+      <div class="luz v">
+        <span class="tag">Verde</span>
+        <div class="es">4 GB de RAM o más y procesador de 64 bits (i3, i5, Ryzen, AMD A-series)</div>
+        <ul>
+          <li>Windows 10 aligerado (sección 7)</li>
+          <li>Office (Word, Excel, PowerPoint: nada más)</li>
+          <li>Banco de Materiales</li>
+          <li>Congelador, al final</li>
+        </ul>
+      </div>
+      <div class="luz a">
+        <span class="tag">Amarillo</span>
+        <div class="es">2 a 4 GB de RAM, o procesador débil (Atom, Celeron N, AMD E-350, E1, E2)</div>
+        <ul>
+          <li>Windows 10 aligerado, sin extras</li>
+          <li>Solo lo que la escuela de verdad usa: Banco <b>o</b> Office, no todo</li>
+          <li>Sin juegos que no se usen</li>
+          <li>Si hay otra máquina roja con RAM compatible, súbele memoria (sección 10)</li>
+        </ul>
+      </div>
+      <div class="luz r">
+        <span class="tag">Rojo</span>
+        <div class="es">Menos de 2 GB, procesador de 32 bits, o no enciende</div>
+        <ul>
+          <li><b>No se reinstala:</b> es tiempo perdido</li>
+          <li>Se usa como donadora de piezas para las demás</li>
+          <li>Se anota en el reporte para la baja</li>
+        </ul>
+      </div>
+    </div>
+    <div class="tip">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></svg>
+      <div><b>El disco mecánico es lo que más alenta.</b> Si la escuela o la asociación de padres puede comprar algo, lo único que vale la pena es un <b>disco SSD de 120 o 240 GB</b> (cuesta alrededor de $300). Una máquina amarilla con SSD se siente como verde. No vale la pena comprar nada más.</div>
+    </div>
+  </section>
+
+  <!-- 5. KIT -->
+  <section class="section" id="kit">
+    <div class="section-header"><div class="section-num">5</div><h2>El kit: qué sí llevar y qué ya no</h2></div>
+    <p class="lead">Todo lo que va en el disco de mantenimiento termina en las máquinas de las escuelas. Si algo trae virus, lo repartimos nosotros mismos. La regla: <b>solo programas gratuitos descargados de su página oficial</b>.</p>
+    <div class="tabla-wrap">
+      <table>
+        <thead><tr><th>En lugar de…</th><th></th><th>Usar</th><th>Por qué</th></tr></thead>
+        <tbody>
+          <tr><td>360 Total Security, Avast, AVG, "USB Disk Security"</td><td class="no">Ya no</td><td>Windows Defender (ya viene)</td><td>Un segundo antivirus duplica el trabajo y alenta todo.</td></tr>
+          <tr><td>KMSpico y cualquier "activador"</td><td class="no">Ya no</td><td>Activar con la licencia del equipo (etiqueta o BIOS)</td><td>Los activadores son la forma más común de meter virus. Además es ilegal en una dependencia de gobierno.</td></tr>
+          <tr><td>Programas con "Crack", "Key.txt" o carpetas "contraseña 2025"</td><td class="no">Nunca</td><td>Nada</td><td>Ese patrón es de virus que roban contraseñas. Si lo ves en una USB o disco, no lo abras y avisa.</td></tr>
+          <tr><td>Adobe Acrobat crackeado, Adobe Reader de 2017</td><td class="no">Ya no</td><td>Adobe Acrobat Reader actual (gratis, de adobe.com)</td><td>Solo se necesita leer PDF.</td></tr>
+          <tr><td>WinRAR</td><td class="no">Ya no</td><td>7-Zip (gratis, 7-zip.org)</td><td>Hace lo mismo, abre .rar y es libre.</td></tr>
+          <tr><td>Flash Player, Firefox 72</td><td class="no">Ya no</td><td>Firefox o Chrome actual</td><td>Flash murió en 2021. Para el Banco de Materiales ver sección 9.</td></tr>
+          <tr><td>"Optimizadores", desfragmentadores de 2009</td><td class="no">Ya no</td><td>"Desfragmentar y optimizar unidades" de Windows</td><td>Windows ya trae el suyo.</td></tr>
+          <tr><td>Toolwiz Time Freeze</td><td class="no">Cambiar</td><td>Reboot Restore Rx (versión gratuita)</td><td>Toolwiz no se actualiza desde 2015. Ver sección 8.</td></tr>
+          <tr><td>Acronis pirata</td><td class="no">Cambiar</td><td>Rescuezilla (gratis, rescuezilla.com)</td><td>Hace y restaura imágenes de disco desde una USB.</td></tr>
+          <tr><td>CPU-Z, CrystalDiskInfo, Rufus</td><td class="si">Sí</td><td>Se quedan, actualizados</td><td>Gratuitos y útiles para revisar procesador, memoria y salud del disco.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="ojo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17h.01"/></svg>
+      <div>El disco de mantenimiento es <b>solo de trabajo</b>. Nada de archivos personales, cursos ni descargas de páginas como "ZDescargas" o torrents.</div>
+    </div>
+  </section>
+
+  <!-- 6. IMAGEN -->
+  <section class="section" id="imagen">
+    <div class="section-header"><div class="section-num">6</div><h2>La imagen maestra<span class="cuando">Se hace una vez en la oficina, no en la escuela</span></h2></div>
+    <p class="lead">Ya clonamos máquinas con imágenes de disco, y eso está muy bien: ahorra horas. El problema es que <b>si la imagen trae algo malo, todas las máquinas clonadas lo heredan</b>. Por eso las imágenes se rehacen limpias.</p>
+    <div class="card">
+      <h3 style="margin-top:0">Cómo rehacer una imagen limpia (por modelo: HP 3500, HP 400, HP Mini, Lenovo…)</h3>
+      <ol class="pasos">
+        <li><span class="n">1</span><div><b>Instala Windows 10 desde cero</b> con la USB oficial de Microsoft ("Herramienta de creación de medios").</div></li>
+        <li><span class="n">2</span><div><b>Conéctala a internet y deja que se actualice toda</b>, reiniciando hasta que Windows Update diga "Estás al día".</div></li>
+        <li><span class="n">3</span><div><b>Instala solo lo del semáforo</b> (sección 4) y los controladores del modelo.</div></li>
+        <li><span class="n">4</span><div><b>Aligérala</b> con los pasos de la sección 7.</div></li>
+        <li><span class="n">5</span><div><b>Limpia:</b> busca "Liberador de espacio en disco" → "Limpiar archivos del sistema" → marca todo → Aceptar.</div></li>
+        <li><span class="n">6</span><div><b>Espera a que esté tranquila:</b> abre el Administrador de tareas (Ctrl + Shift + Esc). El disco debe estar casi en 0% sin hacer nada.<small>Si sigue alto, espera más. Esto es el "primer arranque" que no debe llegar a la escuela.</small></div></li>
+        <li><span class="n">7</span><div><b>Captura la imagen</b> con Rescuezilla y ponle nombre con modelo y fecha: <span class="ruta">HP3500_limpia_2026-11</span>.</div></li>
+        <li><span class="n">8</span><div><b>Borra las imágenes viejas</b> de ese modelo cuando la nueva ya esté probada en una máquina.</div></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- 7. WINDOWS -->
+  <section class="section" id="windows">
+    <div class="section-header"><div class="section-num">7</div><h2>Aligerar Windows 10<span class="cuando">En la imagen maestra, o en cada máquina si no se clona</span></h2></div>
+    <p class="lead">Ninguno de estos pasos rompe nada. Todos se pueden deshacer.</p>
+    <div class="card">
+      <ol class="pasos">
+        <li><span class="n">1</span><div><b>Quita lo que arranca solo.</b> Administrador de tareas → pestaña <b>Inicio</b> → clic derecho → <b>Deshabilitar</b> en todo menos Windows Defender y el controlador de audio.</div></li>
+        <li><span class="n">2</span><div><b>Efectos visuales al mínimo.</b> Tecla Windows + R → escribe <span class="ruta">sysdm.cpl</span> → pestaña <b>Opciones avanzadas</b> → Rendimiento → <b>Configuración</b> → "Ajustar para obtener el mejor rendimiento" → Aceptar.</div></li>
+        <li><span class="n">3</span><div><b>Apaga dos servicios que en disco mecánico estorban.</b> Windows + R → <span class="ruta">services.msc</span> → doble clic en <b>SysMain</b> → Tipo de inicio: <b>Deshabilitado</b> → Detener. Repite con <b>Windows Search</b>.<small>Solo en máquinas con disco mecánico. Si la máquina tiene SSD, déjalos.</small></div></li>
+        <li><span class="n">4</span><div><b>Quita OneDrive y "Noticias e intereses".</b> Configuración → Aplicaciones → Microsoft OneDrive → Desinstalar. Clic derecho en la barra de tareas → Noticias e intereses → Desactivar.</div></li>
+        <li><span class="n">5</span><div><b>Que no comparta actualizaciones con otras máquinas.</b> Configuración → Actualización y seguridad → Optimización de distribución → desactiva "Permitir descargas desde otros equipos".</div></li>
+        <li><span class="n">6</span><div><b>Plan de energía.</b> Panel de control → Opciones de energía → <b>Alto rendimiento</b> (o "Equilibrado" en laptops).</div></li>
+        <li><span class="n">7</span><div><b>Si el aula tiene internet: que Windows no descargue en plena clase.</b>
+          <small>Windows 10 Pro: Windows + R → <span class="ruta">gpedit.msc</span> → Configuración del equipo → Plantillas administrativas → Componentes de Windows → Windows Update → "Configurar Actualizaciones automáticas" → Habilitada → opción <b>2 - Notificar descargas e instalaciones</b>.</small>
+          <small>Windows 10 Home: Configuración → Red e Internet → la red conectada → activar <b>Conexión de uso medido</b>.</small></div></li>
+        <li><span class="n">8</span><div><b>Office: solo Word, Excel y PowerPoint.</b> Outlook, Access, Publisher, OneNote y Teams no se usan en el aula y ocupan espacio y memoria.</div></li>
+      </ol>
+    </div>
+    <div class="ojo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17h.01"/></svg>
+      <div><b>No desactives Windows Defender</b> ni el archivo de paginación, y no uses "limpiadores de registro". Ahorran poco y pueden dejar la máquina inestable o desprotegida.</div>
+    </div>
+  </section>
+
+  <!-- 8. CONGELADOR -->
+  <section class="section" id="congelador">
+    <div class="section-header"><div class="section-num">8</div><h2>El congelador</h2></div>
+    <p class="lead">El congelador es buena idea: lo que los alumnos cambien se borra al reiniciar. Pero <b>también borra las actualizaciones de Windows</b>, y eso es lo que alenta las máquinas con internet.</p>
+    <div class="semaforo dos">
+      <div class="luz v">
+        <span class="tag">Aula sin internet</span>
+        <ul>
+          <li>Congelar sin problema: no hay actualizaciones que se repitan.</li>
+          <li>Congelar <b>al final</b>, con todo instalado y aligerado.</li>
+        </ul>
+      </div>
+      <div class="luz a">
+        <span class="tag">Aula con internet</span>
+        <ul>
+          <li>Antes de congelar: Windows Update hasta "Estás al día".</li>
+          <li>Aplica el paso 7 de la sección anterior (que no descargue solo).</li>
+          <li>Acordar con el responsable del aula un <b>día para descongelar</b> (una vez cada dos meses), actualizar y volver a congelar.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="tip">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></svg>
+      <div>En las imágenes nuevas, usar <b>Reboot Restore Rx</b> (versión gratuita, de horizondatasys.com) en lugar de Toolwiz Time Freeze. Funciona igual: se congela, y para hacer cambios se desactiva con su contraseña.</div>
+    </div>
+  </section>
+
+  <!-- 9. BANCO -->
+  <section class="section" id="banco">
+    <div class="section-header"><div class="section-num">9</div><h2>Banco de Materiales</h2></div>
+    <p class="lead">El Banco de Materiales funciona con un servidor local (XAMPP: Apache y MySQL) y sus actividades están hechas en Flash. Mientras se prueba una forma más moderna de abrirlas, esto reduce su peso:</p>
+    <div class="card">
+      <ol class="pasos">
+        <li><span class="n">1</span><div><b>Que XAMPP no arranque con Windows.</b> Abre el Panel de control de XAMPP. Si a la izquierda de Apache o MySQL hay una palomita verde ("Service"), quítala. Así no ocupa memoria cuando no se usa el Banco.</div></li>
+        <li><span class="n">2</span><div><b>Un solo acceso directo para abrir el Banco.</b> En el escritorio, un acceso directo que primero ejecute <span class="ruta">C:\xampp\xampp_start.exe</span> y después abra <span class="ruta">http://localhost/Catalogo/</span>. El docente le da doble clic solo cuando lo va a usar.</div></li>
+        <li><span class="n">3</span><div><b>Instalar el Banco solo en máquinas verdes</b>, o en amarillas donde la escuela de verdad lo use.</div></li>
+        <li><span class="n">4</span><div><b>Si Windows pide permiso de red para Apache o MySQL</b>, marca solo "Redes privadas".</div></li>
+      </ol>
+    </div>
+    <div class="tip">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></svg>
+      <div><b>En prueba en la oficina:</b> abrir las actividades Flash con <b>Ruffle</b>, un programa gratuito que las reproduce en Firefox o Chrome actuales, sin Flash Player y sin el Firefox viejo. De los 447 materiales del Banco que usan Flash, 231 son del tipo que Ruffle ya reproduce bien; los otros 216 hay que probarlos uno por uno. Cuando esté probado se agrega a esta guía.</div>
+    </div>
+  </section>
+
+  <!-- 10. PIEZAS -->
+  <section class="section" id="piezas">
+    <div class="section-header"><div class="section-num">10</div><h2>Piezas, RAM y bajas</h2></div>
+    <p class="lead">Sin presupuesto, las máquinas rojas son nuestra tienda de refacciones.</p>
+    <div class="card">
+      <h3 style="margin-top:0">Pasar memoria RAM de una máquina a otra</h3>
+      <ol class="pasos">
+        <li><span class="n">1</span><div>Con <b>CPU-Z</b> (pestaña <b>Memory</b>) revisa el tipo de memoria de las dos máquinas: <b>DDR2, DDR3 o DDR4</b>. Tienen que ser del mismo tipo.</div></li>
+        <li><span class="n">2</span><div>Revisa la forma: las de escritorio usan memoria larga; laptops, mini y muchas "todo en uno" usan memoria corta. No son intercambiables.</div></li>
+        <li><span class="n">3</span><div>Apaga, desconecta la corriente y toca algo metálico antes de abrir. Pasa el módulo y prueba que encienda.</div></li>
+        <li><span class="n">4</span><div>Corre de nuevo el diagnóstico: el color debe mejorar.</div></li>
+      </ol>
+      <h3>También se rescatan</h3>
+      <p>Discos duros sanos (revisa con CrystalDiskInfo: debe decir "Bueno"), cables de corriente y de video, teclados, mouse y fuentes de poder del mismo modelo.</p>
+      <h3>Cuándo recomendar baja</h3>
+      <p>Cuando la máquina es roja y no hay pieza que la salve. En el reporte de visita escribe cuántas, el modelo y por qué (no enciende, procesador de 32 bits, le faltan piezas). Con eso la escuela puede tramitar la baja y pedir donaciones con un dato real.</p>
+    </div>
+  </section>
+
+  <!-- 11. CIERRE -->
+  <section class="section" id="cierre">
+    <div class="section-header"><div class="section-num">11</div><h2>Antes de irte de la escuela</h2></div>
+    <div class="card">
+      <ul class="checklist">
+        <li>Reinicia una máquina y cuenta cuánto tarda en estar lista para usar. Anótalo en el reporte.</li>
+        <li>Abre Word y el Banco de Materiales en una máquina para confirmar que funcionan.</li>
+        <li>Revisa que el congelador esté activado (si se instaló).</li>
+        <li>Explícale al responsable del aula: no instalar programas, no descongelar sin avisar, y a quién llamar.</li>
+        <li>Si el aula tiene internet, acuerda con él el día de descongelar y actualizar.</li>
+        <li>Llena el reporte de visita en <a href="../reporte-visita.html">reporte-visita.html</a> el mismo día, con las máquinas rojas y su motivo.</li>
+        <li>Guarda el archivo <span class="ruta">inventario-equipos.csv</span> de tu USB para entregarlo en la oficina.</li>
+      </ul>
+    </div>
+    <div class="bien">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+      <div>Un aula con <b>10 máquinas que arrancan en un minuto</b> le sirve más a la escuela que 20 que tardan cinco. Eso es un buen mantenimiento.</div>
+    </div>
+  </section>
+
+</main>
+
+<footer>Oficina de Tecnología para el Desarrollo Educativo · Subdirección de Educación Primaria en la Región de Nezahualcóyotl · Noviembre 2026</footer>
+
+</body>
+</html>

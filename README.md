@@ -110,7 +110,9 @@ seprn-sitio/
 │
 ├── descargas/                    # Instaladores/ejecutables descargables
 │   ├── Instalador_Office_2019_OTDE.exe
-│   └── Instalador_Office_OTDE.bat
+│   ├── Instalador_Office_OTDE.bat
+│   ├── diagnostico-equipo.bat    # Diagnóstico de equipo para técnicos (semáforo); llama a diagnostico-equipo.ps1
+│   └── diagnostico-equipo.ps1
 │
 ├── docs/
 │   ├── ARCHITECTURE.md           # Arquitectura, componentes, convenciones
@@ -121,7 +123,8 @@ seprn-sitio/
 │   ├── QA-NOTES.md               # Bugs reales ya cazados, con causa raíz — consultar antes de fetch()/appendRow() nuevos
 │   ├── manual-sistema-registro.html    # Manual de uso interno del sistema de registro (Conferencia IA)
 │   ├── manual-formacion-docente.html   # Manual de uso interno del Centro de Formación Docente
-│   └── manual-oficios.html             # Guía rápida visual de la Oficina interna OTDE (capturas en images/manual-oficios/)
+│   ├── manual-oficios.html             # Guía rápida visual de la Oficina interna OTDE (capturas en images/manual-oficios/)
+│   └── guia-aulas-de-medios.html       # Guía de campo para técnicos de Mantenimiento (semáforo de equipo, kit, imagen limpia)
 │
 ├── kit-digital/                  # Recursos digitales OTDE (banco de materiales)
 │

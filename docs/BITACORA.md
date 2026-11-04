@@ -16,6 +16,24 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-11-04 · Aulas de medios: diagnóstico, guía de campo y programa de diagnóstico
+
+| | |
+|---|---|
+| **Fecha** | 2026-11-04 (segunda sesión del día) |
+| **Sesión** | Jorge pidió ayuda técnica para el equipo de Mantenimiento: escuelas reportan equipos lentos, o más lentos, después de la visita. Se revisó la hoja `Solicitudes_Mantenimiento_2026` (35 solicitudes, 16 reportes de visita del 18 sep al 23 oct) con el conector de Sheets, solo lectura, y el disco externo que usan los técnicos (solo lectura, nada ejecutado). |
+| **Diagnóstico** | 10 de 11 visitas a aulas instalaron la misma receta (Windows 10 + Office + Banco de Materiales + Toolwiz Time Freeze) en equipos de 2-4 GB con disco mecánico (HP Mini, HP Pro 3500, Compaq 100, Lanix). Causas: Windows 10 sobrado para el equipo, congelador que borra las actualizaciones en aulas con internet (se vuelven a bajar en cada arranque), primer arranque inconcluso al irse el técnico, y herramientas pesadas en el kit. El reporte de visita no registra RAM, disco ni tiempo de arranque. |
+| **Banco de Materiales** | Paquete de la Dirección de Educación Elemental: 22 GB, catálogo PHP + MySQL sobre XAMPP 7.2.9, 22,105 `.swf`. Por encabezado de cada `.swf`: de 447 materiales con Flash, 231 son solo ActionScript 1/2 (Ruffle los reproduce) y 216 usan AS3 (soporte parcial, probar). |
+| **Kit de mantenimiento** | La revisión del disco encontró hallazgos de seguridad. Se tratan como incidente **fuera del repo** (es público): notas, lista de escuelas por prioridad y un programa de revisión en `~/Proyectos/trabajo/aulas-medios-incidente/`. |
+| **Guía de campo** | `docs/guia-aulas-de-medios.html` (nueva, `noindex`, mismo estilo que `docs/manual-oficios.html`, imprimible): 6 reglas de oro, por qué quedan lentas, semáforo de equipo (verde/amarillo/rojo), kit gratuito y legal, imagen maestra limpia, aligerar Windows 10, congelador con y sin internet, Banco con XAMPP sin arranque automático, piezas/RAM/bajas y lista de cierre de visita. Revisada con Playwright a 375 px: sin scroll horizontal. |
+| **Programa de diagnóstico** | `descargas/diagnostico-equipo.bat` + `.ps1` (UTF-8 con BOM, CRLF): solo lee el equipo, pide CCT y número, agrega una fila a `inventario-equipos.csv` en la USB y muestra el color del semáforo y qué instalar. **Sin probar en Windows** (no hay PowerShell en la Mac). |
+| **Documento para la Dra.** | "Aulas de medios: diagnóstico y propuesta OTDE" en Claude Docs (https://claude.ai/artifact/7tKXkLr99xoj8neuHRqwiD): cifras, causas, propuesta sin costo, impulso a las aulas y qué se necesita de la Subdirección. El kit se menciona solo como "renovar con software gratuito o con licencia". |
+| **Pendiente** | Jorge: atender primero el seguimiento de `~/Proyectos/trabajo/aulas-medios-incidente/NOTAS.md`. Después: probar `diagnostico-equipo.bat` en una PC con Windows antes de publicarlo, revisar la guía con los técnicos, revisar y enviar el documento a la Dra., piloto en una escuela que reportó lentitud. ROADMAP 41. |
+| **Documentación actualizada** | Este checkpoint, `docs/ROADMAP.md` (41 nuevo), `README.md` (árbol de archivos), `CLAUDE.md` (Pendientes vigentes). |
+| **Commits** | Solo el de este cierre (guía + programa de diagnóstico + docs). |
+
+---
+
 ## CHECKPOINT — 2026-11-04 · Reporte de octubre cerrado y diseño de periodos con fecha de corte
 
 | | |
