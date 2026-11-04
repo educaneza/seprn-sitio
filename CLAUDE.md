@@ -350,7 +350,8 @@ ya resueltos al final de `docs/SISTEMAS.md`. Lo genuinamente abierto:
   en producción (`oficios.html`, arrancado oficialmente el 12 oct 2026; 2C el 19 oct). Falta:
   que Jorge pruebe un oficio de salida real, importar
   el primer caso real de Asesorías resueltas (Nancy llena *Fecha de realización* y *Asistentes*),
-  llenar `NP_planeacion` en cada curso nuevo (sin él, el curso no sale en el reporte mensual), y
+  llenar `NP_planeacion` en cada curso nuevo **antes** de la primera importación (sin él sale
+  como no planeado, y llenarlo después no corrige la fila: `docs/QA-NOTES.md #59`), y
   siguiente paso (2E). `docs/PLAN-OPERACION-INTERNA.md` y ROADMAP ítem 27.
 - **Agenda SEPRN** (sustituir el calendario de Outlook de Planeación): prototipo publicado en
   `agenda-prototipo.html` el 21 oct 2026; falta que Planeación valide campos, catálogos, quién
@@ -359,7 +360,9 @@ ya resueltos al final de `docs/SISTEMAS.md`. Lo genuinamente abierto:
   Plantilla, entrevistas y criterio de decisión en `docs/DIAGNOSTICO-DIFUSION.md`. ROADMAP ítem 38.
 - **Reporte mensual de Planeación**: la bitácora no avisa de lo que se queda fuera (visita sin
   reporte, asesoría sin "Resuelto", correo sin entrega, comisión sin actividad). Revisarlo antes
-  de entregar; revisión automática en `docs/ROADMAP.md` ítem 39.
+  de entregar; revisión automática en `docs/ROADMAP.md` ítem 39. **Periodos con fecha de corte**
+  (Planeación pide noviembre el 24 nov y diciembre el 11 dic, con lo del 25-30 nov): construir
+  antes del 11 dic 2026, ROADMAP ítem 40.
 - **`PANEL_TOKEN` débil** (4 caracteres, fácil de adivinar): cambiarlo en todos los proyectos a la vez. ROADMAP ítem 36.
 - **Formación Docente — calendario**: iPhone y computadora confirmados; falta Android y Outlook.
   Compartir la liga `?calendario=ACF-2627-001`. Los correos casi no salen en cursos grandes por

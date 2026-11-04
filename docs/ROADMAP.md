@@ -1077,6 +1077,35 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     fecha del evento) contra `Actividades`; resultado en una pestaña "Revisión AAAA-MM", sin
     escribir en las fuentes. Toca 6 proyectos: desplegar primero los backends y al final la
     bitácora.
+    **Agregado el 4 nov 2026:**
+    - **Comisiones que solo justifican inasistencia** (4844, 4855 y 4862 de octubre) no llevan
+      reporte ni actividad. Agregar en `oficios.html` una pregunta obligatoria, sin opción por
+      defecto, "¿Para qué es esta comisión?" (*Actividad de OTDE (va al reporte)* / *Solo
+      justificar inasistencia*), en una columna nueva de `Numeros`; la revisión ignora las de
+      "Solo justificar".
+    - **Un sistema lento tumba todo el menú.** `bitConsultarBackend_` consulta los 5 backends en
+      fila sin límite propio; el 4 nov un 500 de Mantenimiento y un "Excedió el tiempo máximo de
+      ejecución" dejaron el reporte a medias. Cada fuente debe fallar sola con aviso ("no respondió
+      a tiempo") y el reporte salir con las demás.
+40. **Bitácora: periodos de reporte con fecha de corte en vez de meses de calendario** (abierto 4
+    nov 2026; **construir entre el 25 nov y el 11 dic 2026**, junto con el ítem 39). Planeación
+    pide el reporte en fechas fijas: noviembre el 24 nov; diciembre el 11 dic, e incluye lo del 25
+    al 30 nov. Las de 2027 aún no las tiene Jorge. Diseño acordado:
+    - Tabla `Periodo | Fecha de corte | Entregado` en `Config` de la Bitácora, llenada por Jorge.
+      Cada periodo empieza el día siguiente al corte anterior. Sin corte registrado se usa el mes
+      de calendario y el reporte avisa que falta capturarlo.
+    - Cada actividad cae en su periodo por su fecha de inicio; la columna `Mes` pasa a significar
+      "periodo de reporte" (mismo formato AAAA-MM).
+    - **Regla 3 (confirmada por Jorge):** un periodo marcado "Entregado" se congela; lo que llegue
+      tarde (p. ej. un reporte de visita capturado después del corte) entra al siguiente periodo
+      abierto con nota.
+    - Mantenimiento y Asesorías mandan la fecha de cada visita: la bitácora pide los meses que
+      toca el periodo y filtra (sin cambiar esos backends). Formación recorta cada curso al
+      periodo en vez del mes. **Soporte y Correo** sí cambian: hoy mandan el resumen ya sumado por
+      mes, necesitan `desde`/`hasta`; el concentrado mensual de Correo (N.P. 12) debe seguir el
+      periodo.
+    - Si no se alcanza: para el 11 dic, generar 2026-11 y 2026-12 y mover a mano las filas del 25
+      al 30 nov.
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue

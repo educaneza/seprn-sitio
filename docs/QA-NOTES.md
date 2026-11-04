@@ -1530,3 +1530,21 @@ es lo único que pasa `data-src` a `src`, y solo corre al hacer clic; ni `cte.ht
 
 **Regla:** al rotar la sesión activa, cambiar `data-src` → `src` en la nueva y `src` → `data-src`
 en la que se colapsa.
+
+## 59. Bitácora: llenar `NP_planeacion` después de importar no corrige la actividad
+
+**Síntoma (4 nov 2026):** el 30 oct se llenó `NP_planeacion` en 4 cursos de octubre para que
+salieran en su N.P., pero en `Actividades` sus filas (BIT-0012 a 0015) seguían sin N.P., con
+"Origen: Convocatoria de…" y el propósito de no planeado.
+
+**Causa raíz:** `bitAgregarActividades_` solo reescribe filas existentes si son `regenerable`
+(los resúmenes `SOP:` y `CORREO:`). Las filas `FD:<curso>:<mes>` y `MAN:<folio>:<mes>` se
+escriben una sola vez: "la hoja manda". Un dato corregido en la fuente después de la primera
+importación no llega.
+
+**Fix:** borrar las filas afectadas en `Actividades` y volver a traer (o "Generar reporte del
+mes"). Salen con IDs nuevos; `bitSiguienteId_` parte del mayor existente, así que puede reusar
+números de filas borradas al final.
+
+**Regla:** llenar `NP_planeacion` antes de la primera importación del mes. Si una fuente se
+corrigió después, borrar su fila en `Actividades` y volver a traer.

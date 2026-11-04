@@ -16,6 +16,24 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-11-04 · Reporte de octubre cerrado y diseño de periodos con fecha de corte
+
+| | |
+|---|---|
+| **Fecha** | 2026-11-04 |
+| **Sesión** | Apertura con `/open` (gh estaba en `albertobonillat-collab`; no se cambió porque la sesión arrancó en modo plan). Jorge eligió cerrar el reporte de octubre, ya vencido para Planeación. Sin cambios al repo: correcciones en el Sheet de la Bitácora con el conector de Sheets (aprobación de Jorge en cada bloque) y corridas del menú por Jorge. |
+| **Cursos sin N.P. (trampa)** | El 30 oct se llenó `NP_planeacion` en `Cursos`, pero BIT-0012 a 0015 (ACF-2627-001/002/003, CNF-2627-002) ya estaban en `Actividades` sin N.P. y como "no planeados". Las filas `FD:` no son `regenerable` (`bitAgregarActividades_`): volver a traerlas no las corrige. Se borraron, junto con BIT-0028/0029 (MAN-0022/0021, "0 equipos", previas a v14), y se volvieron a importar: BIT-0028 → N.P. 5, BIT-0029 y 0030 → N.P. 10, BIT-0031 → N.P. 13, BIT-0032/0033 las dos visitas de solo equipos administrativos (3 y 4 equipos). Los IDs se reutilizan porque `bitSiguienteId_` parte del mayor existente. `docs/QA-NOTES.md #59`. |
+| **BIT-0018 (MIED)** | Reescrita (aprobada por Jorge) con las comisiones 4845-4848 y 4854: Cuitláhuac (21 oct), Netzahualcóyotl (22), Lic. Benito Juárez (23) y Miguel Hidalgo y Costilla (27), sectores V y X; Responsable "Suarsor y OTDE". Sin cifras de alumnos (no se tenían). |
+| **Fallas del menú** | Primera corrida: Mantenimiento devolvió HTTP 500; un reintento terminó en "Excedió el tiempo máximo de ejecución". Código publicado de Mantenimiento y Bitácora idéntico al repo (`desplegar.sh` sin `--publicar`), `Reportes de visita` sin datos raros, `consulta` respondiendo en ~2 s: falla pasajera de Google. La pestaña `Reporte 2026-10` final quedó sin el bloque "Avance de la planeación" (corrida cortada después de las METAS; no va al Excel). `bitConsultarBackend_` consulta los 5 sistemas en fila sin límite de tiempo: ROADMAP 39. |
+| **Reporte 2026-10** | META 21: 10 · META 23: 6. Correo subió a 22 atendidas. Revisado celda por celda con `get_values`. |
+| **Comisiones solo para justificar** | 4844, 4855 y 4862 son oficios de comisión que solo justifican inasistencia: no llevan reporte ni actividad. Propuesta (sin construir): pregunta obligatoria "¿Para qué es esta comisión?" en `oficios.html`; la revisión del ROADMAP 39 ignora las de "Solo justificar". |
+| **Periodos con fecha de corte** | Los reportes se entregan en fechas fijas (noviembre el 24 nov; diciembre el 11 dic, con lo del 25-30 nov). Diseño acordado: tabla de cortes en `Config`, cada actividad cae en su periodo por fecha de inicio, y **regla 3 (confirmada por Jorge): un periodo entregado se congela y lo que llegue tarde pasa al siguiente periodo abierto con nota**. ROADMAP 40, fecha límite 11 dic. |
+| **Pendiente** | Jorge: cuando Alejandro capture el reporte de 4851/4852 (Cuauhtémoc, 23 oct), volver a generar 2026-10 (debe quedar META 21: 11 y reaparecer el bloque de avance) y pasarlo al Excel. Confirmar con Alejandro MAN-0021/0022 (mismos docentes/alumnos, horarios encimados). Siguen los del 30 oct (7 oficios por cerrar con "ya llega sola", OF-0078, oficio de salida real 2C) y el permiso de Drive de Correo. **Siguiente:** ROADMAP 40 + 39 juntos, entre el 25 nov y el 11 dic (después de entregar noviembre). gh quedó en `albertobonillat-collab`. |
+| **Documentación actualizada** | Este checkpoint, `docs/ROADMAP.md` (39 y 40 nuevo), `docs/QA-NOTES.md` (#59), `docs/TABLERO-SALUD.md` (Bitácora, Oficios), `CLAUDE.md` (Pendientes vigentes). |
+| **Commits** | Solo el de este cierre. |
+
+---
+
 ## CHECKPOINT — 2026-10-30 · Opening de la 2da Sesión CTE verificado y limpieza de datos de la Oficina interna
 
 | | |
