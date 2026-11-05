@@ -949,6 +949,22 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     reemplazar el `.exe` en `descargas/`, actualizar el texto y el tamaño de la tarjeta de
     descarga y la guía paso a paso (aparece el selector 2016/2019 y la descarga de ~830 MB), y
     avisar que Windows 7 ya no está soportado.
+    **Desde el 5 nov 2026 se puede hacer en la VM de pruebas** (`ssh winvm`, ver `CLAUDE.md`).
+    Lo que se encontró al revisar el proyecto v3 (`Instalador_Office_2019/Instalador_Office_2019.iss`):
+    - El `.exe` publicado es Inno Setup 6.7, 32 bits (x86): compilado en la VM ARM sigue
+      corriendo en las PCs x64 de las escuelas.
+    - El `.iss` tiene rutas fijas de otra PC (`C:\Users\UsuarioGEM\Desktop\Instalador_Files\...`
+      y el ícono en `Downloads`): pasarlas a rutas relativas. Falta localizar
+      `Icon Office OTDE circulo.ico` (no está en la carpeta del proyecto).
+    - Probar el `.bat` de punta a punta escribe de verdad: manda un registro "INICIANDO" al Apps
+      Script y, si `setup.exe` termina bien, `accion=contador` suma una instalación a la escuela.
+      Agregar un **modo de prueba** que haga control remoto, descarga de la base y validación de
+      CCT (bloqueo y límite) pero no registre, no sume y no ejecute `setup.exe`. Compilar para
+      publicar sin ese modo.
+    - Las ventanas de captura de CCT y avisos son `InputBox`/`MessageBox`: por SSH no se ven,
+      esas partes las prueba Jorge en la ventana de UTM. No instalar Office real en la VM (ARM,
+      ~3 GB, 14 GB libres).
+    - Revisar contra la v4 qué de esto ya trae (su `.iss` vive en `Instalador_Office_v4/`).
 31. ~~**"Que se note que sigue trabajando" — extender al resto de formularios.**~~ — **resuelto el
     19 oct 2026**: `estrategias-nacionales.html` (Registrar y Cancelar) ya usa `esperaConProgreso()`;
     `asistencia.html` se retiró. El 5 oct 2026
@@ -1111,8 +1127,9 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     reportan equipos más lentos tras el mantenimiento. Ya hecho: `docs/guia-aulas-de-medios.html`,
     `descargas/diagnostico-equipo.bat/.ps1` y documento para la Dra. (detalle en BITACORA, 4 nov).
     Falta:
-    - Probar `diagnostico-equipo.bat` en una PC con Windows (sin probar: no hay PowerShell en la
-      Mac); después ligarlo desde algún lugar visible para los técnicos.
+    - ~~Probar `diagnostico-equipo.bat` en Windows~~ — probado el 5 nov 2026 en una PC real
+      (Jorge) y en la VM de pruebas (semáforo VERDE y fila completa en el CSV). Falta ligarlo
+      desde algún lugar visible para los técnicos.
     - Rehacer las imágenes de disco por modelo desde una instalación limpia (guía §6).
     - Probar Ruffle con el Banco de Materiales: 231 materiales AS1/2 deberían funcionar, 216 AS3
       hay que probarlos. Si funciona, quitar Flash Player y el Firefox viejo de la receta.

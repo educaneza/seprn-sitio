@@ -342,8 +342,14 @@ Para saber qué sistema necesita atención (y cuál se está olvidando), empezar
 ya resueltos al final de `docs/SISTEMAS.md`. Lo genuinamente abierto:
 - **Aulas de medios (4 nov 2026)**: primero el seguimiento del kit de mantenimiento, que vive
   **fuera del repo** (`~/Proyectos/trabajo/aulas-medios-incidente/NOTAS.md`; no copiar detalles
-  aquí, el repo es público). Después: probar `descargas/diagnostico-equipo.bat` en Windows,
-  revisar `docs/guia-aulas-de-medios.html` con los técnicos, Ruffle para el Banco. ROADMAP 41.
+  aquí, el repo es público). Después: ligar `descargas/diagnostico-equipo.bat` (ya probado en
+  Windows el 5 nov) donde lo vean los técnicos, revisar `docs/guia-aulas-de-medios.html` con
+  ellos, Ruffle para el Banco. ROADMAP 41.
+- **Pruebas en Windows**: VM "Windows-Pruebas" (UTM, Windows 11 ARM) en la Mac de Jorge; Claude
+  entra con `ssh winvm` y trabaja en `C:\pruebas`. Jorge tiene que encenderla en UTM. Las ventanas
+  emergentes (`InputBox`/`MessageBox`) no se ven por SSH, y el hardware no es el de una escuela.
+- **Instalador de Office v4**: recompilar con Inno Setup en la VM y probarlo con un modo de prueba
+  que no registre ni sume al contador de la escuela. ROADMAP 30.
 - **Crea tu app educativa / Banco de Materiales 2.0**: falta que Jorge revise PDA y apps, decida
   la licencia y valide con la Dra. Galindo; después, carta descriptiva del taller, ficha técnica y
   catálogo del banco. `docs/ROADMAP.md` ítem 35.

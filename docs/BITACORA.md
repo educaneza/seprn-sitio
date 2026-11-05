@@ -16,6 +16,21 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-11-05 · VM de Windows para pruebas y semáforo de equipo probado
+
+| | |
+|---|---|
+| **Fecha** | 2026-11-05 (cuarta sesión del día) |
+| **Semáforo de equipo** | Jorge probó `descargas/diagnostico-equipo.bat` en una PC real: funciona (sin captura). También se corrió en la VM: VERDE, fila completa en `inventario-equipos.csv`. |
+| **Revisión de equipos (incidente)** | Jorge probó el script de revisión del kit (vive fuera del repo) en dos PCs: da los veredictos esperados. Resultados y pistas nuevas en las notas privadas (`~/Proyectos/trabajo/aulas-medios-incidente/NOTAS.md`), no aquí. Pendiente opcional: excluir dos falsos positivos de arranque (actualizador de un juego y Lenovo Service Bridge). |
+| **VM de Windows** | UTM + Windows 11 Pro ARM64 en la Mac ("Windows-Pruebas", 6 GB RAM, disco de 48 GB). OpenSSH Server con llave propia; Claude entra con `ssh winvm`, carpeta `C:\pruebas`. Sin carpetas compartidas con la Mac a propósito. Para hacer espacio se movieron ~18 GB de videos sueltos de `~/Movies` a un SSD externo (verificados por SHA-1, originales en la Papelera). |
+| **Instalador de Office** | Revisado el proyecto v3 (fuera del repo): Inno Setup 6.7 x86, rutas fijas de otra PC en el `.iss`, falta el `.ico`, y el `.bat` escribe registros reales y suma al contador de la escuela. Plan anotado en ROADMAP 30 (modo de prueba, recompilar en la VM). Jorge pidió dejarlo para otra sesión. |
+| **Pendiente** | Instalador de Office: decidir v3 o v4, localizar el `.ico`, agregar modo de prueba y recompilar en la VM (ROADMAP 30). Ligar el semáforo donde lo vean los técnicos (ROADMAP 41). Lo de los checkpoints anteriores sigue igual: confirmar `OTDE-INC-0007` y `OTDE-CAP-0647`, periodos con fecha de corte antes del 24 nov / 11 dic (ROADMAP 40). |
+| **Documentación actualizada** | Este checkpoint, `docs/ROADMAP.md` (30 y 41), `CLAUDE.md` (pendientes: aulas de medios, VM, instalador). |
+| **Commits** | Solo el de este cierre (docs). |
+
+---
+
 ## CHECKPOINT — 2026-11-05 · Correo: fila 1 de las 5 hojas protegida
 
 | | |
