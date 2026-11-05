@@ -16,6 +16,21 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-11-05 · Formación Docente: inscripciones sin folio por encabezado borrado
+
+| | |
+|---|---|
+| **Fecha** | 2026-11-05 |
+| **Sesión** | Jorge sospechaba que quienes se inscriben no reciben folio. El código publicado era idéntico al repo (`desplegar.sh formacion-docente`, vista previa). Se revisó la hoja `Inscripciones` con el conector de Sheets. |
+| **Causa** | `Inscripciones!A1` estaba en `" "` en lugar de `Folio` (edición a mano). Al leer por encabezado, `generarFolio()` regresaba `OTDE-CAP-0001` a todos y `agregarInscripcion()` dejaba la columna vacía. 20 filas afectadas (727-746, del 4 nov 12:19 al 5 nov 11:41). También dejaron de verlas los recordatorios, "Sí, ya me llegó" y la constancia. |
+| **Corrección en la hoja** | Folios `OTDE-CAP-0627` a `0646` por orden de fecha, y después el encabezado `Folio` restaurado. Primero se asignó desde 0626, pero ese número ya era de la fila 191 desde el 15 oct (duplicado de 0089), así que se recorrieron una posición. Revisado: la columna completa quedó sin duplicados. A los afectados no se les avisó (decisión de Jorge). Fila 1 de `Inscripciones` protegida con "solo advertencia". `OTDE-CAP-0584` tiene `Fecha_registro` en `" "` (misma edición a mano, sin corregir). |
+| **Código** | `generarFolio()` lanza un error claro si no existe la columna `Folio`. Publicado como versión @30 en la misma URL, verificado idéntico al repo. |
+| **Pendiente** | Activadores ya reinstalados por Jorge tras v30. Confirmar que la próxima inscripción real sale con `OTDE-CAP-0647`. Opcional: averiguar quién editó la hoja el 4 nov (historial de versiones) y recuperar la fecha de 0584. Lo demás sigue igual que en el checkpoint anterior (aulas de medios, ROADMAP 41). |
+| **Documentación actualizada** | Este checkpoint, `docs/QA-NOTES.md` (#60), `docs/SISTEMAS.md` (Formación Docente), `docs/TABLERO-SALUD.md` (fila Formación Docente). |
+| **Commits** | Solo el de este cierre (guarda en `generarFolio()` + docs). |
+
+---
+
 ## CHECKPOINT — 2026-11-04 · Aulas de medios: diagnóstico, guía de campo y programa de diagnóstico
 
 | | |

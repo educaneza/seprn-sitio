@@ -964,6 +964,12 @@ function estilizarEncabezado(hoja, numCols) {
 function generarFolio(hoja) {
   const datos  = hoja.getDataRange().getValues();
   const colFolio = indicesPorEncabezado_(datos[0]).Folio;
+  // Sin el encabezado "Folio" (nov 2026: alguien lo borró a mano) esto
+  // regresaba OTDE-CAP-0001 a todos y la fila se guardaba sin folio. Mejor
+  // que el registro falle visible a que se acumulen inscripciones huérfanas.
+  if (colFolio === undefined) {
+    throw new Error('La hoja Inscripciones no tiene la columna "Folio" (encabezado borrado o cambiado). Avisa a OTDE.');
+  }
   const prefix = 'OTDE-CAP-';
   const maxNum = datos.slice(1)
     .map(row => String(row[colFolio]))

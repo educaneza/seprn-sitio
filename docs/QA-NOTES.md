@@ -1548,3 +1548,30 @@ números de filas borradas al final.
 
 **Regla:** llenar `NP_planeacion` antes de la primera importación del mes. Si una fuente se
 corrigió después, borrar su fila en `Actividades` y volver a traer.
+
+## 60. Formación Docente: inscripciones sin folio y "OTDE-CAP-0001" para todos
+
+**Síntoma (5 nov 2026):** desde el 4 nov a las 12:19, las inscripciones nuevas quedaban en
+`Inscripciones` con la columna A vacía, y la página le mostraba a cada docente el folio
+`OTDE-CAP-0001` (que es de otra docente, de julio). Fueron 20 filas (727 a 746).
+
+**Causa raíz:** el encabezado `Inscripciones!A1` estaba en `" "` (alguien lo borró a mano). Las
+columnas se leen por nombre (`indicesPorEncabezado_`), así que sin `Folio` la función
+`generarFolio()` no veía ningún folio previo y regresaba `0001`, y `agregarInscripcion()` se
+saltaba la columna. De paso, los recordatorios, "Sí, ya me llegó" y la constancia dejaban de
+encontrar esas filas, porque filtran o buscan por `Folio`.
+
+**Fix:** se restauró `Folio` en A1 y se asignaron `OTDE-CAP-0627` a `0646` por orden de fecha
+(primero los folios y después el encabezado, para que ningún registro tomara un número en medio).
+Primero se asignaron desde 0626, tomando como último folio el de la última fila, pero **0626 ya
+existía**: el 15 oct se le dio a la fila 191 al resolver el duplicado de 0089. Se recorrieron una
+posición. El siguiente folio se calcula con el **máximo de toda la columna**, igual que
+`generarFolio()`, nunca con la última fila. Pista de la misma edición a mano: `OTDE-CAP-0584`
+tiene `Fecha_registro` en `" "`. A los
+afectados no se les avisó (decisión de Jorge): su comprobante dice 0001, así que una aclaración se
+busca por RFC. `generarFolio()` ahora truena con un mensaje claro si falta la columna, en vez de
+inventar un folio (versión @30). La fila 1 de `Inscripciones` quedó protegida con "solo
+advertencia" (no bloquea a nadie ni a los scripts, solo avisa antes de editar).
+
+**Regla:** en hojas que se leen por encabezado, perder un encabezado no da error, solo "desaparece"
+la columna. Si un registro sale sin un dato que siempre debería llevar, revisar primero la fila 1.
