@@ -1577,7 +1577,7 @@ advertencia" (no bloquea a nadie ni a los scripts, solo avisa antes de editar).
 apareció en `0` en lugar de `Fecha`. Ahí sí hubo error visible: `colCorreo_()` (`Config.gs`) truena
 si falta la columna, y el formulario mostró "La hoja Incidencias no tiene la columna \"Fecha\"",
 así que nada se guardó mal, pero ninguna incidencia entraba. Fix: restaurar el encabezado a mano.
-Pendiente: fila 1 de las 5 hojas de Correo con protección de "solo advertencia".
+La fila 1 de las 5 hojas de Correo quedó protegida con "solo advertencia" el mismo día.
 
 **Regla:** en hojas que se leen por encabezado, perder un encabezado no da error, solo "desaparece"
 la columna. Si un registro sale sin un dato que siempre debería llevar, revisar primero la fila 1.

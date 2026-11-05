@@ -16,6 +16,20 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-11-05 · Correo: fila 1 de las 5 hojas protegida
+
+| | |
+|---|---|
+| **Fecha** | 2026-11-05 (tercera sesión del día) |
+| **Sesión** | Seguimiento del checkpoint anterior. Desde Chrome (Claude in Chrome), en `Solicitudes_Correo_2026_2027` → Datos → Proteger hojas y rangos, se agregó la fila 1 de `Alta`, `Cambio de Contraseña`, `Reset 2FA`, `Cambio y Eliminar Autenticación` e `Incidencias` con "Mostrar una advertencia" y la descripción "Encabezados: no editar (los lee el sistema)". Mismo criterio que `Inscripciones` de Formación Docente. Las hojas ya tenían protecciones con advertencia en las columnas automáticas (filas 2 en adelante), pero ninguna en la fila 1. |
+| **Verificación** | Las 5 protecciones aparecen en el panel, cada una en su hoja. El A1 de las 5 hojas dice `Fecha`. No se probó la advertencia editando un encabezado. La última incidencia sigue siendo `OTDE-INC-0006`. |
+| **Incidente menor** | Un clic fuera de lugar abrió la protección existente de `Incidencias!T2:T1004` y se empezó a escribir en `Incidencias!T2`. Se canceló con Escape (la celda quedó vacía, como estaba) y el panel con Cancelar (la descripción original se conserva). Si hay duda, revisar el historial de versiones del 5 nov. |
+| **Pendiente** | Pedir a la usuaria que reenvíe su incidencia y confirmar `OTDE-INC-0007`. Avisar a Marcos que no escriba en la fila 1 (texto listo en la conversación). Probar una vez que salga la advertencia al editar un encabezado. Lo demás sigue igual que en los checkpoints anteriores (aulas de medios, ROADMAP 41; periodos con fecha de corte antes del 24 nov / 11 dic, ROADMAP 40). |
+| **Documentación actualizada** | Este checkpoint, `docs/QA-NOTES.md` (#60, segundo caso), `docs/TABLERO-SALUD.md` (fila Correo). |
+| **Commits** | Solo el de este cierre (docs). |
+
+---
+
 ## CHECKPOINT — 2026-11-05 · Correo: Incidencias rechazadas por encabezado `Fecha` sobrescrito
 
 | | |
