@@ -1573,5 +1573,11 @@ busca por RFC. `generarFolio()` ahora truena con un mensaje claro si falta la co
 inventar un folio (versión @30). La fila 1 de `Inscripciones` quedó protegida con "solo
 advertencia" (no bloquea a nadie ni a los scripts, solo avisa antes de editar).
 
+**Segundo caso (5 nov 2026, Correo):** `Incidencias!A1` de `Solicitudes_Correo_2026_2027`
+apareció en `0` en lugar de `Fecha`. Ahí sí hubo error visible: `colCorreo_()` (`Config.gs`) truena
+si falta la columna, y el formulario mostró "La hoja Incidencias no tiene la columna \"Fecha\"",
+así que nada se guardó mal, pero ninguna incidencia entraba. Fix: restaurar el encabezado a mano.
+Pendiente: fila 1 de las 5 hojas de Correo con protección de "solo advertencia".
+
 **Regla:** en hojas que se leen por encabezado, perder un encabezado no da error, solo "desaparece"
 la columna. Si un registro sale sin un dato que siempre debería llevar, revisar primero la fila 1.

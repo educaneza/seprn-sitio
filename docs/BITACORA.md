@@ -16,6 +16,20 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-11-05 · Correo: Incidencias rechazadas por encabezado `Fecha` sobrescrito
+
+| | |
+|---|---|
+| **Fecha** | 2026-11-05 (segunda sesión del día) |
+| **Sesión** | Una usuaria reportó (captura de WhatsApp) que el formulario de Incidencias de `correo.html` respondía "No se pudo registrar el reporte: La hoja Incidencias no tiene la columna \"Fecha\"". Se revisó `Solicitudes_Correo_2026_2027` con el conector de Sheets. |
+| **Causa** | `Incidencias!A1` decía `0` en lugar de `Fecha` (edición a mano; ningún `.gs` escribe en la fila 1, solo la leen). `colCorreo_()` (`Config.gs`) truena si falta la columna, así que el envío se rechazó con mensaje claro en vez de guardarse mal. Las otras 4 hojas tenían `Fecha` en A1. Misma familia que el `Folio` borrado de Formación Docente de esta mañana (`docs/QA-NOTES.md #60`). |
+| **Corrección** | Jorge escribió `Fecha` en A1 (la escritura por el conector la bloqueó el permiso automático). Verificado: la fila 1 de Incidencias tiene todos los encabezados que usa el backend. Sin envío de prueba (crearía un folio real y avisaría a Marcos). Última incidencia registrada: `OTDE-INC-0006` (29 sep); no se sabe desde cuándo estaba roto. |
+| **Pendiente** | Pedir a la usuaria que reenvíe su incidencia y confirmar que sale `OTDE-INC-0007`. Proteger la fila 1 de las 5 hojas de Correo con "solo advertencia" (como en `Inscripciones`) y avisar a Marcos que no escriba en la fila 1. Lo demás sigue igual que en el checkpoint anterior. |
+| **Documentación actualizada** | Este checkpoint, `docs/QA-NOTES.md` (#60, segundo caso), `docs/TABLERO-SALUD.md` (fila Correo). |
+| **Commits** | Solo el de este cierre (docs). |
+
+---
+
 ## CHECKPOINT — 2026-11-05 · Formación Docente: inscripciones sin folio por encabezado borrado
 
 | | |
