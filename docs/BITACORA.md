@@ -16,6 +16,19 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-11-08 · Sesión fuera del sitio (insumos SNTE)
+
+| | |
+|---|---|
+| **Fecha** | 2026-11-08 |
+| **Sesión** | Trabajo de Jorge ajeno al sitio: llenado de un formato de captura externo con los insumos de `docs/insumos/SNTE-S36/` (carpeta ignorada por git; contiene datos personales, por eso el detalle no va en este repo público). Los archivos nuevos viven solo en esa carpeta. |
+| **Sitio y backends** | Sin cambios. |
+| **Pendiente** | Lo mismo que el checkpoint anterior (2026-11-05): instalador de Office (ROADMAP 30), ligar el semáforo de equipo (ROADMAP 41), confirmar `OTDE-INC-0007` y `OTDE-CAP-0647`, periodos con fecha de corte antes del 24 nov / 11 dic (ROADMAP 40). |
+| **Documentación actualizada** | Solo este checkpoint. |
+| **Commits** | Solo el de este cierre (docs). |
+
+---
+
 ## CHECKPOINT — 2026-11-05 · VM de Windows para pruebas y semáforo de equipo probado
 
 | | |
