@@ -348,8 +348,10 @@ ya resueltos al final de `docs/SISTEMAS.md`. Lo genuinamente abierto:
 - **Pruebas en Windows**: VM "Windows-Pruebas" (UTM, Windows 11 ARM) en la Mac de Jorge; Claude
   entra con `ssh winvm` y trabaja en `C:\pruebas`. Jorge tiene que encenderla en UTM. Las ventanas
   emergentes (`InputBox`/`MessageBox`) no se ven por SSH, y el hardware no es el de una escuela.
-- **Instalador de Office v4**: recompilar con Inno Setup en la VM y probarlo con un modo de prueba
-  que no registre ni sume al contador de la escuela. ROADMAP 30.
+- **Instalador de Office v4**: compilado y probado en la VM en modo de prueba (19 nov). Falta
+  probarlo en una PC real de escuela y después publicarlo en `descargas/` con la guía nueva de
+  `otde.html`. Su hoja de control (`ControlOTDE.gs`, fuera del repo) está pendiente de que Jorge la
+  instale en el Sheet. ROADMAP 30.
 - **Crea tu app educativa / Banco de Materiales 2.0**: falta que Jorge revise PDA y apps, decida
   la licencia y valide con la Dra. Galindo; después, carta descriptiva del taller, ficha técnica y
   catálogo del banco. `docs/ROADMAP.md` ítem 35.

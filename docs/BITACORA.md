@@ -16,6 +16,24 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-11-19 · Instalador de Office v4: compilado, modo de prueba, ventanas OTDE NEZA y hoja de control
+
+| | |
+|---|---|
+| **Fecha** | 2026-11-19 |
+| **Sesión** | Todo fuera del repo, en el proyecto del instalador (`~/Proyectos/trabajo/Instalador-Office-2019-OTDE/`, sin git) y en la VM. El sitio y los backends del repo no cambiaron. Antes de editar se respaldaron los archivos como `*_2026-11-19*.bak`. |
+| **Compilación en la VM** | Inno Setup 6.7.4 instalado en la VM (firma verificada). El `.iss` usa rutas relativas (`SourcePath`) y saca `Output\`. El diccionario LZMA bajó de 1 GB a 64 MB: con 1 GB el compilador de 32 bits tronaba con "Out of memory". EXE final de 5.1 MB, ya no los ~850 MB del 4 jun. |
+| **Modo de prueba** | `ISCC /DPRUEBA` empaqueta `modo_prueba.flag`. Con ese archivo, un solo filtro en `:HTTP_GET` deja salir únicamente el kill switch y `validar_cct`, y se omiten desinstalar e instalar. `SIMULAR_ERROR=<código>` y `SIMULAR_CCT=LIMITE` en el flag simulan esas pantallas. Jorge lo probó en la VM con 2016 (descarga de 830 MB y SHA-256) y con 2019: el Sheet de registro y el contador no cambiaron. Se corrigió la auto-destrucción, que dejaba la carpeta vacía porque el proceso que borraba "estaba parado" dentro de ella. `timeout` se cambió por `ping`, porque sin consola visible falla. |
+| **Ayuda cuando falla** | Si el código de salida no es 0 pero `WINWORD.EXE` aparece y no existía antes, cuenta como éxito (cubre `-1073740791` y `3010`). Hay un reintento automático con `-1`, `17002`, `17004`, `30015`, `30183`, `1603` y `1618`. Después sale una pantalla de ayuda según el código, con botón Reintentar hasta el intento 4; con restos de Office previo no se ofrece Reintentar, se pide reiniciar. |
+| **Sin consola, con marca OTDE NEZA** | Pedido de Jorge: que sea funcional y agradable, y que se note la OTDE NEZA. La consola va oculta (`runhidden`). Las ventanas nuevas: `ventana_pasos.ps1` (6 pasos, detalle, tiempo, avance real de la descarga de 2016 y anuncios rotativos de 6 servicios OTDE con liga; compacta, se ajusta a pantallas chicas), `pedir_cct.ps1` (reemplaza al `InputBox`: siempre encima, con foco, valida al escribir y Cancelar sí cancela) y `aviso_licencias.ps1` (licencias agotadas o CCT bloqueada: canal = enlace de sector, botón "Copiar datos"). También: ícono nuevo `OTDE-OFFICE-LOGO.ico`, panel guinda en el asistente, VersionInfo "OTDE NEZA", botones de azul a guinda, liga a la Oficina Virtual al cierre y nombre de escuela en dos líneas en la confirmación. Jorge probó todo en la VM y queda conforme. |
+| **Hoja de control** | El Dashboard del Sheet del instalador cuenta intentos, no equipos ("66 % CRÍTICO"), y su fórmula `*-1*` también cuenta los `-1073740791`. Por equipo (datos al 17 nov): 303 atendidos, 274 con Office (90 %), 29 sin Office, 52 que instalaron después de un error y 131 pendientes de cargar a CoEEE. Se escribió `AppsScript/ControlOTDE.gs` (en el proyecto del instalador), con 4 pestañas regeneradas al abrir y el menú "Marcar como cargadas a CoEEE". El cálculo se probó con Node sobre el registro real; la escritura en el Sheet no se ha corrido. |
+| **Decisiones** | Licencias agotadas: por ahora la opción ligera (ventana + enlace de sector). La solicitud automática con Telegram y la pestaña de ampliaciones quedan pendientes: hace falta el código actual del Apps Script de registro, que no está en ningún repo. En los anuncios no se incluyeron Excel fácil ni Crea tu app (liga directa o validación pendiente). |
+| **Pendiente** | Jorge: pegar `ControlOTDE.gs` en el Apps Script del Sheet "escuelas" y correr `ctlInstalar`, luego revisar las pestañas. Instalador: probar el EXE final en una PC real de escuela con Windows 10/11 (2019 y 2016) instalando Office de verdad; si pasa, reemplazar `descargas/Instalador_Office_2019_OTDE.exe` y actualizar la guía de `otde.html` (ROADMAP 30). Siguen igual: ligar el semáforo (ROADMAP 41), confirmar `OTDE-INC-0007` y `OTDE-CAP-0647`, **reporte de noviembre para Planeación el 24 nov** y periodos con fecha de corte antes del 11 dic (ROADMAP 40). |
+| **Documentación actualizada** | Este checkpoint, `docs/ROADMAP.md` (30), `docs/TABLERO-SALUD.md` (fila nueva del instalador), `CLAUDE.md` (pendiente del instalador). Fuera del repo: `docs/ROADMAP.md` y `docs/GOOGLE_SHEETS.md` del proyecto del instalador. |
+| **Commits** | Solo el de este cierre (docs). |
+
+---
+
 ## CHECKPOINT — 2026-11-10 · Sesión fuera del sitio (insumos SNTE, continuación)
 
 | | |
