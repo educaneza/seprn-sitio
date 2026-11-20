@@ -446,6 +446,10 @@ const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
 
 let acciones = [];
 let anteriores = {};
+// Periodos de reporte con fecha de corte (Config de la Bitácora, 20 nov 2026):
+// { 'AAAA-MM': { corte: 'AAAA-MM-DD' | '', entregado } }. Vacío con un backend
+// viejo: entonces se cuenta por mes calendario, como antes.
+let periodos = {};
 let idEnvioActual = null;
 // Último texto que el formulario puso solo en cada campo: si el usuario no lo
 // tocó, al cambiar de acción se reemplaza; si ya lo editó, se respeta.
@@ -546,6 +550,7 @@ async function cargarPlaneacion(clave) {
 function poblarFormulario(datos) {
   acciones = datos.acciones || [];
   anteriores = datos.anteriores || {};
+  periodos = datos.periodos || {};
   const np = $('np');
   np.innerHTML = '<option value="">Selecciona…</option>';
   acciones.forEach(function (a) {
@@ -697,13 +702,37 @@ function fechaTexto(inicio, fin) {
   return 'Del ' + dia(inicio) + ' de ' + mes(inicio) + anioInicio + ' al ' + dia(fin) + ' de ' + mes(fin) + ' de ' + anio(fin);
 }
 
+// Mismo cálculo que bitPeriodoDeFecha_ / bitPeriodoAbiertoDesde_ de bitacora.gs.
+function mesVecino(mes, delta) {
+  const p = mes.split('-').map(Number);
+  const f = new Date(p[0], p[1] - 1 + delta, 1, 12);
+  return f.getFullYear() + '-' + ('0' + (f.getMonth() + 1)).slice(-2);
+}
+function isoDia(f) {
+  return f.getFullYear() + '-' + ('0' + (f.getMonth() + 1)).slice(-2) + '-' + ('0' + f.getDate()).slice(-2);
+}
+function periodoDeFecha(f) {
+  const iso = isoDia(f);
+  const mes = iso.slice(0, 7);
+  const anterior = periodos[mesVecino(mes, -1)];
+  if (anterior && anterior.corte && iso <= anterior.corte) return mesVecino(mes, -1);
+  const propio = periodos[mes];
+  if (propio && propio.corte && iso > propio.corte) return mesVecino(mes, 1);
+  return mes;
+}
+function nombreDelMes(mes) { return MESES[Number(mes.split('-')[1]) - 1]; }
+
 function actualizarFechaPreview() {
   const ini = fechaDesdeISO($('fecha-inicio').value);
   const fin = fechaDesdeISO($('fecha-fin').value);
   const prev = $('fecha-preview');
   if (!ini) { prev.textContent = ''; return; }
   if (fin && fin < ini) { prev.textContent = ''; return; }
-  prev.textContent = 'En el reporte: "' + fechaTexto(ini, fin) + '" · se cuenta en el reporte de ' + MESES[ini.getMonth()] + '.';
+  const natural = periodoDeFecha(ini);
+  let destino = natural;
+  for (let i = 0; i < 36 && periodos[destino] && periodos[destino].entregado; i++) destino = mesVecino(destino, 1);
+  prev.textContent = 'En el reporte: "' + fechaTexto(ini, fin) + '" · se cuenta en el reporte de ' + nombreDelMes(destino) +
+    (destino === natural ? '.' : ' (el de ' + nombreDelMes(natural) + ' ya se entregó).');
 }
 ['fecha-inicio', 'fecha-fin'].forEach(function (id) {
   $(id).addEventListener('change', function () {
@@ -1065,7 +1094,8 @@ $('form-actividad').addEventListener('submit', async function (ev) {
     if (d.status === 'ok') {
       const mesNum = Number(String(d.mes || '').split('-')[1]);
       $('ok-detalle').textContent = (d.meta ? 'META ' + d.meta + ' · ' : '') + (d.fechaTexto || '') +
-        (mesNum ? ' · entra en el reporte de ' + MESES[mesNum - 1] : '');
+        (mesNum ? ' · entra en el reporte de ' + MESES[mesNum - 1] : '') +
+        (d.nota ? ' (' + d.nota.replace(/\.$/, '') + ')' : '');
       $('ok-id').textContent = d.id;
       idEnvioActual = null;
       $('ok-oficio').classList.add('campo-oculto');

@@ -45,7 +45,23 @@
 //   Registrado | ID | Mes | Meta | N.P. | Origen | Tipo y nombre |
 //   Fecha inicio | Fecha fin | Fecha (texto) | Responsable | Modalidad |
 //   Lugar | CCT | Descripción | Propósito | Beneficiarios | Capturó |
-//   ID de envío | Va al reporte (Sí/No, 1 oct 2026)
+//   ID de envío | Va al reporte (Sí/No, 1 oct 2026) |
+//   Nota de periodo (20 nov 2026, ver PERIODOS)
+//
+// PERIODOS CON FECHA DE CORTE (20 nov 2026, ROADMAP 40): Planeación pide el
+// reporte en fechas fijas (noviembre el 24 nov; diciembre el 11 dic, con lo
+// del 25 al 30 nov). "Mes" ya no es el mes calendario: es el PERIODO de
+// reporte, con el mismo formato AAAA-MM. La tabla Periodo | Fecha de corte |
+// Entregado vive en Config (columnas E:G) y la llena Jorge. Un periodo va
+// del día siguiente al corte del anterior hasta su propio corte; sin corte
+// capturado se usa el mes completo y el reporte lo avisa.
+// Regla 3: un periodo marcado "Entregado" se congela (no se regenera ni se
+// vuelve a traer). Lo que llegue tarde con fecha de un periodo entregado
+// (p. ej. un reporte de visita capturado después del corte) entra al
+// periodo que se está generando, con "Nota de periodo". El "ID de envío"
+// conserva el periodo NATURAL (el de la fecha), así no se duplica lo que ya
+// se había traído. Los backends no cambian: siguen respondiendo por mes
+// calendario y la bitácora pide los meses que toca el rango y filtra.
 // ALIMENTACIÓN AUTOMÁTICA DESDE MANTENIMIENTO (24 sep 2026): cada reporte
 // de visita de reporte-visita.html se vuelve una actividad de META 21 /
 // N.P. 7 sin recapturarla. La bitácora la JALA (no Mantenimiento la empuja)
@@ -126,8 +142,24 @@ const ENCABEZADOS_ACTIVIDADES = [
   'Registrado', 'ID', 'Mes', 'Meta', 'N.P.', 'Origen', 'Tipo y nombre',
   'Fecha inicio', 'Fecha fin', 'Fecha (texto)', 'Responsable', 'Modalidad',
   'Lugar', 'CCT', 'Descripción', 'Propósito', 'Beneficiarios', 'Capturó',
-  'ID de envío', 'Va al reporte'
+  'ID de envío', 'Va al reporte', 'Nota de periodo'
 ];
+
+// Nota interna (no va al Excel de Planeación): por qué una fila cayó en un
+// periodo distinto al de su fecha (Regla 3, ver PERIODOS arriba).
+const BIT_COL_NOTA = 'Nota de periodo';
+
+// Tabla de periodos en Config, a partir de la columna E (A es Responsables).
+const BIT_COL_PERIODOS = 5;
+const BIT_ENC_PERIODOS = ['Periodo', 'Fecha de corte', 'Entregado'];
+// Septiembre y octubre ya se entregaron por mes completo (decisión de Jorge,
+// 20 nov 2026); noviembre se corta el 24 nov.
+const BIT_PERIODOS_INICIALES = [
+  ['2026-09', '2026-09-30', true],
+  ['2026-10', '2026-10-31', true],
+  ['2026-11', '2026-11-24', false]
+];
+const BIT_RE_MES = /^\d{4}-(0[1-9]|1[0-2])$/;
 
 // "Va al reporte" (1 oct 2026): un oficio de solicitud capturado aquí es
 // control, no una acción; la acción (visita, asesoría…) es lo que se reporta.
@@ -311,6 +343,7 @@ function bitPrepararHojas() {
     config.getRange(1, 3).setValue('Agrega aquí responsables nuevos (uno por fila). Aparecen en el formulario de captura.')
       .setFontColor('#6b7280');
   }
+  bitAsegurarTablaPeriodos_(config);
 
   // La hoja vacía que trae un Sheet nuevo ("Hoja 1"/"Sheet1") ya no hace falta.
   ['Hoja 1', 'Sheet1'].forEach(function (nombre) {
@@ -436,7 +469,9 @@ function doGet(e) {
       acciones: bitLeerPlaneacion_(),
       anteriores: bitDescripcionesAnteriores_(),
       responsables: bitLeerResponsables_(),
-      metas: Object.keys(BIT_METAS)
+      metas: Object.keys(BIT_METAS),
+      // Para que la vista previa diga en qué reporte cae la fecha (ver PERIODOS).
+      periodos: bitLeerPeriodos_()
     });
   }
   return bitRespuesta_({ status: 'ok', servicio: 'OTDE Bitácora de actividades' });
@@ -496,6 +531,188 @@ function bitLeerResponsables_() {
   return hoja.getRange(2, 1, hoja.getLastRow() - 1, 1).getValues()
     .map(function (r) { return String(r[0]).trim(); })
     .filter(String);
+}
+
+// ── Periodos de reporte con fecha de corte (ver PERIODOS al inicio) ──
+
+// Crea la tabla Periodo | Fecha de corte | Entregado en Config (E:G) si falta
+// y la siembra con BIT_PERIODOS_INICIALES. Si ya existe no toca nada: la llena
+// Jorge. "Periodo" va como texto para que Sheets no lo vuelva fecha.
+function bitAsegurarTablaPeriodos_(config) {
+  const col = BIT_COL_PERIODOS;
+  if (String(config.getRange(1, col).getValue()).trim() === BIT_ENC_PERIODOS[0]) return;
+  config.getRange(1, col, 1, BIT_ENC_PERIODOS.length).setValues([BIT_ENC_PERIODOS])
+    .setFontWeight('bold').setBackground('#56212f').setFontColor('#F9F8F5');
+  const filas = Math.max(config.getMaxRows() - 1, 40);
+  if (config.getMaxRows() < filas + 1) config.insertRowsAfter(config.getMaxRows(), filas + 1 - config.getMaxRows());
+  config.getRange(2, col, filas, 1).setNumberFormat('@');
+  config.getRange(2, col + 1, filas, 1).setNumberFormat('dd/mm/yyyy');
+  config.getRange(2, col + 2, filas, 1).insertCheckboxes();
+  config.getRange(2, col, BIT_PERIODOS_INICIALES.length, 3).setValues(BIT_PERIODOS_INICIALES.map(function (p) {
+    return [p[0], bitParsearFecha_(p[1]), p[2]];
+  }));
+  config.setColumnWidth(col, 90);
+  config.setColumnWidth(col + 1, 110);
+  config.setColumnWidth(col + 2, 90);
+  config.getRange(1, col + 4).setValue('Un periodo por fila (AAAA-MM). Va del día siguiente al corte anterior hasta su ' +
+    'fecha de corte. Marca "Entregado" al mandarlo a Planeación: ya no se regenera, y lo que llegue tarde entra al siguiente.')
+    .setFontColor('#6b7280');
+}
+
+// { 'AAAA-MM': { corte: 'AAAA-MM-DD' | '', entregado: bool } } desde Config.
+function bitLeerPeriodos_() {
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_BIT_CONFIG);
+  const periodos = {};
+  if (!hoja || hoja.getLastRow() < 2) return periodos;
+  if (String(hoja.getRange(1, BIT_COL_PERIODOS).getValue()).trim() !== BIT_ENC_PERIODOS[0]) return periodos;
+  const tz = 'America/Mexico_City';
+  hoja.getRange(2, BIT_COL_PERIODOS, hoja.getLastRow() - 1, 3).getValues().forEach(function (r) {
+    const mes = bitMesDeFila_(r[0]);
+    if (!BIT_RE_MES.test(mes)) return;
+    let corte = '';
+    if (r[1] instanceof Date) {
+      corte = Utilities.formatDate(r[1], tz, 'yyyy-MM-dd');
+    } else {
+      const t = String(r[1]).trim();
+      const dmy = t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if (/^\d{4}-\d{2}-\d{2}$/.test(t)) corte = t;
+      else if (dmy) corte = dmy[3] + '-' + ('0' + dmy[2]).slice(-2) + '-' + ('0' + dmy[1]).slice(-2);
+    }
+    periodos[mes] = { corte: corte, entregado: r[2] === true || /^(s[ií]|true|x)$/i.test(String(r[2]).trim()) };
+  });
+  return periodos;
+}
+
+// Las funciones de aquí a bitPeriodoAbiertoDesde_ son puras (solo cadenas
+// AAAA-MM y AAAA-MM-DD), para probarlas fuera de Apps Script.
+function bitMesVecino_(mes, delta) {
+  const p = mes.split('-').map(Number);
+  const f = new Date(p[0], p[1] - 1 + delta, 1, 12);
+  return f.getFullYear() + '-' + ('0' + (f.getMonth() + 1)).slice(-2);
+}
+
+function bitIsoDia_(f) {
+  return f.getFullYear() + '-' + ('0' + (f.getMonth() + 1)).slice(-2) + '-' + ('0' + f.getDate()).slice(-2);
+}
+
+function bitDiaSiguienteIso_(iso) {
+  const p = iso.split('-').map(Number);
+  return bitIsoDia_(new Date(p[0], p[1] - 1, p[2] + 1, 12));
+}
+
+function bitUltimoDiaIso_(mes) {
+  const p = mes.split('-').map(Number);
+  return bitIsoDia_(new Date(p[0], p[1], 0, 12));
+}
+
+// Rango del periodo: { mes, inicio, fin, sinCorte, entregado } en AAAA-MM-DD.
+function bitRangoPeriodo_(mes, periodos) {
+  const anterior = periodos[bitMesVecino_(mes, -1)];
+  const propio = periodos[mes];
+  const inicio = anterior && anterior.corte ? bitDiaSiguienteIso_(anterior.corte) : mes + '-01';
+  const sinCorte = !(propio && propio.corte);
+  const fin = sinCorte ? bitUltimoDiaIso_(mes) : propio.corte;
+  if (fin < inicio) {
+    throw new Error('el periodo ' + mes + ' termina (' + fin + ') antes de empezar (' + inicio +
+      '): revisa las fechas de corte en Config.');
+  }
+  return { mes: mes, inicio: inicio, fin: fin, sinCorte: sinCorte, entregado: !!(propio && propio.entregado) };
+}
+
+// Periodo al que pertenece un día (AAAA-MM-DD): el 26 nov cae en 2026-12 si
+// noviembre se cortó el 24.
+function bitPeriodoDeFecha_(iso, periodos) {
+  const mes = iso.slice(0, 7);
+  const r = bitRangoPeriodo_(mes, periodos);
+  if (iso < r.inicio) return bitMesVecino_(mes, -1);
+  if (iso > r.fin) return bitMesVecino_(mes, 1);
+  return mes;
+}
+
+// El mismo periodo, o el siguiente que no esté entregado (Regla 3).
+function bitPeriodoAbiertoDesde_(mes, periodos) {
+  let m = mes;
+  for (let i = 0; i < 36 && periodos[m] && periodos[m].entregado; i++) m = bitMesVecino_(m, 1);
+  return m;
+}
+
+// Meses calendario que toca un rango, para pedirlos a los backends.
+function bitMesesQueToca_(inicio, fin) {
+  const meses = [];
+  for (let m = inicio.slice(0, 7); m <= fin.slice(0, 7); m = bitMesVecino_(m, 1)) meses.push(m);
+  return meses;
+}
+
+// Lo que se propone en los cuadros de diálogo: el primer periodo registrado
+// que no se ha entregado y ya empezó; si no hay, el periodo de hoy (o el
+// siguiente abierto).
+function bitPeriodoSugerido_(periodos, hoyIso) {
+  const abiertos = Object.keys(periodos).sort().filter(function (m) {
+    return !periodos[m].entregado && bitRangoPeriodo_(m, periodos).inicio <= hoyIso;
+  });
+  return abiertos.length ? abiertos[0] : bitPeriodoAbiertoDesde_(bitPeriodoDeFecha_(hoyIso, periodos), periodos);
+}
+
+// Todo lo que un importador necesita del periodo que se genera. Se consulta
+// desde el inicio del periodo anterior si ese ya se entregó, para encontrar lo
+// que llegó tarde (Regla 3); si no se ha entregado, lo suyo le toca a él.
+function bitContextoPeriodo_(mes, periodos) {
+  const rango = bitRangoPeriodo_(mes, periodos);
+  const mesAnterior = bitMesVecino_(mes, -1);
+  const anteriorEntregado = !!(periodos[mesAnterior] && periodos[mesAnterior].entregado);
+  const desde = anteriorEntregado ? bitRangoPeriodo_(mesAnterior, periodos).inicio : rango.inicio;
+  return {
+    mes: mes, periodos: periodos, rango: rango,
+    mesAnterior: mesAnterior, anteriorEntregado: anteriorEntregado,
+    desde: desde, hasta: rango.fin, meses: bitMesesQueToca_(desde, rango.fin)
+  };
+}
+
+// Dónde entra un item con fecha iso al generar ctx.mes:
+//   { natural, tarde } si entra (tarde = su periodo ya se entregó), o null.
+function bitClasificarFecha_(iso, ctx) {
+  if (!iso || iso < ctx.desde || iso > ctx.hasta) return null;
+  const natural = bitPeriodoDeFecha_(iso, ctx.periodos);
+  if (natural === ctx.mes) return { natural: natural, tarde: false };
+  if (natural < ctx.mes && ctx.periodos[natural] && ctx.periodos[natural].entregado) return { natural: natural, tarde: true };
+  return null;
+}
+
+function bitNombrePeriodo_(mes) {
+  const p = mes.split('-');
+  return BIT_MESES[Number(p[1]) - 1] + ' de ' + p[0];
+}
+
+function bitNotaTarde_(natural) {
+  return 'Llegó después del corte de ' + bitNombrePeriodo_(natural) + ' (periodo ya entregado).';
+}
+
+// Pide el periodo en un cuadro de diálogo y arma su contexto. null si se
+// canceló, el formato no es válido o el periodo ya se entregó (ya se avisó).
+function bitPedirPeriodo_(ui, titulo, pregunta) {
+  const periodos = bitLeerPeriodos_();
+  const sugerido = bitPeriodoSugerido_(periodos, Utilities.formatDate(new Date(), 'America/Mexico_City', 'yyyy-MM-dd'));
+  const r = ui.prompt(titulo, pregunta + ' Escríbelo como AAAA-MM (sugerido: ' + sugerido + ').', ui.ButtonSet.OK_CANCEL);
+  if (r.getSelectedButton() !== ui.Button.OK) return null;
+  const mes = r.getResponseText().trim() || sugerido;
+  if (!BIT_RE_MES.test(mes)) {
+    ui.alert('Formato no válido. Usa AAAA-MM, por ejemplo ' + sugerido + '.');
+    return null;
+  }
+  let ctx;
+  try {
+    ctx = bitContextoPeriodo_(mes, periodos);
+  } catch (err) {
+    ui.alert('No se pudo: ' + err.message);
+    return null;
+  }
+  if (ctx.rango.entregado) {
+    ui.alert('El periodo ' + mes + ' ya está marcado como Entregado en Config, así que no se regenera. ' +
+      'Lo nuevo con fecha de ese periodo entra al siguiente abierto (' + bitPeriodoAbiertoDesde_(mes, periodos) + '), con nota. ' +
+      'Si de verdad hay que rehacerlo, quita la marca de "Entregado".');
+    return null;
+  }
+  return ctx;
 }
 
 // Últimas descripciones capturadas a mano (no las "(auto)") por N.P., para
@@ -567,7 +784,8 @@ function doPost(e) {
         return bitRespuesta_({
           status: 'ok', id: previa[idx['ID']], duplicado: true,
           mes: bitMesDeFila_(previa[idx['Mes']]), meta: String(previa[idx['Meta']]),
-          fechaTexto: previa[idx['Fecha (texto)']]
+          fechaTexto: previa[idx['Fecha (texto)']],
+          nota: idx[BIT_COL_NOTA] === undefined ? '' : String(previa[idx[BIT_COL_NOTA]] || '')
         });
       }
     }
@@ -592,7 +810,8 @@ function doPost(e) {
       'Propósito': d.proposito,
       'Beneficiarios': d.beneficiarios,
       'Capturó': d.capturo,
-      'ID de envío': d.idEnvio
+      'ID de envío': d.idEnvio,
+      'Nota de periodo': d.nota
     };
     const fila = new Array(hoja.getLastColumn()).fill('');
     Object.keys(valores).forEach(function (h) {
@@ -600,7 +819,7 @@ function doPost(e) {
     });
     hoja.appendRow(fila);
 
-    return bitRespuesta_({ status: 'ok', id: id, mes: d.mes, meta: d.meta, fechaTexto: valores['Fecha (texto)'] });
+    return bitRespuesta_({ status: 'ok', id: id, mes: d.mes, meta: d.meta, fechaTexto: valores['Fecha (texto)'], nota: d.nota });
   } catch (err) {
     return bitRespuesta_({ status: 'error', mensaje: err.message });
   } finally {
@@ -656,7 +875,12 @@ function bitValidarActividad_(x) {
   if (!bitIniciaConVerbo_(d.proposito)) {
     throw new Error('El propósito debe iniciar con un verbo, por ejemplo: Fortalecer…, Dar seguimiento…');
   }
-  d.mes = Utilities.formatDate(d.fechaInicio, 'America/Mexico_City', 'yyyy-MM');
+  // Periodo de reporte por la fecha de inicio; si ese periodo ya se entregó,
+  // el siguiente abierto, con nota (Regla 3, ver PERIODOS).
+  const periodos = bitLeerPeriodos_();
+  const natural = bitPeriodoDeFecha_(bitIsoDia_(d.fechaInicio), periodos);
+  d.mes = bitPeriodoAbiertoDesde_(natural, periodos);
+  d.nota = d.mes === natural ? '' : bitNotaTarde_(natural);
   return d;
 }
 
@@ -711,16 +935,9 @@ function bitFechaTexto_(inicio, fin) {
 // está mal, se corrige en "Actividades" y se vuelve a generar.
 function bitGenerarReporteMensual() {
   const ui = SpreadsheetApp.getUi();
-  const hoy = new Date();
-  const sugerido = Utilities.formatDate(hoy, 'America/Mexico_City', 'yyyy-MM');
-  const r = ui.prompt('Reporte del mes',
-    '¿Qué mes? Escríbelo como AAAA-MM (ejemplo: ' + sugerido + ').', ui.ButtonSet.OK_CANCEL);
-  if (r.getSelectedButton() !== ui.Button.OK) return;
-  const mes = r.getResponseText().trim() || sugerido;
-  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(mes)) {
-    ui.alert('Formato no válido. Usa AAAA-MM, por ejemplo ' + sugerido + '.');
-    return;
-  }
+  const ctx = bitPedirPeriodo_(ui, 'Reporte del periodo', '¿Qué periodo de reporte?');
+  if (!ctx) return;
+  const mes = ctx.mes;
 
   // Antes de armar el reporte, trae las visitas de Mantenimiento y las
   // asesorías resueltas del mes. Si alguna falla (sin conexión configurada,
@@ -734,7 +951,7 @@ function bitGenerarReporteMensual() {
     ['Correo institucional', bitImportarCorreo_]
   ].map(function (f) {
     try {
-      return f[0] + ': ' + bitResumenImportacion_(f[1](mes));
+      return f[0] + ': ' + bitResumenImportacion_(f[1](ctx));
     } catch (err) {
       return f[0] + ': no se pudo traer (' + err.message + ')';
     }
@@ -750,6 +967,9 @@ function bitGenerarReporteMensual() {
   const todasDelMes = filas.filter(function (f) { return bitMesDeFila_(f[idx['Mes']]) === mes; });
   const delMes = todasDelMes.filter(function (f) { return !esNo(f); });
   const omitidas = todasDelMes.length - delMes.length;
+  const colNota = idx[BIT_COL_NOTA];
+  const tardias = colNota === undefined ? 0
+    : delMes.filter(function (f) { return String(f[colNota] || '').trim(); }).length;
   delMes.sort(function (a, b) {
     return new Date(a[idx['Fecha inicio']]).getTime() - new Date(b[idx['Fecha inicio']]).getTime();
   });
@@ -771,9 +991,17 @@ function bitGenerarReporteMensual() {
   hoja.getRange(fila, 1).setValue('Reporte de actividades OTDE · ' + nombreMes + ' ' + anio)
     .setFontWeight('bold').setFontSize(13).setFontColor('#56212f');
   fila++;
+  const textoRango = bitFechaTexto_(bitParsearFecha_(ctx.rango.inicio), bitParsearFecha_(ctx.rango.fin));
   hoja.getRange(fila, 1).setValue('Encabezado de cada pestaña del Excel (llenar a mano): Periodo del informe = ' +
-    nombreMes + ' · ' + anio + '. Evidencias: un solo PDF del mes.').setFontColor('#6b7280');
-  fila += 2;
+    nombreMes + ' · ' + anio + ' (' + textoRango.charAt(0).toLowerCase() + textoRango.slice(1) +
+    '). Evidencias: un solo PDF del periodo.').setFontColor('#6b7280');
+  fila++;
+  if (ctx.rango.sinCorte) {
+    hoja.getRange(fila, 1).setValue('Aviso: el periodo ' + mes + ' no tiene fecha de corte en Config (columnas E:G); ' +
+      'se usó hasta el fin de mes.').setFontColor('#8a2020').setFontWeight('bold');
+    fila++;
+  }
+  fila++;
 
   const avisos = [];
   const resumenMetas = [];
@@ -800,7 +1028,7 @@ function bitGenerarReporteMensual() {
     fila++;
 
     if (!acts.length) {
-      hoja.getRange(fila, 1, 1, 12).merge().setValue('Sin actividades registradas este mes.').setFontStyle('italic').setFontColor('#6b7280');
+      hoja.getRange(fila, 1, 1, 12).merge().setValue('Sin actividades registradas en este periodo.').setFontStyle('italic').setFontColor('#6b7280');
       fila += 2;
       return;
     }
@@ -820,7 +1048,7 @@ function bitGenerarReporteMensual() {
 
   // Avance de la planeación: solo para OTDE, no va al Excel.
   const plan = bitLeerPlaneacion_();
-  hoja.getRange(fila, 1, 1, 12).merge().setValue('Avance de la planeación en el mes (uso interno, no va al Excel)')
+  hoja.getRange(fila, 1, 1, 12).merge().setValue('Avance de la planeación en el periodo (uso interno, no va al Excel)')
     .setFontWeight('bold').setBackground('#977e5b').setFontColor('#ffffff');
   fila++;
   const avance = plan.map(function (a) {
@@ -835,7 +1063,15 @@ function bitGenerarReporteMensual() {
   });
 
   ss.setActiveSheet(hoja);
-  ui.alert('Reporte ' + nombreMes + ' ' + anio + ' listo en la pestaña "' + nombre + '".\n\n' +
+  if (ctx.rango.sinCorte) {
+    avisos.push('Periodo sin fecha de corte en Config: se usó el mes completo (hasta el ' + ctx.rango.fin + ').');
+  }
+  if (tardias) {
+    avisos.push(tardias + ' actividad' + (tardias === 1 ? '' : 'es') + ' llegó' + (tardias === 1 ? '' : 'aron') +
+      ' después del corte de un periodo entregado y entra' + (tardias === 1 ? '' : 'n') +
+      ' en este (ver la columna "' + BIT_COL_NOTA + '" de Actividades).');
+  }
+  ui.alert('Reporte ' + nombreMes + ' ' + anio + ' (' + textoRango + ') listo en la pestaña "' + nombre + '".\n\n' +
     resumenMetas.join(' · ') + '\n' + avisosFuentes.join('\n') +
     (omitidas ? '\n' + omitidas + ' registro' + (omitidas === 1 ? '' : 's') + ' marcado' + (omitidas === 1 ? '' : 's') +
       ' como "No va al reporte" se omiti' + (omitidas === 1 ? 'ó' : 'eron') + '.' : '') +
@@ -901,16 +1137,11 @@ function bitTraerFormacion() { bitTraerDesdeMenu_('Traer cursos de Formación Do
 
 function bitTraerDesdeMenu_(titulo, importar) {
   const ui = SpreadsheetApp.getUi();
-  const sugerido = Utilities.formatDate(new Date(), 'America/Mexico_City', 'yyyy-MM');
-  const r = ui.prompt(titulo, '¿De qué mes? Escríbelo como AAAA-MM (ejemplo: ' + sugerido + ').', ui.ButtonSet.OK_CANCEL);
-  if (r.getSelectedButton() !== ui.Button.OK) return;
-  const mes = r.getResponseText().trim() || sugerido;
-  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(mes)) {
-    ui.alert('Formato no válido. Usa AAAA-MM, por ejemplo ' + sugerido + '.');
-    return;
-  }
+  const ctx = bitPedirPeriodo_(ui, titulo, '¿De qué periodo de reporte?');
+  if (!ctx) return;
   try {
-    ui.alert(titulo + ' · ' + mes + ':\n\n' + bitResumenImportacion_(importar(mes)));
+    ui.alert(titulo + ' · ' + ctx.mes + ' (' + ctx.rango.inicio + ' a ' + ctx.rango.fin + '):\n\n' +
+      bitResumenImportacion_(importar(ctx)));
   } catch (err) {
     ui.alert('No se pudo: ' + err.message);
   }
@@ -944,6 +1175,18 @@ function bitConsultarBackend_(propUrl, nombre, accion, mes) {
   if (datos.status === 'no_autorizado') throw new Error('el PANEL_TOKEN no coincide con el de ' + nombre + '.');
   if (datos.status !== 'ok') throw new Error(datos.mensaje || 'respuesta con error de ' + nombre + '.');
   return datos.items || [];
+}
+
+// Pide a un backend cada mes calendario que toca el rango del contexto y deja
+// solo los items que entran en el periodo (bitClasificarFecha_), cada uno con
+// _periodo = { natural, tarde }. campoFecha: el campo AAAA-MM-DD del item.
+function bitConsultarRango_(propUrl, nombre, accion, ctx, campoFecha) {
+  let items = [];
+  ctx.meses.forEach(function (m) { items = items.concat(bitConsultarBackend_(propUrl, nombre, accion, m)); });
+  return items.filter(function (x) {
+    x._periodo = bitClasificarFecha_(String(x[campoFecha] || ''), ctx);
+    return !!x._periodo;
+  });
 }
 
 function bitAccionPlaneacion_(np) {
@@ -1021,8 +1264,13 @@ function bitAgregarActividades_(filas) {
 // número al guardarlos, y no cambian para un mismo "ID de envío".
 const BIT_PREFIJO_HUELLA = 'BIT_HUELLA_';
 const BIT_FUERA_DE_HUELLA = ['Mes', 'Meta'];
+// "Nota de periodo" vacía también queda fuera, para que los resúmenes traídos
+// antes de que existiera la columna (20 nov 2026) sigan regenerándose.
 function bitHuella_(valores) {
-  const norm = Object.keys(valores).filter(function (h) { return BIT_FUERA_DE_HUELLA.indexOf(h) === -1; })
+  const norm = Object.keys(valores).filter(function (h) {
+    if (h === BIT_COL_NOTA && !String(valores[h] == null ? '' : valores[h]).trim()) return false;
+    return BIT_FUERA_DE_HUELLA.indexOf(h) === -1;
+  })
     .sort().map(function (h) {
     const v = valores[h];
     return h + '=' + (v instanceof Date ? Utilities.formatDate(v, 'America/Mexico_City', 'yyyy-MM-dd')
@@ -1032,10 +1280,11 @@ function bitHuella_(valores) {
 }
 
 // Trae los reportes de visita del mes y agrega a Actividades los que falten.
-function bitImportarMantenimiento_(mes) {
-  const items = bitConsultarBackend_('MAN_URL', 'Mantenimiento', 'reportesMes', mes);
+function bitImportarMantenimiento_(ctx) {
+  const mes = ctx.mes;
+  const items = bitConsultarRango_('MAN_URL', 'Mantenimiento', 'reportesMes', ctx, 'fechaAtencion');
   const accion = bitAccionPlaneacion_(BIT_NP_MANTENIMIENTO);
-  return bitAgregarActividades_(bitAgruparVisitasMan_(items, mes).map(function (g) {
+  return bitAgregarActividades_(bitAgruparVisitasMan_(items).map(function (g) {
     const inicio = bitParsearFecha_(g.fechas[0]);
     const fin = g.fechas.length > 1 ? bitParsearFecha_(g.fechas[g.fechas.length - 1]) : null;
     return {
@@ -1056,7 +1305,8 @@ function bitImportarMantenimiento_(mes) {
         'Descripción': bitManDescripcion_(g),
         'Propósito': accion.proposito,
         'Beneficiarios': bitManBeneficiarios_(g, accion.beneficiarios),
-        'Capturó': BIT_CAPTURO_MAN
+        'Capturó': BIT_CAPTURO_MAN,
+        'Nota de periodo': g.tarde ? bitNotaTarde_(g.natural) : ''
       }
     };
   }));
@@ -1065,8 +1315,9 @@ function bitImportarMantenimiento_(mes) {
 // Trae las asesorías resueltas del mes (META 23 / N.P. 8). Si alguna no tiene
 // "Fecha de realización" o "Asistentes", se usa la fecha programada o el
 // número solicitado y se avisa, para corregirlo en Asesorías y en la hoja.
-function bitImportarAsesorias_(mes) {
-  const items = bitConsultarBackend_('ASE_URL', 'Asesorías', 'asesoriasMes', mes);
+function bitImportarAsesorias_(ctx) {
+  const mes = ctx.mes;
+  const items = bitConsultarRango_('ASE_URL', 'Asesorías', 'asesoriasMes', ctx, 'fecha');
   const accion = bitAccionPlaneacion_(BIT_NP_ASESORIAS);
   const avisos = [];
   const res = bitAgregarActividades_(items.map(function (a) {
@@ -1094,7 +1345,8 @@ function bitImportarAsesorias_(mes) {
         'Descripción': bitAseDescripcion_(g),
         'Propósito': accion.proposito,
         'Beneficiarios': bitAseBeneficiarios_(g),
-        'Capturó': BIT_CAPTURO_ASE
+        'Capturó': BIT_CAPTURO_ASE,
+        'Nota de periodo': a._periodo.tarde ? bitNotaTarde_(a._periodo.natural) : ''
       }
     };
   }));
@@ -1102,18 +1354,32 @@ function bitImportarAsesorias_(mes) {
   return res;
 }
 
-// Trae los cursos de Formación Docente cuyo desarrollo se cruza con el mes
-// (?action=cursosMes de formacion-docente.gs) y agrega una actividad por curso
-// y mes. Un curso de varios meses aparece en cada uno, con la fecha recortada
-// al mes. Inscritos y constancias son del curso completo.
-function bitImportarFormacion_(mes) {
-  const items = bitConsultarBackend_('FD_URL', 'Formación Docente', 'cursosMes', mes);
+// Trae los cursos de Formación Docente cuyo desarrollo se cruza con el periodo
+// (?action=cursosMes de formacion-docente.gs, un llamado por mes calendario
+// que toca el periodo) y agrega una actividad por curso y periodo. Un curso
+// largo aparece en cada periodo, con la fecha recortada al periodo.
+// Inscritos y constancias son del curso completo. Sin Regla 3: un curso no
+// "llega tarde", su fecha la pone la convocatoria.
+function bitImportarFormacion_(ctx) {
+  const mes = ctx.mes;
+  const visto = {};
+  let items = [];
+  bitMesesQueToca_(ctx.rango.inicio, ctx.rango.fin).forEach(function (m) {
+    bitConsultarBackend_('FD_URL', 'Formación Docente', 'cursosMes', m).forEach(function (c) {
+      if (visto[c.idCurso]) return;
+      visto[c.idCurso] = true;
+      items.push(c);
+    });
+  });
+  items = items.filter(function (c) {
+    const fin = c.fin && c.fin >= c.inicio ? c.fin : c.inicio;
+    return c.inicio <= ctx.rango.fin && fin >= ctx.rango.inicio;
+  });
   bitRenumerarMetas_();
   const porNp = {};
   bitLeerPlaneacion_().forEach(function (a) { porNp[a.np] = a; });
-  const m = mes.split('-').map(Number);
-  const primerDia = new Date(m[0], m[1] - 1, 1, 12);
-  const ultimoDia = new Date(m[0], m[1], 0, 12);
+  const primerDia = bitParsearFecha_(ctx.rango.inicio);
+  const ultimoDia = bitParsearFecha_(ctx.rango.fin);
   const avisos = [];
 
   const res = bitAgregarActividades_(items.map(function (c) {
@@ -1153,7 +1419,7 @@ function bitImportarFormacion_(mes) {
           'Híbrida': 'Híbrida, presencial y a través de la plataforma del curso.',
           'Presencial': 'Presencial, en la sede indicada en la convocatoria.' }[modalidad],
         'CCT': '',
-        'Descripción': bitFdDescripcion_(c, inicioCurso, finCurso),
+        'Descripción': bitFdDescripcion_(c, inicioCurso, finCurso, primerDia, ultimoDia),
         'Propósito': proposito,
         'Beneficiarios': bitFdBeneficiarios_(c),
         'Capturó': BIT_CAPTURO_FD
@@ -1164,14 +1430,49 @@ function bitImportarFormacion_(mes) {
   return res;
 }
 
-// Resumen mensual de Soporte: una sola fila (SOP:<mes>) con el total de
+// Resúmenes regenerables (Soporte, Correo) y la Regla 3: un folio con fecha
+// del periodo anterior ya entregado llegó tarde solo si no estaba en la lista
+// de folios que se guardó al traer ese periodo (Script Property
+// <prefijo><AAAA-MM>, se reescribe en cada importación de un periodo abierto).
+// Los periodos traídos antes del 20 nov 2026 no tienen lista: de ellos no se
+// recupera nada, y se avisa.
+const BIT_PREFIJO_FOLIOS_SOP = 'BIT_FOLIOS_SOP_';
+const BIT_PREFIJO_FOLIOS_CORREO = 'BIT_FOLIOS_CORREO_';
+function bitSepararTardios_(items, ctx, prefijoProp, avisos) {
+  const props = PropertiesService.getScriptProperties();
+  const propios = items.filter(function (x) { return !x._periodo.tarde; });
+  const delAnterior = items.filter(function (x) { return x._periodo.tarde; });
+  let tardios = [];
+  if (delAnterior.length) {
+    const guardada = props.getProperty(prefijoProp + ctx.mesAnterior);
+    if (guardada) {
+      const ya = JSON.parse(guardada);
+      tardios = delAnterior.filter(function (x) { return ya.indexOf(x.folio) === -1; });
+    } else {
+      avisos.push('no hay lista de folios guardada de ' + ctx.mesAnterior + ' (se trajo antes de los periodos con corte), ' +
+        'así que lo que se haya cerrado tarde de ese periodo no se contó');
+    }
+  }
+  props.setProperty(prefijoProp + ctx.mes, JSON.stringify(propios.map(function (x) { return x.folio; })));
+  const nota = tardios.length
+    ? 'Incluye ' + tardios.length + ' con fecha de ' + bitNombrePeriodo_(ctx.mesAnterior) +
+      ' que llegaron después de su corte (periodo ya entregado): ' + tardios.map(function (x) { return x.folio; }).join(', ') + '.'
+    : '';
+  return { todos: propios.concat(tardios), paraFechas: propios.length ? propios : tardios, nota: nota };
+}
+
+// Resumen de Soporte del periodo: una sola fila (SOP:<periodo>) con el total de
 // solicitudes resueltas, desglose por tipo de ayuda, sectores y funciones.
-function bitImportarSoporte_(mes) {
-  const items = bitConsultarBackend_('SOP_URL', 'Soporte', 'soporteMes', mes);
-  if (!items.length) return { nuevas: 0, existentes: 0, avisos: [] };
+function bitImportarSoporte_(ctx) {
+  const mes = ctx.mes;
+  const avisosTardios = [];
+  const sep = bitSepararTardios_(bitConsultarRango_('SOP_URL', 'Soporte', 'soporteMes', ctx, 'fecha'),
+    ctx, BIT_PREFIJO_FOLIOS_SOP, avisosTardios);
+  const items = sep.todos;
+  if (!items.length) return { nuevas: 0, existentes: 0, avisos: avisosTardios };
   const sinAtencion = items.filter(function (x) { return x.fechaFuente !== 'atencion'; })
     .map(function (x) { return x.folio; });
-  const fechas = items.map(function (x) { return x.fecha; }).sort();
+  const fechas = sep.paraFechas.map(function (x) { return x.fecha; }).sort();
   const inicio = bitParsearFecha_(fechas[0]);
   const fin = bitParsearFecha_(fechas[fechas.length - 1]);
   const mismoDia = fin.getTime() === inicio.getTime();
@@ -1199,23 +1500,28 @@ function bitImportarSoporte_(mes) {
       'Descripción': bitSopDescripcion_(items.length, cuenta('tipoAyuda', 'Otro'), cuenta('sector', 'Sin sector')),
       'Propósito': BIT_PROPOSITO_SOP,
       'Beneficiarios': bitSopBeneficiarios_(cuenta('funcion', 'Sin función')),
-      'Capturó': BIT_CAPTURO_SOP
+      'Capturó': BIT_CAPTURO_SOP,
+      'Nota de periodo': sep.nota
     }
   }]);
-  res.avisos = sinAtencion.length
+  res.avisos = (sinAtencion.length
     ? [sinAtencion.length + ' sin "Fecha de atención" (se contó la fecha de la solicitud): ' + sinAtencion.join(', ')]
-    : [];
+    : []).concat(avisosTardios);
   return res;
 }
 
-// Resumen mensual de Correo institucional: una sola fila (CORREO:<mes>) en el
-// N.P. 12 con las solicitudes atendidas (Fecha de entrega en el mes) de los 5
-// tipos, sectores y desglose por tipo.
-function bitImportarCorreo_(mes) {
-  const items = bitConsultarBackend_('CORREO_URL', 'Correo institucional', 'correoMes', mes);
-  if (!items.length) return { nuevas: 0, existentes: 0, avisos: [] };
+// Resumen de Correo institucional del periodo: una sola fila (CORREO:<periodo>)
+// en el N.P. 12 con las solicitudes atendidas (Fecha de entrega en el periodo)
+// de los 5 tipos, sectores y desglose por tipo.
+function bitImportarCorreo_(ctx) {
+  const mes = ctx.mes;
+  const avisosTardios = [];
+  const sep = bitSepararTardios_(bitConsultarRango_('CORREO_URL', 'Correo institucional', 'correoMes', ctx, 'fecha'),
+    ctx, BIT_PREFIJO_FOLIOS_CORREO, avisosTardios);
+  const items = sep.todos;
+  if (!items.length) return { nuevas: 0, existentes: 0, avisos: avisosTardios };
   const accion = bitAccionPlaneacion_(BIT_NP_CORREO);
-  const fechas = items.map(function (x) { return x.fecha; }).sort();
+  const fechas = sep.paraFechas.map(function (x) { return x.fecha; }).sort();
   const inicio = bitParsearFecha_(fechas[0]);
   const fin = bitParsearFecha_(fechas[fechas.length - 1]);
   const mismoDia = fin.getTime() === inicio.getTime();
@@ -1245,10 +1551,11 @@ function bitImportarCorreo_(mes) {
       'Propósito': accion.proposito,
       'Beneficiarios': items.length + ' figura' + (items.length === 1 ? '' : 's') + ' educativa' +
         (items.length === 1 ? '' : 's') + ' atendida' + (items.length === 1 ? '' : 's'),
-      'Capturó': BIT_CAPTURO_CORREO
+      'Capturó': BIT_CAPTURO_CORREO,
+      'Nota de periodo': sep.nota
     }
   }]);
-  res.avisos = [];
+  res.avisos = avisosTardios;
   return res;
 }
 
@@ -1302,13 +1609,14 @@ function bitSectoresTexto_(porSector) {
   return texto;
 }
 
-function bitFdDescripcion_(c, inicioCurso, finCurso) {
+// El rango completo del curso se menciona cuando se sale del periodo.
+function bitFdDescripcion_(c, inicioCurso, finCurso, inicioPeriodo, finPeriodo) {
   let texto = c.descripcion ? c.descripcion.replace(/\s*\.?\s*$/, '.') + ' ' : '';
   texto += 'La OTDE difundió la convocatoria entre las figuras educativas de la región' +
     (c.inscritos ? ' y registró a ' + c.inscritos + ' participante' + (c.inscritos === 1 ? '' : 's') +
       bitSectoresTexto_(c.porSector) : '') + '.';
-  const otroMes = inicioCurso.getMonth() !== finCurso.getMonth() || inicioCurso.getFullYear() !== finCurso.getFullYear();
-  if (otroMes) {
+  const fueraDelPeriodo = inicioCurso < inicioPeriodo || finCurso > finPeriodo;
+  if (fueraDelPeriodo) {
     const rango = bitFechaTexto_(inicioCurso, finCurso);
     texto += ' El curso se desarrolla ' + rango.charAt(0).toLowerCase() + rango.slice(1) + '.';
   }
@@ -1370,21 +1678,26 @@ function bitAseBeneficiarios_(g) {
   return titular + '\n' + g.personas + ' docente' + (g.personas === 1 ? '' : 's');
 }
 
-// Una actividad por folio en el mes: si el técnico fue dos días a la misma
-// escuela, las cifras se suman y las fechas quedan como rango.
-function bitAgruparVisitasMan_(items, mes) {
-  const porFolio = {};
+// Una actividad por folio y periodo natural (el de la fecha de la visita, ver
+// PERIODOS): si el técnico fue dos días a la misma escuela, las cifras se
+// suman y las fechas quedan como rango. Cada item trae _periodo de
+// bitConsultarRango_. El ID de envío MAN:<folio>:<periodo natural> coincide
+// con el de lo ya traído antes de los periodos (mes calendario = periodo).
+function bitAgruparVisitasMan_(items) {
+  const porClave = {};
   const orden = [];
   items.slice().sort(function (a, b) { return a.fechaAtencion < b.fechaAtencion ? -1 : 1; })
     .forEach(function (v) {
-      if (!porFolio[v.folio]) {
-        porFolio[v.folio] = { folio: v.folio, idEnvio: 'MAN:' + v.folio + ':' + mes, visitas: [] };
-        orden.push(v.folio);
+      const natural = v._periodo.natural;
+      const clave = v.folio + ':' + natural;
+      if (!porClave[clave]) {
+        porClave[clave] = { folio: v.folio, idEnvio: 'MAN:' + clave, natural: natural, tarde: v._periodo.tarde, visitas: [] };
+        orden.push(clave);
       }
-      porFolio[v.folio].visitas.push(v);
+      porClave[clave].visitas.push(v);
     });
-  return orden.map(function (folio) {
-    const g = porFolio[folio];
+  return orden.map(function (clave) {
+    const g = porClave[clave];
     const p = g.visitas[0];
     g.fechas = g.visitas.map(function (v) { return v.fechaAtencion; })
       .filter(function (f, i, arr) { return arr.indexOf(f) === i; });

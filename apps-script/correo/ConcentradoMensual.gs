@@ -19,6 +19,14 @@
 //
 // Menú "OTDE Correos → Generar concentrado del mes". Si la pestaña del mes
 // ya existe, se reemplaza.
+//
+// FECHA DE CORTE (20 nov 2026, ROADMAP 40): Planeación pide el reporte en
+// fechas fijas (noviembre el 24 nov; diciembre el 11 dic, con lo del 25 al
+// 30 nov), así que el concentrado cubre un PERIODO: del día siguiente al
+// corte del mes anterior hasta el corte que se escribe al generarlo (vacío =
+// fin de mes). Cada corte queda en la Script Property CONC_CORTE_AAAA-MM.
+// Debe ser el mismo corte de la tabla de periodos de la Bitácora (Config,
+// columnas E:G) para que la cifra coincida con la fila CORREO:<periodo>.
 // ============================================================
 
 const CONC_PREFIJO = 'Concentrado ';
@@ -55,9 +63,31 @@ function generarConcentradoMesCorreo() {
     ui.alert('Formato no válido. Usa AAAA-MM, por ejemplo ' + sugerido + '.');
     return;
   }
+  const props = PropertiesService.getScriptProperties();
+  const corteAnterior = props.getProperty(CONC_PREFIJO_CORTE + concMesVecino_(mes, -1));
+  const desde = corteAnterior ? concDiaSiguiente_(corteAnterior) : mes + '-01';
+  const finDeMes = concUltimoDia_(mes);
+  const corteGuardado = props.getProperty(CONC_PREFIJO_CORTE + mes) || finDeMes;
+  const rc = ui.prompt('Fecha de corte',
+    'El periodo empieza el ' + concDmy_(desde) + '. ¿Hasta qué día? Escríbelo como DD/MM/AAAA ' +
+    '(vacío = ' + concDmy_(corteGuardado) + '). Usa el mismo corte de la Bitácora.', ui.ButtonSet.OK_CANCEL);
+  if (rc.getSelectedButton() !== ui.Button.OK) return;
+  const textoCorte = rc.getResponseText().trim();
+  const dmy = textoCorte.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (textoCorte && !dmy) {
+    ui.alert('Formato no válido. Usa DD/MM/AAAA, por ejemplo ' + concDmy_(finDeMes) + '.');
+    return;
+  }
+  const hasta = dmy ? dmy[3] + '-' + ('0' + dmy[2]).slice(-2) + '-' + ('0' + dmy[1]).slice(-2) : corteGuardado;
+  if (hasta < desde || hasta > concUltimoDia_(concMesVecino_(mes, 1))) {
+    ui.alert('El corte debe quedar entre el ' + concDmy_(desde) + ' y el fin del mes siguiente. No se generó nada.');
+    return;
+  }
+  props.setProperty(CONC_PREFIJO_CORTE + mes, hasta);
+  const rango = { desde: desde, hasta: hasta };
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const datos = concLeerMes_(ss, mes);
-  const hoja = concArmarHoja_(ss, mes, datos);
+  const datos = concLeerMes_(ss, rango);
+  const hoja = concArmarHoja_(ss, mes, datos, rango);
   ss.setActiveSheet(hoja);
 
   const sinNp = datos.atendidas.filter(function (a) { return !a.np; }).length;
@@ -70,7 +100,7 @@ function generarConcentradoMesCorreo() {
   const html = HtmlService.createHtmlOutput(
     '<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.5">' +
     '<p><b>' + datos.atendidas.length + '</b> solicitud' + (datos.atendidas.length === 1 ? '' : 'es') +
-    ' atendida' + (datos.atendidas.length === 1 ? '' : 's') + ' en el mes.</p>' +
+    ' atendida' + (datos.atendidas.length === 1 ? '' : 's') + ' ' + escapeHtml_(concRangoTexto_(rango)) + '.</p>' +
     (sinNp ? '<p style="color:#8a2020"><b>' + sinNp + '</b> sin NP SIGEE (marcadas en rojo). ' +
       'Conviene anotarlo y volver a generar: es lo que liga cada folio con SIGEE.</p>' : '<p>Todas tienen NP SIGEE.</p>') +
     (pdf
@@ -124,10 +154,15 @@ function concCarpeta_() {
   return carpeta;
 }
 
-// Cifras y lista de atendidas del mes, leyendo las 5 hojas por encabezado.
-function concLeerMes_(ss, mes) {
+// Cifras y lista de atendidas del periodo ({desde, hasta} en AAAA-MM-DD),
+// leyendo las 5 hojas por encabezado.
+function concLeerMes_(ss, rango) {
   const tz = 'America/Mexico_City';
-  const enMes = function (v) { return v instanceof Date && Utilities.formatDate(v, tz, 'yyyy-MM') === mes; };
+  const enMes = function (v) {
+    if (!(v instanceof Date)) return false;
+    const dia = Utilities.formatDate(v, tz, 'yyyy-MM-dd');
+    return dia >= rango.desde && dia <= rango.hasta;
+  };
   const txt = function (v) { return String(v == null ? '' : v).trim(); };
   const res = { recibidas: 0, rechazadas: 0, enProceso: 0, pendientesTotal: 0, atendidas: [], porTipo: {}, porSector: {} };
 
@@ -176,7 +211,7 @@ function concLeerMes_(ss, mes) {
   return res;
 }
 
-function concArmarHoja_(ss, mes, d) {
+function concArmarHoja_(ss, mes, d, rango) {
   const tz = 'America/Mexico_City';
   const nombre = CONC_PREFIJO + mes;
   const previa = ss.getSheetByName(nombre);
@@ -199,6 +234,10 @@ function concArmarHoja_(ss, mes, d) {
     .setFontWeight('bold').setFontSize(14).setFontColor(CONC_GUINDA);
   fila++;
   hoja.getRange(fila, 1, 1, CONC_COLUMNAS).merge()
+    .setValue('Periodo del informe: ' + concRangoTexto_(rango) + '.')
+    .setFontWeight('bold').setFontColor(CONC_GUINDA);
+  fila++;
+  hoja.getRange(fila, 1, 1, CONC_COLUMNAS).merge()
     .setValue('Oficina de Tecnología para el Desarrollo Educativo (OTDE) · Subdirección de Educación Primaria en la Región de Nezahualcóyotl')
     .setFontColor(CONC_GRIS);
   fila++;
@@ -210,14 +249,14 @@ function concArmarHoja_(ss, mes, d) {
   fila += 2;
 
   // Cifras del mes
-  titulo(fila, 'Cifras del mes');
+  titulo(fila, 'Cifras del periodo');
   fila++;
   const cifras = [
-    ['Atendidas en el mes', d.atendidas.length, 'Con fecha de entrega en el mes (incluye solicitudes recibidas antes).'],
-    ['Recibidas en el mes', d.recibidas, 'Solicitudes nuevas en la Oficina Virtual OTDE.'],
-    ['Recibidas en el mes y rechazadas', d.rechazadas, 'No corresponden al nivel o les faltó información.'],
-    ['Recibidas en el mes y en proceso', d.enProceso, 'En trámite ante SIGEE al corte.'],
-    ['Pendientes al corte (todos los meses)', d.pendientesTotal, 'Sin entrega ni rechazo, de cualquier mes.']
+    ['Atendidas en el periodo', d.atendidas.length, 'Con fecha de entrega en el periodo (incluye solicitudes recibidas antes).'],
+    ['Recibidas en el periodo', d.recibidas, 'Solicitudes nuevas en la Oficina Virtual OTDE.'],
+    ['Recibidas en el periodo y rechazadas', d.rechazadas, 'No corresponden al nivel o les faltó información.'],
+    ['Recibidas en el periodo y en proceso', d.enProceso, 'En trámite ante SIGEE al generar el concentrado.'],
+    ['Pendientes (todos los meses)', d.pendientesTotal, 'Sin entrega ni rechazo, de cualquier mes, al generar el concentrado.']
   ];
   hoja.getRange(fila, 1, cifras.length, 3).setValues(cifras);
   hoja.getRange(fila, 2, cifras.length, 1).setFontWeight('bold').setFontSize(12).setFontColor('#9F2241').setHorizontalAlignment('center');
@@ -256,13 +295,13 @@ function concArmarHoja_(ss, mes, d) {
   }
 
   // Detalle de folios atendidos
-  titulo(fila, 'Folios atendidos en el mes (' + d.atendidas.length + ')');
+  titulo(fila, 'Folios atendidos en el periodo (' + d.atendidas.length + ')');
   fila++;
   hoja.getRange(fila, 1, 1, CONC_COLUMNAS).setValues([['Folio', 'Tipo', 'Recepción', 'Subida a SIGEE', 'Entrega', 'Sector', 'Zona', 'Función', 'NP SIGEE']])
     .setFontWeight('bold').setBackground(CONC_ARENA).setWrap(true);
   fila++;
   if (!d.atendidas.length) {
-    hoja.getRange(fila, 1, 1, CONC_COLUMNAS).merge().setValue('Sin solicitudes atendidas este mes.').setFontStyle('italic').setFontColor(CONC_GRIS);
+    hoja.getRange(fila, 1, 1, CONC_COLUMNAS).merge().setValue('Sin solicitudes atendidas en este periodo.').setFontStyle('italic').setFontColor(CONC_GRIS);
     fila += 2;
   } else {
     const filas = d.atendidas.map(function (a) {
@@ -283,6 +322,41 @@ function concArmarHoja_(ss, mes, d) {
     .setWrap(true).setFontSize(8).setFontColor(CONC_GRIS);
   hoja.setRowHeight(fila, 28);
   return hoja;
+}
+
+const CONC_PREFIJO_CORTE = 'CONC_CORTE_';
+
+function concMesVecino_(mes, delta) {
+  const p = mes.split('-').map(Number);
+  const f = new Date(p[0], p[1] - 1 + delta, 1, 12);
+  return f.getFullYear() + '-' + ('0' + (f.getMonth() + 1)).slice(-2);
+}
+
+function concIso_(f) {
+  return f.getFullYear() + '-' + ('0' + (f.getMonth() + 1)).slice(-2) + '-' + ('0' + f.getDate()).slice(-2);
+}
+
+function concDiaSiguiente_(iso) {
+  const p = iso.split('-').map(Number);
+  return concIso_(new Date(p[0], p[1] - 1, p[2] + 1, 12));
+}
+
+function concUltimoDia_(mes) {
+  const p = mes.split('-').map(Number);
+  return concIso_(new Date(p[0], p[1], 0, 12));
+}
+
+function concDmy_(iso) {
+  const p = iso.split('-');
+  return p[2] + '/' + p[1] + '/' + p[0];
+}
+
+// "del 1 al 24 de noviembre de 2026" / "del 25 de noviembre al 11 de diciembre de 2026".
+function concRangoTexto_(rango) {
+  const a = rango.desde.split('-').map(Number), b = rango.hasta.split('-').map(Number);
+  if (a[0] === b[0] && a[1] === b[1]) return 'del ' + a[2] + ' al ' + b[2] + ' de ' + CONC_MESES[b[1] - 1] + ' de ' + b[0];
+  return 'del ' + a[2] + ' de ' + CONC_MESES[a[1] - 1] + (a[0] === b[0] ? '' : ' de ' + a[0]) +
+    ' al ' + b[2] + ' de ' + CONC_MESES[b[1] - 1] + ' de ' + b[0];
 }
 
 function concNombreMes_(mes) {
