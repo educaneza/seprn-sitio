@@ -16,6 +16,24 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-11-20 · Bitácora: periodos de reporte con fecha de corte (ROADMAP 40), desplegados sin prueba en vivo
+
+| | |
+|---|---|
+| **Fecha** | 2026-11-20 |
+| **Sesión** | Se adelantó el ítem 40 del ROADMAP para que el reporte de noviembre (se entrega el 24 nov) ya salga del 1 al 24 nov. Jorge salió de emergencia antes de probarlo en vivo. |
+| **Periodos** | `bitacora.gs` lee la tabla `Periodo \| Fecha de corte \| Entregado` en `Config` (columnas E:G, `bitAsegurarTablaPeriodos_()` desde "Preparar hojas"; sembrada con 2026-09 y 2026-10 entregados y 2026-11 con corte el 24 nov, decisión de Jorge). Un periodo va del día siguiente al corte anterior hasta su corte; sin corte, mes completo con aviso en el reporte. La columna `Mes` pasa a ser el periodo. Los menús proponen el primer periodo abierto (`bitPeriodoSugerido_()`) y se niegan a correr sobre uno entregado. |
+| **Regla 3 (llegó tarde)** | Para el periodo P se consulta desde el inicio del periodo anterior si ese ya se entregó (`bitContextoPeriodo_()`, `bitClasificarFecha_()`). Lo que no estaba traído entra en P con la columna nueva `Nota de periodo` (interna, no va al Excel). El `ID de envío` conserva el periodo natural (`MAN:<folio>:<periodo>`), así cuadra con lo traído antes por mes calendario. Soporte y Correo guardan la lista de folios de cada periodo (`BIT_FOLIOS_SOP_<P>` / `BIT_FOLIOS_CORREO_<P>`); de septiembre y octubre no hay lista, así que sus tardíos no se recuperan (se avisa). La captura manual con fecha de un periodo entregado cae en el siguiente abierto con nota. `bitHuella_()` ignora la nota vacía para que los resúmenes ya traídos sigan regenerándose. |
+| **Backends sin cambios** | Corrección al ROADMAP: Soporte y Correo no necesitaban `desde`/`hasta`. Los 5 backends ya mandan un registro por item con su fecha; la bitácora pide cada mes calendario que toca el rango (`bitConsultarRango_()`) y filtra. Formación recorta cada curso al periodo y no tiene Regla 3. |
+| **Correo N.P. 12 y formulario** | `ConcentradoMensual.gs`: el menú pide la fecha de corte (vacío = fin de mes), la guarda en `CONC_CORTE_AAAA-MM` y el periodo arranca el día siguiente al corte del mes anterior; textos "del periodo" y línea "Periodo del informe". `bitacora.html`: la vista previa dice en qué reporte cae la fecha (y si el suyo ya se entregó); la confirmación muestra la nota. |
+| **Verificación** | Harness de Node en el scratchpad con el `bitacora.gs` real (30 comprobaciones: rangos, 26 nov → diciembre, tardíos de octubre con nota, ya traídos omitidos, curso 20 nov-5 dic recortado en los dos periodos, lista de folios de Soporte) + prueba de los helpers de Correo y de `periodoDeFecha()` del formulario. **No** se probó `bitacora.html` en navegador (no se permitió levantar servidor local). `desplegar.sh`: lo publicado era igual a `HEAD` (473 y 104 líneas de diferencia = las de esta sesión); Bitácora versión 15 y Correo versión 31, verificados idénticos al repo. `curl`: Bitácora responde `no_autorizado` sin clave. Pages en `success`, `periodoDeFecha` en vivo. |
+| **Límites conocidos** | Solo se revisa el periodo inmediato anterior. Una visita tardía extra de un folio de Mantenimiento ya traído en ese periodo se omite. El corte de Correo se escribe aparte del de la Bitácora (deben coincidir). |
+| **Pendiente** | **Jorge, antes del 24 nov:** (1) Bitácora → "Preparar hojas" y revisar `Config` E:G; (2) en `Actividades`, revisar filas `Mes = 2026-11` con fecha después del 24 nov (cursos traídos antes con el mes completo, o capturas con fecha futura) y borrarlas antes de generar; (3) "Generar reporte del mes" → 2026-11 (debe salir del 1 al 24 nov); (4) Correo → concentrado 2026-11 con corte 24/11/2026; (5) al mandarlo, marcar noviembre "Entregado". Siguen igual: `ControlOTDE.gs` e instalador v4 en PC real (ROADMAP 30), ROADMAP 39 (revisión de lo que falta y fuentes que fallan solas) antes del 11 dic, semáforo (41), `OTDE-INC-0007` y `OTDE-CAP-0647`. |
+| **Documentación actualizada** | Este checkpoint, `docs/ROADMAP.md` (40), `docs/SISTEMAS.md` (Bitácora y Correo), `docs/ARCHITECTURE.md §36`, `docs/TABLERO-SALUD.md` (Bitácora y Correo), `CLAUDE.md` (pendiente del reporte mensual). Memoria: responder siempre en español. |
+| **Commits** | `278a066` (código) y el de este cierre (docs). |
+
+---
+
 ## CHECKPOINT — 2026-11-19 · Instalador de Office v4: compilado, modo de prueba, ventanas OTDE NEZA y hoja de control
 
 | | |

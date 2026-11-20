@@ -1103,8 +1103,12 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
       fila sin límite propio; el 4 nov un 500 de Mantenimiento y un "Excedió el tiempo máximo de
       ejecución" dejaron el reporte a medias. Cada fuente debe fallar sola con aviso ("no respondió
       a tiempo") y el reporte salir con las demás.
-40. **Bitácora: periodos de reporte con fecha de corte en vez de meses de calendario** (abierto 4
-    nov 2026; **construir entre el 25 nov y el 11 dic 2026**, junto con el ítem 39). Planeación
+40. ~~**Bitácora: periodos de reporte con fecha de corte en vez de meses de calendario**~~ —
+    **construido y desplegado el 20 nov 2026** (Bitácora v15, Correo v31, commit `278a066`;
+    detalle en `docs/BITACORA.md` y `docs/ARCHITECTURE.md §36`). Falta la prueba en vivo de
+    Jorge con el reporte de noviembre (antes del 24 nov). Corrección al diseño: Soporte y Correo
+    **no** cambiaron, la bitácora pide los meses calendario del rango y filtra. Diseño original
+    (abierto 4 nov 2026): Planeación
     pide el reporte en fechas fijas: noviembre el 24 nov; diciembre el 11 dic, e incluye lo del 25
     al 30 nov. Las de 2027 aún no las tiene Jorge. Diseño acordado:
     - Tabla `Periodo | Fecha de corte | Entregado` en `Config` de la Bitácora, llenada por Jorge.

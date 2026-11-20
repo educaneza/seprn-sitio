@@ -373,8 +373,11 @@ ya resueltos al final de `docs/SISTEMAS.md`. Lo genuinamente abierto:
 - **Reporte mensual de Planeación**: la bitácora no avisa de lo que se queda fuera (visita sin
   reporte, asesoría sin "Resuelto", correo sin entrega, comisión sin actividad). Revisarlo antes
   de entregar; revisión automática en `docs/ROADMAP.md` ítem 39. **Periodos con fecha de corte**
-  (Planeación pide noviembre el 24 nov y diciembre el 11 dic, con lo del 25-30 nov): construir
-  antes del 11 dic 2026, ROADMAP ítem 40.
+  (Planeación pide noviembre el 24 nov y diciembre el 11 dic): desplegados el 20 nov 2026, sin
+  prueba en vivo. `Mes` = periodo; tabla `Periodo | Fecha de corte | Entregado` en `Config` E:G
+  de la Bitácora (la llena Jorge; un periodo "Entregado" ya no se regenera y lo tardío entra al
+  siguiente con `Nota de periodo`). El concentrado de Correo pide el mismo corte aparte.
+  `docs/ARCHITECTURE.md §36`.
 - **`PANEL_TOKEN` débil** (4 caracteres, fácil de adivinar): cambiarlo en todos los proyectos a la vez. ROADMAP ítem 36.
 - **Formación Docente — calendario**: iPhone y computadora confirmados; falta Android y Outlook.
   Compartir la liga `?calendario=ACF-2627-001`. Los correos casi no salen en cursos grandes por

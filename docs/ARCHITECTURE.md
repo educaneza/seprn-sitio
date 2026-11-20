@@ -3408,3 +3408,34 @@ otde.nezahualcoyotl@gmail.com (credenciales en `~/.clasprc.json`, fuera del repo
 **Primer uso real (19 oct 2026):** la vista previa de los 9 proyectos encontró 8 idénticos al
 repo y Oficios con una línea sin publicar (cargo del Dr. Pacheco: "Computación **y**
 Electrónica"); se publicó como versión 10 y la verificación confirmó código idéntico.
+
+
+## 36. Bitácora: periodos de reporte con fecha de corte (nov 2026)
+
+Planeación pide el reporte mensual en fechas fijas (noviembre el 24 nov; diciembre el 11 dic, que
+incluye lo del 25 al 30 nov), así que en `apps-script/bitacora.gs` la columna `Mes` de
+`Actividades` es el **periodo de reporte** (mismo formato AAAA-MM), no el mes calendario.
+
+- **Tabla de periodos**: `Config`, columnas E:G (`Periodo | Fecha de corte | Entregado`), creada
+  por `bitAsegurarTablaPeriodos_()` desde "Preparar hojas" y llenada por Jorge. La columna A
+  sigue siendo Responsables. `bitLeerPeriodos_()` la lee como `{ 'AAAA-MM': {corte, entregado} }`.
+- **Rango** (`bitRangoPeriodo_()`): del día siguiente al corte del periodo anterior hasta su
+  propio corte; sin corte, el mes completo, y el reporte lo avisa. `bitPeriodoDeFecha_()` dice a
+  qué periodo pertenece un día. Funciones puras (solo cadenas AAAA-MM-DD), probables en Node.
+- **Backends sin cambios**: todos responden por mes calendario con un registro por item y su
+  fecha. `bitConsultarRango_()` pide cada mes que toca el rango y filtra con
+  `bitClasificarFecha_()`.
+- **Regla 3 (congelar)**: un periodo marcado "Entregado" no se regenera (`bitPedirPeriodo_()` se
+  niega). Al generar P se consulta desde el inicio del periodo anterior si ese ya se entregó; lo
+  que no estaba traído entra en P con `Nota de periodo` (columna interna, no va al Excel). El
+  `ID de envío` usa el periodo **natural** (el de la fecha), por eso no duplica lo traído antes.
+  Los resúmenes de Soporte y Correo guardan sus folios por periodo en Script Properties
+  (`BIT_FOLIOS_SOP_<P>`, `BIT_FOLIOS_CORREO_<P>`) para distinguir lo tardío. La captura manual
+  (`doPost`) con fecha de un periodo entregado cae en el siguiente abierto.
+- **Formación Docente** recorta cada curso al periodo (`FD:<idCurso>:<periodo>`), sin Regla 3.
+- **Formulario** (`bitacora.html`): `?action=planeacion` manda `periodos` y `periodoDeFecha()`
+  replica el cálculo para la vista previa.
+- **Correo N.P. 12** (`correo/ConcentradoMensual.gs`): pide su propio corte
+  (`CONC_CORTE_AAAA-MM`); debe coincidir con el de la Bitácora.
+- **Límites**: solo se revisa el periodo inmediato anterior; los periodos traídos antes del
+  20 nov 2026 no tienen lista de folios de Soporte/Correo.
