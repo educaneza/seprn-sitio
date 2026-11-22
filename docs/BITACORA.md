@@ -16,6 +16,19 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-11-22 · Insumos del SNTE movidos fuera del sitio
+
+| | |
+|---|---|
+| **Fecha** | 2026-11-22 |
+| **Sesión** | Jorge pidió sacar del sitio el trabajo sindical (SNTE S36 y la captura del 8 y 10 nov). `docs/insumos/SNTE-S36/` (53 MB, ignorada por git) se movió a `~/Proyectos/trabajo/delegacion-sindical/SNTE-S36/`, la carpeta del proyecto sindical (sin git). Las dos memorias de Claude de ese trabajo pasaron a la memoria de ese proyecto y se quitaron de la de este. |
+| **Sitio y backends** | Sin cambios. Los checkpoints del 23 oct y del 8 y 10 nov citan la ruta vieja; se quedan así porque son historial. |
+| **Pendiente** | Lo mismo que el checkpoint del 2026-11-20: **antes del 24 nov**, "Preparar hojas" en la Bitácora, revisar `Config` E:G y las filas `Mes = 2026-11` posteriores al 24 nov, generar el reporte 2026-11 y el concentrado de Correo con corte 24/11/2026, y marcar noviembre "Entregado". Siguen `ControlOTDE.gs` e instalador v4 en PC real (ROADMAP 30), ROADMAP 39 antes del 11 dic, semáforo (41), `OTDE-INC-0007` y `OTDE-CAP-0647`. |
+| **Documentación actualizada** | Solo este checkpoint. |
+| **Commits** | Solo el de este cierre (docs). |
+
+---
+
 ## CHECKPOINT — 2026-11-20 · Bitácora: periodos de reporte con fecha de corte (ROADMAP 40), desplegados sin prueba en vivo
 
 | | |
