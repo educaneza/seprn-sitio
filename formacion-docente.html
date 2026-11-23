@@ -2577,13 +2577,13 @@
           item.appendChild(cta);
         }
       } else if (r.curso.liga) {
-        // Liga solo de referencia (curso sin cupo real en plataforma externa).
+        // Liga del curso o de la transmisión (curso sin cupo real en plataforma externa).
         const liga = document.createElement('a');
         liga.className = 'fi-liga';
         liga.href = r.curso.liga;
         liga.target = '_blank';
         liga.rel = 'noopener noreferrer';
-        liga.textContent = 'Ver convocatoria →';
+        liga.textContent = 'Entrar al curso o a la transmisión →';
         item.appendChild(liga);
       }
 
