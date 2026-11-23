@@ -16,6 +16,22 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-11-23 · Tercera Sesión Ordinaria CTE 2026-2027 publicada (YouTube + sitio)
+
+| | |
+|---|---|
+| **Fecha** | 2026-11-23 (segunda sesión del día) |
+| **Sesión** | Jorge pidió subir el opening y los materiales de la 3ra Sesión (27 nov). El opening venía de `openings-seprn/sesiones/2627-s3/`; Jorge lo subió a YouTube como borrador y los materiales los copió a `pdfs/cte/cte-2026-2027/cte-tercera-sesión/`. |
+| **YouTube** | Con Claude in Chrome, en el borrador: título, descripción con capítulos y etiquetas de `salida/youtube.txt`, miniatura, subtítulos `.srt` (Español México), playlist "CTE 2026-2027", "No es contenido para niños", incorporación permitida. Publicado como público (decisión de Jorge): `bjQjS37ozT8`. Sin pantalla final (el video ya cierra con su tarjeta). |
+| **Sitio** | `cte.html`: acordeón nuevo activo con NUEVO, iframe con `src`, 7 materiales con título legible (PPTX SEPRN, 2 orientaciones, presentación de la Reunión Nacional del 17 nov, dinámica DOCX "El Juego de la Convivencia", 2 lecturas complementarias) y ZIP de 34 MB. Segunda Sesión colapsada (`data-src`, sin NUEVO). Banner de `index.html` a "Tercera Sesión". Dos archivos llegaron con acentos en NFD (macOS); se renombraron a NFC para que coincidan con los `href` `%C3%B3`. |
+| **Verificación** | Local con Playwright: solo la 3ra abierta al cargar; al abrir la 2da su `data-src` pasa a `src`. Producción: run de `fc83fcb` en `success`, `curl` encuentra `bjQjS37ozT8` en `cte.html` y el banner nuevo en `index.html`, los 8 archivos responden 200. Contenido publicado: 640 MB (aviso a 800 MB); archivo más grande del repo 69 MB (ZIP de la Sexta Sesión 2025-2026). |
+| **openings-seprn** | `guion.json` con `youtube.id`, `publicacion` y `en_sitio: true`; pendiente quitado de su `BITACORA.md` y entrada nueva en su Registro. **Sin commit** (ese repo no tiene remoto). |
+| **Pendiente** | **Jorge:** comitear los 2 cambios de `openings-seprn`. Sigue lo del checkpoint anterior: marcar 2026-11 "Entregado" en `Config` G4 al mandar el reporte, agregar 2026-12 con corte 11/12/2026, confirmar "El ABC de las emociones" de SEM-2627-002. Siguen ROADMAP 39 antes del 11 dic, `ControlOTDE.gs` e instalador v4 en PC real (ROADMAP 30), semáforo (41), `OTDE-INC-0007` y `OTDE-CAP-0647`. |
+| **Documentación actualizada** | Este checkpoint; en el commit `fc83fcb`, `CLAUDE.md` (tabla de sesiones CTE) y `docs/SISTEMAS.md` (`cte.html`); en este cierre, `docs/TABLERO-SALUD.md` (CTE), `docs/ROADMAP.md` ítem 10 y `CLAUDE.md` (tamaño publicado). |
+| **Commits** | `fc83fcb` (sesión publicada) + el de este cierre (docs). |
+
+---
+
 ## CHECKPOINT — 2026-11-23 · Reporte de noviembre generado: primera prueba en vivo de los periodos con corte
 
 | | |
