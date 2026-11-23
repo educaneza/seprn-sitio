@@ -1342,6 +1342,15 @@ Los 506 registros se enriquecieron con `municipio` (18 municipios) cruzando por 
   El 27 oct 2026 (commit `82018cb`) se agregó la presentación de la Subdirección
   (`SUB Segunda Sesión Ordinaria CTE 2026-2027.pptx`, 5.1 MB) como primer material ("Presentación
   SEPRN", igual que en la Primera Sesión) y dentro del ZIP, que subió a 22 MB.
+- ~~**Tercera Sesión Ordinaria 2026-2027**~~ — publicada 23 nov 2026 (la sesión es el 27 nov):
+  opening `bjQjS37ozT8` (subido y publicado el mismo día, con miniatura, `.srt` y playlist "CTE
+  2026-2027"), 7 materiales en `pdfs/cte/cte-2026-2027/cte-tercera-sesión/`: presentación SEPRN
+  (PPTX), orientaciones para directivos y para escuelas de organización completa y multigrado,
+  presentación de la Reunión Nacional (17 nov), dinámica "El Juego de la Convivencia" (DOCX) y dos
+  lecturas complementarias (Memorias, sentidos y experiencias; Sembrar ciencia STEAM+). ZIP de
+  34 MB. Dos nombres de archivo llegaron con acentos en NFD (como los guarda macOS): se
+  renombraron a NFC para que coincidan con el `%C3%B3` de los `href`. Segunda Sesión pasó a
+  colapsada (`data-src`). Banner de `index.html` actualizado.
 - ~~**Centro de Formación Docente** — dar de alta los primeros cursos propios del ciclo
   26-27~~ — resuelto 10 sep 2026: primer curso dado de alta (`ACF-2627-001`, "Formación
   Docente en Inteligencia Artificial", Fundación Televisa) y tarjeta reactivada en

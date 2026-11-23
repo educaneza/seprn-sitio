@@ -74,7 +74,7 @@ Todas las páginas de área siguen este patrón:
 4. Cada sección usa `.section-header` + `.section-eyebrow` + `.section-title` en lugar de `.seccion-titulo`
 5. Las tarjetas de oficinas usan `class="oficina-card fade-item"` para animación al scroll
 
-## CTE — Sesiones publicadas (al 25 oct 2026)
+## CTE — Sesiones publicadas (al 23 nov 2026)
 **Ojo:** "Taller Intensivo de Cierre 2025-2026" (jul 2026) y "Taller Intensivo CTE 2025-2026" (ene 2026) son **dos eventos distintos** — no confundirlos ni fusionar su contenido.
 
 **Estructura por ciclo (ago 2026):** `cte.html` ya no es una lista plana única — se divide en un
@@ -96,6 +96,7 @@ conocida, no corregida a propósito (decisión de Jorge).
 
 | Sesión | Ciclo | Opening YT | Grabación | Materiales | ZIP |
 |---|---|---|---|---|---|
+| Tercera Sesión Ordinaria 2026-2027 (27 nov) | 2026-2027 (actual) | `bjQjS37ozT8` | — | PPTX + 6 materiales (orientaciones, Reunión Nacional, dinámica DOCX, 2 lecturas complementarias, `pdfs/cte/cte-2026-2027/cte-tercera-sesión/`) | ✅ (`cte-tercera-sesión-completa.zip`) |
 | Segunda Sesión Ordinaria 2026-2027 (30 oct) | 2026-2027 (actual) | `jtJ31LCm4po` | — | PPTX + 19 PDFs (Consulta Nacional + temas por nivel, `pdfs/cte/cte-2026-2027/cte-segunda-sesión/`) | ✅ (`cte-segunda-sesión-completa.zip`) |
 | Primera Sesión Ordinaria 2026-2027 | 2026-2027 (actual) | `vhuipmEOEuY` | — | 5 materiales (PPTX + 4 PDFs, `pdfs/cte/cte-2026-2027/cte-primera-sesión/`) | ✅ (`cte-primera-sesión-completa.zip`) |
 | Fase Intensiva 2026-2027 | 2026-2027 (actual) | `bXq_TtMf_pc` | — | 9 PDFs (`pdfs/cte/cte-2026-2027/cte-fase-intensiva/`) | ✅ (`cte-fase-intensiva-completa.zip`) |
