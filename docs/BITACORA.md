@@ -16,6 +16,21 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-11-23 · Reporte de noviembre generado: primera prueba en vivo de los periodos con corte
+
+| | |
+|---|---|
+| **Fecha** | 2026-11-23 |
+| **Sesión** | Se acompañó a Jorge en el reporte de noviembre para Planeación (se entrega el 24 nov). Jorge corrió los menús; Claude revisó los Sheets con el conector de Google Sheets y corrigió textos. Sin cambios de código. |
+| **Bitácora (v15, prueba en vivo)** | "Preparar hojas": `Config` E:G con 2026-09 y 2026-10 entregados y 2026-11 con corte 24/11/2026. `Actividades`: 17 filas `Mes = 2026-11`, ninguna después del 24 nov (los cursos que siguen, `PRY-2627-001` y `AUT-2627-006`, quedaron recortados al 24). Reporte 2026-11: del 1 al 24 nov, META 21: 3, META 23: 14 (12 de Formación, oficio 4871 y resumen de Correo). **Regla 3 en vivo**: la visita del 23 oct a la Primaria "Cuauhtémoc" (`MAN:OTDE-MAN-0014:2026-10`, la de las comisiones 4851/4852) entró a noviembre con `Nota de periodo`; octubre ya no se regenera. Avisos esperados: sin lista de folios de 2026-10 en Soporte y Correo. Sin Soporte en el periodo (Jorge confirmó que no hubo casos). |
+| **Textos corregidos** | En `Actividades` de la Bitácora (filas 32, 34, 40, 45, 47): oficio 4871 (Propósito decía solo "Fortalecer" y errores de dedo; Propósito nuevo redactado por Claude), Supervisión 33 (redacción y Propósito de equipo administrativo), SEM-2627-002 (sin "El ABC de las emociones…"), SEM-2627-007 (sin "Semanor"), CNF-2627-003 (acentos y sin "0 constancias recibidas"). Jorge regeneró y el reporte los trae. En `Cursos` de Formación Docente: G17 (SEM-2627-002) y G24 (CNF-2627-003); SEM-2627-007 ya estaba corregido. |
+| **Correo (v31, prueba en vivo)** | Concentrado 2026-11 con corte 24/11/2026: 11 atendidas, todas con NP SIGEE (igual que la Bitácora). El PDF fallaba por el permiso de Drive (`#56`): correr una función desde el editor no lo pedía. Jorge quitó el acceso del proyecto en la cuenta de Google, volvió a autorizar desde el editor y el PDF quedó en Drive ("Concentrado correo institucional 2026-11.pdf", 23 nov 12:46). Manifiesto revisado con `clasp pull` al scratchpad: sin `oauthScopes` fijos. `curl` `?action=consulta` con folio ficticio → `no_encontrado` (el Web App siguió funcionando). |
+| **Pendiente** | **Jorge:** al mandar el reporte a Planeación, marcar 2026-11 "Entregado" en `Config` G4 de la Bitácora (al cierre seguía en FALSE). Agregar el periodo 2026-12 con corte 11/12/2026 en `Config`. Confirmar si la frase "El ABC de las emociones" sí era de la convocatoria de SEM-2627-002 (se quitó en las dos hojas). Siguen: ROADMAP 39 antes del 11 dic, `ControlOTDE.gs` e instalador v4 en PC real (ROADMAP 30), semáforo (41), `OTDE-INC-0007` y `OTDE-CAP-0647`. |
+| **Documentación actualizada** | Este checkpoint, `docs/TABLERO-SALUD.md` (Bitácora y Correo), `docs/ROADMAP.md` (40), `docs/SISTEMAS.md` (Bitácora y Correo), `docs/QA-NOTES.md #56`, `CLAUDE.md` (pendiente del reporte mensual). |
+| **Commits** | Solo el de este cierre (docs). |
+
+---
+
 ## CHECKPOINT — 2026-11-22 · Insumos del SNTE movidos fuera del sitio
 
 | | |

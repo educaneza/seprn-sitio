@@ -1105,8 +1105,9 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
       a tiempo") y el reporte salir con las demás.
 40. ~~**Bitácora: periodos de reporte con fecha de corte en vez de meses de calendario**~~ —
     **construido y desplegado el 20 nov 2026** (Bitácora v15, Correo v31, commit `278a066`;
-    detalle en `docs/BITACORA.md` y `docs/ARCHITECTURE.md §36`). Falta la prueba en vivo de
-    Jorge con el reporte de noviembre (antes del 24 nov). Corrección al diseño: Soporte y Correo
+    detalle en `docs/BITACORA.md` y `docs/ARCHITECTURE.md §36`). **Probado en vivo el 23 nov
+    2026** con el reporte de noviembre (1-24 nov, un tardío de octubre entró con nota) y el
+    concentrado de Correo con corte. Corrección al diseño: Soporte y Correo
     **no** cambiaron, la bitácora pide los meses calendario del rango y filtra. Diseño original
     (abierto 4 nov 2026): Planeación
     pide el reporte en fechas fijas: noviembre el 24 nov; diciembre el 11 dic, e incluye lo del 25

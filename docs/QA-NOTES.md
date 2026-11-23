@@ -1498,6 +1498,15 @@ por `getUi` desde el editor es normal.
 **Regla:** cuando un cambio agrega un servicio que el proyecto no usaba (Drive, Gmail, Calendar…),
 avisar antes de publicar que hay que autorizar desde el editor, no esperar que el menú lo pida.
 
+**Recaída (23 nov 2026):** el concentrado de noviembre volvió a fallar con el mismo error y correr
+una función desde el editor tampoco pidió autorización. El manifiesto no fija `oauthScopes`
+(revisado con `clasp pull`), así que el permiso sí se detecta; lo probable es que en la
+autorización anterior la casilla de Drive quedara sin marcar (la pantalla de Google deja aceptar
+permisos uno por uno) y el editor ya no vuelva a preguntar. **Fix que funcionó:** quitar el acceso
+del proyecto en la cuenta de Google (myaccount.google.com/connections), volver a correr la función
+desde el editor y aceptar **todos** los permisos. El Web App siguió respondiendo (corre con la
+autorización de su versión publicada; confirmado con `curl`).
+
 ## 57. Bitácora: visita de "Solo equipos administrativos" reportada como aula con 0 equipos
 
 **Síntoma (23 oct 2026, revisión del reporte de octubre):** BIT-0028 (MAN-0022) decía

@@ -590,7 +590,8 @@ diseño libre para niños, solo el sello de crédito al pie.
 - **Periodos con fecha de corte (20 nov 2026, v15; ROADMAP 40)**: `Mes` es el periodo de reporte,
   no el mes calendario. Tabla `Periodo | Fecha de corte | Entregado` en `Config` E:G (la crea
   "Preparar hojas"); un periodo entregado se congela y lo tardío entra al siguiente con
-  `Nota de periodo`. Desplegado sin prueba en vivo; ver `docs/ARCHITECTURE.md §36`.
+  `Nota de periodo`. Probado en vivo el 23 nov 2026 (reporte 2026-11: 1-24 nov, MAN-0014 del
+  23 oct entró con nota); ver `docs/ARCHITECTURE.md §36`.
 - **La planeación se edita en el Sheet** (hoja `Planeacion`) y se ve al instante en el formulario.
   Se pueden agregar filas con N.P. único y meta 21/23, y el "Nombre corto" va a mano. No insertar
   ni reordenar columnas antes de "Nombre corto" (lectura por posición) ni renumerar los N.P. 7/8.
@@ -1022,7 +1023,9 @@ arquitectura completo en `docs/ARCHITECTURE.md §16`. Resumen operativo:
 - **Fecha de corte (20 nov 2026, v31; ROADMAP 40)**: después del mes, el menú pide hasta qué día
   (DD/MM/AAAA, vacío = fin de mes) y lo guarda en `CONC_CORTE_AAAA-MM`; el periodo empieza el día
   siguiente al corte del mes anterior. Debe ser el mismo corte de la tabla de periodos de la
-  Bitácora. Pestaña y PDF siguen con nombre `… AAAA-MM`. Sin prueba en vivo.
+  Bitácora. Pestaña y PDF siguen con nombre `… AAAA-MM`. Probado en vivo el 23 nov 2026
+  (2026-11, 11 atendidas); ese día quedó autorizado por fin el permiso de Drive y el PDF se
+  guardó solo (`docs/QA-NOTES.md #56`).
 
 ### Mantenimiento (página propia desde el 27 ago 2026, ver `mantenimiento.html`)
 Ya no es solo texto ("solicita por oficio y vía estructura") — formulario "Solicitar

@@ -373,8 +373,8 @@ ya resueltos al final de `docs/SISTEMAS.md`. Lo genuinamente abierto:
 - **Reporte mensual de Planeación**: la bitácora no avisa de lo que se queda fuera (visita sin
   reporte, asesoría sin "Resuelto", correo sin entrega, comisión sin actividad). Revisarlo antes
   de entregar; revisión automática en `docs/ROADMAP.md` ítem 39. **Periodos con fecha de corte**
-  (Planeación pide noviembre el 24 nov y diciembre el 11 dic): desplegados el 20 nov 2026, sin
-  prueba en vivo. `Mes` = periodo; tabla `Periodo | Fecha de corte | Entregado` en `Config` E:G
+  (Planeación pide noviembre el 24 nov y diciembre el 11 dic): desplegados el 20 nov 2026 y
+  probados en vivo con el reporte de noviembre el 23 nov. `Mes` = periodo; tabla `Periodo | Fecha de corte | Entregado` en `Config` E:G
   de la Bitácora (la llena Jorge; un periodo "Entregado" ya no se regenera y lo tardío entra al
   siguiente con `Nota de periodo`). El concentrado de Correo pide el mismo corte aparte.
   `docs/ARCHITECTURE.md §36`.
