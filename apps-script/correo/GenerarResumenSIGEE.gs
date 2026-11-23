@@ -46,6 +46,9 @@ function onOpen() {
     .addItem('Enviar resumen semanal ahora', 'resumenSemanal')
     .addItem('Aplicar validación y semáforo', 'configurarValidacionYSemaforo')
     .addItem('Reordenar columnas de las 5 hojas', 'reordenarColumnasCorreo')
+    .addSeparator()
+    .addItem('Configurar plantilla de membrete', 'mbtConfigurarPlantilla')
+    .addItem('Crear plantilla de membrete', 'mbtCrearPlantilla')
     .addToUi();
 }
 

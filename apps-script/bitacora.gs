@@ -1422,7 +1422,12 @@ function bitImportarFormacion_(ctx) {
         'Descripción': bitFdDescripcion_(c, inicioCurso, finCurso, primerDia, ultimoDia),
         'Propósito': proposito,
         'Beneficiarios': bitFdBeneficiarios_(c),
-        'Capturó': BIT_CAPTURO_FD
+        'Capturó': BIT_CAPTURO_FD,
+        // Webinars, seminarios y conferencias (23 nov 2026): se registran,
+        // pero Planeación ya no los acepta en el reporte. La regla vive en
+        // formacion-docente.gs (FD_CATEGORIAS_FUERA_DEL_REPORTE); un backend
+        // que no manda el dato entra como siempre.
+        'Va al reporte': c.vaAlReporte === false ? 'No' : ''
       }
     };
   }));

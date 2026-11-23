@@ -221,7 +221,7 @@ Detalle completo de cada backend en `docs/SISTEMAS.md`; arquitectura en `docs/AR
 | `soporte-remoto.gs` | `Solicitudes_Soporte_2026` (archivo "Soporte Técnico Remoto"), `OTDE-SOP-NNNN` | URL en `SOPORTE_APPS_SCRIPT_URL` de `soporte.html`. Telegram a Alejandro + correo `SOP_CORREO_EQUIPO`. Cierre automático `sopOnEditCierre` (solo avisa al solicitante, sin Zona/Sector a propósito). `?action=pendientes`, `?action=soporteMes`, `?action=consulta` |
 | `mantenimiento.gs` | `Solicitudes_Mantenimiento_2026` (hojas `Solicitudes`, `Contactos_Zona_Sector`, `Reportes de visita`), `OTDE-MAN-NNNN` | El oficio firmado sigue siendo obligatorio (PDF, 5 MB). Cae en "Pendiente de validar". Correo combinado: `to`=solicitante, `cc` según tipo de solicitante (escuela → Zona+Sector, supervisión → Sector, jefatura → nadie). Telegram a Alejandro. Aviso al técnico al tener fecha + `Técnico asignado`. Reporte de visita con PDF (`reporte-visita.html` → `doPost` `accion:'reporteVisita'`). **Si cambian campos obligatorios: publicar primero el `.html` y después el `.gs`.** Endpoints `pendientes`, `reportesMes`, `oficiosOV`, `mantenimientoPorCct`, `agendaVisitas`, `consulta` |
 | `asesorias.gs` | `Solicitudes_Asesorias_2026`, `OTDE-ASE-NNNN` | Mismo patrón que Mantenimiento. Tipos: Banco de Materiales y Chuka (exige casilla de mantenimiento previo; verificación por CCT contra Mantenimiento, no bloquea) y Excel básico (temas opcionales). Telegram a Nancy (al programar fecha solo correo al solicitante). Endpoints `pendientes`, `asesoriasMes`, `oficiosOV`, `agendaVisitas`, `consulta` |
-| `correo/` (12 `.gs`, un solo despliegue) | `Solicitudes_Correo_2026_2027`, 5 hojas, folios `OTDE-ALT/CAM/2FA/CYR/INC-` | `WebApp.gs` enruta por `datos.tipo`. Al redesplegar, pegar **todos** los archivos modificados y una sola Nueva versión. El sistema viejo de Marcos (Google Form) se apagó el 14 oct 2026. Telegram/correo a Marcos (Alta no avisa a propósito). `NP SIGEE` lo llena Marcos a mano: es lo que sostiene la trazabilidad. Menú "Generar concentrado del mes" = evidencia del N.P. 12 (PDF en Drive, sin datos personales; el permiso de Drive se autoriza desde el editor, `docs/QA-NOTES.md #56`) |
+| `correo/` (12 `.gs`, un solo despliegue) | `Solicitudes_Correo_2026_2027`, 5 hojas, folios `OTDE-ALT/CAM/2FA/CYR/INC-` | `WebApp.gs` enruta por `datos.tipo`. Al redesplegar, pegar **todos** los archivos modificados y una sola Nueva versión. El sistema viejo de Marcos (Google Form) se apagó el 14 oct 2026. Telegram/correo a Marcos (Alta no avisa a propósito). `NP SIGEE` lo llena Marcos a mano: es lo que sostiene la trazabilidad. Menú "Generar concentrado del mes" = evidencia del N.P. 12 (PDF con membrete en Drive, sin datos personales; ver concentrados abajo). Solo Alta pide `Función` (ROADMAP 42) |
 | `formacion-docente.gs` | `Formacion_Docente_2026_2027` (`Docentes`/`Cursos`/`Inscripciones`), `OTDE-CAP-NNNN` | Ver sección abajo |
 | `panel-otde.gs` | "Panel OTDE" | **Apagado** el 14 oct 2026 (el código y el Sheet se quedan) |
 | `bitacora.gs` | "Bitácora OTDE 2026-2027" | Reporte mensual de Planeación (METAS 21/23). Se alimenta solo de Mantenimiento (N.P. 7), Asesorías (N.P. 8), Formación Docente (`NP_planeacion`), Soporte y Correo (resúmenes regenerables). URLs + `PANEL_TOKEN` en Script Properties. Tras cambiar hojas, correr "Preparar hojas" |
@@ -245,6 +245,20 @@ Correo → Marcos. Cada una por Telegram (chat personal) + correo.
 - Tras cada redeploy, correr "OTDE Formación → Instalar recordatorios automáticos" **desde el
   menú de la hoja**, no con ▶️ desde el editor.
 - Constancias solo para cursos con `Liga_tutorial_constancia` (UNETE).
+- **Webinar, Seminario y Conferencia ya no van al reporte de Planeación**
+  (`FD_CATEGORIAS_FUERA_DEL_REPORTE`): sin concentrado, y la Bitácora los importa con
+  `Va al reporte = No`. Menú "Generar concentrados del periodo (evidencias)" = un PDF por curso.
+
+### Concentrados de evidencias (Correo y Formación Docente)
+- Salen con el membrete de los oficios y firmas (VALIDÓ jefe de OTDE, Vo. Bo. Dra. Galindo) desde
+  una plantilla de Google Docs. `apps-script/membrete/Membrete.gs` es **un archivo en dos
+  proyectos** (`correo` y `formacion-docente` en `proyectos-clasp.json`): un cambio se publica en
+  los dos. Sin plantilla, sale el PDF de la pestaña. `docs/ARCHITECTURE.md §37`.
+- Las imágenes del membrete (logos del Gobierno) **no van en el repo**:
+  `docs/insumos/Oficios/membrete-2026/`. La leyenda cambia cada año (`MBT_LEYENDA`).
+- Servicio nuevo en un proyecto ya autorizado (`UrlFetchApp`, `DocumentApp`, Drive): **avisar
+  antes de publicar que se autoriza desde el editor**, nunca desde el menú (`docs/QA-NOTES.md #56`,
+  pasó tres veces).
 
 ## Páginas propias de trámite (`correo.html`, `mantenimiento.html`, `asesorias.html`, `soporte.html`)
 Patrón compartido (detalle en `docs/SISTEMAS.md` y `docs/ARCHITECTURE.md §21`):
@@ -379,6 +393,9 @@ ya resueltos al final de `docs/SISTEMAS.md`. Lo genuinamente abierto:
   de la Bitácora (la llena Jorge; un periodo "Entregado" ya no se regenera y lo tardío entra al
   siguiente con `Nota de periodo`). El concentrado de Correo pide el mismo corte aparte.
   `docs/ARCHITECTURE.md §36`.
+- **Evidencias con membrete (23 nov 2026)**: publicado sin probar; Jorge crea la plantilla
+  (pasos en el checkpoint de `docs/BITACORA.md`) y revisa los PDF. Después, la función de quien
+  pide en Correo (ROADMAP 42).
 - **`PANEL_TOKEN` débil** (4 caracteres, fácil de adivinar): cambiarlo en todos los proyectos a la vez. ROADMAP ítem 36.
 - **Formación Docente — calendario**: iPhone y computadora confirmados; falta Android y Outlook.
   Compartir la liga `?calendario=ACF-2627-001`. Los correos casi no salen en cursos grandes por

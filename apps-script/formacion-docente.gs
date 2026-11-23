@@ -171,6 +171,15 @@ const PREFIJOS_CATEGORIA = {
   'Proyecto didáctico':     'PRY'
 };
 
+// Categorías que Planeación ya no acepta en el reporte mensual (23 nov 2026).
+// Se siguen registrando en la Bitácora OTDE (es trabajo hecho), pero entran
+// con "Va al reporte" = No, y no llevan concentrado de evidencias.
+const FD_CATEGORIAS_FUERA_DEL_REPORTE = ['Webinar', 'Seminario', 'Conferencia'];
+
+function fdVaAlReporte_(categoria) {
+  return FD_CATEGORIAS_FUERA_DEL_REPORTE.indexOf(String(categoria || '').trim()) === -1;
+}
+
 // ── Fecha sin hora (año/mes/día), para comparar ventanas de visibilidad
 // sin depender de husos horarios ni de la hora exacta de la visita ──
 function soloFecha(valor) {
@@ -1072,6 +1081,7 @@ function fdListarCursosMes_(tokenRecibido, mes) {
       fin: fmt(fin),
       sinFechaFin: !finReal,
       conConstancia: !!txt(row[CUR.Liga_tutorial_constancia]),
+      vaAlReporte: fdVaAlReporte_(row[CUR.Categoria]),
       inscritos: 0, porSector: {}, porFuncion: {}, constancias: 0
     });
   });
@@ -1314,6 +1324,7 @@ function onOpen() {
     .createMenu('OTDE Formación')
     .addItem('Generar ID de cursos faltantes', 'generarIdsCursosFaltantes')
     .addItem('Generar estadísticas', 'generarEstadisticas')
+    .addItem('Generar concentrados del periodo (evidencias)', 'fdGenerarConcentrados')
     .addItem('Actualizar vista de Inscripciones', 'actualizarVistaInscripciones')
     .addItem('Reordenar columnas de Cursos', 'reordenarColumnasCursos')
     .addItem('Reordenar columnas de Inscripciones', 'reordenarColumnasInscripciones')
@@ -1331,6 +1342,9 @@ function onOpen() {
     .addItem('Desinstalar auto-generación de ID de curso', 'desinstalarTriggerAutoId')
     .addSeparator()
     .addItem('Configurar token del panel (Bitácora OTDE)', 'fdConfigurarTokenPanel')
+    .addSeparator()
+    .addItem('Crear plantilla de membrete', 'mbtCrearPlantilla')
+    .addItem('Configurar plantilla de membrete', 'mbtConfigurarPlantilla')
     .addToUi();
 }
 
@@ -2683,4 +2697,484 @@ function desinstalarRecordatoriosAutomaticos() {
     }
   });
   SpreadsheetApp.getUi().alert(quitados + ' disparador(es) de recordatorios eliminado(s).');
+}
+
+// ============================================================
+// CONCENTRADOS DE EVIDENCIAS POR CURSO (23 nov 2026)
+// ============================================================
+// Evidencia de los cursos (autogestivos, acciones formativas, proyectos
+// didácticos, diplomados) para el reporte mensual de Planeación. Mismo patrón
+// que el concentrado de correo (apps-script/correo/ConcentradoMensual.gs):
+// cifras, gráficas por sector y por función y la lista de inscritos, guardado
+// como PDF en Drive (carpeta FDC_CARPETA, junto al Sheet). UN PDF POR CURSO,
+// porque cada curso es una actividad aparte en el reporte.
+//
+// Va a Planeación: NUNCA lleva nombre, RFC, correo ni teléfono. Solo folio,
+// fecha de registro, CCT, escuela, sector, zona, función y si confirmó su
+// registro en la plataforma del curso.
+//
+// Cursos: los que se desarrollan (Fecha_inicio a Fecha_fin) dentro del
+// periodo, sin Ocultar_historial, salvo FD_CATEGORIAS_FUERA_DEL_REPORTE.
+// Inscritos: los registrados hasta la fecha de corte.
+//
+// FECHA DE CORTE: como en el de correo, el periodo va del día siguiente al
+// corte del mes anterior hasta el corte que se escribe (vacío = fin de mes).
+// Cada corte queda en la Script Property FDC_CORTE_AAAA-MM. Debe ser el mismo
+// de la tabla de periodos de la Bitácora (Config, columnas E:G).
+//
+// La pestaña de cada curso se borra en cuanto su PDF queda en Drive (para no
+// llenar el Sheet); si el PDF falla, se queda para descargarla a mano.
+//
+// Menú "OTDE Formación → Generar concentrados del periodo (evidencias)".
+// ============================================================
+
+const FDC_PREFIJO_CORTE = 'FDC_CORTE_';
+const FDC_CARPETA = 'Evidencias Formación Docente';
+const FDC_GUINDA = '#56212f';
+const FDC_ARENA = '#d6d1ca';
+const FDC_GRIS = '#6b7280';
+const FDC_COLUMNAS = 8;
+const FDC_SECTORES = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'SEPRN'];
+const FDC_MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
+  'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+function fdGenerarConcentrados() {
+  const ui = SpreadsheetApp.getUi();
+  const tz = 'America/Mexico_City';
+  const sugerido = Utilities.formatDate(new Date(), tz, 'yyyy-MM');
+  const r = ui.prompt('Concentrados del periodo',
+    '¿Qué mes? Escríbelo como AAAA-MM (ejemplo: ' + sugerido + ').', ui.ButtonSet.OK_CANCEL);
+  if (r.getSelectedButton() !== ui.Button.OK) return;
+  const mes = r.getResponseText().trim() || sugerido;
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(mes)) {
+    ui.alert('Formato no válido. Usa AAAA-MM, por ejemplo ' + sugerido + '.');
+    return;
+  }
+  const props = PropertiesService.getScriptProperties();
+  const corteAnterior = props.getProperty(FDC_PREFIJO_CORTE + fdcMesVecino_(mes, -1));
+  const desde = corteAnterior ? fdcDiaSiguiente_(corteAnterior) : mes + '-01';
+  const finDeMes = fdcUltimoDia_(mes);
+  const corteGuardado = props.getProperty(FDC_PREFIJO_CORTE + mes) || finDeMes;
+  const rc = ui.prompt('Fecha de corte',
+    'El periodo empieza el ' + fdcDmy_(desde) + '. ¿Hasta qué día? Escríbelo como DD/MM/AAAA ' +
+    '(vacío = ' + fdcDmy_(corteGuardado) + '). Usa el mismo corte de la Bitácora.', ui.ButtonSet.OK_CANCEL);
+  if (rc.getSelectedButton() !== ui.Button.OK) return;
+  const textoCorte = rc.getResponseText().trim();
+  const dmy = textoCorte.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (textoCorte && !dmy) {
+    ui.alert('Formato no válido. Usa DD/MM/AAAA, por ejemplo ' + fdcDmy_(finDeMes) + '.');
+    return;
+  }
+  const hasta = dmy ? dmy[3] + '-' + ('0' + dmy[2]).slice(-2) + '-' + ('0' + dmy[1]).slice(-2) : corteGuardado;
+  if (hasta < desde || hasta > fdcUltimoDia_(fdcMesVecino_(mes, 1))) {
+    ui.alert('El corte debe quedar entre el ' + fdcDmy_(desde) + ' y el fin del mes siguiente. No se generó nada.');
+    return;
+  }
+  props.setProperty(FDC_PREFIJO_CORTE + mes, hasta);
+  const rango = { desde: desde, hasta: hasta };
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const datos = fdcLeerCursos_(rango);
+  const resultados = [];
+  datos.cursos.forEach(function (c) {
+    const hoja = fdcArmarHoja_(ss, mes, c, rango);
+    let pdf = null, error = '', sinMembrete = '';
+    // Primero con membrete (Membrete.gs); si falla, el PDF de la pestaña
+    // como antes, para no quedarse sin evidencia.
+    try {
+      pdf = mbtGenerarPdf_(fdcSpec_(mes, c, rango, hoja), fdcCarpeta_()).pdf;
+    } catch (err) {
+      sinMembrete = err.message;
+    }
+    if (!pdf) {
+      try {
+        pdf = fdcGuardarPdf_(ss, hoja, mes, c);
+      } catch (err) {
+        error = err.message;
+      }
+    }
+    if (pdf) ss.deleteSheet(hoja);
+    resultados.push({ curso: c, pdf: pdf, error: error, sinMembrete: sinMembrete, hoja: pdf ? '' : hoja.getName() });
+  });
+
+  const esc = escaparHtml_;
+  let html = '<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.5">' +
+    '<p>Periodo ' + esc(fdcRangoTexto_(rango)) + ': <b>' + resultados.length + '</b> curso' +
+    (resultados.length === 1 ? '' : 's') + ' con concentrado.</p>';
+  if (resultados.length) {
+    html += '<ul style="padding-left:18px">' + resultados.map(function (x) {
+      const c = x.curso;
+      const avisos = [];
+      if (!c.inscritos.length) avisos.push('sin inscritos al corte');
+      if (!c.np) avisos.push('sin NP_planeacion');
+      return '<li style="margin-bottom:6px"><b>' + esc(c.idCurso) + '</b> · ' + esc(c.nombre) + ' (' +
+        c.inscritos.length + ' inscrito' + (c.inscritos.length === 1 ? '' : 's') + ')<br>' +
+        (x.pdf
+          ? '<a href="' + x.pdf.getUrl() + '" target="_blank">' + esc(x.pdf.getName()) + '</a>'
+          : '<span style="color:#8a2020">No se pudo guardar el PDF (' + esc(x.error) + '). La pestaña <b>' +
+            esc(x.hoja) + '</b> se quedó: Archivo → Descargar → PDF, hoja actual, horizontal.</span>') +
+        (x.pdf && x.sinMembrete ? '<br><span style="color:#8a2020">Salió SIN membrete (' + esc(x.sinMembrete) + ').</span>' : '') +
+        (avisos.length ? '<br><span style="color:#8a2020">' + esc(avisos.join(' · ')) + '</span>' : '') +
+        '</li>';
+    }).join('') + '</ul>';
+    html += '<p>PDF en Drive, carpeta <b>' + esc(FDC_CARPETA) + '</b>.</p>';
+  }
+  if (datos.omitidos.length) {
+    html += '<p style="color:' + FDC_GRIS + ';font-size:12px">Sin concentrado (no van al reporte de Planeación): ' +
+      esc(datos.omitidos.join(', ')) + '.</p>';
+  }
+  html += '</div>';
+  ui.showModalDialog(HtmlService.createHtmlOutput(html).setWidth(520).setHeight(420),
+    'Concentrados ' + fdcNombreMes_(mes) + ' listos');
+}
+
+// Cursos del periodo con sus inscritos al corte, leyendo por encabezado.
+// Nunca toca RFC_Docente, Nombre_Docente, Correo ni Telefono.
+function fdcLeerCursos_(rango) {
+  const tz = 'America/Mexico_City';
+  const txt = function (v) { return String(v == null ? '' : v).trim(); };
+  const iso = function (d) { return Utilities.formatDate(d, tz, 'yyyy-MM-dd'); };
+  const cursos = [], omitidos = [], porId = {};
+
+  valoresCursos_(obtenerHojaCursos()).slice(1).forEach(function (row) {
+    const id = txt(row[CUR.ID_Curso]).toUpperCase();
+    if (!id || txt(row[CUR.Ocultar_historial]).toUpperCase() === 'TRUE') return;
+    const inicio = parseFechaSegura_(row[CUR.Fecha_inicio]);
+    if (!inicio) return;
+    const finReal = parseFechaSegura_(row[CUR.Fecha_fin]);
+    const fin = finReal && finReal >= inicio ? finReal : inicio;
+    if (iso(inicio) > rango.hasta || iso(fin) < rango.desde) return;
+    if (!fdVaAlReporte_(row[CUR.Categoria])) {
+      omitidos.push(id + ' (' + txt(row[CUR.Categoria]) + ')');
+      return;
+    }
+    const c = {
+      idCurso: id,
+      nombre: txt(row[CUR.Nombre]),
+      categoria: txt(row[CUR.Categoria]),
+      responsable: txt(row[CUR.Responsable]),
+      modalidad: txt(row[CUR.Modalidad]),
+      dirigidoA: txt(row[CUR.Dirigido_a]),
+      liga: txt(row[CUR.Liga_convocatoria]),
+      np: txt(row[CUR.NP_planeacion]).replace(/^N\.?\s*P\.?\s*/i, ''),
+      inicio: inicio, fin: fin,
+      inscritos: []
+    };
+    cursos.push(c);
+    porId[id] = c;
+  });
+  if (!cursos.length) return { cursos: cursos, omitidos: omitidos };
+
+  const datos = obtenerHojaInscripciones().getDataRange().getValues();
+  const cols = indicesPorEncabezado_(datos[0]);
+  const celda = function (row, h) { return h in cols ? row[cols[h]] : ''; };
+  datos.slice(1).forEach(function (row) {
+    const c = porId[txt(celda(row, 'ID_Curso')).toUpperCase()];
+    if (!c) return;
+    const fecha = celda(row, 'Fecha_registro');
+    const dia = fecha instanceof Date ? iso(fecha) : '';
+    if (dia && dia > rango.hasta) return; // se inscribió después del corte
+    c.inscritos.push({
+      folio: txt(celda(row, 'Folio')).toUpperCase(),
+      fecha: fecha,
+      enPeriodo: !!dia && dia >= rango.desde,
+      cct: txt(celda(row, 'CCT')).toUpperCase(),
+      escuela: txt(celda(row, 'Escuela')),
+      sector: txt(celda(row, 'Sector')) || 'Sin sector',
+      zona: txt(celda(row, 'Zona')),
+      funcion: txt(celda(row, 'Funcion')) || 'Sin función',
+      externo: txt(celda(row, 'Registro_externo'))
+    });
+  });
+  const ordenSector = function (s) { const k = FDC_SECTORES.indexOf(s); return k === -1 ? 99 : k; };
+  cursos.forEach(function (c) {
+    c.inscritos.sort(function (a, b) {
+      return ordenSector(a.sector) - ordenSector(b.sector) ||
+        (Number(a.zona) || 0) - (Number(b.zona) || 0) || (a.folio < b.folio ? -1 : a.folio > b.folio ? 1 : 0);
+    });
+  });
+  return { cursos: cursos, omitidos: omitidos };
+}
+
+function fdcArmarHoja_(ss, mes, c, rango) {
+  const tz = 'America/Mexico_City';
+  const nombre = ('Conc ' + mes + ' ' + c.idCurso).slice(0, 99);
+  const previa = ss.getSheetByName(nombre);
+  if (previa) ss.deleteSheet(previa);
+  const hoja = ss.insertSheet(nombre);
+  hoja.setHiddenGridlines(true);
+  [115, 85, 105, 230, 70, 55, 150, 140].forEach(function (w, k) { hoja.setColumnWidth(k + 1, w); });
+
+  const fecha = function (v) {
+    return v instanceof Date ? Utilities.formatDate(v, tz, 'dd/MM/yyyy') : String(v == null ? '' : v).trim().split(' ')[0];
+  };
+  const linea = function (fila, texto) {
+    return hoja.getRange(fila, 1, 1, FDC_COLUMNAS).merge().setValue(texto);
+  };
+  const titulo = function (fila, texto) {
+    linea(fila, texto).setFontWeight('bold').setBackground(FDC_GUINDA).setFontColor('#F9F8F5');
+  };
+  const cuenta = function (campo) {
+    const m = {};
+    c.inscritos.forEach(function (x) { m[x[campo]] = (m[x[campo]] || 0) + 1; });
+    return m;
+  };
+  let fila = 1;
+
+  linea(fila, 'Concentrado de participación · ' + c.nombre).setFontWeight('bold').setFontSize(14)
+    .setFontColor(FDC_GUINDA).setWrap(true);
+  hoja.setRowHeight(fila, 40);
+  fila++;
+  linea(fila, 'Periodo del informe: ' + fdcRangoTexto_(rango) + '.').setFontWeight('bold').setFontColor(FDC_GUINDA);
+  fila++;
+  linea(fila, 'Oficina de Tecnología para el Desarrollo Educativo (OTDE) · Subdirección de Educación Primaria en la Región de Nezahualcóyotl')
+    .setFontColor(FDC_GRIS);
+  fila += 2;
+
+  // Ficha del curso
+  titulo(fila, 'Datos del curso');
+  fila++;
+  const mismoDia = c.fin.getTime() === c.inicio.getTime();
+  const ficha = [
+    ['ID del curso', c.idCurso],
+    ['Tipo', c.categoria || '—'],
+    ['Responsable', c.responsable || '—'],
+    ['Modalidad', c.modalidad || '—'],
+    ['Desarrollo del curso', mismoDia ? fecha(c.inicio) : 'Del ' + fecha(c.inicio) + ' al ' + fecha(c.fin)],
+    ['Dirigido a', c.dirigidoA || '—'],
+    ['N.P. de la planeación', c.np || 'Sin N.P. (no planeado)'],
+    ['Convocatoria', c.liga || '—']
+  ];
+  ficha.forEach(function (f, k) {
+    hoja.getRange(fila + k, 1, 1, 2).merge().setValue(f[0]).setFontWeight('bold');
+    hoja.getRange(fila + k, 3, 1, FDC_COLUMNAS - 2).merge().setValue(f[1]).setWrap(true);
+  });
+  fila += ficha.length + 1;
+
+  // Cifras
+  titulo(fila, 'Cifras al corte');
+  fila++;
+  const total = c.inscritos.length;
+  const enPeriodo = c.inscritos.filter(function (x) { return x.enPeriodo; }).length;
+  const externo = cuenta('externo');
+  const cifras = [
+    ['Inscritos al corte', total, 'Registros en el Centro de Formación Docente (Oficina Virtual OTDE) hasta la fecha de corte.'],
+    ['Inscritos en el periodo', enPeriodo, 'De los anteriores, los que se registraron dentro del periodo del informe.'],
+    ['Confirmaron su registro en la plataforma', externo[REGISTRO_EXTERNO.CONFIRMADO] || 0,
+      'La persona declaró que recibió el correo de bienvenida de la plataforma del curso.'],
+    ['Pendientes de confirmar en la plataforma', externo[REGISTRO_EXTERNO.PENDIENTE] || 0,
+      'Se registraron con OTDE y todavía no confirman su inscripción en la plataforma.']
+  ];
+  cifras.forEach(function (f, k) {
+    hoja.getRange(fila + k, 1, 1, 2).merge().setValue(f[0]);
+    hoja.getRange(fila + k, 3).setValue(f[1]).setFontWeight('bold').setFontSize(12).setFontColor('#9F2241').setHorizontalAlignment('center');
+    hoja.getRange(fila + k, 4, 1, FDC_COLUMNAS - 3).merge().setValue(f[2]).setFontColor(FDC_GRIS).setFontSize(9).setWrap(true);
+  });
+  fila += cifras.length + 1;
+
+  // Tablas por sector y por función (las gráficas leen de aquí)
+  titulo(fila, 'Inscritos por sector y por función');
+  fila++;
+  const porSector = cuenta('sector'), porFuncion = cuenta('funcion');
+  const ordenSector = function (s) { const k = FDC_SECTORES.indexOf(s); return k === -1 ? 99 : k; };
+  const sectores = Object.keys(porSector).sort(function (a, b) { return ordenSector(a) - ordenSector(b); })
+    .map(function (s) { return [s === 'SEPRN' ? 'Subdirección' : (s === 'Sin sector' ? s : 'Sector ' + s), porSector[s]]; });
+  const funciones = Object.keys(porFuncion).sort(function (a, b) { return porFuncion[b] - porFuncion[a]; })
+    .map(function (f) { return [f, porFuncion[f]]; });
+  const filaTablas = fila;
+  hoja.getRange(fila, 1, 1, 2).setValues([['Sector', 'Inscritos']]).setFontWeight('bold').setBackground(FDC_ARENA);
+  hoja.getRange(fila, 4, 1, 2).setValues([['Función', 'Inscritos']]).setFontWeight('bold').setBackground(FDC_ARENA);
+  if (sectores.length) hoja.getRange(fila + 1, 1, sectores.length, 2).setValues(sectores);
+  if (funciones.length) hoja.getRange(fila + 1, 4, funciones.length, 2).setValues(funciones).setWrap(true);
+  fila += Math.max(sectores.length, funciones.length, 1) + 2;
+
+  if (total) {
+    const opciones = function (chart, tituloGrafica) {
+      return chart.setOption('title', tituloGrafica).setOption('legend', { position: 'none' })
+        .setOption('colors', [FDC_GUINDA]).setOption('width', 450).setOption('height', 300)
+        .setOption('hAxis', { minValue: 0, format: '0' }).setOption('vAxis', { minValue: 0, format: '0' });
+    };
+    hoja.insertChart(opciones(hoja.newChart().setChartType(Charts.ChartType.COLUMN)
+      .addRange(hoja.getRange(filaTablas, 1, sectores.length + 1, 2)).setNumHeaders(1)
+      .setPosition(fila, 1, 0, 0), 'Por sector educativo').build());
+    hoja.insertChart(opciones(hoja.newChart().setChartType(Charts.ChartType.BAR)
+      .addRange(hoja.getRange(filaTablas, 4, funciones.length + 1, 2)).setNumHeaders(1)
+      .setPosition(fila, 5, 0, 0), 'Por función').build());
+    fila += 16; // espacio para las gráficas (300 px)
+  }
+
+  // Lista de inscritos
+  titulo(fila, 'Inscritos al corte (' + total + ')');
+  fila++;
+  hoja.getRange(fila, 1, 1, FDC_COLUMNAS)
+    .setValues([['Folio', 'Registro', 'CCT', 'Escuela', 'Sector', 'Zona', 'Función', 'Registro en plataforma']])
+    .setFontWeight('bold').setBackground(FDC_ARENA).setWrap(true);
+  fila++;
+  if (!total) {
+    linea(fila, 'Sin inscritos al corte.').setFontStyle('italic').setFontColor(FDC_GRIS);
+    fila += 2;
+  } else {
+    const filas = c.inscritos.map(function (x) {
+      return [x.folio, fecha(x.fecha), x.cct || '—', x.escuela || '—', x.sector, x.zona || '—', x.funcion,
+        x.externo === REGISTRO_EXTERNO.CONFIRMADO ? 'Confirmado' : (x.externo || '—')];
+    });
+    hoja.getRange(fila, 1, filas.length, FDC_COLUMNAS).setNumberFormat('@').setValues(filas)
+      .setWrap(true).setVerticalAlignment('top').setFontSize(9)
+      .setBorder(true, true, true, true, true, true, '#d1d5db', SpreadsheetApp.BorderStyle.SOLID);
+    fila += filas.length + 1;
+  }
+
+  linea(fila, 'Fuente: Centro de Formación Docente de la Oficina Virtual OTDE (registro de inscripciones). ' +
+    '"Registro en plataforma" lo declara la propia persona al inscribirse o desde el recordatorio; no es verificación contra la plataforma del curso. ' +
+    'Sin datos personales de las figuras educativas. Generado el ' + Utilities.formatDate(new Date(), tz, 'dd/MM/yyyy HH:mm') + '.')
+    .setWrap(true).setFontSize(8).setFontColor(FDC_GRIS);
+  hoja.setRowHeight(fila, 40);
+  return hoja;
+}
+
+// Contenido del concentrado con membrete (ver mbtGenerarPdf_ en Membrete.gs).
+// Mismos datos que la pestaña; las gráficas se toman de la pestaña.
+function fdcSpec_(mes, c, rango, hoja) {
+  const tz = 'America/Mexico_City';
+  const fecha = function (v) {
+    return v instanceof Date ? Utilities.formatDate(v, tz, 'dd/MM/yyyy') : String(v == null ? '' : v).trim().split(' ')[0];
+  };
+  const cuenta = function (campo) {
+    const m = {};
+    c.inscritos.forEach(function (x) { m[x[campo]] = (m[x[campo]] || 0) + 1; });
+    return m;
+  };
+  const total = c.inscritos.length;
+  const externo = cuenta('externo'), porSector = cuenta('sector'), porFuncion = cuenta('funcion');
+  const ordenSector = function (s) { const k = FDC_SECTORES.indexOf(s); return k === -1 ? 99 : k; };
+  const mismoDia = c.fin.getTime() === c.inicio.getTime();
+  SpreadsheetApp.flush();
+  const graficas = hoja.getCharts().map(function (g) {
+    try { return g.getAs('image/png'); } catch (err) { return null; }
+  });
+
+  return {
+    nombre: 'Concentrado ' + c.idCurso + ' ' + mes,
+    titulo: 'Concentrado de participación',
+    subtitulos: [c.nombre, 'Periodo del informe: ' + fdcRangoTexto_(rango) + '.'],
+    bloques: [
+      { tipo: 'seccion', texto: 'Datos del curso' },
+      { tipo: 'pares', filas: [
+        ['ID del curso', c.idCurso],
+        ['Tipo', c.categoria || '—'],
+        ['Responsable', c.responsable || '—'],
+        ['Modalidad', c.modalidad || '—'],
+        ['Desarrollo del curso', mismoDia ? fecha(c.inicio) : 'Del ' + fecha(c.inicio) + ' al ' + fecha(c.fin)],
+        ['Dirigido a', c.dirigidoA || '—'],
+        ['N.P. de la planeación', c.np || 'Sin N.P. (no planeado)'],
+        ['Convocatoria', c.liga || '—']
+      ] },
+      { tipo: 'seccion', texto: 'Cifras al corte' },
+      { tipo: 'cifras', filas: [
+        ['Inscritos al corte', total, 'Registros en el Centro de Formación Docente (Oficina Virtual OTDE) hasta la fecha de corte.'],
+        ['Inscritos en el periodo', c.inscritos.filter(function (x) { return x.enPeriodo; }).length,
+          'De los anteriores, los que se registraron dentro del periodo del informe.'],
+        ['Confirmaron su registro en la plataforma', externo[REGISTRO_EXTERNO.CONFIRMADO] || 0,
+          'La persona declaró que recibió el correo de bienvenida de la plataforma del curso.'],
+        ['Pendientes de confirmar en la plataforma', externo[REGISTRO_EXTERNO.PENDIENTE] || 0,
+          'Se registraron con OTDE y todavía no confirman su inscripción en la plataforma.']
+      ] },
+      { tipo: 'seccion', texto: 'Inscritos por sector y por función' },
+      { tipo: 'dosTablas',
+        izq: { encabezados: ['Sector', 'Inscritos'], filas: Object.keys(porSector)
+          .sort(function (a, b) { return ordenSector(a) - ordenSector(b); })
+          .map(function (s) { return [s === 'SEPRN' ? 'Subdirección' : (s === 'Sin sector' ? s : 'Sector ' + s), porSector[s]]; }) },
+        der: { encabezados: ['Función', 'Inscritos'], filas: Object.keys(porFuncion)
+          .sort(function (a, b) { return porFuncion[b] - porFuncion[a]; })
+          .map(function (f) { return [f, porFuncion[f]]; }) } },
+      { tipo: 'graficas', blobs: graficas },
+      { tipo: 'seccion', texto: 'Inscritos al corte (' + total + ')' },
+      { tipo: 'tabla',
+        encabezados: ['Folio', 'Registro', 'CCT', 'Escuela', 'Sector', 'Zona', 'Función', 'Registro en plataforma'],
+        anchos: [66, 50, 62, 118, 36, 30, 82, 60],
+        filas: c.inscritos.map(function (x) {
+          return [x.folio, fecha(x.fecha), x.cct || '—', x.escuela || '—', x.sector, x.zona || '—', x.funcion,
+            x.externo === REGISTRO_EXTERNO.CONFIRMADO ? 'Confirmado' : (x.externo || '—')];
+        }) }
+    ],
+    pie: 'Fuente: Centro de Formación Docente de la Oficina Virtual OTDE (registro de inscripciones). ' +
+      '"Registro en plataforma" lo declara la propia persona; no es verificación contra la plataforma del curso. ' +
+      'Sin datos personales de las figuras educativas. Generado el ' + Utilities.formatDate(new Date(), tz, 'dd/MM/yyyy HH:mm') + '.'
+  };
+}
+
+// Exporta la pestaña a PDF con la sesión del propio script (no depende de la
+// cuenta del navegador; ver concGuardarPdf_ en correo/ConcentradoMensual.gs).
+// Un PDF previo con el mismo nombre se manda a la papelera.
+function fdcGuardarPdf_(ss, hoja, mes, c) {
+  SpreadsheetApp.flush();
+  const url = 'https://docs.google.com/spreadsheets/d/' + ss.getId() + '/export?format=pdf&gid=' + hoja.getSheetId() +
+    '&portrait=false&size=letter&fitw=true&gridlines=false&printtitle=false&sheetnames=false' +
+    '&pagenum=CENTER&top_margin=0.5&bottom_margin=0.5&left_margin=0.5&right_margin=0.5';
+  const resp = UrlFetchApp.fetch(url, {
+    headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() }, muteHttpExceptions: true
+  });
+  if (resp.getResponseCode() !== 200) throw new Error('Google respondió HTTP ' + resp.getResponseCode() + ' al exportar');
+  const nombre = 'Concentrado ' + c.idCurso + ' ' + mes + '.pdf';
+  const carpeta = fdcCarpeta_();
+  const previos = carpeta.getFilesByName(nombre);
+  while (previos.hasNext()) previos.next().setTrashed(true);
+  return carpeta.createFile(resp.getBlob().setName(nombre));
+}
+
+// Carpeta de evidencias junto al Sheet; su ID se guarda para no crear otra si
+// alguien la renombra o la mueve.
+function fdcCarpeta_() {
+  const props = PropertiesService.getScriptProperties();
+  const id = props.getProperty('FDC_CARPETA_ID');
+  if (id) {
+    try {
+      const f = DriveApp.getFolderById(id);
+      if (!f.isTrashed()) return f;
+    } catch (err) { /* borrada o sin acceso: se crea otra */ }
+  }
+  const padres = DriveApp.getFileById(SpreadsheetApp.getActiveSpreadsheet().getId()).getParents();
+  const padre = padres.hasNext() ? padres.next() : DriveApp.getRootFolder();
+  const existentes = padre.getFoldersByName(FDC_CARPETA);
+  const carpeta = existentes.hasNext() ? existentes.next() : padre.createFolder(FDC_CARPETA);
+  props.setProperty('FDC_CARPETA_ID', carpeta.getId());
+  return carpeta;
+}
+
+function fdcMesVecino_(mes, delta) {
+  const p = mes.split('-').map(Number);
+  const f = new Date(p[0], p[1] - 1 + delta, 1, 12);
+  return f.getFullYear() + '-' + ('0' + (f.getMonth() + 1)).slice(-2);
+}
+
+function fdcIso_(f) {
+  return f.getFullYear() + '-' + ('0' + (f.getMonth() + 1)).slice(-2) + '-' + ('0' + f.getDate()).slice(-2);
+}
+
+function fdcDiaSiguiente_(iso) {
+  const p = iso.split('-').map(Number);
+  return fdcIso_(new Date(p[0], p[1] - 1, p[2] + 1, 12));
+}
+
+function fdcUltimoDia_(mes) {
+  const p = mes.split('-').map(Number);
+  return fdcIso_(new Date(p[0], p[1], 0, 12));
+}
+
+function fdcDmy_(iso) {
+  const p = iso.split('-');
+  return p[2] + '/' + p[1] + '/' + p[0];
+}
+
+// "del 1 al 24 de noviembre de 2026" / "del 25 de noviembre al 11 de diciembre de 2026".
+function fdcRangoTexto_(rango) {
+  const a = rango.desde.split('-').map(Number), b = rango.hasta.split('-').map(Number);
+  if (a[0] === b[0] && a[1] === b[1]) return 'del ' + a[2] + ' al ' + b[2] + ' de ' + FDC_MESES[b[1] - 1] + ' de ' + b[0];
+  return 'del ' + a[2] + ' de ' + FDC_MESES[a[1] - 1] + (a[0] === b[0] ? '' : ' de ' + a[0]) +
+    ' al ' + b[2] + ' de ' + FDC_MESES[b[1] - 1] + ' de ' + b[0];
+}
+
+function fdcNombreMes_(mes) {
+  const p = mes.split('-');
+  return FDC_MESES[Number(p[1]) - 1] + ' ' + p[0];
 }

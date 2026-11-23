@@ -91,11 +91,20 @@ function generarConcentradoMesCorreo() {
   ss.setActiveSheet(hoja);
 
   const sinNp = datos.atendidas.filter(function (a) { return !a.np; }).length;
-  let pdf = null, errorPdf = '';
+  // Primero con membrete y firmas (Membrete.gs); si falla, el PDF de la
+  // pestaña como antes, para no quedarse sin evidencia.
+  let pdf = null, errorPdf = '', sinMembrete = '';
   try {
-    pdf = concGuardarPdf_(ss, hoja, mes);
+    pdf = mbtGenerarPdf_(concSpec_(mes, datos, rango, hoja), concCarpeta_()).pdf;
   } catch (err) {
-    errorPdf = err.message;
+    sinMembrete = err.message;
+  }
+  if (!pdf) {
+    try {
+      pdf = concGuardarPdf_(ss, hoja, mes);
+    } catch (err) {
+      errorPdf = err.message;
+    }
   }
   const html = HtmlService.createHtmlOutput(
     '<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.5">' +
@@ -105,11 +114,63 @@ function generarConcentradoMesCorreo() {
       'Conviene anotarlo y volver a generar: es lo que liga cada folio con SIGEE.</p>' : '<p>Todas tienen NP SIGEE.</p>') +
     (pdf
       ? '<p>PDF guardado en Drive, carpeta <b>' + CONC_CARPETA + '</b>: <a href="' + pdf.getUrl() + '" target="_blank">' +
-        escapeHtml_(pdf.getName()) + '</a></p>'
+        escapeHtml_(pdf.getName()) + '</a></p>' +
+        (sinMembrete ? '<p style="color:#8a2020">Salió SIN membrete (' + escapeHtml_(sinMembrete) + ').</p>' : '')
       : '<p style="color:#8a2020">No se pudo guardar el PDF (' + escapeHtml_(errorPdf) + '). La pestaña sí quedó: ' +
         'Archivo → Descargar → PDF, hoja actual, horizontal.</p>') +
     '</div>').setWidth(440).setHeight(240);
   ui.showModalDialog(html, 'Concentrado ' + concNombreMes_(mes) + ' listo');
+}
+
+// Contenido del concentrado con membrete (ver mbtGenerarPdf_ en Membrete.gs).
+// Mismos datos que la pestaña; las gráficas se toman de la pestaña.
+function concSpec_(mes, d, rango, hoja) {
+  const tz = 'America/Mexico_City';
+  const fecha = function (v) {
+    return v instanceof Date ? Utilities.formatDate(v, tz, 'dd/MM/yyyy') : String(v == null ? '' : v).trim().split(' ')[0];
+  };
+  const orden = function (s) { const k = CONC_SECTORES.indexOf(s); return k === -1 ? 99 : k; };
+  SpreadsheetApp.flush();
+  const graficas = hoja.getCharts().map(function (g) {
+    try { return g.getAs('image/png'); } catch (err) { return null; }
+  });
+  const resaltar = [];
+  d.atendidas.forEach(function (a, k) { if (!a.np) resaltar.push(k); });
+  return {
+    nombre: 'Concentrado correo institucional ' + mes,
+    titulo: 'Concentrado mensual de solicitudes de correo institucional',
+    subtitulos: ['Periodo del informe: ' + concRangoTexto_(rango) + '.',
+      'N.P. 12. Gestionar las cuentas de correo institucional de las figuras educativas mediante la Oficina Virtual OTDE y la plataforma SIGEE. ' +
+      'Medio de verificación: registro y seguimiento de solicitudes en la Oficina Virtual OTDE, en coordinación con la plataforma SIGEE.'],
+    bloques: [
+      { tipo: 'seccion', texto: 'Cifras del periodo' },
+      { tipo: 'cifras', filas: [
+        ['Atendidas en el periodo', d.atendidas.length, 'Con fecha de entrega en el periodo (incluye solicitudes recibidas antes).'],
+        ['Recibidas en el periodo', d.recibidas, 'Solicitudes nuevas en la Oficina Virtual OTDE.'],
+        ['Recibidas en el periodo y rechazadas', d.rechazadas, 'No corresponden al nivel o les faltó información.'],
+        ['Recibidas en el periodo y en proceso', d.enProceso, 'En trámite ante SIGEE al generar el concentrado.'],
+        ['Pendientes (todos los meses)', d.pendientesTotal, 'Sin entrega ni rechazo, de cualquier mes, al generar el concentrado.']
+      ] },
+      { tipo: 'seccion', texto: 'Solicitudes atendidas por tipo y por sector' },
+      { tipo: 'dosTablas',
+        izq: { encabezados: ['Tipo', 'Atendidas'], filas: Object.keys(d.porTipo).map(function (t) { return [t, d.porTipo[t]]; }) },
+        der: { encabezados: ['Sector', 'Atendidas'], filas: Object.keys(d.porSector)
+          .sort(function (a, b) { return orden(a) - orden(b); })
+          .map(function (s) { return [s === 'SEPRN' ? 'Subdirección' : (s === 'Sin sector' ? s : 'Sector ' + s), d.porSector[s]]; }) } },
+      { tipo: 'graficas', blobs: graficas },
+      { tipo: 'seccion', texto: 'Folios atendidos en el periodo (' + d.atendidas.length + ')' },
+      { tipo: 'tabla',
+        encabezados: ['Folio', 'Tipo', 'Recepción', 'Subida a SIGEE', 'Entrega', 'Sector', 'Zona', 'Función', 'NP SIGEE'],
+        anchos: [64, 96, 48, 48, 48, 36, 30, 74, 60],
+        resaltar: resaltar,
+        filas: d.atendidas.map(function (a) {
+          return [a.folio, a.tipo, fecha(a.recepcion), fecha(a.subida), fecha(a.entrega), a.sector, a.zona,
+            a.funcion || '—', a.np || 'Sin NP'];
+        }) }
+    ],
+    pie: 'Fuente: Oficina Virtual OTDE (registro de solicitudes de correo institucional). NP SIGEE = número de solicitud en la plataforma SIGEE. ' +
+      'Sin datos personales de las figuras educativas. Generado el ' + Utilities.formatDate(new Date(), tz, 'dd/MM/yyyy HH:mm') + '.'
+  };
 }
 
 // Exporta la pestaña a PDF (horizontal, carta, sin cuadrícula) con la sesión

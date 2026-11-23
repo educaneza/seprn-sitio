@@ -527,6 +527,15 @@ diseño libre para niños, solo el sello de crédito al pie.
   (`fdAgendaCursos_()`, solo lectura, `PANEL_TOKEN`): cierre de inscripción, inicio, sesiones,
   mitad de cursos largos y fin, para el resumen diario por Telegram de `oficios.gs`, que avisa a
   OTDE aunque nadie del equipo esté inscrito. Ver `docs/ARCHITECTURE.md §31`
+- **Concentrados de evidencias por curso (23 nov 2026, v31; membrete v32):** menú "Generar
+  concentrados del periodo (evidencias)" (`fdGenerarConcentrados`). Pide mes y corte (mismo de la
+  Bitácora, `FDC_CORTE_AAAA-MM`) y saca **un PDF por curso** que se desarrolla en el periodo, en
+  la carpeta de Drive "Evidencias Formación Docente". Lista de inscritos al corte **sin nombre,
+  RFC, correo ni teléfono**. Webinars, seminarios y conferencias no llevan concentrado
+  (`FD_CATEGORIAS_FUERA_DEL_REPORTE`, Planeación ya no los acepta) y `?action=cursosMes` los
+  manda con `vaAlReporte: false`. Desde v32 sale con membrete y firmas (`docs/ARCHITECTURE.md
+  §37`). Probado en vivo el 23 nov (2026-11: 4 cursos, 8 omitidos) tras autorizar desde el editor
+  el permiso de `UrlFetchApp` (`docs/QA-NOTES.md #56`)
 - Para cambios: copiar el `.gs` completo en Apps Script y re-desplegar como aplicación web (Cualquier usuario) — recordar **Administrar implementaciones → Nueva versión**, no solo "Guardar" en el editor, o el sitio sigue sirviendo la versión anterior
 
 ### `apps-script/panel-otde.gs` (nuevo, ago 2026 — apagado el 14 oct 2026)
@@ -602,6 +611,9 @@ diseño libre para niños, solo el sello de crédito al pie.
   anteriores (`anteriores` en `?action=planeacion`). Columna `Va al reporte` en `Actividades`:
   "No" saca la fila del reporte (oficios de solicitud, que no son acciones). Las columnas nuevas
   las crea "Preparar hojas"
+- **Webinars, seminarios y conferencias fuera del reporte (23 nov 2026, v16):** se siguen
+  importando, pero con `Va al reporte = No` (la regla vive en `formacion-docente.gs`). Las filas
+  importadas antes de v16 se corrigen a mano
 - Detalle completo en `docs/ARCHITECTURE.md §26`
 
 ### `apps-script/oficios.gs` (nuevo, oct 2026)
@@ -1026,6 +1038,12 @@ arquitectura completo en `docs/ARCHITECTURE.md §16`. Resumen operativo:
   Bitácora. Pestaña y PDF siguen con nombre `… AAAA-MM`. Probado en vivo el 23 nov 2026
   (2026-11, 11 atendidas); ese día quedó autorizado por fin el permiso de Drive y el PDF se
   guardó solo (`docs/QA-NOTES.md #56`).
+- **Membrete y firmas (23 nov 2026, v32):** el concentrado sale de una plantilla de Google Docs
+  con el membrete de los oficios, en carta vertical, con firmas de validación y Vo. Bo.
+  (`apps-script/membrete/Membrete.gs`, compartido con Formación Docente; `docs/ARCHITECTURE.md
+  §37`). Sin plantilla configurada, sale el PDF de la pestaña como antes. Sin probar al cierre.
+- **Función de quien pide (pendiente, ROADMAP 42):** Planeación quiere la función de cada
+  persona, no "figuras educativas". Solo Alta pide `Función`; los otros 4 trámites no.
 
 ### Mantenimiento (página propia desde el 27 ago 2026, ver `mantenimiento.html`)
 Ya no es solo texto ("solicita por oficio y vía estructura") — formulario "Solicitar

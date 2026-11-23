@@ -43,14 +43,16 @@
       "correo/Reset2FA.gs",
       "correo/ResumenSemanal.gs",
       "correo/Seguimiento.gs",
-      "correo/WebApp.gs"
+      "correo/WebApp.gs",
+      "membrete/Membrete.gs"
     ],
     "scriptId": "1sF9rKH6fIsX08ZufsOnAgVpgwa5yr5lAYmJlb-m83GeAB3_bbzerAmP8",
     "deploymentId": "AKfycbwjy-jx1J0riVAlcAkuwAqKq9LMQVIxs4R_ikBIRPXXntO3FwMkGTPBf90W5A8FPAD7"
   },
   "formacion-docente": {
     "archivos": [
-      "formacion-docente.gs"
+      "formacion-docente.gs",
+      "membrete/Membrete.gs"
     ],
     "scriptId": "1iRP2mt6uxbyVE5xWLvHPK7jVDpn6g2K44i6gBHQrWTcJ3uISaqt1DEva",
     "deploymentId": "AKfycbz5UWWzv58tbGxqPaFc9LP-e5JHBhzsZsh_j-Ao7QOCucoiLiTnS96Fsfl7upp9S8E",

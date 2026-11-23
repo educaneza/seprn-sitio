@@ -1146,6 +1146,20 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     - Seguimiento del kit de mantenimiento: fuera del repo, en
       `~/Proyectos/trabajo/aulas-medios-incidente/NOTAS.md`.
 
+42. **Correo: función de quien pide en los 5 trámites** (abierto 23 nov 2026). Planeación quiere
+    que el concentrado del N.P. 12 diga la función de cada persona (docente, director,
+    supervisor…), no "figuras educativas". Hoy solo Alta de cuenta pide `Función`. Propuesta,
+    pendiente de que Jorge decida:
+    - Hacia adelante: campo `Función` en Cambio de contraseña, Eliminar método de autenticación,
+      Cambio + eliminación e Incidencias de `correo.html` (`otdePoblarFuncion()`), columna en el
+      bloque del solicitante de `encabezadosCorreo_()` (Config.gs); publicar `.html` antes que
+      `.gs`.
+    - Hacia atrás (folios ya atendidos): cruzar `Correo Institucional` contra la hoja de Alta;
+      deducir del CCT cuando es supervisión o Subdirección; lo demás lo llena Marcos o sale como
+      "Función no registrada". Nunca inventarla.
+    - Después: concentrado con tabla/gráfica por función y "Beneficiarios" de la fila
+      `CORREO:<periodo>` de la Bitácora desglosado por función.
+
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue
 abierto de esa entrega (decisión de notificación de cierre de ticket, limpieza de función

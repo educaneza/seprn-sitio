@@ -1507,6 +1507,15 @@ del proyecto en la cuenta de Google (myaccount.google.com/connections), volver a
 desde el editor y aceptar **todos** los permisos. El Web App siguió respondiendo (corre con la
 autorización de su versión publicada; confirmado con `curl`).
 
+**Tercera vez (23 nov 2026, Formación Docente):** se publicó el concentrado por curso (primer uso
+de `UrlFetchApp` en ese proyecto) y Claude le indicó a Jorge autorizar **desde el menú**, aunque
+esta nota ya decía que no. Falló con "No cuentas con el permiso para llamar a
+UrlFetchApp.fetch…". Se arregló quitando el acceso en connections (aparecían **dos** proyectos
+con el mismo nombre, "Formacion Docente - Backend (formacion-docente.gs)", probablemente uno de
+una copia del Sheet; se quitaron los dos sin efecto en el Web App) y autorizando desde el editor.
+Para saber el nombre exacto que aparece en connections: `title` del proyecto en la API de Apps
+Script (`script.googleapis.com/v1/projects/<scriptId>`, con el token de clasp).
+
 ## 57. Bitácora: visita de "Solo equipos administrativos" reportada como aula con 0 equipos
 
 **Síntoma (23 oct 2026, revisión del reporte de octubre):** BIT-0028 (MAN-0022) decía

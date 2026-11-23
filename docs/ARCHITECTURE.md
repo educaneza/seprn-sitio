@@ -3439,3 +3439,38 @@ incluye lo del 25 al 30 nov), así que en `apps-script/bitacora.gs` la columna `
   (`CONC_CORTE_AAAA-MM`); debe coincidir con el de la Bitácora.
 - **Límites**: solo se revisa el periodo inmediato anterior; los periodos traídos antes del
   20 nov 2026 no tienen lista de folios de Soporte/Correo.
+
+## 37. Concentrados de evidencias con membrete (nov 2026)
+
+Evidencias del reporte mensual de Planeación, sin datos personales: el concentrado de Correo
+(N.P. 12, `correo/ConcentradoMensual.gs`, uno por periodo) y los de Formación Docente
+(`fdGenerarConcentrados` en `formacion-docente.gs`, **uno por curso**). Los dos siguen el mismo
+flujo:
+
+1. Arman una pestaña con cifras, tablas y gráficas (sirve de respaldo y de fuente de las
+   gráficas). El corte del periodo se pide en el menú y se guarda en Script Properties
+   (`CONC_CORTE_*`, `FDC_CORTE_*`); debe coincidir con el de la Bitácora (§36).
+2. Con los mismos datos arman un `spec` (`concSpec_`, `fdcSpec_`) y llaman a
+   `mbtGenerarPdf_(spec, carpeta)`: copia la plantilla de Google Docs (`MBT_PLANTILLA_ID`), limpia
+   el cuerpo, lo llena (bloques `seccion`, `pares`, `cifras`, `dosTablas`, `graficas`, `tabla`),
+   agrega las firmas `MBT_FIRMAS` (VALIDÓ jefe de la OTDE, Vo. Bo. Encargada del Despacho) y
+   guarda Doc + PDF en la carpeta de evidencias. Carta vertical, ancho útil 504 pt (las imágenes
+   se miden en px, las columnas en pt).
+3. Si no hay plantilla o algo falla, se exporta la pestaña a PDF como antes y el diálogo avisa
+   "Salió SIN membrete". Nunca se queda sin evidencia.
+
+- **Un archivo, dos proyectos:** `apps-script/membrete/Membrete.gs` está en la lista `archivos`
+  de `correo` y `formacion-docente` en `proyectos-clasp.json`; `desplegar.sh` lo sube con su
+  nombre (`Membrete.gs`). Un cambio de formato se publica en **los dos** proyectos.
+- **Plantilla:** `mbtCrearPlantilla` la arma con `DocumentApp` (encabezado: logos, `MBT_LEYENDA`,
+  `MBT_DEPENDENCIA`; pie: greca y `MBT_DIRECCION`) a partir de tres PNG en Drive con nombre fijo
+  (`MBT_IMAGENES`). Las imágenes **no van en el repo** (logos del Gobierno, repo público); viven
+  en `docs/insumos/Oficios/membrete-2026/` (ignorada por git). La marca de agua (colibrí) se pone
+  a mano en Docs: `DocumentApp` no puede crear marcas de agua ni imágenes detrás del texto. El otro
+  proyecto guarda la misma liga con `mbtConfigurarPlantilla`. Cada año: cambiar `MBT_LEYENDA` y
+  rehacer o editar la plantilla.
+- **Permisos:** `UrlFetchApp` (exportar la pestaña) y `DocumentApp` son servicios nuevos en esos
+  proyectos: se autorizan desde el editor, no desde el menú (`docs/QA-NOTES.md #56`).
+- **Fuera del reporte:** `FD_CATEGORIAS_FUERA_DEL_REPORTE` (Webinar, Seminario, Conferencia) no
+  lleva concentrado y `?action=cursosMes` lo manda con `vaAlReporte: false`; la Bitácora lo
+  importa con `Va al reporte = No`.
