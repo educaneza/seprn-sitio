@@ -803,11 +803,27 @@ usa) ni tiene código muerto: `toggleForm()`, un helper genérico que ya no llam
 antes de esta ronda de migraciones, se eliminó en la misma sesión.
 
 ### Licencias Office
-Instalador `descargas/Instalador_Office_2019_OTDE.exe` (self-extracting, incluye
-`Instalador_Office_OTDE.bat` + Office Deployment Tool) que valida por CCT. El texto evita
+Instalador `descargas/Instalador_Office_2019_OTDE.exe`, que valida por CCT. El texto evita
 atribuir la causa a SEIEM directamente (se enmarca como "actualización del esquema de
-licenciamiento institucional"). Los 5 pasos de la guía rápida están basados en el flujo real
-del `.bat` — si el `.bat` cambia, actualizar el manual para que siga siendo preciso.
+licenciamiento institucional"). Los 7 pasos de la guía rápida siguen el flujo real del
+instalador: si cambian sus ventanas, actualizar la guía.
+
+- **Versiones:** v3 (ene 2026, `.bat` con consola) hasta el 24 nov; ese día v4 (`fad75bb`) y v4.1
+  (`4317e33`), siempre con el mismo nombre de archivo para no romper ligas. El código del
+  instalador vive fuera del repo (`~/Proyectos/trabajo/Instalador-Office-2019-OTDE/`, sin git; se
+  compila en la VM). La v3 lee `Hoja 1` como CSV publicado en la web; la v4 pregunta a
+  `validar_cct`. Las dos usan el mismo interruptor remoto, que solo lee `activo`: no sirve para
+  apagar una sin la otra. La v3 se apaga dejando de publicar el CSV (corte avisado para el 4 dic).
+- **Backend:** Apps Script ligado al Sheet "Instalador Office OTDE - Registro y licencias"
+  (`Oficina Virtual OTDE 2026-2027/Instalador de Office/` en Drive). No está en
+  `apps-script/proyectos-clasp.json`; se publica con `clasp` a mano (`update-deployment` sobre la
+  misma implementación que usan v3 y v4). Copia del código en `AppsScript/` del proyecto del
+  instalador. Desde @8 las licencias se cuentan por equipo (`docs/QA-NOTES.md #62`); desde @9 el
+  instalador v4.1 pide una licencia más (+1 automático hasta 2 extra por escuela, Telegram a
+  Jorge; arriba del tope queda pendiente en `Solicitudes_Licencias` y Jorge decide en la columna
+  Decisión).
+- **Hoja de control:** `ControlOTDE.gs` en el mismo proyecto (menú OTDE Control, pestañas que se
+  regeneran al abrir). El `Dashboard` viejo está oculto: contaba intentos, no equipos.
 
 ### Banner de convocatoria
 Uno solo hoy: Oficina Virtual (ago 2026, gradiente guinda `#56212f→#9F2241`, CTA clase `.light`,

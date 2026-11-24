@@ -1625,3 +1625,23 @@ Correo (@33).
 
 **Regla:** en `DocumentApp`, ningún párrafo ni celda se crea con `''`. Si hace falta un renglón en
 blanco, usar `' '`.
+
+## 62. Instalador de Office: escuelas "sin licencias" que no las habían gastado
+
+**Síntoma (24 nov 2026):** en la pestaña `Control - Licencias` del Sheet del instalador, 12 de las
+22 CCT en 0 disponibles tenían menos equipos que su contador. La López Mateos (15DPR1776O) estaba
+bloqueada con 3 de 3 y un solo equipo, instalado tres veces el 4 de noviembre.
+
+**Causa raíz:** la acción `contador` del Apps Script de registro (fuera del repo, en el Sheet del
+instalador) sumaba +1 en cada instalación exitosa, aunque fuera la misma PC. Reinstalar gastaba
+licencia.
+
+**Fix (Web App @8):** `contador` ya no suma; el registro EXITOSO recalcula `Instaladas` como series
+distintas por CCT (`regRecontarCct_`). Primero `regRecontarVistaPrevia` (no escribe) y después
+`regRecontarTodas`. La primera vista previa juntaba en un solo equipo las PC que reportan una
+serie genérica (`To Be Filled By O.E.M.`, `Default string`, `0`): se agregó la lista de
+`ControlOTDE` y esas cuentan una por instalación.
+
+**Regla:** al contar equipos por serie, tratar como "sin serie" las genéricas, no solo
+"No detectado". Y antes de reescribir un contador desde otra fuente, correr una vista previa
+y revisarla con Jorge: la fuente puede estar incompleta.

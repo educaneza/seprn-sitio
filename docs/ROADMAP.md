@@ -941,31 +941,21 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     probó.
     (c) Al arrancar el ciclo 2027-2028: Sheet nueva (`Estrategias_Nacionales_27-28`) y
     `MESES_EN_CICLO` actualizado; con eso todas las escuelas vuelven a quedar libres.
-30. **Instalador de Office v4 — publicarlo en el sitio cuando se libere.** El instalador vive
-    fuera de este repo (`~/Proyectos/trabajo/Instalador-Office-2019-OTDE/`, sin git, docs en su
-    `docs/ROADMAP.md`). Hoy `otde.html` (pestaña Licencias Office) ofrece
-    `descargas/Instalador_Office_2019_OTDE.exe` (v3.0, 4.3 MB).
-    **Al 19 nov 2026 la v4 ya está compilada** en la VM (Inno Setup 6.7.4, EXE final de 5.1 MB
-    en `Output/` del proyecto). Ya trae:
-    - modo de prueba (`ISCC /DPRUEBA`), que no registra, no suma y no instala;
-    - ayuda según el código de error, con reintento;
-    - ventanas OTDE NEZA sin consola;
-    - aviso de licencias agotadas (el canal sigue siendo el enlace de sector).
-
-    Jorge la probó en la VM en modo de prueba (2016 y 2019) y quedó conforme. Detalle en
-    `docs/BITACORA.md` (19 nov) y en el ROADMAP del instalador. Falta:
-    - **Probar el EXE final en una PC real de escuela** con Windows 10/11, instalando Office de
-      verdad con 2019 y con 2016. La VM es ARM y no puede instalar Office.
-    - Al liberarla:
-      - reemplazar el `.exe` en `descargas/`;
-      - actualizar en `otde.html` el texto y el tamaño de la tarjeta de descarga;
-      - rehacer la guía paso a paso, que hoy sigue el `.bat` de la v3: ahora va el asistente con
-        el panel OTDE, el selector 2016/2019, la ventana de la CCT y la ventana de pasos;
-      - avisar que Windows 7 ya no está soportado.
-    - Opcional, cuando Jorge comparta el código del Apps Script de registro (no está en ningún
-      repo): botón "Solicitar más licencias", que mande la solicitud sola con aviso por Telegram,
-      y la pestaña "Control - Ampliaciones" en la hoja de control (`AppsScript/ControlOTDE.gs` del
-      proyecto del instalador).
+30. **Instalador de Office — retirar la v3 y lo que queda.** La v4 y la v4.1 se publicaron el
+    24 nov 2026 (licencias por equipo, "Solicitar una licencia más" con Telegram; detalle en
+    `docs/SISTEMAS.md`, Licencias Office, y `docs/BITACORA.md`). Falta:
+    - **4 dic 2026:** apagar la v3 dejando de publicar `Hoja 1` en la web (la v3 valida con ese
+      CSV; la v4 no lo usa). Avisado a sectores y enlaces el 24 nov. Verificar con `curl` que el
+      CSV ya no responde y que `validar_cct` sigue igual.
+    - Segunda vuelta de avisos: en espera de cómo reaccionan los sectores. Si se hace, por
+      supervisiones de zona, no escuela por escuela (398 de 417 escuelas todavía pueden instalar).
+    - Ideas sin fecha, todas solo de servidor (no hay que redistribuir el EXE):
+      - resumen por Telegram de los equipos con error o sin cerrar, para llamar a la escuela;
+      - archivo con el formato del Excel de CoEEE para los equipos por cargar (falta ver el formato);
+      - éxito por versión en `Control OTDE`, para saber si la v4 bajó el error `-1`.
+    - Descartado por ahora: v4.2 con aviso de versión nueva (el instalador va de salida; si algún
+      día hay v4.2 por otra razón, se agrega de paso) y que el EXE baje su código de internet
+      (corre como administrador; los antivirus lo marcan).
 31. ~~**"Que se note que sigue trabajando" — extender al resto de formularios.**~~ — **resuelto el
     19 oct 2026**: `estrategias-nacionales.html` (Registrar y Cancelar) ya usa `esperaConProgreso()`;
     `asistencia.html` se retiró. El 5 oct 2026

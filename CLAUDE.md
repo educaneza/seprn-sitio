@@ -367,10 +367,10 @@ ya resueltos al final de `docs/SISTEMAS.md`. Lo genuinamente abierto:
 - **Pruebas en Windows**: VM "Windows-Pruebas" (UTM, Windows 11 ARM) en la Mac de Jorge; Claude
   entra con `ssh winvm` y trabaja en `C:\pruebas`. Jorge tiene que encenderla en UTM. Las ventanas
   emergentes (`InputBox`/`MessageBox`) no se ven por SSH, y el hardware no es el de una escuela.
-- **Instalador de Office v4**: compilado y probado en la VM en modo de prueba (19 nov). Falta
-  probarlo en una PC real de escuela y después publicarlo en `descargas/` con la guía nueva de
-  `otde.html`. Su hoja de control (`ControlOTDE.gs`, fuera del repo) está pendiente de que Jorge la
-  instale en el Sheet. ROADMAP 30.
+- **Instalador de Office**: v4.1 publicada el 24 nov 2026 (mismo nombre de archivo en
+  `descargas/`). Su backend es el Apps Script del Sheet del instalador, fuera de
+  `proyectos-clasp.json`: detalle en `docs/SISTEMAS.md` (Licencias Office). Falta apagar la v3 el
+  4 dic dejando de publicar el CSV de `Hoja 1`. ROADMAP 30.
 - **Crea tu app educativa / Banco de Materiales 2.0**: falta que Jorge revise PDA y apps, decida
   la licencia y valide con la Dra. Galindo; después, carta descriptiva del taller, ficha técnica y
   catálogo del banco. `docs/ROADMAP.md` ítem 35.
