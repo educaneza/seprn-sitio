@@ -132,7 +132,7 @@ ya esté expandido).
 **Los videos opening se producen fuera de este repo** (desde el 25 oct 2026), en
 `~/Proyectos/trabajo/openings-seprn/` (fotos de niñas y niños: no deben acercarse a un repo
 público). Aquí solo entra el ID de YouTube. El material de las dos primeras sesiones del ciclo
-quedó en `docs/insumos/Openings-CTE/` (ignorado por git).
+(y el de la 8va 2025-2026) vive en `openings-seprn/sesiones/<sesión>/archivo/` desde el 24 nov 2026.
 
 ## Páginas del sitio
 Tabla completa, con el historial de cada página, en `docs/SISTEMAS.md`.
@@ -370,7 +370,9 @@ ya resueltos al final de `docs/SISTEMAS.md`. Lo genuinamente abierto:
 - **Instalador de Office**: v4.1 publicada el 24 nov 2026 (mismo nombre de archivo en
   `descargas/`). Su backend es el Apps Script del Sheet del instalador, fuera de
   `proyectos-clasp.json`: detalle en `docs/SISTEMAS.md` (Licencias Office). Falta apagar la v3 el
-  4 dic dejando de publicar el CSV de `Hoja 1`. ROADMAP 30.
+  4 dic dejando de publicar el CSV de `Hoja 1`. ROADMAP 30. Ese mismo día, mover a
+  `~/Proyectos/trabajo/_archivo/` el `.exe` de la v3 (`Instalador_Office_2019_OTDE_Final.exe`) y
+  la carpeta `Instalador_Office_2019/` del proyecto del instalador (acordado con Jorge el 24 nov).
 - **Crea tu app educativa / Banco de Materiales 2.0**: falta que Jorge revise PDA y apps, decida
   la licencia y valide con la Dra. Galindo; después, carta descriptiva del taller, ficha técnica y
   catálogo del banco. `docs/ROADMAP.md` ítem 35.
@@ -413,5 +415,10 @@ ya resueltos al final de `docs/SISTEMAS.md`. Lo genuinamente abierto:
 - **Recrear páginas eliminadas** (las 4 de arriba): requieren contenido validado con la Dra.
   Galindo.
 - **Formación Docente — más cursos**: el catálogo se alimenta a mano en la hoja `Cursos`.
+- **Vaciar `~/Proyectos/trabajo/_archivo/`** (2.0 GB, armado el 24 nov 2026 al limpiar duplicados;
+  fuera del repo): recordárselo a Jorge **a partir del 5 ene 2027** (un mes después de mover ahí la v3
+  del instalador el 4 dic), o antes si el disco se llena. Proponer qué borrar: lo seguro es todo
+  (Correos-institucionales y manual-otde ya viven en el repo/GitHub; el resto son `.bak`, versiones
+  `_v1` y una copia idéntica de las carpetas MSI de Office 2016). Nunca borrar sin su confirmación.
 - **Recordatorio operativo**: "NP SIGEE" en Correo se llena a mano por Marcos; sin eso se pierde
   la trazabilidad.
