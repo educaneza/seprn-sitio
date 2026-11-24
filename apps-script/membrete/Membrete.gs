@@ -86,7 +86,6 @@ function mbtCrearPlantilla() {
     p.editAsText().setFontFamily(MBT_FUENTE).setFontSize(7.5).setForegroundColor('#000000');
   });
 
-  body.getParagraphs()[0].setText('');
   doc.saveAndClose();
   PropertiesService.getScriptProperties().setProperty('MBT_PLANTILLA_ID', doc.getId());
   const url = 'https://docs.google.com/document/d/' + doc.getId() + '/edit';
@@ -118,6 +117,13 @@ function mbtConfigurarPlantilla() {
   ui.alert('Plantilla guardada. Los concentrados ya salen con membrete.');
 }
 
+// Docs no acepta texto vacío en appendParagraph/appendTable ("No se puede insertar un
+// elemento vacío de texto"): todo texto que entra al Doc pasa por aquí.
+function mbtTxt_(v) {
+  const t = (v === null || v === undefined) ? '' : String(v);
+  return t === '' ? ' ' : t;
+}
+
 // InlineImage se mide en píxeles (setColumnWidth de las tablas, en puntos).
 function mbtEscalar_(imagen, anchoPx) {
   const w = imagen.getWidth(), h = imagen.getHeight();
@@ -125,7 +131,7 @@ function mbtEscalar_(imagen, anchoPx) {
   return imagen;
 }
 
-// ── Genera Doc + PDF con membrete en `carpeta`. Lanza error si no hay
+// ── Genera el Google Doc con membrete en `carpeta`. Lanza error si no hay
 // plantilla o algo falla: quien llama decide el plan B (PDF sin membrete).
 //
 // spec = { nombre, titulo, subtitulos: [texto], bloques: [...], pie }
@@ -153,7 +159,7 @@ function mbtGenerarPdf_(spec, carpeta) {
 
   const parrafo = function (texto, o) {
     o = o || {};
-    const p = body.appendParagraph(texto);
+    const p = body.appendParagraph(mbtTxt_(texto));
     p.setSpacingBefore(o.antes || 0).setSpacingAfter(o.despues === undefined ? 4 : o.despues).setLineSpacing(1);
     if (o.centro) p.setAlignment(C);
     p.editAsText().setFontFamily(MBT_FUENTE).setFontSize(o.tam || 9).setBold(!!o.negrita)
@@ -176,7 +182,8 @@ function mbtGenerarPdf_(spec, carpeta) {
     }
   };
   const tabla = function (encabezados, filas, anchos, tam, resaltar) {
-    const t = body.appendTable([encabezados].concat(filas.length ? filas : [encabezados.map(function () { return ''; })]));
+    const t = body.appendTable([encabezados].concat(filas.length ? filas : [encabezados.map(function () { return ''; })])
+      .map(function (f) { return f.map(mbtTxt_); }));
     t.setBorderColor('#bfbfbf').setBorderWidth(0.5);
     celdas(t, tam);
     for (let c = 0; c < encabezados.length; c++) {
@@ -201,13 +208,13 @@ function mbtGenerarPdf_(spec, carpeta) {
     } else if (b.tipo === 'parrafo') {
       parrafo(b.texto, { tam: b.chico ? 7.5 : 9, color: b.chico ? MBT_GRIS : '#000000' });
     } else if (b.tipo === 'pares') {
-      const t = body.appendTable(b.filas.map(function (f) { return [String(f[0]), String(f[1])]; }));
+      const t = body.appendTable(b.filas.map(function (f) { return [mbtTxt_(f[0]), mbtTxt_(f[1])]; }));
       t.setBorderWidth(0);
       celdas(t, 8.5);
       t.setColumnWidth(0, 140).setColumnWidth(1, MBT_ANCHO_UTIL - 140);
       for (let r = 0; r < t.getNumRows(); r++) t.getRow(r).getCell(0).editAsText().setBold(true);
     } else if (b.tipo === 'cifras') {
-      const t = body.appendTable(b.filas.map(function (f) { return [String(f[0]), String(f[1]), String(f[2])]; }));
+      const t = body.appendTable(b.filas.map(function (f) { return [mbtTxt_(f[0]), mbtTxt_(f[1]), mbtTxt_(f[2])]; }));
       t.setBorderColor('#bfbfbf').setBorderWidth(0.5);
       celdas(t, 8.5);
       t.setColumnWidth(0, 170).setColumnWidth(1, 50).setColumnWidth(2, MBT_ANCHO_UTIL - 220);
@@ -221,13 +228,13 @@ function mbtGenerarPdf_(spec, carpeta) {
     } else if (b.tipo === 'tabla') {
       tabla(b.encabezados, b.filas, b.anchos, b.tam || 7.5, b.resaltar);
     } else if (b.tipo === 'dosTablas') {
-      const marco = body.appendTable([['', '', '']]);
+      const marco = body.appendTable([[' ', ' ', ' ']]);
       marco.setBorderWidth(0);
       marco.setColumnWidth(0, 240).setColumnWidth(1, 24).setColumnWidth(2, 240);
       [[0, b.izq], [2, b.der]].forEach(function (par) {
         const celda = marco.getRow(0).getCell(par[0]);
         const datos = [par[1].encabezados].concat(par[1].filas.length ? par[1].filas : [['Sin registros', '']]);
-        const t = celda.appendTable(datos.map(function (f) { return f.map(String); }));
+        const t = celda.appendTable(datos.map(function (f) { return f.map(mbtTxt_); }));
         t.setBorderColor('#bfbfbf').setBorderWidth(0.5);
         celdas(t, 8);
         for (let c = 0; c < 2; c++) t.getRow(0).getCell(c).setBackgroundColor(MBT_ARENA).editAsText().setBold(true);
@@ -237,7 +244,7 @@ function mbtGenerarPdf_(spec, carpeta) {
     } else if (b.tipo === 'graficas') {
       const blobs = (b.blobs || []).filter(Boolean);
       if (!blobs.length) return;
-      const marco = body.appendTable([blobs.map(function () { return ''; })]);
+      const marco = body.appendTable([blobs.map(function () { return ' '; })]);
       marco.setBorderWidth(0);
       blobs.forEach(function (blob, i) {
         const celda = marco.getRow(0).getCell(i);
@@ -278,6 +285,8 @@ function mbtGenerarPdf_(spec, carpeta) {
   }
   doc.saveAndClose();
 
-  const pdf = carpeta.createFile(copia.getAs('application/pdf').setName(spec.nombre + '.pdf'));
-  return { pdf: pdf, doc: copia };
+  // Solo el Google Doc (decisión de Jorge, 24 nov 2026): desde ahí se imprime o se
+  // descarga en PDF cuando haga falta, y se puede corregir a mano (p. ej. un salto de
+  // página antes de las firmas). `pdf` se queda como nombre por compatibilidad.
+  return { pdf: copia, doc: copia };
 }

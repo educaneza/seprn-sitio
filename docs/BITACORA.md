@@ -16,6 +16,25 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-11-24 · Membrete probado en vivo; concentrados solo en Google Doc y beneficiarios de Correo por escuelas
+
+| | |
+|---|---|
+| **Fecha** | 2026-11-24 (día de entrega del reporte de noviembre a Planeación) |
+| **Sesión** | `/open`; Jorge eligió terminar el membrete de las evidencias. Él corrió los pasos en Google (imágenes a Drive, plantilla, marca de agua del colibrí, autorizaciones). Claude corrigió y publicó desde la terminal (`desplegar.sh`) y revisó cada resultado con los conectores de Drive y Sheets. A media sesión Jorge decidió: (1) solo Google Doc, sin PDF; (2) sin tabla de folios; (3) beneficiarios de Correo por escuelas, zonas y sectores en vez de la función; (4) pestaña temporal también en Correo. |
+| **Membrete (FD @33, Correo @33)** | La primera corrida tronó con "No se puede insertar un elemento vacío de texto": Docs no acepta párrafos ni celdas `''`. Todo texto pasa por `mbtTxt_()` (`docs/QA-NOTES.md #61`). En Correo, `mbtConfigurarPlantilla` falló por falta del permiso de Docs: es la cuarta vez de `#56`. Se arregló quitando el acceso de "Webform Correo 2026-2027 - Backend" en connections y autorizando desde el editor; el nombre se sacó de la API de Apps Script. |
+| **Revisión de los PDF** | Correo 2026-11: membrete completo y firmas, 15 atendidas (todas con NP SIGEE). La Bitácora decía 11 porque se importó antes de 4 entregas del 23 nov; Jorge volvió a traer el resumen y quedó en 15. FD: 4 cursos sin datos personales (`pdftotext`). En `ACF-2627-002` la tabla de firmas se partió entre las hojas 2 y 3: salto de página a mano (ROADMAP 43). Las 8 filas SEM/CNF de noviembre ya tenían `Va al reporte = No`. |
+| **Formato (Correo @34)** | Etiquetas cortas en la gráfica por tipo (antes salían cortadas) y columna Folio más ancha. |
+| **Solo Doc y sin tabla por folio (FD @34, Correo @35)** | `mbtGenerarPdf_` ya no crea PDF; el Doc se devuelve en la propiedad `pdf` para no tocar a quien la llama. Se quitaron el bloque de folios atendidos (Correo) y el de inscritos (FD); el detalle sigue en los Sheets. |
+| **Beneficiarios de Correo (Correo @36, Bitácora @17)** | `?action=correoMes` manda `cct` y `zona`. `bitCorreoBeneficiarios_` cuenta los CCT distintos por tipo con `bitManTipoCct_`, además de zonas y sectores. Si no hay `cct`, deja el texto viejo. Se descartó poner "docentes" a todos porque sería falso. En vivo, fila `CORREO:2026-11`: 15 solicitudes, 12 escuelas, 1 supervisión escolar, 1 jefatura de sector, 1 Subdirección, 13 zonas escolares de 9 sectores. |
+| **Pestaña temporal en Correo (Correo @37)** | Se borra al guardar el Doc, como en FD; el diálogo lista los folios sin NP SIGEE (antes remitía a los "marcados en rojo" de la pestaña). |
+| **Verificación** | Cada publicación: `desplegar.sh` confirmó código idéntico al repo y misma URL `/exec`. `curl` `?action=consulta` con folio ficticio → `no_encontrado` tras cada una de Correo; el catálogo de FD respondió tras las suyas. Los conteos de beneficiarios se probaron en local con `node` antes de publicar. |
+| **Pendiente** | **Jorge, hoy:** "Generar reporte del mes" 2026-11 en la Bitácora (después de traer Correo); regenerar los concentrados de Correo y FD para que salgan como Doc; salto de página en el Doc de `ACF-2627-002` si se vuelve a partir; mandar el reporte; marcar 2026-11 "Entregado" en `Config` G4 y agregar 2026-12 con corte 11/12/2026; si quiere, borrar los PDF de la mañana en las dos carpetas de evidencias. **Claude:** ROADMAP 43 (firmas que no se partan) cuando convenga tocar el manifiesto; ROADMAP 39 antes del 11 dic. Siguen: confirmar "El ABC de las emociones" (SEM-2627-002), comitear `openings-seprn`, `ControlOTDE.gs` e instalador v4 en PC real (ROADMAP 30), `OTDE-INC-0007`, `OTDE-CAP-0647`. Fila 52 (`CNF-2627-004`) dice "0 constancias recibidas", pero no va al reporte. |
+| **Documentación actualizada** | Este checkpoint, `docs/QA-NOTES.md` (#56 cuarta vez, #61 nuevo), `docs/ARCHITECTURE.md §37`, `docs/ROADMAP.md` (42 actualizado, 43 nuevo), `docs/SISTEMAS.md` (FD, Bitácora, Correo), `docs/TABLERO-SALUD.md` (Bitácora, FD, Correo), `CLAUDE.md` (concentrados, regla de permisos, pendientes). Además deja registrado el commit `4c30462` (botón de confirmación de FD), posterior al cierre anterior. |
+| **Commits** | Uno de cierre: el código de los 4 backends (ya publicado) y los docs. |
+
+---
+
 ## CHECKPOINT — 2026-11-23 · Evidencias de Formación Docente por curso y concentrados con membrete
 
 | | |

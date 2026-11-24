@@ -1516,6 +1516,14 @@ una copia del Sheet; se quitaron los dos sin efecto en el Web App) y autorizando
 Para saber el nombre exacto que aparece en connections: `title` del proyecto en la API de Apps
 Script (`script.googleapis.com/v1/projects/<scriptId>`, con el token de clasp).
 
+**Cuarta vez (24 nov 2026, Correo):** primer uso de `DocumentApp` (membrete). Jorge corrió
+`mbtConfigurarPlantilla` desde el menú y falló con "No cuentas con el permiso para llamar a
+DocumentApp.openById. Permisos necesarios: …/auth/documents". Se arregló como la vez anterior:
+quitar el acceso de "Webform Correo 2026-2027 - Backend" en connections, ▶️ desde el editor
+aceptando todo (el error de `getUi` al final es normal) y luego el menú. **Regla nueva:** cuando un
+cambio agrega un servicio, el procedimiento empieza por **quitar el acceso en connections**; no
+probar antes solo desde el editor ni desde el menú.
+
 ## 57. Bitácora: visita de "Solo equipos administrativos" reportada como aula con 0 equipos
 
 **Síntoma (23 oct 2026, revisión del reporte de octubre):** BIT-0028 (MAN-0022) decía
@@ -1599,3 +1607,21 @@ La fila 1 de las 5 hojas de Correo quedó protegida con "solo advertencia" el mi
 
 **Regla:** en hojas que se leen por encabezado, perder un encabezado no da error, solo "desaparece"
 la columna. Si un registro sale sin un dato que siempre debería llevar, revisar primero la fila 1.
+
+## 61. Membrete: "No se puede insertar un elemento vacío de texto"
+
+**Síntoma (24 nov 2026):** primera corrida real del membrete (`apps-script/membrete/Membrete.gs`):
+el concentrado tronó con "Exception: No se puede insertar un elemento vacío de texto".
+
+**Causa raíz:** `DocumentApp` no acepta texto vacío en `appendParagraph('')` ni en celdas `''` de
+`appendTable()`. `mbtGenerarPdf_` lo hacía en el renglón en blanco antes de las firmas, en los
+marcos sin borde de `dosTablas` y `graficas`, en el relleno de una tabla sin filas y en cualquier
+dato vacío de una fila (un Sector o Zona sin llenar). En el código no se veía: nunca se había
+corrido contra un Doc real.
+
+**Fix:** todo texto que entra al Doc pasa por `mbtTxt_()`, que cambia el vacío por un espacio.
+También se quitó `setText('')` de `mbtCrearPlantilla`. Publicado en Formación Docente (@33) y
+Correo (@33).
+
+**Regla:** en `DocumentApp`, ningún párrafo ni celda se crea con `''`. Si hace falta un renglón en
+blanco, usar `' '`.

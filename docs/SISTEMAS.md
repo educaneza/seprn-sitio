@@ -536,6 +536,12 @@ diseño libre para niños, solo el sello de crédito al pie.
   manda con `vaAlReporte: false`. Desde v32 sale con membrete y firmas (`docs/ARCHITECTURE.md
   §37`). Probado en vivo el 23 nov (2026-11: 4 cursos, 8 omitidos) tras autorizar desde el editor
   el permiso de `UrlFetchApp` (`docs/QA-NOTES.md #56`)
+- **Membrete probado en vivo (24 nov 2026, v33-v34):** la primera corrida tronó por texto vacío
+  en el Doc (`docs/QA-NOTES.md #61`, arreglado en v33). Jorge creó la plantilla y puso la marca de
+  agua. Con eso salieron los 4 concentrados de 2026-11 con membrete y firmas, sin datos
+  personales. En `ACF-2627-002` la tabla de firmas se partió entre hojas (ROADMAP 43). En v34
+  (decisión de Jorge) se guarda **solo el Google Doc**, sin PDF, y sin la tabla de inscritos por
+  folio
 - Para cambios: copiar el `.gs` completo en Apps Script y re-desplegar como aplicación web (Cualquier usuario) — recordar **Administrar implementaciones → Nueva versión**, no solo "Guardar" en el editor, o el sitio sigue sirviendo la versión anterior
 
 ### `apps-script/panel-otde.gs` (nuevo, ago 2026 — apagado el 14 oct 2026)
@@ -614,6 +620,12 @@ diseño libre para niños, solo el sello de crédito al pie.
 - **Webinars, seminarios y conferencias fuera del reporte (23 nov 2026, v16):** se siguen
   importando, pero con `Va al reporte = No` (la regla vive en `formacion-docente.gs`). Las filas
   importadas antes de v16 se corrigen a mano
+- **Beneficiarios de Correo por centro de trabajo (24 nov 2026, v17):** `bitCorreoBeneficiarios_`
+  cuenta los CCT distintos por tipo (`bitManTipoCct_`: escuela, supervisión 15FIZ, jefatura 15FJS;
+  Subdirección por sector `SEPRN` o 15ADG), y las zonas y sectores. Sustituye "N figuras
+  educativas atendidas" (ROADMAP 42). Si Correo no manda `cct`, sale el texto viejo. Probado en
+  vivo: 2026-11 → 15 solicitudes, 12 escuelas, 1 supervisión, 1 jefatura, la Subdirección, 13
+  zonas de 9 sectores
 - Detalle completo en `docs/ARCHITECTURE.md §26`
 
 ### `apps-script/oficios.gs` (nuevo, oct 2026)
@@ -1041,9 +1053,17 @@ arquitectura completo en `docs/ARCHITECTURE.md §16`. Resumen operativo:
 - **Membrete y firmas (23 nov 2026, v32):** el concentrado sale de una plantilla de Google Docs
   con el membrete de los oficios, en carta vertical, con firmas de validación y Vo. Bo.
   (`apps-script/membrete/Membrete.gs`, compartido con Formación Docente; `docs/ARCHITECTURE.md
-  §37`). Sin plantilla configurada, sale el PDF de la pestaña como antes. Sin probar al cierre.
-- **Función de quien pide (pendiente, ROADMAP 42):** Planeación quiere la función de cada
-  persona, no "figuras educativas". Solo Alta pide `Función`; los otros 4 trámites no.
+  §37`). Sin plantilla configurada, sale el PDF de la pestaña como antes.
+- **Probado en vivo y ajustado (24 nov 2026, v33-v37):** v33 arregla el texto vacío
+  (`docs/QA-NOTES.md #61`). El permiso de Docs se autorizó quitando el acceso en connections
+  (`#56`, cuarta vez). El concentrado de 2026-11 salió con membrete: 15 atendidas, todas con NP
+  SIGEE. Cambios: v34, etiquetas cortas en la gráfica por tipo y columna Folio más ancha; v35,
+  solo Google Doc, sin PDF, y sin la tabla de folios; v36, `?action=correoMes` manda `cct` y
+  `zona` para los beneficiarios de la Bitácora; v37, la pestaña es temporal como en Formación
+  Docente y el diálogo lista los folios sin NP SIGEE.
+- **Función de quien pide (ROADMAP 42):** se salió del compromiso describiendo los beneficiarios
+  por escuelas, zonas y sectores en la Bitácora. El campo `Función` en los otros 4 trámites
+  sigue sin construir.
 
 ### Mantenimiento (página propia desde el 27 ago 2026, ver `mantenimiento.html`)
 Ya no es solo texto ("solicita por oficio y vía estructura") — formulario "Solicitar

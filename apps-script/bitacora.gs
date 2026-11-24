@@ -1554,8 +1554,7 @@ function bitImportarCorreo_(ctx) {
       'CCT': '',
       'Descripción': bitCorreoDescripcion_(items.length, porTipo, porSector),
       'Propósito': accion.proposito,
-      'Beneficiarios': items.length + ' figura' + (items.length === 1 ? '' : 's') + ' educativa' +
-        (items.length === 1 ? '' : 's') + ' atendida' + (items.length === 1 ? '' : 's'),
+      'Beneficiarios': bitCorreoBeneficiarios_(items),
       'Capturó': BIT_CAPTURO_CORREO,
       'Nota de periodo': sep.nota
     }
@@ -1575,6 +1574,52 @@ function bitCorreoDescripcion_(total, porTipo, porSector) {
   return 'Gestionar ante la plataforma SIGEE ' + total + ' solicitud' + (total === 1 ? '' : 'es') +
     ' de correo institucional recibida' + (total === 1 ? '' : 's') + ' en la Oficina Virtual OTDE' +
     (sectores ? ',' + sectores : '') + ': ' + lista + '.';
+}
+
+// Beneficiarios del N.P. 12 por centro de trabajo, no por función (Correo solo pide la
+// función en Alta; decisión de Jorge, 24 nov 2026). CCT distintos, tipo según el CCT:
+//   15 solicitudes atendidas
+//   12 escuelas
+//   2 supervisiones escolares
+//   1 Subdirección
+//   14 zonas escolares de 9 sectores
+// Si Correo todavía no manda el CCT (versión vieja), sale el texto de antes.
+function bitCorreoBeneficiarios_(items) {
+  const n = items.length;
+  const lineas = [n + ' solicitud' + (n === 1 ? '' : 'es') + ' atendida' + (n === 1 ? '' : 's')];
+  if (!items.some(function (x) { return x.cct; })) {
+    return n + ' figura' + (n === 1 ? '' : 's') + ' educativa' + (n === 1 ? '' : 's') + ' atendida' + (n === 1 ? '' : 's');
+  }
+  const centros = { escuela: {}, supervision: {}, jefatura: {}, subdireccion: {} };
+  const zonas = {}, sectores = {};
+  let sinCct = 0;
+  items.forEach(function (x) {
+    const sector = String(x.sector || '').trim();
+    const tipo = sector === 'SEPRN' ? 'subdireccion' : bitManTipoCct_('', x.cct || '');
+    if (x.cct) centros[tipo][x.cct] = true; else if (tipo === 'subdireccion') centros.subdireccion.SEPRN = true; else sinCct++;
+    if (sector && sector !== 'SEPRN' && sector !== 'Sin sector') {
+      sectores[sector] = true;
+      if (x.zona && (tipo === 'escuela' || tipo === 'supervision')) zonas[sector + '|' + x.zona] = true;
+    }
+  });
+  const cuenta = function (o) { return Object.keys(o).length; };
+  const textos = [
+    ['escuela', 'escuela', 'escuelas'],
+    ['supervision', 'supervisión escolar', 'supervisiones escolares'],
+    ['jefatura', 'jefatura de sector', 'jefaturas de sector']
+  ];
+  textos.forEach(function (t) {
+    const k = cuenta(centros[t[0]]);
+    if (k) lineas.push(k + ' ' + (k === 1 ? t[1] : t[2]));
+  });
+  if (cuenta(centros.subdireccion)) lineas.push('1 Subdirección');
+  if (sinCct) lineas.push(sinCct + ' sin CCT registrado');
+  const z = cuenta(zonas), s = cuenta(sectores);
+  if (z || s) {
+    lineas.push((z ? z + ' zona' + (z === 1 ? '' : 's') + ' escolar' + (z === 1 ? '' : 'es') + ' de ' : '') +
+      s + ' sector' + (s === 1 ? '' : 'es'));
+  }
+  return lineas.join('\n');
 }
 
 // "Brindar soporte técnico remoto, mediante TeamViewer, a 6 solicitudes de

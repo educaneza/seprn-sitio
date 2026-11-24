@@ -2817,7 +2817,7 @@ function fdGenerarConcentrados() {
         (avisos.length ? '<br><span style="color:#8a2020">' + esc(avisos.join(' · ')) + '</span>' : '') +
         '</li>';
     }).join('') + '</ul>';
-    html += '<p>PDF en Drive, carpeta <b>' + esc(FDC_CARPETA) + '</b>.</p>';
+    html += '<p>En Drive, carpeta <b>' + esc(FDC_CARPETA) + '</b>.</p>';
   }
   if (datos.omitidos.length) {
     html += '<p style="color:' + FDC_GRIS + ';font-size:12px">Sin concentrado (no van al reporte de Planeación): ' +
@@ -3087,15 +3087,8 @@ function fdcSpec_(mes, c, rango, hoja) {
         der: { encabezados: ['Función', 'Inscritos'], filas: Object.keys(porFuncion)
           .sort(function (a, b) { return porFuncion[b] - porFuncion[a]; })
           .map(function (f) { return [f, porFuncion[f]]; }) } },
-      { tipo: 'graficas', blobs: graficas },
-      { tipo: 'seccion', texto: 'Inscritos al corte (' + total + ')' },
-      { tipo: 'tabla',
-        encabezados: ['Folio', 'Registro', 'CCT', 'Escuela', 'Sector', 'Zona', 'Función', 'Registro en plataforma'],
-        anchos: [66, 50, 62, 118, 36, 30, 82, 60],
-        filas: c.inscritos.map(function (x) {
-          return [x.folio, fecha(x.fecha), x.cct || '—', x.escuela || '—', x.sector, x.zona || '—', x.funcion,
-            x.externo === REGISTRO_EXTERNO.CONFIRMADO ? 'Confirmado' : (x.externo || '—')];
-        }) }
+      { tipo: 'graficas', blobs: graficas }
+      // Sin la tabla de inscritos por folio (Jorge, 24 nov 2026: no hace falta como evidencia).
     ],
     pie: 'Fuente: Centro de Formación Docente de la Oficina Virtual OTDE (registro de inscripciones). ' +
       '"Registro en plataforma" lo declara la propia persona; no es verificación contra la plataforma del curso. ' +

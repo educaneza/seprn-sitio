@@ -1159,6 +1159,21 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
       "Función no registrada". Nunca inventarla.
     - Después: concentrado con tabla/gráfica por función y "Beneficiarios" de la fila
       `CORREO:<periodo>` de la Bitácora desglosado por función.
+    - **Salida del compromiso (24 nov 2026, decisión de Jorge):** en vez de la función, la columna
+      "Beneficiarios" de `CORREO:<periodo>` se describe por centro de trabajo
+      (`bitCorreoBeneficiarios_` en `bitacora.gs`, con el `cct` y la `zona` que ahora manda
+      `?action=correoMes`): "15 solicitudes atendidas / 12 escuelas / 1 supervisión escolar / 1
+      jefatura de sector / 1 Subdirección / 13 zonas escolares de 9 sectores". "Docentes" para
+      todos se descartó porque sería falso. Lo de arriba (campo `Función` en los 4 trámites) queda
+      abierto por si Planeación insiste en la función.
+
+43. **Membrete: que la tabla de firmas no se parta entre hojas** (abierto 24 nov 2026). En
+    `ACF-2627-002` la tabla de `MBT_FIRMAS` cayó al final de la página 2 y la última línea del
+    cargo y el pie se fueron a una hoja 3. `DocumentApp` no puede impedirlo; la API de Docs sí
+    (`updateTableRowStyle` con `preventOverflow: true` en la fila de firmas). Eso exige el
+    servicio avanzado Docs en el manifiesto de `correo` y `formacion-docente`, y `desplegar.sh`
+    no toca el manifiesto remoto. Mientras, como el concentrado ya es un Doc, se corrige a mano
+    con un salto de página antes de "VALIDÓ".
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue

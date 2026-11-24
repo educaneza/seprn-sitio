@@ -90,7 +90,8 @@ function generarConcentradoMesCorreo() {
   const hoja = concArmarHoja_(ss, mes, datos, rango);
   ss.setActiveSheet(hoja);
 
-  const sinNp = datos.atendidas.filter(function (a) { return !a.np; }).length;
+  const foliosSinNp = datos.atendidas.filter(function (a) { return !a.np; }).map(function (a) { return a.folio; });
+  const sinNp = foliosSinNp.length;
   // Primero con membrete y firmas (Membrete.gs); si falla, el PDF de la
   // pestaña como antes, para no quedarse sin evidencia.
   let pdf = null, errorPdf = '', sinMembrete = '';
@@ -106,14 +107,17 @@ function generarConcentradoMesCorreo() {
       errorPdf = err.message;
     }
   }
+  // Pestaña temporal, como en Formación Docente: se borra en cuanto el archivo quedó en
+  // Drive (Jorge, 24 nov 2026). Si falló, se queda para descargarla a mano.
+  if (pdf) ss.deleteSheet(hoja);
   const html = HtmlService.createHtmlOutput(
     '<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.5">' +
     '<p><b>' + datos.atendidas.length + '</b> solicitud' + (datos.atendidas.length === 1 ? '' : 'es') +
     ' atendida' + (datos.atendidas.length === 1 ? '' : 's') + ' ' + escapeHtml_(concRangoTexto_(rango)) + '.</p>' +
-    (sinNp ? '<p style="color:#8a2020"><b>' + sinNp + '</b> sin NP SIGEE (marcadas en rojo). ' +
+    (sinNp ? '<p style="color:#8a2020"><b>' + sinNp + '</b> sin NP SIGEE: ' + escapeHtml_(foliosSinNp.join(', ')) + '. ' +
       'Conviene anotarlo y volver a generar: es lo que liga cada folio con SIGEE.</p>' : '<p>Todas tienen NP SIGEE.</p>') +
     (pdf
-      ? '<p>PDF guardado en Drive, carpeta <b>' + CONC_CARPETA + '</b>: <a href="' + pdf.getUrl() + '" target="_blank">' +
+      ? '<p>Guardado en Drive, carpeta <b>' + CONC_CARPETA + '</b>: <a href="' + pdf.getUrl() + '" target="_blank">' +
         escapeHtml_(pdf.getName()) + '</a></p>' +
         (sinMembrete ? '<p style="color:#8a2020">Salió SIN membrete (' + escapeHtml_(sinMembrete) + ').</p>' : '')
       : '<p style="color:#8a2020">No se pudo guardar el PDF (' + escapeHtml_(errorPdf) + '). La pestaña sí quedó: ' +
@@ -126,16 +130,11 @@ function generarConcentradoMesCorreo() {
 // Mismos datos que la pestaña; las gráficas se toman de la pestaña.
 function concSpec_(mes, d, rango, hoja) {
   const tz = 'America/Mexico_City';
-  const fecha = function (v) {
-    return v instanceof Date ? Utilities.formatDate(v, tz, 'dd/MM/yyyy') : String(v == null ? '' : v).trim().split(' ')[0];
-  };
   const orden = function (s) { const k = CONC_SECTORES.indexOf(s); return k === -1 ? 99 : k; };
   SpreadsheetApp.flush();
   const graficas = hoja.getCharts().map(function (g) {
     try { return g.getAs('image/png'); } catch (err) { return null; }
   });
-  const resaltar = [];
-  d.atendidas.forEach(function (a, k) { if (!a.np) resaltar.push(k); });
   return {
     nombre: 'Concentrado correo institucional ' + mes,
     titulo: 'Concentrado mensual de solicitudes de correo institucional',
@@ -157,18 +156,11 @@ function concSpec_(mes, d, rango, hoja) {
         der: { encabezados: ['Sector', 'Atendidas'], filas: Object.keys(d.porSector)
           .sort(function (a, b) { return orden(a) - orden(b); })
           .map(function (s) { return [s === 'SEPRN' ? 'Subdirección' : (s === 'Sin sector' ? s : 'Sector ' + s), d.porSector[s]]; }) } },
-      { tipo: 'graficas', blobs: graficas },
-      { tipo: 'seccion', texto: 'Folios atendidos en el periodo (' + d.atendidas.length + ')' },
-      { tipo: 'tabla',
-        encabezados: ['Folio', 'Tipo', 'Recepción', 'Subida a SIGEE', 'Entrega', 'Sector', 'Zona', 'Función', 'NP SIGEE'],
-        anchos: [64, 96, 48, 48, 48, 36, 30, 74, 60],
-        resaltar: resaltar,
-        filas: d.atendidas.map(function (a) {
-          return [a.folio, a.tipo, fecha(a.recepcion), fecha(a.subida), fecha(a.entrega), a.sector, a.zona,
-            a.funcion || '—', a.np || 'Sin NP'];
-        }) }
+      { tipo: 'graficas', blobs: graficas }
+      // Sin la tabla de folios (Jorge, 24 nov 2026: no hace falta como evidencia). El
+      // detalle por folio sigue en la pestaña del Sheet.
     ],
-    pie: 'Fuente: Oficina Virtual OTDE (registro de solicitudes de correo institucional). NP SIGEE = número de solicitud en la plataforma SIGEE. ' +
+    pie: 'Fuente: Oficina Virtual OTDE (registro de solicitudes de correo institucional) y plataforma SIGEE. ' +
       'Sin datos personales de las figuras educativas. Generado el ' + Utilities.formatDate(new Date(), tz, 'dd/MM/yyyy HH:mm') + '.'
   };
 }
@@ -327,7 +319,13 @@ function concArmarHoja_(ss, mes, d, rango) {
   // Tablas por tipo y por sector (las gráficas leen de aquí)
   titulo(fila, 'Solicitudes atendidas por tipo y por sector');
   fila++;
-  const tipos = Object.keys(d.porTipo).map(function (t) { return [t, d.porTipo[t]]; });
+  // Nombre corto solo para la gráfica (los largos salían cortados en el eje); la tabla del PDF
+  // con membrete usa el nombre completo.
+  const CORTO = {
+    'Eliminación del método de autenticación': 'Eliminación de autenticación',
+    'Cambio de contraseña y eliminación del método de autenticación': 'Contraseña + autenticación'
+  };
+  const tipos = Object.keys(d.porTipo).map(function (t) { return [CORTO[t] || t, d.porTipo[t]]; });
   const orden = function (s) { const k = CONC_SECTORES.indexOf(s); return k === -1 ? 99 : k; };
   const sectores = Object.keys(d.porSector).sort(function (a, b) { return orden(a) - orden(b); })
     .map(function (s) { return [s === 'SEPRN' ? 'Subdirección' : (s === 'Sin sector' ? s : 'Sector ' + s), d.porSector[s]]; });

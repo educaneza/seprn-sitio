@@ -127,6 +127,8 @@ function listarAtendidasMesCorreo_(tokenRecibido, mes) {
     const idxFolio = indexOfHeader(headers, 'Folio');
     const idxEntrega = indexOfHeader(headers, 'Fecha de entrega');
     const idxSector = indexOfHeader(headers, 'Sector');
+    const idxCct = indexOfHeader(headers, 'CCT');
+    const idxZona = indexOfHeader(headers, 'Zona');
     if (idxFolio === -1 || idxEntrega === -1) return;
     datos.slice(1).forEach(function (fila) {
       const entrega = fila[idxEntrega];
@@ -136,7 +138,11 @@ function listarAtendidasMesCorreo_(tokenRecibido, mes) {
         folio: String(fila[idxFolio]).trim().toUpperCase(),
         tipo: t[1],
         fecha: Utilities.formatDate(entrega, tz, 'yyyy-MM-dd'),
-        sector: idxSector === -1 ? '' : String(fila[idxSector] || '').trim()
+        sector: idxSector === -1 ? '' : String(fila[idxSector] || '').trim(),
+        // CCT y zona: la Bitácora describe a quién se atendió por escuelas, zonas y
+        // sectores (Beneficiarios del N.P. 12, 24 nov 2026).
+        cct: idxCct === -1 ? '' : String(fila[idxCct] || '').trim().toUpperCase(),
+        zona: idxZona === -1 ? '' : String(fila[idxZona] || '').trim()
       });
     });
   });

@@ -3447,14 +3447,18 @@ Evidencias del reporte mensual de Planeación, sin datos personales: el concentr
 (`fdGenerarConcentrados` en `formacion-docente.gs`, **uno por curso**). Los dos siguen el mismo
 flujo:
 
-1. Arman una pestaña con cifras, tablas y gráficas (sirve de respaldo y de fuente de las
-   gráficas). El corte del periodo se pide en el menú y se guarda en Script Properties
+1. Arman una pestaña temporal con cifras, tablas y gráficas (respaldo y fuente de las gráficas);
+   se borra en cuanto el archivo queda en Drive, en los dos sistemas desde el 24 nov 2026. El corte del periodo se pide en el menú y se guarda en Script Properties
    (`CONC_CORTE_*`, `FDC_CORTE_*`); debe coincidir con el de la Bitácora (§36).
 2. Con los mismos datos arman un `spec` (`concSpec_`, `fdcSpec_`) y llaman a
    `mbtGenerarPdf_(spec, carpeta)`: copia la plantilla de Google Docs (`MBT_PLANTILLA_ID`), limpia
    el cuerpo, lo llena (bloques `seccion`, `pares`, `cifras`, `dosTablas`, `graficas`, `tabla`),
    agrega las firmas `MBT_FIRMAS` (VALIDÓ jefe de la OTDE, Vo. Bo. Encargada del Despacho) y
-   guarda Doc + PDF en la carpeta de evidencias. Carta vertical, ancho útil 504 pt (las imágenes
+   guarda **solo el Google Doc** en la carpeta de evidencias (decisión de Jorge, 24 nov 2026: de
+   ahí se imprime o se descarga en PDF, y se corrige a mano si hace falta). La propiedad `pdf` del
+   resultado se quedó con ese nombre, pero ahora es el Doc. Desde el 24 nov 2026 ninguno de los
+   dos concentrados lleva la tabla de detalle por folio; el bloque `tabla` sigue disponible.
+   Todo texto pasa por `mbtTxt_()`: Docs no acepta párrafos ni celdas vacías (`docs/QA-NOTES.md #61`). Carta vertical, ancho útil 504 pt (las imágenes
    se miden en px, las columnas en pt).
 3. Si no hay plantilla o algo falla, se exporta la pestaña a PDF como antes y el diálogo avisa
    "Salió SIN membrete". Nunca se queda sin evidencia.
@@ -3471,6 +3475,9 @@ flujo:
   rehacer o editar la plantilla.
 - **Permisos:** `UrlFetchApp` (exportar la pestaña) y `DocumentApp` son servicios nuevos en esos
   proyectos: se autorizan desde el editor, no desde el menú (`docs/QA-NOTES.md #56`).
+- **Firmas partidas:** si la tabla de firmas cae al final de una hoja, Docs la parte (pasó con
+  `ACF-2627-002` el 24 nov 2026). Por ahora se corrige a mano en el Doc con un salto de página.
+  Arreglo de fondo en `docs/ROADMAP.md` ítem 43.
 - **Fuera del reporte:** `FD_CATEGORIAS_FUERA_DEL_REPORTE` (Webinar, Seminario, Conferencia) no
   lleva concentrado y `?action=cursosMes` lo manda con `vaAlReporte: false`; la Bitácora lo
   importa con `Va al reporte = No`.
