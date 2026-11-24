@@ -373,6 +373,8 @@ ya resueltos al final de `docs/SISTEMAS.md`. Lo genuinamente abierto:
   4 dic dejando de publicar el CSV de `Hoja 1`. ROADMAP 30. Ese mismo día, mover a
   `~/Proyectos/trabajo/_archivo/` el `.exe` de la v3 (`Instalador_Office_2019_OTDE_Final.exe`) y
   la carpeta `Instalador_Office_2019/` del proyecto del instalador (acordado con Jorge el 24 nov).
+  **v4.2 compilada sin publicar** (Windows de 32 bits → 2019 de 32 bits): se publica solo si la
+  prueba con `15FIZ0226B` sale `EXITOSO`. La rama 2016 no arranca en 32 bits (ROADMAP 44).
 - **Crea tu app educativa / Banco de Materiales 2.0**: falta que Jorge revise PDA y apps, decida
   la licencia y valide con la Dra. Galindo; después, carta descriptiva del taller, ficha técnica y
   catálogo del banco. `docs/ROADMAP.md` ítem 35.

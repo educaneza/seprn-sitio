@@ -814,6 +814,12 @@ instalador: si cambian sus ventanas, actualizar la guía.
   compila en la VM). La v3 lee `Hoja 1` como CSV publicado en la web; la v4 pregunta a
   `validar_cct`. Las dos usan el mismo interruptor remoto, que solo lee `activo`: no sirve para
   apagar una sin la otra. La v3 se apaga dejando de publicar el CSV (corte avisado para el 4 dic).
+- **Windows de 32 bits (24 nov 2026):** la v4.1 pide 2019 de 64 bits (1603 en segundos) y su
+  rama 2016 tampoco sirve: `setup_2016.exe`/`setup.dll` son de 64 bits (216), aunque el paquete
+  es de 32. La **v4.2** (compilada, sin publicar, en prueba con `15FIZ0226B`) manda Windows 10
+  de 32 bits a 2019 de 32 bits (`Office2019Plus_32.xml`), no reintenta un 1603 rápido y deja
+  Windows/bits/RAM/disco en Marca y los segundos del intento en Resultado. Windows 7/8 de 32
+  bits sigue sin salida (ROADMAP 44, `docs/QA-NOTES.md #63`).
 - **Backend:** Apps Script ligado al Sheet "Instalador Office OTDE - Registro y licencias"
   (`Oficina Virtual OTDE 2026-2027/Instalador de Office/` en Drive). No está en
   `apps-script/proyectos-clasp.json`; se publica con `clasp` a mano (`update-deployment` sobre la

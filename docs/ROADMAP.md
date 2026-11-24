@@ -953,9 +953,15 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
       - resumen por Telegram de los equipos con error o sin cerrar, para llamar a la escuela;
       - archivo con el formato del Excel de CoEEE para los equipos por cargar (falta ver el formato);
       - éxito por versión en `Control OTDE`, para saber si la v4 bajó el error `-1`.
-    - Descartado por ahora: v4.2 con aviso de versión nueva (el instalador va de salida; si algún
-      día hay v4.2 por otra razón, se agrega de paso) y que el EXE baje su código de internet
-      (corre como administrador; los antivirus lo marcan).
+    - **v4.2 compilada el 24 nov 2026, sin publicar.** Windows de 32 bits recibe Office 2019 de
+      32 bits (`Office2019Plus_32.xml`) sin preguntar; un 1603 de 2019 en menos de 2 min ya no
+      se reintenta; Marca lleva Windows/bits/RAM/disco y Resultado los segundos del intento.
+      Caso que la originó: `15FIZ0226B` (HP Pro 3500, Windows 10 Pro 32 bits), 1603 en ~35 s
+      con 2019 de 64 bits y 216 con 2016. Primera prueba real: se le manda el EXE a ese equipo.
+      Si sale `EXITOSO` con versión 4.2, reemplazar `descargas/Instalador_Office_2019_OTDE.exe`.
+      La rama 2016 en 32 bits sigue rota: ver ítem 44.
+    - Descartado por ahora: aviso de versión nueva dentro del instalador (va de salida) y que el
+      EXE baje su código de internet (corre como administrador; los antivirus lo marcan).
 31. ~~**"Que se note que sigue trabajando" — extender al resto de formularios.**~~ — **resuelto el
     19 oct 2026**: `estrategias-nacionales.html` (Registrar y Cancelar) ya usa `esperaConProgreso()`;
     `asistencia.html` se retiró. El 5 oct 2026
@@ -1164,6 +1170,19 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     servicio avanzado Docs en el manifiesto de `correo` y `formacion-docente`, y `desplegar.sh`
     no toca el manifiesto remoto. Mientras, como el concentrado ya es un Doc, se corrige a mano
     con un salto de página antes de "VALIDÓ".
+44. **Instalador de Office: Office 2016 no arranca en Windows de 32 bits** (abierto 24 nov 2026).
+    El paquete `Office2016_OTDE.7z` sí es de 32 bits (`office32.es-es`, `office32ww.msi`), pero el
+    lanzador que lleva el EXE (`setup_2016.exe` y `setup.dll`, iguales a los de
+    `Instalador_Office_2016/`) es de 64 bits: en Windows de 32 bits Windows lo rechaza con código
+    216, **después** de bajar 830 MB y desinstalar el Office previo. Confirmado en `15FIZ0226B`
+    el 24 nov. Windows 10 de 32 bits ya tiene salida (2019 de 32 bits en la v4.2, ítem 30);
+    **Windows 7 y 8/8.1 de 32 bits no tienen ninguna**, porque el instalador los manda a 2016.
+    Arreglo: conseguir `setup.exe` y `setup.dll` de 32 bits del medio original de Office 2016 por
+    volumen (carpeta x86 del ISO de VLSC, o el medio que haya dado SEIEM), empaquetarlos aparte
+    y elegirlos según `WIN64`. Mientras, una v4.x podría revisar la arquitectura antes de
+    descargar y cortar con un aviso claro en vez de desinstalar y fallar. Antes, contar en
+    `Registro_Instalaciones` cuántos equipos hay con Windows 7/8 de 32 bits (desde la v4.2 la
+    columna Marca lo dice) para ver si vale la pena.
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue

@@ -16,6 +16,22 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-11-24 (noche, cont.) · Instalador de Office: error 1603 en Windows de 32 bits y v4.2 compilada
+
+| | |
+|---|---|
+| **Fecha** | 2026-11-24 (noche) |
+| **Sesión** | Jorge trajo un caso: Supervisión Escolar 53 (`15FIZ0226B`, Luis, HP Pro 3500, S/N MXL2502KR0) con 1603 en cada intento, 10 intentos desde el 14 oct (también con la v3). Todo el código fuera del repo, en `Instalador_Office_v4/`; respaldos `Instalador_OTDE_v4_2026-11-24_v41.bak` y `Instalador_OTDE_v4_2026-11-24_v41.iss.bak`. |
+| **Diagnóstico** | Cada intento con 2019 fallaba en 30-40 s: el setup se negaba en su revisión previa, no era red ni Windows Update. `Office2019Plus.xml` pide `OfficeClientEdition="64"` y el `.bat` no revisaba la arquitectura. Luis confirmó Windows 10 Pro 22H2 (19045) de **32 bits**. Mientras, Jorge le pidió probar 2016: salió **216** ("Este equipo no es compatible"), como se había anticipado: `setup_2016.exe` y `setup.dll` son de 64 bits aunque el paquete `Office2016_OTDE.7z` es de 32 (`office32.es-es`). Ese intento bajó 830 MB y pasó por la desinstalación antes de fallar (en la captura no se ve Office previo, usa WPS). `docs/QA-NOTES.md #63`. |
+| **v4.2 (sin publicar)** | Windows de 32 bits → Office 2019 de 32 bits sin preguntar la versión (`Office2019Plus_32.xml` nuevo, agregado al `.iss`; el ODT `setup_2019.exe` sí es de 32 bits). Un 1603 de 2019 en menos de 120 s ya no se reintenta: ayuda nueva `:AYUDA_MSI_RAPIDO` (64 bits: probar 2016; 32 bits: Soporte remoto) sin botón Reintentar. Duración del intento con `:SEGUNDOS_AHORA` (PowerShell, no `%TIME%`). Registro: `marca` agrega `!WIN_RESUMEN!` (edición, bits, build, RAM, GB libres en C:) y `resultado` agrega `- en N s`, sin cambiar el backend (`ControlOTDE` usa solo lo anterior al primer ` - ` de Marca y saca el código con `CODIGO\s+(-?\d+)`). Modo de prueba: `SIMULAR_32BITS=1` en `modo_prueba.flag`. `VERSION_INSTALADOR` y `AppVersion` = 4.2. |
+| **Verificación** | Bloques nuevos aislados en la VM (Windows 11 de 64 bits): resumen correcto, 1603 en 35 s no reintenta, en 600 s sí, 17002 sin cambio. Carpeta de la VM comparada por SHA-256 contra la local antes de compilar (solo difieren los 3 archivos cambiados). `ISCC` `/DPRUEBA` y final, código 0; EXE en `Output/Instalador_Office_OTDE_v4.2_Final.exe` y `_PRUEBA.exe` (5.1 MB). **Sin probar:** instalación real de 2019 de 32 bits (no hay Windows de 32 bits a la mano) y las ventanas del flujo completo (no se ven por SSH). `descargas/` sin tocar. |
+| **Decisiones** | No publicar la v4.2 a todas las escuelas todavía: Jorge le manda el EXE a Luis como primera prueba real. La rama 2016 en 32 bits (Windows 7/8) queda rota y va al ROADMAP 44. |
+| **Pendiente** | **Luis aún no corre la v4.2** (Jorge avisa al tener información). Si sale `EXITOSO` con versión 4.2 y Marca con "32 bits": reemplazar `descargas/Instalador_Office_2019_OTDE.exe`, actualizar la guía de `otde.html` (versión), `ERROR_CODES.md` del instalador y `docs/SISTEMAS.md`. Si sale 1603 rápido otra vez: pedir el `.log` más reciente de `%temp%`. Antes de publicar, que Jorge pruebe en la VM con `SIMULAR_32BITS=1` + `SIMULAR_ERROR=1603` (no pregunta versión, sale la ayuda nueva). Sigue lo del checkpoint anterior: 4 dic (v3 y `_archivo/`), reporte 2026-11, "Entregado" en `Config` G4, periodo 2026-12, ROADMAP 39 antes del 11 dic. |
+| **Documentación actualizada** | Este checkpoint, `docs/ROADMAP.md` (30 y 44 nuevo), `docs/SISTEMAS.md` (Licencias Office), `docs/TABLERO-SALUD.md` (instalador), `docs/QA-NOTES.md` (#63), `CLAUDE.md` (pendiente del instalador). |
+| **Commits** | Solo el de este cierre (docs). |
+
+---
+
 ## CHECKPOINT — 2026-11-24 (noche) · Limpieza de duplicados en `~/Proyectos/trabajo`
 
 | | |

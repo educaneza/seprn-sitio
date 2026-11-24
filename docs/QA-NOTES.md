@@ -1645,3 +1645,24 @@ serie genérica (`To Be Filled By O.E.M.`, `Default string`, `0`): se agregó la
 **Regla:** al contar equipos por serie, tratar como "sin serie" las genéricas, no solo
 "No detectado". Y antes de reescribir un contador desde otra fuente, correr una vista previa
 y revisarla con Jorge: la fuente puede estar incompleta.
+
+## 63. Instalador de Office: 1603 en segundos y 216 en Windows de 32 bits
+
+**Síntoma (24 nov 2026):** `15FIZ0226B` (HP Pro 3500) con `ERROR - Codigo 1603` en cada intento
+de Office 2019, 10 intentos desde el 14 oct, cada uno en 30-40 s. La ayuda decía "espere a
+Windows Update y reintente". Con Office 2016, código 216 ("Este equipo no es compatible").
+
+**Causa raíz:** el equipo tiene Windows 10 de 32 bits. `Office2019Plus.xml` pide
+`OfficeClientEdition="64"` y el `.bat` no revisaba la arquitectura, así que el setup se negaba
+en su revisión previa. La rama 2016 falla por otra cosa: el paquete es de 32 bits, pero
+`setup_2016.exe` y `setup.dll` son de 64 bits (alguien mezcló dos medios), y Windows no los
+ejecuta. Además, ese fallo llega después de bajar 830 MB y desinstalar el Office previo.
+
+**Fix (v4.2, sin publicar al cierre):** `[Environment]::Is64BitOperatingSystem` en sysinfo; en
+32 bits, 2019 con `Office2019Plus_32.xml` sin preguntar; un 1603 rápido (< 120 s) no se
+reintenta y muestra ayuda propia; Windows/bits y la duración quedan en el registro. Windows 7/8
+de 32 bits sigue sin salida (ROADMAP 44).
+
+**Regla:** un error que llega en segundos no se arregla reintentando: medir cuánto tardó antes
+de decidir. Y revisar la arquitectura (`file` en la Mac) de cada ejecutable que se empaqueta,
+no solo del contenido que instala.
