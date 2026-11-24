@@ -16,6 +16,22 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-11-24 (noche) · Limpieza de duplicados en `~/Proyectos/trabajo`
+
+| | |
+|---|---|
+| **Fecha** | 2026-11-24 (noche) |
+| **Sesión** | Jorge pidió revisar `~/Proyectos/trabajo` (12 carpetas, 8.9 GB) buscando duplicados. Casi todo fuera del repo. Decisión de Jorge: **mover a `~/Proyectos/trabajo/_archivo/`, no borrar**; solo se borraron cachés y temporales (`jubilaciones/.cache`, `~$*.docx`). |
+| **Archivado** | `Correos-institucionales/` (sistema viejo de Marcos; lo vigente es `apps-script/correo/`). `manual-otde/` local y el repo `educaneza/manual-otde` archivado en GitHub (solo lectura, la página sigue en línea; nada del sitio lo ligaba). Del instalador: el `.exe` v4 de 805 MB del 4 jun, el `_PRUEBA.exe`, 19 `.bak`, la v3.0 de `Registro_escuelas_Codigo` y las 21 carpetas MSI de Office 2016 que había en `Instalador_Office_v4/` (idénticas una por una a `Instalador_Office_2016/` con `diff -rq`; el `.iss` ya no las mete en el EXE desde oct). Videos `_v1` de jubilaciones y `.bak` de BM-Chuka. Total en `_archivo/`: 2.0 GB. |
+| **Reacomodo** | Openings viejos (1ra y 2da 2026-2027 de `docs/insumos/Openings-CTE/`, 240 MB, y `Opening-8va-sesion-cte/`) a `openings-seprn/sesiones/<sesión>/archivo/`, con `sesiones/*/archivo/` agregado antes al `.gitignore` de openings-seprn (commit local `8c51100`; ese repo no tiene remoto). `docs/insumos/Openings-CTE/` ya no existe. `delegacion-sindical/` + `ponencia-congreso/` (SNTE, con padrones) a `~/Proyectos/sindical/` (`03_CONGRESO`). |
+| **Correcciones a la propuesta** | `ControlOTDE.gs` y `Registro_escuelas_Codigo.gs` no eran copias (pesan casi lo mismo por casualidad); el sobrante era la v3.0. `openings-seprn/sesiones/*/cache` no es caché regenerable: guarda las fotos crudas; no se tocó. La receta para regenerar `Office2016_OTDE.7z` en el `docs/DEPLOYMENT.md` del instalador hacía `cd Instalador_Office_v4`: ahora sale de `Instalador_Office_2016`. |
+| **Verificación** | md5 del EXE de `Output/` = `descargas/Instalador_Office_2019_OTDE.exe` (sin tocar). `git status` sin fotos ni videos visibles en seprn-sitio ni openings-seprn. `gh api repos/educaneza/manual-otde` → `archived: true`. Pages del commit `06f9217`: `success`. |
+| **Pendiente** | **4 dic:** además de apagar la v3, mover a `_archivo/` el `.exe` v3 y `Instalador_Office_2019/` (anotado en `CLAUDE.md`). **Desde el 5 ene 2027:** recordar a Jorge vaciar `_archivo/` (nunca sin su confirmación). Sigue lo del checkpoint anterior: reporte 2026-11, "Entregado" en `Config` G4, periodo 2026-12, ROADMAP 39 antes del 11 dic. |
+| **Documentación actualizada** | Este checkpoint y `CLAUDE.md` (ruta de los openings, pendientes del 4 dic y de `_archivo/`). Fuera del repo: `docs/DEPLOYMENT.md` del instalador y la memoria de Claude. |
+| **Commits** | `06f9217` (ya publicado) y el de este cierre. |
+
+---
+
 ## CHECKPOINT — 2026-11-24 (cont.) · Instalador de Office v4.1 publicado: licencias por equipo, solicitud con Telegram y Drive ordenado
 
 | | |
