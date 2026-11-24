@@ -109,8 +109,7 @@ seprn-sitio/
 │   └── proyectos-clasp.json      # scriptId, deploymentId y nombre remoto de cada proyecto que publica desplegar.sh
 │
 ├── descargas/                    # Instaladores/ejecutables descargables
-│   ├── Instalador_Office_2019_OTDE.exe
-│   ├── Instalador_Office_OTDE.bat
+│   ├── Instalador_Office_2019_OTDE.exe  # Instalador de Office v4 (asistente OTDE NEZA, 2019/2016, valida por CCT)
 │   ├── diagnostico-equipo.bat    # Diagnóstico de equipo para técnicos (semáforo); llama a diagnostico-equipo.ps1
 │   └── diagnostico-equipo.ps1
 │
