@@ -23,6 +23,7 @@ una regla o trampa que hay que saber siempre, su resumen en `CLAUDE.md`.
 | `planeacion.html` | Subjefatura de Planeación |
 | `recursos.html` | Subjefatura de Recursos |
 | `otde.html` | Oficina de Tecnología (OTDE) — hoy solo Licencias Office, Chuka y Recursos (los 4 trámites con formulario propio ya migraron a páginas propias, ver abajo) |
+| `ticket-asesoria.html` / `seguimiento-asesoria.html` | Ticket de salida y seguimiento (días 7/21/30) de la asesoría Banco de Materiales y Chuka (nov 2026). `noindex`, sin entrada en nav; se llega por QR o por correo. Backend `apps-script/ticket-asesoria.gs` |
 | `asesorias.html` | Solicitud de Asesorías en TICCAD (Banco de Materiales/Chuka) — página propia, migrada desde la tab "Asesorías" de `otde.html` el 27 ago 2026 (ver `docs/ARCHITECTURE.md` y `apps-script/asesorias.gs` abajo). Header/nav/footer institucional completo (reusa `styles.css`), sin entrada en nav/footer del sitio — se llega vía `oficina-virtual.html` |
 | `mantenimiento.html` | Solicitud de Mantenimiento Preventivo y Correctivo — página propia, migrada desde la tab "Mantenimiento" de `otde.html` el 27 ago 2026, mismo patrón que `asesorias.html` (ver `docs/ARCHITECTURE.md` y `apps-script/mantenimiento.gs` abajo) |
 | `soporte.html` | Solicitud de Soporte Técnico Remoto (vía TeamViewer) — página propia, migrada desde la tab "Soporte Técnico" de `otde.html` el 27 ago 2026, mismo patrón que `asesorias.html`/`mantenimiento.html` (ver `docs/ARCHITECTURE.md` y `apps-script/soporte-remoto.gs` abajo) |
@@ -790,6 +791,25 @@ diseño libre para niños, solo el sello de crédito al pie.
   columna, y la lista de escuelas ya no se desborda a 320 px. Mensajes en singular con 1 escuela.
   Jorge lo confirmó en su celular
 
+
+### `apps-script/ticket-asesoria.gs` (nuevo, 25 nov 2026)
+- **Qué es**: backend del ticket de salida y del seguimiento automatizado de la asesoría
+  "Banco de Materiales y Chuka" (carta descriptiva v2). Proyecto **ligado a su propia hoja**
+  ("OTDE · Ticket de salida y seguimiento de asesorías", creado con `clasp create-script --type
+  sheets` en la cuenta OTDE). scriptId `1w3yLmRd2nykqqCVWwc_nrWO0vIkZiXda5duDxJ196XtW0rAJx9XJoHAy`;
+  hoja `1MDu0piM5Wol8E6I9tki0uhaY9P629a4G2DCTUbFskSY`.
+- **Páginas**: `ticket-asesoria.html` (QR de la última diapositiva, `?cct=…&s=AAAA-MM-DD`) y
+  `seguimiento-asesoria.html?t=TOKEN` (enlace del correo del día 21). Ambas `noindex`, sin
+  entrada en nav/footer, constante `TICKET_APPS_SCRIPT_URL`.
+- **Flujo**: ticket → hoja `Tickets` + correo inmediato con compromiso, materiales del kit y
+  canales. Activador diario `tktProcesarSeguimiento` (8 h): día 7 recordatorio, día 21 enlace al
+  seguimiento, día 30 devolución/cierre; máximo un correo por docente por corrida; `?action=baja`.
+  Hoja `Seguimiento` con columnas Fortaleza/Mejora (OTDE) → menú "OTDE Ticket → Enviar
+  retroalimentación". `tktResumenSemanal` (lunes 9 h) a `RESUMEN_CORREO`. Hoja `Tablero` con
+  fórmulas (indicadores, necesidades, conectividad, SAMR).
+- **Configuración única**: correr `tktSetup()` en el editor (autoriza y crea hojas/activadores),
+  implementar como Web App (Yo / Cualquier usuario), `tktConfigurarUrlWebApp(url)` para el enlace de
+  baja. Prueba: `tktActivarModoPrueba(correo)` y `tktProbarSeguimiento(correo)`.
 
 ## `otde.html` — Oficina de Tecnología (OTDE)
 

@@ -99,5 +99,15 @@
     "nombresRemotos": {
       "estrategias-nacionales.gs": "Código.gs"
     }
+  },
+  "ticket-asesoria": {
+    "archivos": [
+      "ticket-asesoria.gs"
+    ],
+    "scriptId": "1w3yLmRd2nykqqCVWwc_nrWO0vIkZiXda5duDxJ196XtW0rAJx9XJoHAy",
+    "deploymentId": "AKfycbwZGkr1EUJy2tMiJZy_ejAxO1xRUBrkHrYTWoH6edcz8695Nx88OIKtrkmpRqdh2jA",
+    "nombresRemotos": {
+      "ticket-asesoria.gs": "Código.gs"
+    }
   }
 }

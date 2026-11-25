@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-7D68DB8ELW"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-7D68DB8ELW');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="Seguimiento de la asesoría Banco de Materiales y Chuka.">
+    <title>Seguimiento de asesoría - OTDE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Ticket de salida / seguimiento de asesoría (nov 2026) — solo estas dos páginas */
+        .tkt-wrap { max-width: 720px; margin: 0 auto; }
+        .tkt-fs { border: none; padding: 0; margin: 0 0 30px; }
+        .tkt-fs legend { font-size: 18px; font-weight: 700; color: #56212f; padding-bottom: 8px; margin-bottom: 14px;
+            border-bottom: 2px solid var(--arena); width: 100%; }
+        .tkt-ayuda { font-size: 14px !important; color: var(--texto-muted) !important; margin: -6px 0 14px !important; }
+        .tkt-fila { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+        @media (max-width: 600px) { .tkt-fila { grid-template-columns: 1fr; } }
+        .tkt-opciones { display: flex; gap: 8px; flex-wrap: wrap; }
+        .tkt-op { position: relative; margin: 0 !important; }
+        .tkt-op input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+        .tkt-op span { display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 46px;
+            border: 2px solid var(--arena); border-radius: 10px; font-weight: 700; color: #56212f; cursor: pointer;
+            background: #fff; transition: all .15s; }
+        .tkt-op input:checked + span { background: var(--guinda-acento); border-color: var(--guinda-acento); color: #fff; }
+        .tkt-op input:focus-visible + span { outline: 2px solid var(--guinda-acento); outline-offset: 3px; }
+        .tkt-check { display: flex !important; align-items: flex-start; gap: 10px; font-weight: 500 !important;
+            color: var(--texto) !important; font-size: 14px !important; margin: 0 0 10px !important; line-height: 1.45; }
+        .tkt-check input, .soporte-form-group .tkt-check input[type="checkbox"] { margin-top: 3px; flex-shrink: 0; width: 18px; height: 18px; accent-color: var(--guinda-acento); }
+        .tkt-listo h3 { color: #56212f; }
+        .tkt-grupos { display: grid; gap: 18px; }
+        .tkt-grupo h4 { font-size: 13px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--caramelo-oscuro); margin-bottom: 8px; }
+        .tkt-grupo ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+        .tkt-grupo a { display: block; padding: 10px 14px; border: 1px solid var(--arena); border-radius: 10px;
+            color: var(--guinda-acento); font-weight: 600; text-decoration: none; background: var(--off-white); }
+        .tkt-grupo a:hover { border-color: var(--guinda-acento); }
+    </style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Saltar al contenido principal</a>
+<header>
+    <nav>
+        <div class="logo"><svg class="logo-icon" width="34" height="34" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="12" fill="#56212f"/><text x="32" y="27" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#d6d1ca" letter-spacing="-1">NE</text><text x="32" y="53" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#d6d1ca" letter-spacing="-1">ZA</text></svg><span class="logo-text">SEPRN</span></div>
+        <button class="nav-toggle" aria-label="Abrir menú" aria-expanded="false">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <ul>
+            <li><a href="index.html">Inicio</a></li>
+            <li><a href="nosotros.html">Nosotros</a></li>
+            <li><a href="areas.html">Áreas</a></li>
+            <li><a href="cte.html">CTE</a></li>
+            <li><a href="contacto.html">Contacto</a></li>
+        </ul>
+    </nav>
+</header>
+
+<section class="hero hero-sm">
+    <div class="hero-inner">
+        <span class="hero-badge">OTDE · Seguimiento</span>
+        <h1>¿Cómo te fue?</h1>
+        <p>Cuéntanos en 2 minutos cómo te fue con la actividad que te comprometiste a aplicar. Te respondemos con retroalimentación.</p>
+    </div>
+    <div class="hero-glow"></div>
+</section>
+<section class="content-section tkt-wrap" id="main-content" role="main">
+    <div class="content-block" id="seg-bloque-form">
+        <p id="seg-saludo">Cargando…</p>
+        <form id="seg-form" novalidate hidden>
+            <div class="soporte-form-group">
+                <label for="seg-aplico">¿Aplicaste la actividad?<span class="req">*</span></label>
+                <select id="seg-aplico" required>
+                    <option value="">— Selecciona —</option>
+                    <option>Sí</option>
+                    <option>Parcialmente</option>
+                    <option>Todavía no</option>
+                </select>
+                <div class="soporte-field-error" id="seg-aplico-error">Selecciona una opción.</div>
+            </div>
+            <div class="soporte-form-group">
+                <label for="seg-funciono">¿Qué funcionó? (o, si no la aplicaste, qué sí lograste preparar)</label>
+                <textarea id="seg-funciono" maxlength="800"></textarea>
+            </div>
+            <div class="soporte-form-group">
+                <label for="seg-barrera">¿Cuál fue la principal barrera?</label>
+                <textarea id="seg-barrera" maxlength="800" placeholder="Ej. no hubo internet, pocos equipos, falta de tiempo, no encontré el recurso…"></textarea>
+            </div>
+            <div class="tkt-fila">
+                <div class="soporte-form-group">
+                    <label for="seg-modalidad">Modalidad que te resultó viable</label>
+                    <select id="seg-modalidad">
+                        <option value="">— Selecciona —</option>
+                        <option>On-Line (internet)</option>
+                        <option>Off-Line (servidor local)</option>
+                        <option>Recurso descargado en USB</option>
+                        <option>Sin tecnología (plan B)</option>
+                    </select>
+                </div>
+                <div class="soporte-form-group">
+                    <label for="seg-samr">Nivel SAMR que alcanzó</label>
+                    <select id="seg-samr">
+                        <option value="">— Selecciona —</option>
+                        <option>Sustitución</option>
+                        <option>Aumento</option>
+                        <option>Modificación</option>
+                        <option>Redefinición</option>
+                        <option>No sé</option>
+                    </select>
+                </div>
+            </div>
+            <div class="soporte-form-group">
+                <label for="seg-evidencia">Evidencia (opcional)</label>
+                <input type="text" id="seg-evidencia" maxlength="400" placeholder="Enlace a Drive/fotos, o describe brevemente el producto">
+                <div class="soporte-field-hint">Sin rostros ni nombres de alumnos.</div>
+            </div>
+            <div class="soporte-form-group">
+                <label for="seg-acomp">¿Te gustaría acompañamiento?</label>
+                <select id="seg-acomp">
+                    <option value="">No por ahora</option>
+                    <option>Sí, visita en mi aula</option>
+                    <option>Sí, asesoría en mi escuela (grupo docente)</option>
+                    <option>Sí, orientación por correo o WhatsApp</option>
+                </select>
+            </div>
+            <div class="soporte-form-group">
+                <label for="seg-comentario">Comentario libre</label>
+                <textarea id="seg-comentario" maxlength="800"></textarea>
+            </div>
+            <label class="tkt-check"><input type="checkbox" id="seg-publicar"> Autorizo que OTDE comparta mi actividad (sin datos de alumnos) en la galería de prácticas de la región</label>
+            <button type="submit" class="form-button" id="seg-enviar"><span>Enviar</span></button>
+            <div id="seg-msg" class="soporte-submit-msg"></div>
+        </form>
+    </div>
+    <div class="content-block" id="seg-listo" hidden>
+        <h3>¡Gracias!</h3>
+        <p>Recibimos tu reporte. En los próximos días te enviaremos una retroalimentación breve (una fortaleza y una mejora). Tus materiales siguen en el <a href="kit-digital/">kit digital</a>, y para solicitar asesorías o soporte está la <a href="oficina-virtual.html">Oficina Virtual OTDE</a>.</p>
+    </div>
+</section>
+
+<footer>
+        <div class="footer-grid">
+            <div class="footer-col">
+                <p class="footer-brand"><svg class="logo-icon" width="30" height="30" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="12" fill="#F9F8F5"/><text x="32" y="27" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#56212f" letter-spacing="-1">NE</text><text x="32" y="53" font-family="'Montserrat',sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#56212f" letter-spacing="-1">ZA</text></svg>SEPRN</p>
+                <p class="footer-desc">Subdirección de Educación Primaria<br>en la Región de Nezahualcóyotl</p>
+                <p class="footer-meta">Av. Texcoco #116, Col. Juárez Pantitlán<br>Nezahualcóyotl, Estado de México, C.P. 57460</p>
+                <p class="footer-meta">Lunes a Viernes · 08:30 – 15:30 h</p>
+            </div>
+            <div class="footer-col">
+                <p class="footer-col-title">Sitio</p>
+                <ul class="footer-links">
+                    <li><a href="index.html">Inicio</a></li>
+                    <li><a href="nosotros.html">Nosotros</a></li>
+                    <li><a href="areas.html">Áreas</a></li>
+                    <li><a href="cte.html">CTE</a></li>
+                    <li><a href="contacto.html">Contacto</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <p class="footer-col-title">Áreas</p>
+                <ul class="footer-links">
+                    <li><a href="academica.html">Subjefatura Académica</a></li>
+                    <li><a href="personal.html">Subjefatura de Personal</a></li>
+                    <li><a href="planeacion.html">Subjefatura de Planeación</a></li>
+                    <li><a href="recursos.html">Subjefatura de Recursos</a></li>
+                    <li><a href="otde.html">OTDE</a></li>
+                    <li><a href="oeve.html">OEVE</a></li>
+                    <li><a href="juridico.html">Asuntos Jurídicos</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="social-links">
+                <a href="https://www.facebook.com/SubNeza" target="_blank" rel="noopener noreferrer" title="Facebook">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                </a>
+                <a href="https://www.youtube.com/channel/UCvDb2DPSJxFyhH3bCPd5D2Q" target="_blank" rel="noopener noreferrer" title="YouTube">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                </a>
+            </div>
+            <div class="copyright">
+                © 2026 SEPRN · Subdirección de Educación Primaria en la Región de Nezahualcóyotl<br>
+                Órgano desconcentrado de SEIEM · Gobierno del Estado de México
+            </div>
+        </div>
+    </footer>
+
+<script src="js/tramites-shared.js"></script>
+<script>
+    // ── Seguimiento a 21 días de la asesoría BM + Chuka (nov 2026) ──
+    // Llega desde el correo del día 21: seguimiento-asesoria.html?t=TOKEN
+    // Backend: apps-script/ticket-asesoria.gs (mismo que el ticket de salida).
+    const TICKET_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwZGkr1EUJy2tMiJZy_ejAxO1xRUBrkHrYTWoH6edcz8695Nx88OIKtrkmpRqdh2jA/exec';
+    var segToken = new URLSearchParams(location.search).get('t') || '';
+    var idEnvioSeg = null;
+    var saludo = document.getElementById('seg-saludo');
+
+    (async function () {
+        if (!segToken) {
+            saludo.textContent = 'Este enlace no es válido. Usa el botón del correo que te enviamos, o escríbenos a otde.nezahualcoyotl@dee.edu.mx.';
+            return;
+        }
+        try {
+            var r = await fetchJsonConTimeout(TICKET_APPS_SCRIPT_URL + '?action=seguimiento&t=' + encodeURIComponent(segToken));
+            if (r.status !== 'ok') throw new Error(r.mensaje);
+            saludo.textContent = 'Hola, ' + String(r.nombre || '').split(' ')[0] + '. Te comprometiste a usar: «' + r.recurso + '». ¿Cómo te fue?';
+            document.getElementById('seg-form').hidden = false;
+        } catch (e) {
+            saludo.textContent = 'No pudimos abrir tu seguimiento. Usa el botón del correo que te enviamos, o escríbenos a otde.nezahualcoyotl@dee.edu.mx.';
+        }
+    })();
+
+    function segValor(id) { return document.getElementById(id).value.trim(); }
+
+    document.getElementById('seg-form').addEventListener('submit', async function (evt) {
+        evt.preventDefault();
+        var msg = document.getElementById('seg-msg');
+        var btn = document.getElementById('seg-enviar');
+        msg.className = 'soporte-submit-msg'; msg.textContent = '';
+        var falta = !segValor('seg-aplico');
+        document.getElementById('seg-aplico').classList.toggle('error', falta);
+        document.getElementById('seg-aplico-error').classList.toggle('visible', falta);
+        if (falta) return;
+
+        var espera = esperaConProgreso(btn, msg, { boton: 'Enviando…', texto: 'Enviando tu reporte…' });
+        if (!idEnvioSeg) idEnvioSeg = 'seg-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+        try {
+            var data = await fetchJsonConTimeout(TICKET_APPS_SCRIPT_URL, {
+                method: 'POST', headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({
+                    tipo: 'seguimiento', token: segToken, idEnvio: idEnvioSeg,
+                    aplico: segValor('seg-aplico'), funciono: segValor('seg-funciono'), barrera: segValor('seg-barrera'),
+                    modalidad: segValor('seg-modalidad'), samr: segValor('seg-samr'), evidencia: segValor('seg-evidencia'),
+                    acompanamiento: segValor('seg-acomp'), comentario: segValor('seg-comentario'),
+                    publicar: document.getElementById('seg-publicar').checked
+                })
+            });
+            espera.fin();
+            if (data.status === 'ok') {
+                document.getElementById('seg-bloque-form').hidden = true;
+                document.getElementById('seg-listo').hidden = false;
+            } else {
+                msg.classList.add('error');
+                msg.textContent = 'No se pudo registrar: ' + data.mensaje;
+            }
+        } catch (err) {
+            espera.fin();
+            msg.classList.add('error');
+            msg.textContent = 'No recibimos la confirmación del servidor; puedes presionar Enviar de nuevo sin riesgo de duplicar.';
+        } finally {
+            espera.fin();
+        }
+    });
+</script>
+<script src="script.js" defer></script>
+</body>
+</html>
