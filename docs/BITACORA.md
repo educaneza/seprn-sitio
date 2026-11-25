@@ -16,6 +16,24 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-11-24 (noche, cont. 2) · Instalador de Office v4.2 publicado: 32 bits, aviso de versión nueva y "Datos del equipo"
+
+| | |
+|---|---|
+| **Fecha** | 2026-11-24 (noche) |
+| **Sesión** | `/open`; Jorge trajo el resultado de Luis: v4.2 `EXITOSO` en `15FIZ0226B` (16:45, 14 min, Marca con "32 bits"). Pidió aprovechar la recompilación para un aviso de versión nueva y sacar los datos del equipo de Marca. Código del instalador fuera del repo (`Instalador_Office_v4/`); respaldos `*_2026-11-24_v42-antes-aviso.*` y `AppsScript/*_2026-11-24-antes-v33.gs.bak`. |
+| **Columnas espejo de CoEEE** | Jorge: CCT, Escuela, Usuario, Sector, Zona, Marca, Serie y Office se copian a CoEEE; Resultado no. Marca vuelve a ser como en la v4.1 y Windows/bits/build/RAM/disco van en `equipo_info` → columna "Datos del equipo" (por nombre, al final: la M ya es "Observaciones", escrita a mano, y la L no tiene encabezado). Resultado conserva `- en N s`. |
+| **Aviso de versión nueva (Web App @10, misma URL)** | La v4.2 manda `version_instalador` en `validar_cct`; si es menor a `REG_VERSION_MINIMA` (menú OTDE Control → "Versión mínima del instalador"), el servidor responde `ACTUALIZAR` y el EXE muestra la ventana OTDE con "Abrir la página de descarga" (`otde.html#office`) y no instala. No baja ni ejecuta código (se mantiene lo descartado esa tarde). v3/v4.0/v4.1 y la copia de Luis no mandan versión: el aviso no les llega. Opción para frenarlas con `TOKEN_INVALIDO`, sin construir (ROADMAP 30). |
+| **Ventana detrás** | La primera versión del aviso usó `MessageBox` y salió detrás de las demás (Jorge la notó por el sonido). Se pasó a `aviso_licencias.ps1 -Tipo ACTUALIZAR`, que fuerza el foco como LIMITE/BLOQUEADA. Las ventanas OTDE no suenan (el sonido lo pone Windows al `MessageBox`): P10 en el ROADMAP del instalador. |
+| **VM** | La VM usaba "Microsoft Basic Display Driver" (resolución fija): el disco "UTM Guest Tools" estaba montado en E: sin instalar. Jorge lo instaló; quedó "Red Hat VirtIO GPU DOD controller" sin error y `vdservice` corriendo; la resolución ya se ajusta a la ventana. |
+| **Verificación** | Servidor: 11 casos en local con `node` (versión, columna por nombre, v4.1 sin `equipo_info`); `clasp pull` idéntico a la copia local antes de cambiar; `curl` `validar_cct` con y sin versión → `OK` tras @10 y al final (mínima vacía). Instalador: carpeta de la VM = local por SHA-256, `ISCC` final y `/DPRUEBA` código 0, vista previa de la ventana ACTUALIZAR. Jorge en la VM: 32 bits + 1603 simulados (no pregunta versión, ayuda sin Reintentar) y aviso real con mínima 4.3 (ventana al frente, abre la página); mínima vuelta a vacío. Producción: Pages `success`, EXE 5,337,230 bytes con md5 igual al compilado, `otde.html` con "versión 4.2" y la línea de 32 bits. **Sin ver:** "Datos del equipo" con una instalación real. |
+| **Registro del día** | Héroes de Zacapoaxtla (`15DPR1479O`, v4.1) `EXITOSO` en 1 h 37 min. Supervisión 38 (`15FIZ0079I`, v4.1) se quedó en INICIANDO desde las 16:20: sin error registrado, probablemente cerraron la ventana. |
+| **Pendiente** | Ver "Datos del equipo" en la primera instalación con la v4.2. Preguntar a la Supervisión 38 qué vieron y que reintenten con la v4.2. Decidir si se frena la v4.0/v4.1 con `TOKEN_INVALIDO` (ROADMAP 30). Sigue: 4 dic (apagar la v3, mover v3 y `Instalador_Office_2019/` a `_archivo/`), reporte 2026-11, "Entregado" en `Config` G4, periodo 2026-12, ROADMAP 39 antes del 11 dic. |
+| **Documentación actualizada** | Este checkpoint, `docs/SISTEMAS.md` (Licencias Office), `docs/ROADMAP.md` (30 y 44), `docs/TABLERO-SALUD.md` (instalador), `CLAUDE.md` (pendiente del instalador). Fuera del repo: `ERROR_CODES.md` y `ROADMAP.md` (P10) del instalador, memoria de Claude (VM). |
+| **Commits** | `ab06f6f` (ya publicado) y el de este cierre. |
+
+---
+
 ## CHECKPOINT — 2026-11-24 (noche, cont.) · Instalador de Office: error 1603 en Windows de 32 bits y v4.2 compilada
 
 | | |

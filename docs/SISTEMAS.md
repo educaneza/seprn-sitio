@@ -808,18 +808,30 @@ atribuir la causa a SEIEM directamente (se enmarca como "actualización del esqu
 licenciamiento institucional"). Los 7 pasos de la guía rápida siguen el flujo real del
 instalador: si cambian sus ventanas, actualizar la guía.
 
-- **Versiones:** v3 (ene 2026, `.bat` con consola) hasta el 24 nov; ese día v4 (`fad75bb`) y v4.1
-  (`4317e33`), siempre con el mismo nombre de archivo para no romper ligas. El código del
+- **Versiones:** v3 (ene 2026, `.bat` con consola) hasta el 24 nov; ese día v4 (`fad75bb`), v4.1
+  (`4317e33`) y v4.2 (`ab06f6f`), siempre con el mismo nombre de archivo para no romper ligas. El código del
   instalador vive fuera del repo (`~/Proyectos/trabajo/Instalador-Office-2019-OTDE/`, sin git; se
   compila en la VM). La v3 lee `Hoja 1` como CSV publicado en la web; la v4 pregunta a
   `validar_cct`. Las dos usan el mismo interruptor remoto, que solo lee `activo`: no sirve para
   apagar una sin la otra. La v3 se apaga dejando de publicar el CSV (corte avisado para el 4 dic).
 - **Windows de 32 bits (24 nov 2026):** la v4.1 pide 2019 de 64 bits (1603 en segundos) y su
   rama 2016 tampoco sirve: `setup_2016.exe`/`setup.dll` son de 64 bits (216), aunque el paquete
-  es de 32. La **v4.2** (compilada, sin publicar, en prueba con `15FIZ0226B`) manda Windows 10
-  de 32 bits a 2019 de 32 bits (`Office2019Plus_32.xml`), no reintenta un 1603 rápido y deja
-  Windows/bits/RAM/disco en Marca y los segundos del intento en Resultado. Windows 7/8 de 32
-  bits sigue sin salida (ROADMAP 44, `docs/QA-NOTES.md #63`).
+  es de 32. La **v4.2** (publicada el 24 nov, `EXITOSO` en `15FIZ0226B` en 14 min) manda
+  Windows 10/11 de 32 bits a 2019 de 32 bits (`Office2019Plus_32.xml`) sin preguntar la versión
+  y no reintenta un 1603 rápido. Windows 7/8 de 32 bits sigue sin salida (ROADMAP 44,
+  `docs/QA-NOTES.md #63`).
+- **Columnas espejo de CoEEE** (CCT, Escuela, Usuario, Sector, Zona, Marca, Serie, Office en
+  `Registro_Instalaciones`): no se les agrega nada. Desde la v4.2 Windows/bits/build/RAM/disco
+  van en `equipo_info` → columna **"Datos del equipo"** (se busca por nombre y se crea al final;
+  la M es "Observaciones", a mano). Resultado sí lleva los segundos del intento (no es espejo).
+- **Aviso de versión nueva (v4.2 + @10):** el instalador manda `version_instalador` en
+  `validar_cct`; si es menor a `REG_VERSION_MINIMA` (Script Property, menú OTDE Control →
+  "Versión mínima del instalador"; vacío = apagado), el servidor responde `ACTUALIZAR` y el EXE
+  muestra la ventana OTDE (`aviso_licencias.ps1 -Tipo ACTUALIZAR`) con liga a `otde.html#office`
+  y no instala. No baja ni ejecuta código. **v3, v4.0, v4.1 y la primera compilación de la v4.2
+  (la que se le mandó a Luis) no mandan su versión: el aviso no les llega.** Con la mínima en una
+  versión mayor a la publicada, la publicada deja de instalar: dejarla vacía salvo al sacar
+  una nueva.
 - **Backend:** Apps Script ligado al Sheet "Instalador Office OTDE - Registro y licencias"
   (`Oficina Virtual OTDE 2026-2027/Instalador de Office/` en Drive). No está en
   `apps-script/proyectos-clasp.json`; se publica con `clasp` a mano (`update-deployment` sobre la
@@ -827,7 +839,7 @@ instalador: si cambian sus ventanas, actualizar la guía.
   instalador. Desde @8 las licencias se cuentan por equipo (`docs/QA-NOTES.md #62`); desde @9 el
   instalador v4.1 pide una licencia más (+1 automático hasta 2 extra por escuela, Telegram a
   Jorge; arriba del tope queda pendiente en `Solicitudes_Licencias` y Jorge decide en la columna
-  Decisión).
+  Decisión). @10 (24 nov): aviso de versión nueva y "Datos del equipo".
 - **Hoja de control:** `ControlOTDE.gs` en el mismo proyecto (menú OTDE Control, pestañas que se
   regeneran al abrir). El `Dashboard` viejo está oculto: contaba intentos, no equipos.
 

@@ -953,15 +953,16 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
       - resumen por Telegram de los equipos con error o sin cerrar, para llamar a la escuela;
       - archivo con el formato del Excel de CoEEE para los equipos por cargar (falta ver el formato);
       - éxito por versión en `Control OTDE`, para saber si la v4 bajó el error `-1`.
-    - **v4.2 compilada el 24 nov 2026, sin publicar.** Windows de 32 bits recibe Office 2019 de
-      32 bits (`Office2019Plus_32.xml`) sin preguntar; un 1603 de 2019 en menos de 2 min ya no
-      se reintenta; Marca lleva Windows/bits/RAM/disco y Resultado los segundos del intento.
-      Caso que la originó: `15FIZ0226B` (HP Pro 3500, Windows 10 Pro 32 bits), 1603 en ~35 s
-      con 2019 de 64 bits y 216 con 2016. Primera prueba real: se le manda el EXE a ese equipo.
-      Si sale `EXITOSO` con versión 4.2, reemplazar `descargas/Instalador_Office_2019_OTDE.exe`.
-      La rama 2016 en 32 bits sigue rota: ver ítem 44.
-    - Descartado por ahora: aviso de versión nueva dentro del instalador (va de salida) y que el
-      EXE baje su código de internet (corre como administrador; los antivirus lo marcan).
+    - **v4.2 publicada el 24 nov 2026** (Windows de 32 bits → 2019 de 32 bits, aviso de versión
+      nueva, "Datos del equipo" aparte; detalle en `docs/SISTEMAS.md`). La rama 2016 en 32 bits
+      sigue rota: ver ítem 44.
+    - **Frenar v4.0/v4.1 (sin construir, a decidir por Jorge):** no mandan su versión, así que el
+      aviso no les llega. Opción: interruptor "Bloquear instaladores sin versión" que responda
+      `TOKEN_INVALIDO` (la v4.x ya muestra "Versión no autorizada, descargue la actualizada");
+      es la ventana gris, sin liga. Bloquearía también la copia de Luis.
+    - Descartado: que el EXE baje su código de internet (corre como administrador; los antivirus
+      lo marcan). El aviso de versión nueva sí se hizo porque solo es un mensaje del servidor.
+    - Sonido en las ventanas OTDE: P10 del ROADMAP del instalador, para la próxima compilación.
 31. ~~**"Que se note que sigue trabajando" — extender al resto de formularios.**~~ — **resuelto el
     19 oct 2026**: `estrategias-nacionales.html` (Registrar y Cancelar) ya usa `esperaConProgreso()`;
     `asistencia.html` se retiró. El 5 oct 2026
@@ -1182,7 +1183,7 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     y elegirlos según `WIN64`. Mientras, una v4.x podría revisar la arquitectura antes de
     descargar y cortar con un aviso claro en vez de desinstalar y fallar. Antes, contar en
     `Registro_Instalaciones` cuántos equipos hay con Windows 7/8 de 32 bits (desde la v4.2 la
-    columna Marca lo dice) para ver si vale la pena.
+    columna "Datos del equipo" lo dice) para ver si vale la pena.
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue

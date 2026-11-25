@@ -367,14 +367,16 @@ ya resueltos al final de `docs/SISTEMAS.md`. Lo genuinamente abierto:
 - **Pruebas en Windows**: VM "Windows-Pruebas" (UTM, Windows 11 ARM) en la Mac de Jorge; Claude
   entra con `ssh winvm` y trabaja en `C:\pruebas`. Jorge tiene que encenderla en UTM. Las ventanas
   emergentes (`InputBox`/`MessageBox`) no se ven por SSH, y el hardware no es el de una escuela.
-- **Instalador de Office**: v4.1 publicada el 24 nov 2026 (mismo nombre de archivo en
+- **Instalador de Office**: v4.2 publicada el 24 nov 2026 (mismo nombre de archivo en
   `descargas/`). Su backend es el Apps Script del Sheet del instalador, fuera de
   `proyectos-clasp.json`: detalle en `docs/SISTEMAS.md` (Licencias Office). Falta apagar la v3 el
   4 dic dejando de publicar el CSV de `Hoja 1`. ROADMAP 30. Ese mismo día, mover a
   `~/Proyectos/trabajo/_archivo/` el `.exe` de la v3 (`Instalador_Office_2019_OTDE_Final.exe`) y
   la carpeta `Instalador_Office_2019/` del proyecto del instalador (acordado con Jorge el 24 nov).
-  **v4.2 compilada sin publicar** (Windows de 32 bits → 2019 de 32 bits): se publica solo si la
-  prueba con `15FIZ0226B` sale `EXITOSO`. La rama 2016 no arranca en 32 bits (ROADMAP 44).
+  La rama 2016 no arranca en 32 bits (ROADMAP 44). **`REG_VERSION_MINIMA`** (menú OTDE Control
+  del Sheet) se deja **vacía**: con una versión mayor a la publicada, la publicada deja de instalar.
+  Las columnas CCT…Office de `Registro_Instalaciones` son espejo del archivo de CoEEE: no
+  agregarles datos (van en "Datos del equipo").
 - **Crea tu app educativa / Banco de Materiales 2.0**: falta que Jorge revise PDA y apps, decida
   la licencia y valide con la Dra. Galindo; después, carta descriptiva del taller, ficha técnica y
   catálogo del banco. `docs/ROADMAP.md` ítem 35.
