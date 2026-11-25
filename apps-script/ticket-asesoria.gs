@@ -51,7 +51,9 @@ const TKT_ENC_TICKETS = [
   'Utilidad (1-5)', 'Claridad (1-5)', 'Aplicabilidad (1-5)', 'Confianza antes (1-5)', 'Confianza después (1-5)',
   'Lo más útil', 'Qué faltó', 'Necesidades de seguimiento', 'Quiere visita en aula', 'Autoriza compartir su práctica',
   'Token', 'ID de envío', 'Correo de materiales', 'Correo día 7', 'Correo día 21', 'Correo día 30',
-  'Respondió seguimiento', 'Baja', 'Notas OTDE'
+  'Respondió seguimiento', 'Baja', 'Notas OTDE',
+  // nov 2026 (revisión del 25-nov): agregadas al final para no recorrer columnas
+  'Conectividad del Aula de Medios', 'BM Off-Line instalado', 'Quiere avisos de asesorías'
 ];
 
 const TKT_ENC_SEGUIMIENTO = [
@@ -82,6 +84,7 @@ const TKT_CANALES = [
   ['Kit digital completo', TKT_KIT],
   ['Oficina Virtual OTDE (trámites y solicitudes)', TKT_SITIO + 'oficina-virtual.html'],
   ['OTDE en el sitio SEPRN', TKT_SITIO + 'otde.html'],
+  ['Protocolos de actuación SEPRN', TKT_SITIO + 'protocolos.html'],
   ['Sitio web SEPRN', TKT_SITIO + 'index.html'],
   ['Canal de WhatsApp OTDE', 'https://whatsapp.com/channel/0029VbBDCG572WTz3WCjRS11'],
   ['Facebook SubNeza', 'https://www.facebook.com/SubNeza'],
@@ -96,7 +99,7 @@ function tktSetup() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   tktHoja_(ss, TKT_HOJA_TICKETS, TKT_ENC_TICKETS);
   tktHoja_(ss, TKT_HOJA_SEGUIMIENTO, TKT_ENC_SEGUIMIENTO);
-  tktCrearTablero_(ss);
+  tktAsegurarTablero_(ss);
   const hoja1 = ss.getSheetByName('Hoja 1') || ss.getSheetByName('Sheet1');
   if (hoja1 && ss.getSheets().length > 1 && hoja1.getLastRow() === 0) ss.deleteSheet(hoja1);
 
@@ -179,60 +182,73 @@ function tktAgregarFila_(hoja, objeto) {
   hoja.appendRow(fila);
 }
 
+const TKT_TABLERO_VERSION = '2';
+
+// Se rehace solo cuando cambia TKT_TABLERO_VERSION (se llama en cada registro).
+function tktAsegurarTablero_(ss) {
+  const props = PropertiesService.getScriptProperties();
+  if (ss.getSheetByName(TKT_HOJA_TABLERO) && props.getProperty('TABLERO_V') === TKT_TABLERO_VERSION) return;
+  const viejo = ss.getSheetByName(TKT_HOJA_TABLERO);
+  if (viejo) ss.deleteSheet(viejo);
+  tktCrearTablero_(ss);
+  props.setProperty('TABLERO_V', TKT_TABLERO_VERSION);
+}
+
 function tktCrearTablero_(ss) {
   if (ss.getSheetByName(TKT_HOJA_TABLERO)) return;
   const t = ss.insertSheet(TKT_HOJA_TABLERO);
-  const T = "'" + TKT_HOJA_TICKETS + "'!";
-  const S = "'" + TKT_HOJA_SEGUIMIENTO + "'!";
-  // Columnas por letra calculadas desde los encabezados canónicos
-  const col = function (enc, nombre) {
-    return tktLetra_(enc.indexOf(nombre) + 1);
+  // Columna por NOMBRE de encabezado: sigue funcionando si se agregan o mueven columnas
+  const rango = function (hoja, nombre) {
+    return "INDEX('" + hoja + "'!A2:ZZ,0,MATCH(\"" + nombre + "\",'" + hoja + "'!1:1,0))";
   };
-  const cT = function (n) { return T + col(TKT_ENC_TICKETS, n) + '2:' + col(TKT_ENC_TICKETS, n); };
-  const cS = function (n) { return S + col(TKT_ENC_SEGUIMIENTO, n) + '2:' + col(TKT_ENC_SEGUIMIENTO, n); };
+  const cT = function (n) { return rango(TKT_HOJA_TICKETS, n); };
+  const cS = function (n) { return rango(TKT_HOJA_SEGUIMIENTO, n); };
+  const cuenta = function (c, v) { return '=IFERROR(COUNTIF(' + c + ',"' + v + '"),0)'; };
 
   const filas = [
-    ['TABLERO — Ticket de salida y seguimiento (se actualiza solo)', ''],
+    ['TABLERO — Cierre de la asesoría y seguimiento (se actualiza solo)', ''],
     ['', ''],
     ['INDICADORES DEL TALLER', ''],
-    ['Tickets registrados', '=COUNTA(' + cT('Correo') + ')'],
+    ['Respuestas de cierre', '=IFERROR(COUNTA(' + cT('Correo') + '),0)'],
     ['Utilidad promedio (1-5)', '=IFERROR(AVERAGE(' + cT('Utilidad (1-5)') + '),"")'],
-    ['Aplicabilidad promedio (1-5)', '=IFERROR(AVERAGE(' + cT('Aplicabilidad (1-5)') + '),"")'],
+    ['Aplicabilidad con su grupo, promedio (1-5)', '=IFERROR(AVERAGE(' + cT('Aplicabilidad (1-5)') + '),"")'],
     ['Confianza antes → después', '=IFERROR(TEXT(AVERAGE(' + cT('Confianza antes (1-5)') + '),"0.0")&" → "&TEXT(AVERAGE(' + cT('Confianza después (1-5)') + '),"0.0"),"")'],
-    ['Reportes de seguimiento recibidos', '=COUNTA(' + cS('Correo') + ')'],
-    ['Aplicaron la actividad (sí o parcial)', '=COUNTIF(' + cS('¿Aplicó la actividad?') + ',"Sí")+COUNTIF(' + cS('¿Aplicó la actividad?') + ',"Parcialmente")'],
-    ['% de aplicación sobre tickets', '=IFERROR(B9/B4,"")'],
+    ['Reportes de seguimiento recibidos', '=IFERROR(COUNTA(' + cS('Correo') + '),0)'],
+    ['Aplicaron la actividad (sí o parcial)', '=IFERROR(COUNTIF(' + cS('¿Aplicó la actividad?') + ',"Sí")+COUNTIF(' + cS('¿Aplicó la actividad?') + ',"Parcialmente"),0)'],
+    ['% de aplicación', '=IFERROR(B9/B4,"")'],
     ['', ''],
-    ['ASESORÍAS POR DEMANDA (necesidades marcadas en el ticket)', ''],
-    ['Banco de Materiales Off-Line', '=COUNTIF(' + cT('Necesidades de seguimiento') + ',"*Off-Line*")'],
-    ['Diseño de actividades con BM', '=COUNTIF(' + cT('Necesidades de seguimiento') + ',"*Diseño de actividades*")'],
-    ['Evaluación formativa', '=COUNTIF(' + cT('Necesidades de seguimiento') + ',"*Evaluación formativa*")'],
-    ['Integración tecnológica (SAMR)', '=COUNTIF(' + cT('Necesidades de seguimiento') + ',"*SAMR*")'],
-    ['Acompañamiento con Chuka', '=COUNTIF(' + cT('Necesidades de seguimiento') + ',"*Chuka*")'],
-    ['Piden visita en aula', '=COUNTIF(' + cT('Quiere visita en aula') + ',"Sí")'],
+    ['TEMAS DE INTERÉS (para planear asesorías)', ''],
+    ['Banco de Materiales sin internet', cuenta(cT('Necesidades de seguimiento'), '*Off-Line*')],
+    ['Encontrar recursos del BM', cuenta(cT('Necesidades de seguimiento'), '*Encontrar recursos*')],
+    ['Chuka con su grupo', cuenta(cT('Necesidades de seguimiento'), '*Chuka*')],
+    ['Integración tecnológica (SAMR)', cuenta(cT('Necesidades de seguimiento'), '*SAMR*')],
+    ['Otros temas', cuenta(cT('Necesidades de seguimiento'), '*Otro:*')],
+    ['Quieren avisos de asesorías y cursos', cuenta(cT('Quiere avisos de asesorías'), 'Sí')],
     ['', ''],
-    ['MAPA DE INFRAESTRUCTURA (conectividad declarada)', ''],
-    ['Con internet estable', '=COUNTIF(' + cT('Conectividad de la escuela') + ',"Internet estable")'],
-    ['Internet intermitente', '=COUNTIF(' + cT('Conectividad de la escuela') + ',"Internet intermitente")'],
-    ['Sin internet (servidor local)', '=COUNTIF(' + cT('Conectividad de la escuela') + ',"Sin internet, con servidor local")'],
-    ['Sin internet ni servidor local', '=COUNTIF(' + cT('Conectividad de la escuela') + ',"Sin internet ni servidor local")'],
-    ['No sé', '=COUNTIF(' + cT('Conectividad de la escuela') + ',"No sé")'],
+    ['INTERNET (escuela / Aula de Medios)', ''],
+    ['Sí, estable', cuenta(cT('Conectividad de la escuela'), 'Sí, estable'), cuenta(cT('Conectividad del Aula de Medios'), 'Sí, estable')],
+    ['Sí, pero falla seguido', cuenta(cT('Conectividad de la escuela'), 'Sí, pero falla seguido'), cuenta(cT('Conectividad del Aula de Medios'), 'Sí, pero falla seguido')],
+    ['No hay', cuenta(cT('Conectividad de la escuela'), 'No hay'), cuenta(cT('Conectividad del Aula de Medios'), 'No hay')],
+    ['No sé', cuenta(cT('Conectividad de la escuela'), 'No sé'), cuenta(cT('Conectividad del Aula de Medios'), 'No sé')],
+    ['BM sin internet instalado en el Aula de Medios (Sí | No)', cuenta(cT('BM Off-Line instalado'), 'Sí'), cuenta(cT('BM Off-Line instalado'), 'No') ],
     ['', ''],
     ['SAMR ALCANZADO (seguimiento)', ''],
-    ['Sustitución', '=COUNTIF(' + cS('Nivel SAMR alcanzado') + ',"Sustitución")'],
-    ['Aumento', '=COUNTIF(' + cS('Nivel SAMR alcanzado') + ',"Aumento")'],
-    ['Modificación', '=COUNTIF(' + cS('Nivel SAMR alcanzado') + ',"Modificación")'],
-    ['Redefinición', '=COUNTIF(' + cS('Nivel SAMR alcanzado') + ',"Redefinición")'],
-    ['Prácticas autorizadas para la galería', '=COUNTIF(' + cS('Autoriza publicar en galería') + ',"Sí")']
-  ];
-  t.getRange(1, 1, filas.length, 2).setValues(filas);
+    ['Sustitución', cuenta(cS('Nivel SAMR alcanzado'), 'Sustitución')],
+    ['Aumento', cuenta(cS('Nivel SAMR alcanzado'), 'Aumento')],
+    ['Modificación', cuenta(cS('Nivel SAMR alcanzado'), 'Modificación')],
+    ['Redefinición', cuenta(cS('Nivel SAMR alcanzado'), 'Redefinición')],
+    ['Experiencias autorizadas para compartir', cuenta(cS('Autoriza publicar en galería'), 'Sí')]
+  ].map(function (f) { while (f.length < 3) f.push(''); return f; });
+  t.getRange(1, 1, filas.length, 3).setValues(filas);
+  t.getRange('B20:C20').setValues([['Escuela', 'Aula de Medios']]);
   t.getRange('B10').setNumberFormat('0%');
   t.getRange('A1').setFontWeight('bold').setFontSize(13).setFontColor('#56212f');
   [3, 12, 20, 27].forEach(function (r) {
-    t.getRange(r, 1, 1, 2).setFontWeight('bold').setBackground('#d6d1ca');
+    t.getRange(r, 1, 1, 3).setFontWeight('bold').setBackground('#d6d1ca');
   });
-  t.setColumnWidth(1, 380);
-  t.setColumnWidth(2, 140);
+  t.setColumnWidth(1, 420);
+  t.setColumnWidth(2, 120);
+  t.setColumnWidth(3, 140);
 }
 
 function tktLetra_(n) {
@@ -280,7 +296,6 @@ function tktValidarCorreo_(c) {
 function tktRegistrarTicket_(d) {
   const correo = tktTexto_(d.correo, 120).toLowerCase();
   const nombre = tktTexto_(d.nombre, 120);
-  if (!nombre) throw new Error('Falta tu nombre.');
   if (!tktValidarCorreo_(correo)) throw new Error('El correo no es válido.');
   if (!tktTexto_(d.recurso, 300)) throw new Error('Falta el recurso que usarás.');
 
@@ -292,6 +307,7 @@ function tktRegistrarTicket_(d) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const hoja = tktHoja_(ss, TKT_HOJA_TICKETS, TKT_ENC_TICKETS);
+    tktAsegurarTablero_(ss);
     const idEnvio = tktTexto_(d.idEnvio, 60);
     if (idEnvio && hoja.getLastRow() > 1) {
       const idx = tktIdx_(hoja);
@@ -326,7 +342,9 @@ function tktRegistrarTicket_(d) {
         'Lo más útil': tktTexto_(d.masUtil, 600),
         'Qué faltó': tktTexto_(d.falto, 600),
         'Necesidades de seguimiento': tktTexto_(d.necesidades, 400),
-        'Quiere visita en aula': d.visita ? 'Sí' : 'No',
+        'Conectividad del Aula de Medios': tktTexto_(d.conectividadAula, 60),
+        'BM Off-Line instalado': tktTexto_(d.offline, 20),
+        'Quiere avisos de asesorías': d.avisos ? 'Sí' : 'No',
         'Autoriza compartir su práctica': d.compartir ? 'Sí' : 'No',
         'Token': token,
         'ID de envío': idEnvio
@@ -476,6 +494,11 @@ function tktLista_(items) {
   }).join('') + '</ul>';
 }
 
+function tktHola_(nombre) {
+  const n = String(nombre || '').trim().split(' ')[0];
+  return '<p>Hola' + (n ? ', ' + tktEsc_(n) : '') + ':</p>';
+}
+
 function tktH_(t) {
   return '<h3 style="color:#56212f;font-size:15px;margin:18px 0 4px">' + t + '</h3>';
 }
@@ -486,20 +509,20 @@ function tktCompromiso_(obj) {
     '<strong>Recurso:</strong> ' + f('recurso') + '<br><strong>Grupo:</strong> ' + f('grupo') +
     '<br><strong>Campo formativo:</strong> ' + f('campo') + '<br><strong>Aprendizaje:</strong> ' + f('aprendizaje') +
     '<br><strong>Evidencia:</strong> ' + f('evidencia') +
-    (obj.fechaAplicacion ? '<br><strong>Fecha tentativa:</strong> ' + f('fechaAplicacion') : '') + '</div>';
+    (obj.fechaAplicacion ? '<br><strong>Cuándo:</strong> ' + f('fechaAplicacion') : '') + '</div>';
 }
 
 // d = datos tal como vienen del formulario (recurso, grupo, campo...)
 function tktCorreoMateriales_(d, nombre, token) {
-  const cuerpo = '<p>Hola, ' + tktEsc_(nombre.split(' ')[0]) + ':</p>' +
+  const cuerpo = tktHola_(nombre) +
     '<p>Gracias por participar en la asesoría <strong>Banco de Materiales Educativos y Chuka: Rompe el Silencio</strong>. ' +
-    'Este es el compromiso que registraste en tu ticket de salida:</p>' + tktCompromiso_(d) +
+    'Esta es la actividad que elegiste al cerrar la asesoría:</p>' + tktCompromiso_(d) +
     tktH_('Materiales de la asesoría') + tktLista_(TKT_MATERIALES) +
     tktH_('Plataformas') + tktLista_(TKT_PLATAFORMAS) +
     tktH_('OTDE y SEPRN') + tktLista_(TKT_CANALES) +
     '<p style="background:#F9F8F5;padding:10px 14px;border-radius:6px;font-size:13px"><strong>¿Qué sigue?</strong> ' +
     'En una semana te escribiremos para ver cómo va tu actividad, y en tres semanas te pediremos un reporte breve ' +
-    '(2 minutos). Con lo que nos cuentes te devolvemos retroalimentación y organizamos las siguientes asesorías.</p>' +
+    '(2 minutos). Con lo que nos cuentes planeamos las siguientes asesorías de la región.</p>' +
     '<p style="font-size:12px;color:#6b5a44">Si en tu grupo surge una situación de violencia, sigue la ruta y los protocolos ' +
     'institucionales de actuación de tu escuela. Chuka apoya la prevención y detección; no sustituye esos protocolos.</p>';
   return tktMarco_('Tus materiales de la asesoría', cuerpo, token);
@@ -514,8 +537,8 @@ function tktObjCompromiso_(o) {
 }
 
 function tktCorreoDia7_(o) {
-  const cuerpo = '<p>Hola, ' + tktEsc_(String(o['Nombre']).split(' ')[0]) + ':</p>' +
-    '<p>Hace una semana te comprometiste a esto:</p>' + tktCompromiso_(tktObjCompromiso_(o)) +
+  const cuerpo = tktHola_(o['Nombre']) +
+    '<p>Hace una semana, al cerrar la asesoría, elegiste esta actividad:</p>' + tktCompromiso_(tktObjCompromiso_(o)) +
     tktH_('Tres ideas para afinarla') +
     '<ol style="padding-left:18px"><li><strong>Busca el recurso por grado y campo.</strong> En <a href="http://red.dee.edu.mx/" style="color:#9F2241">red.dee.edu.mx</a> ' +
     '(o en <em>localhost/catalogo</em> si tu escuela no tiene internet) filtra por Primaria → tu grado → tipo de material.</li>' +
@@ -530,27 +553,26 @@ function tktCorreoDia7_(o) {
 
 function tktCorreoDia21_(o) {
   const url = TKT_SITIO + 'seguimiento-asesoria.html?t=' + encodeURIComponent(o['Token']);
-  const cuerpo = '<p>Hola, ' + tktEsc_(String(o['Nombre']).split(' ')[0]) + ':</p>' +
+  const cuerpo = tktHola_(o['Nombre']) +
     '<p>Queremos saber cómo te fue con <strong>' + tktEsc_(o['Recurso a usar']) + '</strong>. ' +
     'Son 5 preguntas (2 minutos), y no importa si todavía no la aplicas: también nos sirve saber qué lo impidió.</p>' +
     '<p style="text-align:center;margin:22px 0"><a href="' + url + '" style="background:#9F2241;color:#fff;padding:12px 22px;' +
     'border-radius:8px;text-decoration:none;font-weight:bold">Contar cómo me fue</a></p>' +
     '<p><strong>¿Para qué lo usamos?</strong></p><ul style="padding-left:18px">' +
-    '<li>Te devolvemos retroalimentación breve: una fortaleza y una mejora de tu práctica.</li>' +
+    '<li>Si nos cuentas cómo la aplicaste, el equipo de OTDE te envía un comentario breve.</li>' +
     '<li>Si nos autorizas, tu actividad se suma a la galería de prácticas de la región para que otros docentes la reutilicen.</li>' +
-    '<li>Organizamos las siguientes asesorías y visitas según lo que más se necesite.</li></ul>';
+    '<li>Planeamos las siguientes asesorías de la región según lo que más se necesite.</li></ul>';
   return tktMarco_('¿Cómo te fue? (2 minutos)', cuerpo, o['Token']);
 }
 
 function tktCorreoDia30_(o) {
-  const nombre = tktEsc_(String(o['Nombre']).split(' ')[0]);
   const respondio = !!o['Respondió seguimiento'];
   const cuerpo = respondio
-    ? '<p>Hola, ' + nombre + ':</p><p>Gracias por contarnos cómo te fue. Tu reporte ya está con el equipo de OTDE: ' +
-      'en los próximos días te enviaremos una retroalimentación breve, y si pediste acompañamiento te contactaremos para agendarlo.</p>' +
+    ? tktHola_(o['Nombre']) + '<p>Gracias por contarnos cómo te fue. Tu reporte ya está con el equipo de OTDE: ' +
+      'si nos contaste cómo la aplicaste, te enviaremos un comentario breve. Si quieres una asesoría en tu escuela, puedes solicitarla en la Oficina Virtual.</p>' +
       '<p>Si quieres seguir explorando, aquí tienes el <a href="' + TKT_KIT + '" style="color:#9F2241">kit digital</a> y la ' +
       '<a href="' + TKT_SITIO + 'oficina-virtual.html" style="color:#9F2241">Oficina Virtual OTDE</a> para solicitar asesorías, mantenimiento o soporte.</p>'
-    : '<p>Hola, ' + nombre + ':</p><p>Este es nuestro último correo de seguimiento de la asesoría. Si todavía quieres contarnos ' +
+      : tktHola_(o['Nombre']) + '<p>Este es nuestro último correo de seguimiento de la asesoría. Si todavía quieres contarnos ' +
       'cómo te fue, el enlace sigue abierto:</p><p><a href="' + TKT_SITIO + 'seguimiento-asesoria.html?t=' + encodeURIComponent(o['Token']) +
       '" style="color:#9F2241;font-weight:bold">Contar cómo me fue</a></p>' +
       '<p>Y si necesitas apoyo para aplicarla, la <a href="' + TKT_SITIO + 'oficina-virtual.html" style="color:#9F2241">Oficina Virtual OTDE</a> ' +
@@ -618,11 +640,11 @@ function tktEnviarRetroalimentacion() {
     const fort = String(r[idx['Fortaleza (OTDE)']] || '').trim();
     const mej = String(r[idx['Mejora (OTDE)']] || '').trim();
     if (!fort || !mej || r[idx['Retroalimentación enviada']]) return;
-    const cuerpo = '<p>Hola, ' + tktEsc_(String(r[idx['Nombre']]).split(' ')[0]) + ':</p>' +
+    const cuerpo = tktHola_(r[idx['Nombre']]) +
       '<p>Revisamos el reporte de tu actividad. Esta es nuestra retroalimentación, con la rúbrica de la asesoría:</p>' +
       '<div style="background:#F9F8F5;border-left:4px solid #2e7d32;padding:12px 16px;margin:10px 0"><strong>Una fortaleza:</strong><br>' + tktEsc_(fort) + '</div>' +
       '<div style="background:#F9F8F5;border-left:4px solid #bc955b;padding:12px 16px;margin:10px 0"><strong>Una mejora para la próxima:</strong><br>' + tktEsc_(mej) + '</div>' +
-      '<p>Gracias por llevar el Banco de Materiales y Chuka a tu aula. Si quieres acompañamiento, responde este correo.</p>';
+      '<p>Gracias por llevar el Banco de Materiales y Chuka a tu grupo.</p>';
     tktEnviarCorreo_({ to: r[idx['Correo']], subject: 'Retroalimentación de tu actividad — OTDE', htmlBody: tktMarco_('Retroalimentación de tu práctica', cuerpo, r[idx['Token']]) });
     hoja.getRange(i + 2, idx['Retroalimentación enviada'] + 1).setValue(new Date());
     enviados++;
@@ -642,7 +664,7 @@ function tktResumenSemanal() {
   const it = tktIdx_(ht);
   const tickets = ht.getRange(2, 1, ht.getLastRow() - 1, ht.getLastColumn()).getValues();
   const nuevos = tickets.filter(function (r) { return r[it['Fecha']] >= hace7; });
-  const visitas = tickets.filter(function (r) { return r[it['Quiere visita en aula']] === 'Sí'; });
+  const avisos = tickets.filter(function (r) { return r[it['Quiere avisos de asesorías']] === 'Sí'; }).length;
   const necesidades = {};
   tickets.forEach(function (r) {
     String(r[it['Necesidades de seguimiento']] || '').split(';').map(function (s) { return s.trim(); })
@@ -660,17 +682,15 @@ function tktResumenSemanal() {
     return '<ul>' + Object.keys(obj).sort(function (a, b) { return obj[b] - obj[a]; })
       .map(function (k) { return '<li>' + tktEsc_(k) + ': <strong>' + obj[k] + '</strong></li>'; }).join('') + '</ul>';
   };
-  const cuerpo = '<p><strong>Esta semana:</strong> ' + nuevos.length + ' tickets nuevos · ' + segNuevos.length + ' reportes de seguimiento.</p>' +
-    '<p><strong>Acumulado:</strong> ' + tickets.length + ' tickets · ' + seg.length + ' reportes · ' +
+  const cuerpo = '<p><strong>Esta semana:</strong> ' + nuevos.length + ' respuestas de cierre nuevas · ' + segNuevos.length + ' reportes de seguimiento.</p>' +
+    '<p><strong>Acumulado:</strong> ' + tickets.length + ' respuestas de cierre · ' + seg.length + ' reportes · ' +
     (pendRetro || 0) + ' reportes sin retroalimentación.</p>' +
-    tktH_('Necesidades (para asesorías por demanda)') + lista(necesidades) +
-    tktH_('Piden visita en aula (' + visitas.length + ')') + '<ul>' + visitas.map(function (r) {
-      return '<li>' + tktEsc_(r[it['Nombre']]) + ' — ' + tktEsc_(r[it['CCT']]) + ' ' + tktEsc_(r[it['Escuela']]) + ' — ' + tktEsc_(r[it['Correo']]) + '</li>';
-    }).join('') + '</ul>' +
+    tktH_('Temas de interés (para planear asesorías)') + lista(necesidades) +
+    '<p>Quieren avisos de asesorías y cursos: <strong>' + avisos + '</strong></p>' +
     '<p><a href="' + ss.getUrl() + '" style="color:#9F2241;font-weight:bold">Abrir la hoja y el tablero</a></p>';
   MailApp.sendEmail({
     to: PropertiesService.getScriptProperties().getProperty('RESUMEN_CORREO') || Session.getEffectiveUser().getEmail(),
-    subject: 'Resumen semanal — Ticket de salida y seguimiento de asesorías',
+    subject: 'Resumen semanal — Cierre y seguimiento de asesorías',
     htmlBody: tktMarco_('Resumen semanal de seguimiento', cuerpo, null),
     name: 'OTDE · Sistema de seguimiento'
   });

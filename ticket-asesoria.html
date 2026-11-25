@@ -13,8 +13,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <meta name="description" content="Ticket de salida de la asesoría Banco de Materiales y Chuka: compromiso de aplicación, valoración y materiales.">
-    <title>Ticket de salida - Asesoría BM y Chuka - OTDE</title>
+    <meta name="description" content="Cierre de la asesoría Banco de Materiales y Chuka: tu actividad, tu opinión y tus materiales.">
+    <title>Cierre de la asesoría BM y Chuka - OTDE</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap">
@@ -24,11 +24,15 @@
     <style>
         /* Ticket de salida / seguimiento de asesoría (nov 2026) — solo estas dos páginas */
         .tkt-wrap { max-width: 720px; margin: 0 auto; }
+        /* iPhone: con letra < 16px Safari hace zoom al tocar un campo y la página "brinca" */
+        .tkt-wrap .soporte-form-group input, .tkt-wrap .soporte-form-group select, .tkt-wrap .soporte-form-group textarea { font-size: 16px; min-width: 0; max-width: 100%; }
+        .tkt-wrap #tkt-nec-otro { margin-top: 6px; }
+        .tkt-fila > * { min-width: 0; }
         .tkt-fs { border: none; padding: 0; margin: 0 0 30px; }
         .tkt-fs legend { font-size: 18px; font-weight: 700; color: #56212f; padding-bottom: 8px; margin-bottom: 14px;
             border-bottom: 2px solid var(--arena); width: 100%; }
         .tkt-ayuda { font-size: 14px !important; color: var(--texto-muted) !important; margin: -6px 0 14px !important; }
-        .tkt-fila { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+        .tkt-fila { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 16px; }
         @media (max-width: 600px) { .tkt-fila { grid-template-columns: 1fr; } }
         .tkt-opciones { display: flex; gap: 8px; flex-wrap: wrap; }
         .tkt-op { position: relative; margin: 0 !important; }
@@ -73,8 +77,8 @@
 <section class="hero hero-sm">
     <div class="hero-inner">
         <span class="hero-badge">OTDE · Asesoría</span>
-        <h1>Ticket de salida</h1>
-        <p>Banco de Materiales Educativos y Chuka: Rompe el Silencio. Respóndelo en 4 minutos y recibe en tu correo todos los materiales.</p>
+        <h1>Cierre de la asesoría</h1>
+        <p>Banco de Materiales Educativos y Chuka: Rompe el Silencio. Cuéntanos qué te llevas en 3 minutos y recibe todos los materiales en tu correo.</p>
     </div>
     <div class="hero-glow"></div>
 </section>
@@ -82,16 +86,16 @@
 
     <div class="content-block" id="tkt-bloque-form">
         <div class="highlight-box">
-            <p><strong>Sobre tus datos:</strong> registramos tu nombre, correo, escuela y respuestas solo para enviarte los materiales, darte seguimiento y organizar las asesorías de OTDE. No se comparten con terceros. Puedes darte de baja desde cualquier correo.</p>
+            <p><strong>Esto no es una evaluación a tu trabajo.</strong> Solo necesitamos tu correo para enviarte los materiales; tu nombre es opcional. Tus respuestas nos ayudan a mejorar las asesorías y no se comparten con terceros. Puedes darte de baja desde cualquier correo.</p>
         </div>
 
         <form id="tkt-form" novalidate>
             <fieldset class="tkt-fs">
                 <legend>1 · Tus datos</legend>
                 <div class="soporte-form-group">
-                    <label for="tkt-nombre">Nombre completo<span class="req">*</span></label>
-                    <input type="text" id="tkt-nombre" maxlength="120" autocomplete="name" required>
-                    <div class="soporte-field-error" id="tkt-nombre-error">Escribe tu nombre.</div>
+                    <label for="tkt-nombre">Nombre (opcional)</label>
+                    <input type="text" id="tkt-nombre" maxlength="120" autocomplete="name">
+                    <div class="soporte-field-hint">Solo para saludarte por tu nombre en los correos.</div>
                 </div>
                 <div class="soporte-form-group">
                     <label for="tkt-correo">Correo electrónico<span class="req">*</span></label>
@@ -138,16 +142,37 @@
             <fieldset class="tkt-fs">
                 <legend>2 · Tu escuela</legend>
                 <div class="soporte-form-group">
-                    <label for="tkt-conectividad">¿Cómo es la conectividad en tu escuela?<span class="req">*</span></label>
+                    <label for="tkt-conectividad">¿Hay internet en tu escuela (dirección, salones)?<span class="req">*</span></label>
                     <select id="tkt-conectividad" required>
                         <option value="">— Selecciona —</option>
-                        <option>Internet estable</option>
-                        <option>Internet intermitente</option>
-                        <option>Sin internet, con servidor local</option>
-                        <option>Sin internet ni servidor local</option>
+                        <option>Sí, estable</option>
+                        <option>Sí, pero falla seguido</option>
+                        <option>No hay</option>
                         <option>No sé</option>
                     </select>
                     <div class="soporte-field-error" id="tkt-conectividad-error">Selecciona una opción.</div>
+                </div>
+                <div class="soporte-form-group">
+                    <label for="tkt-conectividad-am">¿Y en el Aula de Medios?<span class="req">*</span></label>
+                    <select id="tkt-conectividad-am" required>
+                        <option value="">— Selecciona —</option>
+                        <option>Sí, estable</option>
+                        <option>Sí, pero falla seguido</option>
+                        <option>No hay</option>
+                        <option>No sé</option>
+                        <option>Mi escuela no tiene Aula de Medios</option>
+                    </select>
+                    <div class="soporte-field-error" id="tkt-conectividad-am-error">Selecciona una opción.</div>
+                </div>
+                <div class="soporte-form-group">
+                    <label for="tkt-offline">¿El Banco de Materiales sin internet (localhost/catalogo) está instalado en el Aula de Medios?<span class="req">*</span></label>
+                    <select id="tkt-offline" required>
+                        <option value="">— Selecciona —</option>
+                        <option>Sí</option>
+                        <option>No</option>
+                        <option>No sé</option>
+                    </select>
+                    <div class="soporte-field-error" id="tkt-offline-error">Selecciona una opción.</div>
                 </div>
                 <div class="soporte-form-group">
                     <label for="tkt-modelo">¿Con qué equipamiento trabajarías con tu grupo?<span class="req">*</span></label>
@@ -156,14 +181,15 @@
                         <option>30:1 — un equipo para todo el grupo</option>
                         <option>3:1 — un equipo por equipo de tres</option>
                         <option>1:1 — un equipo por alumno</option>
+                        <option>Varios, según la actividad</option>
                     </select>
                     <div class="soporte-field-error" id="tkt-modelo-error">Selecciona una opción.</div>
                 </div>
             </fieldset>
 
             <fieldset class="tkt-fs">
-                <legend>3 · Tu compromiso de aplicación</legend>
-                <p class="tkt-ayuda">Lo que vas a llevar al aula. Te lo enviamos por correo para que lo tengas a la mano.</p>
+                <legend>3 · La actividad que llevarás a tu grupo</legend>
+                <p class="tkt-ayuda">Te la enviamos por correo para que la tengas a la mano.</p>
                 <div class="soporte-form-group">
                     <label for="tkt-recurso">¿Qué recurso vas a usar?<span class="req">*</span></label>
                     <input type="text" id="tkt-recurso" maxlength="300" placeholder="Ej. interactivo de fracciones del BM, Chuka, video de…" required>
@@ -198,8 +224,14 @@
                     <div class="soporte-field-error" id="tkt-evidencia-error">Escribe la evidencia.</div>
                 </div>
                 <div class="soporte-form-group">
-                    <label for="tkt-fecha">Fecha tentativa de aplicación</label>
-                    <input type="date" id="tkt-fecha">
+                    <label for="tkt-fecha">¿Cuándo piensas aplicarla?</label>
+                    <select id="tkt-fecha">
+                        <option value="">— Selecciona —</option>
+                        <option>Esta semana</option>
+                        <option>La próxima semana</option>
+                        <option>Este mes</option>
+                        <option>Más adelante</option>
+                    </select>
                 </div>
             </fieldset>
 
@@ -208,7 +240,7 @@
                 <p class="tkt-ayuda">1 = nada · 5 = mucho</p>
                 <div class="tkt-escala" data-campo="utilidad" data-etiqueta="¿Qué tan útil te resultó?"></div>
                 <div class="tkt-escala" data-campo="claridad" data-etiqueta="¿Qué tan clara fue?"></div>
-                <div class="tkt-escala" data-campo="aplicabilidad" data-etiqueta="¿Qué tan aplicable es en tu aula?"></div>
+                <div class="tkt-escala" data-campo="aplicabilidad" data-etiqueta="¿Qué tan aplicable es con tu grupo?"></div>
                 <div class="tkt-escala" data-campo="confianzaAntes" data-etiqueta="Tu confianza para usar BM y Chuka ANTES de la asesoría"></div>
                 <div class="tkt-escala" data-campo="confianzaDespues" data-etiqueta="Tu confianza AHORA"></div>
                 <div class="soporte-form-group">
@@ -222,17 +254,21 @@
             </fieldset>
 
             <fieldset class="tkt-fs">
-                <legend>5 · ¿En qué te podemos seguir apoyando?</legend>
+                <legend>5 · ¿Qué te gustaría seguir aprendiendo?</legend>
+                <p class="tkt-ayuda">Nos ayuda a planear las próximas asesorías de la región. No es una solicitud.</p>
                 <div class="soporte-form-group">
-                    <label>Marca lo que te serviría (opcional)</label>
-                    <label class="tkt-check"><input type="checkbox" class="tkt-nec" value="Banco de Materiales Off-Line"> Usar el Banco de Materiales sin internet (Off-Line)</label>
-                    <label class="tkt-check"><input type="checkbox" class="tkt-nec" value="Diseño de actividades con BM"> Diseñar actividades con recursos del Banco</label>
-                    <label class="tkt-check"><input type="checkbox" class="tkt-nec" value="Evaluación formativa"> Evaluación formativa con recursos digitales</label>
-                    <label class="tkt-check"><input type="checkbox" class="tkt-nec" value="Integración tecnológica (SAMR)"> Subir el nivel de integración tecnológica (SAMR)</label>
-                    <label class="tkt-check"><input type="checkbox" class="tkt-nec" value="Acompañamiento con Chuka"> Acompañamiento para trabajar Chuka con mi grupo</label>
+                    <label class="tkt-check"><input type="checkbox" class="tkt-nec" value="Banco de Materiales Off-Line"> Usar el Banco de Materiales sin internet</label>
+                    <label class="tkt-check"><input type="checkbox" class="tkt-nec" value="Encontrar recursos del BM"> Encontrar recursos del Banco para mi grado</label>
+                    <label class="tkt-check"><input type="checkbox" class="tkt-nec" value="Chuka con mi grupo"> Trabajar Chuka con mi grupo</label>
+                    <label class="tkt-check"><input type="checkbox" class="tkt-nec" value="Integración tecnológica (SAMR)"> Aprovechar mejor la tecnología en mis actividades (SAMR)</label>
+                    <input type="text" id="tkt-nec-otro" maxlength="200" placeholder="Otro tema (opcional)">
                 </div>
-                <label class="tkt-check"><input type="checkbox" id="tkt-visita"> Me gustaría una visita de acompañamiento en mi aula</label>
-                <label class="tkt-check"><input type="checkbox" id="tkt-compartir"> Autorizo que, si aplico la actividad, OTDE pueda compartirla (sin datos de alumnos) como práctica de la región</label>
+                <label class="tkt-check"><input type="checkbox" id="tkt-avisos"> Quiero recibir avisos de nuevas asesorías y cursos de OTDE</label>
+            </fieldset>
+
+            <fieldset class="tkt-fs">
+                <legend>6 · Compartir tu experiencia (opcional)</legend>
+                <label class="tkt-check"><input type="checkbox" id="tkt-compartir"> Si aplico la actividad, autorizo que OTDE la comparta con otros docentes de la región como ejemplo, sin datos ni imágenes de alumnos.</label>
             </fieldset>
 
             <button type="submit" class="form-button" id="tkt-enviar"><span>Enviar y recibir mis materiales</span></button>
@@ -241,7 +277,7 @@
     </div>
 
     <div class="content-block tkt-listo" id="tkt-listo" hidden>
-        <h3>¡Gracias! Tu ticket quedó registrado</h3>
+        <h3>¡Gracias! Ya quedó registrado</h3>
         <p>En unos minutos te llega un correo con tu compromiso y todo esto. Si no lo ves, revisa spam. Aquí lo tienes desde ya:</p>
         <div class="tkt-grupos" id="tkt-enlaces"></div>
     </div>
@@ -325,6 +361,7 @@
         ]],
         ['OTDE y SEPRN', [
             ['Kit digital completo', KIT],
+            ['Protocolos de actuación SEPRN', 'protocolos.html'],
             ['Oficina Virtual OTDE', 'oficina-virtual.html'],
             ['Canal de WhatsApp OTDE', 'https://whatsapp.com/channel/0029VbBDCG572WTz3WCjRS11'],
             ['Facebook SubNeza', 'https://www.facebook.com/SubNeza'],
@@ -379,12 +416,13 @@
     function tktValidar() {
         var primero = null;
         function chk(id, malo) { if (tktError(id, malo) && !primero) primero = document.getElementById(id) || document.getElementById(id + '-error'); }
-        chk('tkt-nombre', !tktValor('tkt-nombre'));
         chk('tkt-correo', !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(tktValor('tkt-correo')));
         chk('tkt-funcion', !tktValor('tkt-funcion'));
         chk('tkt-cct', !/^[0-9]{2}[A-Z]{3}[0-9]{4}[A-Z]$/.test(tktValor('tkt-cct').toUpperCase()));
         chk('tkt-grado', !tktValor('tkt-grado'));
         chk('tkt-conectividad', !tktValor('tkt-conectividad'));
+        chk('tkt-conectividad-am', !tktValor('tkt-conectividad-am'));
+        chk('tkt-offline', !tktValor('tkt-offline'));
         chk('tkt-modelo', !tktValor('tkt-modelo'));
         chk('tkt-recurso', !tktValor('tkt-recurso'));
         chk('tkt-grupo', !tktValor('tkt-grupo'));
@@ -437,7 +475,7 @@
         msg.className = 'soporte-submit-msg'; msg.textContent = '';
         if (!tktValidar()) return;
 
-        var espera = esperaConProgreso(btn, msg, { boton: 'Enviando…', texto: 'Registrando tu ticket…' });
+        var espera = esperaConProgreso(btn, msg, { boton: 'Enviando…', texto: 'Enviando…' });
         if (!idEnvioTkt) idEnvioTkt = 'tkt-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
         var datos = {
             tipo: 'ticket',
@@ -449,6 +487,8 @@
             escuela: tktMostrarEscuela(),
             grado: tktValor('tkt-grado'),
             conectividad: tktValor('tkt-conectividad'),
+            conectividadAula: tktValor('tkt-conectividad-am'),
+            offline: tktValor('tkt-offline'),
             modelo: tktValor('tkt-modelo'),
             recurso: tktValor('tkt-recurso'),
             grupo: tktValor('tkt-grupo'),
@@ -463,8 +503,9 @@
             confianzaDespues: tktRadio('confianzaDespues'),
             masUtil: tktValor('tkt-masutil'),
             falto: tktValor('tkt-falto'),
-            necesidades: Array.from(document.querySelectorAll('.tkt-nec:checked')).map(function (c) { return c.value; }).join('; '),
-            visita: document.getElementById('tkt-visita').checked,
+            necesidades: Array.from(document.querySelectorAll('.tkt-nec:checked')).map(function (c) { return c.value; })
+                .concat(tktValor('tkt-nec-otro') ? ['Otro: ' + tktValor('tkt-nec-otro')] : []).join('; '),
+            avisos: document.getElementById('tkt-avisos').checked,
             compartir: document.getElementById('tkt-compartir').checked,
             idEnvio: idEnvioTkt
         };
@@ -479,7 +520,7 @@
                 document.getElementById('tkt-bloque-form').hidden = true;
                 var listo = document.getElementById('tkt-listo');
                 listo.hidden = false;
-                listo.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                window.scrollTo(0, Math.max(0, listo.getBoundingClientRect().top + window.pageYOffset - 90));
             } else {
                 msg.classList.add('error');
                 msg.textContent = 'No se pudo registrar: ' + data.mensaje;
@@ -487,7 +528,7 @@
         } catch (err) {
             espera.fin();
             msg.classList.add('error');
-            msg.textContent = 'No recibimos la confirmación del servidor, pero es posible que tu ticket sí se haya registrado. ' +
+            msg.textContent = 'No recibimos la confirmación del servidor, pero es posible que tus respuestas sí se hayan registrado. ' +
                 'Puedes presionar Enviar de nuevo sin riesgo de duplicarlo.';
         } finally {
             espera.fin();

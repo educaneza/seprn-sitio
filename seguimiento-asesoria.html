@@ -24,11 +24,13 @@
     <style>
         /* Ticket de salida / seguimiento de asesoría (nov 2026) — solo estas dos páginas */
         .tkt-wrap { max-width: 720px; margin: 0 auto; }
+        .tkt-wrap .soporte-form-group input, .tkt-wrap .soporte-form-group select, .tkt-wrap .soporte-form-group textarea { font-size: 16px; min-width: 0; max-width: 100%; }
+        .tkt-fila > * { min-width: 0; }
         .tkt-fs { border: none; padding: 0; margin: 0 0 30px; }
         .tkt-fs legend { font-size: 18px; font-weight: 700; color: #56212f; padding-bottom: 8px; margin-bottom: 14px;
             border-bottom: 2px solid var(--arena); width: 100%; }
         .tkt-ayuda { font-size: 14px !important; color: var(--texto-muted) !important; margin: -6px 0 14px !important; }
-        .tkt-fila { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+        .tkt-fila { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 16px; }
         @media (max-width: 600px) { .tkt-fila { grid-template-columns: 1fr; } }
         .tkt-opciones { display: flex; gap: 8px; flex-wrap: wrap; }
         .tkt-op { position: relative; margin: 0 !important; }
@@ -74,7 +76,7 @@
     <div class="hero-inner">
         <span class="hero-badge">OTDE · Seguimiento</span>
         <h1>¿Cómo te fue?</h1>
-        <p>Cuéntanos en 2 minutos cómo te fue con la actividad que te comprometiste a aplicar. Te respondemos con retroalimentación.</p>
+        <p>Cuéntanos en 2 minutos cómo te fue con la actividad que elegiste al cerrar la asesoría.</p>
     </div>
     <div class="hero-glow"></div>
 </section>
@@ -129,13 +131,13 @@
                 <div class="soporte-field-hint">Sin rostros ni nombres de alumnos.</div>
             </div>
             <div class="soporte-form-group">
-                <label for="seg-acomp">¿Te gustaría acompañamiento?</label>
+                <label for="seg-acomp">¿Te gustaría seguir en contacto con OTDE?</label>
                 <select id="seg-acomp">
                     <option value="">No por ahora</option>
-                    <option>Sí, visita en mi aula</option>
-                    <option>Sí, asesoría en mi escuela (grupo docente)</option>
-                    <option>Sí, orientación por correo o WhatsApp</option>
+                    <option>Sí, avisos de asesorías y cursos</option>
+                    <option>Sí, me gustaría una asesoría en mi escuela</option>
                 </select>
+                <div class="soporte-field-hint">Las asesorías en escuela se solicitan formalmente desde la <a href="oficina-virtual.html">Oficina Virtual OTDE</a>.</div>
             </div>
             <div class="soporte-form-group">
                 <label for="seg-comentario">Comentario libre</label>
@@ -148,7 +150,7 @@
     </div>
     <div class="content-block" id="seg-listo" hidden>
         <h3>¡Gracias!</h3>
-        <p>Recibimos tu reporte. En los próximos días te enviaremos una retroalimentación breve (una fortaleza y una mejora). Tus materiales siguen en el <a href="kit-digital/">kit digital</a>, y para solicitar asesorías o soporte está la <a href="oficina-virtual.html">Oficina Virtual OTDE</a>.</p>
+        <p>Recibimos tu experiencia. Si nos contaste cómo la aplicaste, el equipo de OTDE te enviará un comentario breve. Tus materiales siguen en el <a href="kit-digital/">kit digital</a>, y para solicitar asesorías o soporte está la <a href="oficina-virtual.html">Oficina Virtual OTDE</a>.</p>
     </div>
 </section>
 
@@ -221,7 +223,7 @@
         try {
             var r = await fetchJsonConTimeout(TICKET_APPS_SCRIPT_URL + '?action=seguimiento&t=' + encodeURIComponent(segToken));
             if (r.status !== 'ok') throw new Error(r.mensaje);
-            saludo.textContent = 'Hola, ' + String(r.nombre || '').split(' ')[0] + '. Te comprometiste a usar: «' + r.recurso + '». ¿Cómo te fue?';
+            saludo.textContent = 'Hola' + (r.nombre ? ', ' + String(r.nombre).split(' ')[0] : '') + '. Al cerrar la asesoría elegiste: «' + r.recurso + '». ¿Cómo te fue?';
             document.getElementById('seg-form').hidden = false;
         } catch (e) {
             saludo.textContent = 'No pudimos abrir tu seguimiento. Usa el botón del correo que te enviamos, o escríbenos a otde.nezahualcoyotl@dee.edu.mx.';
