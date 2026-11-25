@@ -233,6 +233,10 @@
                         <option>Más adelante</option>
                     </select>
                 </div>
+                <div class="soporte-form-group">
+                    <label for="tkt-necesito">¿Qué necesitas para lograrlo? (opcional)</label>
+                    <input type="text" id="tkt-necesito" maxlength="300" placeholder="Ej. reservar el Aula de Medios, verificar que cargue el BM…">
+                </div>
             </fieldset>
 
             <fieldset class="tkt-fs">
@@ -346,11 +350,11 @@
     const TKT_ENLACES = [
         ['Materiales de la asesoría', [
             ['Presentación de la asesoría (PDF)', KIT + 'Presentacion_BM_Chuka_2026.pdf'],
-            ['Plantilla de microdiseño y rúbrica (Word)', KIT + 'Plantilla_Microdiseno_y_Rubrica.docx'],
+            ['Organizador gráfico 30:1 · 3:1 · 1:1 (Word)', KIT + 'Organizadores_Gr%C3%A1ficos_Editable.docx'],
+            ['Guía para llenar el organizador y rúbrica (PDF)', KIT + 'Guia_Organizador_Grafico_y_Rubrica.pdf'],
             ['Ejemplos resueltos (PDF)', KIT + 'Ejemplos_Resueltos.pdf'],
             ['Tabla SAMR (PDF)', KIT + 'Tabla_SAMR_Niveles_Integraci%C3%B3n.pdf'],
             ['Banco de Ideas NEM (PDF)', KIT + 'Banco_de_Ideas_NEM.pdf'],
-            ['Organizadores gráficos (Word)', KIT + 'Organizadores_Gr%C3%A1ficos_Editable.docx'],
             ['Instrucciones de acceso BM y Chuka (PDF)', KIT + 'Instrucciones_Acceso_BM_y_Chuka.pdf'],
             ['Chuka — guía para docentes (PDF)', KIT + 'chuka-guia-docentes.pdf'],
             ['Chuka — guía para familias (PDF)', KIT + 'chuka-guia-familias.pdf']
@@ -496,6 +500,7 @@
             aprendizaje: tktValor('tkt-aprendizaje'),
             evidencia: tktValor('tkt-evidencia'),
             fechaAplicacion: tktValor('tkt-fecha'),
+            necesito: tktValor('tkt-necesito'),
             utilidad: tktRadio('utilidad'),
             claridad: tktRadio('claridad'),
             aplicabilidad: tktRadio('aplicabilidad'),

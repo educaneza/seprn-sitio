@@ -53,7 +53,7 @@ const TKT_ENC_TICKETS = [
   'Token', 'ID de envío', 'Correo de materiales', 'Correo día 7', 'Correo día 21', 'Correo día 30',
   'Respondió seguimiento', 'Baja', 'Notas OTDE',
   // nov 2026 (revisión del 25-nov): agregadas al final para no recorrer columnas
-  'Conectividad del Aula de Medios', 'BM Off-Line instalado', 'Quiere avisos de asesorías'
+  'Conectividad del Aula de Medios', 'BM Off-Line instalado', 'Quiere avisos de asesorías', 'Lo que necesita para lograrlo'
 ];
 
 const TKT_ENC_SEGUIMIENTO = [
@@ -66,11 +66,11 @@ const TKT_ENC_SEGUIMIENTO = [
 // ── Materiales y canales: una sola lista para el correo y para la página ──
 const TKT_MATERIALES = [
   ['Presentación de la asesoría (PDF)', TKT_KIT + 'Presentacion_BM_Chuka_2026.pdf'],
-  ['Plantilla de microdiseño y rúbrica (Word editable)', TKT_KIT + 'Plantilla_Microdiseno_y_Rubrica.docx'],
+  ['Organizador gráfico 30:1 · 3:1 · 1:1 (Word editable)', TKT_KIT + 'Organizadores_Gr%C3%A1ficos_Editable.docx'],
+  ['Guía para llenar el organizador y rúbrica (PDF)', TKT_KIT + 'Guia_Organizador_Grafico_y_Rubrica.pdf'],
   ['Ejemplos resueltos (PDF)', TKT_KIT + 'Ejemplos_Resueltos.pdf'],
   ['Tabla SAMR — niveles de integración (PDF)', TKT_KIT + 'Tabla_SAMR_Niveles_Integraci%C3%B3n.pdf'],
   ['Banco de Ideas NEM por campo formativo (PDF)', TKT_KIT + 'Banco_de_Ideas_NEM.pdf'],
-  ['Organizadores gráficos 30:1 · 3:1 · 1:1 (Word editable)', TKT_KIT + 'Organizadores_Gr%C3%A1ficos_Editable.docx'],
   ['Instrucciones de acceso: BM On-Line, Off-Line y Chuka (PDF)', TKT_KIT + 'Instrucciones_Acceso_BM_y_Chuka.pdf'],
   ['Chuka — guía para docentes (PDF)', TKT_KIT + 'chuka-guia-docentes.pdf'],
   ['Chuka — guía para familias (PDF)', TKT_KIT + 'chuka-guia-familias.pdf']
@@ -345,6 +345,7 @@ function tktRegistrarTicket_(d) {
         'Conectividad del Aula de Medios': tktTexto_(d.conectividadAula, 60),
         'BM Off-Line instalado': tktTexto_(d.offline, 20),
         'Quiere avisos de asesorías': d.avisos ? 'Sí' : 'No',
+        'Lo que necesita para lograrlo': tktTexto_(d.necesito, 300),
         'Autoriza compartir su práctica': d.compartir ? 'Sí' : 'No',
         'Token': token,
         'ID de envío': idEnvio
@@ -509,7 +510,8 @@ function tktCompromiso_(obj) {
     '<strong>Recurso:</strong> ' + f('recurso') + '<br><strong>Grupo:</strong> ' + f('grupo') +
     '<br><strong>Campo formativo:</strong> ' + f('campo') + '<br><strong>Aprendizaje:</strong> ' + f('aprendizaje') +
     '<br><strong>Evidencia:</strong> ' + f('evidencia') +
-    (obj.fechaAplicacion ? '<br><strong>Cuándo:</strong> ' + f('fechaAplicacion') : '') + '</div>';
+    (obj.fechaAplicacion ? '<br><strong>Cuándo:</strong> ' + f('fechaAplicacion') : '') +
+    (obj.necesito ? '<br><strong>Lo que necesitas:</strong> ' + f('necesito') : '') + '</div>';
 }
 
 // d = datos tal como vienen del formulario (recurso, grupo, campo...)
@@ -532,7 +534,7 @@ function tktObjCompromiso_(o) {
   return {
     recurso: o['Recurso a usar'], grupo: o['Grupo'], campo: o['Campo formativo'],
     aprendizaje: o['Aprendizaje que busca'], evidencia: o['Evidencia que recogerá'],
-    fechaAplicacion: o['Fecha tentativa de aplicación']
+    fechaAplicacion: o['Fecha tentativa de aplicación'], necesito: o['Lo que necesita para lograrlo']
   };
 }
 
