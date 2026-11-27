@@ -2041,9 +2041,9 @@ function bitRevisarPeriodo() {
         const quien = g.personas.length ? ' (' + g.personas.join(', ') + ')' : '';
         const donde = (g.c.cct ? g.c.cct + ' · ' : '') + (g.c.lugar || g.c.asunto || '');
         if (!dia) {
-          s.filas.push([g.numeros.join(', '), g.c.fecha, donde, 'Sin ninguna actividad ese día' + quien + '.']);
+          s.filas.push([g.numeros.join(', '), g.c.fecha, donde, 'Ninguna actividad ese día' + quien + '. Si sí se hizo, falta su reporte de visita, cerrar la asesoría como Resuelto o capturarla en la bitácora; si solo justifica una inasistencia, márcalo en Numeros.']);
         } else if (g.c.cct && !dia.ccts[g.c.cct]) {
-          s.filas.push([g.numeros.join(', '), g.c.fecha, donde, 'Hay actividad ese día, pero no en este CCT' + quien + ': revisar que sea la misma.']);
+          s.filas.push([g.numeros.join(', '), g.c.fecha, donde, 'Ese día hay actividades en otras escuelas, pero ninguna en esta' + quien + '. Si sí se hizo, falta su reporte de visita, cerrar la asesoría como Resuelto o capturarla en la bitácora.']);
         }
       });
     }
