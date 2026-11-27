@@ -3481,3 +3481,39 @@ flujo:
 - **Fuera del reporte:** `FD_CATEGORIAS_FUERA_DEL_REPORTE` (Webinar, Seminario, Conferencia) no
   lleva concentrado y `?action=cursosMes` lo manda con `vaAlReporte: false`; la Bitácora lo
   importa con `Va al reporte = No`.
+
+## 38. Bitácora: revisar qué falta del periodo (nov 2026)
+
+Cada fuente de la Bitácora deja fuera del reporte, sin aviso, lo que no cumple su filtro. El menú
+"Revisar qué falta del periodo" (`bitRevisarPeriodo()` en `apps-script/bitacora.gs`) lo junta en la
+pestaña `Revisión AAAA-MM` antes de entregar. **Solo lee**: no escribe en las fuentes ni en
+`Actividades`; se corrige en cada sistema y se repite.
+
+- **Consultas en paralelo**: `bitConsultarEnParalelo_()` arma todos los GET (con `PANEL_TOKEN`) y
+  los manda con `UrlFetchApp.fetchAll`; si `fetchAll` truena completo, repite uno por uno. Cada
+  clave junta los items de sus meses; un error marca solo esa sección (en rojo) y las demás se
+  revisan. Los pedidos de varios meses del mismo endpoint se deduplican por folio.
+- **Fuentes y cruces** (todos endpoints que ya existían, salvo Oficios):
+
+  | Sección | Endpoints | Qué marca |
+  |---|---|---|
+  | Mantenimiento | `agendaVisitas` + `reportesMes` | Visita programada (hasta hoy) sin reporte de visita en el periodo |
+  | Asesorías | `agendaVisitas` + `asesoriasMes` | Programada sin "Resuelto"; resuelta sin Fecha de realización o Asistentes |
+  | Soporte | `pendientes` + `soporteMes` | Sin resolver; resuelta sin Fecha de atención |
+  | Correo | `pendientes` | Sigue en "Solicitud recibida" |
+  | Formación Docente | `cursosMes` | Sin `NP_planeacion` o con un N.P. que no existe (omite los `vaAlReporte: false`) |
+  | Oficios | `comisionesPeriodo` (oficios.gs) | Comisión (hasta hoy) sin actividad ese día, o con actividad solo en otras escuelas |
+  | Bitácora | hoja `Actividades` | Filas del periodo que van al reporte con campos vacíos |
+
+- **Comisiones**: se agrupan por fecha + CCT + lugar. `bitActividadesPorDia_()` marca los días con
+  actividad (filas de `Actividades` que van al reporte, recorriendo Fecha inicio → Fecha fin, más
+  los reportes de Mantenimiento y las asesorías resueltas aunque aún no se hayan traído). Si la
+  comisión tiene CCT, cuenta solo una actividad en ese CCT. Se omiten las marcadas
+  `Solo justificar inasistencia` en la columna `Para qué es la comisión` de `Numeros`
+  (pregunta obligatoria en `oficios.html` desde el 27 nov 2026; el `.gs` no la exige para no
+  romper una página vieja en caché).
+- **Fechas**: lo programado después de hoy no cuenta como faltante. Sin fecha de corte en
+  `Config`, se revisa el mes completo y se avisa (ventana y pestaña).
+- **Presupuesto de tiempo en "Generar reporte del mes"**: `BIT_PRESUPUESTO_IMPORTAR_MS` (4 min);
+  las fuentes que no se alcanzan se saltan con aviso y el reporte sale con lo que ya hay.
+- **Conexión con Oficios**: Script Property `OF_URL` (menú "Configurar conexión con Oficios").

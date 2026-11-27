@@ -627,6 +627,14 @@ diseño libre para niños, solo el sello de crédito al pie.
   educativas atendidas" (ROADMAP 42). Si Correo no manda `cct`, sale el texto viejo. Probado en
   vivo: 2026-11 → 15 solicitudes, 12 escuelas, 1 supervisión, 1 jefatura, la Subdirección, 13
   zonas de 9 sectores
+- **Revisar qué falta del periodo (27 nov 2026, v18-v21; ROADMAP 39):** menú nuevo, pestaña
+  `Revisión AAAA-MM`, solo lectura, 7 secciones (Mantenimiento, Asesorías, Soporte, Correo,
+  Formación Docente, Oficios, Bitácora) pedidas en paralelo. Conexión con Oficios en `OF_URL`.
+  "Generar reporte del mes" con presupuesto de 4 min para traer fuentes. v19: aviso si el periodo
+  no tiene fecha de corte (la primera corrida en vivo salió al 31 dic porque faltaba la fila
+  2026-12). v20: omite las comisiones "Solo justificar inasistencia". v21: texto más claro en
+  las comisiones. **Probado en vivo el 27 nov** con 2026-12: 8 por revisar (1 asesoría, 1
+  soporte, 2 correos, 4 comisiones). Detalle en `docs/ARCHITECTURE.md §38`
 - Detalle completo en `docs/ARCHITECTURE.md §26`
 
 ### `apps-script/oficios.gs` (nuevo, oct 2026)
@@ -723,6 +731,14 @@ diseño libre para niños, solo el sello de crédito al pie.
   página real con los dos `.gs` en una simulación de Sheets: **ese script no está en el repo**
   (vivió en la carpeta temporal de la sesión del 8 oct), hay que rehacerlo. Detalle en
   `docs/ARCHITECTURE.md §31`
+- **¿Para qué es esta comisión? (27 nov 2026, v15-v16; ROADMAP 39):** v15 agrega
+  `?action=comisionesPeriodo&desde=&hasta=&token=` (solo lectura, `PANEL_TOKEN`) para la revisión
+  de la Bitácora. v16: pregunta obligatoria en `oficios.html`, sin opción por defecto y solo en
+  Comisión (`OF_PARA_QUE`: `Actividad de OTDE (va al reporte)` / `Solo justificar inasistencia`),
+  columna `Para qué es la comisión` al final de `Numeros`, lista desplegable en "Preparar hojas",
+  se precarga al reasignar. El `.gs` no la exige (página vieja en caché) y al reasignar sin el dato
+  conserva el que había. Guía `docs/manual-oficios.html` actualizada; la captura 03 de Tomar
+  número queda más desfasada
 
 ### `apps-script/visitas-jefes.gs` (nuevo, ago 2026)
 - **No es un backend de OTDE** — lo usan jefes de toda la Subdirección (~20 jefes de área +

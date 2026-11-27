@@ -16,6 +16,25 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-11-27 · Bitácora: "Revisar qué falta del periodo" y "¿Para qué es esta comisión?" en Oficios (ROADMAP 39)
+
+| | |
+|---|---|
+| **Fecha** | 2026-11-27 |
+| **Sesión** | `/open` (gh estaba en `albertobonillat-collab`, se cambió a `educaneza`). Jorge pidió: 1) cerrar la sesión del 25 nov que no tuvo checkpoint, 2) ROADMAP 39 antes del 11 dic. |
+| **Cierre retroactivo del 25 nov** | Checkpoint propio abajo (`b574a7a`). Al documentarlo salieron dos copias de `Organizadores_Gráficos_Editable.docx` y `Tabla_SAMR_Niveles_Integración.pdf` con la tilde en NFD; se quitaron del índice con `git -c core.precomposeunicode=false rm --cached` (con `precomposeunicode=true`, un `git rm` normal habría borrado la copia NFC, que es la que ligan `index.html`, `ticket-asesoria.html` y `ticket-asesoria.gs`). `meta description` del kit al día (`e48b029`). |
+| **Revisar qué falta del periodo (Bitácora v18)** | Menú nuevo → pestaña `Revisión AAAA-MM`, solo lectura, 7 secciones. Cambio al plan de ROADMAP 39: de 6 proyectos a 2, porque `agendaVisitas`, `reportesMes`, `asesoriasMes`, `pendientes`, `soporteMes` y `cursosMes` ya daban lo necesario; solo Oficios necesitó `?action=comisionesPeriodo` (v15). Fuentes en paralelo con `UrlFetchApp.fetchAll`, cada una falla sola. "Generar reporte del mes" con presupuesto de 4 min (`BIT_PRESUPUESTO_IMPORTAR_MS`): lo que no alcanza se salta con aviso (el fallo del 4 nov). Probado antes en Node con backends simulados: cazó un folio repetido al pedir dos meses (dedupe por folio). |
+| **Primera corrida en vivo** | Salió del 25 nov al **31 dic**: faltaba la fila 2026-12 en `Config` y Oficios sin conectar. v19: la revisión avisa si el periodo no tiene corte. Jorge agregó `2026-12 | 11/12/2026` y conectó Oficios (`OF_URL`); segunda corrida: 25 nov–11 dic, 7 fuentes, 8 por revisar (1 asesoría, 1 soporte, 2 correos, 4 comisiones). 2026-11 ya estaba "Entregado". |
+| **¿Para qué es esta comisión? (Oficios v16, Bitácora v20)** | Pregunta obligatoria en `oficios.html`, sin opción por defecto, solo en Comisión: `Actividad de OTDE (va al reporte)` / `Solo justificar inasistencia`. Columna `Para qué es la comisión` al final de `Numeros`. El `.gs` no la exige (página vieja en caché) y al reasignar sin el dato conserva el que había. La revisión omite las "Solo justificar". Probado con Playwright sobre el archivo local con `fetch` simulado (sin red): la pregunta solo aparece en Comisión, bloquea sin respuesta y manda el valor. Guía `docs/manual-oficios.html` al día. |
+| **Texto de las comisiones (Bitácora v21)** | Jorge tuvo dudas con 4883 (Alejandro, 26 nov, 15DPR1898Z) y 4884/4885 (Jorge y Nancy, 25 nov, 15DPR0854V): sí fueron actividades, pero no hay actividad en ese CCT ese día (visita sin reporte, asesoría sin "Resuelto" o sin capturar). "Revisar que sea la misma" confundía; ahora dice qué falta. |
+| **Verificación** | `desplegar.sh` confirmó código idéntico al repo en cada publicación; `clasp list-deployments`: Oficios @16, Bitácora @21. `curl` a `comisionesPeriodo` sin token → `no_autorizado`. GitHub Pages `success` y `oficios.html` en vivo con la pregunta. Cambios de la sesión: `bitacora.gs` +373, `oficios.gs` +58/-4, `oficios.html` +19. |
+| **Pendiente** | **Jorge:** marcar "Solo justificar inasistencia" en las comisiones viejas que apliquen (4844, 4855, 4862) y correr "OTDE Oficios → Preparar hojas" para la lista; avisar al equipo de la pregunta nueva. **Antes del 11 dic:** Nancy cierra la asesoría de 15DPR0854V (Resuelto, Fecha de realización 25/11, Asistentes); Alejandro aclara la visita del 26 nov a 15DPR1898Z; repetir la revisión y generar 2026-12. Sigue: 4 dic (apagar v3 del instalador, `_archivo/`), Ticket de asesoría (`tktSetup()` y prueba en modo prueba). |
+| **Siguiente** | Rotación: Mantenimiento/Asesorías (prueba en vivo más vieja, 25 sep). |
+| **Documentación actualizada** | Este checkpoint, `docs/ROADMAP.md` (39 hecho, con lo que queda abierto), `docs/ARCHITECTURE.md §38` (nueva), `docs/SISTEMAS.md` (bitacora.gs y oficios.gs), `docs/TABLERO-SALUD.md` (Oficios y Bitácora), `CLAUDE.md` (pendiente del reporte y resumen de los dos backends), `docs/manual-oficios.html`. |
+| **Commits** | `b574a7a`, `e48b029`, `e52a6e2`, `f1373cc`, `50293d3`, `a443a6b` (publicados) y el de este cierre. |
+
+---
+
 ## CHECKPOINT — 2026-11-25 · Cierre y seguimiento de la asesoría BM + Chuka; kit digital rediseñado (cierre retroactivo)
 
 | | |

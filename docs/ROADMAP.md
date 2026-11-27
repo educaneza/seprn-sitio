@@ -1080,27 +1080,22 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     criterios mínimos con el community manager, entrevistar a las 4 personas del grupo de
     WhatsApp de la Dra. Galindo y decidir con la regla del documento (plataforma solo si 2 de 4
     repiten trabajo o pierden información; si no, basta la plantilla para las áreas).
-39. **Bitácora: revisar qué falta del mes antes de entregar el reporte** (abierto 23 oct 2026).
-    La revisión del reporte de octubre se hizo a mano leyendo los Sheets (`docs/BITACORA.md`,
-    23 oct). Cada fuente deja fuera, sin aviso, lo que no cumple su filtro: visitas sin reporte de
-    visita o con folio que no existe, asesorías no marcadas "Resuelto", soporte sin resolver,
-    correo sin "Fecha de entrega"; y Oficios no alimenta la bitácora, así que una comisión sin
-    actividad capturada no aparece. Propuesta: menú "Revisar qué falta del mes" en
-    `bitacora.gs` que pida a cada backend sus pendientes del mes (endpoints nuevos de solo
-    lectura con `PANEL_TOKEN`) y cruce las comisiones de Oficios (`Numeros`, tipo Comisión, con
-    fecha del evento) contra `Actividades`; resultado en una pestaña "Revisión AAAA-MM", sin
-    escribir en las fuentes. Toca 6 proyectos: desplegar primero los backends y al final la
-    bitácora.
-    **Agregado el 4 nov 2026:**
-    - **Comisiones que solo justifican inasistencia** (4844, 4855 y 4862 de octubre) no llevan
-      reporte ni actividad. Agregar en `oficios.html` una pregunta obligatoria, sin opción por
-      defecto, "¿Para qué es esta comisión?" (*Actividad de OTDE (va al reporte)* / *Solo
-      justificar inasistencia*), en una columna nueva de `Numeros`; la revisión ignora las de
-      "Solo justificar".
-    - **Un sistema lento tumba todo el menú.** `bitConsultarBackend_` consulta los 5 backends en
-      fila sin límite propio; el 4 nov un 500 de Mantenimiento y un "Excedió el tiempo máximo de
-      ejecución" dejaron el reporte a medias. Cada fuente debe fallar sola con aviso ("no respondió
-      a tiempo") y el reporte salir con las demás.
+39. ~~**Bitácora: revisar qué falta del mes antes de entregar el reporte**~~ — **construido y
+    desplegado el 27 nov 2026** (Bitácora v18-v21, Oficios v15-v16; detalle en `docs/BITACORA.md`
+    y `docs/ARCHITECTURE.md §38`). **Probado en vivo el 27 nov** con el periodo 2026-12: revisó
+    las 7 fuentes y marcó 8 cosas. Menú "Revisar qué falta del periodo" → pestaña
+    "Revisión AAAA-MM", solo lectura. Cambio al diseño: no hicieron falta endpoints nuevos en
+    Mantenimiento, Asesorías, Soporte ni Correo (se usan `agendaVisitas`, `reportesMes`,
+    `asesoriasMes`, `pendientes`, `soporteMes`, `cursosMes`); solo `?action=comisionesPeriodo` en
+    Oficios. Las fuentes se piden en paralelo (`UrlFetchApp.fetchAll`) y cada una falla sola;
+    "Generar reporte del mes" salta las fuentes que no alcanza en 4 min. La pregunta "¿Para qué
+    es esta comisión?" ya está en `oficios.html` (columna `Para qué es la comisión` de `Numeros`).
+    **Queda abierto, sin prisa:**
+    - Un reporte de visita con folio que no existe sigue invisible (`reportesMes` lo descarta);
+      si la visita estaba programada sale como "sin reporte". Detectarlo pide un cambio chico en
+      `mantenimiento.gs`.
+    - Correo solo marca las que siguen en "Solicitud recibida", no otros estados intermedios.
+    - Las comisiones anteriores al 27 nov no tienen respuesta: se marcan a mano en `Numeros`.
 40. ~~**Bitácora: periodos de reporte con fecha de corte en vez de meses de calendario**~~ —
     **construido y desplegado el 20 nov 2026** (Bitácora v15, Correo v31, commit `278a066`;
     detalle en `docs/BITACORA.md` y `docs/ARCHITECTURE.md §36`). **Probado en vivo el 23 nov
