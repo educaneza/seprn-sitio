@@ -16,6 +16,24 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-11-27 (cont. 2) · Aspecto visual: emojis fuera, encabezados de sección juntos y prototipo de hero con la silueta de la región
+
+| | |
+|---|---|
+| **Fecha** | 2026-11-27 |
+| **Sesión** | Jorge preguntó si conviene instalar alguna skill de diseño de las que circulan en redes para que el sitio no se vea genérico. Respuesta: no (son instrucciones genéricas y las de terceros pueden traer scripts; la única seria es `frontend-design` de Anthropic, leerla antes si algún día se quiere). Lo genérico viene de falta de material propio: `images/` tiene 13 archivos y una sola fotografía real. Auditoría con capturas Playwright (servidor local, sin backends) de `index.html`, `academica.html` y móvil. |
+| **Emojis fuera** | 👤/📧 en las tarjetas de oficinas de `academica.html`, `personal.html`, `planeacion.html` y `recursos.html` (iban contra la regla 7 de `CLAUDE.md`) → SVG de persona y sobre, nombre y correo en dos renglones (`.responsable-linea`, CSS inline de cada página). De paso: `<span>` sin cerrar en el renglón "Correo" del cuadro de Contacto de las 6 páginas de área (las 4 + `juridico.html` y `oeve.html`). |
+| **Eyebrow y título separados** | `.content-section h2 { margin-top: 60px }` (regla vieja) dejaba 74 px entre el eyebrow y su `.section-title`. Dos reglas en `styles.css` (`.content-section .section-header` con `padding-top: 40px` y `.section-title` con `margin-top: 0`): 14 px en los 13 encabezados medidos de Académica, CTE, OTDE, Oficina Virtual, Protocolos, Jurídico y Planeación; el bloque completo queda 20 px más corto que antes. |
+| **Prototipo: hero con la silueta de la región** | Jorge descartó conseguir fotos por ahora. `images/region-trazo.svg` (generado con los polígonos del mapa de `index.html`: 18 municipios en trazo caramelo, Neza relleno en guinda, 7 vecinos punteados) + clase `.hero-region` en `styles.css` (pseudo-elemento a la derecha; opacidad 0.9 / 0.5 bajo 1100 px / 0.45 en móvil). Solo en `academica.html`. Trampa: la animación `hero-enter` con `both` pisaba la opacidad (queda en 1 al terminar), por eso la silueta no lleva animación. |
+| **Decisiones para la siguiente etapa** | El mapa actual es esquemático (polígonos aproximados con huecos): animarlo o extenderlo a todos los heroes resalta el problema, así que primero trazar la silueta con límites reales de INEGI y después animarla con CSS/SVG (trazo que se dibuja, municipios que se encienden, `prefers-reduced-motion`). Monumentos de los 18 municipios (idea de Jorge: el Coyote de Neza, el Guerrero Chimalli): no se pueden dibujar bien sin referencias, no todos tienen uno icónico y el Chimalli es obra de un autor vivo (confirmar con Jurídico). Contrapropuesta aceptada por Jorge: **glifos toponímicos** de los códices (dominio público, un solo lenguaje visual; Neza con el coyote del tlatoani); monumentos en una segunda etapa. ROADMAP 46. |
+| **Verificación** | Solo local (Playwright contra `python3 -m http.server`): capturas antes/después en escritorio 1366 px y móvil 390 px, sin scroll horizontal en móvil. Sin publicar. Cambios: `styles.css` +30, `academica.html` +9/-7, `personal.html`/`planeacion.html`/`recursos.html` +6/-4 c/u, `juridico.html`/`oeve.html` +1/-1, `images/region-trazo.svg` nuevo. |
+| **Pendiente** | **Jorge:** ver el prototipo en `academica.html` y decidir si sigue. **Siguiente sesión visual:** ROADMAP 46 (silueta con límites reales → animación → glifos). Siguen los pendientes del checkpoint de abajo: menús del Ticket/Asesorías/Mantenimiento ("Configurar token para Asesorías", "Instalar cierre diario con tickets de salida", "Cerrar las que ya tienen reporte de visita"), borrar el ticket de prueba del 25 nov, las 3 comisiones de la revisión, MAN-0021/0022 y las 7 validadas sin fecha con Alejandro, 4 dic (apagar v3 del instalador, `_archivo/`). |
+| **Siguiente** | ROADMAP 45 (fechas en texto en Asesorías) o ROADMAP 46, según lo que pida Jorge. |
+| **Documentación actualizada** | Este checkpoint, `docs/ROADMAP.md` (46 nuevo), `CLAUDE.md` (`.hero-region` en el sistema de diseño). |
+| **Commits** | El de este cierre. |
+
+---
+
 ## CHECKPOINT — 2026-11-27 (cont.) · Rotación Mantenimiento/Asesorías: fechas en texto, cierres automáticos y herramientas para probar Apps Script
 
 | | |

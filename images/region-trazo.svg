@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="40 55 330 340" fill="none" stroke-linejoin="round">
+<!-- Silueta de la región (mismo trazo esquemático que el mapa de index.html). Fondo decorativo de .hero-region -->
+<g stroke="#d6d1ca" stroke-width="0.8" stroke-dasharray="2 3" opacity="0.35">
+<polygon points="60,80 155,80 155,130 145,155 100,160 60,140"/>
+<polygon points="60,140 100,160 90,200 60,210"/>
+<polygon points="155,80 195,70 225,80 245,100 195,118"/>
+<polygon points="305,115 340,110 350,150 325,160 295,140"/>
+<polygon points="325,260 350,255 355,310 330,330 308,305"/>
+<polygon points="165,350 208,338 215,370 185,380 158,368"/>
+<polygon points="310,350 330,345 338,375 315,385 298,370"/>
+</g>
+<g stroke="#c4a882" stroke-width="1.1" opacity="0.75">
+<polygon points="155,130 195,118 215,135 210,165 190,175 160,170 145,155" fill="#9F2241" fill-opacity="0.8" stroke="#e0c9a6"/>
+<polygon points="215,135 245,125 255,145 240,165 210,165"/>
+<polygon points="190,175 210,165 240,165 235,190 205,195"/>
+<polygon points="235,190 265,175 285,190 280,220 250,225 235,210"/>
+<polygon points="255,145 285,140 295,160 275,175 255,165"/>
+<polygon points="245,100 285,90 305,115 295,140 265,145 245,125"/>
+<polygon points="250,225 280,220 300,240 290,265 260,265 245,248"/>
+<polygon points="205,195 235,190 245,210 235,228 210,225"/>
+<polygon points="235,228 255,225 262,245 248,255 233,245"/>
+<polygon points="290,245 315,238 325,260 310,278 288,272"/>
+<polygon points="260,268 290,265 305,282 295,305 265,308 252,290"/>
+<polygon points="250,308 278,308 282,328 260,335 242,325"/>
+<polygon points="295,305 318,300 325,320 308,332 287,328"/>
+<polygon points="243,325 262,335 258,352 238,355 228,340"/>
+<polygon points="284,330 307,332 310,350 290,358 278,347"/>
+<polygon points="215,320 242,322 240,345 220,350 208,338"/>
+<polygon points="205,280 232,278 235,300 215,308 200,296"/>
+<polygon points="180,300 205,296 210,318 192,325 176,315"/>
+</g>
+</svg>

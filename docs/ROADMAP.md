@@ -1194,6 +1194,19 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     aunque el correo falle en silencio (QA #8/#40), y dos folios del mismo CCT y día se cerrarían
     los dos con todos los tickets.
 
+46. **Identidad visual sin fotos: silueta real de la región, animación y glifos** (abierto 27 nov
+    2026, Jorge). Prototipo en `academica.html`: clase `.hero-region` + `images/region-trazo.svg`,
+    sacado del mapa esquemático de `index.html` (polígonos aproximados con huecos). Orden acordado:
+    1) trazar la silueta con límites municipales reales (INEGI) y regenerar `region-trazo.svg` y el
+    mapa de la portada con ella; 2) animarla con CSS/SVG sin librerías (trazo que se dibuja,
+    municipios que se encienden, enlace mapa ↔ lista en la portada, respetar
+    `prefers-reduced-motion`); 3) extender `.hero-region` a los demás heroes; 4) glifos
+    toponímicos de los códices por municipio (dominio público; Neza con el coyote del tlatoani),
+    cuidando que no parezcan emblema municipal (decisión del 19 oct: sin marcas de gobierno).
+    Monumentos (Coyote, Guerrero Chimalli) quedan para después: necesitan fotos o ilustrador,
+    validar cuál representa a cada municipio con la Dra. Galindo y confirmar con Jurídico la
+    reproducción de obras de autores vivos.
+
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue
 abierto de esa entrega (decisión de notificación de cierre de ticket, limpieza de función

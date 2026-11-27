@@ -48,6 +48,9 @@ Clases reutilizables en `styles.css`:
   pleca de logos del Gobierno del Estado de México. No reabrir sin que Jorge lo pida.
 - `.logo-icon` — ícono NE/ZA (mismo símbolo que `favicon.svg`, en Montserrat) dentro de `.logo`
   (nav) y `.footer-brand` (footer, colorway invertido) — ver `docs/ARCHITECTURE.md §18`
+- `.hero-region` — silueta de los 18 municipios (`images/region-trazo.svg`) como fondo del hero.
+  **Prototipo** solo en `academica.html` (27 nov 2026); el trazo es esquemático, rehacerlo con
+  límites reales antes de extenderlo (ROADMAP 46). Sin animación: `hero-enter` pisa su opacidad
 - `.servicio-header` / `.content-block` / `.highlight-box` / `.benefit-list` / `.featured-box` /
   `.download-button` — contenido institucional compartido (extraído a `styles.css` el 27 ago
   2026 al migrar Asesorías/Mantenimiento); usado por `otde.html` (Licencias Office, Chuka,
