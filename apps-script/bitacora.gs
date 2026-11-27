@@ -86,6 +86,10 @@ const HOJA_BIT_PLANEACION = 'Planeacion';
 const HOJA_BIT_ACTIVIDADES = 'Actividades';
 const HOJA_BIT_CONFIG = 'Config';
 const BIT_PREFIJO_REPORTE = 'Reporte ';
+const BIT_PREFIJO_REVISION = 'Revisión ';
+// Tiempo máximo para traer fuentes antes de armar el reporte (Apps Script
+// corta a los 6 min; queda margen para escribir la pestaña).
+const BIT_PRESUPUESTO_IMPORTAR_MS = 4 * 60 * 1000;
 
 // Filas de actividad disponibles por pestaña en el Excel de Planeación (14 a 30).
 const BIT_MAX_FILAS_POR_META = 17;
@@ -269,6 +273,7 @@ function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('OTDE Bitácora')
     .addItem('Generar reporte del mes', 'bitGenerarReporteMensual')
+    .addItem('Revisar qué falta del periodo', 'bitRevisarPeriodo')
     .addItem('Traer visitas de Mantenimiento', 'bitTraerMantenimiento')
     .addItem('Traer asesorías resueltas', 'bitTraerAsesorias')
     .addItem('Traer cursos de Formación Docente', 'bitTraerFormacion')
@@ -282,6 +287,7 @@ function onOpen() {
     .addItem('Configurar conexión con Formación Docente', 'bitConfigurarConexionFormacion')
     .addItem('Configurar conexión con Soporte', 'bitConfigurarConexionSoporte')
     .addItem('Configurar conexión con Correo institucional', 'bitConfigurarConexionCorreo')
+    .addItem('Configurar conexión con Oficios', 'bitConfigurarConexionOficios')
     .addToUi();
 }
 
@@ -943,6 +949,10 @@ function bitGenerarReporteMensual() {
   // asesorías resueltas del mes. Si alguna falla (sin conexión configurada,
   // red), el reporte se genera igual y el aviso final lo dice.
   bitRenumerarMetas_();
+  // Presupuesto de tiempo (ROADMAP 39): Apps Script corta a los 6 min. Si
+  // una fuente se tarda, las que siguen se saltan con aviso y el reporte sale
+  // igual con lo que ya está en Actividades (se traen después con su menú).
+  const inicioMs = Date.now();
   const avisosFuentes = [
     ['Mantenimiento', bitImportarMantenimiento_],
     ['Asesorías', bitImportarAsesorias_],
@@ -950,6 +960,9 @@ function bitGenerarReporteMensual() {
     ['Soporte', bitImportarSoporte_],
     ['Correo institucional', bitImportarCorreo_]
   ].map(function (f) {
+    if (Date.now() - inicioMs > BIT_PRESUPUESTO_IMPORTAR_MS) {
+      return f[0] + ': no se alcanzó a consultar (las fuentes anteriores tardaron). Tráela con su menú "Traer…" y vuelve a generar el reporte.';
+    }
     try {
       return f[0] + ': ' + bitResumenImportacion_(f[1](ctx));
     } catch (err) {
@@ -1076,6 +1089,7 @@ function bitGenerarReporteMensual() {
     (omitidas ? '\n' + omitidas + ' registro' + (omitidas === 1 ? '' : 's') + ' marcado' + (omitidas === 1 ? '' : 's') +
       ' como "No va al reporte" se omiti' + (omitidas === 1 ? 'ó' : 'eron') + '.' : '') +
     (avisos.length ? '\n\nAviso:\n' + avisos.join('\n') : '') +
+    '\n\nAntes de entregarlo, corre "Revisar qué falta del periodo".' +
     '\n\nPara pasarlo al Excel: selecciona las filas de actividades de cada bloque (de la columna A a la L), ' +
     'cópialas y pégalas en la fila 14 de la pestaña META correspondiente.');
 }
@@ -1101,6 +1115,7 @@ function bitConfigurarConexionAsesorias() { bitConfigurarConexion_('Asesorías',
 function bitConfigurarConexionCorreo() { bitConfigurarConexion_('Correo institucional', 'CORREO_URL', 'CAMBIO_APPS_SCRIPT_URL de correo.html'); }
 function bitConfigurarConexionSoporte() { bitConfigurarConexion_('Soporte', 'SOP_URL', 'SOPORTE_APPS_SCRIPT_URL de soporte.html'); }
 function bitConfigurarConexionFormacion() { bitConfigurarConexion_('Formación Docente', 'FD_URL', 'APPS_SCRIPT_URL de formacion-docente.html'); }
+function bitConfigurarConexionOficios() { bitConfigurarConexion_('Oficios', 'OF_URL', 'OFICIOS_APPS_SCRIPT_URL de oficios.html'); }
 
 function bitConfigurarConexion_(nombre, propUrl, constanteSitio) {
   const ui = SpreadsheetApp.getUi();
@@ -1862,4 +1877,353 @@ function bitManBeneficiarios_(g, textoPlaneacion) {
 // ── Respuesta de texto plano (evita preflight CORS, mismo patrón del sitio) ──
 function bitRespuesta_(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.TEXT);
+}
+
+// ============================================================
+// REVISAR QUÉ FALTA DEL PERIODO (27 nov 2026, ROADMAP 39)
+// Cada fuente deja fuera del reporte, sin aviso, lo que no cumple su filtro:
+// una visita sin reporte de visita, una asesoría que no se marcó "Resuelto",
+// un soporte o un correo sin cerrar, un curso sin NP_planeacion, una comisión
+// sin actividad capturada. Este menú lo junta en la pestaña "Revisión AAAA-MM"
+// para corregirlo ANTES de entregar. Solo lee: no escribe en las fuentes ni en
+// Actividades. Usa los endpoints de solo lectura que ya existen (agendaVisitas,
+// reportesMes, asesoriasMes, pendientes, soporteMes, cursosMes) más
+// ?action=comisionesPeriodo de oficios.gs, todos con PANEL_TOKEN, y los pide
+// en paralelo (UrlFetchApp.fetchAll) para no acercarse al límite de 6 min.
+// Una fuente que falla sale en rojo en su sección; las demás se revisan igual.
+// ============================================================
+const BIT_TZ = 'America/Mexico_City';
+
+function bitRevisarPeriodo() {
+  const ui = SpreadsheetApp.getUi();
+  const ctx = bitPedirPeriodo_(ui, 'Revisar qué falta del periodo', '¿Qué periodo vas a revisar?');
+  if (!ctx) return;
+  const r = ctx.rango;
+  const hoy = Utilities.formatDate(new Date(), BIT_TZ, 'yyyy-MM-dd');
+  // Lo programado para después de hoy todavía no "falta".
+  const hastaVencido = r.fin < hoy ? r.fin : hoy;
+  const meses = bitMesesQueToca_(r.inicio, r.fin);
+  const rango = { desde: r.inicio, hasta: r.fin };
+
+  const pedidos = [];
+  const pedir = function (clave, propUrl, nombre, accion, params) {
+    pedidos.push({ clave: clave, propUrl: propUrl, nombre: nombre, accion: accion, params: params || {} });
+  };
+  pedir('manAgenda', 'MAN_URL', 'Mantenimiento', 'agendaVisitas', rango);
+  pedir('aseAgenda', 'ASE_URL', 'Asesorías', 'agendaVisitas', rango);
+  pedir('sopPend', 'SOP_URL', 'Soporte', 'pendientes');
+  pedir('correoPend', 'CORREO_URL', 'Correo institucional', 'pendientes');
+  pedir('ofCom', 'OF_URL', 'Oficios', 'comisionesPeriodo', rango);
+  meses.forEach(function (m) {
+    pedir('manRep', 'MAN_URL', 'Mantenimiento', 'reportesMes', { mes: m });
+    pedir('aseMes', 'ASE_URL', 'Asesorías', 'asesoriasMes', { mes: m });
+    pedir('sopMes', 'SOP_URL', 'Soporte', 'soporteMes', { mes: m });
+    pedir('fdMes', 'FD_URL', 'Formación Docente', 'cursosMes', { mes: m });
+  });
+  const res = bitConsultarEnParalelo_(pedidos);
+  const enRango = function (iso, hasta) { return !!iso && iso >= r.inicio && iso <= (hasta || r.fin); };
+  const secciones = [];
+
+  // ── Mantenimiento: visita programada (ya pasada) sin reporte de visita ──
+  (function () {
+    const s = { titulo: 'Mantenimiento: visitas programadas sin reporte de visita',
+      corregir: 'El técnico llena reporte-visita.html con el folio (Alejandro).', filas: [], error: bitErrorDe_(res, ['manAgenda', 'manRep']) };
+    if (!s.error) {
+      const conReporte = {};
+      res.manRep.items.forEach(function (x) { if (enRango(x.fechaAtencion)) conReporte[String(x.folio).toUpperCase()] = true; });
+      res.manAgenda.items.forEach(function (x) {
+        if (!enRango(x.fecha, hastaVencido) || conReporte[String(x.folio).toUpperCase()]) return;
+        s.filas.push([x.folio, x.fecha, bitEscuelaTexto_(x), 'Visita programada sin reporte de visita en el periodo' +
+          (x.responsable ? ' (técnico: ' + x.responsable + ')' : '') + '.']);
+      });
+    }
+    secciones.push(s);
+  })();
+
+  // ── Asesorías: programada (ya pasada) sin "Resuelto"; resuelta sin datos ──
+  (function () {
+    const s = { titulo: 'Asesorías: sin cerrar o cerradas sin datos',
+      corregir: 'Hoja de Asesorías: Estatus "Resuelto", Fecha de realización y Asistentes (Nancy).', filas: [], error: bitErrorDe_(res, ['aseAgenda', 'aseMes']) };
+    if (!s.error) {
+      const resueltas = {};
+      res.aseMes.items.forEach(function (a) {
+        const folio = String(a.folio).toUpperCase();
+        if (!enRango(a.fecha) || resueltas[folio]) return;
+        resueltas[folio] = true;
+        const faltan = [];
+        if (a.fechaFuente !== 'realizacion') faltan.push('Fecha de realización');
+        if (String(a.asistentes == null ? '' : a.asistentes).trim() === '') faltan.push('Asistentes');
+        if (faltan.length) s.filas.push([a.folio, a.fecha, bitEscuelaTexto_(a), 'Resuelta, pero sin ' + faltan.join(' ni ') + ' (el reporte usa lo programado o lo solicitado).']);
+      });
+      res.aseAgenda.items.forEach(function (x) {
+        if (!enRango(x.fecha, hastaVencido) || resueltas[String(x.folio).toUpperCase()]) return;
+        s.filas.push([x.folio, x.fecha, bitEscuelaTexto_(x), 'Programada y no marcada "Resuelto" en el periodo: no entra al reporte.']);
+      });
+    }
+    secciones.push(s);
+  })();
+
+  // ── Soporte: solicitudes del periodo sin resolver o sin fecha de atención ──
+  (function () {
+    const s = { titulo: 'Soporte remoto: sin resolver o sin fecha de atención',
+      corregir: 'Hoja de Soporte: Estatus "Resuelto" y Fecha de atención (Alejandro).', filas: [], error: bitErrorDe_(res, ['sopPend', 'sopMes']) };
+    if (!s.error) {
+      res.sopPend.items.forEach(function (x) {
+        const dia = bitDiaDeIso_(x.fecha);
+        if (!enRango(dia)) return;
+        s.filas.push([x.folio, dia, bitEscuelaTexto_(x), 'Sin resolver (' + (x.estatus || 'sin estatus') + '): no cuenta en el resumen.']);
+      });
+      const vistos = {};
+      res.sopMes.items.forEach(function (x) {
+        if (!enRango(x.fecha) || x.fechaFuente === 'atencion' || vistos[x.folio]) return;
+        vistos[x.folio] = true;
+        s.filas.push([x.folio, x.fecha, bitEscuelaTexto_(x), 'Resuelta sin "Fecha de atención": se contó con la fecha de la solicitud.']);
+      });
+    }
+    secciones.push(s);
+  })();
+
+  // ── Correo: solicitudes del periodo que siguen en "Solicitud recibida" ──
+  (function () {
+    const s = { titulo: 'Correo institucional: solicitudes sin atender',
+      corregir: 'Hojas de Correo: Fecha de entrega y NP SIGEE (Marcos).', filas: [], error: bitErrorDe_(res, ['correoPend']) };
+    if (!s.error) {
+      res.correoPend.items.forEach(function (x) {
+        const dia = bitDiaDeIso_(x.fecha);
+        if (!enRango(dia)) return;
+        s.filas.push([x.folio, dia, bitEscuelaTexto_(x), 'Sigue en "Solicitud recibida": no entra al resumen ni al concentrado.']);
+      });
+    }
+    secciones.push(s);
+  })();
+
+  // ── Formación Docente: cursos del periodo sin N.P. o con N.P. inexistente ──
+  (function () {
+    const s = { titulo: 'Formación Docente: cursos sin NP_planeacion',
+      corregir: 'Hoja Cursos de Formación Docente: columna NP_planeacion, ANTES de traer el periodo (QA-NOTES #59).', filas: [], error: bitErrorDe_(res, ['fdMes']) };
+    if (!s.error) {
+      const nps = {};
+      bitLeerPlaneacion_().forEach(function (a) { nps[a.np] = true; });
+      const visto = {};
+      res.fdMes.items.forEach(function (c) {
+        if (visto[c.idCurso]) return;
+        visto[c.idCurso] = true;
+        const fin = c.fin && c.fin >= c.inicio ? c.fin : c.inicio;
+        if (!(c.inicio <= r.fin && fin >= r.inicio) || c.vaAlReporte === false) return;
+        const nombre = (c.categoria ? c.categoria + ': ' : '') + c.nombre;
+        if (!c.np) s.filas.push([c.idCurso, c.inicio, nombre, 'Sin NP_planeacion: saldrá como no planeado (META ' + BIT_META_NO_PLANEADA_FD + ').']);
+        else if (!nps[c.np]) s.filas.push([c.idCurso, c.inicio, nombre, 'N.P. ' + c.np + ' no existe en Planeacion: saldrá como no planeado.']);
+        if (c.sinFechaFin) s.filas.push([c.idCurso, c.inicio, nombre, 'Sin Fecha_fin: se toma como de un día.']);
+      });
+    }
+    secciones.push(s);
+  })();
+
+  // ── Oficios: comisión (ya pasada) sin actividad ese día ──
+  (function () {
+    const s = { titulo: 'Oficios: comisiones sin actividad en la bitácora',
+      corregir: 'Capturar la actividad en bitacora.html. Si la comisión solo justifica una inasistencia, ignorarla.', filas: [], error: bitErrorDe_(res, ['ofCom']) };
+    if (!s.error) {
+      const porDia = bitActividadesPorDia_(res);
+      const grupos = {};
+      const orden = [];
+      res.ofCom.items.forEach(function (c) {
+        if (!enRango(c.fecha, hastaVencido)) return;
+        const k = c.fecha + '|' + c.cct + '|' + c.lugar;
+        if (!grupos[k]) { grupos[k] = { c: c, numeros: [], personas: [] }; orden.push(k); }
+        if (c.numero) grupos[k].numeros.push(c.numero);
+        if (c.persona && grupos[k].personas.indexOf(c.persona) === -1) grupos[k].personas.push(c.persona);
+      });
+      orden.forEach(function (k) {
+        const g = grupos[k];
+        const dia = porDia[g.c.fecha];
+        const quien = g.personas.length ? ' (' + g.personas.join(', ') + ')' : '';
+        const donde = (g.c.cct ? g.c.cct + ' · ' : '') + (g.c.lugar || g.c.asunto || '');
+        if (!dia) {
+          s.filas.push([g.numeros.join(', '), g.c.fecha, donde, 'Sin ninguna actividad ese día' + quien + '.']);
+        } else if (g.c.cct && !dia.ccts[g.c.cct]) {
+          s.filas.push([g.numeros.join(', '), g.c.fecha, donde, 'Hay actividad ese día, pero no en este CCT' + quien + ': revisar que sea la misma.']);
+        }
+      });
+    }
+    secciones.push(s);
+  })();
+
+  // ── Bitácora: actividades del periodo con campos vacíos ──
+  (function () {
+    const s = { titulo: 'Bitácora: actividades del periodo con datos vacíos',
+      corregir: 'Hoja Actividades de esta bitácora (la hoja manda: el reporte copia lo que diga).', filas: [], error: '' };
+    const hoja = bitObtenerHojaActividades_();
+    const idx = bitIndices_(hoja);
+    if (hoja.getLastRow() > 1) {
+      const colVa = idx[BIT_COL_VA_AL_REPORTE];
+      hoja.getRange(2, 1, hoja.getLastRow() - 1, hoja.getLastColumn()).getValues().forEach(function (f) {
+        if (bitMesDeFila_(f[idx['Mes']]) !== ctx.mes) return;
+        if (colVa !== undefined && String(f[colVa]).trim().toLowerCase() === 'no') return;
+        const vacios = ['Tipo y nombre', 'Fecha (texto)', 'Lugar', 'Descripción', 'Propósito', 'Beneficiarios']
+          .filter(function (h) { return idx[h] !== undefined && !String(f[idx[h]] == null ? '' : f[idx[h]]).trim(); });
+        if (!vacios.length) return;
+        const ini = f[idx['Fecha inicio']];
+        s.filas.push([f[idx['ID']] || f[idx['ID de envío']] || '', ini instanceof Date ? bitIsoDia_(ini) : String(ini || ''),
+          String(f[idx['Tipo y nombre']] || '').slice(0, 80), 'Vacío: ' + vacios.join(', ') + '.']);
+      });
+    }
+    secciones.push(s);
+  })();
+
+  const nombre = bitEscribirRevision_(ctx, secciones, hoy);
+  const resumen = secciones.map(function (s) {
+    return (s.error ? '✗ ' : (s.filas.length ? '• ' : '✓ ')) + s.titulo.split(':')[0] + ': ' +
+      (s.error ? 'no se pudo revisar (' + s.error + ')' : s.filas.length + ' por revisar');
+  });
+  const total = secciones.reduce(function (n, s) { return n + s.filas.length; }, 0);
+  const fallidas = secciones.filter(function (s) { return s.error; }).length;
+  ui.alert('Revisión de ' + bitNombrePeriodo_(ctx.mes) + ' (' + r.inicio + ' a ' + r.fin + ')',
+    (total ? total + ' cosa' + (total === 1 ? '' : 's') + ' por revisar' : 'No se encontró nada pendiente') +
+    (fallidas ? ', y ' + fallidas + ' fuente' + (fallidas === 1 ? '' : 's') + ' sin revisar' : '') +
+    '. Detalle en la pestaña "' + nombre + '".\n\n' + resumen.join('\n') +
+    '\n\nCorrige en cada sistema, vuelve a traer la fuente (o a generar el reporte) y repite la revisión.',
+    ui.ButtonSet.OK);
+}
+
+// Pide varios GET a la vez. pedidos: [{clave, propUrl, nombre, accion, params}].
+// Devuelve { clave: { items: [...], error: '' } }; los pedidos con la misma
+// clave (un mes cada uno) juntan sus items, y basta un error para marcarla.
+function bitConsultarEnParalelo_(pedidos) {
+  const props = PropertiesService.getScriptProperties();
+  const token = props.getProperty('PANEL_TOKEN');
+  const res = {};
+  const listos = [];
+  pedidos.forEach(function (p) {
+    if (!res[p.clave]) res[p.clave] = { items: [], error: '' };
+    const url = props.getProperty(p.propUrl);
+    if (!url || !token) {
+      res[p.clave].error = 'falta configurar la conexión con ' + p.nombre;
+      return;
+    }
+    let q = '?action=' + p.accion + '&token=' + encodeURIComponent(token);
+    Object.keys(p.params).forEach(function (k) { q += '&' + k + '=' + encodeURIComponent(p.params[k]); });
+    listos.push({ p: p, req: { url: url + q, muteHttpExceptions: true, followRedirects: true } });
+  });
+  let respuestas;
+  try {
+    respuestas = UrlFetchApp.fetchAll(listos.map(function (x) { return x.req; }));
+  } catch (err) {
+    // fetchAll falla completo si una sola petición no llega: se repite una por una.
+    respuestas = listos.map(function (x) {
+      try { return UrlFetchApp.fetch(x.req.url, x.req); } catch (e) { return { error: e.message }; }
+    });
+  }
+  listos.forEach(function (x, i) {
+    const destino = res[x.p.clave];
+    const r = respuestas[i];
+    if (destino.error) return;
+    if (r.error) { destino.error = x.p.nombre + ' no respondió (' + r.error + ')'; return; }
+    let datos;
+    try {
+      datos = JSON.parse(r.getContentText());
+    } catch (e) {
+      destino.error = x.p.nombre + ' no respondió como se esperaba (HTTP ' + r.getResponseCode() +
+        '). ¿Ya se desplegó la versión con ?action=' + x.p.accion + '?';
+      return;
+    }
+    if (datos.status === 'no_autorizado') { destino.error = 'el PANEL_TOKEN no coincide con el de ' + x.p.nombre; return; }
+    if (datos.status !== 'ok') { destino.error = datos.mensaje || 'respuesta con error de ' + x.p.nombre; return; }
+    destino.items = destino.items.concat(datos.items || []);
+  });
+  return res;
+}
+
+function bitErrorDe_(res, claves) {
+  for (let i = 0; i < claves.length; i++) if (res[claves[i]] && res[claves[i]].error) return res[claves[i]].error;
+  return '';
+}
+
+// ISO con hora (toISOString, en UTC) → día local AAAA-MM-DD.
+function bitDiaDeIso_(v) {
+  const s = String(v || '');
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  const f = new Date(s);
+  return isNaN(f.getTime()) ? '' : Utilities.formatDate(f, BIT_TZ, 'yyyy-MM-dd');
+}
+
+function bitEscuelaTexto_(x) {
+  const partes = [];
+  if (x.cct) partes.push(String(x.cct).toUpperCase());
+  if (x.escuela) partes.push(x.escuela);
+  if (x.sector || x.zona) partes.push('S' + (x.sector || '?') + ' Z' + (x.zona || '?'));
+  return partes.join(' · ');
+}
+
+// Días con actividad: lo que ya está en Actividades (cualquier periodo, solo
+// lo que va al reporte) más las visitas y asesorías que la fuente ya tiene
+// aunque todavía no se hayan traído. { 'AAAA-MM-DD': { ccts: {CCT: true} } }
+function bitActividadesPorDia_(res) {
+  const porDia = {};
+  const marcar = function (iso, cct) {
+    if (!iso) return;
+    if (!porDia[iso]) porDia[iso] = { ccts: {} };
+    if (cct) porDia[iso].ccts[String(cct).trim().toUpperCase()] = true;
+  };
+  const hoja = bitObtenerHojaActividades_();
+  const idx = bitIndices_(hoja);
+  if (hoja.getLastRow() > 1) {
+    const colVa = idx[BIT_COL_VA_AL_REPORTE];
+    hoja.getRange(2, 1, hoja.getLastRow() - 1, hoja.getLastColumn()).getValues().forEach(function (f) {
+      if (colVa !== undefined && String(f[colVa]).trim().toLowerCase() === 'no') return;
+      const ini = f[idx['Fecha inicio']];
+      if (!(ini instanceof Date)) return;
+      const finV = f[idx['Fecha fin']];
+      const finD = finV instanceof Date && finV > ini ? finV : ini;
+      // A mediodía los dos, para que una hora distinta no se coma el último día.
+      const fin = new Date(finD.getFullYear(), finD.getMonth(), finD.getDate(), 12);
+      const cct = idx['CCT'] === undefined ? '' : f[idx['CCT']];
+      for (let d = new Date(ini.getFullYear(), ini.getMonth(), ini.getDate(), 12), n = 0; d <= fin && n < 62; d.setDate(d.getDate() + 1), n++) {
+        marcar(bitIsoDia_(d), cct);
+      }
+    });
+  }
+  if (res.manRep && !res.manRep.error) res.manRep.items.forEach(function (x) { marcar(x.fechaAtencion, x.cct); });
+  if (res.aseMes && !res.aseMes.error) res.aseMes.items.forEach(function (x) { marcar(x.fecha, x.cct); });
+  return porDia;
+}
+
+function bitEscribirRevision_(ctx, secciones, hoy) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const nombre = BIT_PREFIJO_REVISION + ctx.mes;
+  const previa = ss.getSheetByName(nombre);
+  if (previa) ss.deleteSheet(previa);
+  const hoja = ss.insertSheet(nombre);
+  [150, 90, 300, 420].forEach(function (w, i) { hoja.setColumnWidth(i + 1, w); });
+  let fila = 1;
+  hoja.getRange(fila, 1).setValue('Revisión de ' + bitNombrePeriodo_(ctx.mes) + ' · qué falta antes de entregar')
+    .setFontWeight('bold').setFontSize(13).setFontColor('#56212f');
+  fila++;
+  hoja.getRange(fila, 1).setValue('Periodo ' + ctx.rango.inicio + ' a ' + ctx.rango.fin + ' · revisado el ' + hoy +
+    '. Solo lectura: nada se corrigió solo. Lo programado después de hoy no se cuenta como faltante.').setFontColor('#6b7280');
+  fila += 2;
+  secciones.forEach(function (s) {
+    const cuenta = s.error ? 'no se pudo revisar' : (s.filas.length ? s.filas.length + ' por revisar' : 'nada pendiente');
+    hoja.getRange(fila, 1, 1, 4).merge().setValue(s.titulo + ' — ' + cuenta)
+      .setFontWeight('bold').setBackground(s.error ? '#8a2020' : (s.filas.length ? '#56212f' : '#977e5b')).setFontColor('#F9F8F5');
+    fila++;
+    hoja.getRange(fila, 1, 1, 4).merge().setValue('Dónde se corrige: ' + s.corregir).setFontColor('#6b7280').setWrap(true);
+    fila++;
+    if (s.error) {
+      hoja.getRange(fila, 1, 1, 4).merge().setValue('No se pudo revisar: ' + s.error.replace(/\.$/, '') + ' — las demás secciones sí se revisaron.')
+        .setFontColor('#8a2020').setWrap(true);
+      fila += 2;
+      return;
+    }
+    if (!s.filas.length) { fila++; return; }
+    hoja.getRange(fila, 1, 1, 4).setValues([['Folio / número', 'Fecha', 'Escuela / lugar', 'Qué falta']])
+      .setFontWeight('bold').setBackground('#d6d1ca');
+    fila++;
+    const valores = s.filas.map(function (f) { return f.map(function (v) { return String(v == null ? '' : v); }); });
+    hoja.getRange(fila, 1, valores.length, 4).setNumberFormat('@').setValues(valores).setWrap(true).setVerticalAlignment('top')
+      .setBorder(true, true, true, true, true, true, '#d1d5db', SpreadsheetApp.BorderStyle.SOLID);
+    fila += valores.length + 1;
+  });
+  ss.setActiveSheet(hoja);
+  return nombre;
 }

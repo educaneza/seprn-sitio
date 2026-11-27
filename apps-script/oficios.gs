@@ -649,7 +649,46 @@ function doGet(e) {
       return ofRespuesta_({ status: 'error', mensaje: err.message });
     }
   }
+  if (p.action === 'comisionesPeriodo') {
+    try {
+      return ofRespuesta_(ofComisionesPeriodo_(p.token, p.desde, p.hasta));
+    } catch (err) {
+      return ofRespuesta_({ status: 'error', mensaje: err.message });
+    }
+  }
   return ofRespuesta_({ status: 'ok', servicio: 'OTDE Control de oficios' });
+}
+
+// ── Comisiones de un rango para la Bitácora OTDE (?action=comisionesPeriodo, nov 2026) ──
+// "Revisar qué falta del periodo" (bitacora.gs, ROADMAP 39) las cruza contra las
+// actividades: una comisión sin actividad ese día se queda fuera del reporte sin
+// aviso. Solo lectura (getSheetByName directo, sin ofObtenerHoja_ que repara
+// encabezados) y mismo PANEL_TOKEN que la Oficina Virtual. Sin RFC ni datos del
+// personal más allá del nombre que ya sale en el resumen diario.
+function ofComisionesPeriodo_(tokenRecibido, desde, hasta) {
+  const tokenEsperado = PropertiesService.getScriptProperties().getProperty('PANEL_TOKEN');
+  if (!tokenEsperado || tokenRecibido !== tokenEsperado) return { status: 'no_autorizado' };
+  const formato = /^\d{4}-\d{2}-\d{2}$/;
+  if (!formato.test(String(desde)) || !formato.test(String(hasta))) {
+    return { status: 'error', mensaje: 'Parámetros desde/hasta no válidos (AAAA-MM-DD).' };
+  }
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_OF_NUMEROS);
+  if (!hoja || hoja.getLastRow() < 2) return { status: 'ok', items: [] };
+  const idx = ofIndices_(hoja);
+  if (idx['Fecha del evento'] === undefined || idx['Tipo de documento'] === undefined) return { status: 'ok', items: [] };
+  const items = [];
+  ofFilas_(hoja).forEach(function (r) {
+    const v = function (h) { return idx[h] === undefined ? '' : ofTxt_(r[idx[h]]); };
+    if (v('Estatus') === 'Cancelado' || v('Tipo de documento') !== OF_TIPO_COMISION) return;
+    const fecha = ofFechaIso_(r[idx['Fecha del evento']]);
+    if (!formato.test(fecha) || fecha < desde || fecha > hasta) return;
+    items.push({
+      numero: v('Número'), fecha: fecha, persona: v('Persona comisionada'),
+      lugar: v('Lugar / destino'), cct: v('CCT destino').toUpperCase(), asunto: v('Asunto'),
+      vinculo: v('Vínculo')
+    });
+  });
+  return { status: 'ok', items: items };
 }
 
 function ofDatosInicio_() {
