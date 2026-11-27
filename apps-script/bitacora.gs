@@ -2022,13 +2022,14 @@ function bitRevisarPeriodo() {
   // ── Oficios: comisión (ya pasada) sin actividad ese día ──
   (function () {
     const s = { titulo: 'Oficios: comisiones sin actividad en la bitácora',
-      corregir: 'Capturar la actividad en bitacora.html. Si la comisión solo justifica una inasistencia, ignorarla.', filas: [], error: bitErrorDe_(res, ['ofCom']) };
+      corregir: 'Capturar la actividad en bitacora.html. Si solo justifica una inasistencia, márcalo en la columna "Para qué es la comisión" de Numeros (Control de oficios) y ya no saldrá aquí.', filas: [], error: bitErrorDe_(res, ['ofCom']) };
     if (!s.error) {
       const porDia = bitActividadesPorDia_(res);
       const grupos = {};
       const orden = [];
       res.ofCom.items.forEach(function (c) {
-        if (!enRango(c.fecha, hastaVencido)) return;
+        // Las que solo justifican una inasistencia no son actividad (oficios.html, 27 nov 2026).
+        if (!enRango(c.fecha, hastaVencido) || c.paraQue === 'Solo justificar inasistencia') return;
         const k = c.fecha + '|' + c.cct + '|' + c.lugar;
         if (!grupos[k]) { grupos[k] = { c: c, numeros: [], personas: [] }; orden.push(k); }
         if (c.numero) grupos[k].numeros.push(c.numero);

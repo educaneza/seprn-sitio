@@ -93,7 +93,9 @@ const ENCABEZADOS_OF_NUMEROS = ['Número', 'Consecutivo', 'Año', 'Tomado', 'Ela
   'CCT destino', 'Dirección destino', 'Modalidad', 'Km (ida y vuelta)',
   'RFC', 'Cargo', 'Destino completo', 'Oficio generado',
   // 19 oct 2026 (paso 2C): destinatarios y cuerpo del oficio de salida, en JSON, para volver a generarlo.
-  'Contenido del oficio'];
+  'Contenido del oficio',
+  // 27 nov 2026 (ROADMAP 39): la revisión de la bitácora ignora las que solo justifican una inasistencia.
+  'Para qué es la comisión'];
 // "Fecha límite" se retiró de la página el 20 oct 2026 (nada la usaba); la
 // columna se queda con lo ya capturado. Desde ese día una Difusión puede
 // convocar a una actividad presencial: usa Fecha del evento, Horario y
@@ -104,6 +106,9 @@ const OF_TIPO_DIFUSION = 'Difusión de información';
 const OF_TIPO_SUBE = 'Oficio a Toluca / CoEEE';
 const OF_TIPO_OTRO = 'Otro documento';
 const OF_TIPOS_DOCUMENTO = [OF_TIPO_COMISION, OF_TIPO_DIFUSION, OF_TIPO_SUBE, OF_TIPO_OTRO];
+const OF_PARA_QUE_ACTIVIDAD = 'Actividad de OTDE (va al reporte)';
+const OF_PARA_QUE_JUSTIFICAR = 'Solo justificar inasistencia';
+const OF_PARA_QUE = [OF_PARA_QUE_ACTIVIDAD, OF_PARA_QUE_JUSTIFICAR];
 const OF_MAX_TANDA = 20;
 // Origen de toda comisión (contacto.html) y modalidades de traslado (Config → "Modalidades").
 const OF_ORIGEN_COMISION = 'Av. Texcoco 116, Col. Juárez Pantitlán, Nezahualcóyotl, Estado de México, C.P. 57460';
@@ -371,6 +376,8 @@ function ofAplicarValidacion_() {
     if (elab) elab.setDataValidation(lista(config.elabora, false));
     const tipoDoc = columna(numeros, i, 'Tipo de documento');
     if (tipoDoc) tipoDoc.setDataValidation(lista(OF_TIPOS_DOCUMENTO, false));
+    const paraQue = columna(numeros, i, 'Para qué es la comisión');
+    if (paraQue) paraQue.setDataValidation(lista(OF_PARA_QUE, false));
     ofSemaforo_(numeros, est, { 'Cancelado': '#e5e7eb' });
   }
 
@@ -685,7 +692,7 @@ function ofComisionesPeriodo_(tokenRecibido, desde, hasta) {
     items.push({
       numero: v('Número'), fecha: fecha, persona: v('Persona comisionada'),
       lugar: v('Lugar / destino'), cct: v('CCT destino').toUpperCase(), asunto: v('Asunto'),
-      vinculo: v('Vínculo')
+      vinculo: v('Vínculo'), paraQue: v('Para qué es la comisión')
     });
   });
   return { status: 'ok', items: items };
@@ -737,6 +744,7 @@ function ofNumeroParaPagina_(r, i) {
     reasignado: !!v('Historial').trim(),
     cct: v('CCT destino'), direccion: v('Dirección destino'), modalidad: v('Modalidad'), km: v('Km (ida y vuelta)'),
     cargo: v('Cargo'), destinoCompleto: v('Destino completo'), oficioGenerado: v('Oficio generado'),
+    paraQue: v('Para qué es la comisión'),
     contenido: ofContenidoGuardado_(v('Contenido del oficio'))
   };
 }
@@ -868,7 +876,9 @@ function ofNormalizarDocumento_(x) {
     rfc: tipo === OF_TIPO_COMISION ? ofTxt_(x.rfc).toUpperCase() : '',
     cargo: tipo === OF_TIPO_COMISION ? ofTxt_(x.cargo) : '',
     destinoCompleto: tipo === OF_TIPO_COMISION ? ofTxt_(x.destinoCompleto) : '',
-    resumen: tipo === OF_TIPO_DIFUSION || tipo === OF_TIPO_SUBE ? ofTxt_(x.resumen) : ''
+    resumen: tipo === OF_TIPO_DIFUSION || tipo === OF_TIPO_SUBE ? ofTxt_(x.resumen) : '',
+    // La página lo exige; aquí no, para que una página vieja en caché siga funcionando.
+    paraQue: tipo === OF_TIPO_COMISION && OF_PARA_QUE.indexOf(ofTxt_(x.paraQue)) !== -1 ? ofTxt_(x.paraQue) : ''
   };
 }
 
@@ -932,13 +942,16 @@ function ofValidarDocumento_(d, n) {
 }
 
 function ofValoresDocumento_(d) {
-  return {
+  const v = {
     'Tipo de documento': d.tipo, 'Asunto': d.asunto, 'Destino': d.destino,
     'Persona comisionada': d.persona, 'Lugar / destino': d.lugar, 'Fecha del evento': d.fechaEvento,
     'Horario': d.horario, 'Resumen del cuerpo': d.resumen,
     'CCT destino': d.cct, 'Dirección destino': d.direccion, 'Modalidad': d.modalidad, 'Km (ida y vuelta)': d.km,
     'RFC': d.rfc, 'Cargo': d.cargo, 'Destino completo': d.destinoCompleto
   };
+  // Si no llegó (página vieja), al reasignar una comisión se conserva lo que ya decía.
+  if (d.tipo !== OF_TIPO_COMISION || d.paraQue) v['Para qué es la comisión'] = d.paraQue;
+  return v;
 }
 
 // Se llama con el candado tomado. Acepta una tanda ({documentos: [...]}, de 1

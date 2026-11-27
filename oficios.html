@@ -369,6 +369,14 @@
           <select id="num-modalidad"></select>
           <div class="error-msg" id="err-num-modalidad">Elige la modalidad.</div>
         </div>
+        <div class="campo" data-solo="Comisión">
+          <span class="etq">¿Para qué es esta comisión? <span class="req">*</span></span>
+          <div class="opciones" role="radiogroup" aria-label="Para qué es esta comisión">
+            <label class="opcion"><input type="radio" name="num-para-que" value="Actividad de OTDE (va al reporte)">Actividad de OTDE<small>Visita, asesoría, curso o reunión: va al reporte de Planeación</small></label>
+            <label class="opcion"><input type="radio" name="num-para-que" value="Solo justificar inasistencia">Solo justificar inasistencia<small>No es una actividad de OTDE: no va al reporte</small></label>
+          </div>
+          <div class="error-msg" id="err-num-para-que">Elige para qué es la comisión.</div>
+        </div>
         <div class="dias" data-solo="Comisión">
           <p class="subtit">Días de la comisión <small>Un renglón por día. Busca la escuela por CCT o nombre; si no está en el catálogo, escribe el lugar.</small></p>
           <div id="lista-dias"></div>
@@ -1010,11 +1018,15 @@ function aplicarTipo() {
     dest.value = tieneOpcion(dest, s) ? s : '';
   }
   CAMPOS_NUMERO.forEach(function (id) { if (id !== 'num-motivo') marcarError(id, false); });
+  marcarError('num-para-que', false);
   renumerar();
 }
 
 document.querySelectorAll('input[name="num-tipo"]').forEach(function (r) {
   r.addEventListener('change', function () { idEnvioNumero = null; aplicarTipo(); });
+});
+document.querySelectorAll('input[name="num-para-que"]').forEach(function (r) {
+  r.addEventListener('change', function () { marcarError('num-para-que', false); });
 });
 
 // Una sola fila de cada lista al responder un oficio o al reasignar (un solo número).
@@ -1240,6 +1252,11 @@ function leerFormularioNumero() {
   if (tipo === TIPO_COMISION) {
     base.modalidad = $('num-modalidad').value;
     req('num-modalidad', !!base.modalidad);
+    // Sin opción por defecto (ROADMAP 39): la revisión de la bitácora ignora
+    // las que solo justifican una inasistencia.
+    const paraQue = document.querySelector('input[name="num-para-que"]:checked');
+    base.paraQue = paraQue ? paraQue.value : '';
+    req('num-para-que', !!base.paraQue);
     const personas = Array.prototype.map.call($('lista-personas').children, function (f) {
       const p = leerPersona(f);
       if (!p) ok = false;
@@ -1305,6 +1322,7 @@ function reiniciarNumero() {
   aplicarTipo();
   aplicarPresencial();
   CAMPOS_NUMERO.forEach(function (id) { marcarError(id, false); });
+  marcarError('num-para-que', false);
   $('numero-error').classList.remove('visible');
   idEnvioNumero = null;
   $('form-numero').classList.remove('hidden');
@@ -1355,6 +1373,7 @@ function reasignarNumero(n) {
   }
   $('num-destino').value = n.destino || '';
   if (n.modalidad) llenarModalidades(n.modalidad);
+  document.querySelectorAll('input[name="num-para-que"]').forEach(function (r) { r.checked = r.value === n.paraQue; });
   $('num-resumen').value = n.resumen || '';
   $('num-presencial').checked = n.tipo === TIPO_DIFUSION && !!n.fechaEvento;
   $('num-ev-fecha').value = $('num-presencial').checked ? n.fechaEvento : '';
