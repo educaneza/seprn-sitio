@@ -86,6 +86,8 @@ seprn-sitio/
 ├── crea-tu-app.html              # Crea tu app educativa (oct 2026) — generador de prompts con catálogo SEP incrustado; un solo archivo, sin internet; link directo
 ├── apps-educativas/              # Banco de Materiales 2.0 — apps educativas de un solo archivo (hoy 3 de muestra)
 ├── excel-facil.html              # Excel fácil (oct 2026) — herramienta 100% local de 6 módulos (duplicados, filtros, validar RFC/CURP/CCT, Word, fórmulas, IA); un solo archivo con librerías incrustadas, funciona sin internet; link directo
+├── ticket-asesoria.html          # Cierre de la asesoría BM + Chuka (nov 2026) — QR de la presentación; dispara el seguimiento por correo
+├── seguimiento-asesoria.html     # Reporte de aplicación a 21 días de la asesoría BM + Chuka (?t=TOKEN, llega por correo)
 ├── oficios.html                  # Oficina interna OTDE (oct 2026) — página única: Tomar número (lotes) · Oficios (recibidos y pendientes) · Actividad (bitácora integrada); con clave, link directo
 ├── 404.html                      # Página de error personalizada
 │
@@ -105,6 +107,7 @@ seprn-sitio/
 │   ├── visitas-jefes.gs          # Backend Ceremonias Cívicas (ago 2026) — SEPRN-wide, no un trámite de OTDE; folio SEPRN-CC-NNNN, sin correo/Telegram a propósito
 │   ├── estrategias-nacionales.gs # Backend Estrategias Nacionales (sep 2026) — folio SEPRN-EN-NNNN, bloqueo duro por ciclo, sin correo/Telegram
 │   ├── oficios.gs                # Backend Control de oficios (oct 2026) — lotes de números, oficios recibidos OF-NNNN, PDF a Drive
+│   ├── ticket-asesoria.gs        # Backend del cierre y seguimiento de la asesoría BM + Chuka (nov 2026) — hoja propia, correos día 7/21/30
 │   ├── desplegar.sh              # Publica un backend con clasp desde la terminal: vista previa o --publicar (oct 2026, docs/ARCHITECTURE.md §35)
 │   └── proyectos-clasp.json      # scriptId, deploymentId y nombre remoto de cada proyecto que publica desplegar.sh
 │

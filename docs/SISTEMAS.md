@@ -810,6 +810,16 @@ diseño libre para niños, solo el sello de crédito al pie.
 - **Configuración única**: correr `tktSetup()` en el editor (autoriza y crea hojas/activadores),
   implementar como Web App (Yo / Cualquier usuario), `tktConfigurarUrlWebApp(url)` para el enlace de
   baja. Prueba: `tktActivarModoPrueba(correo)` y `tktProbarSeguimiento(correo)`.
+- **Ajustes del 25 nov (revisión de Jorge)**: lo que ve el docente se llama "Cierre de la
+  asesoría" (no "ticket de salida"); nombre opcional; internet de la escuela y del Aula de Medios
+  por separado, y si el BM sin internet está instalado; fecha de aplicación en texto libre (el
+  selector se desbordaba en celular); campo opcional "¿Qué necesitas para lograrlo?"
+  (`tkt-necesito`); campos a 16 px para evitar el zoom de iPhone. Tablero v2
+  (`TKT_TABLERO_VERSION`) por nombre de columna. Contacto en `TKT_CONTACTO`.
+- **Kit** (`kit-digital/`): el producto de la asesoría es el organizador gráfico
+  (`Guia_Organizador_Grafico_y_Rubrica.pdf` sustituye a la plantilla de microdiseño). Ojo: el
+  `.docx` de organizadores y la tabla SAMR están dos veces en git con la tilde en NFC y NFD;
+  `index.html` liga la NFC.
 
 ## `otde.html` — Oficina de Tecnología (OTDE)
 

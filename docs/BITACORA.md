@@ -16,6 +16,23 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-11-25 · Cierre y seguimiento de la asesoría BM + Chuka; kit digital rediseñado (cierre retroactivo)
+
+| | |
+|---|---|
+| **Fecha** | 2026-11-25 (10:28–11:18, cuatro commits). Documentado el 27 nov a partir de los diffs: esa sesión no pasó por `/close`. |
+| **Sesión** | Material para la asesoría "Banco de Materiales y Chuka" (carta descriptiva v2): formulario de cierre al final de la sesión, seguimiento automático por correo y kit digital con la identidad del sitio. |
+| **Cierre de la asesoría (`ticket-asesoria.html`)** | Se llega por el QR de la última diapositiva (`?cct=…&s=AAAA-MM-DD`). Registra compromiso de aplicación, valoración y necesidades; al enviar muestra los materiales del kit y dispara el correo con kit y canales. Tras la revisión de Jorge (`9c265a9`): "Ticket de salida" → "Cierre de la asesoría" en lo que ve el docente, nombre opcional y aviso de que no es evaluación, internet de la escuela y del Aula de Medios por separado, pregunta por el BM sin internet, "¿Cuándo piensas aplicarla?" en texto (el selector de fecha se desbordaba), temas de interés sin compromiso de visitas y autorización para compartir aparte, campos a 16 px en celular (evita el zoom de iPhone). `f5a1abe`: campo opcional "¿Qué necesitas para lograrlo?". |
+| **Seguimiento (`seguimiento-asesoria.html`, `apps-script/ticket-asesoria.gs`)** | Proyecto nuevo ligado a su propia hoja (`Tickets`, `Seguimiento`, `Tablero`), dado de alta en `proyectos-clasp.json`. Activador diario `tktProcesarSeguimiento`: día 7 recordatorio, día 21 enlace con token al reporte de aplicación, día 30 cierre; baja con `?action=baja`. Retroalimentación de OTDE desde el menú y resumen semanal `tktResumenSemanal`. Tablero v2 por nombre de columna. Protocolos de actuación ligados en correo, confirmación y kit. |
+| **Kit digital (`kit-digital/`)** | `index.html` rediseñado con `styles.css` (Montserrat, paleta). Presentación v2 en PDF. La "plantilla de microdiseño" se sustituyó por `Guia_Organizador_Grafico_y_Rubrica.pdf`: el producto de la asesoría es el organizador gráfico; el boleto de salida en papel pasa a ser la página "Cierre de la asesoría" con QR. Liga de Chuka corregida (chukagame.com), nomenclatura NEM, consigna de la diapositiva 26 alineada al organizador. Teléfono OTDE actualizado a 55 3300 2400 ext. 9065 en PDFs y organizadores (`4a8ad4f`). |
+| **Verificación (27 nov)** | `apps-script/desplegar.sh ticket-asesoria`: el código del proyecto es igual al repo. **No consta** en los commits si ya se corrió `tktSetup()` (activadores) ni si hubo una prueba de punta a punta con `tktActivarModoPrueba`. |
+| **Hallazgos al documentar** | `kit-digital/` lleva **dos copias** de `Organizadores_Gráficos_Editable.docx` y de `Tabla_SAMR_Niveles_Integración.pdf`, con la tilde en dos codificaciones Unicode (NFC y NFD); en la Mac se ven como un solo archivo. `index.html` liga la NFC; la NFD sobra. El `meta description` de `kit-digital/index.html` todavía dice "plantilla de microdiseño". |
+| **Pendiente** | Jorge: confirmar que `tktSetup()` corrió y que los 2 activadores aparecen en "Activadores"; hacer una prueba con `tktActivarModoPrueba(correo)` + `tktProbarSeguimiento(correo)` antes de la primera asesoría real. Claude: quitar las copias NFD de `kit-digital/` y corregir el `meta description` (cambio chico, con permiso de Jorge). |
+| **Documentación actualizada** | Este checkpoint, `docs/SISTEMAS.md` (ajustes del 25 nov al ticket), `docs/TABLERO-SALUD.md` (fila nueva), `CLAUDE.md` (tabla de páginas y resumen por backend), `README.md` (estructura). |
+| **Commits** | `b07e983`, `9c265a9`, `f5a1abe`, `4a8ad4f` (publicados el 25 nov) y el de este cierre. |
+
+---
+
 ## CHECKPOINT — 2026-11-24 (noche, cont. 2) · Instalador de Office v4.2 publicado: 32 bits, aviso de versión nueva y "Datos del equipo"
 
 | | |
