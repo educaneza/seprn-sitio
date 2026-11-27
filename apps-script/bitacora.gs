@@ -2081,7 +2081,9 @@ function bitRevisarPeriodo() {
   ui.alert('Revisión de ' + bitNombrePeriodo_(ctx.mes) + ' (' + r.inicio + ' a ' + r.fin + ')',
     (total ? total + ' cosa' + (total === 1 ? '' : 's') + ' por revisar' : 'No se encontró nada pendiente') +
     (fallidas ? ', y ' + fallidas + ' fuente' + (fallidas === 1 ? '' : 's') + ' sin revisar' : '') +
-    '. Detalle en la pestaña "' + nombre + '".\n\n' + resumen.join('\n') +
+    '. Detalle en la pestaña "' + nombre + '".\n\n' +
+    (r.sinCorte ? 'Aviso: el periodo ' + ctx.mes + ' no tiene fecha de corte en Config (columnas E:G); se revisó hasta el fin de mes. Captúrala y repite la revisión.\n\n' : '') +
+    resumen.join('\n') +
     '\n\nCorrige en cada sistema, vuelve a traer la fuente (o a generar el reporte) y repite la revisión.',
     ui.ButtonSet.OK);
 }
@@ -2201,7 +2203,13 @@ function bitEscribirRevision_(ctx, secciones, hoy) {
   fila++;
   hoja.getRange(fila, 1).setValue('Periodo ' + ctx.rango.inicio + ' a ' + ctx.rango.fin + ' · revisado el ' + hoy +
     '. Solo lectura: nada se corrigió solo. Lo programado después de hoy no se cuenta como faltante.').setFontColor('#6b7280');
-  fila += 2;
+  fila++;
+  if (ctx.rango.sinCorte) {
+    hoja.getRange(fila, 1).setValue('Aviso: el periodo ' + ctx.mes + ' no tiene fecha de corte en Config (columnas E:G); ' +
+      'se revisó hasta el fin de mes.').setFontColor('#8a2020').setFontWeight('bold');
+    fila++;
+  }
+  fila++;
   secciones.forEach(function (s) {
     const cuenta = s.error ? 'no se pudo revisar' : (s.filas.length ? s.filas.length + ' por revisar' : 'nada pendiente');
     hoja.getRange(fila, 1, 1, 4).merge().setValue(s.titulo + ' — ' + cuenta)
