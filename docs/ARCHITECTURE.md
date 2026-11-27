@@ -3517,3 +3517,32 @@ pestaña `Revisión AAAA-MM` antes de entregar. **Solo lee**: no escribe en las 
 - **Presupuesto de tiempo en "Generar reporte del mes"**: `BIT_PRESUPUESTO_IMPORTAR_MS` (4 min);
   las fuentes que no se alcanzan se saltan con aviso y el reporte sale con lo que ya hay.
 - **Conexión con Oficios**: Script Property `OF_URL` (menú "Configurar conexión con Oficios").
+
+## 39. Cierre automático de Mantenimiento y Asesorías (nov 2026)
+
+Antes las dos solicitudes se cerraban a mano: alguien cambiaba `Estatus` a Resuelto y el
+`onEdit` de cierre mandaba el correo. Si se olvidaba, la solicitud se quedaba "En atención"
+con la visita ya hecha y la revisión de la Bitácora la marcaba. Ahora cada una se cierra con
+la evidencia que ya llega sola.
+
+- **Mantenimiento: con el reporte de visita.** En `manDoPostReporteVisita_()`, si
+  `¿Requiere segunda visita?` = No y la solicitud no está Resuelta ni Rechazada
+  (`manSePuedeCerrarConReporte_()`), se marca Resuelto. El aviso va en el mismo correo del
+  reporte (`manEnviarReporteVisita_(…, cierraSola)`), con Zona/Sector en copia por
+  `manFiltrarContactosPorTipo`: un solo correo, no dos. Para lo reportado antes de esto, el
+  menú `manCerrarConReporte()` usa el último reporte de cada folio y manda el correo de cierre
+  normal.
+- **Asesorías: con los tickets de salida.** Solo `Banco de Materiales y Chuka` (Excel no usa
+  ticket). `aseCerrarConTickets_()` (menú y activador diario, 20:00) pide a
+  `ticket-asesoria.gs` `?action=ticketsPorCct&desde&hasta` (conteos por CCT y sesión, con
+  `PANEL_TOKEN`, sin datos personales) y cierra las que ya pasaron su `Fecha programada de
+  visita` y tienen tickets de su CCT para ese día: `Fecha de realización`, `Asistentes` (=
+  tickets, solo si estaba vacío) y Resuelto. Asistentes es una cota inferior: Telegram a Nancy
+  para corregirlo con la lista.
+- **Escribir el Estatus desde el script no dispara `onEdit`.** Por eso cada cierre automático
+  manda su propio correo y pone `Notificación de cierre enviada` = Sí; así, si después alguien
+  edita la fila, el `onEdit` no repite el aviso.
+- **Contrato entre proyectos**: Asesorías es cliente de Ticket como ya lo era de Mantenimiento
+  (`aseVerificarMantenimiento_()`): `UrlFetchApp` + `PANEL_TOKEN` compartido, sin servicios
+  nuevos. Un `PANEL_TOKEN` nuevo (ROADMAP 36) también va en el proyecto del Ticket.
+- Prueba en Node: `.claude/skills/probar-gs/ejemplos/cierres-27nov.js`.

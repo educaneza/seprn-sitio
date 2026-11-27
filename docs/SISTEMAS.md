@@ -313,6 +313,29 @@ diseño libre para niños, solo el sello de crédito al pie.
 - **Versión 28 (20 oct 2026)**: `?action=agendaVisitas&desde&hasta&token`
   (`manAgendaVisitas_()`, mismo contrato que Asesorías, más `Técnico asignado`) para el
   resumen diario de `oficios.gs`.
+- **Versiones 31-33 (27 nov 2026)**:
+  - **Fecha programada en texto** (v31): Alejandro captura `Fecha programada de visita` como
+    texto ("24 DE NOV 2026", "23 oct 26") y `manAgendaVisitas_()` descartaba toda fila que no
+    fuera `Date`: desde el 20 oct, ni el resumen diario de Oficios ni la revisión de la
+    Bitácora veían una sola visita de Mantenimiento (`docs/QA-NOTES.md #64`). Ahora
+    `manFechaProgramadaComoDate_()` acepta `Date`, "día mes año" en español y dd/mm/aaaa; y
+    `manAplicarValidacionFechaProgramada()` pone `requireDate` con aviso (sin bloquear) en la
+    columna, aplicada por `manObtenerHojaSolicitudes()` (y por eso también por el menú "Aplicar
+    validación y semáforo"). La consulta de la Oficina Virtual y los correos muestran el texto tal cual.
+  - **Cierre automático con el reporte de visita** (v33): si el reporte llega con
+    `¿Requiere segunda visita?` = No y la solicitud no está Resuelta ni Rechazada
+    (`manSePuedeCerrarConReporte_()`), pasa sola a Resuelto (`manMarcarResueltoPorFolio_()`, que
+    también pone `Notificación de cierre enviada` = Sí). **Un solo correo** (decisión de Jorge):
+    `manEnviarReporteVisita_(…, cierraSola)` cambia asunto e introducción ("tu solicitud queda
+    resuelta") y agrega en copia a Zona/Sector según el tipo de solicitante; el correo de cierre
+    aparte no sale. La respuesta trae `resuelta` y `reporte-visita.html` lo muestra al técnico.
+    Las atenciones urgentes nacen Resueltas y no se tocan. Menú "Cerrar las que ya tienen
+    reporte de visita" (`manCerrarConReporte()`): toma el último reporte de cada folio, pide
+    confirmación y manda el correo de cierre normal.
+  - Revisión del 27 nov (`revisor-apps-script`), riesgos menores aceptados por ahora: el "Sí"
+    de la notificación se pone aunque `manNotificarCierre` falle en silencio (cuota), y un
+    reintento del técnico tras un envío que sí llegó responde `resuelta: false` y repite el
+    correo del reporte (el reporte no usa `ID de envío`).
 
 ### `apps-script/asesorias.gs`
 - **Nuevo (ago 2026)**: mismo patrón que `mantenimiento.gs` (Sheet propio con hojas
@@ -424,6 +447,25 @@ diseño libre para niños, solo el sello de crédito al pie.
   solicitudes con `Fecha programada de visita` en el rango, menos Rechazadas. El correo de fecha
   programada ya no dice "visita técnica" (texto heredado de Mantenimiento; observación de
   Jorge): "Ya se programó la fecha de tu asesoría", etiqueta "Fecha de la asesoría".
+- **27 nov 2026**: confirmado en la hoja que los dos activadores `onEdit` sí corren (ASE-0003
+  quedó con `Notificación de fecha programada enviada` y `Notificación de cierre enviada` = Sí).
+- **Versión 23 (27 nov 2026) — cierre con los tickets de salida**: `aseCerrarConTickets_()`
+  cierra las de `Banco de Materiales y Chuka` cuya `Fecha programada de visita` ya pasó y que
+  tienen tickets de su CCT para ese día (`?action=ticketsPorCct` de `ticket-asesoria.gs`,
+  `PANEL_TOKEN`; URL en la propiedad `TKT_URL`, o `ASE_TKT_URL_POR_DEFECTO`): `Fecha de
+  realización` = día programado, `Asistentes` = número de tickets (solo si estaba vacío),
+  Resuelto y el correo de cierre de siempre (`aseNotificarCierre`, marcando la notificación).
+  Telegram a Nancy (`aseAvisarCierresConTickets_()`) para que corrija `Asistentes` con la lista:
+  no todos llenan el ticket (26 nov: 11 tickets, 13 asistentes). Excel básico sigue a mano.
+  Menú "Cerrar con tickets de salida ahora" e "Instalar cierre diario con tickets de salida"
+  (`aseCerrarConTicketsDiario`, 20:00). **Pendiente de Jorge**: el token en el proyecto del
+  Ticket e instalar el activador.
+  - **Riesgo abierto (revisor, 27 nov)**: `aseCerrarConTickets_()` y `aseAgendaVisitas_()`
+    exigen que `Fecha programada de visita` sea `Date`, y esa columna no tiene `requireDate`.
+    Hoy Nancy captura fechas reales, pero si una se escribe como texto la asesoría no se cierra
+    y desaparece del resumen de Oficios y de la revisión (la trampa de `docs/QA-NOTES.md #64`).
+    Arreglo propuesto: el mismo intérprete y validación que Mantenimiento. También: dos folios
+    del mismo CCT y día se cerrarían los dos con todos los tickets.
 
 ### `apps-script/formacion-docente.gs`
 **Desplegado en producción desde jul 2026** (Spreadsheet real `Formacion_Docente_2026_2027`, URL real ya pegada en `APPS_SCRIPT_URL` de `formacion-docente.html`; la extinta `jornada-verano-2026.html` compartió este mismo backend hasta su eliminación el 13 jul 2026).
@@ -833,9 +875,16 @@ diseño libre para niños, solo el sello de crédito al pie.
   (`tkt-necesito`); campos a 16 px para evitar el zoom de iPhone. Tablero v2
   (`TKT_TABLERO_VERSION`) por nombre de columna. Contacto en `TKT_CONTACTO`.
 - **Kit** (`kit-digital/`): el producto de la asesoría es el organizador gráfico
-  (`Guia_Organizador_Grafico_y_Rubrica.pdf` sustituye a la plantilla de microdiseño). Ojo: el
-  `.docx` de organizadores y la tabla SAMR están dos veces en git con la tilde en NFC y NFD;
-  `index.html` liga la NFC.
+  (`Guia_Organizador_Grafico_y_Rubrica.pdf` sustituye a la plantilla de microdiseño). El
+  `.docx` de organizadores y la tabla SAMR estuvieron dos veces en git (tilde en NFC y NFD); la
+  copia NFD se quitó del índice el 27 nov 2026 y queda la NFC, que es la que liga `index.html`.
+- **Primer uso real (26 nov 2026)**: 11 tickets de 15DPR0854V (ASE-0003), más uno de prueba de
+  Jorge del 25 nov que hay que borrar de `Tickets` para que no cuente en el cierre de Asesorías.
+- **Versión 5 (27 nov 2026)**: `?action=ticketsPorCct&token&desde&hasta`
+  (`tktTicketsPorCct_()`): solo conteos por CCT y sesión (`Sesión`, o el día de `Fecha` si viene
+  vacía), sin nombres ni correos, con `PANEL_TOKEN` (menú "Configurar token para Asesorías
+  (PANEL_TOKEN)", `tktConfigurarTokenPanelMenu()`). Sin token configurado responde
+  `no_autorizado`. Lo consume `aseCerrarConTickets_()`.
 
 ## `otde.html` — Oficina de Tecnología (OTDE)
 

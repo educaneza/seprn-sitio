@@ -1005,7 +1005,7 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     tanto, revisar "Ejecuciones" de cada proyecto (los cambios están hechos para no bloquear: si
     falla la verificación o la subida de fotos, la solicitud entra igual, así que un error puede
     pasar en silencio). Los 2 activadores de Asesorías (`aseOnEditCierre`/`aseOnEditProgramacion`)
-    no se habían ejecutado nunca al 15 oct: confirmar cuando Nancy cierre la próxima. (c) ~~pila
+    no se habían ejecutado nunca al 15 oct; ~~confirmar cuando Nancy cierre la próxima~~ — confirmado el 27 nov 2026 (ASE-0003 con las dos notificaciones en Sí). (c) ~~pila
     CR2032~~ — confirmado (en general; puede variar). (d) ~~destinatario extra del resumen
     semanal~~ — se queda solo `otde.nezahualcoyotl@dee.edu.mx`. (e) ~~`Historico_v8.5`~~ —
     descartado: se arranca de cero (la hoja sigue siendo opcional en el código). (f) opcional:
@@ -1064,6 +1064,8 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     **todos** los proyectos que lo usan a la vez (backends y quienes los consultan: Bitácora y
     Oficios), porque es el mismo en todos; con uno distinto, la Bitácora y Oficios dejan de traer
     datos. Después, `curl` de lectura con el token nuevo y con el viejo (debe dar `no_autorizado`).
+    Desde el 27 nov 2026 también lo usa el proyecto del Ticket de salida (`?action=ticketsPorCct`,
+    lo consulta Asesorías para cerrar asesorías): incluirlo en el cambio.
 
 37. **Agenda SEPRN: sustituir el calendario de Outlook de Planeación** (abierto 21 oct 2026).
     Prototipo sin backend publicado en `agenda-prototipo.html` para validarlo con la Subjefatura
@@ -1179,6 +1181,18 @@ movió — ver `docs/BITACORA.md` para el historial; esto es solo lo que sigue a
     descargar y cortar con un aviso claro en vez de desinstalar y fallar. Antes, contar en
     `Registro_Instalaciones` cuántos equipos hay con Windows 7/8 de 32 bits (desde la v4.2 la
     columna "Datos del equipo" lo dice) para ver si vale la pena.
+
+45. **Asesorías: aceptar la fecha programada escrita como texto** (abierto 27 nov 2026, revisor de
+    Apps Script). `aseAgendaVisitas_()` y `aseCerrarConTickets_()` exigen que `Fecha programada de
+    visita` sea `Date`, y la columna no tiene `requireDate`. Hoy Nancy captura fechas reales, pero
+    una escrita como texto haría que la asesoría no se cierre con los tickets y desaparezca del
+    resumen de Oficios y de la revisión de la Bitácora (lo que pasó en Mantenimiento,
+    `docs/QA-NOTES.md #64`). Arreglo: copiar `manFechaProgramadaComoDate_()` como
+    `aseFechaProgramadaComoDate_()`, usarla en los dos lugares y agregar `requireDate` con aviso a
+    la columna en `aseConfigurarValidacionYSemaforo_()`; probar con `/probar-gs`. De paso, riesgos
+    menores del mismo revisor: en los dos cierres automáticos el "Sí" de la notificación se pone
+    aunque el correo falle en silencio (QA #8/#40), y dos folios del mismo CCT y día se cerrarían
+    los dos con todos los tickets.
 
 Los 3 backends de Correo/Mantenimiento/Asesorías ya se desplegaron (6 ago 2026) — ver
 `docs/BITACORA.md` para el detalle. Ver `CLAUDE.md` §"Pendientes vigentes" para lo que sigue

@@ -1453,7 +1453,8 @@ document.getElementById('form-reporte').addEventListener('submit', async (e) => 
     }
 
     if (d.status === 'ok') {
-      document.getElementById('ok-folio').textContent = 'Folio: ' + d.folio;
+      document.getElementById('ok-folio').textContent = 'Folio: ' + d.folio +
+        (d.resuelta ? ' · la solicitud quedó Resuelta' : '');
       document.getElementById('screen-form').classList.add('hidden');
       document.getElementById('screen-ok').classList.remove('hidden');
     } else {

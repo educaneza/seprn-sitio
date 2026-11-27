@@ -140,7 +140,58 @@ function onOpen() {
     .addItem('Enviar retroalimentación (filas con Fortaleza y Mejora)', 'tktEnviarRetroalimentacion')
     .addItem('Procesar seguimiento ahora', 'tktProcesarSeguimiento')
     .addItem('Mandar resumen semanal ahora', 'tktResumenSemanal')
+    .addItem('Configurar token para Asesorías (PANEL_TOKEN)', 'tktConfigurarTokenPanelMenu')
     .addToUi();
+}
+
+// ── Token para ?action=ticketsPorCct (27 nov 2026) ──
+// El mismo PANEL_TOKEN de los demás proyectos: asesorias.gs lo manda al pedir el conteo.
+// Desde menú (con cuadro de diálogo) porque ▶️ no pasa argumentos (docs/QA-NOTES.md #14).
+function tktConfigurarTokenPanelMenu() {
+  const ui = SpreadsheetApp.getUi();
+  const r = ui.prompt('Token para Asesorías', 'Pega el mismo PANEL_TOKEN que usa el proyecto de Asesorías.', ui.ButtonSet.OK_CANCEL);
+  if (r.getSelectedButton() !== ui.Button.OK) return;
+  const token = r.getResponseText().trim();
+  if (!token) { ui.alert('No se guardó: el token está vacío.'); return; }
+  PropertiesService.getScriptProperties().setProperty('PANEL_TOKEN', token);
+  ui.alert('Listo. Asesorías ya puede contar los tickets por escuela.');
+}
+
+// ── ?action=ticketsPorCct&token=&desde=&hasta= (27 nov 2026) ──
+// Cuántos tickets llegaron por CCT y por sesión (AAAA-MM-DD, ambos incluidos). Solo
+// conteos: ni nombres ni correos salen de aquí. asesorias.gs lo usa para cerrar sola la
+// asesoría de Banco de Materiales y Chuka cuyo día programado ya tiene tickets.
+// La sesión es la que eligió el docente en el ticket; si viene vacía, el día del registro.
+function tktTicketsPorCct_(tokenRecibido, desde, hasta) {
+  const esperado = PropertiesService.getScriptProperties().getProperty('PANEL_TOKEN');
+  if (!esperado || tokenRecibido !== esperado) return tktJson_({ status: 'no_autorizado' });
+  const formato = /^\d{4}-\d{2}-\d{2}$/;
+  if (!formato.test(String(desde)) || !formato.test(String(hasta))) {
+    return tktJson_({ status: 'error', mensaje: 'Parámetros desde/hasta no válidos (AAAA-MM-DD).' });
+  }
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(TKT_HOJA_TICKETS);
+  if (!hoja || hoja.getLastRow() < 2) return tktJson_({ status: 'ok', items: [] });
+  const datos = hoja.getDataRange().getValues();
+  const idx = {};
+  datos[0].forEach(function (h, i) { idx[String(h).trim()] = i; });
+  const dia = function (v) {
+    if (v instanceof Date) return Utilities.formatDate(v, 'America/Mexico_City', 'yyyy-MM-dd');
+    const m = String(v || '').trim().match(/^(\d{4}-\d{2}-\d{2})/);
+    return m ? m[1] : '';
+  };
+  const conteo = {};
+  datos.slice(1).forEach(function (r) {
+    const cct = String(r[idx['CCT']] || '').trim().toUpperCase();
+    const sesion = dia(r[idx['Sesión']]) || dia(r[idx['Fecha']]);
+    if (!cct || !sesion || sesion < desde || sesion > hasta) return;
+    const k = cct + '|' + sesion;
+    conteo[k] = (conteo[k] || 0) + 1;
+  });
+  const items = Object.keys(conteo).map(function (k) {
+    const p = k.split('|');
+    return { cct: p[0], sesion: p[1], tickets: conteo[k] };
+  });
+  return tktJson_({ status: 'ok', items: items });
 }
 
 // ============================================================
@@ -267,6 +318,7 @@ function tktJson_(obj) {
 function doGet(e) {
   const p = (e && e.parameter) || {};
   if (p.action === 'baja') return tktBaja_(p.t);
+  if (p.action === 'ticketsPorCct') return tktTicketsPorCct_(p.token, p.desde, p.hasta);
   if (p.action === 'seguimiento') {
     const r = tktBuscarToken_(p.t);
     if (!r) return tktJson_({ status: 'error', mensaje: 'Enlace no válido.' });

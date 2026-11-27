@@ -516,8 +516,8 @@ function manAgendaVisitas_(tokenRecibido, desde, hasta) {
   const v = function (r, h) { return idx[h] === undefined ? '' : r[idx[h]]; };
   const items = [];
   datos.slice(1).forEach(function (r) {
-    const programada = v(r, 'Fecha programada de visita');
-    if (!v(r, 'Folio') || !(programada instanceof Date)) return;
+    const programada = manFechaProgramadaComoDate_(v(r, 'Fecha programada de visita'));
+    if (!v(r, 'Folio') || !programada) return;
     if (String(v(r, 'Estatus')).trim() === 'Rechazado') return;
     const fecha = Utilities.formatDate(programada, 'America/Mexico_City', 'yyyy-MM-dd');
     if (fecha < desde || fecha > hasta) return;
@@ -529,6 +529,36 @@ function manAgendaVisitas_(tokenRecibido, desde, hasta) {
     });
   });
   return manTextResponse(JSON.stringify({ status: 'ok', tramite: 'Mantenimiento', items: items }));
+}
+
+// ── "Fecha programada de visita" como Date (27 nov 2026) ──
+// Hasta nov 2026 la columna se capturaba como texto ("24 DE NOV 2026",
+// "23 oct 26", "05 de nov de 2026") y agendaVisitas descartaba toda fila que no
+// fuera Date: el resumen de Oficios y la revisión de la Bitácora no veían
+// ninguna visita de Mantenimiento (docs/QA-NOTES.md #64). Acepta Date, texto
+// "día mes año" en español (mes abreviado o completo, con o sin "de") y
+// dd/mm/aaaa. Devuelve null si no se entiende. Mediodía para que el cambio de
+// zona horaria no la mueva de día. Las constantes van dentro de la función
+// (CLAUDE.md: const de nivel superior puede tronar con ReferenceError).
+function manFechaProgramadaComoDate_(valor) {
+  if (valor instanceof Date) return isNaN(valor.getTime()) ? null : valor;
+  const meses = { ene: 0, feb: 1, mar: 2, abr: 3, may: 4, jun: 5, jul: 6, ago: 7, sep: 8, set: 8, oct: 9, nov: 10, dic: 11 };
+  const texto = String(valor || '').toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+  if (!texto) return null;
+  let d, m, a;
+  let p = texto.match(/^(\d{1,2})\s*[\/\-.]\s*(\d{1,2})\s*[\/\-.]\s*(\d{2,4})$/);
+  if (p) {
+    d = +p[1]; m = +p[2] - 1; a = +p[3];
+  } else {
+    p = texto.match(/^(\d{1,2})\s*(?:de\s+)?([a-z]+)\.?\s*(?:de\s+|del\s+)?(\d{2,4})$/);
+    if (!p || !(p[2].slice(0, 3) in meses)) return null;
+    d = +p[1]; m = meses[p[2].slice(0, 3)]; a = +p[3];
+  }
+  if (a < 100) a += 2000;
+  const fecha = new Date(a, m, d, 12, 0, 0);
+  if (fecha.getFullYear() !== a || fecha.getMonth() !== m || fecha.getDate() !== d) return null;
+  return fecha;
 }
 
 // ── Lista de solicitudes abiertas para el Panel OTDE (?action=pendientes) ──
@@ -809,6 +839,7 @@ function manObtenerHojaSolicitudes() {
 
   manAplicarValidacionEstatus(hoja);
   manAplicarValidacionTecnico(hoja);
+  manAplicarValidacionFechaProgramada(hoja);
   manAsegurarHojaContactos(ss);
   manAsegurarHojaReportes(ss);
 
@@ -824,6 +855,18 @@ function manAplicarValidacionTecnico(hoja) {
     .setAllowInvalid(false)
     .build();
   hoja.getRange(2, manCol_(hoja, 'Técnico asignado'), 1000, 1).setDataValidation(regla);
+}
+
+// ── "Fecha programada de visita" pide fecha (idempotente, 27 nov 2026) —
+// con aviso, sin bloquear (como "Fecha de realización" en Asesorías): doble clic
+// abre el calendario. El texto que ya había lo entiende manFechaProgramadaComoDate_(). ──
+function manAplicarValidacionFechaProgramada(hoja) {
+  const regla = SpreadsheetApp.newDataValidation()
+    .requireDate()
+    .setAllowInvalid(true)
+    .setHelpText('Fecha de la visita: doble clic para elegirla en el calendario (o escríbela como 24/11/2026).')
+    .build();
+  hoja.getRange(2, manCol_(hoja, 'Fecha programada de visita'), 1000, 1).setDataValidation(regla);
 }
 
 // ── Dropdown de valores válidos en la columna Estatus (idempotente) ──
@@ -1140,7 +1183,8 @@ function manCrearSolicitudUrgente_(datos) {
     lock.releaseLock();
   }
 
-  return { folio: folio, nombre: nombre, cct: cct, sector: sector, zona: zona, escuela: escuela, correo: correo };
+  // estatus: nace Resuelto, así que el reporte no la "cierra" otra vez (27 nov 2026).
+  return { folio: folio, nombre: nombre, cct: cct, sector: sector, zona: zona, escuela: escuela, correo: correo, estatus: 'Resuelto' };
 }
 
 // ── Buscar los contactos de Zona y de Sector en la hoja de contactos —
@@ -1755,8 +1799,78 @@ function manBuscarSolicitudPorFolio_(folio) {
     sector: fila[MS['Sector']],
     zona: fila[MS['Zona']],
     escuela: fila[MS['Escuela']],
-    correo: String(fila[MS['Correo']] || '').trim()
+    correo: String(fila[MS['Correo']] || '').trim(),
+    tipoSolicitante: String(fila[MS['Tipo de solicitante']] || '').trim(),
+    estatus: String(fila[MS['Estatus']] || '').trim()
   };
+}
+
+// ── Cierre automático con el reporte de visita (27 nov 2026) ──
+// Antes el reporte se guardaba y la solicitud seguía "En atención" hasta que alguien
+// la cambiaba a mano (MAN-0025 y MAN-0030 quedaron así). Ahora, si el técnico contesta
+// "¿Requiere segunda visita?" = No, la solicitud pasa sola a Resuelto. Una Rechazada o
+// una ya Resuelta no se tocan. Solo Validado / En atención / Pendiente de validar / vacío.
+function manSePuedeCerrarConReporte_(estatus, segundaVisita) {
+  const e = String(estatus || '').trim();
+  return String(segundaVisita || '').trim() === 'No' && e !== 'Resuelto' && e !== 'Rechazado';
+}
+
+// Escribe Resuelto + "Notificación de cierre enviada" = Sí en la fila del folio. Un
+// setValue() desde el script no dispara manOnEditCierre, así que el "Sí" lo pone aquí
+// quien ya mandó (o decidió no mandar) el aviso. Devuelve true si encontró el folio.
+function manMarcarResueltoPorFolio_(folio) {
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_MAN_SOLICITUDES);
+  if (!hoja || hoja.getLastRow() < 2) return false;
+  const colFolio = manCol_(hoja, 'Folio');
+  const folios = hoja.getRange(2, colFolio, hoja.getLastRow() - 1, 1).getValues();
+  for (let i = 0; i < folios.length; i++) {
+    if (String(folios[i][0]).trim().toUpperCase() !== folio) continue;
+    hoja.getRange(i + 2, manCol_(hoja, 'Estatus')).setValue('Resuelto');
+    hoja.getRange(i + 2, manCol_(hoja, 'Notificación de cierre enviada')).setValue('Sí');
+    return true;
+  }
+  return false;
+}
+
+// ── Menú: ponerse al día con las que ya tienen reporte (27 nov 2026) ──
+// Para las que se reportaron antes del cierre automático. Toma el reporte más reciente
+// de cada folio; si dice "segunda visita = No", la pasa a Resuelto y manda el correo de
+// cierre normal (manNotificarCierre: escuela + Zona/Sector), porque el correo de su
+// reporte salió sin decir que quedaba resuelta. Pide confirmación antes de escribir.
+function manCerrarConReporte() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const hojaSol = ss.getSheetByName(HOJA_MAN_SOLICITUDES);
+  const hojaRep = ss.getSheetByName(HOJA_MAN_REPORTES);
+  const ui = SpreadsheetApp.getUi();
+  if (!hojaSol || !hojaRep) { ui.alert('No encontré las hojas de Solicitudes y Reportes de visita.'); return; }
+
+  const ultimo = {}; // folio -> {fecha, segunda}
+  manFilasCanonicas_(hojaRep, ENCABEZADOS_MAN_REPORTES).forEach(function (r) {
+    const folio = String(r[MR['Folio']] || '').trim().toUpperCase();
+    if (!folio) return;
+    const f = r[MR['Fecha de atención']];
+    const t = f instanceof Date ? f.getTime() : 0;
+    if (!ultimo[folio] || t >= ultimo[folio].t) ultimo[folio] = { t: t, segunda: r[MR['¿Requiere segunda visita?']] };
+  });
+
+  const porCerrar = [];
+  manFilasCanonicas_(hojaSol, ENCABEZADOS_MAN_SOLICITUDES).forEach(function (r) {
+    const folio = String(r[MS['Folio']] || '').trim().toUpperCase();
+    if (folio && ultimo[folio] && manSePuedeCerrarConReporte_(r[MS['Estatus']], ultimo[folio].segunda)) porCerrar.push(r);
+  });
+  if (!porCerrar.length) { ui.alert('No hay solicitudes abiertas con reporte de visita que diga "sin segunda visita".'); return; }
+
+  const lista = porCerrar.map(function (r) { return r[MS['Folio']] + ' — ' + r[MS['Escuela']]; }).join('\n');
+  const resp = ui.alert('Cerrar ' + porCerrar.length + ' solicitud(es)',
+    'Se marcan Resuelto y la escuela recibe el correo de cierre (con copia a Zona y Sector):\n\n' + lista + '\n\n¿Continuar?',
+    ui.ButtonSet.YES_NO);
+  if (resp !== ui.Button.YES) return;
+
+  porCerrar.forEach(function (r) {
+    manNotificarCierre(r);
+    manMarcarResueltoPorFolio_(String(r[MS['Folio']]).trim().toUpperCase());
+  });
+  ui.alert('Listo: ' + porCerrar.length + ' solicitud(es) en Resuelto.');
 }
 
 // ── Busca la fila de "Reportes de visita" con ese folio. Regresa
@@ -2095,13 +2209,23 @@ function manGuardarPDFReporte_(pdfBlob) {
 // saturarlos; se enteran en el correo de cierre que ya existe cuando Jorge
 // marca Estatus = Resuelto). PDF adjunto, mismo wrapper manEnviarCorreo_
 // (respeta el modo de prueba). ──
-function manEnviarReporteVisita_(solicitud, datos, pdfBlob) {
+// cierraSola (27 nov 2026): el mismo correo avisa que la solicitud quedó resuelta y
+// lleva en copia a Zona/Sector (los mismos de manNotificarCierre), en vez de mandar
+// dos correos a la escuela al mismo tiempo.
+function manEnviarReporteVisita_(solicitud, datos, pdfBlob, cierraSola) {
   const responsable = String(datos[COL_MAN_REP_RESPONSABLE - 1] || '').trim();
   const correoTecnico = MAN_TECNICOS[responsable];
-  const asunto = 'Reporte de visita técnica — ' + (solicitud.escuela || solicitud.cct) + ' · ' + solicitud.folio;
+  const asunto = (cierraSola ? 'Solicitud resuelta: reporte de visita técnica — ' : 'Reporte de visita técnica — ') +
+    (solicitud.escuela || solicitud.cct) + ' · ' + solicitud.folio;
+  const intro = cierraSola
+    ? 'Adjuntamos el reporte de la visita técnica realizada. Con esta visita, tu solicitud de mantenimiento queda <strong>resuelta</strong>.'
+    : 'Adjuntamos el reporte de la visita técnica realizada.';
+  const contactos = cierraSola
+    ? manFiltrarContactosPorTipo(manBuscarContactosZonaSector(solicitud.sector, solicitud.zona), solicitud.tipoSolicitante)
+    : [];
   const html = manCorreoHtml_({
-    titulo: 'Reporte de visita técnica',
-    introHtml: '<p style="margin:0 0 16px 0;font-size:15px;color:#333333;line-height:1.7;">Adjuntamos el reporte de la visita técnica realizada.</p>',
+    titulo: cierraSola ? 'Reporte de visita técnica · solicitud resuelta' : 'Reporte de visita técnica',
+    introHtml: '<p style="margin:0 0 16px 0;font-size:15px;color:#333333;line-height:1.7;">' + intro + '</p>',
     filas: [
       { icono: '🎫', etiqueta: 'Folio', valor: solicitud.folio },
       { icono: '🏫', etiqueta: 'Escuela / CCT', valor: manEscapeHtml_(solicitud.escuela || '') + ' — ' + manEscapeHtml_(solicitud.cct) },
@@ -2115,7 +2239,8 @@ function manEnviarReporteVisita_(solicitud, datos, pdfBlob) {
 
   const opciones = {
     to: solicitud.correo,
-    cc: [correoTecnico, 'otde.nezahualcoyotl@dee.edu.mx'].filter(Boolean).join(','),
+    cc: [correoTecnico, 'otde.nezahualcoyotl@dee.edu.mx']
+      .concat(contactos.map(function (c) { return c.correo; })).filter(Boolean).join(','),
     subject: asunto,
     htmlBody: html,
     name: 'OTDE | Oficina de Tecnología para el Desarrollo Educativo',
@@ -2278,14 +2403,19 @@ function manDoPostReporteVisita_(datos) {
     rowIndex = hojaReportes.getLastRow();
   }
 
+  // Cierre automático (27 nov 2026): "sin segunda visita" → Resuelto, y el correo del
+  // reporte avisa también el cierre (un solo correo, con Zona/Sector en copia).
+  const cierraSola = manSePuedeCerrarConReporte_(solicitud.estatus, valores['¿Requiere segunda visita?']);
+
   const pdfBlob = manGenerarPDFReporte_(solicitud, filaValores);
   const urlPDF = manGuardarPDFReporte_(pdfBlob);
-  manEnviarReporteVisita_(solicitud, filaValores, pdfBlob);
+  manEnviarReporteVisita_(solicitud, filaValores, pdfBlob, cierraSola);
 
   hojaReportes.getRange(rowIndex, manCol_(hojaReportes, 'PDF del reporte (link Drive)')).setValue(urlPDF);
   hojaReportes.getRange(rowIndex, manCol_(hojaReportes, 'Notificación de reporte enviada')).setValue('Sí');
+  if (cierraSola) manMarcarResueltoPorFolio_(folio);
 
-  return manTextResponse(JSON.stringify({ status: 'ok', folio: folio, urlPDF: urlPDF }));
+  return manTextResponse(JSON.stringify({ status: 'ok', folio: folio, urlPDF: urlPDF, resuelta: cierraSola }));
 }
 
 // ── La hoja de reportes es "ligera": a diferencia de Solicitudes, no
@@ -2444,6 +2574,7 @@ function onOpen() {
     .addItem('Instalar trigger de programación de visita', 'manInstalarTriggerProgramacion')
     .addItem('Desinstalar trigger de programación de visita', 'manDesinstalarTriggerProgramacion')
     .addItem('Generar y enviar reporte de visita', 'manGenerarYEnviarReporteVisita')
+    .addItem('Cerrar las que ya tienen reporte de visita', 'manCerrarConReporte')
     .addItem('Aplicar validación y semáforo', 'manConfigurarValidacionYSemaforo')
     .addItem('Reordenar columnas (Solicitudes y Reportes de visita)', 'manReordenarColumnas')
     .addToUi();

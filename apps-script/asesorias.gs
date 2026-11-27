@@ -1383,7 +1383,118 @@ function onOpen() {
     .addItem('Reordenar columnas de Solicitudes', 'aseReordenarColumnasSolicitudes')
     .addItem('Configurar conexión con Mantenimiento', 'aseConfigurarConexionMantenimientoMenu')
     .addItem('Probar verificación de mantenimiento (un CCT)', 'aseProbarVerificacionMenu')
+    .addSeparator()
+    .addItem('Cerrar con tickets de salida ahora', 'aseCerrarConTicketsMenu')
+    .addItem('Instalar cierre diario con tickets de salida', 'aseInstalarTriggerTickets')
     .addToUi();
+}
+
+// ============================================================
+// Cierre automático con los tickets de salida (27 nov 2026)
+// ============================================================
+// Una asesoría de Banco de Materiales y Chuka cuyo día programado ya pasó y que tiene
+// tickets de salida (ticket-asesoria.gs, ?action=ticketsPorCct) de su CCT para ese día
+// se cierra sola: Fecha de realización = día programado, Asistentes = número de tickets
+// (solo si estaba vacío) y Estatus = Resuelto, con el mismo correo de cierre de siempre.
+// Asistentes es un punto de partida: no todos llenan el ticket (26 nov: 11 tickets, 13
+// asistentes), así que Nancy recibe un Telegram para corregirlo con la lista de asistencia.
+// Excel básico no usa ticket: se sigue cerrando a mano. Corre una vez al día (20:00)
+// y desde el menú. Un setValue() del script no dispara aseOnEditCierre: el correo y el
+// "Notificación de cierre enviada" = Sí se hacen aquí.
+const ASE_TKT_URL_POR_DEFECTO = 'https://script.google.com/macros/s/AKfycbwZGkr1EUJy2tMiJZy_ejAxO1xRUBrkHrYTWoH6edcz8695Nx88OIKtrkmpRqdh2jA/exec';
+const ASE_TIPO_CON_TICKET = 'Banco de Materiales y Chuka';
+
+function aseCerrarConTickets_() {
+  const props = PropertiesService.getScriptProperties();
+  const url = props.getProperty('TKT_URL') || ASE_TKT_URL_POR_DEFECTO;
+  const token = props.getProperty('PANEL_TOKEN');
+  if (!token) throw new Error('Falta PANEL_TOKEN en este proyecto.');
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_ASE_SOLICITUDES);
+  const filas = aseFilasCanonicas_(hoja);
+  const zona = 'America/Mexico_City';
+  const hoy = Utilities.formatDate(new Date(), zona, 'yyyy-MM-dd');
+
+  const candidatas = [];
+  filas.forEach(function (r, i) {
+    const estatus = String(r[ASE['Estatus']] || '').trim();
+    const programada = r[ASE['Fecha programada de visita']];
+    if (String(r[ASE['Tipo de Asesoría']] || '').trim() !== ASE_TIPO_CON_TICKET) return;
+    if (estatus === 'Resuelto' || estatus === 'Rechazado' || !(programada instanceof Date)) return;
+    const dia = Utilities.formatDate(programada, zona, 'yyyy-MM-dd');
+    if (dia > hoy) return;
+    candidatas.push({ fila: i + 2, r: r, dia: dia, cct: String(r[ASE['CCT']] || '').trim().toUpperCase() });
+  });
+  if (!candidatas.length) return [];
+
+  const desde = candidatas.reduce(function (m, c) { return c.dia < m ? c.dia : m; }, hoy);
+  const resp = UrlFetchApp.fetch(url + '?action=ticketsPorCct&token=' + encodeURIComponent(token) +
+    '&desde=' + desde + '&hasta=' + hoy, { muteHttpExceptions: true, followRedirects: true });
+  const datos = JSON.parse(resp.getContentText());
+  if (datos.status !== 'ok') throw new Error('Ticket de salida respondió: ' + (datos.mensaje || datos.status));
+  const conteo = {};
+  datos.items.forEach(function (x) { conteo[x.cct + '|' + x.sesion] = x.tickets; });
+
+  const cerradas = [];
+  candidatas.forEach(function (c) {
+    const tickets = conteo[c.cct + '|' + c.dia];
+    if (!tickets) return;
+    const col = function (n) { return aseCol_(hoja, n); };
+    if (!c.r[ASE['Fecha de realización']]) hoja.getRange(c.fila, col('Fecha de realización')).setValue(c.r[ASE['Fecha programada de visita']]);
+    if (c.r[ASE['Asistentes']] === '' || c.r[ASE['Asistentes']] === null) hoja.getRange(c.fila, col('Asistentes')).setValue(tickets);
+    hoja.getRange(c.fila, col('Estatus')).setValue('Resuelto');
+    if (String(c.r[ASE['Notificación de cierre enviada']] || '').trim() !== 'Sí') {
+      aseNotificarCierre(aseFilaCanonica_(hoja, c.fila));
+      hoja.getRange(c.fila, col('Notificación de cierre enviada')).setValue('Sí');
+    }
+    cerradas.push({ folio: c.r[ASE['Folio']], escuela: c.r[ASE['Escuela']], cct: c.cct, dia: c.dia, tickets: tickets });
+  });
+  if (cerradas.length) aseAvisarCierresConTickets_(cerradas);
+  return cerradas;
+}
+
+// Telegram a Nancy (mismo bot y chat que las solicitudes nuevas).
+function aseAvisarCierresConTickets_(cerradas) {
+  try {
+    const props = PropertiesService.getScriptProperties();
+    const token = props.getProperty('TELEGRAM_BOT_TOKEN');
+    const chatId = props.getProperty('TELEGRAM_CHAT_ID');
+    if (!token || !chatId) return;
+    const texto = '✅ *Asesorías cerradas con los tickets de salida*\n' +
+      cerradas.map(function (c) {
+        return c.folio + ' — ' + aseEscapeMarkdown_(c.escuela || c.cct) + ' (' + c.dia + '): ' + c.tickets + ' ticket(s)';
+      }).join('\n') +
+      '\nRevisa *Asistentes* con la lista de asistencia: no todos llenan el ticket.';
+    UrlFetchApp.fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
+      method: 'post', payload: { chat_id: chatId, text: texto, parse_mode: 'Markdown' }, muteHttpExceptions: true
+    });
+  } catch (err) {
+    // Silencioso: el cierre ya quedó en la hoja.
+  }
+}
+
+function aseCerrarConTicketsDiario() {
+  try { aseCerrarConTickets_(); } catch (err) { console.error('aseCerrarConTicketsDiario: ' + err.message); }
+}
+
+function aseCerrarConTicketsMenu() {
+  const ui = SpreadsheetApp.getUi();
+  try {
+    const cerradas = aseCerrarConTickets_();
+    ui.alert(cerradas.length
+      ? 'Cerradas ' + cerradas.length + ':\n\n' + cerradas.map(function (c) { return c.folio + ' — ' + c.tickets + ' ticket(s)'; }).join('\n') +
+        '\n\nRevisa Asistentes con la lista de asistencia.'
+      : 'No hay asesorías de Banco de Materiales y Chuka con fecha ya pasada y tickets de salida por cerrar.');
+  } catch (err) {
+    ui.alert('No se pudo revisar: ' + err.message);
+  }
+}
+
+function aseInstalarTriggerTickets() {
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    if (t.getHandlerFunction() === 'aseCerrarConTicketsDiario') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('aseCerrarConTicketsDiario').timeBased().everyDays(1).atHour(20).create();
+  try { SpreadsheetApp.getUi().alert('Listo: cada día a las 20:00 se cierran las asesorías con tickets de salida. Confírmalo en "Activadores".'); } catch (err) {}
 }
 
 // Versiones de menú (con cuadro de diálogo) de la configuración de arriba: correr desde

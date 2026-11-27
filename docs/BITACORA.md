@@ -16,6 +16,25 @@ para qué otro documento tocar además de este. Al abrir sesión, el skill `/ope
 
 ---
 
+## CHECKPOINT — 2026-11-27 (cont.) · Rotación Mantenimiento/Asesorías: fechas en texto, cierres automáticos y herramientas para probar Apps Script
+
+| | |
+|---|---|
+| **Fecha** | 2026-11-27 |
+| **Sesión** | `/open` (todo en orden: `educaneza`, `main` = `origin/main`, Pages `success`, 648 MB). Jorge eligió la rotación con Mantenimiento/Asesorías (prueba en vivo más vieja, 25 sep). Revisión de las hojas con el conector de Sheets, solo lectura. |
+| **Hallazgo: Mantenimiento invisible desde el 20 oct** | `Fecha programada de visita` está como texto en la hoja ("24 DE NOV 2026", "23 oct 26"; `effectiveValue.stringValue`) y `manAgendaVisitas_()` solo aceptaba `Date`: el resumen de Oficios y la revisión de la Bitácora nunca vieron una visita de Alejandro. v31: `manFechaProgramadaComoDate_()` (las 17 fechas reales de la hoja se leen bien) y `requireDate` con aviso en la columna (`docs/QA-NOTES.md #64`). Asesorías sí guarda fechas reales. |
+| **Revisión del periodo repetida por Jorge** | 6 por revisar (Mantenimiento 0, Asesorías 0, Soporte 1, Correo 2, Oficios 3). El 0 de Mantenimiento **no prueba** el arreglo (MAN-0030 ya tenía reporte y MAN-0025 cae antes del periodo); la prueba real será la próxima visita programada. **Corrección al checkpoint anterior:** la comisión de 15DPR0854V es del **26 nov** (el 25 se elaboró), así que la Fecha de realización 26/11 que puso Nancy en ASE-0003 es correcta. Oficios bajó de 4 a 3 y no a 2: queda por ver cuáles son (la pestaña `Revisión 2026-12` se leyó vacía por la API). |
+| **Cierre automático (pedido de Jorge)** | Mantenimiento v33: reporte con "¿Requiere segunda visita?" = No → Resuelto, y **un solo correo** (el del reporte avisa el cierre, con Zona/Sector; decisión de Jorge). Menú "Cerrar las que ya tienen reporte de visita" para MAN-0025 y MAN-0030. `reporte-visita.html` le dice al técnico si quedó resuelta. Asesorías v23 + Ticket v5: `?action=ticketsPorCct` (solo conteos) y `aseCerrarConTickets_()` (menú y activador diario 20:00) cierran Banco de Materiales y Chuka con los tickets del CCT ese día; Asistentes = tickets y Telegram a Nancy para corregirlo (26 nov: 11 tickets, 13 asistentes; Jorge eligió esta opción). `docs/ARCHITECTURE.md §39`. |
+| **Otros hallazgos en las hojas** | Los dos `onEdit` de Asesorías sí corren (ROADMAP 33 cerrado en ese punto). MAN-0025/0030 con reporte pero "En atención"; el reporte del 22 oct cargado en MAN-0022 (Rechazado, otra escuela) es gemelo del de MAN-0021; 7 validadas sin fecha (MAN-0029 desde el 28 sep); ASE-0002 sin fecha desde el 28 sep. Ticket: primera asesoría real con 11 tickets, más uno de prueba de Jorge que hay que borrar. Las copias NFD de `kit-digital/` ya no están en git (el tablero decía que sí). |
+| **Herramientas (recomendador de automatizaciones)** | Hook `PostToolUse` `.claude/hooks/revisar-sintaxis-gs.sh` (`node --check` al editar un `.gs`; 0 falsos positivos en los 27 `.gs`). Skill `/probar-gs` (`simulador.js` + `ejemplos/cierres-27nov.js`, 18 comprobaciones; falla contra el `mantenimiento.gs` de antes del arreglo, como debe). Agente `revisor-apps-script` (índice de QA-NOTES): en su primera corrida encontró que Asesorías tiene la misma trampa de fechas (ROADMAP 45) y dos riesgos menores. |
+| **Verificación** | `desplegar.sh` confirmó código idéntico al repo en cada publicación: Mantenimiento @31, @32 (comentario), @33; Asesorías @23; Ticket @5. `curl` GET sin token a `agendaVisitas` (Mantenimiento, Asesorías) y `ticketsPorCct` → `no_autorizado`. Cambios: `mantenimiento.gs` +142/-11, `asesorias.gs` +111, `ticket-asesoria.gs` +52, `reporte-visita.html` +2/-1. |
+| **Pendiente** | **Jorge:** menú OTDE Ticket → "Configurar token para Asesorías"; OTDE Asesorías → "Instalar cierre diario con tickets de salida" (confirmar en Activadores); OTDE Mantenimiento → "Cerrar las que ya tienen reporte de visita"; borrar el ticket de prueba del 25 nov; decir qué 3 comisiones quedan en la revisión. **Con Alejandro:** MAN-0021/0022 y las 7 validadas sin fecha. Sigue lo del checkpoint anterior (4844/4855/4862 "Solo justificar", 4 dic instalador, `tktSetup()`). |
+| **Siguiente** | ROADMAP 45 (fechas en texto en Asesorías, corto, con `/probar-gs` y el revisor) y ver en vivo el primer cierre automático de cada sistema. |
+| **Documentación actualizada** | Este checkpoint, `docs/QA-NOTES.md #64`, `docs/ARCHITECTURE.md §39`, `docs/SISTEMAS.md` (mantenimiento.gs, asesorias.gs, ticket-asesoria.gs), `docs/ROADMAP.md` (33, 36, 45 nuevo), `docs/TABLERO-SALUD.md` (Mantenimiento, Asesorías, Ticket), `CLAUDE.md` (resumen de los 3 backends, reglas comunes, pendientes). |
+| **Commits** | El de este cierre (todo lo de la sesión va junto). |
+
+---
+
 ## CHECKPOINT — 2026-11-27 · Bitácora: "Revisar qué falta del periodo" y "¿Para qué es esta comisión?" en Oficios (ROADMAP 39)
 
 | | |

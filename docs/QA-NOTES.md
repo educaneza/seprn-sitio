@@ -1666,3 +1666,27 @@ de 32 bits sigue sin salida (ROADMAP 44).
 **Regla:** un error que llega en segundos no se arregla reintentando: medir cuánto tardó antes
 de decidir. Y revisar la arquitectura (`file` en la Mac) de cada ejecutable que se empaqueta,
 no solo del contenido que instala.
+
+## 64. Mantenimiento: ninguna visita en el resumen de Oficios ni en la revisión de la Bitácora
+
+**Síntoma (27 nov 2026):** desde el 20 oct, `?action=agendaVisitas` de Mantenimiento devolvía
+cero visitas, así que el resumen diario de Oficios nunca mostró una visita de Alejandro, el
+cruce visita-comisión nunca funcionó para Mantenimiento y la revisión del periodo de la Bitácora
+no podía marcar visitas sin reporte. Nadie lo notó porque "0" también es una respuesta normal.
+
+**Causa raíz:** `Fecha programada de visita` se captura a mano en la hoja, y Alejandro la
+escribe como texto ("24 DE NOV 2026", "23 oct 26", "05 de nov de 2026"); el conector de Sheets
+lo confirmó con `effectiveValue.stringValue`. `manAgendaVisitas_()` descartaba toda fila cuyo
+valor no fuera `instanceof Date`. Los correos de fecha programada no fallaban (muestran el
+texto tal cual), por eso no hubo ningún síntoma visible. En Asesorías la misma columna sí trae
+fechas reales (Nancy usa el calendario), así que allá no pasó.
+
+**Fix (Mantenimiento @31):** `manFechaProgramadaComoDate_()` acepta `Date`, "día mes año" en
+español (mes abreviado o completo, con o sin "de", año de 2 o 4 dígitos) y dd/mm/aaaa, y descarta
+lo que no entiende ("Por definir", "31 de nov"); probado con las 17 fechas reales de la hoja. Y
+`requireDate` con aviso, sin bloquear, en la columna (`manAplicarValidacionFechaProgramada()`).
+
+**Regla:** una columna que llena una persona en la hoja no se lee solo con `instanceof Date`:
+o se acepta también el texto, o se le pone validación de fecha, y de preferencia las dos. Al
+revisar un endpoint que devuelve "0", confirmar contra la hoja que de verdad no hay nada.
+Pendiente el mismo arreglo en Asesorías (`aseAgendaVisitas_()`, `aseCerrarConTickets_()`).
